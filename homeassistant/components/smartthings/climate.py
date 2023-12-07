@@ -498,9 +498,9 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         """Return the unit of measurement."""
         return UNIT_MAP[self._device.status.attributes[Attribute.temperature].unit]
 
-    def _determine_swing_modes(self) -> list[str]:
+    def _determine_swing_modes(self) -> list[str] | None:
         """Return the list of available swing modes."""
-        supported_swings = [SWING_OFF]
+        supported_swings = None
         supported_modes = self._device.status.attributes[
             Attribute.supported_fan_oscillation_modes
         ][0]
