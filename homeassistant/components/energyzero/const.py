@@ -25,9 +25,9 @@ GAS_SERVICE_NAME: Final = "get_gas_prices"
 ENERGY_SERVICE_NAME: Final = "get_energy_prices"
 SERVICE_SCHEMA: Final = vol.Schema(
     {
+        vol.Required(ATTR_INCL_VAT): bool,
         vol.Optional(ATTR_START): str,
         vol.Optional(ATTR_END): str,
-        vol.Optional(ATTR_INCL_VAT, default=True): bool,
     }
 )
 

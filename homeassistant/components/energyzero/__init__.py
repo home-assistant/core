@@ -61,12 +61,7 @@ async def __get_prices(
     start = __get_date(call.data.get(ATTR_START))
     end = __get_date(call.data.get(ATTR_END))
 
-    incl_vat = call.data.get(ATTR_INCL_VAT)
-    vat = (
-        VatOption.EXCLUDE
-        if incl_vat is not None and not incl_vat
-        else VatOption.INCLUDE
-    )
+    vat = VatOption.INCLUDE if call.data.get(ATTR_INCL_VAT) else VatOption.EXCLUDE
 
     data: Electricity | Gas
 

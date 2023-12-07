@@ -1,4 +1,4 @@
-"""Tests for the sensors provided by the EnergyZero integration."""
+"""Tests for the services provided by the EnergyZero integration."""
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -10,8 +10,6 @@ from homeassistant.components.energyzero.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-
-pytestmark = [pytest.mark.freeze_time("2022-12-07 15:00:00")]
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -25,7 +23,7 @@ async def test_has_services(
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize("service", [GAS_SERVICE_NAME, ENERGY_SERVICE_NAME])
-@pytest.mark.parametrize("incl_vat", [{"incl_vat": False}, {"incl_vat": True}, {}])
+@pytest.mark.parametrize("incl_vat", [{"incl_vat": False}, {"incl_vat": True}])
 @pytest.mark.parametrize(
     "start", [{"start": "2023-01-01 00:00:00"}, {"start": "incorrect date"}, {}]
 )

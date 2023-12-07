@@ -1,8 +1,9 @@
 get_gas_prices:
   fields:
     incl_vat:
-      required: false
-      example: false
+      required: true
+      default: true
+      example: true
       selector:
         boolean:
     start:
@@ -18,8 +19,9 @@ get_gas_prices:
 get_energy_prices:
   fields:
     incl_vat:
-      required: false
-      example: false
+      required: true
+      default: true
+      example: true
       selector:
         boolean:
     start:
