@@ -87,6 +87,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/anthemav/ @hyralex
 /tests/components/anthemav/ @hyralex
 /homeassistant/components/aosmith/ @bdr99
+/tests/components/aosmith/ @bdr99
 /homeassistant/components/apache_kafka/ @bachya
 /tests/components/apache_kafka/ @bachya
 /homeassistant/components/apcupsd/ @yuxincs
