@@ -12,7 +12,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN, EMPTY_MAC
-from .coordinator import MotionMountCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.NUMBER,
@@ -26,8 +25,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Create API instance
     mm = motionmount.MotionMount(host, entry.data[CONF_PORT])
-    coordinator = MotionMountCoordinator(hass, mm)
-    mm.add_listener(coordinator.motionmount_callback)
 
     # Validate the API connection
     try:
@@ -47,10 +44,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Unexpected device found at {host}; expected {entry.unique_id}, found {found_mac}"
         )
 
-    await coordinator.async_config_entry_first_refresh()
-
     # Store an API object for your platforms to access
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = mm
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -60,8 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator = hass.data[DOMAIN].pop(entry.entry_id)
-        coordinator.mm.remove_listener(coordinator.motionmount_callback)
-        await coordinator.mm.disconnect()
+        mm: motionmount.MotionMount = hass.data[DOMAIN].pop(entry.entry_id)
+        await mm.disconnect()
 
     return unload_ok
