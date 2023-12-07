@@ -1578,7 +1578,7 @@ pyW215==0.7.0
 pyW800rf32==0.4
 
 # homeassistant.components.acaia
-pyacaia_async==0.0.11b9
+pyacaia_async==0.0.11b11
 
 # homeassistant.components.ads
 pyads==3.2.2
