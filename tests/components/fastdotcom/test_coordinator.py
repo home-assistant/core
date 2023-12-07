@@ -36,7 +36,6 @@ async def test_fastdotcom_data_update_coordinator(
     ):
         freezer.tick(timedelta(minutes=5, seconds=1))
         async_fire_time_changed(hass)
-        await coordinator.async_refresh()
 
     state = hass.states.get("sensor.fast_com_download")
     assert state.state == "10.0"
