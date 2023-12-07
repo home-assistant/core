@@ -96,7 +96,7 @@ def deserialize_entity_description(
 ) -> EntityDescription:
     """Deserialize an entity description."""
     result: dict[str, Any] = {}
-    for field in cached_fields(descriptions_class):  # type: ignore[arg-type]
+    for field in cached_fields(descriptions_class):
         field_name = field.name
         # It would be nice if field.type returned the actual
         # type instead of a str so we could avoid writing this
@@ -116,7 +116,7 @@ def serialize_entity_description(description: EntityDescription) -> dict[str, An
     as_dict = dataclasses.asdict(description)
     return {
         field.name: as_dict[field.name]
-        for field in cached_fields(type(description))  # type: ignore[arg-type]
+        for field in cached_fields(type(description))
         if field.default != as_dict.get(field.name)
     }
 
