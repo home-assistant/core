@@ -21,10 +21,10 @@ async def test_fastdotcom_data_update_coordinator(
     )
     config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(config_entry.entry_id)
     with patch(
         "homeassistant.components.fastdotcom.coordinator.fast_com",
     ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.fast_com_download")
