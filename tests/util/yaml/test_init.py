@@ -1,13 +1,15 @@
 """Test Home Assistant yaml loader."""
+from collections.abc import Generator
 import importlib
 import io
 import os
 import pathlib
 from typing import Any
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
+import voluptuous as vol
 import yaml as pyyaml
 
 from homeassistant.config import YAML_CONFIG_FILE, load_yaml_config_file
@@ -132,6 +134,7 @@ def test_include_yaml(
     [
         ({"/test/one.yaml": "one", "/test/two.yaml": "two"}, ["one", "two"]),
         ({"/test/one.yaml": "1", "/test/two.yaml": "2"}, [1, 2]),
+        ({"/test/one.yaml": "1", "/test/two.yaml": None}, [1]),
     ],
 )
 def test_include_dir_list(
@@ -187,6 +190,10 @@ def test_include_dir_list_recursive(
         (
             {"/test/first.yaml": "1", "/test/second.yaml": "2"},
             {"first": 1, "second": 2},
+        ),
+        (
+            {"/test/first.yaml": "1", "/test/second.yaml": None},
+            {"first": 1},
         ),
     ],
 )
@@ -246,6 +253,10 @@ def test_include_dir_named_recursive(
         (
             {"/test/first.yaml": "- 1", "/test/second.yaml": "- 2\n- 3"},
             [1, 2, 3],
+        ),
+        (
+            {"/test/first.yaml": "- 1", "/test/second.yaml": None},
+            [1],
         ),
     ],
 )
@@ -308,6 +319,13 @@ def test_include_dir_merge_list_recursive(
                 "/test/second.yaml": "key2: 2\nkey3: 3",
             },
             {"key1": 1, "key2": 2, "key3": 3},
+        ),
+        (
+            {
+                "/test/first.yaml": "key1: 1",
+                "/test/second.yaml": None,
+            },
+            {"key1": 1},
         ),
     ],
 )
@@ -584,6 +602,58 @@ async def test_loading_actual_file_with_syntax_error(
         await hass.async_add_executor_job(load_yaml_config_file, fixture_path)
 
 
+@pytest.fixture
+def mock_integration_frame() -> Generator[Mock, None, None]:
+    """Mock as if we're calling code from inside an integration."""
+    correct_frame = Mock(
+        filename="/home/paulus/homeassistant/components/hue/light.py",
+        lineno="23",
+        line="self.light.is_on",
+    )
+    with patch(
+        "homeassistant.helpers.frame.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/paulus/homeassistant/core.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            correct_frame,
+            Mock(
+                filename="/home/paulus/aiohue/lights.py",
+                lineno="2",
+                line="something()",
+            ),
+        ],
+    ):
+        yield correct_frame
+
+
+@pytest.mark.parametrize(
+    ("loader_class", "message"),
+    [
+        (yaml.loader.SafeLoader, "'SafeLoader' instead of 'FastSafeLoader'"),
+        (
+            yaml.loader.SafeLineLoader,
+            "'SafeLineLoader' instead of 'PythonSafeLoader'",
+        ),
+    ],
+)
+async def test_deprecated_loaders(
+    hass: HomeAssistant,
+    mock_integration_frame: Mock,
+    caplog: pytest.LogCaptureFixture,
+    loader_class,
+    message: str,
+) -> None:
+    """Test instantiating the deprecated yaml loaders logs a warning."""
+    with pytest.raises(TypeError), patch(
+        "homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()
+    ):
+        loader_class()
+    assert (f"Detected that integration 'hue' uses deprecated {message}") in caplog.text
+
+
 def test_string_annotated(try_both_loaders) -> None:
     """Test strings are annotated with file + line."""
     conf = (
@@ -615,3 +685,37 @@ def test_string_annotated(try_both_loaders) -> None:
             getattr(value, "__config_file__", None) == expected_annotations[key][1][0]
         )
         assert getattr(value, "__line__", None) == expected_annotations[key][1][1]
+
+
+def test_string_used_as_vol_schema(try_both_loaders) -> None:
+    """Test the subclassed strings can be used in voluptuous schemas."""
+    conf = "wanted_data:\n  key_1: value_1\n  key_2: value_2\n"
+    with io.StringIO(conf) as file:
+        doc = yaml_loader.parse_yaml(file)
+
+    # Test using the subclassed strings in a schema
+    schema = vol.Schema(
+        {vol.Required(key): value for key, value in doc["wanted_data"].items()},
+    )
+    # Test using the subclassed strings when validating a schema
+    schema(doc["wanted_data"])
+    schema({"key_1": "value_1", "key_2": "value_2"})
+    with pytest.raises(vol.Invalid):
+        schema({"key_1": "value_2", "key_2": "value_1"})
+
+
+@pytest.mark.parametrize(
+    ("hass_config_yaml", "expected_data"), [("", {}), ("bla:", {"bla": None})]
+)
+def test_load_yaml_dict(
+    try_both_loaders, mock_hass_config_yaml: None, expected_data: Any
+) -> None:
+    """Test item without a key."""
+    assert yaml.load_yaml_dict(YAML_CONFIG_FILE) == expected_data
+
+
+@pytest.mark.parametrize("hass_config_yaml", ["abc", "123", "[]"])
+def test_load_yaml_dict_fail(try_both_loaders, mock_hass_config_yaml: None) -> None:
+    """Test item without a key."""
+    with pytest.raises(yaml_loader.YamlTypeError):
+        yaml_loader.load_yaml_dict(YAML_CONFIG_FILE)

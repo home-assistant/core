@@ -62,8 +62,8 @@ async def test_setup_missing_config(
     await hass.async_block_till_done()
     assert_setup_component(0, SWITCH_DOMAIN)
     assert (
-        "Invalid config for 'switch.rest': required key 'resource' not provided"
-        in caplog.text
+        "Invalid config for 'switch' from integration 'rest': required key 'resource' "
+        "not provided" in caplog.text
     )
 
 
@@ -75,7 +75,10 @@ async def test_setup_missing_schema(
     assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
     assert_setup_component(0, SWITCH_DOMAIN)
-    assert "Invalid config for 'switch.rest': invalid url" in caplog.text
+    assert (
+        "Invalid config for 'switch' from integration 'rest': invalid url"
+        in caplog.text
+    )
 
 
 @respx.mock

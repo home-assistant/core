@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry
 CAMERA_ATTRIBUTES = {
     "name": "Camera 1",
     "camera_id": "111111",
-    "serial": "serail",
+    "serial": "serial",
     "temperature": None,
     "temperature_c": 25.1,
     "temperature_calibrated": None,

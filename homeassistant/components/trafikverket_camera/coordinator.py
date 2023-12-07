@@ -15,13 +15,13 @@ from pytrafikverket.exceptions import (
 from pytrafikverket.trafikverket_camera import CameraInfo, TrafikverketCamera
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_LOCATION, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 TIME_BETWEEN_UPDATES = timedelta(minutes=5)
@@ -48,14 +48,14 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[CameraData]):
         )
         self.session = async_get_clientsession(hass)
         self._camera_api = TrafikverketCamera(self.session, entry.data[CONF_API_KEY])
-        self._location = entry.data[CONF_LOCATION]
+        self._id = entry.data[CONF_ID]
 
     async def _async_update_data(self) -> CameraData:
         """Fetch data from Trafikverket."""
         camera_data: CameraInfo
         image: bytes | None = None
         try:
-            camera_data = await self._camera_api.async_get_camera(self._location)
+            camera_data = await self._camera_api.async_get_camera(self._id)
         except (NoCameraFound, MultipleCamerasFound, UnknownError) as error:
             raise UpdateFailed from error
         except InvalidAuthentication as error:

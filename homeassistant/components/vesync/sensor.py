@@ -48,12 +48,12 @@ class VeSyncSensorEntityDescription(
 ):
     """Describe VeSync sensor entity."""
 
-    exists_fn: Callable[
-        [VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], bool
-    ] = lambda _: True
-    update_fn: Callable[
-        [VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], None
-    ] = lambda _: None
+    exists_fn: Callable[[VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], bool] = (
+        lambda _: True
+    )
+    update_fn: Callable[[VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], None] = (
+        lambda _: None
+    )
 
 
 def update_energy(device):
