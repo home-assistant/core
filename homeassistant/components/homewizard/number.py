@@ -6,6 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from .const import DOMAIN
 from .coordinator import HWEnergyDeviceUpdateCoordinator
@@ -45,7 +46,9 @@ class HWEnergyNumberEntity(HomeWizardEntity, NumberEntity):
     @homewizard_exception_handler
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
-        await self.coordinator.api.state_set(brightness=int(value * (255 / 100)))
+        await self.coordinator.api.state_set(
+            brightness=value_to_brightness((0, 100), value)
+        )
         await self.coordinator.async_refresh()
 
     @property
@@ -61,4 +64,4 @@ class HWEnergyNumberEntity(HomeWizardEntity, NumberEntity):
             or (brightness := self.coordinator.data.state.brightness) is None
         ):
             return None
-        return round(brightness * (100 / 255))
+        return brightness_to_value((0, 100), brightness)
