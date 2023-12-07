@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 from typing import Final
 
 from homewizard_energy.models import Data
@@ -24,7 +25,8 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -33,6 +35,7 @@ from .coordinator import HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
 
 PARALLEL_UPDATES = 1
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(kw_only=True)
@@ -431,11 +434,63 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
 )
 
 
+async def _async_migrate_entries(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> bool:
+    """Migrate old entry.
+
+    The HWE-SKT had no total_power_*_kwh in 2023.11, in 2023.12 it does.
+    But simultaneously, the total_power_*_t1_kwh was removed for HWE-SKT.
+
+    This migration migrates the old unique_id to the new one, if possible.
+
+    Migration can be removed after 2023.6
+    """
+    entity_registry = er.async_get(hass)
+
+    @callback
+    def update_unique_id(entry: er.RegistryEntry) -> dict[str, str] | None:
+        replacements = {
+            "total_power_import_t1_kwh": "total_power_import_kwh",
+            "total_power_export_t1_kwh": "total_power_export_kwh",
+        }
+
+        for old_id, new_id in replacements.items():
+            if entry.unique_id.endswith(old_id):
+                new_unique_id = entry.unique_id.replace(old_id, new_id)
+                _LOGGER.debug(
+                    "Migrating entity '%s' unique_id from '%s' to '%s'",
+                    entry.entity_id,
+                    entry.unique_id,
+                    new_unique_id,
+                )
+                if existing_entity_id := entity_registry.async_get_entity_id(
+                    entry.domain, entry.platform, new_unique_id
+                ):
+                    _LOGGER.debug(
+                        "Cannot migrate to unique_id '%s', already exists for '%s'",
+                        new_unique_id,
+                        existing_entity_id,
+                    )
+                    return None
+                return {
+                    "new_unique_id": new_unique_id,
+                }
+
+        return None
+
+    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+
+    return True
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Initialize sensors."""
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+    await _async_migrate_entries(hass, entry)
 
     async_add_entities(
         HomeWizardSensorEntity(coordinator, description)
