@@ -41,7 +41,7 @@ async def test_number_entities(
     assert snapshot == device_entry
 
     # Test unknown handling
-    assert state.state == "100"
+    assert state.state == "100.0"
 
     mock_homewizardenergy.state.return_value.brightness = None
 
@@ -64,7 +64,7 @@ async def test_number_entities(
     )
 
     assert len(mock_homewizardenergy.state_set.mock_calls) == 1
-    mock_homewizardenergy.state_set.assert_called_with(brightness=127)
+    mock_homewizardenergy.state_set.assert_called_with(brightness=129)
 
     mock_homewizardenergy.state_set.side_effect = RequestError
     with pytest.raises(
