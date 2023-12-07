@@ -67,16 +67,15 @@ async def __get_prices(
             vat=vat,
         )
         return {"prices": data.timestamp_prices}
-    else:
-        data = await coordinator.easyenergy.energy_prices(
-            start_date=start,
-            end_date=end,
-            vat=vat,
-        )
+    data = await coordinator.easyenergy.energy_prices(
+        start_date=start,
+        end_date=end,
+        vat=vat,
+    )
 
-        if price_type == PriceType.ENERGY_USAGE:
-            return {"prices": data.timestamp_usage_prices}
-        return {"prices": data.timestamp_return_prices}
+    if price_type == PriceType.ENERGY_USAGE:
+        return {"prices": data.timestamp_usage_prices}
+    return {"prices": data.timestamp_return_prices}
 
 
 async def async_setup_services(
