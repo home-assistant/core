@@ -1,7 +1,7 @@
 """Matter lock."""
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from chip.clusters import Objects as clusters
 
@@ -89,7 +89,7 @@ class MatterLock(MatterEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock with pin if needed."""
-        code: Optional[str] = kwargs.get(ATTR_CODE)
+        code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         await self.send_device_command(
             command=clusters.DoorLock.Commands.LockDoor(code_bytes)
@@ -97,7 +97,7 @@ class MatterLock(MatterEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock with pin if needed."""
-        code: Optional[str] = kwargs.get(ATTR_CODE)
+        code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         if self.supports_unbolt:
             # if the lock reports it has separate unbolt support,
@@ -113,7 +113,7 @@ class MatterLock(MatterEntity, LockEntity):
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
-        code: Optional[str] = kwargs.get(ATTR_CODE)
+        code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         await self.send_device_command(
             command=clusters.DoorLock.Commands.UnlockDoor(code_bytes)
