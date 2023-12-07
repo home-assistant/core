@@ -5,7 +5,7 @@ import asyncio
 from datetime import datetime, timedelta
 import ssl
 from types import MappingProxyType
-from typing import Any
+from typing import Any, Literal
 
 from aiohttp import CookieJar
 import aiounifi
@@ -458,7 +458,7 @@ async def get_unifi_controller(
     config: MappingProxyType[str, Any],
 ) -> aiounifi.Controller:
     """Create a controller object and verify authentication."""
-    ssl_context: ssl.SSLContext | bool = False
+    ssl_context: ssl.SSLContext | Literal[False] = False
 
     if verify_ssl := config.get(CONF_VERIFY_SSL):
         session = aiohttp_client.async_get_clientsession(hass)
