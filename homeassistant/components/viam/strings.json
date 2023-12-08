@@ -45,6 +45,20 @@
       }
     }
   },
+  "exceptions": {
+    "camera_entity_not_found": {
+      "message": "A camera entity called {camera_name} was not found"
+    },
+    "camera_not_found": {
+      "message": "A camera for the entity {camera_name} was not found"
+    },
+    "robot_credentials_required": {
+      "message": "The robot location and secret are required for this connection type."
+    },
+    "robot_credentials_not_found": {
+      "message": "The necessary credentials for the RobotClient could not be found."
+    }
+  },
   "services": {
     "capture_data": {
       "name": "Capture data",
