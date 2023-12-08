@@ -208,6 +208,8 @@ async def test_services(hass: HomeAssistant) -> None:
     # entities should be in correct state depending on the SUPPORT_STOP feature and valve position
     assert is_closed(hass, ent1)
     assert not is_opening(hass, ent2)
+    assert not is_closing(hass, ent2)
+    assert is_closed(hass, ent2)
 
     await call_service(hass, SERVICE_SET_VALVE_POSITION, ent2, 50)
     assert is_opening(hass, ent2)
