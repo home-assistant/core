@@ -39,6 +39,7 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
             hw_version=coordinator.data["vehicle_config-driver_assist"],
         )
 
+    @property
     def get(self) -> Any:
         """Return value from coordinator data."""
         return self.coordinator.data[self.key]
