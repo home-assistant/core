@@ -21,7 +21,7 @@ class OpenAQDataCoordinator(DataUpdateCoordinator):
         """Initialize OpenAQDataCoordinator."""
         self.api_key = api_key
         self.location_id = location_id
-        self.sensor_data = {}
+        self.sensor_data: dict = {}
         self.client = AQClient(
             hass=hass,
             api_key=api_key,
@@ -40,11 +40,9 @@ class OpenAQDataCoordinator(DataUpdateCoordinator):
             metrics = self.client.get_latest_metrices().results
             for metric in metrics:
                 self.sensor_data[metric.parameter.name] = metric.value
-                print(str(metric.parameter.name) + " " + str(metric.value))
             last_update = self.client.get_device().datetime_last.utc
             if last_update:
                 self.sensor_data["last_update"] = last_update
-            print("updated " + str(self.sensor_data))
             self.data = self.sensor_data
             return self.sensor_data
 
