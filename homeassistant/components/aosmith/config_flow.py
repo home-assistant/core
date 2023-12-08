@@ -1,6 +1,7 @@
 """Config flow for A. O. Smith integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -22,6 +23,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self):
+        """Start the config flow."""
+        self._reauth_entry = None
+        self._email = None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -30,7 +36,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             unique_id = user_input[CONF_EMAIL].lower()
             await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
+            if not self._reauth_entry:
+                self._abort_if_unique_id_configured()
 
             session = aiohttp_client.async_get_clientsession(self.hass)
             client = AOSmithAPIClient(
@@ -45,17 +52,36 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(
-                    title=user_input[CONF_EMAIL], data=user_input
+                if not self._reauth_entry:
+                    return self.async_create_entry(
+                        title=user_input[CONF_EMAIL], data=user_input
+                    )
+
+                self.hass.config_entries.async_update_entry(
+                    self._reauth_entry, data=user_input, unique_id=unique_id
                 )
+
+                # Reload the config entry otherwise devices will remain unavailable
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+                )
+                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_EMAIL): str,
+                    vol.Required(CONF_EMAIL, default=self._email): str,
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
         )
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Perform reauth if the user credentials have changed."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        self._email = entry_data["email"]
+        return await self.async_step_user()
