@@ -81,7 +81,7 @@
       "active_preset": "asleep",
       "available": true,
       "available_schedules": ["Weekschema", "Badkamer", "Test"],
-      "control_state": "heating",
+      "control_state": "preheating",
       "dev_class": "thermostat",
       "location": "f2bf9048bef64cc5b6d5110154e33c81",
       "mode": "heat",
