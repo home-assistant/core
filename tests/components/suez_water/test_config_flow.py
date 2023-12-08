@@ -27,15 +27,16 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] == {}
 
     with patch("homeassistant.components.suez_water.config_flow.SuezClient"):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             MOCK_DATA,
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "test-username"
-    assert result2["data"] == MOCK_DATA
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test-username"
+    assert result["result"].unique_id == "test-username"
+    assert result["data"] == MOCK_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -71,6 +72,7 @@ async def test_form_invalid_auth(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
+    assert result["result"].unique_id == "test-username"
     assert result["data"] == MOCK_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -80,6 +82,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
 
     entry = MockConfigEntry(
         domain=DOMAIN,
+        unique_id="test-username",
         data=MOCK_DATA,
     )
     entry.add_to_hass(hass)
@@ -144,6 +147,7 @@ async def test_import(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
+    assert result["result"].unique_id == "test-username"
     assert result["data"] == MOCK_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -191,6 +195,7 @@ async def test_import_already_configured(hass: HomeAssistant) -> None:
 
     entry = MockConfigEntry(
         domain=DOMAIN,
+        unique_id="test-username",
         data=MOCK_DATA,
     )
     entry.add_to_hass(hass)

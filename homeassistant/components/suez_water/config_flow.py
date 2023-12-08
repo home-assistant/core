@@ -57,7 +57,8 @@ class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
+            await self.async_set_unique_id(user_input[CONF_USERNAME])
+            self._abort_if_unique_id_configured()
             try:
                 await self.hass.async_add_executor_job(validate_input, user_input)
             except CannotConnect:
@@ -78,8 +79,9 @@ class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Import the yaml config."""
+        await self.async_set_unique_id(user_input[CONF_USERNAME])
         try:
-            self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
+            self._abort_if_unique_id_configured()
         except AbortFlow:
             async_create_issue(
                 self.hass,
