@@ -257,6 +257,7 @@ class ValveEntity(Entity):
 
     def stop_valve(self) -> None:
         """Stop the valve."""
+        raise NotImplementedError()
 
     async def async_stop_valve(self) -> None:
         """Stop the valve."""
