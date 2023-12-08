@@ -318,8 +318,9 @@ class EnergyCostSensor(SensorEntity):
                 energy_price = float(energy_price_state.state)
             except ValueError:
                 if self._last_energy_sensor_state is None:
-                    # Initialize as it's the first time all required entities except price are in place.
-                    # This means that the cost will update the first time that the energy is updated after the price entity is in place
+                    # Initialize as it's the first time all required entities except
+                    # price are in place. This means that the cost will update the first
+                    # time the energy is updated after the price entity is in place.
                     self._reset(energy_state)
                 return
 
