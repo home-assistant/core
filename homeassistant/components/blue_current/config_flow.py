@@ -37,7 +37,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match(user_input)
 
             try:
-                await client.validate_api_token(api_token)
+                customer_id = await client.validate_api_token(api_token)
                 email = await client.get_email()
             except WebsocketError:
                 errors["base"] = "cannot_connect"
@@ -52,6 +52,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             else:
+                await self.async_set_unique_id(customer_id)
+                self._abort_if_unique_id_configured()
+
                 return self.async_create_entry(title=email, data=user_input)
 
         return self.async_show_form(
