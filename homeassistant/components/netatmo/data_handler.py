@@ -37,9 +37,11 @@ from .const import (
     NETATMO_CREATE_CLIMATE,
     NETATMO_CREATE_COVER,
     NETATMO_CREATE_LIGHT,
+    NETATMO_CREATE_OPENING_SENSOR,
     NETATMO_CREATE_ROOM_SENSOR,
     NETATMO_CREATE_SELECT,
     NETATMO_CREATE_SENSOR,
+    NETATMO_CREATE_SIREN_SENSOR,
     NETATMO_CREATE_SWITCH,
     NETATMO_CREATE_WEATHER_SENSOR,
     PLATFORMS,
@@ -332,6 +334,8 @@ class NetatmoDataHandler:
             NetatmoDeviceCategory.meter: [NETATMO_CREATE_SENSOR],
         }
         for module in home.modules.values():
+            if module.device_type is NetatmoDeviceType.NIS:
+                module.device_category = NetatmoDeviceCategory.siren
             if not module.device_category:
                 continue
 
@@ -355,6 +359,29 @@ class NetatmoDataHandler:
                         module,
                         home.entity_id,
                         WEATHER,
+                    ),
+                )
+            if module.device_category is NetatmoDeviceCategory.siren:
+                async_dispatcher_send(
+                    self.hass,
+                    NETATMO_CREATE_SIREN_SENSOR,
+                    NetatmoDevice(
+                        self,
+                        module,
+                        home.entity_id,
+                        signal_home,
+                    ),
+                )
+
+            if module.device_category is NetatmoDeviceCategory.opening:
+                async_dispatcher_send(
+                    self.hass,
+                    NETATMO_CREATE_OPENING_SENSOR,
+                    NetatmoDevice(
+                        self,
+                        module,
+                        home.entity_id,
+                        signal_home,
                     ),
                 )
 

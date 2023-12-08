@@ -25,6 +25,31 @@ async def test_weather_sensor(hass: HomeAssistant, config_entry, netatmo_auth) -
     assert hass.states.get(f"{prefix}pressure").state == "1014.5"
 
 
+async def test_window_sensor(hass: HomeAssistant, config_entry, netatmo_auth) -> None:
+    """Test weather sensor setup."""
+    with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    prefix = "sensor.window_hall_"
+    assert hass.states.get(f"{prefix}status").state == "no_news"
+    assert hass.states.get(f"{prefix}battery_percent").state == "75"
+
+
+async def test_siren_sensor(hass: HomeAssistant, config_entry, netatmo_auth) -> None:
+    """Test weather sensor setup."""
+    with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    prefix = "sensor.sirene_in_hall_"
+    assert hass.states.get(f"{prefix}status").state == "no_sound"
+    assert hass.states.get(f"{prefix}battery_percent").state == "25"
+    assert hass.states.get(f"{prefix}monitoring").state == "False"
+
+
 async def test_public_weather_sensor(
     hass: HomeAssistant, config_entry, netatmo_auth
 ) -> None:
