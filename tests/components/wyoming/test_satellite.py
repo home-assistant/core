@@ -8,6 +8,7 @@ import wave
 
 from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
+from wyoming.error import Error
 from wyoming.event import Event
 from wyoming.pipeline import PipelineStage, RunPipeline
 from wyoming.satellite import RunSatellite
@@ -96,6 +97,9 @@ class SatelliteAsyncTcpClient(MockAsyncTcpClient):
         self.tts_audio_stop_event = asyncio.Event()
         self.tts_audio_chunk: AudioChunk | None = None
 
+        self.error_event = asyncio.Event()
+        self.error: Error | None = None
+
         self._mic_audio_chunk = AudioChunk(
             rate=16000, width=2, channels=1, audio=b"chunk"
         ).event()
@@ -135,6 +139,9 @@ class SatelliteAsyncTcpClient(MockAsyncTcpClient):
             self.tts_audio_chunk_event.set()
         elif AudioStop.is_type(event.type):
             self.tts_audio_stop_event.set()
+        elif Error.is_type(event.type):
+            self.error = Error.from_event(event)
+            self.error_event.set()
 
     async def read_event(self) -> Event | None:
         """Receive."""
@@ -175,8 +182,9 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
             await mock_client.connect_event.wait()
             await mock_client.run_satellite_event.wait()
 
-        mock_run_pipeline.assert_called()
+        mock_run_pipeline.assert_called_once()
         event_callback = mock_run_pipeline.call_args.kwargs["event_callback"]
+        assert mock_run_pipeline.call_args.kwargs.get("device_id") == device.device_id
 
         # Start detecting wake word
         event_callback(
@@ -458,3 +466,43 @@ async def test_satellite_disconnect_during_pipeline(hass: HomeAssistant) -> None
 
         # Sensor should have been turned off
         assert not device.is_active
+
+
+async def test_satellite_error_during_pipeline(hass: HomeAssistant) -> None:
+    """Test satellite error occurring during pipeline run."""
+    events = [
+        RunPipeline(
+            start_stage=PipelineStage.WAKE, end_stage=PipelineStage.TTS
+        ).event(),
+    ]  # no audio chunks after RunPipeline
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=SATELLITE_INFO,
+    ), patch(
+        "homeassistant.components.wyoming.satellite.AsyncTcpClient",
+        SatelliteAsyncTcpClient(events),
+    ) as mock_client, patch(
+        "homeassistant.components.wyoming.satellite.assist_pipeline.async_pipeline_from_audio_stream",
+    ) as mock_run_pipeline:
+        await setup_config_entry(hass)
+
+        async with asyncio.timeout(1):
+            await mock_client.connect_event.wait()
+            await mock_client.run_satellite_event.wait()
+
+        mock_run_pipeline.assert_called_once()
+        event_callback = mock_run_pipeline.call_args.kwargs["event_callback"]
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                assist_pipeline.PipelineEventType.ERROR,
+                {"code": "test code", "message": "test message"},
+            )
+        )
+
+        async with asyncio.timeout(1):
+            await mock_client.error_event.wait()
+
+        assert mock_client.error is not None
+        assert mock_client.error.text == "test message"
+        assert mock_client.error.code == "test code"
