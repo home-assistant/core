@@ -398,6 +398,9 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                         self._attr_color_temp = None
                     else:
                         self._attr_color_temp = int(values["color_temp"])  # type: ignore[arg-type]
+                    # Allow deprecated color mode to switch back to color_temp
+                    if "color" not in values:
+                        self._attr_hs_color = None
                 except KeyError:
                     pass
                 except ValueError:
