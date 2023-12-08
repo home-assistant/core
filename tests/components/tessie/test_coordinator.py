@@ -5,7 +5,6 @@ from homeassistant.components.tessie.const import DOMAIN, TessieStatus
 from homeassistant.core import HomeAssistant
 
 from .common import (
-    ERROR_AUTH,
     ERROR_CONNECTION,
     ERROR_TIMEOUT,
     ERROR_UNKNOWN,
@@ -37,14 +36,6 @@ async def test_coordinator(hass: HomeAssistant) -> None:
         await coordinator.async_refresh()
         assert coordinator.last_update_success is True
         assert coordinator.data["state"] == TessieStatus.ASLEEP
-        mock_get_state.assert_called_once()
-
-    with patch(
-        "homeassistant.components.tessie.coordinator.get_state",
-        side_effect=ERROR_AUTH,
-    ) as mock_get_state:
-        await coordinator.async_refresh()
-        assert coordinator.last_update_success is False
         mock_get_state.assert_called_once()
 
     with patch(
