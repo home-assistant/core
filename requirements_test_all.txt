@@ -175,6 +175,9 @@ aioairzone==0.6.9
 # homeassistant.components.ambient_station
 aioambient==2023.04.0
 
+# homeassistant.components.apcupsd
+aioapcaccess==0.4.2
+
 # homeassistant.components.aseko_pool_live
 aioaseko==0.0.2
 
@@ -396,9 +399,6 @@ anova-wifi==0.10.0
 
 # homeassistant.components.anthemav
 anthemav==1.4.1
-
-# homeassistant.components.apcupsd
-apcaccess==0.0.13
 
 # homeassistant.components.weatherkit
 apple_weatherkit==1.1.2
