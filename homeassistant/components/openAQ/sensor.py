@@ -63,7 +63,9 @@ async def async_setup_entry(
     sensor_names.append(
         "last_update"
     )  # Special case for last updated as it is not available in get_sensors() but in the sensor data instead
-    sensors_metrics = [OPENAQ_PARAMETERS[j] for j in sensor_names]
+    sensors_metrics = [
+        OPENAQ_PARAMETERS[j] for j in sensor_names if j in OPENAQ_PARAMETERS
+    ]
 
     entities = []
 

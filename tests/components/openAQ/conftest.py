@@ -1,6 +1,6 @@
 """Provide common openAQ fixtures."""
 from collections.abc import Awaitable, Callable
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import patch
 
 from openaq._sync.models.locations import LocationsResponse
 from openaq._sync.models.measurements import MeasurementsResponse
@@ -15,10 +15,8 @@ from tests.common import MockConfigEntry, load_json_value_fixture
 ComponentSetup = Callable[[MockConfigEntry], Awaitable[None]]
 
 
-class TestingOpenAQ:
+class OpenAQMock:
     """Mock of openaq client."""
-
-    __test__ = False
 
     def __init__(self, fixture_locations):
         """Create Mock of openaq client with mocked values."""
@@ -30,7 +28,7 @@ class TestingOpenAQ:
 
     def list(self, locations_id, page, limit, date_from):
         """Override list method in openaq library with mocked data."""
-        fixture_measurements: str = "measurements.json"
+        fixture_measurements: str = "measurements_good.json"
 
         measurements = MeasurementsResponse.load(
             load_json_value_fixture(fixture_measurements, DOMAIN)
@@ -57,50 +55,10 @@ async def mock_setup_integration(
 ) -> Callable[[MockConfigEntry], Awaitable[None]]:
     """Fixture for setting up the component."""
 
-    async def func(mock_config_entry: MockConfigEntry) -> None:
+    async def func(mock_config_entry: MockConfigEntry, location: str) -> None:
         mock_config_entry.add_to_hass(hass)
-        with patch(
-            "openaq.OpenAQ.__new__", return_value=TestingOpenAQ("location_good.json")
-        ):
+        with patch("openaq.OpenAQ.__new__", return_value=OpenAQMock(location)):
             assert await async_setup_component(hass, DOMAIN, {})
             await hass.async_block_till_done()
 
     return func
-
-
-@pytest.fixture
-def mock_aq_client():
-    """Fixture to create a basic mock AQClient."""
-    with patch("homeassistant.components.openAQ.aq_client.AQClient") as mock_client:
-        yield mock_client.return_value
-
-
-@pytest.fixture
-def mock_aq_client_for_config_flow(mock_aq_client):
-    """Fixture to provide mocked AQClient with predefined data for config flow tests."""
-    # Define standard mocked responses
-    mock_aq_client.get_device.side_effect = [
-        # Successful data retrieval
-        AsyncMock(
-            return_value=Mock(
-                sensors=[
-                    {
-                        "type": "pm25",
-                        "value": 15,
-                        "last_updated": "2023-11-30T12:00:00",
-                    },
-                    {
-                        "type": "pm10",
-                        "value": 20,
-                        "last_updated": "2023-11-30T12:00:00",
-                    },
-                ],
-                locality="Visby",
-            )
-        ),
-        # Location not found (empty sensors list)
-        AsyncMock(return_value=Mock(sensors=[], locality="")),
-        # Response for invalid or empty API key: Simulate no sensor data and no locality info
-        AsyncMock(return_value=Mock(sensors=[], locality="")),
-    ]
-    return mock_aq_client
