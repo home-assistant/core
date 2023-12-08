@@ -32,4 +32,4 @@ typing-extensions>=4.8.0,<5.0
 ulid-transform==0.9.0
 voluptuous==0.13.1
 voluptuous-serialize==2.6.0
-yarl==1.9.2
+yarl==1.9.4
