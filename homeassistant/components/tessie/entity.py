@@ -3,8 +3,6 @@
 
 from typing import Any
 
-from aiohttp import ClientSession
-
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -26,7 +24,6 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
         super().__init__(coordinator)
         self.vin: str = coordinator.vin
         self.key: str = key
-        self.session: ClientSession = coordinator.session
 
         car_type = coordinator.data["vehicle_config-car_type"]
 
