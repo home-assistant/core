@@ -50,7 +50,15 @@ def __get_date(date_input: str | None) -> date | datetime:
 
 def __serialize_prices(prices: Electricity | Gas) -> ServiceResponse:
     """Serialize prices."""
-    return {str(timestamp): price for timestamp, price in prices.prices.items()}
+    return {
+        "prices": [
+            {
+                key: str(value) if isinstance(value, datetime) else value
+                for key, value in timestamp_price.items()
+            }
+            for timestamp_price in prices.timestamp_prices
+        ]
+    }
 
 
 async def __get_prices(
