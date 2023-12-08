@@ -1238,9 +1238,7 @@ def test_to_json(hass: HomeAssistant) -> None:
     class MyStr(str):
         pass
 
-    expected_result = (
-        '{"mykey1": 11.0, "mykey2": "myvalue2", "mykey3": ["opt3b", "opt3a"]}'
-    )
+    expected_result = '{"mykey1":11.0,"mykey2":"myvalue2","mykey3":["opt3b","opt3a"]}'
     test_dict = {
         MyStr("mykey2"): "myvalue2",
         MyStr("mykey1"): 11.0,
