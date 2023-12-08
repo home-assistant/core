@@ -485,6 +485,8 @@ async def test_satellite_error_during_pipeline(hass: HomeAssistant) -> None:
     ) as mock_client, patch(
         "homeassistant.components.wyoming.satellite.assist_pipeline.async_pipeline_from_audio_stream",
     ) as mock_run_pipeline:
+        await setup_config_entry(hass)
+
         async with asyncio.timeout(1):
             await mock_client.connect_event.wait()
             await mock_client.run_satellite_event.wait()
