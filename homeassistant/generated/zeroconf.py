@@ -364,6 +364,11 @@ ZEROCONF = {
             "domain": "forked_daapd",
         },
     ],
+    "_devialet-http._tcp.local.": [
+        {
+            "domain": "devialet",
+        },
+    ],
     "_dkapi._tcp.local.": [
         {
             "domain": "daikin",
@@ -708,6 +713,11 @@ ZEROCONF = {
     "_wled._tcp.local.": [
         {
             "domain": "wled",
+        },
+    ],
+    "_wyoming._tcp.local.": [
+        {
+            "domain": "wyoming",
         },
     ],
     "_xbmc-jsonrpc-h._tcp.local.": [

@@ -150,7 +150,7 @@ async def test_restore_state(
 async def test_setup_component(hass: HomeAssistant, setup: str) -> None:
     """Set up a TTS platform with defaults."""
     assert hass.services.has_service(tts.DOMAIN, "clear_cache")
-    assert f"{tts.DOMAIN}.test" in hass.config.components
+    assert f"test.{tts.DOMAIN}" in hass.config.components
 
 
 @pytest.mark.parametrize("init_tts_cache_dir_side_effect", [OSError(2, "No access")])

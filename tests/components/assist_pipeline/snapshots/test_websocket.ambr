@@ -650,6 +650,33 @@
     'message': 'Timeout running pipeline',
   })
 # ---
+# name: test_pipeline_empty_tts_output
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': None,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_pipeline_empty_tts_output.1
+  dict({
+    'engine': 'test',
+    'language': 'en-US',
+    'tts_input': '',
+    'voice': 'james_earl_jones',
+  })
+# ---
+# name: test_pipeline_empty_tts_output.2
+  dict({
+    'tts_output': dict({
+    }),
+  })
+# ---
+# name: test_pipeline_empty_tts_output.3
+  None
+# ---
 # name: test_stt_provider_missing
   dict({
     'language': 'en',

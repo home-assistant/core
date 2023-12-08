@@ -135,6 +135,7 @@ PLATFORMS = [
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.SELECT,
 ]
 
 
@@ -307,10 +308,11 @@ class Router:
         """Log out router session."""
         try:
             self.client.user.logout()
-        except ResponseErrorNotSupportedException:
-            _LOGGER.debug("Logout not supported by device", exc_info=True)
-        except ResponseErrorLoginRequiredException:
-            _LOGGER.debug("Logout not supported when not logged in", exc_info=True)
+        except (
+            ResponseErrorLoginRequiredException,
+            ResponseErrorNotSupportedException,
+        ):
+            pass  # Ok, normal, nothing to do
         except Exception:  # pylint: disable=broad-except
             _LOGGER.warning("Logout error", exc_info=True)
 

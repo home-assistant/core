@@ -1,6 +1,7 @@
 """The OurGroceries coordinator."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -25,6 +26,7 @@ class OurGroceriesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         """Initialize global OurGroceries data updater."""
         self.og = og
         self.lists = lists
+        self._ids = [sl["id"] for sl in lists]
         interval = timedelta(seconds=SCAN_INTERVAL)
         super().__init__(
             hass,
@@ -35,7 +37,11 @@ class OurGroceriesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
     async def _async_update_data(self) -> dict[str, dict]:
         """Fetch data from OurGroceries."""
-        return {
-            sl["id"]: (await self.og.get_list_items(list_id=sl["id"]))
-            for sl in self.lists
-        }
+        return dict(
+            zip(
+                self._ids,
+                await asyncio.gather(
+                    *[self.og.get_list_items(list_id=id) for id in self._ids]
+                ),
+            )
+        )

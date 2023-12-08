@@ -32,7 +32,6 @@ COMMENT_REQUIREMENTS = (
     "pybluez",
     "pycocotools",
     "pycups",
-    "python-eq3bt",
     "python-gammu",
     "python-lirc",
     "pyuserinput",

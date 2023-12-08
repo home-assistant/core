@@ -282,15 +282,6 @@ class TemplateFan(TemplateEntity, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset_mode of the fan."""
-        if self.preset_modes and preset_mode not in self.preset_modes:
-            _LOGGER.error(
-                "Received invalid preset_mode: %s for entity %s. Expected: %s",
-                preset_mode,
-                self.entity_id,
-                self.preset_modes,
-            )
-            return
-
         self._preset_mode = preset_mode
 
         if self._set_preset_mode_script:

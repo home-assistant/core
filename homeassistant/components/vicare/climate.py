@@ -95,25 +95,30 @@ HA_TO_VICARE_PRESET_HEATING = {
 }
 
 
+def _build_entities(
+    api: PyViCareDevice,
+    device_config: PyViCareDeviceConfig,
+) -> list[ViCareClimate]:
+    """Create ViCare climate entities for a device."""
+    return [
+        ViCareClimate(
+            api,
+            circuit,
+            device_config,
+            "heating",
+        )
+        for circuit in get_circuits(api)
+    ]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ViCare climate platform."""
-    entities = []
     api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
     device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
-    circuits = await hass.async_add_executor_job(get_circuits, api)
-
-    for circuit in circuits:
-        entity = ViCareClimate(
-            api,
-            circuit,
-            device_config,
-            "heating",
-        )
-        entities.append(entity)
 
     platform = entity_platform.async_get_current_platform()
 
@@ -123,7 +128,13 @@ async def async_setup_entry(
         "set_vicare_mode",
     )
 
-    async_add_entities(entities)
+    async_add_entities(
+        await hass.async_add_executor_job(
+            _build_entities,
+            api,
+            device_config,
+        )
+    )
 
 
 class ViCareClimate(ViCareEntity, ClimateEntity):
@@ -155,7 +166,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         self._current_program = None
         self._attr_translation_key = translation_key
 
-    async def async_update(self) -> None:
+    def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
         try:
             _room_temperature = None
@@ -206,15 +217,11 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             self._current_action = False
             # Update the specific device attributes
             with suppress(PyViCareNotSupportedFeatureError):
-                burners = await self.hass.async_add_executor_job(get_burners, self._api)
-                for burner in burners:
+                for burner in get_burners(self._api):
                     self._current_action = self._current_action or burner.getActive()
 
             with suppress(PyViCareNotSupportedFeatureError):
-                compressors = await self.hass.async_add_executor_job(
-                    get_compressors, self._api
-                )
-                for compressor in compressors:
+                for compressor in get_compressors(self._api):
                     self._current_action = (
                         self._current_action or compressor.getActive()
                     )

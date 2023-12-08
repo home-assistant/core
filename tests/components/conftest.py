@@ -16,7 +16,7 @@ def patch_zeroconf_multiple_catcher() -> Generator[None, None, None]:
         yield
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def prevent_io() -> Generator[None, None, None]:
     """Fixture to prevent certain I/O from happening."""
     with patch(

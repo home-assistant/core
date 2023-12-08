@@ -430,10 +430,3 @@ def get_release_url(gen: int, model: str, beta: bool) -> str | None:
         return None
 
     return GEN1_RELEASE_URL if gen == 1 else GEN2_RELEASE_URL
-
-
-def is_relay_used_as_actuator(relay_id: int, mac: str, config: dict[str, Any]) -> bool:
-    """Return True if an internal relay is used as the thermostat actuator."""
-    return f"{mac}/c/switch:{relay_id}".lower() in config[f"thermostat:{relay_id}"].get(
-        "actuator", ""
-    )

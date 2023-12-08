@@ -36,7 +36,7 @@ env:
   CACHE_VERSION: 5
   PIP_CACHE_VERSION: 4
   MYPY_CACHE_VERSION: 6
-  HA_SHORT_VERSION: "2023.12"
+  HA_SHORT_VERSION: "2024.1"
   DEFAULT_PYTHON: "3.11"
   ALL_PYTHON_VERSIONS: "['3.11', '3.12']"
   # 10.3 is the oldest supported version
@@ -225,7 +225,7 @@ jobs:
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -269,7 +269,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -292,17 +292,12 @@ jobs:
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
               needs.info.outputs.pre-commit_cache_key }}
-      - name: Run ruff-format (fully)
+      - name: Run ruff-format
         run: |
           . venv/bin/activate
           pre-commit run --hook-stage manual ruff-format --all-files --show-diff-on-failure
-      - name: Run ruff-format (partially)
-        if: needs.info.outputs.test_full_suite == 'false'
-        shell: bash
-        run: |
-          . venv/bin/activate
-          shopt -s globstar
-          pre-commit run --hook-stage manual ruff-format --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*} --show-diff-on-failure
+        env:
+          RUFF_OUTPUT_FORMAT: github
 
   lint-ruff:
     name: Check ruff
@@ -314,7 +309,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -337,22 +332,12 @@ jobs:
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
               needs.info.outputs.pre-commit_cache_key }}
-      - name: Register ruff problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/ruff.json"
-      - name: Run ruff (fully)
-        if: needs.info.outputs.test_full_suite == 'true'
+      - name: Run ruff
         run: |
           . venv/bin/activate
           pre-commit run --hook-stage manual ruff --all-files --show-diff-on-failure
-      - name: Run ruff (partially)
-        if: needs.info.outputs.test_full_suite == 'false'
-        shell: bash
-        run: |
-          . venv/bin/activate
-          shopt -s globstar
-          pre-commit run --hook-stage manual ruff --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*} --show-diff-on-failure
-
+        env:
+          RUFF_OUTPUT_FORMAT: github
   lint-other:
     name: Check other linters
     runs-on: ubuntu-22.04
@@ -363,7 +348,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -458,7 +443,7 @@ jobs:
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -526,7 +511,7 @@ jobs:
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -558,7 +543,7 @@ jobs:
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -591,7 +576,7 @@ jobs:
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -635,7 +620,7 @@ jobs:
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -717,7 +702,7 @@ jobs:
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -762,7 +747,7 @@ jobs:
             cov_params+=(--cov-report=xml)
           fi
 
-          python3 -X dev -m pytest \
+          python3 -b -X dev -m pytest \
             -qq \
             --timeout=9 \
             --durations=10 \
@@ -799,7 +784,7 @@ jobs:
             cov_params+=(--cov-report=term-missing)
           fi
 
-          python3 -X dev -m pytest \
+          python3 -b -X dev -m pytest \
             -qq \
             --timeout=9 \
             -n auto \
@@ -869,7 +854,7 @@ jobs:
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -920,7 +905,7 @@ jobs:
             cov_params+=(--cov-report=term-missing)
           fi
 
-          python3 -X dev -m pytest \
+          python3 -b -X dev -m pytest \
             -qq \
             --timeout=20 \
             -n 1 \
@@ -993,7 +978,7 @@ jobs:
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -1044,7 +1029,7 @@ jobs:
             cov_params+=(--cov-report=term-missing)
           fi
 
-          python3 -X dev -m pytest \
+          python3 -b -X dev -m pytest \
             -qq \
             --timeout=9 \
             -n 1 \
