@@ -4,99 +4,99 @@
     'prices': list([
       dict({
         'price': 0.11153,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.10698,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.10497,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.10172,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.10723,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.11462,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.11894,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.1599,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.164,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.17169,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.13635,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.1296,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.15487,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.16049,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.17596,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.18629,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.20394,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.19757,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.17143,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.15,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.14841,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.14934,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -106,99 +106,99 @@
     'prices': list([
       dict({
         'price': 0.13495,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.12945,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.12701,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.12308,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.12975,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.13869,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.14392,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.19348,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.19844,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.20774,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.16498,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.15682,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.18739,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.19419,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.21291,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.22541,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.24677,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.23906,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.20743,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.1815,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.17958,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.1807,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -208,99 +208,99 @@
     'prices': list([
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 23:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 00:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 01:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 02:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 03:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 04:00:00+00:00',
       }),
     ]),
   })
@@ -310,99 +310,99 @@
     'prices': list([
       dict({
         'price': 0.11153,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.10698,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.10497,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.10172,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.10723,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.11462,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.11894,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.1599,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.164,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.17169,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.13635,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.1296,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.15487,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.16049,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.17596,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.18629,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.20394,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.19757,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.17143,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.15,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.14841,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.14934,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -412,99 +412,99 @@
     'prices': list([
       dict({
         'price': 0.13495,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.12945,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.12701,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.12308,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.12975,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.13869,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.14392,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.19348,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.19844,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.20774,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.16498,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.15682,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.18739,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.19419,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.21291,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.22541,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.24677,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.23906,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.20743,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.1815,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.17958,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.1807,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -514,99 +514,99 @@
     'prices': list([
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 23:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 00:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 01:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 02:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 03:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 04:00:00+00:00',
       }),
     ]),
   })
@@ -616,99 +616,99 @@
     'prices': list([
       dict({
         'price': 0.11153,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.10698,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.10497,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.10172,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.10723,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.11462,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.11894,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.1599,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.164,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.17169,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.13635,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.1296,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.15487,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.16049,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.17596,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.18629,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.20394,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.19757,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.17143,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.15,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.14841,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.14934,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -718,99 +718,99 @@
     'prices': list([
       dict({
         'price': 0.13495,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.12945,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.12701,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.12308,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.12975,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.13869,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.14392,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.19348,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.19844,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.20774,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.16498,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.15682,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.18739,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.19419,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.21291,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.22541,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.24677,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.23906,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.20743,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.1815,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.17958,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.1807,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -820,99 +820,99 @@
     'prices': list([
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 23:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 00:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 01:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 02:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 03:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 04:00:00+00:00',
       }),
     ]),
   })
@@ -949,99 +949,99 @@
     'prices': list([
       dict({
         'price': 0.11153,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.10698,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.10497,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.10172,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.10723,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.11462,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.11894,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.1599,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.164,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.17169,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.13635,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.1296,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.15487,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.16049,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.17596,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.18629,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.20394,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.19757,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.17143,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.15,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.14841,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.14934,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -1051,99 +1051,99 @@
     'prices': list([
       dict({
         'price': 0.13495,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.12945,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.12701,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.12308,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.12975,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.13869,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.14392,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.19348,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.19844,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.20774,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.16498,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.15682,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.18739,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.19419,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.21291,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.22541,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.24677,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.23906,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.20743,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.1815,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.17958,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.1807,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -1153,99 +1153,99 @@
     'prices': list([
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 23:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 00:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 01:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 02:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 03:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 04:00:00+00:00',
       }),
     ]),
   })
@@ -1255,99 +1255,99 @@
     'prices': list([
       dict({
         'price': 0.11153,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.10698,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.10497,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.10172,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.10723,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.11462,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.11894,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.1599,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.164,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.17169,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.13635,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.1296,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.15487,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.16049,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.17596,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.18629,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.20394,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.19757,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.17143,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.15,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.14841,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.14934,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -1357,99 +1357,99 @@
     'prices': list([
       dict({
         'price': 0.13495,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.12945,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.12701,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.12308,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.12975,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.13869,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.14392,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.19348,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.19844,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.20774,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.16498,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.15682,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.18739,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.19419,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.21291,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.22541,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.24677,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.23906,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.20743,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.1815,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.17958,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.1807,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -1459,99 +1459,99 @@
     'prices': list([
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 23:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 00:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 01:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 02:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 03:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 04:00:00+00:00',
       }),
     ]),
   })
@@ -1561,99 +1561,99 @@
     'prices': list([
       dict({
         'price': 0.11153,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.10698,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.10497,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.10172,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.10723,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.11462,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.11894,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.1599,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.164,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.17169,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.13635,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.1296,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.15487,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.16049,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.17596,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.18629,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.20394,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.19757,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.17143,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.15,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.14841,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.14934,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -1663,99 +1663,99 @@
     'prices': list([
       dict({
         'price': 0.13495,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.12945,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.12701,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.12308,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.12975,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.13869,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.14392,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.19348,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.19844,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.20774,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.16498,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.15682,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.18739,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.19419,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.21291,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.22541,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.24677,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.23906,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.20743,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.1815,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.17958,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.1807,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -1765,99 +1765,99 @@
     'prices': list([
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 23:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 00:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 01:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 02:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 03:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 04:00:00+00:00',
       }),
     ]),
   })
@@ -1948,99 +1948,99 @@
     'prices': list([
       dict({
         'price': 0.11153,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.10698,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.10497,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.10172,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.10723,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.11462,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.11894,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.1599,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.164,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.17169,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.13635,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.1296,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.15487,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.16049,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.17596,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.18629,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.20394,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.19757,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.17143,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.15,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.14841,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.14934,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -2050,99 +2050,99 @@
     'prices': list([
       dict({
         'price': 0.13495,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.12945,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.12701,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.12308,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.12975,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.13869,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.14392,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.19348,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.19844,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.20774,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.16498,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.15682,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.18739,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.19419,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.21291,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.22541,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.24677,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.23906,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.20743,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.1815,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.17958,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.1807,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -2152,99 +2152,99 @@
     'prices': list([
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 23:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 00:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 01:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 02:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 03:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 04:00:00+00:00',
       }),
     ]),
   })
@@ -2254,99 +2254,99 @@
     'prices': list([
       dict({
         'price': 0.11153,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.10698,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.10497,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.10172,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.10723,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.11462,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.11894,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.1599,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.164,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.17169,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.13635,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.1296,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.15487,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.16049,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.17596,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.18629,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.20394,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.19757,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.17143,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.15,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.14841,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.14934,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -2356,99 +2356,99 @@
     'prices': list([
       dict({
         'price': 0.13495,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.12945,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.12701,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.12308,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.12975,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.13869,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.14392,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.19348,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.19844,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.20774,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.16498,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.15682,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.18739,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.19419,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.21291,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.22541,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.24677,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.23906,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.20743,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.1815,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.17958,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.1807,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -2458,99 +2458,99 @@
     'prices': list([
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 23:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 00:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 01:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 02:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 03:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 04:00:00+00:00',
       }),
     ]),
   })
@@ -2560,99 +2560,99 @@
     'prices': list([
       dict({
         'price': 0.11153,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.10698,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.10497,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.10172,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.10723,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.11462,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.11894,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.1599,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.164,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.17169,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.13635,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.1296,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.15487,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.16049,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.17596,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.18629,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.20394,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.19757,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.17143,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.15,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.14841,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.14934,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -2662,99 +2662,99 @@
     'prices': list([
       dict({
         'price': 0.13495,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.12945,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.12701,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.12308,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.12975,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.13869,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.14392,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.19348,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.19844,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.20774,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.16498,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.15682,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.18739,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.19419,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.21291,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.22541,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.24677,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.23906,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.20743,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.1815,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.17958,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.1807,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -2764,99 +2764,99 @@
     'prices': list([
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 23:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 00:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 01:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 02:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 03:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 04:00:00+00:00',
       }),
     ]),
   })
@@ -2893,99 +2893,99 @@
     'prices': list([
       dict({
         'price': 0.11153,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.10698,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.10497,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.10172,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.10723,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.11462,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.11894,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.1599,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.164,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.17169,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.13635,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.1296,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.15487,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.16049,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.17596,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.18629,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.20394,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.19757,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.17143,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.15,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.14841,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.14934,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -2995,99 +2995,99 @@
     'prices': list([
       dict({
         'price': 0.13495,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.12945,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.12701,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.12308,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.12975,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.13869,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.14392,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.19348,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.19844,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.20774,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.16498,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.15682,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.18739,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.19419,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.21291,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.22541,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.24677,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.23906,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.20743,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.1815,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.17958,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.1807,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -3097,99 +3097,99 @@
     'prices': list([
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 23:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 00:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 01:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 02:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 03:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 04:00:00+00:00',
       }),
     ]),
   })
@@ -3199,99 +3199,99 @@
     'prices': list([
       dict({
         'price': 0.11153,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.10698,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.10497,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.10172,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.10723,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.11462,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.11894,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.1599,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.164,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.17169,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.13635,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.1296,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.15487,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.16049,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.17596,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.18629,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.20394,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.19757,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.17143,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.15,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.14841,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.14934,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -3301,99 +3301,99 @@
     'prices': list([
       dict({
         'price': 0.13495,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.12945,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.12701,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.12308,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.12975,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.13869,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.14392,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.19348,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.19844,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.20774,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.16498,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.15682,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.18739,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.19419,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.21291,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.22541,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.24677,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.23906,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.20743,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.1815,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.17958,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.1807,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -3403,99 +3403,99 @@
     'prices': list([
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 23:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 00:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 01:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 02:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 03:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 04:00:00+00:00',
       }),
     ]),
   })
@@ -3505,99 +3505,99 @@
     'prices': list([
       dict({
         'price': 0.11153,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.10698,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.10497,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.10172,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.10723,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.11462,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.11894,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.1599,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.164,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.17169,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.13635,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.1296,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.15487,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.16049,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.17596,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.18629,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.20394,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.19757,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.17143,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.15,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.14841,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.14934,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.139,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -3607,99 +3607,99 @@
     'prices': list([
       dict({
         'price': 0.13495,
-        'timestamp': datetime.datetime(2023, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-18 23:00:00+00:00',
       }),
       dict({
         'price': 0.12945,
-        'timestamp': datetime.datetime(2023, 1, 19, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 00:00:00+00:00',
       }),
       dict({
         'price': 0.12701,
-        'timestamp': datetime.datetime(2023, 1, 19, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 01:00:00+00:00',
       }),
       dict({
         'price': 0.12308,
-        'timestamp': datetime.datetime(2023, 1, 19, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 02:00:00+00:00',
       }),
       dict({
         'price': 0.12975,
-        'timestamp': datetime.datetime(2023, 1, 19, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 03:00:00+00:00',
       }),
       dict({
         'price': 0.13869,
-        'timestamp': datetime.datetime(2023, 1, 19, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 04:00:00+00:00',
       }),
       dict({
         'price': 0.14392,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.19348,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.19844,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.20774,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.16498,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.15682,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.18739,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.19419,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.21291,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.22541,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.24677,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.23906,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.20743,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.1815,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.17958,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.1807,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.16819,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
     ]),
   })
@@ -3709,99 +3709,99 @@
     'prices': list([
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 5, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 05:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 6, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 06:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 7, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 07:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 8, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 08:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 9, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 09:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 10, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 10:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 11, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 11:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 12, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 12:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 13, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 13:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 14, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 14:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 15, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 15:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 16, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 16:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 17, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 17:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 18, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 18:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 19, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 19:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 20, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 20:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 21, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 21:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 22, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 22:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 19, 23, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-19 23:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 0, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 00:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 1, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 01:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 2, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 02:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 3, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 03:00:00+00:00',
       }),
       dict({
         'price': 0.7253,
-        'timestamp': datetime.datetime(2023, 1, 20, 4, 0, tzinfo=datetime.timezone.utc),
+        'timestamp': '2023-01-20 04:00:00+00:00',
       }),
     ]),
   })
