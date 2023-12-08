@@ -406,6 +406,9 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                         values["color_temp"],
                         self.entity_id,
                     )
+                # Allow to switch back to color_temp
+                if "color" not in values:
+                    self._attr_hs_color = None
 
             if self.supported_features and LightEntityFeature.EFFECT:
                 with suppress(KeyError):
