@@ -14,6 +14,7 @@ from .const import DOMAIN, EMPTY_MAC
 class MotionMountEntity(Entity):
     """Representation of a MotionMount entity."""
 
+    _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(self, mm: motionmount.MotionMount, config_entry: ConfigEntry) -> None:
