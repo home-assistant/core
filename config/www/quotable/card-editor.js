@@ -7,7 +7,6 @@ class QuotableCardEditor extends HTMLElement {
     this._selectedTags = [];
     this._selectedAuthors = [];
     this._intervalValue = 300;
-    this._selectedAuthorSlug = [];
     this._bgColor = "";
     this._textColor = "";
   }
@@ -53,19 +52,14 @@ class QuotableCardEditor extends HTMLElement {
       };
 
       // Call quotable service to fetch all authors
-      const responseAuthor = await this._hass.callWS(authorMessage);
+      const authorsResult = await this._hass.callWS(authorMessage);
+      this._authors = authorsResult.response.success
+        ? authorsResult.response.data
+        : [];
+
       // Call quotable service to fetch all tags
-      const responseTags = await this._hass.callWS(tagMessage);
-
-      if (responseAuthor && responseAuthor.response) {
-        // Update the authors property with the fetched authors
-        this._authors = Object.values(responseAuthor.response);
-      }
-
-      if (responseTags && responseTags.response) {
-        // Update the _tags property with the fetched tags
-        this._tags = Object.values(responseTags.response);
-      }
+      const tagsResult = await this._hass.callWS(tagMessage);
+      this._tags = tagsResult.response.success ? tagsResult.response.data : [];
     } catch (error) {
       return;
     }
@@ -149,21 +143,28 @@ class QuotableCardEditor extends HTMLElement {
 
     <div>
     <label for="authorSelect">Select Authors:</label>
-    <span id="selectedAuthorLabel"></span>
+    <span id="selectedAuthorsLabel"></span>
     <input type="text" id="authorInput" placeholder="Search here">
     <select id="authorSelect" multiple>
       ${this._authors
-        .map((author) => `<option value="${author}">${author}</option>`)
+        .map(
+          (author) =>
+            `<option data-name="${author.name}" data-slug="${author.slug}" value="${author.slug}">${author.name}</option>`
+        )
         .join("")}
     </select>
   </div>
 
   <div>
     <label for="tagSelect">Select Categories:</label>
-<input type="text" id="selectedTags"  placeholder="Select from list">
+    <span id="selectedTagsLabel"></span>
+    <input type="text" id="tagInput" placeholder="Select from list">
     <select id="tagSelect" multiple>
     ${this._tags
-      .map((tag) => `<option value="${tag}">${tag}</option>`)
+      .map(
+        (tag) =>
+          `<option data-name="${tag.name}" data-slug="${tag.slug}" value="${tag.slug}">${tag.name}</option>`
+      )
       .join("")}
   </select>
   </div>
@@ -179,15 +180,17 @@ class QuotableCardEditor extends HTMLElement {
     // Add references to the input and multiselect elements
     const authorInput = this.shadowRoot.getElementById("authorInput");
     const authorSelect = this.shadowRoot.getElementById("authorSelect");
-    const selectedTags = this.shadowRoot.getElementById("selectedTags");
+    const tagInput = this.shadowRoot.getElementById("tagInput");
     const tagSelect = this.shadowRoot.getElementById("tagSelect");
     const updateIntervalSlider = this.shadowRoot.getElementById("slider");
     const updateIntervalLabel = this.shadowRoot.getElementById(
       "updateIntervalLabel"
     );
-    const selectedAuthorLabel = this.shadowRoot.getElementById(
-      "selectedAuthorLabel"
+    const selectedAuthorsLabel = this.shadowRoot.getElementById(
+      "selectedAuthorsLabel"
     );
+    const selectedTagsLabel =
+      this.shadowRoot.getElementById("selectedTagsLabel");
     const form = this.shadowRoot.getElementById("form");
     const bgColorPicker = this.shadowRoot.getElementById(
       "backgroundColorPicker"
@@ -212,18 +215,23 @@ class QuotableCardEditor extends HTMLElement {
         authorOption.style.color =
           authorOption.style.color === "#fff" ? "#007BFF" : "#fff";
 
-        // Add or remove the selected item from the list
-        const index = this._selectedAuthors.indexOf(authorOption.value);
-        if (index === -1) {
-          this._selectedAuthors.push(authorOption.text);
-          this._selectedAuthorSlug.push(authorOption.value);
+        // Add or remove the selected item from the lists
+        const authorIndex = this._selectedAuthors.findIndex(
+          (author) => author.slug == authorOption.dataset.slug
+        );
+        if (authorIndex >= 0) {
+          this._selectedAuthors.splice(authorIndex, 1);
         } else {
-          this._selectedAuthors.splice(index, 1);
-          this._selectedAuthorSlug.splice(index, 1);
+          this._selectedAuthors.push({
+            name: authorOption.dataset.name,
+            slug: authorOption.dataset.slug,
+          });
         }
 
         // Update the selected author list
-        selectedAuthorLabel.textContent = this._selectedAuthors.join(", ");
+        selectedAuthorsLabel.textContent = this._selectedAuthors
+          .map((author) => author.name)
+          .join(", ");
       }
     });
 
@@ -240,16 +248,23 @@ class QuotableCardEditor extends HTMLElement {
         tagOption.style.color =
           tagOption.style.color === "#fff" ? "#007BFF" : "#fff";
 
-        // Add or remove the selected item from the list
-        const index = this._selectedTags.indexOf(tagOption.value);
-        if (index === -1) {
-          this._selectedTags.push(tagOption.value);
+        // Add or remove the selected item from the lists
+        const tagIndex = this._selectedTags.findIndex(
+          (tag) => tag.slug == tagOption.dataset.slug
+        );
+        if (tagIndex >= 0) {
+          this._selectedTags.splice(tagIndex, 1);
         } else {
-          this._selectedTags.splice(index, 1);
+          this._selectedTags.push({
+            name: tagOption.dataset.name,
+            slug: tagOption.dataset.slug,
+          });
         }
 
         // Update the selected tags input
-        selectedTags.value = this._selectedTags.join(", ");
+        selectedTagsLabel.textContent = this._selectedTags
+          .map((tag) => tag.name)
+          .join(", ");
       }
     });
 
@@ -286,17 +301,15 @@ class QuotableCardEditor extends HTMLElement {
         service_data: searchData,
       };
 
-      const authorResponse = await this._hass.callWS(searchMessage);
+      const searchResult = await this._hass.callWS(searchMessage);
+      this._authors = searchResult.result.success
+        ? searchResult.result.data
+        : [];
 
-      if (authorResponse && authorResponse.response) {
+      if (this._authors.length >= 0) {
         const authorSelect = this.shadowRoot.getElementById("authorSelect");
-
         // Clear existing options
         authorSelect.innerHTML = "";
-        this._authors = Object.keys(authorResponse.response).map((slug) => ({
-          slug: slug,
-          name: authorResponse.response[slug],
-        }));
         // Add new options based on the author array
         this._authors.forEach((author) => {
           const option = document.createElement("option");
@@ -312,12 +325,10 @@ class QuotableCardEditor extends HTMLElement {
 
   async updateConfiguration() {
     try {
-      const lowercaseTags = this._selectedTags.map((tag) => tag.toLowerCase());
-
       const updateConfigData = {
         entity_id: this._config.entity,
-        selected_tags: lowercaseTags,
-        selected_authors: this._selectedAuthorSlug,
+        selected_tags: this._selectedTags.map((tag) => tag.slug),
+        selected_authors: this._selectedAuthors.map((author) => author.slug),
         update_frequency: parseInt(this._intervalValue) * 60,
         styles: {
           bg_color: this._selectedBgColor,
