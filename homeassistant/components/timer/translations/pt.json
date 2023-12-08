@@ -1,9 +1,0 @@
-{
-    "state": {
-        "_": {
-            "active": "ativo",
-            "idle": "Em espera",
-            "paused": "Em pausa"
-        }
-    }
-}

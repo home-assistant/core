@@ -1,24 +1,35 @@
-"""This component provides HA sensor support for Ring Door Bell/Chimes."""
+"""Component providing HA sensor support for Ring Door Bell/Chimes."""
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
-from homeassistant.core import callback
-from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN
+from .const import (
+    DOMAIN,
+    RING_DEVICES,
+    RING_HEALTH_COORDINATOR,
+    RING_HISTORY_COORDINATOR,
+)
 from .entity import RingEntityMixin
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up a sensor for a Ring device."""
-    devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
+    devices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
 
     entities = [
         description.cls(config_entry.entry_id, device, description)
@@ -36,19 +47,16 @@ class RingSensor(RingEntityMixin, SensorEntity):
     """A sensor implementation for Ring device."""
 
     entity_description: RingSensorEntityDescription
-    _attr_should_poll = False  # updates are controlled via the hub
 
     def __init__(
         self,
         config_entry_id,
         device,
         description: RingSensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize a sensor for Ring device."""
         super().__init__(config_entry_id, device)
         self.entity_description = description
-        self._extra = None
-        self._attr_name = f"{device.name} {description.name}"
         self._attr_unique_id = f"{device.id}-{description.key}"
 
     @property
@@ -61,35 +69,26 @@ class RingSensor(RingEntityMixin, SensorEntity):
         if sensor_type == "battery":
             return self._device.battery_life
 
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        if (
-            self.entity_description.key == "battery"
-            and self._device.battery_life is not None
-        ):
-            return icon_for_battery_level(
-                battery_level=self._device.battery_life, charging=False
-            )
-        return self.entity_description.icon
-
 
 class HealthDataRingSensor(RingSensor):
     """Ring sensor that relies on health data."""
 
-    async def async_added_to_hass(self):
+    # These sensors are data hungry and not useful. Disable by default.
+    _attr_entity_registry_enabled_default = False
+
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
 
-        await self.ring_objects["health_data"].async_track_device(
+        await self.ring_objects[RING_HEALTH_COORDINATOR].async_track_device(
             self._device, self._health_update_callback
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect callbacks."""
         await super().async_will_remove_from_hass()
 
-        self.ring_objects["health_data"].async_untrack_device(
+        self.ring_objects[RING_HEALTH_COORDINATOR].async_untrack_device(
             self._device, self._health_update_callback
         )
 
@@ -97,12 +96,6 @@ class HealthDataRingSensor(RingSensor):
     def _health_update_callback(self, _health_data):
         """Call update method."""
         self.async_write_ha_state()
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        # These sensors are data hungry and not useful. Disable by default.
-        return False
 
     @property
     def native_value(self):
@@ -118,21 +111,21 @@ class HealthDataRingSensor(RingSensor):
 class HistoryRingSensor(RingSensor):
     """Ring sensor that relies on history data."""
 
-    _latest_event = None
+    _latest_event: dict[str, Any] | None = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
 
-        await self.ring_objects["history_data"].async_track_device(
+        await self.ring_objects[RING_HISTORY_COORDINATOR].async_track_device(
             self._device, self._history_update_callback
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect callbacks."""
         await super().async_will_remove_from_hass()
 
-        self.ring_objects["history_data"].async_untrack_device(
+        self.ring_objects[RING_HISTORY_COORDINATOR].async_untrack_device(
             self._device, self._history_update_callback
         )
 
@@ -198,15 +191,14 @@ class RingSensorEntityDescription(SensorEntityDescription, RingRequiredKeysMixin
 SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
     RingSensorEntityDescription(
         key="battery",
-        name="Battery",
         category=["doorbots", "authorized_doorbots", "stickup_cams"],
         native_unit_of_measurement=PERCENTAGE,
-        device_class="battery",
+        device_class=SensorDeviceClass.BATTERY,
         cls=RingSensor,
     ),
     RingSensorEntityDescription(
         key="last_activity",
-        name="Last Activity",
+        translation_key="last_activity",
         category=["doorbots", "authorized_doorbots", "stickup_cams"],
         icon="mdi:history",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -214,7 +206,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
     ),
     RingSensorEntityDescription(
         key="last_ding",
-        name="Last Ding",
+        translation_key="last_ding",
         category=["doorbots", "authorized_doorbots"],
         icon="mdi:history",
         kind="ding",
@@ -223,7 +215,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
     ),
     RingSensorEntityDescription(
         key="last_motion",
-        name="Last Motion",
+        translation_key="last_motion",
         category=["doorbots", "authorized_doorbots", "stickup_cams"],
         icon="mdi:history",
         kind="motion",
@@ -232,25 +224,25 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
     ),
     RingSensorEntityDescription(
         key="volume",
-        name="Volume",
+        translation_key="volume",
         category=["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
         icon="mdi:bell-ring",
         cls=RingSensor,
     ),
     RingSensorEntityDescription(
         key="wifi_signal_category",
-        name="WiFi Signal Category",
+        translation_key="wifi_signal_category",
         category=["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
         icon="mdi:wifi",
         cls=HealthDataRingSensor,
     ),
     RingSensorEntityDescription(
         key="wifi_signal_strength",
-        name="WiFi Signal Strength",
+        translation_key="wifi_signal_strength",
         category=["chimes", "doorbots", "authorized_doorbots", "stickup_cams"],
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         icon="mdi:wifi",
-        device_class="signal_strength",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         cls=HealthDataRingSensor,
     ),
 )

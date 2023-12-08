@@ -1,5 +1,4 @@
 """Test the Advantage Air Sensor Platform."""
-
 from datetime import timedelta
 from json import loads
 
@@ -10,11 +9,11 @@ from homeassistant.components.advantage_air.sensor import (
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
-from tests.components.advantage_air import (
+from . import (
     TEST_SET_RESPONSE,
     TEST_SET_URL,
     TEST_SYSTEM_DATA,
@@ -22,8 +21,15 @@ from tests.components.advantage_air import (
     add_mock_config,
 )
 
+from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_sensor_platform(hass, aioclient_mock):
+
+async def test_sensor_platform(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test sensor platform."""
 
     aioclient_mock.get(
@@ -36,17 +42,15 @@ async def test_sensor_platform(hass, aioclient_mock):
     )
     await add_mock_config(hass)
 
-    registry = er.async_get(hass)
-
     assert len(aioclient_mock.mock_calls) == 1
 
     # Test First TimeToOn Sensor
-    entity_id = "sensor.ac_one_time_to_on"
+    entity_id = "sensor.myzone_time_to_on"
     state = hass.states.get(entity_id)
     assert state
     assert int(state.state) == 0
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-timetoOn"
 
@@ -66,12 +70,12 @@ async def test_sensor_platform(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     # Test First TimeToOff Sensor
-    entity_id = "sensor.ac_one_time_to_off"
+    entity_id = "sensor.myzone_time_to_off"
     state = hass.states.get(entity_id)
     assert state
     assert int(state.state) == 10
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-timetoOff"
 
@@ -91,56 +95,56 @@ async def test_sensor_platform(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
 
     # Test First Zone Vent Sensor
-    entity_id = "sensor.zone_open_with_sensor_vent"
+    entity_id = "sensor.myzone_zone_open_with_sensor_vent"
     state = hass.states.get(entity_id)
     assert state
     assert int(state.state) == 100
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z01-vent"
 
     # Test Second Zone Vent Sensor
-    entity_id = "sensor.zone_closed_with_sensor_vent"
+    entity_id = "sensor.myzone_zone_closed_with_sensor_vent"
     state = hass.states.get(entity_id)
     assert state
     assert int(state.state) == 0
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z02-vent"
 
     # Test First Zone Signal Sensor
-    entity_id = "sensor.zone_open_with_sensor_signal"
+    entity_id = "sensor.myzone_zone_open_with_sensor_signal"
     state = hass.states.get(entity_id)
     assert state
     assert int(state.state) == 40
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z01-signal"
 
     # Test Second Zone Signal Sensor
-    entity_id = "sensor.zone_closed_with_sensor_signal"
+    entity_id = "sensor.myzone_zone_closed_with_sensor_signal"
     state = hass.states.get(entity_id)
     assert state
     assert int(state.state) == 10
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z02-signal"
 
     # Test First Zone Temp Sensor (disabled by default)
-    entity_id = "sensor.zone_open_with_sensor_temperature"
+    entity_id = "sensor.myzone_zone_open_with_sensor_temperature"
 
     assert not hass.states.get(entity_id)
 
-    registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
     await hass.async_block_till_done()
 
     async_fire_time_changed(
         hass,
-        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done()
 
@@ -148,6 +152,6 @@ async def test_sensor_platform(hass, aioclient_mock):
     assert state
     assert int(state.state) == 25
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z01-temp"

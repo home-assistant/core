@@ -18,15 +18,18 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_BRAND = "YI Home Camera"
 DEFAULT_PASSWORD = ""
-DEFAULT_PATH = "/tmp/sd/record"  # nosec
+DEFAULT_PATH = "/tmp/sd/record"  # noqa: S108
 DEFAULT_PORT = 21
 DEFAULT_USERNAME = "root"
 DEFAULT_ARGUMENTS = "-pred 1"
@@ -46,7 +49,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up a Yi Camera."""
     async_add_entities([YiCamera(hass, config)], True)
 

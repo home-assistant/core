@@ -1,10 +1,16 @@
 """Support for interacting with Linode nodes."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     ATTR_CREATED,
@@ -28,10 +34,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Linode Node switch."""
-    linode = hass.data.get(DATA_LINODE)
-    nodes = config.get(CONF_NODES)
+    linode = hass.data[DATA_LINODE]
+    nodes = config[CONF_NODES]
 
     dev = []
     for node in nodes:
@@ -46,24 +57,24 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class LinodeSwitch(SwitchEntity):
     """Representation of a Linode Node switch."""
 
-    def __init__(self, li, node_id):  # pylint: disable=invalid-name
+    def __init__(self, li, node_id):
         """Initialize a new Linode sensor."""
         self._linode = li
         self._node_id = node_id
         self.data = None
         self._attr_extra_state_attributes = {}
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Boot-up the Node."""
         if self.data.status != "running":
             self.data.boot()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Shutdown the nodes."""
         if self.data.status == "running":
             self.data.shutdown()
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the device and update the data."""
         self._linode.update()
         if self._linode.data is not None:

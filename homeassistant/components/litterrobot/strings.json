@@ -6,6 +6,13 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reauth_confirm": {
+        "description": "Please update your password for {username}",
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {
@@ -14,7 +21,156 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "issues": {
+    "service_deprecation_turn_off": {
+      "title": "Litter-Robot vaccum support for {old_service} is being removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::litterrobot::issues::service_deprecation_turn_off::title%]",
+            "description": "Litter-Robot vaccum support for the {old_service} service is deprecated and will be removed in Home Assistant 2024.2; Please adjust any automation or script that uses the service to instead call {new_service} and select submit below to mark this issue as resolved."
+          }
+        }
+      }
+    },
+    "service_deprecation_turn_on": {
+      "title": "[%key:component::litterrobot::issues::service_deprecation_turn_off::title%]",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::litterrobot::issues::service_deprecation_turn_off::title%]",
+            "description": "[%key:component::litterrobot::issues::service_deprecation_turn_off::fix_flow::step::confirm::description%]"
+          }
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "sleeping": {
+        "name": "Sleeping"
+      },
+      "sleep_mode": {
+        "name": "Sleep mode"
+      },
+      "power_status": {
+        "name": "Power status"
+      }
+    },
+    "button": {
+      "reset_waste_drawer": {
+        "name": "Reset waste drawer"
+      },
+      "give_snack": {
+        "name": "Give snack"
+      }
+    },
+    "sensor": {
+      "food_level": {
+        "name": "Food level"
+      },
+      "last_seen": {
+        "name": "Last seen"
+      },
+      "litter_level": {
+        "name": "Litter level"
+      },
+      "pet_weight": {
+        "name": "Pet weight"
+      },
+      "sleep_mode_end_time": {
+        "name": "Sleep mode end time"
+      },
+      "sleep_mode_start_time": {
+        "name": "Sleep mode start time"
+      },
+      "status_code": {
+        "name": "Status code",
+        "state": {
+          "br": "Bonnet Removed",
+          "ccc": "Clean Cycle Complete",
+          "ccp": "Clean Cycle In Progress",
+          "cd": "Cat Detected",
+          "csf": "Cat Sensor Fault",
+          "csi": "Cat Sensor Interrupted",
+          "cst": "Cat Sensor Timing",
+          "df1": "Drawer Almost Full - 2 Cycles Left",
+          "df2": "Drawer Almost Full - 1 Cycle Left",
+          "dfs": "Drawer Full",
+          "dhf": "Dump + Home Position Fault",
+          "dpf": "Dump Position Fault",
+          "ec": "Empty Cycle",
+          "hpf": "Home Position Fault",
+          "off": "[%key:common::state::off%]",
+          "offline": "Offline",
+          "otf": "Over Torque Fault",
+          "p": "[%key:common::state::paused%]",
+          "pd": "Pinch Detect",
+          "pwrd": "Powering Down",
+          "pwru": "Powering Up",
+          "rdy": "Ready",
+          "scf": "Cat Sensor Fault At Startup",
+          "sdf": "Drawer Full At Startup",
+          "spf": "Pinch Detect At Startup"
+        }
+      },
+      "waste_drawer": {
+        "name": "Waste drawer"
+      }
+    },
+    "select": {
+      "cycle_delay": {
+        "name": "Clean cycle wait time minutes"
+      },
+      "meal_insert_size": {
+        "name": "Meal insert size"
+      },
+      "brightness_level": {
+        "name": "Panel brightness",
+        "state": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      }
+    },
+    "switch": {
+      "night_light_mode": {
+        "name": "Night light mode"
+      },
+      "panel_lockout": {
+        "name": "Panel lockout"
+      }
+    },
+    "time": {
+      "sleep_mode_start_time": {
+        "name": "[%key:component::litterrobot::entity::sensor::sleep_mode_start_time::name%]"
+      }
+    },
+    "vacuum": {
+      "litter_box": {
+        "name": "Litter box"
+      }
+    }
+  },
+  "services": {
+    "set_sleep_mode": {
+      "name": "Set sleep mode",
+      "description": "Sets the sleep mode and start time.",
+      "fields": {
+        "enabled": {
+          "name": "[%key:common::state::enabled%]",
+          "description": "Whether sleep mode should be enabled."
+        },
+        "start_time": {
+          "name": "Start time",
+          "description": "The start time at which the Litter-Robot will enter sleep mode and prevent an automatic clean cycle for 8 hours."
+        }
+      }
     }
   }
 }

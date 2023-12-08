@@ -8,7 +8,7 @@ from homeassistant import config_entries, setup
 from homeassistant.components.aseko_pool_live.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -17,7 +17,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -41,14 +41,14 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "aseko@example.com"
     assert result2["data"] == {CONF_ACCESS_TOKEN: "any_access_token"}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
-    "error_web, error_mobile, reason",
+    ("error_web", "error_mobile", "reason"),
     [
         (APIUnavailable, None, "cannot_connect"),
         (InvalidAuthCredentials, None, "invalid_auth"),
@@ -82,5 +82,5 @@ async def test_get_account_info_exceptions(
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": reason}

@@ -17,12 +17,14 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SENSORS,
     PERCENTAGE,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify as util_slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -140,21 +142,21 @@ SENSOR_TYPES: dict[str, RepetierSensorEntityDescription] = {
     "bed_temperature": RepetierSensorEntityDescription(
         key="bed_temperature",
         type="temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         name="_bed_",
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     "extruder_temperature": RepetierSensorEntityDescription(
         key="extruder_temperature",
         type="temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         name="_extruder_",
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     "chamber_temperature": RepetierSensorEntityDescription(
         key="chamber_temperature",
         type="temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         name="_chamber_",
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
@@ -215,7 +217,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Repetier Server component."""
     hass.data[REPETIER_API] = {}
 
@@ -313,4 +315,6 @@ class PrinterAPI:
 
         if not sensor_info:
             return
-        load_platform(self._hass, "sensor", DOMAIN, sensor_info, self.config)
+        load_platform(
+            self._hass, "sensor", DOMAIN, {"sensors": sensor_info}, self.config
+        )

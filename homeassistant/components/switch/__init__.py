@@ -3,12 +3,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import StrEnum
 import logging
-from typing import Any, final
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SERVICE_TOGGLE,
@@ -26,20 +25,13 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-DOMAIN = "switch"
+from .const import DOMAIN
+
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-ATTR_TODAY_ENERGY_KWH = "today_energy_kwh"
-ATTR_CURRENT_POWER_W = "current_power_w"
-
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
-PROP_TO_ATTR = {
-    "current_power_w": ATTR_CURRENT_POWER_W,
-    "today_energy_kwh": ATTR_TODAY_ENERGY_KWH,
-}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,6 +51,8 @@ DEVICE_CLASSES = [cls.value for cls in SwitchDeviceClass]
 DEVICE_CLASS_OUTLET = SwitchDeviceClass.OUTLET.value
 DEVICE_CLASS_SWITCH = SwitchDeviceClass.SWITCH.value
 
+# mypy: disallow-any-generics
+
 
 @bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
@@ -71,7 +65,7 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for switches."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[SwitchEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
     await component.async_setup(config)
@@ -85,13 +79,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[SwitchEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[SwitchEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -99,44 +93,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class SwitchEntityDescription(ToggleEntityDescription):
     """A class that describes switch entities."""
 
-    device_class: SwitchDeviceClass | str | None = None
+    device_class: SwitchDeviceClass | None = None
 
 
 class SwitchEntity(ToggleEntity):
     """Base class for switch entities."""
 
     entity_description: SwitchEntityDescription
-    _attr_current_power_w: float | None = None
-    _attr_device_class: SwitchDeviceClass | str | None
-    _attr_today_energy_kwh: float | None = None
+    _attr_device_class: SwitchDeviceClass | None
 
     @property
-    def current_power_w(self) -> float | None:
-        """Return the current power usage in W."""
-        return self._attr_current_power_w
-
-    @property
-    def device_class(self) -> SwitchDeviceClass | str | None:
+    def device_class(self) -> SwitchDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
             return self._attr_device_class
         if hasattr(self, "entity_description"):
             return self.entity_description.device_class
         return None
-
-    @property
-    def today_energy_kwh(self) -> float | None:
-        """Return the today total energy usage in kWh."""
-        return self._attr_today_energy_kwh
-
-    @final
-    @property
-    def state_attributes(self) -> dict[str, Any] | None:
-        """Return the optional state attributes."""
-        data = {}
-
-        for prop, attr in PROP_TO_ATTR.items():
-            if (value := getattr(self, prop)) is not None:
-                data[attr] = value
-
-        return data

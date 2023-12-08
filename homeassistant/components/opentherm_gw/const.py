@@ -1,14 +1,17 @@
 """Constants for the opentherm_gw integration."""
+from __future__ import annotations
+
 import pyotgw.vars as gw_vars
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     PERCENTAGE,
-    PRESSURE_BAR,
-    TEMP_CELSIUS,
-    TIME_HOURS,
-    TIME_MINUTES,
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolume,
 )
 
 ATTR_GW_ID = "gateway_id"
@@ -22,6 +25,8 @@ CONF_PRECISION = "precision"
 CONF_READ_PRECISION = "read_precision"
 CONF_SET_PRECISION = "set_precision"
 CONF_TEMPORARY_OVRD_MODE = "temporary_override_mode"
+
+CONNECTION_TIMEOUT = 10
 
 DATA_GATEWAYS = "gateways"
 DATA_OPENTHERM_GW = "opentherm_gw"
@@ -46,10 +51,7 @@ TRANSLATE_SOURCE = {
     gw_vars.THERMOSTAT: "Thermostat",
 }
 
-UNIT_KW = "kW"
-UNIT_L_MIN = f"L/{TIME_MINUTES}"
-
-BINARY_SENSOR_INFO = {
+BINARY_SENSOR_INFO: dict[str, list] = {
     # [device_class, friendly_name format, [status source, ...]]
     gw_vars.DATA_MASTER_CH_ENABLED: [
         None,
@@ -211,11 +213,11 @@ BINARY_SENSOR_INFO = {
     gw_vars.OTGW_OVRD_HB: [None, "Gateway Override High Byte {}", [gw_vars.OTGW]],
 }
 
-SENSOR_INFO = {
+SENSOR_INFO: dict[str, list] = {
     # [device_class, unit, friendly_name, [status source, ...]]
     gw_vars.DATA_CONTROL_SETPOINT: [
         SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
+        UnitOfTemperature.CELSIUS,
         "Control Setpoint {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
@@ -245,13 +247,13 @@ SENSOR_INFO = {
     ],
     gw_vars.DATA_CONTROL_SETPOINT_2: [
         SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
+        UnitOfTemperature.CELSIUS,
         "Control Setpoint 2 {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_ROOM_SETPOINT_OVRD: [
         SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
+        UnitOfTemperature.CELSIUS,
         "Room Setpoint Override {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
@@ -262,8 +264,8 @@ SENSOR_INFO = {
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_SLAVE_MAX_CAPACITY: [
-        None,
-        UNIT_KW,
+        SensorDeviceClass.POWER,
+        UnitOfPower.KILO_WATT,
         "Boiler Maximum Capacity {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
@@ -275,7 +277,7 @@ SENSOR_INFO = {
     ],
     gw_vars.DATA_ROOM_SETPOINT: [
         SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
+        UnitOfTemperature.CELSIUS,
         "Room Setpoint {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
@@ -286,116 +288,116 @@ SENSOR_INFO = {
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_CH_WATER_PRESS: [
-        None,
-        PRESSURE_BAR,
+        SensorDeviceClass.PRESSURE,
+        UnitOfPressure.BAR,
         "Central Heating Water Pressure {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_DHW_FLOW_RATE: [
         None,
-        UNIT_L_MIN,
+        f"{UnitOfVolume.LITERS}/{UnitOfTime.MINUTES}",
         "Hot Water Flow Rate {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_ROOM_SETPOINT_2: [
         SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
+        UnitOfTemperature.CELSIUS,
         "Room Setpoint 2 {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_ROOM_TEMP: [
         SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
+        UnitOfTemperature.CELSIUS,
         "Room Temperature {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_CH_WATER_TEMP: [
         SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
+        UnitOfTemperature.CELSIUS,
         "Central Heating Water Temperature {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_DHW_TEMP: [
         SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
+        UnitOfTemperature.CELSIUS,
         "Hot Water Temperature {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_OUTSIDE_TEMP: [
         SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
+        UnitOfTemperature.CELSIUS,
         "Outside Temperature {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_RETURN_WATER_TEMP: [
         SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
+        UnitOfTemperature.CELSIUS,
         "Return Water Temperature {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_SOLAR_STORAGE_TEMP: [
         SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
+        UnitOfTemperature.CELSIUS,
         "Solar Storage Temperature {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_SOLAR_COLL_TEMP: [
         SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
+        UnitOfTemperature.CELSIUS,
         "Solar Collector Temperature {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_CH_WATER_TEMP_2: [
         SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
+        UnitOfTemperature.CELSIUS,
         "Central Heating 2 Water Temperature {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_DHW_TEMP_2: [
         SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
+        UnitOfTemperature.CELSIUS,
         "Hot Water 2 Temperature {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_EXHAUST_TEMP: [
         SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
+        UnitOfTemperature.CELSIUS,
         "Exhaust Temperature {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_SLAVE_DHW_MAX_SETP: [
         SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
+        UnitOfTemperature.CELSIUS,
         "Hot Water Maximum Setpoint {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_SLAVE_DHW_MIN_SETP: [
         SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
+        UnitOfTemperature.CELSIUS,
         "Hot Water Minimum Setpoint {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_SLAVE_CH_MAX_SETP: [
         SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
+        UnitOfTemperature.CELSIUS,
         "Boiler Maximum Central Heating Setpoint {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_SLAVE_CH_MIN_SETP: [
         SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
+        UnitOfTemperature.CELSIUS,
         "Boiler Minimum Central Heating Setpoint {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_DHW_SETPOINT: [
         SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
+        UnitOfTemperature.CELSIUS,
         "Hot Water Setpoint {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_MAX_CH_SETPOINT: [
         SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
+        UnitOfTemperature.CELSIUS,
         "Maximum Central Heating Setpoint {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
@@ -430,26 +432,26 @@ SENSOR_INFO = {
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_TOTAL_BURNER_HOURS: [
-        None,
-        TIME_HOURS,
+        SensorDeviceClass.DURATION,
+        UnitOfTime.HOURS,
         "Total Burner Hours {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_CH_PUMP_HOURS: [
-        None,
-        TIME_HOURS,
+        SensorDeviceClass.DURATION,
+        UnitOfTime.HOURS,
         "Central Heating Pump Hours {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_DHW_PUMP_HOURS: [
-        None,
-        TIME_HOURS,
+        SensorDeviceClass.DURATION,
+        UnitOfTime.HOURS,
         "Hot Water Pump Hours {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_DHW_BURNER_HOURS: [
-        None,
-        TIME_HOURS,
+        SensorDeviceClass.DURATION,
+        UnitOfTime.HOURS,
         "Hot Water Burner Hours {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
@@ -509,7 +511,7 @@ SENSOR_INFO = {
     gw_vars.OTGW_GPIO_B: [None, None, "Gateway GPIO B Mode {}", [gw_vars.OTGW]],
     gw_vars.OTGW_SB_TEMP: [
         SensorDeviceClass.TEMPERATURE,
-        TEMP_CELSIUS,
+        UnitOfTemperature.CELSIUS,
         "Gateway Setback Temperature {}",
         [gw_vars.OTGW],
     ],
@@ -532,107 +534,4 @@ SENSOR_INFO = {
         "Gateway Reference Voltage Setting {}",
         [gw_vars.OTGW],
     ],
-}
-
-DEPRECATED_BINARY_SENSOR_SOURCE_LOOKUP = {
-    gw_vars.DATA_MASTER_CH_ENABLED: gw_vars.THERMOSTAT,
-    gw_vars.DATA_MASTER_DHW_ENABLED: gw_vars.THERMOSTAT,
-    gw_vars.DATA_MASTER_OTC_ENABLED: gw_vars.THERMOSTAT,
-    gw_vars.DATA_MASTER_CH2_ENABLED: gw_vars.THERMOSTAT,
-    gw_vars.DATA_SLAVE_FAULT_IND: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_CH_ACTIVE: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_DHW_ACTIVE: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_FLAME_ON: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_COOLING_ACTIVE: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_CH2_ACTIVE: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_DIAG_IND: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_DHW_PRESENT: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_CONTROL_TYPE: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_COOLING_SUPPORTED: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_DHW_CONFIG: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_MASTER_LOW_OFF_PUMP: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_CH2_PRESENT: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_SERVICE_REQ: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_REMOTE_RESET: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_LOW_WATER_PRESS: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_GAS_FAULT: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_AIR_PRESS_FAULT: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_WATER_OVERTEMP: gw_vars.BOILER,
-    gw_vars.DATA_REMOTE_TRANSFER_DHW: gw_vars.BOILER,
-    gw_vars.DATA_REMOTE_TRANSFER_MAX_CH: gw_vars.BOILER,
-    gw_vars.DATA_REMOTE_RW_DHW: gw_vars.BOILER,
-    gw_vars.DATA_REMOTE_RW_MAX_CH: gw_vars.BOILER,
-    gw_vars.DATA_ROVRD_MAN_PRIO: gw_vars.THERMOSTAT,
-    gw_vars.DATA_ROVRD_AUTO_PRIO: gw_vars.THERMOSTAT,
-    gw_vars.OTGW_GPIO_A_STATE: gw_vars.OTGW,
-    gw_vars.OTGW_GPIO_B_STATE: gw_vars.OTGW,
-    gw_vars.OTGW_IGNORE_TRANSITIONS: gw_vars.OTGW,
-    gw_vars.OTGW_OVRD_HB: gw_vars.OTGW,
-}
-
-DEPRECATED_SENSOR_SOURCE_LOOKUP = {
-    gw_vars.DATA_CONTROL_SETPOINT: gw_vars.BOILER,
-    gw_vars.DATA_MASTER_MEMBERID: gw_vars.THERMOSTAT,
-    gw_vars.DATA_SLAVE_MEMBERID: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_OEM_FAULT: gw_vars.BOILER,
-    gw_vars.DATA_COOLING_CONTROL: gw_vars.BOILER,
-    gw_vars.DATA_CONTROL_SETPOINT_2: gw_vars.BOILER,
-    gw_vars.DATA_ROOM_SETPOINT_OVRD: gw_vars.THERMOSTAT,
-    gw_vars.DATA_SLAVE_MAX_RELATIVE_MOD: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_MAX_CAPACITY: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_MIN_MOD_LEVEL: gw_vars.BOILER,
-    gw_vars.DATA_ROOM_SETPOINT: gw_vars.THERMOSTAT,
-    gw_vars.DATA_REL_MOD_LEVEL: gw_vars.BOILER,
-    gw_vars.DATA_CH_WATER_PRESS: gw_vars.BOILER,
-    gw_vars.DATA_DHW_FLOW_RATE: gw_vars.BOILER,
-    gw_vars.DATA_ROOM_SETPOINT_2: gw_vars.THERMOSTAT,
-    gw_vars.DATA_ROOM_TEMP: gw_vars.THERMOSTAT,
-    gw_vars.DATA_CH_WATER_TEMP: gw_vars.BOILER,
-    gw_vars.DATA_DHW_TEMP: gw_vars.BOILER,
-    gw_vars.DATA_OUTSIDE_TEMP: gw_vars.THERMOSTAT,
-    gw_vars.DATA_RETURN_WATER_TEMP: gw_vars.BOILER,
-    gw_vars.DATA_SOLAR_STORAGE_TEMP: gw_vars.BOILER,
-    gw_vars.DATA_SOLAR_COLL_TEMP: gw_vars.BOILER,
-    gw_vars.DATA_CH_WATER_TEMP_2: gw_vars.BOILER,
-    gw_vars.DATA_DHW_TEMP_2: gw_vars.BOILER,
-    gw_vars.DATA_EXHAUST_TEMP: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_DHW_MAX_SETP: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_DHW_MIN_SETP: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_CH_MAX_SETP: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_CH_MIN_SETP: gw_vars.BOILER,
-    gw_vars.DATA_DHW_SETPOINT: gw_vars.BOILER,
-    gw_vars.DATA_MAX_CH_SETPOINT: gw_vars.BOILER,
-    gw_vars.DATA_OEM_DIAG: gw_vars.BOILER,
-    gw_vars.DATA_TOTAL_BURNER_STARTS: gw_vars.BOILER,
-    gw_vars.DATA_CH_PUMP_STARTS: gw_vars.BOILER,
-    gw_vars.DATA_DHW_PUMP_STARTS: gw_vars.BOILER,
-    gw_vars.DATA_DHW_BURNER_STARTS: gw_vars.BOILER,
-    gw_vars.DATA_TOTAL_BURNER_HOURS: gw_vars.BOILER,
-    gw_vars.DATA_CH_PUMP_HOURS: gw_vars.BOILER,
-    gw_vars.DATA_DHW_PUMP_HOURS: gw_vars.BOILER,
-    gw_vars.DATA_DHW_BURNER_HOURS: gw_vars.BOILER,
-    gw_vars.DATA_MASTER_OT_VERSION: gw_vars.THERMOSTAT,
-    gw_vars.DATA_SLAVE_OT_VERSION: gw_vars.BOILER,
-    gw_vars.DATA_MASTER_PRODUCT_TYPE: gw_vars.THERMOSTAT,
-    gw_vars.DATA_MASTER_PRODUCT_VERSION: gw_vars.THERMOSTAT,
-    gw_vars.DATA_SLAVE_PRODUCT_TYPE: gw_vars.BOILER,
-    gw_vars.DATA_SLAVE_PRODUCT_VERSION: gw_vars.BOILER,
-    gw_vars.OTGW_MODE: gw_vars.OTGW,
-    gw_vars.OTGW_DHW_OVRD: gw_vars.OTGW,
-    gw_vars.OTGW_ABOUT: gw_vars.OTGW,
-    gw_vars.OTGW_BUILD: gw_vars.OTGW,
-    gw_vars.OTGW_CLOCKMHZ: gw_vars.OTGW,
-    gw_vars.OTGW_LED_A: gw_vars.OTGW,
-    gw_vars.OTGW_LED_B: gw_vars.OTGW,
-    gw_vars.OTGW_LED_C: gw_vars.OTGW,
-    gw_vars.OTGW_LED_D: gw_vars.OTGW,
-    gw_vars.OTGW_LED_E: gw_vars.OTGW,
-    gw_vars.OTGW_LED_F: gw_vars.OTGW,
-    gw_vars.OTGW_GPIO_A: gw_vars.OTGW,
-    gw_vars.OTGW_GPIO_B: gw_vars.OTGW,
-    gw_vars.OTGW_SB_TEMP: gw_vars.OTGW,
-    gw_vars.OTGW_SETP_OVRD_MODE: gw_vars.OTGW,
-    gw_vars.OTGW_SMART_PWR: gw_vars.OTGW,
-    gw_vars.OTGW_THRM_DETECT: gw_vars.OTGW,
-    gw_vars.OTGW_VREF: gw_vars.OTGW,
 }

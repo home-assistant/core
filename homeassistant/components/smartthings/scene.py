@@ -2,11 +2,18 @@
 from typing import Any
 
 from homeassistant.components.scene import Scene
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_BROKERS, DOMAIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add switches for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities([SmartThingsScene(scene) for scene in broker.scenes.values()])
@@ -18,6 +25,8 @@ class SmartThingsScene(Scene):
     def __init__(self, scene):
         """Init the scene class."""
         self._scene = scene
+        self._attr_name = scene.name
+        self._attr_unique_id = scene.scene_id
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene."""
@@ -31,13 +40,3 @@ class SmartThingsScene(Scene):
             "color": self._scene.color,
             "location_id": self._scene.location_id,
         }
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._scene.name
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._scene.scene_id

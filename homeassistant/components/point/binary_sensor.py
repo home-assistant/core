@@ -1,4 +1,6 @@
 """Support for Minut Point binary sensors."""
+from __future__ import annotations
+
 import logging
 
 from pypoint import EVENTS
@@ -8,8 +10,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MinutPointEntity
 from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW, SIGNAL_WEBHOOK
@@ -35,7 +39,11 @@ DEVICES = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up a Point's binary sensors based on a config entry."""
 
     async def async_discover_sensor(device_id):
@@ -68,16 +76,18 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
         self._device_name = device_name
         self._async_unsub_hook_dispatcher_connect = None
         self._events = EVENTS[device_name]
-        self._is_on = None
+        self._attr_unique_id = f"point.{device_id}-{device_name}"
+        self._attr_icon = DEVICES[self._device_name].get("icon")
+        self._attr_name = f"{self._name} {device_name.capitalize()}"
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity is added to HOme Assistant."""
         await super().async_added_to_hass()
         self._async_unsub_hook_dispatcher_connect = async_dispatcher_connect(
             self.hass, SIGNAL_WEBHOOK, self._webhook_event
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect dispatcher listener when removed."""
         await super().async_will_remove_from_hass()
         if self._async_unsub_hook_dispatcher_connect:
@@ -87,10 +97,11 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
         """Update the value of the sensor."""
         if not self.is_updated:
             return
-        if self._events[0] in self.device.ongoing_events:
-            self._is_on = True
+        if self.device_class == BinarySensorDeviceClass.CONNECTIVITY:
+            # connectivity is the other way around.
+            self._attr_is_on = self._events[0] not in self.device.ongoing_events
         else:
-            self._is_on = None
+            self._attr_is_on = self._events[0] in self.device.ongoing_events
         self.async_write_ha_state()
 
     @callback
@@ -104,30 +115,15 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
             return
         _LOGGER.debug("Received webhook: %s", _type)
         if _type == self._events[0]:
-            self._is_on = True
-        if _type == self._events[1]:
-            self._is_on = None
-        self.async_write_ha_state()
+            _is_on = True
+        elif _type == self._events[1]:
+            _is_on = False
+        else:
+            return
 
-    @property
-    def is_on(self):
-        """Return the state of the binary sensor."""
         if self.device_class == BinarySensorDeviceClass.CONNECTIVITY:
             # connectivity is the other way around.
-            return not self._is_on
-        return self._is_on
-
-    @property
-    def name(self):
-        """Return the display name of this device."""
-        return f"{self._name} {self._device_name.capitalize()}"
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return DEVICES[self._device_name].get("icon")
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the sensor."""
-        return f"point.{self._id}-{self._device_name}"
+            self._attr_is_on = not _is_on
+        else:
+            self._attr_is_on = _is_on
+        self.async_write_ha_state()

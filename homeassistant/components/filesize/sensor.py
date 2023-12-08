@@ -1,89 +1,109 @@
 """Sensor for monitoring the size of a file."""
-import datetime
+from __future__ import annotations
+
+from datetime import datetime
 import logging
-import os
+import pathlib
 
-import voluptuous as vol
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_FILE_PATH, EntityCategory, UnitOfInformation
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import DATA_MEGABYTES
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.reload import setup_reload_service
-
-from . import DOMAIN, PLATFORMS
+from .const import DOMAIN
+from .coordinator import FileSizeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-
-CONF_FILE_PATHS = "file_paths"
 ICON = "mdi:file"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_FILE_PATHS): vol.All(cv.ensure_list, [cv.isfile])}
+SENSOR_TYPES = (
+    SensorEntityDescription(
+        key="file",
+        translation_key="size",
+        icon=ICON,
+        native_unit_of_measurement=UnitOfInformation.MEGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="bytes",
+        translation_key="size_bytes",
+        entity_registry_enabled_default=False,
+        icon=ICON,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="last_updated",
+        translation_key="last_updated",
+        entity_registry_enabled_default=False,
+        icon=ICON,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the file size sensor."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the platform from config entry."""
 
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
+    path = entry.data[CONF_FILE_PATH]
+    get_path = await hass.async_add_executor_job(pathlib.Path, path)
+    fullpath = str(get_path.absolute())
 
-    sensors = []
-    for path in config.get(CONF_FILE_PATHS):
-        if not hass.config.is_allowed_path(path):
-            _LOGGER.error("Filepath %s is not valid or allowed", path)
-            continue
-        sensors.append(Filesize(path))
+    coordinator = FileSizeCoordinator(hass, fullpath)
+    await coordinator.async_config_entry_first_refresh()
 
-    if sensors:
-        add_entities(sensors, True)
+    async_add_entities(
+        FilesizeEntity(description, fullpath, entry.entry_id, coordinator)
+        for description in SENSOR_TYPES
+    )
 
 
-class Filesize(SensorEntity):
-    """Encapsulates file size information."""
+class FilesizeEntity(CoordinatorEntity[FileSizeCoordinator], SensorEntity):
+    """Filesize sensor."""
 
-    def __init__(self, path):
-        """Initialize the data object."""
-        self._path = path  # Need to check its a valid path
-        self._size = None
-        self._last_updated = None
-        self._name = path.split("/")[-1]
-        self._unit_of_measurement = DATA_MEGABYTES
+    _attr_has_entity_name = True
 
-    def update(self):
-        """Update the sensor."""
-        statinfo = os.stat(self._path)
-        self._size = statinfo.st_size
-        last_updated = datetime.datetime.fromtimestamp(statinfo.st_mtime)
-        self._last_updated = last_updated.isoformat()
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
-        """Return the size of the file in MB."""
-        decimals = 2
-        state_mb = round(self._size / 1e6, decimals)
-        return state_mb
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
+    def __init__(
+        self,
+        description: SensorEntityDescription,
+        path: str,
+        entry_id: str,
+        coordinator: FileSizeCoordinator,
+    ) -> None:
+        """Initialize the Filesize sensor."""
+        super().__init__(coordinator)
+        base_name = path.split("/")[-1]
+        self._attr_unique_id = (
+            entry_id if description.key == "file" else f"{entry_id}-{description.key}"
+        )
+        self.entity_description = description
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry_id)},
+            name=base_name,
+        )
 
     @property
-    def extra_state_attributes(self):
-        """Return other details about the sensor state."""
-        return {
-            "path": self._path,
-            "last_updated": self._last_updated,
-            "bytes": self._size,
-        }
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+    def native_value(self) -> float | int | datetime:
+        """Return the value of the sensor."""
+        value: float | int | datetime = self.coordinator.data[
+            self.entity_description.key
+        ]
+        return value

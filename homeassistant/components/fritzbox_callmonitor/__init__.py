@@ -4,7 +4,9 @@ import logging
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .base import FritzBoxPhonebook
@@ -20,7 +22,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the fritzbox_callmonitor platforms."""
     fritzbox_phonebook = FritzBoxPhonebook(
         host=config_entry.data[CONF_HOST],
@@ -34,7 +36,10 @@ async def async_setup_entry(hass, config_entry):
         await hass.async_add_executor_job(fritzbox_phonebook.init_phonebook)
     except FritzSecurityError as ex:
         _LOGGER.error(
-            "User has insufficient permissions to access AVM FRITZ!Box settings and its phonebooks: %s",
+            (
+                "User has insufficient permissions to access AVM FRITZ!Box settings and"
+                " its phonebooks: %s"
+            ),
             ex,
         )
         return False
@@ -53,12 +58,12 @@ async def async_setup_entry(hass, config_entry):
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unloading the fritzbox_callmonitor platforms."""
 
     unload_ok = await hass.config_entries.async_unload_platforms(
@@ -73,6 +78,6 @@ async def async_unload_entry(hass, config_entry):
     return unload_ok
 
 
-async def update_listener(hass, config_entry):
+async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Update listener to reload after option has changed."""
     await hass.config_entries.async_reload(config_entry.entry_id)

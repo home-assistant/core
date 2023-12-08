@@ -1,22 +1,34 @@
 """Helpers for data entry flows for config entries."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 import logging
-from typing import Any, Awaitable, Callable, Union
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, mqtt, ssdp, zeroconf
+from homeassistant.components import onboarding
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
-from .typing import UNDEFINED, DiscoveryInfoType, UndefinedType
+from .typing import DiscoveryInfoType
 
-DiscoveryFunctionType = Callable[[HomeAssistant], Union[Awaitable[bool], bool]]
+if TYPE_CHECKING:
+    import asyncio
+
+    from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
+    from homeassistant.components.dhcp import DhcpServiceInfo
+    from homeassistant.components.ssdp import SsdpServiceInfo
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
+
+    from .service_info.mqtt import MqttServiceInfo
+
+_R = TypeVar("_R", bound="Awaitable[bool] | bool")
+DiscoveryFunctionType = Callable[[HomeAssistant], _R]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class DiscoveryFlowHandler(config_entries.ConfigFlow):
+class DiscoveryFlowHandler(config_entries.ConfigFlow, Generic[_R]):
     """Handle a discovery config flow."""
 
     VERSION = 1
@@ -25,7 +37,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         self,
         domain: str,
         title: str,
-        discovery_function: DiscoveryFunctionType,
+        discovery_function: DiscoveryFunctionType[_R],
     ) -> None:
         """Initialize the discovery config flow."""
         self._domain = domain
@@ -47,7 +59,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm setup."""
-        if user_input is None:
+        if user_input is None and onboarding.async_is_onboarded(self.hass):
             self._set_confirm_only()
             return self.async_show_form(step_id="confirm")
 
@@ -55,9 +67,10 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
             # Get current discovered entries.
             in_progress = self._async_in_progress()
 
-            if not (has_devices := in_progress):
-                has_devices = await self.hass.async_add_job(  # type: ignore
-                    self._discovery_function, self.hass
+            if not (has_devices := bool(in_progress)):
+                has_devices = await cast(
+                    "asyncio.Future[bool]",
+                    self.hass.async_add_job(self._discovery_function, self.hass),
                 )
 
             if not has_devices:
@@ -83,7 +96,18 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 
         return await self.async_step_confirm()
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfoBleak
+    ) -> FlowResult:
+        """Handle a flow initialized by bluetooth discovery."""
+        if self._async_in_progress() or self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        await self.async_set_unique_id(self._domain)
+
+        return await self.async_step_confirm()
+
+    async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
         """Handle a flow initialized by dhcp discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -93,7 +117,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         return await self.async_step_confirm()
 
     async def async_step_homekit(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle a flow initialized by Homekit discovery."""
         if self._async_in_progress() or self._async_current_entries():
@@ -103,7 +127,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 
         return await self.async_step_confirm()
 
-    async def async_step_mqtt(self, discovery_info: mqtt.MqttServiceInfo) -> FlowResult:
+    async def async_step_mqtt(self, discovery_info: MqttServiceInfo) -> FlowResult:
         """Handle a flow initialized by mqtt discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -113,7 +137,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         return await self.async_step_confirm()
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle a flow initialized by Zeroconf discovery."""
         if self._async_in_progress() or self._async_current_entries():
@@ -123,7 +147,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 
         return await self.async_step_confirm()
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(self, discovery_info: SsdpServiceInfo) -> FlowResult:
         """Handle a flow initialized by Ssdp discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -148,26 +172,11 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
 def register_discovery_flow(
     domain: str,
     title: str,
-    discovery_function: DiscoveryFunctionType,
-    connection_class: str | UndefinedType = UNDEFINED,
+    discovery_function: DiscoveryFunctionType[Awaitable[bool] | bool],
 ) -> None:
     """Register flow for discovered integrations that not require auth."""
-    if connection_class is not UNDEFINED:
-        _LOGGER.warning(
-            (
-                "The %s (%s) integration is setting a connection_class"
-                " when calling the 'register_discovery_flow()' method in its"
-                " config flow. The connection class has been deprecated and will"
-                " be removed in a future release of Home Assistant."
-                " If '%s' is a custom integration, please contact the author"
-                " of that integration about this warning.",
-            ),
-            title,
-            domain,
-            domain,
-        )
 
-    class DiscoveryFlow(DiscoveryFlowHandler):
+    class DiscoveryFlow(DiscoveryFlowHandler[Awaitable[bool] | bool]):
         """Discovery flow handler."""
 
         def __init__(self) -> None:
@@ -210,6 +219,9 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
             "cloud" in self.hass.config.components
             and self.hass.components.cloud.async_active_subscription()
         ):
+            if not self.hass.components.cloud.async_is_connected():
+                return self.async_abort(reason="cloud_not_connected")
+
             webhook_url = await self.hass.components.cloud.async_create_cloudhook(
                 webhook_id
             )

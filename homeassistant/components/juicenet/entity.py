@@ -1,7 +1,12 @@
 """Adapter to wrap the pyjuicenet api for home assistant."""
 
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from pyjuicenet import Charger
+
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN
 
@@ -9,23 +14,21 @@ from .const import DOMAIN
 class JuiceNetDevice(CoordinatorEntity):
     """Represent a base JuiceNet device."""
 
-    def __init__(self, device, sensor_type, coordinator):
+    _attr_has_entity_name = True
+
+    def __init__(
+        self, device: Charger, key: str, coordinator: DataUpdateCoordinator
+    ) -> None:
         """Initialise the sensor."""
         super().__init__(coordinator)
         self.device = device
-        self.type = sensor_type
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return f"{self.device.id}-{self.type}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this JuiceNet Device."""
-        return DeviceInfo(
-            configuration_url=f"https://home.juice.net/Portal/Details?unitID={self.device.id}",
-            identifiers={(DOMAIN, self.device.id)},
+        self.key = key
+        self._attr_unique_id = f"{device.id}-{key}"
+        self._attr_device_info = DeviceInfo(
+            configuration_url=(
+                f"https://home.juice.net/Portal/Details?unitID={device.id}"
+            ),
+            identifiers={(DOMAIN, device.id)},
             manufacturer="JuiceNet",
-            name=self.device.name,
+            name=device.name,
         )

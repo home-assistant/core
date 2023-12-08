@@ -16,12 +16,12 @@ def toon_exception_handler(func):
     async def handler(self, *args, **kwargs):
         try:
             await func(self, *args, **kwargs)
-            self.coordinator.update_listeners()
+            self.coordinator.async_update_listeners()
 
         except ToonConnectionError as error:
             _LOGGER.error("Error communicating with API: %s", error)
             self.coordinator.last_update_success = False
-            self.coordinator.update_listeners()
+            self.coordinator.async_update_listeners()
 
         except ToonError as error:
             _LOGGER.error("Invalid response from API: %s", error)

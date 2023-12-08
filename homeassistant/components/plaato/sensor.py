@@ -5,13 +5,16 @@ from pyplaato.models.device import PlaatoDevice
 from pyplaato.plaato import PlaatoKeg
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import ATTR_TEMP, SENSOR_UPDATE
-from ...core import callback
 from .const import (
     CONF_USE_WEBHOOK,
     COORDINATOR,
@@ -24,11 +27,18 @@ from .const import (
 from .entity import PlaatoEntity
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Plaato sensor."""
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Plaato from a config entry."""
     entry_data = hass.data[DOMAIN][entry.entry_id]
 
@@ -62,17 +72,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class PlaatoSensor(PlaatoEntity, SensorEntity):
     """Representation of a Plaato Sensor."""
 
-    @property
-    def device_class(self) -> SensorDeviceClass | None:
-        """Return the class of this device, from SensorDeviceClass."""
-        if (
-            self._coordinator is not None
-            and self._sensor_type == PlaatoKeg.Pins.TEMPERATURE
-        ):
-            return SensorDeviceClass.TEMPERATURE
-        if self._sensor_type == ATTR_TEMP:
-            return SensorDeviceClass.TEMPERATURE
-        return None
+    def __init__(self, data, sensor_type, coordinator=None) -> None:
+        """Initialize plaato sensor."""
+        super().__init__(data, sensor_type, coordinator)
+        if sensor_type is PlaatoKeg.Pins.TEMPERATURE or sensor_type == ATTR_TEMP:
+            self._attr_device_class = SensorDeviceClass.TEMPERATURE
 
     @property
     def native_value(self):

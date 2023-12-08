@@ -1,4 +1,6 @@
 """Microsoft Teams platform for notify component."""
+from __future__ import annotations
+
 import logging
 
 import pymsteams
@@ -12,7 +14,9 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import CONF_URL
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +25,11 @@ ATTR_FILE_URL = "image_url"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_URL): cv.url})
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> MSTeamsNotificationService | None:
     """Get the Microsoft Teams notification service."""
     webhook_url = config.get(CONF_URL)
 

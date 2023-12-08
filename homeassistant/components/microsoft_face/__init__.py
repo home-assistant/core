@@ -1,19 +1,23 @@
 """Support for Microsoft face recognition."""
+from __future__ import annotations
+
 import asyncio
 import json
 import logging
 
 import aiohttp
 from aiohttp.hdrs import CONTENT_TYPE
-import async_timeout
 import voluptuous as vol
 
+from homeassistant.components import camera
 from homeassistant.const import ATTR_NAME, CONF_API_KEY, CONF_TIMEOUT, CONTENT_TYPE_JSON
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,14 +71,18 @@ SCHEMA_FACE_SERVICE = vol.Schema(
 SCHEMA_TRAIN_SERVICE = vol.Schema({vol.Required(ATTR_GROUP): cv.slugify})
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Microsoft Face."""
-    entities = {}
+    component = EntityComponent[MicrosoftFaceGroupEntity](
+        logging.getLogger(__name__), DOMAIN, hass
+    )
+    entities: dict[str, MicrosoftFaceGroupEntity] = {}
     face = MicrosoftFace(
         hass,
         config[DOMAIN].get(CONF_AZURE_REGION),
         config[DOMAIN].get(CONF_API_KEY),
         config[DOMAIN].get(CONF_TIMEOUT),
+        component,
         entities,
     )
 
@@ -95,9 +103,12 @@ async def async_setup(hass, config):
         try:
             await face.call_api("put", f"persongroups/{g_id}", {"name": name})
             face.store[g_id] = {}
+            old_entity = entities.pop(g_id, None)
+            if old_entity:
+                await component.async_remove_entity(old_entity.entity_id)
 
             entities[g_id] = MicrosoftFaceGroupEntity(hass, face, g_id, name)
-            entities[g_id].async_write_ha_state()
+            await component.async_add_entities([entities[g_id]])
         except HomeAssistantError as err:
             _LOGGER.error("Can't create group '%s' with error: %s", g_id, err)
 
@@ -114,7 +125,7 @@ async def async_setup(hass, config):
             face.store.pop(g_id)
 
             entity = entities.pop(g_id)
-            hass.states.async_remove(entity.entity_id, service.context)
+            await component.async_remove_entity(entity.entity_id)
         except HomeAssistantError as err:
             _LOGGER.error("Can't delete group '%s' with error: %s", g_id, err)
 
@@ -178,7 +189,6 @@ async def async_setup(hass, config):
         p_id = face.store[g_id].get(service.data[ATTR_PERSON])
 
         camera_entity = service.data[ATTR_CAMERA_ENTITY]
-        camera = hass.components.camera
 
         try:
             image = await camera.async_get_image(hass, camera_entity)
@@ -204,6 +214,8 @@ async def async_setup(hass, config):
 class MicrosoftFaceGroupEntity(Entity):
     """Person-Group state/data Entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, hass, api, g_id, name):
         """Initialize person/group entity."""
         self.hass = hass
@@ -227,11 +239,6 @@ class MicrosoftFaceGroupEntity(Entity):
         return len(self._api.store[self._id])
 
     @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return False
-
-    @property
     def extra_state_attributes(self):
         """Return device specific state attributes."""
         attr = {}
@@ -244,7 +251,7 @@ class MicrosoftFaceGroupEntity(Entity):
 class MicrosoftFace:
     """Microsoft Face api for Home Assistant."""
 
-    def __init__(self, hass, server_loc, api_key, timeout, entities):
+    def __init__(self, hass, server_loc, api_key, timeout, component, entities):
         """Initialize Microsoft Face api."""
         self.hass = hass
         self.websession = async_get_clientsession(hass)
@@ -252,6 +259,7 @@ class MicrosoftFace:
         self._api_key = api_key
         self._server_url = f"https://{server_loc}.{FACE_API_URL}"
         self._store = {}
+        self._component: EntityComponent[MicrosoftFaceGroupEntity] = component
         self._entities = entities
 
     @property
@@ -263,25 +271,30 @@ class MicrosoftFace:
         """Load all group/person data into local store."""
         groups = await self.call_api("get", "persongroups")
 
-        tasks = []
+        remove_tasks = []
+        new_entities = []
         for group in groups:
             g_id = group["personGroupId"]
             self._store[g_id] = {}
+            old_entity = self._entities.pop(g_id, None)
+            if old_entity:
+                remove_tasks.append(
+                    self._component.async_remove_entity(old_entity.entity_id)
+                )
+
             self._entities[g_id] = MicrosoftFaceGroupEntity(
                 self.hass, self, g_id, group["name"]
             )
+            new_entities.append(self._entities[g_id])
 
             persons = await self.call_api("get", f"persongroups/{g_id}/persons")
 
             for person in persons:
                 self._store[g_id][person["name"]] = person["personId"]
 
-            tasks.append(
-                asyncio.create_task(self._entities[g_id].async_update_ha_state())
-            )
-
-        if tasks:
-            await asyncio.wait(tasks)
+        if remove_tasks:
+            await asyncio.gather(remove_tasks)
+        await self._component.async_add_entities(new_entities)
 
     async def call_api(self, method, function, data=None, binary=False, params=None):
         """Make an api call."""
@@ -300,7 +313,7 @@ class MicrosoftFace:
                 payload = None
 
         try:
-            async with async_timeout.timeout(self.timeout):
+            async with asyncio.timeout(self.timeout):
                 response = await getattr(self.websession, method)(
                     url, data=payload, headers=headers, params=params
                 )

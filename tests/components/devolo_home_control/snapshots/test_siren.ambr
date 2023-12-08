@@ -1,0 +1,154 @@
+# serializer version: 1
+# name: test_siren
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'available_tones': list([
+        0,
+      ]),
+      'friendly_name': 'Test',
+      'supported_features': <SirenEntityFeature: 7>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'siren.test',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_siren.1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'available_tones': list([
+        0,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'siren',
+    'entity_category': None,
+    'entity_id': 'siren.test',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'devolo_home_control',
+    'previous_unique_id': None,
+    'supported_features': <SirenEntityFeature: 7>,
+    'translation_key': None,
+    'unique_id': 'devolo.SirenMultiLevelSwitch:Test',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_siren_change_default_tone
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'available_tones': list([
+        0,
+      ]),
+      'friendly_name': 'Test',
+      'supported_features': <SirenEntityFeature: 7>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'siren.test',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_siren_change_default_tone.1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'available_tones': list([
+        0,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'siren',
+    'entity_category': None,
+    'entity_id': 'siren.test',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'devolo_home_control',
+    'previous_unique_id': None,
+    'supported_features': <SirenEntityFeature: 7>,
+    'translation_key': None,
+    'unique_id': 'devolo.SirenMultiLevelSwitch:Test',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_siren_switching
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'available_tones': list([
+        0,
+      ]),
+      'friendly_name': 'Test',
+      'supported_features': <SirenEntityFeature: 7>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'siren.test',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_siren_switching.1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'available_tones': list([
+        0,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'siren',
+    'entity_category': None,
+    'entity_id': 'siren.test',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'devolo_home_control',
+    'previous_unique_id': None,
+    'supported_features': <SirenEntityFeature: 7>,
+    'translation_key': None,
+    'unique_id': 'devolo.SirenMultiLevelSwitch:Test',
+    'unit_of_measurement': None,
+  })
+# ---

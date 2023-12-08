@@ -1,0 +1,14 @@
+{
+  "services": {
+    "set_run_state": {
+      "name": "Set run state",
+      "description": "Sets the ZoneMinder run state.",
+      "fields": {
+        "name": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "The string name of the ZoneMinder run state to set as active."
+        }
+      }
+    }
+  }
+}

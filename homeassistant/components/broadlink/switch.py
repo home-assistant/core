@@ -1,6 +1,9 @@
 """Support for Broadlink switches."""
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 import logging
+from typing import Any
 
 from broadlink.exceptions import BroadlinkException
 import voluptuous as vol
@@ -10,6 +13,7 @@ from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
@@ -22,9 +26,14 @@ from homeassistant.const import (
     STATE_ON,
     Platform,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import BroadlinkDevice
 from .const import DOMAIN
 from .entity import BroadlinkEntity
 from .helpers import data_packet, import_device, mac_address
@@ -59,7 +68,12 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Import the device and set up custom switches.
 
     This is for backward compatibility.
@@ -67,11 +81,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """
     mac_addr = config[CONF_MAC]
     host = config.get(CONF_HOST)
-    switches = config.get(CONF_SWITCHES)
 
-    if switches:
-        platform_data = hass.data[DOMAIN].platforms.setdefault(Platform.SWITCH, {})
-        platform_data.setdefault(mac_addr, []).extend(switches)
+    if switches := config.get(CONF_SWITCHES):
+        platform_data = hass.data[DOMAIN].platforms.get(Platform.SWITCH, {})
+        async_add_entities_config_entry: AddEntitiesCallback
+        device: BroadlinkDevice
+        async_add_entities_config_entry, device = platform_data.get(
+            mac_addr, (None, None)
+        )
+        if not async_add_entities_config_entry:
+            raise PlatformNotReady
+
+        async_add_entities_config_entry(
+            BroadlinkRMSwitch(device, config) for config in switches
+        )
 
     else:
         _LOGGER.warning(
@@ -84,18 +107,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         import_device(hass, host)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Broadlink switch."""
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
-    switches = []
+    switches: list[BroadlinkSwitch] = []
 
     if device.api.type in {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"}:
-        platform_data = hass.data[DOMAIN].platforms.get(Platform.SWITCH, {})
-        user_defined_switches = platform_data.get(device.api.mac, {})
-        switches.extend(
-            BroadlinkRMSwitch(device, config) for config in user_defined_switches
-        )
-
+        platform_data = hass.data[DOMAIN].platforms.setdefault(Platform.SWITCH, {})
+        platform_data[device.api.mac] = async_add_entities, device
     elif device.api.type == "SP1":
         switches.append(BroadlinkSP1Switch(device))
 
@@ -122,21 +145,20 @@ class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
         super().__init__(device)
         self._command_on = command_on
         self._command_off = command_off
-        self._attr_name = f"{device.name} Switch"
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when the switch is added to hass."""
         state = await self.async_get_last_state()
         self._attr_is_on = state is not None and state.state == STATE_ON
         await super().async_added_to_hass()
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         if await self._async_send_packet(self._command_on):
             self._attr_is_on = True
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         if await self._async_send_packet(self._command_off):
             self._attr_is_on = False
@@ -175,6 +197,8 @@ class BroadlinkRMSwitch(BroadlinkSwitch):
 class BroadlinkSP1Switch(BroadlinkSwitch):
     """Representation of a Broadlink SP1 switch."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, device):
         """Initialize the switch."""
         super().__init__(device, 1, 0)
@@ -196,6 +220,8 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
     """Representation of a Broadlink SP2 switch."""
 
     _attr_assumed_state = False
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, device, *args, **kwargs):
         """Initialize the switch."""
@@ -211,13 +237,14 @@ class BroadlinkMP1Slot(BroadlinkSwitch):
     """Representation of a Broadlink MP1 slot."""
 
     _attr_assumed_state = False
+    _attr_has_entity_name = True
 
     def __init__(self, device, slot):
         """Initialize the switch."""
         super().__init__(device, 1, 0)
         self._slot = slot
         self._attr_is_on = self._coordinator.data[f"s{slot}"]
-        self._attr_name = f"{device.name} S{slot}"
+        self._attr_name = f"S{slot}"
         self._attr_unique_id = f"{device.unique_id}-s{slot}"
 
     def _update_state(self, data):
@@ -240,6 +267,7 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
     """Representation of a Broadlink BG1 slot."""
 
     _attr_assumed_state = False
+    _attr_has_entity_name = True
 
     def __init__(self, device, slot):
         """Initialize the switch."""
@@ -247,7 +275,7 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
         self._slot = slot
         self._attr_is_on = self._coordinator.data[f"pwr{slot}"]
 
-        self._attr_name = f"{device.name} S{slot}"
+        self._attr_name = f"S{slot}"
         self._attr_device_class = SwitchDeviceClass.OUTLET
         self._attr_unique_id = f"{device.unique_id}-s{slot}"
 

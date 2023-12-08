@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-import logging
 
 from requests.exceptions import ConnectTimeout, HTTPError
 from rova.rova import Rova
@@ -15,14 +14,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
-from homeassistant.util.dt import get_time_zone, now
+from homeassistant.util.dt import get_time_zone
 
-# Config for rova requests.
-CONF_ZIP_CODE = "zip_code"
-CONF_HOUSE_NUMBER = "house_number"
-CONF_HOUSE_NUMBER_SUFFIX = "house_number_suffix"
+from .const import CONF_HOUSE_NUMBER, CONF_HOUSE_NUMBER_SUFFIX, CONF_ZIP_CODE, LOGGER
 
 UPDATE_DELAY = timedelta(hours=12)
 SCAN_INTERVAL = timedelta(hours=12)
@@ -63,10 +62,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-_LOGGER = logging.getLogger(__name__)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Create the Rova data service and sensors."""
 
     zip_code = config[CONF_ZIP_CODE]
@@ -79,10 +81,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         if not api.is_rova_area():
-            _LOGGER.error("ROVA does not collect garbage in this area")
+            LOGGER.error("ROVA does not collect garbage in this area")
             return
     except (ConnectTimeout, HTTPError):
-        _LOGGER.error("Could not retrieve details from ROVA API")
+        LOGGER.error("Could not retrieve details from ROVA API")
         return
 
     # Create rova data service which will retrieve and update the data.
@@ -101,7 +103,7 @@ class RovaSensor(SensorEntity):
 
     def __init__(
         self, platform_name, description: SensorEntityDescription, data_service
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self.data_service = data_service
@@ -109,7 +111,7 @@ class RovaSensor(SensorEntity):
         self._attr_name = f"{platform_name}_{description.name}"
         self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the sensor and update the state."""
         self.data_service.update()
         pickup_date = self.data_service.data.get(self.entity_description.key)
@@ -132,7 +134,7 @@ class RovaData:
         try:
             items = self.api.get_calendar_items()
         except (ConnectTimeout, HTTPError):
-            _LOGGER.error("Could not retrieve data, retry again later")
+            LOGGER.error("Could not retrieve data, retry again later")
             return
 
         self.data = {}
@@ -142,8 +144,7 @@ class RovaData:
                 tzinfo=get_time_zone("Europe/Amsterdam")
             )
             code = item["GarbageTypeCode"].lower()
-
-            if code not in self.data and date > now():
+            if code not in self.data:
                 self.data[code] = date
 
-        _LOGGER.debug("Updated Rova calendar: %s", self.data)
+        LOGGER.debug("Updated Rova calendar: %s", self.data)

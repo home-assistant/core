@@ -1,4 +1,6 @@
 """Component for facial detection and identification via facebox."""
+from __future__ import annotations
+
 import base64
 from http import HTTPStatus
 import logging
@@ -8,9 +10,6 @@ import voluptuous as vol
 
 from homeassistant.components.image_processing import (
     ATTR_CONFIDENCE,
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingFaceEntity,
 )
@@ -18,13 +17,18 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ID,
     ATTR_NAME,
+    CONF_ENTITY_ID,
     CONF_IP_ADDRESS,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_SOURCE,
     CONF_USERNAME,
 )
-from homeassistant.core import ServiceCall, split_entity_id
+from homeassistant.core import HomeAssistant, ServiceCall, split_entity_id
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN, SERVICE_TEACH_FACE
 
@@ -64,7 +68,7 @@ def check_box_health(url, username, password):
     if username:
         kwargs["auth"] = requests.auth.HTTPBasicAuth(username, password)
     try:
-        response = requests.get(url, **kwargs)
+        response = requests.get(url, **kwargs, timeout=10)
         if response.status_code == HTTPStatus.UNAUTHORIZED:
             _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
             return None
@@ -112,7 +116,9 @@ def post_image(url, image, username, password):
     if username:
         kwargs["auth"] = requests.auth.HTTPBasicAuth(username, password)
     try:
-        response = requests.post(url, json={"base64": encode_image(image)}, **kwargs)
+        response = requests.post(
+            url, json={"base64": encode_image(image)}, timeout=10, **kwargs
+        )
         if response.status_code == HTTPStatus.UNAUTHORIZED:
             _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
             return None
@@ -133,6 +139,7 @@ def teach_file(url, name, file_path, username, password):
                 url,
                 data={FACEBOX_NAME: name, ATTR_ID: file_path},
                 files={"file": open_file},
+                timeout=10,
                 **kwargs,
             )
         if response.status_code == HTTPStatus.UNAUTHORIZED:
@@ -158,7 +165,12 @@ def valid_file_path(file_path):
         return False
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the classifier."""
     if DATA_FACEBOX not in hass.data:
         hass.data[DATA_FACEBOX] = []

@@ -2,11 +2,12 @@
 from homeassistant import auth, data_entry_flow
 from homeassistant.auth.mfa_modules import auth_mfa_module_from_config
 from homeassistant.auth.models import Credentials
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockUser
 
 
-async def test_validate(hass):
+async def test_validate(hass: HomeAssistant) -> None:
     """Test validating pin."""
     auth_module = await auth_mfa_module_from_config(
         hass,
@@ -26,7 +27,7 @@ async def test_validate(hass):
     assert result is False
 
 
-async def test_setup_user(hass):
+async def test_setup_user(hass: HomeAssistant) -> None:
     """Test setup user."""
     auth_module = await auth_mfa_module_from_config(
         hass, {"type": "insecure_example", "data": []}
@@ -39,7 +40,7 @@ async def test_setup_user(hass):
     assert result is True
 
 
-async def test_depose_user(hass):
+async def test_depose_user(hass: HomeAssistant) -> None:
     """Test despose user."""
     auth_module = await auth_mfa_module_from_config(
         hass,
@@ -54,7 +55,7 @@ async def test_depose_user(hass):
     assert len(auth_module._data) == 0
 
 
-async def test_is_user_setup(hass):
+async def test_is_user_setup(hass: HomeAssistant) -> None:
     """Test is user setup."""
     auth_module = await auth_mfa_module_from_config(
         hass,
@@ -67,7 +68,7 @@ async def test_is_user_setup(hass):
     assert await auth_module.async_is_user_setup("invalid-user") is False
 
 
-async def test_login(hass):
+async def test_login(hass: HomeAssistant) -> None:
     """Test login flow with auth module."""
     hass.auth = await auth.auth_manager_from_config(
         hass,
@@ -100,41 +101,41 @@ async def test_login(hass):
 
     provider = hass.auth.auth_providers[0]
     result = await hass.auth.login_flow.async_init((provider.type, provider.id))
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     result = await hass.auth.login_flow.async_configure(
         result["flow_id"], {"username": "incorrect-user", "password": "test-pass"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_auth"
 
     result = await hass.auth.login_flow.async_configure(
         result["flow_id"], {"username": "test-user", "password": "incorrect-pass"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_auth"
 
     result = await hass.auth.login_flow.async_configure(
         result["flow_id"], {"username": "test-user", "password": "test-pass"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "mfa"
     assert result["data_schema"].schema.get("pin") == str
 
     result = await hass.auth.login_flow.async_configure(
         result["flow_id"], {"pin": "invalid-code"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_code"
 
     result = await hass.auth.login_flow.async_configure(
         result["flow_id"], {"pin": "123456"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"].id == "mock-id"
 
 
-async def test_setup_flow(hass):
+async def test_setup_flow(hass: HomeAssistant) -> None:
     """Test validating pin."""
     auth_module = await auth_mfa_module_from_config(
         hass,
@@ -147,9 +148,9 @@ async def test_setup_flow(hass):
     flow = await auth_module.async_setup_flow("new-user")
 
     result = await flow.async_step_init()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     result = await flow.async_step_init({"pin": "abcdefg"})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert auth_module._data[1]["user_id"] == "new-user"
     assert auth_module._data[1]["pin"] == "abcdefg"

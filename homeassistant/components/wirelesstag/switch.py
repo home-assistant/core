@@ -1,6 +1,8 @@
 """Switch implementation for Wireless Sensor Tags (wirelesstag.net)."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -8,10 +10,17 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.const import CONF_MONITORED_CONDITIONS, Platform
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as WIRELESSTAG_DOMAIN, WirelessTagBaseSensor
+from . import (
+    DOMAIN as WIRELESSTAG_DOMAIN,
+    WirelessTagBaseSensor,
+    async_migrate_unique_id,
+)
 
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
@@ -47,37 +56,45 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up switches for a Wireless Sensor Tags."""
-    platform = hass.data.get(WIRELESSTAG_DOMAIN)
+    platform = hass.data[WIRELESSTAG_DOMAIN]
 
     tags = platform.load_tags()
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
-    entities = [
-        WirelessTagSwitch(platform, tag, description)
-        for tag in tags.values()
-        for description in SWITCH_TYPES
-        if description.key in monitored_conditions
-        and description.key in tag.allowed_monitoring_types
-    ]
+    entities = []
+    for tag in tags.values():
+        for description in SWITCH_TYPES:
+            if (
+                description.key in monitored_conditions
+                and description.key in tag.allowed_monitoring_types
+            ):
+                async_migrate_unique_id(hass, tag, Platform.SWITCH, description.key)
+                entities.append(WirelessTagSwitch(platform, tag, description))
 
-    add_entities(entities, True)
+    async_add_entities(entities, True)
 
 
 class WirelessTagSwitch(WirelessTagBaseSensor, SwitchEntity):
     """A switch implementation for Wireless Sensor Tags."""
 
-    def __init__(self, api, tag, description: SwitchEntityDescription):
+    def __init__(self, api, tag, description: SwitchEntityDescription) -> None:
         """Initialize a switch for Wireless Sensor Tag."""
         super().__init__(api, tag)
         self.entity_description = description
         self._name = f"{self._tag.name} {description.name}"
+        self._attr_unique_id = f"{self._uuid}_{description.key}"
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         self._api.arm(self)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         self._api.disarm(self)
 

@@ -14,8 +14,6 @@ from homeassistant.components.homekit.const import (
     DOMAIN,
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
-    HOMEKIT_PAIRING_QR,
-    HOMEKIT_PAIRING_QR_SECRET,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -23,6 +21,7 @@ from homeassistant.components.homekit.const import (
     TYPE_SWITCH,
     TYPE_VALVE,
 )
+from homeassistant.components.homekit.models import HomeKitEntryData
 from homeassistant.components.homekit.util import (
     accessory_friendly_name,
     async_dismiss_setup_message,
@@ -30,9 +29,10 @@ from homeassistant.components.homekit.util import (
     async_port_is_available,
     async_show_setup_message,
     cleanup_name_for_homekit,
+    coerce_int,
     convert_to_float,
     density_to_air_quality,
-    format_sw_version,
+    format_version,
     state_needs_accessory_mode,
     temperature_to_homekit,
     temperature_to_states,
@@ -47,10 +47,9 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TYPE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 
 from .util import async_init_integration
 
@@ -73,7 +72,7 @@ def _mock_socket(failure_attempts: int = 0) -> MagicMock:
     return mock_socket
 
 
-def test_validate_entity_config():
+def test_validate_entity_config() -> None:
     """Test validate entities."""
     configs = [
         None,
@@ -173,7 +172,7 @@ def test_validate_entity_config():
     }
 
 
-def test_validate_media_player_features():
+def test_validate_media_player_features() -> None:
     """Test validate modes for media players."""
     config = {}
     attrs = {ATTR_SUPPORTED_FEATURES: 20873}
@@ -187,7 +186,7 @@ def test_validate_media_player_features():
     assert validate_media_player_features(entity_state, config) is False
 
 
-def test_convert_to_float():
+def test_convert_to_float() -> None:
     """Test convert_to_float method."""
     assert convert_to_float(12) == 12
     assert convert_to_float(12.4) == 12.4
@@ -195,7 +194,7 @@ def test_convert_to_float():
     assert convert_to_float(None) is None
 
 
-def test_cleanup_name_for_homekit():
+def test_cleanup_name_for_homekit() -> None:
     """Ensure name sanitize works as expected."""
 
     assert cleanup_name_for_homekit("abc") == "abc"
@@ -208,30 +207,35 @@ def test_cleanup_name_for_homekit():
     assert cleanup_name_for_homekit("の日本_語文字セット") == "の日本 語文字セット"
 
 
-def test_temperature_to_homekit():
+def test_temperature_to_homekit() -> None:
     """Test temperature conversion from HA to HomeKit."""
-    assert temperature_to_homekit(20.46, TEMP_CELSIUS) == 20.5
-    assert temperature_to_homekit(92.1, TEMP_FAHRENHEIT) == 33.4
+    assert temperature_to_homekit(20.46, UnitOfTemperature.CELSIUS) == 20.5
+    assert temperature_to_homekit(92.1, UnitOfTemperature.FAHRENHEIT) == 33.4
 
 
-def test_temperature_to_states():
+def test_temperature_to_states() -> None:
     """Test temperature conversion from HomeKit to HA."""
-    assert temperature_to_states(20, TEMP_CELSIUS) == 20.0
-    assert temperature_to_states(20.2, TEMP_FAHRENHEIT) == 68.5
+    assert temperature_to_states(20, UnitOfTemperature.CELSIUS) == 20.0
+    assert temperature_to_states(20.2, UnitOfTemperature.FAHRENHEIT) == 68.5
 
 
-def test_density_to_air_quality():
+def test_density_to_air_quality() -> None:
     """Test map PM2.5 density to HomeKit AirQuality level."""
     assert density_to_air_quality(0) == 1
-    assert density_to_air_quality(35) == 1
-    assert density_to_air_quality(35.1) == 2
-    assert density_to_air_quality(75) == 2
-    assert density_to_air_quality(115) == 3
-    assert density_to_air_quality(150) == 4
-    assert density_to_air_quality(300) == 5
+    assert density_to_air_quality(12) == 1
+    assert density_to_air_quality(12.1) == 2
+    assert density_to_air_quality(35.4) == 2
+    assert density_to_air_quality(35.5) == 3
+    assert density_to_air_quality(55.4) == 3
+    assert density_to_air_quality(55.5) == 4
+    assert density_to_air_quality(150.4) == 4
+    assert density_to_air_quality(150.5) == 5
+    assert density_to_air_quality(200) == 5
 
 
-async def test_async_show_setup_msg(hass, hk_driver, mock_get_source_ip):
+async def test_async_show_setup_msg(
+    hass: HomeAssistant, hk_driver, mock_get_source_ip
+) -> None:
     """Test show setup message as persistence notification."""
     pincode = b"123-45-678"
 
@@ -246,15 +250,16 @@ async def test_async_show_setup_msg(hass, hk_driver, mock_get_source_ip):
             hass, entry.entry_id, "bridge_name", pincode, "X-HM://0"
         )
         await hass.async_block_till_done()
-    assert hass.data[DOMAIN][entry.entry_id][HOMEKIT_PAIRING_QR_SECRET]
-    assert hass.data[DOMAIN][entry.entry_id][HOMEKIT_PAIRING_QR]
+    entry_data: HomeKitEntryData = hass.data[DOMAIN][entry.entry_id]
+    assert entry_data.pairing_qr_secret
+    assert entry_data.pairing_qr
 
     assert len(mock_create.mock_calls) == 1
     assert mock_create.mock_calls[0][1][3] == entry.entry_id
     assert pincode.decode() in mock_create.mock_calls[0][1][1]
 
 
-async def test_async_dismiss_setup_msg(hass):
+async def test_async_dismiss_setup_msg(hass: HomeAssistant) -> None:
     """Test dismiss setup message."""
     with patch(
         "homeassistant.components.persistent_notification.async_dismiss",
@@ -267,7 +272,7 @@ async def test_async_dismiss_setup_msg(hass):
     assert mock_dismiss.mock_calls[0][1][1] == "entry_id"
 
 
-async def test_port_is_available(hass):
+async def test_port_is_available(hass: HomeAssistant) -> None:
     """Test we can get an available port and it is actually available."""
     with patch(
         "homeassistant.components.homekit.util.socket.socket",
@@ -300,7 +305,7 @@ async def test_port_is_available(hass):
         assert not async_port_is_available(next_port)
 
 
-async def test_port_is_available_skips_existing_entries(hass):
+async def test_port_is_available_skips_existing_entries(hass: HomeAssistant) -> None:
     """Test we can get an available port and it is actually available."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -343,16 +348,30 @@ async def test_port_is_available_skips_existing_entries(hass):
         async_find_next_available_port(hass, 65530)
 
 
-async def test_format_sw_version():
-    """Test format_sw_version method."""
-    assert format_sw_version("soho+3.6.8+soho-release-rt120+10") == "3.6.8"
-    assert format_sw_version("undefined-undefined-1.6.8") == "1.6.8"
-    assert format_sw_version("56.0-76060") == "56.0.76060"
-    assert format_sw_version(3.6) == "3.6"
-    assert format_sw_version("unknown") is None
+async def test_format_version() -> None:
+    """Test format_version method."""
+    assert format_version("soho+3.6.8+soho-release-rt120+10") == "3.6.8"
+    assert format_version("undefined-undefined-1.6.8") == "1.6.8"
+    assert format_version("56.0-76060") == "56.0.76060"
+    assert format_version(3.6) == "3.6"
+    assert format_version("AK001-ZJ100") == "1.100"
+    assert format_version("HF-LPB100-") == "100"
+    assert format_version("AK001-ZJ2149") == "1.2149"
+    assert format_version("13216407885") == "4294967295"  # max value
+    assert format_version("000132 16407885") == "132.16407885"
+    assert format_version("0.1") == "0.1"
+    assert format_version("0") is None
+    assert format_version("unknown") is None
 
 
-async def test_accessory_friendly_name():
+async def test_coerce_int() -> None:
+    """Test coerce_int method."""
+    assert coerce_int("1") == 1
+    assert coerce_int("") == 0
+    assert coerce_int(0) == 0
+
+
+async def test_accessory_friendly_name() -> None:
     """Test we provide a helpful friendly name."""
 
     accessory = Mock()
@@ -363,7 +382,7 @@ async def test_accessory_friendly_name():
     assert accessory_friendly_name("hass title", accessory) == "Hass title 123"
 
 
-async def test_lock_state_needs_accessory_mode(hass):
+async def test_lock_state_needs_accessory_mode(hass: HomeAssistant) -> None:
     """Test that locks are setup as accessories."""
     hass.states.async_set("lock.mine", "locked")
     assert state_needs_accessory_mode(hass.states.get("lock.mine")) is True

@@ -1,18 +1,27 @@
 """Support for monitoring Repetier Server Sensors."""
-from datetime import datetime
+from __future__ import annotations
+
 import logging
 import time
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
 
 from . import REPETIER_API, SENSOR_TYPES, UPDATE_SIGNAL, RepetierSensorEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the available Repetier Server sensors."""
     if discovery_info is None:
         return
@@ -27,15 +36,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         "job_start": RepetierJobStartSensor,
     }
 
+    sensors_info: list[dict] = discovery_info["sensors"]
     entities = []
-    for info in discovery_info:
+    for info in sensors_info:
         printer_name = info["printer_name"]
         api = hass.data[REPETIER_API][printer_name]
         printer_id = info["printer_id"]
         sensor_type = info["sensor_type"]
         temp_id = info["temp_id"]
         description = SENSOR_TYPES[sensor_type]
-        name = f"{info['name']}{description.name or ''}"
+        name_suffix = "" if description.name is UNDEFINED else description.name
+        name = f"{info['name']}{name_suffix}"
         if temp_id is not None:
             _LOGGER.debug("%s Temp_id: %s", sensor_type, temp_id)
             name = f"{name}{temp_id}"
@@ -59,7 +70,7 @@ class RepetierSensor(SensorEntity):
         name,
         printer_id,
         description: RepetierSensorEntityDescription,
-    ):
+    ) -> None:
         """Init new sensor."""
         self.entity_description = description
         self._api = api
@@ -159,7 +170,7 @@ class RepetierJobEndSensor(RepetierSensor):
         print_time = data["print_time"]
         from_start = data["from_start"]
         time_end = start + round(print_time, 0)
-        self._state = datetime.utcfromtimestamp(time_end)
+        self._state = dt_util.utc_from_timestamp(time_end)
         remaining = print_time - from_start
         remaining_secs = int(round(remaining, 0))
         _LOGGER.debug(
@@ -181,7 +192,7 @@ class RepetierJobStartSensor(RepetierSensor):
         job_name = data["job_name"]
         start = data["start"]
         from_start = data["from_start"]
-        self._state = datetime.utcfromtimestamp(start)
+        self._state = dt_util.utc_from_timestamp(start)
         elapsed_secs = int(round(from_start, 0))
         _LOGGER.debug(
             "Job %s elapsed %s",

@@ -16,7 +16,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.decorator import Registry
 
-MULTI_FACTOR_AUTH_MODULES = Registry()
+MULTI_FACTOR_AUTH_MODULES: Registry[str, type[MultiFactorAuthModule]] = Registry()
 
 MULTI_FACTOR_AUTH_MODULE_SCHEMA = vol.Schema(
     {
@@ -50,17 +50,17 @@ class MultiFactorAuthModule:
 
         Default is same as type
         """
-        return self.config.get(CONF_ID, self.type)
+        return self.config.get(CONF_ID, self.type)  # type: ignore[no-any-return]
 
     @property
     def type(self) -> str:
         """Return type of the module."""
-        return self.config[CONF_TYPE]  # type: ignore
+        return self.config[CONF_TYPE]  # type: ignore[no-any-return]
 
     @property
     def name(self) -> str:
         """Return the name of the auth module."""
-        return self.config.get(CONF_NAME, self.DEFAULT_TITLE)
+        return self.config.get(CONF_NAME, self.DEFAULT_TITLE)  # type: ignore[no-any-return]
 
     # Implement by extending class
 
@@ -116,9 +116,7 @@ class SetupFlow(data_entry_flow.FlowHandler):
 
         if user_input:
             result = await self._auth_module.async_setup_user(self._user_id, user_input)
-            return self.async_create_entry(
-                title=self._auth_module.name, data={"result": result}
-            )
+            return self.async_create_entry(data={"result": result})
 
         return self.async_show_form(
             step_id="init", data_schema=self._setup_schema, errors=errors
@@ -129,7 +127,7 @@ async def auth_mfa_module_from_config(
     hass: HomeAssistant, config: dict[str, Any]
 ) -> MultiFactorAuthModule:
     """Initialize an auth module from a config."""
-    module_name = config[CONF_TYPE]
+    module_name: str = config[CONF_TYPE]
     module = await _load_mfa_module(hass, module_name)
 
     try:
@@ -142,7 +140,7 @@ async def auth_mfa_module_from_config(
         )
         raise
 
-    return MULTI_FACTOR_AUTH_MODULES[module_name](hass, config)  # type: ignore
+    return MULTI_FACTOR_AUTH_MODULES[module_name](hass, config)
 
 
 async def _load_mfa_module(hass: HomeAssistant, module_name: str) -> types.ModuleType:
@@ -166,7 +164,6 @@ async def _load_mfa_module(hass: HomeAssistant, module_name: str) -> types.Modul
 
     processed = hass.data[DATA_REQS] = set()
 
-    # https://github.com/python/mypy/issues/1424
     await requirements.async_process_requirements(
         hass, module_path, module.REQUIREMENTS
     )

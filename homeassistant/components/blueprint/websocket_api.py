@@ -1,7 +1,9 @@
 """Websocket API for blueprint."""
 from __future__ import annotations
 
-import async_timeout
+import asyncio
+from typing import Any, cast
+
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -12,7 +14,7 @@ from homeassistant.util import yaml
 
 from . import importer, models
 from .const import DOMAIN
-from .errors import FileAlreadyExists
+from .errors import FailedToLoad, FileAlreadyExists
 
 
 @callback
@@ -24,19 +26,21 @@ def async_setup(hass: HomeAssistant):
     websocket_api.async_register_command(hass, ws_delete_blueprint)
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "blueprint/list",
         vol.Required("domain"): cv.string,
     }
 )
-async def ws_list_blueprints(hass, connection, msg):
+@websocket_api.async_response
+async def ws_list_blueprints(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """List available blueprints."""
-    domain_blueprints: dict[str, models.DomainBlueprints] | None = hass.data.get(
-        DOMAIN, {}
-    )
-    results = {}
+    domain_blueprints: dict[str, models.DomainBlueprints] = hass.data.get(DOMAIN, {})
+    results: dict[str, Any] = {}
 
     if msg["domain"] not in domain_blueprints:
         connection.send_result(msg["id"], results)
@@ -55,16 +59,20 @@ async def ws_list_blueprints(hass, connection, msg):
     connection.send_result(msg["id"], results)
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "blueprint/import",
         vol.Required("url"): cv.url,
     }
 )
-async def ws_import_blueprint(hass, connection, msg):
+@websocket_api.async_response
+async def ws_import_blueprint(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Import a blueprint."""
-    async with async_timeout.timeout(10):
+    async with asyncio.timeout(10):
         imported_blueprint = await importer.fetch_blueprint_from_url(hass, msg["url"])
 
     if imported_blueprint is None:
@@ -72,6 +80,23 @@ async def ws_import_blueprint(hass, connection, msg):
             msg["id"], websocket_api.ERR_NOT_SUPPORTED, "This url is not supported"
         )
         return
+
+    # Check it exists and if so, which automations are using it
+    domain = imported_blueprint.blueprint.metadata["domain"]
+    domain_blueprints: models.DomainBlueprints | None = hass.data.get(DOMAIN, {}).get(
+        domain
+    )
+    if domain_blueprints is None:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_INVALID_FORMAT, "Unsupported domain"
+        )
+        return
+
+    suggested_path = f"{imported_blueprint.suggested_filename}.yaml"
+    try:
+        exists = bool(await domain_blueprints.async_get_blueprint(suggested_path))
+    except FailedToLoad:
+        exists = False
 
     connection.send_result(
         msg["id"],
@@ -82,11 +107,11 @@ async def ws_import_blueprint(hass, connection, msg):
                 "metadata": imported_blueprint.blueprint.metadata,
             },
             "validation_errors": imported_blueprint.blueprint.validate(),
+            "exists": exists,
         },
     )
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "blueprint/save",
@@ -94,17 +119,21 @@ async def ws_import_blueprint(hass, connection, msg):
         vol.Required("path"): cv.path,
         vol.Required("yaml"): cv.string,
         vol.Optional("source_url"): cv.url,
+        vol.Optional("allow_override"): bool,
     }
 )
-async def ws_save_blueprint(hass, connection, msg):
+@websocket_api.async_response
+async def ws_save_blueprint(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Save a blueprint."""
 
     path = msg["path"]
     domain = msg["domain"]
 
-    domain_blueprints: dict[str, models.DomainBlueprints] | None = hass.data.get(
-        DOMAIN, {}
-    )
+    domain_blueprints: dict[str, models.DomainBlueprints] = hass.data.get(DOMAIN, {})
 
     if domain not in domain_blueprints:
         connection.send_error(
@@ -112,17 +141,21 @@ async def ws_save_blueprint(hass, connection, msg):
         )
 
     try:
-        blueprint = models.Blueprint(
-            yaml.parse_yaml(msg["yaml"]), expected_domain=domain
-        )
+        yaml_data = cast(dict[str, Any], yaml.parse_yaml(msg["yaml"]))
+        blueprint = models.Blueprint(yaml_data, expected_domain=domain)
         if "source_url" in msg:
             blueprint.update_metadata(source_url=msg["source_url"])
     except HomeAssistantError as err:
         connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
         return
 
+    if not path.endswith(".yaml"):
+        path = f"{path}.yaml"
+
     try:
-        await domain_blueprints[domain].async_add_blueprint(blueprint, path)
+        overrides_existing = await domain_blueprints[domain].async_add_blueprint(
+            blueprint, path, allow_override=msg.get("allow_override", False)
+        )
     except FileAlreadyExists:
         connection.send_error(msg["id"], "already_exists", "File already exists")
         return
@@ -132,10 +165,12 @@ async def ws_save_blueprint(hass, connection, msg):
 
     connection.send_result(
         msg["id"],
+        {
+            "overrides_existing": overrides_existing,
+        },
     )
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "blueprint/delete",
@@ -143,15 +178,18 @@ async def ws_save_blueprint(hass, connection, msg):
         vol.Required("path"): cv.path,
     }
 )
-async def ws_delete_blueprint(hass, connection, msg):
+@websocket_api.async_response
+async def ws_delete_blueprint(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
     """Delete a blueprint."""
 
     path = msg["path"]
     domain = msg["domain"]
 
-    domain_blueprints: dict[str, models.DomainBlueprints] | None = hass.data.get(
-        DOMAIN, {}
-    )
+    domain_blueprints: dict[str, models.DomainBlueprints] = hass.data.get(DOMAIN, {})
 
     if domain not in domain_blueprints:
         connection.send_error(

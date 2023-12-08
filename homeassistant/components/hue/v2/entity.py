@@ -1,18 +1,30 @@
 """Generic Hue Entity Model."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, TypeAlias
+
 from aiohue.v2.controllers.base import BaseResourcesController
 from aiohue.v2.controllers.events import EventType
-from aiohue.v2.models.clip import CLIPResource
-from aiohue.v2.models.connectivity import ConnectivityServiceStatus
 from aiohue.v2.models.resource import ResourceTypes
+from aiohue.v2.models.zigbee_connectivity import ConnectivityServiceStatus
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 
 from ..bridge import HueBridge
 from ..const import CONF_IGNORE_AVAILABILITY, DOMAIN
+
+if TYPE_CHECKING:
+    from aiohue.v2.models.device_power import DevicePower
+    from aiohue.v2.models.grouped_light import GroupedLight
+    from aiohue.v2.models.light import Light
+    from aiohue.v2.models.light_level import LightLevel
+    from aiohue.v2.models.motion import Motion
+
+    HueResource: TypeAlias = Light | DevicePower | GroupedLight | LightLevel | Motion
+
 
 RESOURCE_TYPE_NAMES = {
     # a simple mapping of hue resource type to Hass name
@@ -30,7 +42,7 @@ class HueBaseEntity(Entity):
         self,
         bridge: HueBridge,
         controller: BaseResourcesController,
-        resource: CLIPResource,
+        resource: HueResource,
     ) -> None:
         """Initialize a generic Hue resource entity."""
         self.bridge = bridge
@@ -43,31 +55,19 @@ class HueBaseEntity(Entity):
         self._attr_unique_id = resource.id
         # device is precreated in main handler
         # this attaches the entity to the precreated device
-        if self.device is not None:
+        if self.device is None:
+            # attach all device-less entities to the bridge itself
+            # e.g. config based sensors like entertainment area
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, bridge.api.config.bridge.bridge_id)},
+            )
+        else:
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, self.device.id)},
             )
         # used for availability workaround
         self._ignore_availability = None
         self._last_state = None
-
-    @property
-    def name(self) -> str:
-        """Return name for the entity."""
-        if self.device is None:
-            # this is just a guard
-            # creating a pretty name for device-less entities (e.g. groups/scenes)
-            # should be handled in the platform instead
-            return self.resource.type.value
-        # if resource is a light, use the name from metadata
-        if self.resource.type == ResourceTypes.LIGHT:
-            return self.resource.name
-        # for sensors etc, use devicename + pretty name of type
-        dev_name = self.device.metadata.name
-        type_title = RESOURCE_TYPE_NAMES.get(
-            self.resource.type, self.resource.type.value.replace("_", " ").title()
-        )
-        return f"{dev_name} {type_title}"
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
@@ -122,19 +122,19 @@ class HueBaseEntity(Entity):
         # used in subclasses
 
     @callback
-    def _handle_event(self, event_type: EventType, resource: CLIPResource) -> None:
+    def _handle_event(self, event_type: EventType, resource: HueResource) -> None:
         """Handle status event for this resource (or it's parent)."""
-        if event_type == EventType.RESOURCE_DELETED and resource.id == self.resource.id:
-            self.logger.debug("Received delete for %s", self.entity_id)
-            # non-device bound entities like groups and scenes need to be removed here
-            # all others will be be removed by device setup in case of device removal
-            ent_reg = async_get_entity_registry(self.hass)
-            ent_reg.async_remove(self.entity_id)
-        else:
-            self.logger.debug("Received status update for %s", self.entity_id)
-            self._check_availability()
-            self.on_update()
-            self.async_write_ha_state()
+        if event_type == EventType.RESOURCE_DELETED:
+            # cleanup entities that are not strictly device-bound and have the bridge as parent
+            if self.device is None and resource.id == self.resource.id:
+                ent_reg = async_get_entity_registry(self.hass)
+                ent_reg.async_remove(self.entity_id)
+            return
+
+        self.logger.debug("Received status update for %s", self.entity_id)
+        self._check_availability()
+        self.on_update()
+        self.async_write_ha_state()
 
     @callback
     def _check_availability(self):
@@ -142,8 +142,9 @@ class HueBaseEntity(Entity):
         # return if we already processed this entity
         if self._ignore_availability is not None:
             return
-        # only do the availability check for entities connected to a device
-        if self.device is None:
+        # only do the availability check for entities connected to a device (with `on` feature)
+        if self.device is None or not hasattr(self.resource, "on"):
+            self._ignore_availability = False
             return
         # ignore availability if user added device to ignore list
         if self.device.id in self.bridge.config_entry.options.get(
@@ -179,17 +180,20 @@ class HueBaseEntity(Entity):
                 # the device state changed from on->off or off->on
                 # while it was reported as not connected!
                 self.logger.warning(
-                    "Device %s changed state while reported as disconnected. "
-                    "This might be an indicator that routing is not working for this device "
-                    "or the device is having connectivity issues. "
-                    "You can disable availability reporting for this device in the Hue options. "
-                    "Device details: %s - %s (%s) fw: %s",
+                    (
+                        "Device %s changed state while reported as disconnected. This"
+                        " might be an indicator that routing is not working for this"
+                        " device or the device is having connectivity issues. You can"
+                        " disable availability reporting for this device in the Hue"
+                        " options. Device details: %s - %s (%s) fw: %s"
+                    ),
                     self.name,
                     self.device.product_data.manufacturer_name,
                     self.device.product_data.product_name,
                     self.device.product_data.model_id,
                     self.device.product_data.software_version,
                 )
-                # do we want to store this in some persistent storage?
-                self._ignore_availability = True
+                # set attribute to false because we only want to log once per light/device.
+                # a user must opt-in to ignore availability through integration options
+                self._ignore_availability = False
         self._last_state = cur_state

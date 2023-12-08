@@ -9,9 +9,8 @@ from flux_led.const import MODE_MUSIC
 
 from homeassistant import config_entries
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import CONF_NAME
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -34,24 +33,26 @@ async def async_setup_entry(
     """Set up the Flux lights."""
     coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     entities: list[FluxSwitch | FluxRemoteAccessSwitch | FluxMusicSwitch] = []
-    unique_id = entry.unique_id
-    name = entry.data[CONF_NAME]
+    base_unique_id = entry.unique_id or entry.entry_id
 
     if coordinator.device.device_type == DeviceType.Switch:
-        entities.append(FluxSwitch(coordinator, unique_id, name))
+        entities.append(FluxSwitch(coordinator, base_unique_id, None))
 
     if entry.data.get(CONF_REMOTE_ACCESS_HOST):
         entities.append(FluxRemoteAccessSwitch(coordinator.device, entry))
 
     if coordinator.device.microphone:
-        entities.append(FluxMusicSwitch(coordinator, unique_id, name))
+        entities.append(FluxMusicSwitch(coordinator, base_unique_id, "music"))
 
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(entities)
 
 
-class FluxSwitch(FluxOnOffEntity, CoordinatorEntity, SwitchEntity):
+class FluxSwitch(
+    FluxOnOffEntity, CoordinatorEntity[FluxLedUpdateCoordinator], SwitchEntity
+):
     """Representation of a Flux switch."""
+
+    _attr_name = None
 
     async def _async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -62,8 +63,8 @@ class FluxSwitch(FluxOnOffEntity, CoordinatorEntity, SwitchEntity):
 class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
     """Representation of a Flux remote access switch."""
 
-    _attr_should_poll = False
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "remote_access"
 
     def __init__(
         self,
@@ -72,9 +73,8 @@ class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
     ) -> None:
         """Initialize the light."""
         super().__init__(device, entry)
-        self._attr_name = f"{entry.data[CONF_NAME]} Remote Access"
-        if entry.unique_id:
-            self._attr_unique_id = f"{entry.unique_id}_remote_access"
+        base_unique_id = entry.unique_id or entry.entry_id
+        self._attr_unique_id = f"{base_unique_id}_remote_access"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the remote access on."""
@@ -112,17 +112,7 @@ class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
 class FluxMusicSwitch(FluxEntity, SwitchEntity):
     """Representation of a Flux music switch."""
 
-    def __init__(
-        self,
-        coordinator: FluxLedUpdateCoordinator,
-        unique_id: str | None,
-        name: str,
-    ) -> None:
-        """Initialize the flux music switch."""
-        super().__init__(coordinator, unique_id, name)
-        self._attr_name = f"{name} Music"
-        if unique_id:
-            self._attr_unique_id = f"{unique_id}_music"
+    _attr_translation_key = "music"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the microphone on."""

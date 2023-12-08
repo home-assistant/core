@@ -10,7 +10,10 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import PRESSURE_BAR, TEMP_CELSIUS
+from homeassistant.const import UnitOfPressure, UnitOfTemperature
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
 from . import DOMAIN, IncomfortChild
@@ -25,6 +28,9 @@ class IncomfortSensorEntityDescription(SensorEntityDescription):
     """Describes Incomfort sensor entity."""
 
     extra_key: str | None = None
+    # IncomfortSensor does not support UNDEFINED or None,
+    # restrict the type to str
+    name: str = ""
 
 
 SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
@@ -32,26 +38,31 @@ SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
         key="pressure",
         name=INCOMFORT_PRESSURE,
         device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=PRESSURE_BAR,
+        native_unit_of_measurement=UnitOfPressure.BAR,
     ),
     IncomfortSensorEntityDescription(
         key="heater_temp",
         name=INCOMFORT_HEATER_TEMP,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         extra_key="is_pumping",
     ),
     IncomfortSensorEntityDescription(
         key="tap_temp",
         name=INCOMFORT_TAP_TEMP,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         extra_key="is_tapping",
     ),
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up an InComfort/InTouch sensor device."""
     if discovery_info is None:
         return

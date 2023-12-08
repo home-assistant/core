@@ -15,26 +15,36 @@ from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.zwave_js import DOMAIN, device_condition
-from homeassistant.components.zwave_js.helpers import get_zwave_value_from_config
+from homeassistant.components.zwave_js.helpers import (
+    get_device_id,
+    get_zwave_value_from_config,
+)
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, device_registry
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_get_device_automations, async_mock_service
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_conditions(hass, client, lock_schlage_be469, integration) -> None:
+async def test_get_conditions(
+    hass: HomeAssistant,
+    client,
+    lock_schlage_be469,
+    integration,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test we get the expected onditions from a zwave_js."""
-    dev_reg = device_registry.async_get(hass)
-    device = device_registry.async_entries_for_config_entry(
-        dev_reg, integration.entry_id
-    )[0]
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    )
+    assert device
     config_value = list(lock_schlage_be469.get_configuration_values().values())[0]
     value_id = config_value.value_id
     name = config_value.property_name
@@ -45,6 +55,7 @@ async def test_get_conditions(hass, client, lock_schlage_be469, integration) -> 
             "domain": DOMAIN,
             "type": "node_status",
             "device_id": device.id,
+            "metadata": {},
         },
         {
             "condition": "device",
@@ -52,13 +63,15 @@ async def test_get_conditions(hass, client, lock_schlage_be469, integration) -> 
             "type": "config_parameter",
             "device_id": device.id,
             "value_id": value_id,
-            "subtype": f"{value_id} ({name})",
+            "subtype": f"{config_value.property_} ({name}) on endpoint 0",
+            "metadata": {},
         },
         {
             "condition": "device",
             "domain": DOMAIN,
             "type": "value",
             "device_id": device.id,
+            "metadata": {},
         },
     ]
     conditions = await async_get_device_automations(
@@ -67,15 +80,32 @@ async def test_get_conditions(hass, client, lock_schlage_be469, integration) -> 
     for condition in expected_conditions:
         assert condition in conditions
 
+    # Test that we don't return actions for a controller node
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
+    )
+    assert device
+    assert (
+        await async_get_device_automations(
+            hass, DeviceAutomationType.CONDITION, device.id
+        )
+        == []
+    )
+
 
 async def test_node_status_state(
-    hass, client, lock_schlage_be469, integration, calls
+    hass: HomeAssistant,
+    client,
+    lock_schlage_be469,
+    integration,
+    calls,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for node_status conditions."""
-    dev_reg = device_registry.async_get(hass)
-    device = device_registry.async_entries_for_config_entry(
-        dev_reg, integration.entry_id
-    )[0]
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    )
+    assert device
 
     assert await async_setup_component(
         hass,
@@ -96,7 +126,10 @@ async def test_node_status_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "alive - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "alive - {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -114,7 +147,10 @@ async def test_node_status_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "awake - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "awake - {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -132,7 +168,10 @@ async def test_node_status_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "asleep - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "asleep - {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -150,7 +189,10 @@ async def test_node_status_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "dead - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "dead - {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -215,26 +257,20 @@ async def test_node_status_state(
     assert len(calls) == 4
     assert calls[3].data["some"] == "dead - event - test_event4"
 
-    event = Event(
-        "unknown",
-        data={
-            "source": "node",
-            "event": "unknown",
-            "nodeId": lock_schlage_be469.node_id,
-        },
-    )
-    lock_schlage_be469.receive_event(event)
-    await hass.async_block_till_done()
-
 
 async def test_config_parameter_state(
-    hass, client, lock_schlage_be469, integration, calls
+    hass: HomeAssistant,
+    client,
+    lock_schlage_be469,
+    integration,
+    calls,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for config_parameter conditions."""
-    dev_reg = device_registry.async_get(hass)
-    device = device_registry.async_entries_for_config_entry(
-        dev_reg, integration.entry_id
-    )[0]
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    )
+    assert device
 
     assert await async_setup_component(
         hass,
@@ -250,14 +286,17 @@ async def test_config_parameter_state(
                             "device_id": device.id,
                             "type": "config_parameter",
                             "value_id": f"{lock_schlage_be469.node_id}-112-0-3",
-                            "subtype": f"{lock_schlage_be469.node_id}-112-0-3 (Beeper)",
+                            "subtype": "3 (Beeper)",
                             "value": 255,
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "Beeper - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "Beeper - {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -270,14 +309,17 @@ async def test_config_parameter_state(
                             "device_id": device.id,
                             "type": "config_parameter",
                             "value_id": f"{lock_schlage_be469.node_id}-112-0-6",
-                            "subtype": f"{lock_schlage_be469.node_id}-112-0-6 (User Slot Status)",
+                            "subtype": "6 (User Slot Status)",
                             "value": 1,
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "User Slot Status - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "User Slot Status - {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -337,13 +379,18 @@ async def test_config_parameter_state(
 
 
 async def test_value_state(
-    hass, client, lock_schlage_be469, integration, calls
+    hass: HomeAssistant,
+    client,
+    lock_schlage_be469,
+    integration,
+    calls,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for value conditions."""
-    dev_reg = device_registry.async_get(hass)
-    device = device_registry.async_entries_for_config_entry(
-        dev_reg, integration.entry_id
-    )[0]
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    )
+    assert device
 
     assert await async_setup_component(
         hass,
@@ -366,7 +413,10 @@ async def test_value_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "value - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "value - {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -381,13 +431,17 @@ async def test_value_state(
 
 
 async def test_get_condition_capabilities_node_status(
-    hass, client, lock_schlage_be469, integration
-):
+    hass: HomeAssistant,
+    client,
+    lock_schlage_be469,
+    integration,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test we don't get capabilities from a node_status condition."""
-    dev_reg = device_registry.async_get(hass)
-    device = device_registry.async_entries_for_config_entry(
-        dev_reg, integration.entry_id
-    )[0]
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    )
+    assert device
 
     capabilities = await device_condition.async_get_condition_capabilities(
         hass,
@@ -417,13 +471,17 @@ async def test_get_condition_capabilities_node_status(
 
 
 async def test_get_condition_capabilities_value(
-    hass, client, lock_schlage_be469, integration
-):
+    hass: HomeAssistant,
+    client,
+    lock_schlage_be469,
+    integration,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test we get the expected capabilities from a value condition."""
-    dev_reg = device_registry.async_get(hass)
-    device = device_registry.async_entries_for_config_entry(
-        dev_reg, integration.entry_id
-    )[0]
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    )
+    assert device
 
     capabilities = await device_condition.async_get_condition_capabilities(
         hass,
@@ -465,14 +523,18 @@ async def test_get_condition_capabilities_value(
 
 
 async def test_get_condition_capabilities_config_parameter(
-    hass, client, climate_radio_thermostat_ct100_plus, integration
-):
+    hass: HomeAssistant,
+    client,
+    climate_radio_thermostat_ct100_plus,
+    integration,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test we get the expected capabilities from a config_parameter condition."""
     node = climate_radio_thermostat_ct100_plus
-    dev_reg = device_registry.async_get(hass)
-    device = device_registry.async_entries_for_config_entry(
-        dev_reg, integration.entry_id
-    )[0]
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, climate_radio_thermostat_ct100_plus)}
+    )
+    assert device
 
     # Test enumerated type param
     capabilities = await device_condition.async_get_condition_capabilities(
@@ -483,7 +545,7 @@ async def test_get_condition_capabilities_config_parameter(
             "device_id": device.id,
             "type": "config_parameter",
             "value_id": f"{node.node_id}-112-0-1",
-            "subtype": f"{node.node_id}-112-0-1 (Temperature Reporting Threshold)",
+            "subtype": "1 (Temperature Reporting Threshold)",
         },
     )
     assert capabilities and "extra_fields" in capabilities
@@ -514,7 +576,7 @@ async def test_get_condition_capabilities_config_parameter(
             "device_id": device.id,
             "type": "config_parameter",
             "value_id": f"{node.node_id}-112-0-10",
-            "subtype": f"{node.node_id}-112-0-10 (Temperature Reporting Filter)",
+            "subtype": "10 (Temperature Reporting Filter)",
         },
     )
     assert capabilities and "extra_fields" in capabilities
@@ -540,18 +602,24 @@ async def test_get_condition_capabilities_config_parameter(
             "device_id": device.id,
             "type": "config_parameter",
             "value_id": f"{node.node_id}-112-0-2",
-            "subtype": f"{node.node_id}-112-0-2 (HVAC Settings)",
+            "subtype": "2 (HVAC Settings)",
         },
     )
     assert not capabilities
 
 
-async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
+async def test_failure_scenarios(
+    hass: HomeAssistant,
+    client,
+    hank_binary_switch,
+    integration,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test failure scenarios."""
-    dev_reg = device_registry.async_get(hass)
-    device = device_registry.async_entries_for_config_entry(
-        dev_reg, integration.entry_id
-    )[0]
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, hank_binary_switch)}
+    )
+    assert device
 
     with pytest.raises(HomeAssistantError):
         await device_condition.async_condition_from_config(
@@ -596,10 +664,27 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
         == INVALID_CONFIG
     )
 
+    # Test invalid device ID fails validation
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await device_condition.async_validate_condition_config(
+            hass,
+            {
+                "condition": "device",
+                "domain": DOMAIN,
+                "type": "value",
+                "device_id": "invalid_device_id",
+                "command_class": CommandClass.DOOR_LOCK.value,
+                "property": 9999,
+                "property_key": 9999,
+                "endpoint": 9999,
+                "value": 9999,
+            },
+        )
+
 
 async def test_get_value_from_config_failure(
-    hass, client, hank_binary_switch, integration
-):
+    hass: HomeAssistant, client, hank_binary_switch, integration
+) -> None:
     """Test get_value_from_config invalid value ID."""
     with pytest.raises(vol.Invalid):
         get_zwave_value_from_config(

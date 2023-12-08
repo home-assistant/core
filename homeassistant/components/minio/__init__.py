@@ -9,8 +9,9 @@ import threading
 import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .minio_helper import MinioEventThread, create_minio_client
 
@@ -79,7 +80,7 @@ BUCKET_KEY_FILE_SCHEMA = BUCKET_KEY_SCHEMA.extend(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up MinioClient and event listeners."""
     conf = config[DOMAIN]
 
@@ -135,8 +136,7 @@ def setup(hass, config):
         file_path = _render_service_value(service, ATTR_FILE_PATH)
 
         if not hass.config.is_allowed_path(file_path):
-            _LOGGER.error("Invalid file_path %s", file_path)
-            return
+            raise ValueError(f"Invalid file_path {file_path}")
 
         minio_client.fput_object(bucket, key, file_path)
 
@@ -147,8 +147,7 @@ def setup(hass, config):
         file_path = _render_service_value(service, ATTR_FILE_PATH)
 
         if not hass.config.is_allowed_path(file_path):
-            _LOGGER.error("Invalid file_path %s", file_path)
-            return
+            raise ValueError(f"Invalid file_path {file_path}")
 
         minio_client.fget_object(bucket, key, file_path)
 

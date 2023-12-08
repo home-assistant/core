@@ -1,0 +1,59 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "client_id": "Client ID"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "pump_flow": {
+        "name": "Pump flow"
+      },
+      "drink_flow": {
+        "name": "Drink flow"
+      },
+      "pump_pressure": {
+        "name": "Pump pressure"
+      },
+      "pump_starts": {
+        "name": "Pump starts"
+      },
+      "pump_hours": {
+        "name": "Pump hours"
+      },
+      "reservoir_temperature": {
+        "name": "Reservoir temperature"
+      },
+      "reservoir_content": {
+        "name": "Reservoir content"
+      },
+      "total_saved": {
+        "name": "Total saved"
+      },
+      "total_replenished": {
+        "name": "Total replenished"
+      },
+      "error_code": {
+        "name": "Error code"
+      },
+      "total_use": {
+        "name": "Total use"
+      },
+      "reservoir_content_max": {
+        "name": "Maximum reservoir content"
+      }
+    }
+  }
+}

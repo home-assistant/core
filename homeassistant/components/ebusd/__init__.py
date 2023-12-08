@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PORT,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
@@ -65,7 +66,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     server_address = (conf.get(CONF_HOST), conf.get(CONF_PORT))
 
     try:
-
         ebusdpy.init(server_address)
         hass.data[DOMAIN] = EbusdData(server_address, circuit)
 
@@ -74,7 +74,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "client_name": name,
             "sensor_types": SENSOR_TYPES[circuit],
         }
-        load_platform(hass, "sensor", DOMAIN, sensor_config, config)
+        load_platform(hass, Platform.SENSOR, DOMAIN, sensor_config, config)
 
         hass.services.register(DOMAIN, SERVICE_EBUSD_WRITE, hass.data[DOMAIN].write)
 
@@ -110,7 +110,7 @@ class EbusdData:
             raise RuntimeError(err) from err
 
     def write(self, call: ServiceCall) -> None:
-        """Call write methon on ebusd."""
+        """Call write method on ebusd."""
         name = call.data.get("name")
         value = call.data.get("value")
 

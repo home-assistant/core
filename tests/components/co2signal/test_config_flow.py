@@ -1,26 +1,33 @@
 """Test the CO2 Signal config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from aioelectricitymaps.exceptions import (
+    ElectricityMapsDecodeError,
+    ElectricityMapsError,
+    InvalidToken,
+)
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.co2signal import DOMAIN, config_flow
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
-from . import VALID_PAYLOAD
+from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("electricity_maps")
 async def test_form_home(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch("CO2Signal.get_latest", return_value=VALID_PAYLOAD,), patch(
+    with patch(
         "homeassistant.components.co2signal.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -33,7 +40,7 @@ async def test_form_home(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "CO2 Signal"
     assert result2["data"] == {
         "api_key": "api_key",
@@ -41,13 +48,14 @@ async def test_form_home(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("electricity_maps")
 async def test_form_coordinates(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -57,9 +65,9 @@ async def test_form_coordinates(hass: HomeAssistant) -> None:
             "api_key": "api_key",
         },
     )
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
 
-    with patch("CO2Signal.get_latest", return_value=VALID_PAYLOAD,), patch(
+    with patch(
         "homeassistant.components.co2signal.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -72,7 +80,7 @@ async def test_form_coordinates(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["title"] == "12.3, 45.6"
     assert result3["data"] == {
         "latitude": 12.3,
@@ -82,13 +90,14 @@ async def test_form_coordinates(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("electricity_maps")
 async def test_form_country(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -98,9 +107,9 @@ async def test_form_country(hass: HomeAssistant) -> None:
             "api_key": "api_key",
         },
     )
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
 
-    with patch("CO2Signal.get_latest", return_value=VALID_PAYLOAD,), patch(
+    with patch(
         "homeassistant.components.co2signal.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -112,7 +121,7 @@ async def test_form_country(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["title"] == "fr"
     assert result3["data"] == {
         "country_code": "fr",
@@ -122,74 +131,98 @@ async def test_form_country(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "err_str,err_code",
+    ("side_effect", "err_code"),
     [
-        ("Invalid authentication credentials", "invalid_auth"),
-        ("API rate limit exceeded.", "api_ratelimit"),
-        ("Something else", "unknown"),
+        (
+            InvalidToken,
+            "invalid_auth",
+        ),
+        (ElectricityMapsError("Something else"), "unknown"),
+        (ElectricityMapsDecodeError("Boom"), "unknown"),
+    ],
+    ids=[
+        "invalid auth",
+        "generic error",
+        "json decode error",
     ],
 )
-async def test_form_error_handling(hass: HomeAssistant, err_str, err_code) -> None:
+async def test_form_error_handling(
+    hass: HomeAssistant,
+    electricity_maps: AsyncMock,
+    side_effect: Exception,
+    err_code: str,
+) -> None:
     """Test we handle expected errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "CO2Signal.get_latest",
-        side_effect=ValueError(err_str),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "location": config_flow.TYPE_USE_HOME,
-                "api_key": "api_key",
-            },
-        )
+    electricity_maps.latest_carbon_intensity_by_coordinates.side_effect = side_effect
+    electricity_maps.latest_carbon_intensity_by_country_code.side_effect = side_effect
 
-    assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": err_code}
-
-
-async def test_form_error_unexpected_error(hass: HomeAssistant) -> None:
-    """Test we handle unexpected error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "location": config_flow.TYPE_USE_HOME,
+            "api_key": "api_key",
+        },
     )
 
-    with patch(
-        "CO2Signal.get_latest",
-        side_effect=Exception("Boom"),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "location": config_flow.TYPE_USE_HOME,
-                "api_key": "api_key",
-            },
-        )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": err_code}
 
-    assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "unknown"}
+    # reset mock and test if now succeeds
+    electricity_maps.latest_carbon_intensity_by_coordinates.side_effect = None
+    electricity_maps.latest_carbon_intensity_by_country_code.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "location": config_flow.TYPE_USE_HOME,
+            "api_key": "api_key",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "CO2 Signal"
+    assert result["data"] == {
+        "api_key": "api_key",
+    }
 
 
-async def test_form_error_unexpected_data(hass: HomeAssistant) -> None:
-    """Test we handle unexpected data."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+async def test_reauth(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    electricity_maps: AsyncMock,
+) -> None:
+    """Test reauth flow."""
+    config_entry.add_to_hass(hass)
+
+    init_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": config_entry.entry_id,
+        },
+        data=None,
     )
 
+    assert init_result["type"] == FlowResultType.FORM
+    assert init_result["step_id"] == "reauth"
+
     with patch(
-        "CO2Signal.get_latest",
-        return_value={"status": "error"},
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        "homeassistant.components.co2signal.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        configure_result = await hass.config_entries.flow.async_configure(
+            init_result["flow_id"],
             {
-                "location": config_flow.TYPE_USE_HOME,
-                "api_key": "api_key",
+                CONF_API_KEY: "api_key2",
             },
         )
+        await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert configure_result["type"] == FlowResultType.ABORT
+    assert configure_result["reason"] == "reauth_successful"
+    assert len(mock_setup_entry.mock_calls) == 1

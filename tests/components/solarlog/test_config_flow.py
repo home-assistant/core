@@ -7,6 +7,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.solarlog import config_flow
 from homeassistant.components.solarlog.const import DEFAULT_HOST, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -14,7 +15,7 @@ NAME = "Solarlog test 1 2 3"
 HOST = "http://1.1.1.1"
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -58,45 +59,45 @@ def init_config_flow(hass):
     return flow
 
 
-async def test_user(hass, test_connect):
+async def test_user(hass: HomeAssistant, test_connect) -> None:
     """Test user config."""
     flow = init_config_flow(hass)
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     # tets with all provided
     result = await flow.async_step_user({CONF_NAME: NAME, CONF_HOST: HOST})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "solarlog_test_1_2_3"
     assert result["data"][CONF_HOST] == HOST
 
 
-async def test_import(hass, test_connect):
+async def test_import(hass: HomeAssistant, test_connect) -> None:
     """Test import step."""
     flow = init_config_flow(hass)
 
     # import with only host
     result = await flow.async_step_import({CONF_HOST: HOST})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "solarlog"
     assert result["data"][CONF_HOST] == HOST
 
     # import with only name
     result = await flow.async_step_import({CONF_NAME: NAME})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "solarlog_test_1_2_3"
     assert result["data"][CONF_HOST] == DEFAULT_HOST
 
     # import with host and name
     result = await flow.async_step_import({CONF_HOST: HOST, CONF_NAME: NAME})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "solarlog_test_1_2_3"
     assert result["data"][CONF_HOST] == HOST
 
 
-async def test_abort_if_already_setup(hass, test_connect):
+async def test_abort_if_already_setup(hass: HomeAssistant, test_connect) -> None:
     """Test we abort if the device is already setup."""
     flow = init_config_flow(hass)
     MockConfigEntry(
@@ -107,19 +108,19 @@ async def test_abort_if_already_setup(hass, test_connect):
     result = await flow.async_step_import(
         {CONF_HOST: HOST, CONF_NAME: "solarlog_test_7_8_9"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     # Should fail, same HOST and NAME
     result = await flow.async_step_user({CONF_HOST: HOST, CONF_NAME: NAME})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {CONF_HOST: "already_configured"}
 
     # SHOULD pass, diff HOST (without http://), different NAME
     result = await flow.async_step_import(
         {CONF_HOST: "2.2.2.2", CONF_NAME: "solarlog_test_7_8_9"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "solarlog_test_7_8_9"
     assert result["data"][CONF_HOST] == "http://2.2.2.2"
 
@@ -127,6 +128,6 @@ async def test_abort_if_already_setup(hass, test_connect):
     result = await flow.async_step_import(
         {CONF_HOST: "http://2.2.2.2", CONF_NAME: NAME}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "solarlog_test_1_2_3"
     assert result["data"][CONF_HOST] == "http://2.2.2.2"

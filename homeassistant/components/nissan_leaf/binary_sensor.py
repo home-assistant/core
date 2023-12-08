@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import logging
 
-from pycarwings2.pycarwings2 import Leaf
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -13,7 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_CHARGING, DATA_LEAF, DATA_PLUGGED_IN, LeafEntity
+from . import LeafDataStore, LeafEntity
+from .const import DATA_CHARGING, DATA_LEAF, DATA_PLUGGED_IN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,13 +27,13 @@ def setup_platform(
     if discovery_info is None:
         return
 
-    devices: list[LeafEntity] = []
+    entities: list[LeafEntity] = []
     for vin, datastore in hass.data[DATA_LEAF].items():
         _LOGGER.debug("Adding binary_sensors for vin=%s", vin)
-        devices.append(LeafPluggedInSensor(datastore))
-        devices.append(LeafChargingSensor(datastore))
+        entities.append(LeafPluggedInSensor(datastore))
+        entities.append(LeafChargingSensor(datastore))
 
-    add_entities(devices, True)
+    add_entities(entities, True)
 
 
 class LeafPluggedInSensor(LeafEntity, BinarySensorEntity):
@@ -42,7 +41,7 @@ class LeafPluggedInSensor(LeafEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.PLUG
 
-    def __init__(self, car: Leaf) -> None:
+    def __init__(self, car: LeafDataStore) -> None:
         """Set up plug status sensor."""
         super().__init__(car)
         self._attr_unique_id = f"{self.car.leaf.vin.lower()}_plugstatus"
@@ -68,7 +67,7 @@ class LeafChargingSensor(LeafEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
 
-    def __init__(self, car: Leaf) -> None:
+    def __init__(self, car: LeafDataStore) -> None:
         """Set up charging status sensor."""
         super().__init__(car)
         self._attr_unique_id = f"{self.car.leaf.vin.lower()}_chargingstatus"

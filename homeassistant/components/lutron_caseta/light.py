@@ -1,20 +1,22 @@
 """Support for Lutron Caseta lights."""
 from datetime import timedelta
-import logging
+from typing import Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
     DOMAIN,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LutronCasetaDevice
-from .const import BRIDGE_DEVICE, BRIDGE_LEAP, DOMAIN as CASETA_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from . import LutronCasetaDeviceUpdatableEntity
+from .const import DOMAIN as CASETA_DOMAIN
+from .models import LutronCasetaData
 
 
 def to_lutron_level(level):
@@ -27,32 +29,30 @@ def to_hass_level(level):
     return int((level * 255) // 100)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Lutron Caseta light platform.
 
     Adds dimmers from the Caseta bridge associated with the config_entry as
     light entities.
     """
-    entities = []
-    data = hass.data[CASETA_DOMAIN][config_entry.entry_id]
-    bridge = data[BRIDGE_LEAP]
-    bridge_device = data[BRIDGE_DEVICE]
+    data: LutronCasetaData = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    bridge = data.bridge
     light_devices = bridge.get_devices_by_domain(DOMAIN)
-
-    for light_device in light_devices:
-        entity = LutronCasetaLight(light_device, bridge, bridge_device)
-        entities.append(entity)
-
-    async_add_entities(entities, True)
+    async_add_entities(
+        LutronCasetaLight(light_device, data) for light_device in light_devices
+    )
 
 
-class LutronCasetaLight(LutronCasetaDevice, LightEntity):
+class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
     """Representation of a Lutron Light, including dimmable."""
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_supported_features = LightEntityFeature.TRANSITION
 
     @property
     def brightness(self):
@@ -68,13 +68,13 @@ class LutronCasetaLight(LutronCasetaDevice, LightEntity):
             self.device_id, to_lutron_level(brightness), **args
         )
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness = kwargs.pop(ATTR_BRIGHTNESS, 255)
 
         await self._set_brightness(brightness, **kwargs)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._set_brightness(0, **kwargs)
 
@@ -82,8 +82,3 @@ class LutronCasetaLight(LutronCasetaDevice, LightEntity):
     def is_on(self):
         """Return true if device is on."""
         return self._device["current_state"] > 0
-
-    async def async_update(self):
-        """Call when forcing a refresh of the device."""
-        self._device = self._smartbridge.get_device_by_id(self.device_id)
-        _LOGGER.debug(self._device)

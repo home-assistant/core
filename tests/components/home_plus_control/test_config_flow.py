@@ -10,19 +10,22 @@ from homeassistant.components.home_plus_control.const import (
     OAUTH2_TOKEN,
 )
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from .conftest import CLIENT_ID, CLIENT_SECRET, SUBSCRIPTION_KEY
+
 from tests.common import MockConfigEntry
-from tests.components.home_plus_control.conftest import (
-    CLIENT_ID,
-    CLIENT_SECRET,
-    SUBSCRIPTION_KEY,
-)
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
 async def test_full_flow(
-    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,
@@ -39,7 +42,7 @@ async def test_full_flow(
         "home_plus_control", context={"source": config_entries.SOURCE_USER}
     )
 
-    state = config_entry_oauth2_flow._encode_jwt(  # pylint: disable=protected-access
+    state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
             "flow_id": result["flow_id"],
@@ -47,7 +50,7 @@ async def test_full_flow(
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+    assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
     assert result["step_id"] == "auth"
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
@@ -77,7 +80,7 @@ async def test_full_flow(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "Home+ Control"
     config_data = result["data"]
     assert config_data["token"]["refresh_token"] == "mock-refresh-token"
@@ -86,7 +89,9 @@ async def test_full_flow(
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_abort_if_entry_in_progress(hass, current_request_with_host):
+async def test_abort_if_entry_in_progress(
+    hass: HomeAssistant, current_request_with_host: None
+) -> None:
     """Check flow abort when an entry is already in progress."""
     assert await setup.async_setup_component(
         hass,
@@ -109,11 +114,13 @@ async def test_abort_if_entry_in_progress(hass, current_request_with_host):
     result = await hass.config_entries.flow.async_init(
         "home_plus_control", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
 
 
-async def test_abort_if_entry_exists(hass, current_request_with_host):
+async def test_abort_if_entry_exists(
+    hass: HomeAssistant, current_request_with_host: None
+) -> None:
     """Check flow abort when an entry already exists."""
     existing_entry = MockConfigEntry(domain=DOMAIN)
     existing_entry.add_to_hass(hass)
@@ -134,13 +141,16 @@ async def test_abort_if_entry_exists(hass, current_request_with_host):
     result = await hass.config_entries.flow.async_init(
         "home_plus_control", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
 async def test_abort_if_invalid_token(
-    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Check flow abort when the token has an invalid value."""
     assert await setup.async_setup_component(
         hass,
@@ -157,7 +167,7 @@ async def test_abort_if_invalid_token(
         "home_plus_control", context={"source": config_entries.SOURCE_USER}
     )
 
-    state = config_entry_oauth2_flow._encode_jwt(  # pylint: disable=protected-access
+    state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
             "flow_id": result["flow_id"],
@@ -165,7 +175,7 @@ async def test_abort_if_invalid_token(
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+    assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
     assert result["step_id"] == "auth"
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
@@ -189,5 +199,5 @@ async def test_abort_if_invalid_token(
     )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "oauth_error"

@@ -1,5 +1,9 @@
 """Support for iTach IR devices."""
+from __future__ import annotations
+
+from collections.abc import Iterable
 import logging
+from typing import Any
 
 import pyitachip2ir
 import voluptuous as vol
@@ -18,7 +22,10 @@ from homeassistant.const import (
     CONF_PORT,
     DEVICE_DEFAULT_NAME,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,18 +70,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ITach connection and devices."""
     itachip2ir = pyitachip2ir.ITachIP2IR(
-        config.get(CONF_MAC), config.get(CONF_HOST), int(config.get(CONF_PORT))
+        config.get(CONF_MAC), config[CONF_HOST], int(config[CONF_PORT])
     )
 
     if not itachip2ir.ready(CONNECT_TIMEOUT):
         _LOGGER.error("Unable to find iTach")
-        return False
+        return
 
     devices = []
-    for data in config.get(CONF_DEVICES):
+    for data in config[CONF_DEVICES]:
         name = data.get(CONF_NAME)
         modaddr = int(data.get(CONF_MODADDR, DEFAULT_MODADDR))
         connaddr = int(data.get(CONF_CONNADDR, DEFAULT_CONNADDR))
@@ -91,7 +103,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         itachip2ir.addDevice(name, modaddr, connaddr, cmddatas)
         devices.append(ITachIP2IRRemote(itachip2ir, name, ir_count))
     add_entities(devices, True)
-    return True
 
 
 class ITachIP2IRRemote(remote.RemoteEntity):
@@ -114,19 +125,19 @@ class ITachIP2IRRemote(remote.RemoteEntity):
         """Return true if device is on."""
         return self._power
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._power = True
         self.itachip2ir.send(self._name, "ON", self._ir_count)
         self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._power = False
         self.itachip2ir.send(self._name, "OFF", self._ir_count)
         self.schedule_update_ha_state()
 
-    def send_command(self, command, **kwargs):
+    def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
         num_repeats = kwargs.get(ATTR_NUM_REPEATS, DEFAULT_NUM_REPEATS)
         for single_command in command:
@@ -134,6 +145,6 @@ class ITachIP2IRRemote(remote.RemoteEntity):
                 self._name, single_command, self._ir_count * num_repeats
             )
 
-    def update(self):
+    def update(self) -> None:
         """Update the device."""
         self.itachip2ir.update()

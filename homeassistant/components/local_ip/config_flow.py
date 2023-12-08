@@ -12,8 +12,6 @@ from .const import DOMAIN
 class SimpleConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for local_ip."""
 
-    VERSION = 1
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:

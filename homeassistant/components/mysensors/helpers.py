@@ -10,7 +10,7 @@ from mysensors import BaseAsyncGateway, Message
 from mysensors.sensor import ChildSensor
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -19,9 +19,12 @@ from homeassistant.util.decorator import Registry
 from .const import (
     ATTR_DEVICES,
     ATTR_GATEWAY_ID,
+    ATTR_NODE_ID,
     DOMAIN,
     FLAT_PLATFORM_TYPES,
+    MYSENSORS_DISCOVERED_NODES,
     MYSENSORS_DISCOVERY,
+    MYSENSORS_NODE_DISCOVERY,
     MYSENSORS_ON_UNLOAD,
     TYPE_TO_PLATFORMS,
     DevId,
@@ -31,7 +34,9 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-SCHEMAS = Registry()
+SCHEMAS: Registry[
+    tuple[str, str], Callable[[BaseAsyncGateway, ChildSensor, ValueType], vol.Schema]
+] = Registry()
 
 
 @callback
@@ -61,6 +66,27 @@ def discover_mysensors_platform(
             ATTR_GATEWAY_ID: gateway_id,
         },
     )
+
+
+@callback
+def discover_mysensors_node(
+    hass: HomeAssistant, gateway_id: GatewayId, node_id: int
+) -> None:
+    """Discover a MySensors node."""
+    discovered_nodes = hass.data[DOMAIN].setdefault(
+        MYSENSORS_DISCOVERED_NODES.format(gateway_id), set()
+    )
+
+    if node_id not in discovered_nodes:
+        discovered_nodes.add(node_id)
+        async_dispatcher_send(
+            hass,
+            MYSENSORS_NODE_DISCOVERY,
+            {
+                ATTR_GATEWAY_ID: gateway_id,
+                ATTR_NODE_ID: node_id,
+            },
+        )
 
 
 def default_schema(
@@ -148,7 +174,9 @@ def invalid_msg(
     )
 
 
-def validate_set_msg(gateway_id: GatewayId, msg: Message) -> dict[str, list[DevId]]:
+def validate_set_msg(
+    gateway_id: GatewayId, msg: Message
+) -> dict[Platform, list[DevId]]:
     """Validate a set message."""
     if not validate_node(msg.gateway, msg.node_id):
         return {}
@@ -170,9 +198,9 @@ def validate_child(
     node_id: int,
     child: ChildSensor,
     value_type: int | None = None,
-) -> defaultdict[str, list[DevId]]:
+) -> defaultdict[Platform, list[DevId]]:
     """Validate a child. Returns a dict mapping hass platform names to list of DevId."""
-    validated: defaultdict[str, list[DevId]] = defaultdict(list)
+    validated: defaultdict[Platform, list[DevId]] = defaultdict(list)
     pres: type[IntEnum] = gateway.const.Presentation
     set_req: type[IntEnum] = gateway.const.SetReq
     child_type_name: SensorType | None = next(
@@ -186,7 +214,7 @@ def validate_child(
     value_type_names: set[ValueType] = {
         member.name for member in set_req if member.value in value_types
     }
-    platforms: list[str] = TYPE_TO_PLATFORMS.get(child_type_name, [])
+    platforms: list[Platform] = TYPE_TO_PLATFORMS.get(child_type_name, [])
     if not platforms:
         _LOGGER.warning("Child type %s is not supported", child.type)
         return validated

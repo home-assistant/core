@@ -8,8 +8,11 @@ from homeassistant.setup import async_setup_component
 
 from . import (
     DEFAULT_ENTRY_TITLE,
+    FLUX_DISCOVERY,
     IP_ADDRESS,
     MAC_ADDRESS,
+    _mock_config_entry_for_bulb,
+    _mocked_bulb,
     _mocked_switch,
     _patch_discovery,
     _patch_wifibulb,
@@ -18,7 +21,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_switch_reboot(hass: HomeAssistant) -> None:
+async def test_button_reboot(hass: HomeAssistant) -> None:
     """Test a smart plug can be rebooted."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -39,3 +42,39 @@ async def test_switch_reboot(hass: HomeAssistant) -> None:
         BUTTON_DOMAIN, "press", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     switch.async_reboot.assert_called_once()
+
+
+async def test_button_unpair_remotes_bulb(hass: HomeAssistant) -> None:
+    """Test that remotes can be unpaired from a bulb."""
+    _mock_config_entry_for_bulb(hass)
+    bulb = _mocked_bulb()
+    bulb.discovery = FLUX_DISCOVERY
+    with _patch_discovery(device=FLUX_DISCOVERY), _patch_wifibulb(device=bulb):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "button.bulb_rgbcw_ddeeff_unpair_remotes"
+    assert hass.states.get(entity_id)
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN, "press", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    bulb.async_unpair_remotes.assert_called_once()
+
+
+async def test_button_unpair_remotes_smart_switch(hass: HomeAssistant) -> None:
+    """Test that remotes can be unpaired from a smart switch."""
+    _mock_config_entry_for_bulb(hass)
+    switch = _mocked_switch()
+    switch.discovery = FLUX_DISCOVERY
+    with _patch_discovery(device=FLUX_DISCOVERY), _patch_wifibulb(device=switch):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "button.bulb_rgbcw_ddeeff_unpair_remotes"
+    assert hass.states.get(entity_id)
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN, "press", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    switch.async_unpair_remotes.assert_called_once()

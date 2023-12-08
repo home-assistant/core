@@ -25,6 +25,9 @@ from homeassistant.const import (
     SERVICE_STOP_COVER,
     SERVICE_TURN_OFF,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 
 async def mock_rflink(
@@ -75,7 +78,7 @@ async def mock_rflink(
     return event_callback, mock_create, protocol, disconnect_callback
 
 
-async def test_version_banner(hass, monkeypatch):
+async def test_version_banner(hass: HomeAssistant, monkeypatch) -> None:
     """Test sending unknown commands doesn't cause issues."""
     # use sensor domain during testing main platform
     domain = "sensor"
@@ -100,7 +103,7 @@ async def test_version_banner(hass, monkeypatch):
     )
 
 
-async def test_send_no_wait(hass, monkeypatch):
+async def test_send_no_wait(hass: HomeAssistant, monkeypatch) -> None:
     """Test command sending without ack."""
     domain = "switch"
     config = {
@@ -124,7 +127,7 @@ async def test_send_no_wait(hass, monkeypatch):
     assert protocol.send_command.call_args_list[0][0][1] == "off"
 
 
-async def test_cover_send_no_wait(hass, monkeypatch):
+async def test_cover_send_no_wait(hass: HomeAssistant, monkeypatch) -> None:
     """Test command sending to a cover device without ack."""
     domain = "cover"
     config = {
@@ -148,7 +151,7 @@ async def test_cover_send_no_wait(hass, monkeypatch):
     assert protocol.send_command.call_args_list[0][0][1] == "STOP"
 
 
-async def test_send_command(hass, monkeypatch):
+async def test_send_command(hass: HomeAssistant, monkeypatch) -> None:
     """Test send_command service."""
     domain = "rflink"
     config = {"rflink": {"port": "/dev/ttyABC0"}}
@@ -166,7 +169,7 @@ async def test_send_command(hass, monkeypatch):
     assert protocol.send_command_ack.call_args_list[0][0][1] == "on"
 
 
-async def test_send_command_invalid_arguments(hass, monkeypatch):
+async def test_send_command_invalid_arguments(hass: HomeAssistant, monkeypatch) -> None:
     """Test send_command service."""
     domain = "rflink"
     config = {"rflink": {"port": "/dev/ttyABC0"}}
@@ -199,7 +202,7 @@ async def test_send_command_invalid_arguments(hass, monkeypatch):
     assert not success, "send command should not succeed for unknown command"
 
 
-async def test_send_command_event_propagation(hass, monkeypatch):
+async def test_send_command_event_propagation(hass: HomeAssistant, monkeypatch) -> None:
     """Test event propagation for send_command service."""
     domain = "light"
     config = {
@@ -241,7 +244,7 @@ async def test_send_command_event_propagation(hass, monkeypatch):
     assert hass.states.get(f"{domain}.test1").state == "off"
 
 
-async def test_reconnecting_after_disconnect(hass, monkeypatch):
+async def test_reconnecting_after_disconnect(hass: HomeAssistant, monkeypatch) -> None:
     """An unexpected disconnect should cause a reconnect."""
     domain = "sensor"
     config = {
@@ -265,7 +268,7 @@ async def test_reconnecting_after_disconnect(hass, monkeypatch):
     assert mock_create.call_count == 2
 
 
-async def test_reconnecting_after_failure(hass, monkeypatch):
+async def test_reconnecting_after_failure(hass: HomeAssistant, monkeypatch) -> None:
     """A failure to reconnect should be retried."""
     domain = "sensor"
     config = {
@@ -292,7 +295,7 @@ async def test_reconnecting_after_failure(hass, monkeypatch):
     assert mock_create.call_count == 3
 
 
-async def test_error_when_not_connected(hass, monkeypatch):
+async def test_error_when_not_connected(hass: HomeAssistant, monkeypatch) -> None:
     """Sending command should error when not connected."""
     domain = "switch"
     config = {
@@ -322,7 +325,7 @@ async def test_error_when_not_connected(hass, monkeypatch):
     assert not success, "changing state should not succeed when disconnected"
 
 
-async def test_async_send_command_error(hass, monkeypatch):
+async def test_async_send_command_error(hass: HomeAssistant, monkeypatch) -> None:
     """Sending command should error when protocol fails."""
     domain = "rflink"
     config = {"rflink": {"port": "/dev/ttyABC0"}}
@@ -343,7 +346,7 @@ async def test_async_send_command_error(hass, monkeypatch):
     assert protocol.send_command_ack.call_args_list[0][0][1] == SERVICE_TURN_OFF
 
 
-async def test_race_condition(hass, monkeypatch):
+async def test_race_condition(hass: HomeAssistant, monkeypatch) -> None:
     """Test race condition for unknown components."""
     domain = "light"
     config = {"rflink": {"port": "/dev/ttyABC0"}, domain: {"platform": "rflink"}}
@@ -379,19 +382,17 @@ async def test_race_condition(hass, monkeypatch):
     assert new_sensor.state == "on"
 
 
-async def test_not_connected(hass, monkeypatch):
+async def test_not_connected(hass: HomeAssistant, monkeypatch) -> None:
     """Test Error when sending commands to a disconnected device."""
-    import pytest
-
-    from homeassistant.core import HomeAssistantError
-
     test_device = RflinkCommand("DUMMY_DEVICE")
     RflinkCommand.set_rflink_protocol(None)
     with pytest.raises(HomeAssistantError):
         await test_device._async_handle_command("turn_on")
 
 
-async def test_keepalive(hass, monkeypatch, caplog):
+async def test_keepalive(
+    hass: HomeAssistant, monkeypatch, caplog: pytest.LogCaptureFixture
+) -> None:
     """Validate negative keepalive values."""
     keepalive_value = -3
     domain = RFLINK_DOMAIN
@@ -461,7 +462,9 @@ async def test3_keepalive(hass, monkeypatch, caplog):
     assert "TCP Keepalive IDLE timer was provided" not in caplog.text
 
 
-async def test_default_keepalive(hass, monkeypatch, caplog):
+async def test_default_keepalive(
+    hass: HomeAssistant, monkeypatch, caplog: pytest.LogCaptureFixture
+) -> None:
     """Validate keepalive=0 value."""
     domain = RFLINK_DOMAIN
     config = {RFLINK_DOMAIN: {CONF_HOST: "10.10.0.1", CONF_PORT: 1234}}
@@ -476,3 +479,40 @@ async def test_default_keepalive(hass, monkeypatch, caplog):
         == DEFAULT_TCP_KEEPALIVE_IDLE_TIMER
     )  # no keepalive config will default it
     assert "TCP Keepalive IDLE timer was provided" not in caplog.text
+
+
+async def test_unique_id(hass: HomeAssistant, monkeypatch) -> None:
+    """Validate the device unique_id."""
+
+    DOMAIN = "sensor"
+    config = {
+        "rflink": {"port": "/dev/ttyABC0"},
+        DOMAIN: {
+            "platform": "rflink",
+            "devices": {
+                "my_humidity_device_unique_id": {
+                    "name": "humidity_device",
+                    "sensor_type": "humidity",
+                    "aliases": ["test_alias_02_0"],
+                },
+                "my_temperature_device_unique_id": {
+                    "name": "temperature_device",
+                    "sensor_type": "temperature",
+                    "aliases": ["test_alias_02_0"],
+                },
+            },
+        },
+    }
+
+    registry = er.async_get(hass)
+
+    # setup mocking rflink module
+    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
+
+    humidity_entry = registry.async_get("sensor.humidity_device")
+    assert humidity_entry
+    assert humidity_entry.unique_id == "my_humidity_device_unique_id"
+
+    temperature_entry = registry.async_get("sensor.temperature_device")
+    assert temperature_entry
+    assert temperature_entry.unique_id == "my_temperature_device_unique_id"

@@ -1,5 +1,4 @@
-"""
-Test for the SmartThings scene platform.
+"""Test for the SmartThings scene platform.
 
 The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
@@ -7,12 +6,13 @@ real HTTP calls are not initiated during testing.
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_platform
 
 
-async def test_entity_and_device_attributes(hass, scene):
+async def test_entity_and_device_attributes(hass: HomeAssistant, scene) -> None:
     """Test the attributes of the entity are correct."""
     # Arrange
     entity_registry = er.async_get(hass)
@@ -24,7 +24,7 @@ async def test_entity_and_device_attributes(hass, scene):
     assert entry.unique_id == scene.scene_id
 
 
-async def test_scene_activate(hass, scene):
+async def test_scene_activate(hass: HomeAssistant, scene) -> None:
     """Test the scene is activated."""
     await setup_platform(hass, SCENE_DOMAIN, scenes=[scene])
     await hass.services.async_call(
@@ -37,11 +37,10 @@ async def test_scene_activate(hass, scene):
     assert state.attributes["icon"] == scene.icon
     assert state.attributes["color"] == scene.color
     assert state.attributes["location_id"] == scene.location_id
-    # pylint: disable=protected-access
     assert scene.execute.call_count == 1  # type: ignore
 
 
-async def test_unload_config_entry(hass, scene):
+async def test_unload_config_entry(hass: HomeAssistant, scene) -> None:
     """Test the scene is removed when the config entry is unloaded."""
     # Arrange
     config_entry = await setup_platform(hass, SCENE_DOMAIN, scenes=[scene])

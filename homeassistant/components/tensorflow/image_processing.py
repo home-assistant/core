@@ -1,27 +1,34 @@
 """Support for performing TensorFlow classification on images."""
+from __future__ import annotations
+
 import io
 import logging
 import os
 import sys
 import time
 
-from PIL import Image, ImageDraw, UnidentifiedImageError
 import numpy as np
-import tensorflow as tf  # pylint: disable=import-error
+from PIL import Image, ImageDraw, UnidentifiedImageError
+import tensorflow as tf
 import voluptuous as vol
 
 from homeassistant.components.image_processing import (
     CONF_CONFIDENCE,
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.core import split_entity_id
+from homeassistant.const import (
+    CONF_ENTITY_ID,
+    CONF_MODEL,
+    CONF_NAME,
+    CONF_SOURCE,
+    EVENT_HOMEASSISTANT_START,
+)
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.pil import draw_box
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
@@ -43,7 +50,6 @@ CONF_GRAPH = "graph"
 CONF_LABELS = "labels"
 CONF_LABEL_OFFSET = "label_offset"
 CONF_LEFT = "left"
-CONF_MODEL = "model"
 CONF_MODEL_DIR = "model_dir"
 CONF_RIGHT = "right"
 CONF_TOP = "top"
@@ -96,7 +102,12 @@ def get_model_detection_function(model):
     return detect_fn
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the TensorFlow image processing platform."""
     model_config = config[CONF_MODEL]
     model_dir = model_config.get(CONF_MODEL_DIR) or hass.config.path("tensorflow")
@@ -137,7 +148,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         # Display warning that PIL will be used if no OpenCV is found.
-        import cv2  # noqa: F401 pylint: disable=unused-import, import-outside-toplevel
+        import cv2  # noqa: F401 pylint: disable=import-outside-toplevel
     except ImportError:
         _LOGGER.warning(
             "No OpenCV library found. TensorFlow will process image with "

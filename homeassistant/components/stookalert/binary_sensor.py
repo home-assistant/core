@@ -1,4 +1,4 @@
-"""This integration provides support for Stookalert Binary Sensor."""
+"""Support for Stookalert Binary Sensor."""
 from __future__ import annotations
 
 from datetime import timedelta
@@ -11,8 +11,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_PROVINCE, DOMAIN
@@ -35,15 +34,16 @@ class StookalertBinarySensor(BinarySensorEntity):
 
     _attr_attribution = "Data provided by rivm.nl"
     _attr_device_class = BinarySensorDeviceClass.SAFETY
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, client: stookalert.stookalert, entry: ConfigEntry) -> None:
         """Initialize a Stookalert device."""
         self._client = client
-        self._attr_name = f"Stookalert {entry.data[CONF_PROVINCE]}"
         self._attr_unique_id = entry.unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.entry_id}")},
-            name=entry.data[CONF_PROVINCE],
+            name=f"Stookalert {entry.data[CONF_PROVINCE]}",
             manufacturer="RIVM",
             model="Stookalert",
             entry_type=DeviceEntryType.SERVICE,

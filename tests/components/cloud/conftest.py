@@ -10,6 +10,12 @@ from . import mock_cloud, mock_cloud_prefs
 
 
 @pytest.fixture(autouse=True)
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
+    """Mock the TTS cache dir with empty dir."""
+    return mock_tts_cache_dir
+
+
+@pytest.fixture(autouse=True)
 def mock_user_data():
     """Mock os module."""
     with patch("hass_nabucasa.Cloud._write_user_info") as writer:
@@ -49,6 +55,15 @@ def mock_cloud_login(hass, mock_cloud_setup):
         "test",
     )
     with patch.object(hass.data[const.DOMAIN].auth, "async_check_token"):
+        yield
+
+
+@pytest.fixture(name="mock_auth")
+def mock_auth_fixture():
+    """Mock check token."""
+    with patch("hass_nabucasa.auth.CognitoAuth.async_check_token"), patch(
+        "hass_nabucasa.auth.CognitoAuth.async_renew_access_token"
+    ):
         yield
 
 

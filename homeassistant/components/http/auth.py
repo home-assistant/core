@@ -6,16 +6,23 @@ from datetime import timedelta
 from ipaddress import ip_address
 import logging
 import secrets
-from typing import Final
-from urllib.parse import unquote
+import time
+from typing import Any, Final
 
 from aiohttp import hdrs
 from aiohttp.web import Application, Request, StreamResponse, middleware
 import jwt
+from jwt import api_jws
+from yarl import URL
 
+from homeassistant.auth import jwt_wrapper
+from homeassistant.auth.const import GROUP_ID_READ_ONLY
 from homeassistant.auth.models import User
+from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers.json import json_bytes
+from homeassistant.helpers.network import is_cloud_connection
+from homeassistant.helpers.storage import Store
 from homeassistant.util.network import is_local
 
 from .const import KEY_AUTHENTICATED, KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER
@@ -26,28 +33,52 @@ _LOGGER = logging.getLogger(__name__)
 DATA_API_PASSWORD: Final = "api_password"
 DATA_SIGN_SECRET: Final = "http.auth.sign_secret"
 SIGN_QUERY_PARAM: Final = "authSig"
+SAFE_QUERY_PARAMS: Final = ["height", "width"]
+
+STORAGE_VERSION = 1
+STORAGE_KEY = "http.auth"
+CONTENT_USER_NAME = "Home Assistant Content"
 
 
 @callback
 def async_sign_path(
-    hass: HomeAssistant, refresh_token_id: str, path: str, expiration: timedelta
+    hass: HomeAssistant,
+    path: str,
+    expiration: timedelta,
+    *,
+    refresh_token_id: str | None = None,
 ) -> str:
     """Sign a path for temporary access without auth header."""
     if (secret := hass.data.get(DATA_SIGN_SECRET)) is None:
         secret = hass.data[DATA_SIGN_SECRET] = secrets.token_hex()
 
-    now = dt_util.utcnow()
-    encoded = jwt.encode(
+    if refresh_token_id is None:
+        if connection := websocket_api.current_connection.get():
+            refresh_token_id = connection.refresh_token_id
+        elif (
+            request := current_request.get()
+        ) and KEY_HASS_REFRESH_TOKEN_ID in request:
+            refresh_token_id = request[KEY_HASS_REFRESH_TOKEN_ID]
+        else:
+            refresh_token_id = hass.data[STORAGE_KEY]
+
+    url = URL(path)
+    now_timestamp = int(time.time())
+    expiration_timestamp = now_timestamp + int(expiration.total_seconds())
+    params = [itm for itm in url.query.items() if itm[0] not in SAFE_QUERY_PARAMS]
+    json_payload = json_bytes(
         {
             "iss": refresh_token_id,
-            "path": unquote(path),
-            "iat": now,
-            "exp": now + expiration,
-        },
-        secret,
-        algorithm="HS256",
+            "path": url.path,
+            "params": params,
+            "iat": now_timestamp,
+            "exp": expiration_timestamp,
+        }
     )
-    return f"{path}?{SIGN_QUERY_PARAM}={encoded}"
+    encoded = api_jws.encode(json_payload, secret, "HS256")
+    params.append((SIGN_QUERY_PARAM, encoded))
+    url = url.with_query(params)
+    return f"{url.path}?{url.query_string}"
 
 
 @callback
@@ -68,31 +99,44 @@ def async_user_not_allowed_do_auth(
     if not request:
         return "No request available to validate local access"
 
-    if "cloud" in hass.config.components:
-        # pylint: disable=import-outside-toplevel
-        from hass_nabucasa import remote
-
-        if remote.is_cloud_request.get():
-            return "User is local only"
+    if is_cloud_connection(hass):
+        return "User is local only"
 
     try:
-        remote = ip_address(request.remote)
+        remote_address = ip_address(request.remote)  # type: ignore[arg-type]
     except ValueError:
         return "Invalid remote IP"
 
-    if is_local(remote):
+    if is_local(remote_address):
         return None
 
     return "User cannot authenticate remotely"
 
 
-@callback
-def setup_auth(hass: HomeAssistant, app: Application) -> None:
+async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
     """Create auth middleware for the app."""
+    store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
+    if (data := await store.async_load()) is None:
+        data = {}
+
+    refresh_token = None
+    if "content_user" in data:
+        user = await hass.auth.async_get_user(data["content_user"])
+        if user and user.refresh_tokens:
+            refresh_token = list(user.refresh_tokens.values())[0]
+
+    if refresh_token is None:
+        user = await hass.auth.async_create_system_user(
+            CONTENT_USER_NAME, group_ids=[GROUP_ID_READ_ONLY]
+        )
+        refresh_token = await hass.auth.async_create_refresh_token(user)
+        data["content_user"] = user.id
+        await store.async_save(data)
+
+    hass.data[STORAGE_KEY] = refresh_token.id
 
     async def async_validate_auth_header(request: Request) -> bool:
-        """
-        Test authorization header against access token.
+        """Test authorization header against access token.
 
         Basic auth_type is legacy code, should be removed with api_password.
         """
@@ -128,13 +172,21 @@ def setup_auth(hass: HomeAssistant, app: Application) -> None:
             return False
 
         try:
-            claims = jwt.decode(
+            claims = jwt_wrapper.verify_and_decode(
                 signature, secret, algorithms=["HS256"], options={"verify_iss": False}
             )
         except jwt.InvalidTokenError:
             return False
 
         if claims["path"] != request.path:
+            return False
+
+        params = [
+            list(itm)  # claims stores tuples as lists
+            for itm in request.query.items()
+            if itm[0] not in SAFE_QUERY_PARAMS and itm[0] != SIGN_QUERY_PARAM
+        ]
+        if claims["params"] != params:
             return False
 
         refresh_token = await hass.auth.async_get_refresh_token(claims["iss"])
@@ -163,13 +215,13 @@ def setup_auth(hass: HomeAssistant, app: Application) -> None:
         # for every request.
         elif (
             request.method == "GET"
-            and SIGN_QUERY_PARAM in request.query
+            and SIGN_QUERY_PARAM in request.query_string
             and await async_validate_signed_request(request)
         ):
             authenticated = True
             auth_type = "signed request"
 
-        if authenticated:
+        if authenticated and _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
                 "Authenticated %s for %s using %s",
                 request.remote,

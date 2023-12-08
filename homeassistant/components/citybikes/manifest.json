@@ -1,7 +1,7 @@
 {
   "domain": "citybikes",
   "name": "CityBikes",
-  "documentation": "https://www.home-assistant.io/integrations/citybikes",
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/citybikes",
   "iot_class": "cloud_polling"
 }

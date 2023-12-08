@@ -3,14 +3,17 @@ from datetime import datetime, timedelta
 from http import HTTPStatus
 from unittest.mock import patch
 
+import pytest
 import requests.exceptions
+import requests_mock
 
 from homeassistant.components.plex.const import PLEX_UPDATE_LIBRARY_SIGNAL
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .helpers import trigger_plex_update, wait_for_debouncer
 
@@ -33,6 +36,7 @@ class MockPlexMedia:
 class MockPlexClip(MockPlexMedia):
     """Minimal mock of plexapi clip object."""
 
+    TAG = "Video"
     type = "clip"
     title = "Clip 1"
 
@@ -40,6 +44,7 @@ class MockPlexClip(MockPlexMedia):
 class MockPlexMovie(MockPlexMedia):
     """Minimal mock of plexapi movie object."""
 
+    TAG = "Video"
     type = "movie"
     title = "Movie 1"
 
@@ -47,6 +52,7 @@ class MockPlexMovie(MockPlexMedia):
 class MockPlexMusic(MockPlexMedia):
     """Minimal mock of plexapi album object."""
 
+    TAG = "Directory"
     listType = "audio"
     type = "album"
     title = "Album"
@@ -56,6 +62,7 @@ class MockPlexMusic(MockPlexMedia):
 class MockPlexTVEpisode(MockPlexMedia):
     """Minimal mock of plexapi episode object."""
 
+    TAG = "Video"
     type = "episode"
     title = "Episode 5"
     grandparentTitle = "TV Show"
@@ -65,17 +72,17 @@ class MockPlexTVEpisode(MockPlexMedia):
 
 
 async def test_library_sensor_values(
-    hass,
-    caplog,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     setup_plex_server,
     mock_websocket,
-    requests_mock,
+    requests_mock: requests_mock.Mocker,
     library_movies_size,
     library_music_size,
     library_tvshows_size,
     library_tvshows_size_episodes,
     library_tvshows_size_seasons,
-):
+) -> None:
     """Test the library sensors."""
     requests_mock.get(
         "/library/sections/1/all?includeCollections=0",
@@ -118,11 +125,15 @@ async def test_library_sensor_values(
 
     async_fire_time_changed(
         hass,
-        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
 
     media = [MockPlexTVEpisode()]
-    with patch("plexapi.library.LibrarySection.recentlyAdded", return_value=media):
+    with patch(
+        "plexapi.library.LibrarySection.recentlyAdded",
+        return_value=media,
+        __qualname__="recentlyAdded",
+    ):
         await hass.async_block_till_done()
 
     library_tv_sensor = hass.states.get("sensor.plex_server_1_library_tv_shows")
@@ -158,7 +169,11 @@ async def test_library_sensor_values(
     trigger_plex_update(
         mock_websocket, msgtype="status", payload=LIBRARY_UPDATE_PAYLOAD
     )
-    with patch("plexapi.library.LibrarySection.recentlyAdded", return_value=media):
+    with patch(
+        "plexapi.library.LibrarySection.recentlyAdded",
+        return_value=media,
+        __qualname__="recentlyAdded",
+    ):
         await hass.async_block_till_done()
 
     library_tv_sensor = hass.states.get("sensor.plex_server_1_library_tv_shows")
@@ -189,11 +204,15 @@ async def test_library_sensor_values(
 
     async_fire_time_changed(
         hass,
-        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
 
     media = [MockPlexMovie()]
-    with patch("plexapi.library.LibrarySection.recentlyAdded", return_value=media):
+    with patch(
+        "plexapi.library.LibrarySection.recentlyAdded",
+        return_value=media,
+        __qualname__="recentlyAdded",
+    ):
         await hass.async_block_till_done()
 
     library_movies_sensor = hass.states.get("sensor.plex_server_1_library_movies")
@@ -203,11 +222,15 @@ async def test_library_sensor_values(
 
     # Test with clip
     media = [MockPlexClip()]
-    with patch("plexapi.library.LibrarySection.recentlyAdded", return_value=media):
+    with patch(
+        "plexapi.library.LibrarySection.recentlyAdded",
+        return_value=media,
+        __qualname__="recentlyAdded",
+    ):
         async_dispatcher_send(
             hass, PLEX_UPDATE_LIBRARY_SIGNAL.format(mock_plex_server.machine_identifier)
         )
-        async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=3))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
         await hass.async_block_till_done()
 
     library_movies_sensor = hass.states.get("sensor.plex_server_1_library_movies")
@@ -225,11 +248,15 @@ async def test_library_sensor_values(
 
     async_fire_time_changed(
         hass,
-        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
 
     media = [MockPlexMusic()]
-    with patch("plexapi.library.LibrarySection.recentlyAdded", return_value=media):
+    with patch(
+        "plexapi.library.LibrarySection.recentlyAdded",
+        return_value=media,
+        __qualname__="recentlyAdded",
+    ):
         await hass.async_block_till_done()
 
     library_music_sensor = hass.states.get("sensor.plex_server_1_library_music")

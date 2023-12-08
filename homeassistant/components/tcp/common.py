@@ -131,8 +131,10 @@ class TcpEntity(Entity):
             readable, _, _ = select.select([sock], [], [], self._config[CONF_TIMEOUT])
             if not readable:
                 _LOGGER.warning(
-                    "Timeout (%s second(s)) waiting for a response after "
-                    "sending %r to %s on port %s",
+                    (
+                        "Timeout (%s second(s)) waiting for a response after "
+                        "sending %r to %s on port %s"
+                    ),
                     self._config[CONF_TIMEOUT],
                     self._config[CONF_PAYLOAD],
                     self._config[CONF_HOST],

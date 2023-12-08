@@ -2,11 +2,17 @@
 from __future__ import annotations
 
 import asyncio
+from asyncio import events
 import dataclasses
 import logging
+import os
+import subprocess
 import threading
+from time import monotonic
 import traceback
 from typing import Any
+
+import packaging.tags
 
 from . import bootstrap
 from .core import callback
@@ -14,11 +20,9 @@ from .helpers.frame import warn_use
 from .util.executor import InterruptibleThreadPoolExecutor
 from .util.thread import deadlock_safe_shutdown
 
-# mypy: disallow-any-generics
-
 #
-# Python 3.8 has significantly less workers by default
-# than Python 3.7.  In order to be consistent between
+# Some Python versions may have different number of workers by default
+# than others.  In order to be consistent between
 # supported versions, we need to set max_workers.
 #
 # In most cases the workers are not I/O bound, as they
@@ -32,13 +36,14 @@ TASK_CANCELATION_TIMEOUT = 5
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(slots=True)
 class RuntimeConfig:
     """Class to hold the information for running Home Assistant."""
 
     config_dir: str
     skip_pip: bool = False
-    safe_mode: bool = False
+    skip_pip_packages: list[str] = dataclasses.field(default_factory=list)
+    recovery_mode: bool = False
 
     verbose: bool = False
 
@@ -49,19 +54,54 @@ class RuntimeConfig:
     debug: bool = False
     open_ui: bool = False
 
+    safe_mode: bool = False
 
-class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[valid-type,misc]
+
+def can_use_pidfd() -> bool:
+    """Check if pidfd_open is available.
+
+    Back ported from cpython 3.12
+    """
+    if not hasattr(os, "pidfd_open"):
+        return False
+    try:
+        pid = os.getpid()
+        os.close(os.pidfd_open(pid, 0))
+    except OSError:
+        # blocked by security policy like SECCOMP
+        return False
+    return True
+
+
+class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
     """Event loop policy for Home Assistant."""
 
     def __init__(self, debug: bool) -> None:
         """Init the event loop policy."""
         super().__init__()
         self.debug = debug
+        self._watcher: asyncio.AbstractChildWatcher | None = None
+
+    def _init_watcher(self) -> None:
+        """Initialize the watcher for child processes.
+
+        Back ported from cpython 3.12
+        """
+        with events._lock:  # type: ignore[attr-defined] # pylint: disable=protected-access
+            if self._watcher is None:  # pragma: no branch
+                if can_use_pidfd():
+                    self._watcher = asyncio.PidfdChildWatcher()
+                else:
+                    self._watcher = asyncio.ThreadedChildWatcher()
+                if threading.current_thread() is threading.main_thread():
+                    self._watcher.attach_loop(
+                        self._local._loop  # type: ignore[attr-defined] # pylint: disable=protected-access
+                    )
 
     @property
     def loop_name(self) -> str:
         """Return name of the loop."""
-        return self._loop_factory.__name__  # type: ignore
+        return self._loop_factory.__name__  # type: ignore[no-any-return,attr-defined]
 
     def new_event_loop(self) -> asyncio.AbstractEventLoop:
         """Get the event loop."""
@@ -74,9 +114,13 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[valid
             thread_name_prefix="SyncWorker", max_workers=MAX_EXECUTOR_WORKERS
         )
         loop.set_default_executor(executor)
-        loop.set_default_executor = warn_use(  # type: ignore
+        loop.set_default_executor = warn_use(  # type: ignore[method-assign]
             loop.set_default_executor, "sets default executor on the event loop"
         )
+        # bind the built-in time.monotonic directly as loop.time to avoid the
+        # overhead of the additional method call since its the most called loop
+        # method and its roughly 10%+ of all the call time in base_events.py
+        loop.time = monotonic  # type: ignore[method-assign]
         return loop
 
 
@@ -91,11 +135,18 @@ def _async_loop_exception_handler(_: Any, context: dict[str, Any]) -> None:
     if source_traceback := context.get("source_traceback"):
         stack_summary = "".join(traceback.format_list(source_traceback))
         logger.error(
-            "Error doing job: %s: %s", context["message"], stack_summary, **kwargs  # type: ignore
+            "Error doing job: %s: %s",
+            context["message"],
+            stack_summary,
+            **kwargs,  # type: ignore[arg-type]
         )
         return
 
-    logger.error("Error doing job: %s", context["message"], **kwargs)  # type: ignore
+    logger.error(
+        "Error doing job: %s",
+        context["message"],
+        **kwargs,  # type: ignore[arg-type]
+    )
 
 
 async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
@@ -106,13 +157,29 @@ async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
         return 1
 
     # threading._shutdown can deadlock forever
-    threading._shutdown = deadlock_safe_shutdown  # type: ignore[attr-defined] # pylint: disable=protected-access
+    # pylint: disable-next=protected-access
+    threading._shutdown = deadlock_safe_shutdown  # type: ignore[attr-defined]
 
     return await hass.async_run()
 
 
+def _enable_posix_spawn() -> None:
+    """Enable posix_spawn on Alpine Linux."""
+    if subprocess._USE_POSIX_SPAWN:  # pylint: disable=protected-access
+        return
+
+    # The subprocess module does not know about Alpine Linux/musl
+    # and will use fork() instead of posix_spawn() which significantly
+    # less efficient. This is a workaround to force posix_spawn()
+    # when using musl since cpython is not aware its supported.
+    tag = next(packaging.tags.sys_tags())
+    # pylint: disable-next=protected-access
+    subprocess._USE_POSIX_SPAWN = "musllinux" in tag.platform
+
+
 def run(runtime_config: RuntimeConfig) -> int:
     """Run Home Assistant."""
+    _enable_posix_spawn()
     asyncio.set_event_loop_policy(HassEventLoopPolicy(runtime_config.debug))
     # Backport of cpython 3.9 asyncio.run with a _cancel_all_tasks that times out
     loop = asyncio.new_event_loop()
@@ -123,9 +190,7 @@ def run(runtime_config: RuntimeConfig) -> int:
         try:
             _cancel_all_tasks_with_timeout(loop, TASK_CANCELATION_TIMEOUT)
             loop.run_until_complete(loop.shutdown_asyncgens())
-            # Once cpython 3.8 is no longer supported we can use the
-            # the built-in loop.shutdown_default_executor
-            loop.run_until_complete(_shutdown_default_executor(loop))
+            loop.run_until_complete(loop.shutdown_default_executor())
         finally:
             asyncio.set_event_loop(None)
             loop.close()
@@ -140,7 +205,7 @@ def _cancel_all_tasks_with_timeout(
         return
 
     for task in to_cancel:
-        task.cancel()
+        task.cancel("Final process shutdown")
 
     loop.run_until_complete(asyncio.wait(to_cancel, timeout=timeout))
 
@@ -161,22 +226,3 @@ def _cancel_all_tasks_with_timeout(
                     "task": task,
                 }
             )
-
-
-async def _shutdown_default_executor(loop: asyncio.AbstractEventLoop) -> None:
-    """Backport of cpython 3.9 schedule the shutdown of the default executor."""
-    future = loop.create_future()
-
-    def _do_shutdown() -> None:
-        try:
-            loop._default_executor.shutdown(wait=True)  # type: ignore  # pylint: disable=protected-access
-            loop.call_soon_threadsafe(future.set_result, None)
-        except Exception as ex:  # pylint: disable=broad-except
-            loop.call_soon_threadsafe(future.set_exception, ex)
-
-    thread = threading.Thread(target=_do_shutdown)
-    thread.start()
-    try:
-        await future
-    finally:
-        thread.join()

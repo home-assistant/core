@@ -1,4 +1,6 @@
 """Support for getting temperature from TEMPer devices."""
+from __future__ import annotations
+
 import logging
 
 from temperusb.temper import TemperHandler
@@ -13,8 +15,11 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_OFFSET,
     DEVICE_DEFAULT_NAME,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-TEMPER_SENSORS = []
+TEMPER_SENSORS: list[TemperSensor] = []
 
 
 def get_temper_devices():
@@ -36,7 +41,12 @@ def get_temper_devices():
     return TemperHandler().get_devices()
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Temper sensors."""
     prefix = name = config[CONF_NAME]
     scaling = {"scale": config.get(CONF_SCALE), "offset": config.get(CONF_OFFSET)}
@@ -50,8 +60,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 def reset_devices():
-    """
-    Re-scan for underlying Temper sensors and assign them to our devices.
+    """Re-scan for underlying Temper sensors and assign them to our devices.
 
     This assumes the same sensor devices are present in the same order.
     """
@@ -64,7 +73,7 @@ class TemperSensor(SensorEntity):
     """Representation of a Temper temperature sensor."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     def __init__(self, temper_device, name, scaling):
         """Initialize the sensor."""
@@ -81,7 +90,7 @@ class TemperSensor(SensorEntity):
         # set calibration data
         self.temper_device.set_calibration_data(scale=self.scale, offset=self.offset)
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve latest state."""
         try:
             sensor_value = self.temper_device.get_temperature("celsius")

@@ -1,8 +1,8 @@
 """The sms gateway to interact with a GSM modem."""
 import logging
 
-import gammu  # pylint: disable=import-error
-from gammu.asyncworker import GammuAsyncWorker  # pylint: disable=import-error
+import gammu
+from gammu.asyncworker import GammuAsyncWorker
 
 from homeassistant.core import callback
 
@@ -16,14 +16,21 @@ class Gateway:
 
     def __init__(self, config, hass):
         """Initialize the sms gateway."""
+        _LOGGER.debug("Init with connection mode:%s", config["Connection"])
         self._worker = GammuAsyncWorker(self.sms_pull)
         self._worker.configure(config)
         self._hass = hass
         self._first_pull = True
+        self.manufacturer = None
+        self.model = None
+        self.firmware = None
 
     async def init_async(self):
-        """Initialize the sms gateway asynchronously."""
+        """Initialize the sms gateway asynchronously. This method is also called in config flow to verify connection."""
         await self._worker.init_async()
+        self.manufacturer = await self.get_manufacturer_async()
+        self.model = await self.get_model_async()
+        self.firmware = await self.get_firmware_async()
 
     def sms_pull(self, state_machine):
         """Pull device.
@@ -73,7 +80,6 @@ class Gateway:
 
         self._hass.add_job(self._notify_incoming_sms, data)
 
-    # pylint: disable=no-self-use
     def get_and_delete_all_sms(self, state_machine, force=False):
         """Read and delete all SMS in the modem."""
         # Read SMS memory status ...
@@ -154,6 +160,40 @@ class Gateway:
         """Get the current signal level of the modem."""
         return await self._worker.get_signal_quality_async()
 
+    async def get_network_info_async(self):
+        """Get the current network info of the modem."""
+        network_info = await self._worker.get_network_info_async()
+        # Looks like there is a bug and it's empty for any modem https://github.com/gammu/python-gammu/issues/31, so try workaround
+        if not network_info["NetworkName"]:
+            network_info["NetworkName"] = gammu.GSMNetworks.get(
+                network_info["NetworkCode"]
+            )
+        return network_info
+
+    async def get_manufacturer_async(self):
+        """Get the manufacturer of the modem."""
+        return await self._worker.get_manufacturer_async()
+
+    async def get_model_async(self):
+        """Get the model of the modem."""
+        model = await self._worker.get_model_async()
+        if not model or not model[0]:
+            return
+        display = model[0]  # Identification model
+        if model[1]:  # Real model
+            display = f"{display} ({model[1]})"
+        return display
+
+    async def get_firmware_async(self):
+        """Get the firmware information of the modem."""
+        firmware = await self._worker.get_firmware_async()
+        if not firmware or not firmware[0]:
+            return
+        display = firmware[0]  # Version
+        if firmware[1]:  # Date
+            display = f"{display} ({firmware[1]})"
+        return display
+
     async def terminate_async(self):
         """Terminate modem connection."""
         return await self._worker.terminate_async()
@@ -163,8 +203,13 @@ async def create_sms_gateway(config, hass):
     """Create the sms gateway."""
     try:
         gateway = Gateway(config, hass)
-        await gateway.init_async()
+        try:
+            await gateway.init_async()
+        except gammu.GSMError as exc:
+            _LOGGER.error("Failed to initialize, error %s", exc)
+            await gateway.terminate_async()
+            return None
         return gateway
     except gammu.GSMError as exc:
-        _LOGGER.error("Failed to initialize, error %s", exc)
+        _LOGGER.error("Failed to create async worker, error %s", exc)
         return None

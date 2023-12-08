@@ -1,5 +1,4 @@
 """Test the Logitech Harmony Hub activity select."""
-
 from datetime import timedelta
 
 from homeassistant.components.harmony.const import DOMAIN
@@ -16,6 +15,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.util import utcnow
 
 from .const import ENTITY_REMOTE, ENTITY_SELECT, HUB_NAME
@@ -24,8 +24,8 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_connection_state_changes(
-    harmony_client, mock_hc, hass, mock_write_config
-):
+    harmony_client, mock_hc, hass: HomeAssistant, mock_write_config
+) -> None:
     """Ensure connection changes are reflected in the switch states."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
@@ -55,7 +55,7 @@ async def test_connection_state_changes(
     assert hass.states.is_state(ENTITY_SELECT, "Watch TV")
 
 
-async def test_options(mock_hc, hass, mock_write_config):
+async def test_options(mock_hc, hass: HomeAssistant, mock_write_config) -> None:
     """Ensure calls to the switch modify the harmony state."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
@@ -68,14 +68,14 @@ async def test_options(mock_hc, hass, mock_write_config):
     # assert we have all options
     state = hass.states.get(ENTITY_SELECT)
     assert state.attributes.get("options") == [
-        "PowerOff",
+        "power_off",
         "Nile-TV",
         "Play Music",
         "Watch TV",
     ]
 
 
-async def test_select_option(mock_hc, hass, mock_write_config):
+async def test_select_option(mock_hc, hass: HomeAssistant, mock_write_config) -> None:
     """Ensure calls to the switch modify the harmony state."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
@@ -94,10 +94,10 @@ async def test_select_option(mock_hc, hass, mock_write_config):
     assert hass.states.is_state(ENTITY_REMOTE, STATE_ON)
     assert hass.states.is_state(ENTITY_SELECT, "Play Music")
 
-    # turn off harmony by selecting PowerOff activity
-    await _select_option_and_wait(hass, ENTITY_SELECT, "PowerOff")
+    # turn off harmony by selecting power_off activity
+    await _select_option_and_wait(hass, ENTITY_SELECT, "power_off")
     assert hass.states.is_state(ENTITY_REMOTE, STATE_OFF)
-    assert hass.states.is_state(ENTITY_SELECT, "PowerOff")
+    assert hass.states.is_state(ENTITY_SELECT, "power_off")
 
 
 async def _select_option_and_wait(hass, entity, option):

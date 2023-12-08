@@ -1,17 +1,17 @@
 """Axis binary sensor platform tests."""
-
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .test_device import NAME, setup_axis_integration
+from .const import NAME
 
 
-async def test_platform_manually_configured(hass):
+async def test_platform_manually_configured(hass: HomeAssistant) -> None:
     """Test that nothing happens when platform is manually configured."""
     assert (
         await async_setup_component(
@@ -25,17 +25,15 @@ async def test_platform_manually_configured(hass):
     assert AXIS_DOMAIN not in hass.data
 
 
-async def test_no_binary_sensors(hass):
+async def test_no_binary_sensors(hass: HomeAssistant, setup_config_entry) -> None:
     """Test that no sensors in Axis results in no sensor entities."""
-    await setup_axis_integration(hass)
-
     assert not hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)
 
 
-async def test_binary_sensors(hass, mock_rtsp_event):
+async def test_binary_sensors(
+    hass: HomeAssistant, setup_config_entry, mock_rtsp_event
+) -> None:
     """Test that sensors are loaded properly."""
-    await setup_axis_integration(hass)
-
     mock_rtsp_event(
         topic="tns1:Device/tnsaxis:Sensor/PIR",
         data_type="state",

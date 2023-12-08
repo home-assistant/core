@@ -5,20 +5,15 @@ from abc import abstractmethod
 import datetime
 import logging
 
-import soco.config as soco_config
 from soco.core import SoCo
-from soco.exceptions import SoCoException
 
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
-from .const import (
-    DOMAIN,
-    SONOS_FAVORITES_UPDATED,
-    SONOS_POLL_UPDATE,
-    SONOS_STATE_UPDATED,
-)
+from .const import DATA_SONOS, DOMAIN, SONOS_FALLBACK_POLL, SONOS_STATE_UPDATED
+from .exception import SonosUpdateError
 from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,6 +23,7 @@ class SonosEntity(Entity):
     """Representation of a Sonos entity."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, speaker: SonosSpeaker) -> None:
         """Initialize a SonosEntity."""
@@ -35,11 +31,12 @@ class SonosEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Handle common setup when added to hass."""
+        self.hass.data[DATA_SONOS].entity_id_mappings[self.entity_id] = self.speaker
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SONOS_POLL_UPDATE}-{self.soco.uid}",
-                self.async_poll,
+                f"{SONOS_FALLBACK_POLL}-{self.soco.uid}",
+                self.async_fallback_poll,
             )
         )
         self.async_on_remove(
@@ -49,36 +46,27 @@ class SonosEntity(Entity):
                 self.async_write_ha_state,
             )
         )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{SONOS_FAVORITES_UPDATED}-{self.soco.household_id}",
-                self.async_write_ha_state,
-            )
-        )
 
-    async def async_poll(self, now: datetime.datetime) -> None:
+    async def async_will_remove_from_hass(self) -> None:
+        """Clean up when entity is removed."""
+        del self.hass.data[DATA_SONOS].entity_id_mappings[self.entity_id]
+
+    async def async_fallback_poll(self, now: datetime.datetime) -> None:
         """Poll the entity if subscriptions fail."""
         if not self.speaker.subscriptions_failed:
-            if soco_config.EVENT_ADVERTISE_IP:
-                listener_msg = f"{self.speaker.subscription_address} (advertising as {soco_config.EVENT_ADVERTISE_IP})"
-            else:
-                listener_msg = self.speaker.subscription_address
-            _LOGGER.warning(
-                "%s cannot reach %s, falling back to polling, functionality may be limited",
-                self.speaker.zone_name,
-                listener_msg,
-            )
             self.speaker.subscriptions_failed = True
             await self.speaker.async_unsubscribe()
         try:
-            await self._async_poll()
-        except (OSError, SoCoException) as ex:
-            _LOGGER.debug("Error connecting to %s: %s", self.entity_id, ex)
+            await self._async_fallback_poll()
+        except SonosUpdateError as err:
+            _LOGGER.debug("Could not fallback poll: %s", err)
 
     @abstractmethod
-    async def _async_poll(self) -> None:
-        """Poll the specific functionality. Should be implemented by platforms if needed."""
+    async def _async_fallback_poll(self) -> None:
+        """Poll the specific functionality if subscriptions fail.
+
+        Should be implemented by platforms if needed.
+        """
 
     @property
     def soco(self) -> SoCo:
@@ -106,3 +94,20 @@ class SonosEntity(Entity):
     def available(self) -> bool:
         """Return whether this device is available."""
         return self.speaker.available
+
+
+class SonosPollingEntity(SonosEntity):
+    """Representation of a Sonos entity which may not support updating by subscriptions."""
+
+    @abstractmethod
+    def poll_state(self) -> None:
+        """Poll the device for the current state."""
+
+    def update(self) -> None:
+        """Update the state using the built-in entity poller."""
+        if not self.available:
+            return
+        try:
+            self.poll_state()
+        except SonosUpdateError as err:
+            _LOGGER.debug("Could not poll: %s", err)

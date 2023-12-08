@@ -1,47 +1,54 @@
 """Support for Voice mailboxes."""
+from __future__ import annotations
+
 import asyncio
 from contextlib import suppress
 from datetime import timedelta
 from http import HTTPStatus
 import logging
+from typing import Any, Final
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPNotFound
-import async_timeout
 
+from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import callback
+from homeassistant.config import config_per_platform
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform, discovery
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_prepare_setup_platform
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "mailbox"
+DOMAIN: Final = "mailbox"
 
-EVENT = "mailbox_updated"
-CONTENT_TYPE_MPEG = "audio/mpeg"
-CONTENT_TYPE_NONE = "none"
+EVENT: Final = "mailbox_updated"
+CONTENT_TYPE_MPEG: Final = "audio/mpeg"
+CONTENT_TYPE_NONE: Final = "none"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-async def async_setup(hass, config):
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for mailboxes."""
-    mailboxes = []
-    hass.components.frontend.async_register_built_in_panel(
-        "mailbox", "mailbox", "mdi:mailbox"
-    )
+    mailboxes: list[Mailbox] = []
+    frontend.async_register_built_in_panel(hass, "mailbox", "mailbox", "mdi:mailbox")
     hass.http.register_view(MailboxPlatformsView(mailboxes))
     hass.http.register_view(MailboxMessageView(mailboxes))
     hass.http.register_view(MailboxMediaView(mailboxes))
     hass.http.register_view(MailboxDeleteView(mailboxes))
 
-    async def async_setup_platform(p_type, p_config=None, discovery_info=None):
+    async def async_setup_platform(
+        p_type: str,
+        p_config: ConfigType | None = None,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
         """Set up a mailbox platform."""
         if p_config is None:
             p_config = {}
@@ -78,20 +85,24 @@ async def async_setup(hass, config):
 
         mailboxes.append(mailbox)
         mailbox_entity = MailboxEntity(mailbox)
-        component = EntityComponent(
+        component = EntityComponent[MailboxEntity](
             logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
         )
+        component.register_shutdown()
         await component.async_add_entities([mailbox_entity])
 
     setup_tasks = [
         asyncio.create_task(async_setup_platform(p_type, p_config))
         for p_type, p_config in config_per_platform(config, DOMAIN)
+        if p_type is not None
     ]
 
     if setup_tasks:
         await asyncio.wait(setup_tasks)
 
-    async def async_platform_discovered(platform, info):
+    async def async_platform_discovered(
+        platform: str, info: DiscoveryInfoType | None
+    ) -> None:
         """Handle for discovered platform."""
         await async_setup_platform(platform, discovery_info=info)
 
@@ -103,32 +114,32 @@ async def async_setup(hass, config):
 class MailboxEntity(Entity):
     """Entity for each mailbox platform to provide a badge display."""
 
-    def __init__(self, mailbox):
+    def __init__(self, mailbox: Mailbox) -> None:
         """Initialize mailbox entity."""
         self.mailbox = mailbox
         self.message_count = 0
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Complete entity initialization."""
 
         @callback
-        def _mailbox_updated(event):
+        def _mailbox_updated(event: Event) -> None:
             self.async_schedule_update_ha_state(True)
 
         self.hass.bus.async_listen(EVENT, _mailbox_updated)
         self.async_schedule_update_ha_state(True)
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the binary sensor."""
         return str(self.message_count)
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the entity."""
         return self.mailbox.name
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Retrieve messages from platform."""
         messages = await self.mailbox.async_get_messages()
         self.message_count = len(messages)
@@ -137,40 +148,40 @@ class MailboxEntity(Entity):
 class Mailbox:
     """Represent a mailbox device."""
 
-    def __init__(self, hass, name):
+    def __init__(self, hass: HomeAssistant, name: str) -> None:
         """Initialize mailbox object."""
         self.hass = hass
         self.name = name
 
     @callback
-    def async_update(self):
+    def async_update(self) -> None:
         """Send event notification of updated mailbox."""
         self.hass.bus.async_fire(EVENT)
 
     @property
-    def media_type(self):
+    def media_type(self) -> str:
         """Return the supported media type."""
         raise NotImplementedError()
 
     @property
-    def can_delete(self):
+    def can_delete(self) -> bool:
         """Return if messages can be deleted."""
         return False
 
     @property
-    def has_media(self):
+    def has_media(self) -> bool:
         """Return if messages have attached media files."""
         return False
 
-    async def async_get_media(self, msgid):
+    async def async_get_media(self, msgid: str) -> bytes:
         """Return the media blob for the msgid."""
         raise NotImplementedError()
 
-    async def async_get_messages(self):
+    async def async_get_messages(self) -> list[dict[str, Any]]:
         """Return a list of the current messages."""
         raise NotImplementedError()
 
-    async def async_delete(self, msgid):
+    async def async_delete(self, msgid: str) -> bool:
         """Delete the specified messages."""
         raise NotImplementedError()
 
@@ -182,11 +193,11 @@ class StreamError(Exception):
 class MailboxView(HomeAssistantView):
     """Base mailbox view."""
 
-    def __init__(self, mailboxes):
+    def __init__(self, mailboxes: list[Mailbox]) -> None:
         """Initialize a basic mailbox view."""
         self.mailboxes = mailboxes
 
-    def get_mailbox(self, platform):
+    def get_mailbox(self, platform: str) -> Mailbox:
         """Retrieve the specified mailbox."""
         for mailbox in self.mailboxes:
             if mailbox.name == platform:
@@ -202,7 +213,7 @@ class MailboxPlatformsView(MailboxView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Retrieve list of platforms."""
-        platforms = []
+        platforms: list[dict[str, Any]] = []
         for mailbox in self.mailboxes:
             platforms.append(
                 {
@@ -220,7 +231,7 @@ class MailboxMessageView(MailboxView):
     url = "/api/mailbox/messages/{platform}"
     name = "api:mailbox:messages"
 
-    async def get(self, request, platform):
+    async def get(self, request: web.Request, platform: str) -> web.Response:
         """Retrieve messages."""
         mailbox = self.get_mailbox(platform)
         messages = await mailbox.async_get_messages()
@@ -233,7 +244,7 @@ class MailboxDeleteView(MailboxView):
     url = "/api/mailbox/delete/{platform}/{msgid}"
     name = "api:mailbox:delete"
 
-    async def delete(self, request, platform, msgid):
+    async def delete(self, request: web.Request, platform: str, msgid: str) -> None:
         """Delete items."""
         mailbox = self.get_mailbox(platform)
         await mailbox.async_delete(msgid)
@@ -245,12 +256,14 @@ class MailboxMediaView(MailboxView):
     url = r"/api/mailbox/media/{platform}/{msgid}"
     name = "api:asteriskmbox:media"
 
-    async def get(self, request, platform, msgid):
+    async def get(
+        self, request: web.Request, platform: str, msgid: str
+    ) -> web.Response:
         """Retrieve media."""
         mailbox = self.get_mailbox(platform)
 
         with suppress(asyncio.CancelledError, asyncio.TimeoutError):
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 try:
                     stream = await mailbox.async_get_media(msgid)
                 except StreamError as err:

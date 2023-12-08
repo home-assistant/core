@@ -1,8 +1,0 @@
-{
-    "device_automation": {
-        "action_type": {
-            "set_value": "Angi verdi for {entity_name}"
-        }
-    },
-    "title": "Nummer"
-}

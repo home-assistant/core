@@ -1,0 +1,140 @@
+{
+  "config": {
+    "flow_title": "{serial} ({host})",
+    "step": {
+      "manual_device_entry": {
+        "description": "Local Configuration",
+        "data": {
+          "host": "Host (IP Address)"
+        }
+      },
+      "api_config": {
+        "data": {
+          "username": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "dhcp_confirm": {
+        "description": "Do you want to set up {host}\nSerial: {serial}?"
+      },
+      "pick_device": {
+        "title": "Device Selection",
+        "description": "The following IntelliFire devices were discovered. Please select which you wish to configure.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "api_error": "Login failed",
+      "iftapi_connect": "Error conecting to iftapi.net"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "not_intellifire_device": "Not an IntelliFire Device."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "flame": {
+        "name": "Flame"
+      },
+      "timer_on": {
+        "name": "Timer on"
+      },
+      "pilot_light_on": {
+        "name": "Pilot light on"
+      },
+      "thermostat_on": {
+        "name": "Thermostat on"
+      },
+      "pilot_flame_error": {
+        "name": "Pilot flame error"
+      },
+      "flame_error": {
+        "name": "Flame Error"
+      },
+      "fan_delay_error": {
+        "name": "Fan delay error"
+      },
+      "maintenance_error": {
+        "name": "Maintenance error"
+      },
+      "disabled_error": {
+        "name": "Disabled error"
+      },
+      "fan_error": {
+        "name": "Fan error"
+      },
+      "lights_error": {
+        "name": "Lights error"
+      },
+      "accessory_error": {
+        "name": "Accessory error"
+      },
+      "soft_lock_out_error": {
+        "name": "Soft lock out error"
+      },
+      "ecm_offline_error": {
+        "name": "ECM offline error"
+      },
+      "offline_error": {
+        "name": "Offline error"
+      }
+    },
+    "fan": {
+      "fan": {
+        "name": "[%key:component::fan::title%]"
+      }
+    },
+    "light": {
+      "lights": {
+        "name": "Lights"
+      }
+    },
+    "number": {
+      "flame_control": {
+        "name": "Flame control"
+      }
+    },
+    "sensor": {
+      "flame_height": {
+        "name": "Flame height"
+      },
+      "target_temp": {
+        "name": "Target temperature"
+      },
+      "fan_speed": {
+        "name": "Fan Speed"
+      },
+      "timer_end_timestamp": {
+        "name": "Timer end"
+      },
+      "downtime": {
+        "name": "Downtime"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "connection_quality": {
+        "name": "Connection quality"
+      },
+      "ecm_latency": {
+        "name": "ECM latency"
+      },
+      "ipv4_address": {
+        "name": "IP address"
+      }
+    },
+    "switch": {
+      "flame": {
+        "name": "Flame"
+      },
+      "pilot_light": {
+        "name": "Pilot light"
+      }
+    }
+  }
+}

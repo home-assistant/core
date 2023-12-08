@@ -1,10 +1,13 @@
 """Legrand Home+ Control Switch Entity Module that uses the HomeAssistant DataUpdateCoordinator."""
 from functools import partial
+from typing import Any
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import dispatcher
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DISPATCHER_REMOVERS, DOMAIN, HW_TYPE, SIGNAL_ADD_ENTITIES
@@ -26,7 +29,11 @@ def add_switch_entities(new_unique_ids, coordinator, add_entities):
     add_entities(new_entities)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Legrand Home+ Control Switch platform in HomeAssistant.
 
     Args:
@@ -59,16 +66,14 @@ class HomeControlSwitchEntity(CoordinatorEntity, SwitchEntity):
     consumption methods and state attributes.
     """
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, coordinator, idx):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self.idx = idx
         self.module = self.coordinator.data[self.idx]
-
-    @property
-    def name(self):
-        """Name of the device."""
-        return self.module.name
 
     @property
     def unique_id(self):
@@ -85,7 +90,7 @@ class HomeControlSwitchEntity(CoordinatorEntity, SwitchEntity):
             },
             manufacturer="Legrand",
             model=HW_TYPE.get(self.module.hw_type),
-            name=self.name,
+            name=self.module.name,
             sw_version=self.module.fw,
         )
 
@@ -112,14 +117,14 @@ class HomeControlSwitchEntity(CoordinatorEntity, SwitchEntity):
         """Return entity state."""
         return self.module.status == "on"
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         # Do the turning on.
         await self.module.turn_on()
         # Update the data
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.module.turn_off()
         # Update the data

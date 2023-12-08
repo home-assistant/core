@@ -1,0 +1,24 @@
+{
+  "domain": "google",
+  "name": "Google",
+  "integrations": [
+    "google_assistant",
+    "google_assistant_sdk",
+    "google_cloud",
+    "google_domains",
+    "google_generative_ai_conversation",
+    "google_mail",
+    "google_maps",
+    "google_pubsub",
+    "google_sheets",
+    "google_tasks",
+    "google_translate",
+    "google_travel_time",
+    "google_wifi",
+    "google",
+    "nest",
+    "cast",
+    "dialogflow",
+    "youtube"
+  ]
+}

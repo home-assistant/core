@@ -1,9 +1,10 @@
 """Support for fetching WiFi associations through SNMP."""
+from __future__ import annotations
+
 import binascii
 import logging
+import sys
 
-from pysnmp.entity import config as cfg
-from pysnmp.entity.rfc3413.oneliner import cmdgen
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -12,7 +13,10 @@ from homeassistant.components.device_tracker import (
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_AUTH_KEY,
@@ -21,6 +25,11 @@ from .const import (
     CONF_PRIV_KEY,
     DEFAULT_COMMUNITY,
 )
+
+if sys.version_info < (3, 12):
+    from pysnmp.entity import config as cfg
+    from pysnmp.entity.rfc3413.oneliner import cmdgen
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,8 +44,12 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> SnmpScanner | None:
     """Validate the configuration and return an SNMP scanner."""
+    if sys.version_info >= (3, 12):
+        raise HomeAssistantError(
+            "SNMP is not supported on Python 3.12. Please use Python 3.11."
+        )
     scanner = SnmpScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None

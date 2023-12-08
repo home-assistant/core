@@ -1,0 +1,54 @@
+add_doorbell_text:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: unifiprotect
+    message:
+      example: Come In
+      required: true
+      selector:
+        text:
+remove_doorbell_text:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: unifiprotect
+    message:
+      example: Go Away!
+      required: true
+      selector:
+        text:
+set_default_doorbell_text:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: unifiprotect
+    message:
+      example: Welcome!
+      required: true
+      selector:
+        text:
+set_chime_paired_doorbells:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: unifiprotect
+          entity:
+            device_class: unifiprotect__chime_button
+    doorbells:
+      example: "binary_sensor.front_doorbell_doorbell"
+      required: false
+      selector:
+        target:
+          entity:
+            integration: unifiprotect
+            domain: binary_sensor
+            device_class: occupancy

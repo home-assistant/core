@@ -3,17 +3,22 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine, Sequence
-from datetime import timedelta
+from datetime import datetime, timedelta
 import hashlib
 from types import ModuleType
-from typing import Any, Final, final
+from typing import Any, Final, Protocol, final
 
 import attr
 import voluptuous as vol
 
 from homeassistant import util
+from homeassistant.backports.functools import cached_property
 from homeassistant.components import zone
-from homeassistant.config import async_log_exception, load_yaml_config_file
+from homeassistant.config import (
+    async_log_schema_error,
+    config_per_platform,
+    load_yaml_config_file,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_GPS_ACCURACY,
@@ -25,21 +30,28 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
     DEVICE_DEFAULT_NAME,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_HOME,
     STATE_NOT_HOME,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform, discovery
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers import (
+    config_validation as cv,
+    discovery,
+    entity_registry as er,
+)
 from homeassistant.helpers.event import (
     async_track_time_interval,
     async_track_utc_time_change,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, GPSType, StateType
-from homeassistant.setup import async_prepare_setup_platform, async_start_setup
+from homeassistant.setup import (
+    async_notify_setup_error,
+    async_prepare_setup_platform,
+    async_start_setup,
+)
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import dump
 
@@ -63,20 +75,12 @@ from .const import (
     LOGGER,
     PLATFORM_TYPE_LEGACY,
     SCAN_INTERVAL,
-    SOURCE_TYPE_BLUETOOTH,
-    SOURCE_TYPE_BLUETOOTH_LE,
-    SOURCE_TYPE_GPS,
-    SOURCE_TYPE_ROUTER,
+    SourceType,
 )
 
 SERVICE_SEE: Final = "see"
 
-SOURCE_TYPES: Final[tuple[str, ...]] = (
-    SOURCE_TYPE_GPS,
-    SOURCE_TYPE_ROUTER,
-    SOURCE_TYPE_BLUETOOTH,
-    SOURCE_TYPE_BLUETOOTH_LE,
-)
+SOURCE_TYPES = [cls.value for cls in SourceType]
 
 NEW_DEVICE_DEFAULTS_SCHEMA = vol.Any(
     None,
@@ -108,7 +112,7 @@ SERVICE_SEE_PAYLOAD_SCHEMA: Final[vol.Schema] = vol.Schema(
             ATTR_GPS_ACCURACY: cv.positive_int,
             ATTR_BATTERY: cv.positive_int,
             ATTR_ATTRIBUTES: dict,
-            ATTR_SOURCE_TYPE: vol.In(SOURCE_TYPES),
+            ATTR_SOURCE_TYPE: vol.Coerce(SourceType),
             ATTR_CONSIDER_HOME: cv.time_period,
             # Temp workaround for iOS app introduced in 0.65
             vol.Optional("battery_status"): str,
@@ -121,6 +125,48 @@ YAML_DEVICES: Final = "known_devices.yaml"
 EVENT_NEW_DEVICE: Final = "device_tracker_new_device"
 
 
+class SeeCallback(Protocol):
+    """Protocol type for DeviceTracker.see callback."""
+
+    def __call__(
+        self,
+        mac: str | None = None,
+        dev_id: str | None = None,
+        host_name: str | None = None,
+        location_name: str | None = None,
+        gps: GPSType | None = None,
+        gps_accuracy: int | None = None,
+        battery: int | None = None,
+        attributes: dict[str, Any] | None = None,
+        source_type: SourceType | str = SourceType.GPS,
+        picture: str | None = None,
+        icon: str | None = None,
+        consider_home: timedelta | None = None,
+    ) -> None:
+        """Define see type."""
+
+
+class AsyncSeeCallback(Protocol):
+    """Protocol type for DeviceTracker.async_see callback."""
+
+    async def __call__(
+        self,
+        mac: str | None = None,
+        dev_id: str | None = None,
+        host_name: str | None = None,
+        location_name: str | None = None,
+        gps: GPSType | None = None,
+        gps_accuracy: int | None = None,
+        battery: int | None = None,
+        attributes: dict[str, Any] | None = None,
+        source_type: SourceType | str = SourceType.GPS,
+        picture: str | None = None,
+        icon: str | None = None,
+        consider_home: timedelta | None = None,
+    ) -> None:
+        """Define async_see type."""
+
+
 def see(
     hass: HomeAssistant,
     mac: str | None = None,
@@ -130,7 +176,7 @@ def see(
     gps: GPSType | None = None,
     gps_accuracy: int | None = None,
     battery: int | None = None,
-    attributes: dict | None = None,
+    attributes: dict[str, Any] | None = None,
 ) -> None:
     """Call service to notify you see device."""
     data: dict[str, Any] = {
@@ -179,7 +225,7 @@ async def async_setup_integration(hass: HomeAssistant, config: ConfigType) -> No
     discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
 
     # Clean up stale devices
-    async_track_utc_time_change(
+    cancel_update_stale = async_track_utc_time_change(
         hass, tracker.async_update_stale, second=range(0, 60, 5)
     )
 
@@ -198,6 +244,16 @@ async def async_setup_integration(hass: HomeAssistant, config: ConfigType) -> No
     # restore
     await tracker.async_setup_tracked_device()
 
+    @callback
+    def _on_hass_stop(_: Event) -> None:
+        """Cleanup when Home Assistant stops.
+
+        Cancel the async_update_stale schedule.
+        """
+        cancel_update_stale()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_hass_stop)
+
 
 @attr.s
 class DeviceTrackerPlatform:
@@ -214,7 +270,7 @@ class DeviceTrackerPlatform:
     platform: ModuleType = attr.ib()
     config: dict = attr.ib()
 
-    @property
+    @cached_property
     def type(self) -> str | None:
         """Return platform type."""
         methods, platform_type = self.LEGACY_SETUP, PLATFORM_TYPE_LEGACY
@@ -231,12 +287,12 @@ class DeviceTrackerPlatform:
     ) -> None:
         """Set up a legacy platform."""
         assert self.type == PLATFORM_TYPE_LEGACY
-        full_name = f"{DOMAIN}.{self.name}"
+        full_name = f"{self.name}.{DOMAIN}"
         LOGGER.info("Setting up %s", full_name)
         with async_start_setup(hass, [full_name]):
             try:
                 scanner = None
-                setup = None
+                setup: bool | None = None
                 if hasattr(self.platform, "async_get_scanner"):
                     scanner = await self.platform.async_get_scanner(
                         hass, {DOMAIN: self.config}
@@ -267,7 +323,7 @@ class DeviceTrackerPlatform:
                         hass, self.config, scanner, tracker.async_see, self.type
                     )
 
-                if setup is None and scanner is None:
+                if not setup and scanner is None:
                     LOGGER.error(
                         "Error setting up platform %s %s", self.type, self.name
                     )
@@ -291,6 +347,7 @@ async def async_extract_config(
         *(
             async_create_platform_type(hass, config, p_type, p_config)
             for p_type, p_config in config_per_platform(config, DOMAIN)
+            if p_type is not None
         )
     ):
         if platform is None:
@@ -318,6 +375,27 @@ async def async_create_platform_type(
     return DeviceTrackerPlatform(p_type, platform, p_config)
 
 
+def _load_device_names_and_attributes(
+    scanner: DeviceScanner,
+    device_name_uses_executor: bool,
+    extra_attributes_uses_executor: bool,
+    seen: set[str],
+    found_devices: list[str],
+) -> tuple[dict[str, str | None], dict[str, dict[str, Any]]]:
+    """Load device names and attributes in a single executor job."""
+    host_name_by_mac: dict[str, str | None] = {}
+    extra_attributes_by_mac: dict[str, dict[str, Any]] = {}
+    for mac in found_devices:
+        if device_name_uses_executor and mac not in seen:
+            host_name_by_mac[mac] = scanner.get_device_name(mac)
+        if extra_attributes_uses_executor:
+            try:
+                extra_attributes_by_mac[mac] = scanner.get_extra_attributes(mac)
+            except NotImplementedError:
+                extra_attributes_by_mac[mac] = {}
+    return host_name_by_mac, extra_attributes_by_mac
+
+
 @callback
 def async_setup_scanner_platform(
     hass: HomeAssistant,
@@ -335,14 +413,16 @@ def async_setup_scanner_platform(
     scanner.hass = hass
 
     # Initial scan of each mac we also tell about host name for config
-    seen: Any = set()
+    seen: set[str] = set()
 
-    async def async_device_tracker_scan(now: dt_util.dt.datetime | None) -> None:
+    async def async_device_tracker_scan(now: datetime | None) -> None:
         """Handle interval matches."""
         if update_lock.locked():
             LOGGER.warning(
-                "Updating device list from %s took longer than the scheduled "
-                "scan interval %s",
+                (
+                    "Updating device list from %s took longer than the scheduled "
+                    "scan interval %s"
+                ),
                 platform,
                 interval,
             )
@@ -351,22 +431,49 @@ def async_setup_scanner_platform(
         async with update_lock:
             found_devices = await scanner.async_scan_devices()
 
+        device_name_uses_executor = (
+            scanner.async_get_device_name.__func__  # type: ignore[attr-defined]
+            is DeviceScanner.async_get_device_name
+        )
+        extra_attributes_uses_executor = (
+            scanner.async_get_extra_attributes.__func__  # type: ignore[attr-defined]
+            is DeviceScanner.async_get_extra_attributes
+        )
+        host_name_by_mac: dict[str, str | None] = {}
+        extra_attributes_by_mac: dict[str, dict[str, Any]] = {}
+        if device_name_uses_executor or extra_attributes_uses_executor:
+            (
+                host_name_by_mac,
+                extra_attributes_by_mac,
+            ) = await hass.async_add_executor_job(
+                _load_device_names_and_attributes,
+                scanner,
+                device_name_uses_executor,
+                extra_attributes_uses_executor,
+                seen,
+                found_devices,
+            )
+
         for mac in found_devices:
             if mac in seen:
                 host_name = None
             else:
-                host_name = await scanner.async_get_device_name(mac)
+                host_name = host_name_by_mac.get(
+                    mac, await scanner.async_get_device_name(mac)
+                )
                 seen.add(mac)
 
             try:
-                extra_attributes = await scanner.async_get_extra_attributes(mac)
+                extra_attributes = extra_attributes_by_mac.get(
+                    mac, await scanner.async_get_extra_attributes(mac)
+                )
             except NotImplementedError:
                 extra_attributes = {}
 
             kwargs: dict[str, Any] = {
                 "mac": mac,
                 "host_name": host_name,
-                "source_type": SOURCE_TYPE_ROUTER,
+                "source_type": SourceType.ROUTER,
                 "attributes": {
                     "scanner": scanner.__class__.__name__,
                     **extra_attributes,
@@ -383,8 +490,23 @@ def async_setup_scanner_platform(
 
             hass.async_create_task(async_see_device(**kwargs))
 
-    async_track_time_interval(hass, async_device_tracker_scan, interval)
+    cancel_legacy_scan = async_track_time_interval(
+        hass,
+        async_device_tracker_scan,
+        interval,
+        name=f"device_tracker {platform} legacy scan",
+    )
     hass.async_create_task(async_device_tracker_scan(None))
+
+    @callback
+    def _on_hass_stop(_: Event) -> None:
+        """Cleanup when Home Assistant stops.
+
+        Cancel the legacy scan.
+        """
+        cancel_legacy_scan()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_hass_stop)
 
 
 async def get_tracker(hass: HomeAssistant, config: ConfigType) -> DeviceTracker:
@@ -443,8 +565,8 @@ class DeviceTracker:
         gps: GPSType | None = None,
         gps_accuracy: int | None = None,
         battery: int | None = None,
-        attributes: dict | None = None,
-        source_type: str = SOURCE_TYPE_GPS,
+        attributes: dict[str, Any] | None = None,
+        source_type: SourceType | str = SourceType.GPS,
         picture: str | None = None,
         icon: str | None = None,
         consider_home: timedelta | None = None,
@@ -476,8 +598,8 @@ class DeviceTracker:
         gps: GPSType | None = None,
         gps_accuracy: int | None = None,
         battery: int | None = None,
-        attributes: dict | None = None,
-        source_type: str = SOURCE_TYPE_GPS,
+        attributes: dict[str, Any] | None = None,
+        source_type: SourceType | str = SourceType.GPS,
         picture: str | None = None,
         icon: str | None = None,
         consider_home: timedelta | None = None,
@@ -486,7 +608,7 @@ class DeviceTracker:
 
         This method is a coroutine.
         """
-        registry = await async_get_registry(self.hass)
+        registry = er.async_get(self.hass)
         if mac is None and dev_id is None:
             raise HomeAssistantError("Neither mac or device id passed in")
         if mac is not None:
@@ -578,7 +700,7 @@ class DeviceTracker:
             )
 
     @callback
-    def async_update_stale(self, now: dt_util.dt.datetime) -> None:
+    def async_update_stale(self, now: datetime) -> None:
         """Update stale devices.
 
         This method must be run in the event loop.
@@ -612,11 +734,15 @@ class DeviceTracker:
 class Device(RestoreEntity):
     """Base class for a tracked device."""
 
+    # This entity is legacy and does not have a platform.
+    # We can't fix this easily without breaking changes.
+    _no_platform_reported = True
+
     host_name: str | None = None
     location_name: str | None = None
     gps: GPSType | None = None
     gps_accuracy: int = 0
-    last_seen: dt_util.dt.datetime | None = None
+    last_seen: datetime | None = None
     battery: int | None = None
     attributes: dict | None = None
 
@@ -663,7 +789,7 @@ class Device(RestoreEntity):
 
         self._icon = icon
 
-        self.source_type: str | None = None
+        self.source_type: SourceType | str | None = None
 
         self._attributes: dict[str, Any] = {}
 
@@ -716,7 +842,7 @@ class Device(RestoreEntity):
         gps_accuracy: int | None = None,
         battery: int | None = None,
         attributes: dict[str, Any] | None = None,
-        source_type: str = SOURCE_TYPE_GPS,
+        source_type: SourceType | str = SourceType.GPS,
         consider_home: timedelta | None = None,
     ) -> None:
         """Mark the device as seen."""
@@ -744,7 +870,7 @@ class Device(RestoreEntity):
 
         await self.async_update()
 
-    def stale(self, now: dt_util.dt.datetime | None = None) -> bool:
+    def stale(self, now: datetime | None = None) -> bool:
         """Return if device state is stale.
 
         Async friendly.
@@ -769,7 +895,7 @@ class Device(RestoreEntity):
             return
         if self.location_name:
             self._state = self.location_name
-        elif self.gps is not None and self.source_type == SOURCE_TYPE_GPS:
+        elif self.gps is not None and self.source_type == SourceType.GPS:
             zone_state = zone.async_active_zone(
                 self.hass, self.gps[0], self.gps[1], self.gps_accuracy
             )
@@ -887,7 +1013,8 @@ async def async_load_config(
             device = dev_schema(device)
             device["dev_id"] = cv.slugify(dev_id)
         except vol.Invalid as exp:
-            async_log_exception(exp, dev_id, devices, hass)
+            async_log_schema_error(exp, dev_id, devices, hass)
+            async_notify_setup_error(hass, DOMAIN)
         else:
             result.append(Device(hass, **device))
     return result
@@ -909,6 +1036,19 @@ def update_config(path: str, dev_id: str, device: Device) -> None:
         out.write(dump(device_config))
 
 
+def remove_device_from_config(hass: HomeAssistant, device_id: str) -> None:
+    """Remove device from YAML configuration file."""
+    path = hass.config.path(YAML_DEVICES)
+    devices = load_yaml_config_file(path)
+    devices.pop(device_id)
+    dumped = dump(devices)
+
+    with open(path, "r+", encoding="utf8") as out:
+        out.seek(0)
+        out.truncate()
+        out.write(dumped)
+
+
 def get_gravatar_for_email(email: str) -> str:
     """Return an 80px Gravatar for the given email address.
 
@@ -916,6 +1056,6 @@ def get_gravatar_for_email(email: str) -> str:
     """
 
     return (
-        f"https://www.gravatar.com/avatar/"
+        "https://www.gravatar.com/avatar/"
         f"{hashlib.md5(email.encode('utf-8').lower()).hexdigest()}.jpg?s=80&d=wavatar"
     )

@@ -21,8 +21,6 @@ CONF_TEXT_TYPE = "text"
 
 # List from https://tinyurl.com/watson-tts-docs
 SUPPORTED_VOICES = [
-    "ar-AR_OmarVoice",
-    "ar-MS_OmarVoice",
     "de-DE_BirgitV2Voice",
     "de-DE_BirgitV3Voice",
     "de-DE_BirgitVoice",
@@ -30,23 +28,25 @@ SUPPORTED_VOICES = [
     "de-DE_DieterV3Voice",
     "de-DE_DieterVoice",
     "de-DE_ErikaV3Voice",
-    "en-AU_CraigVoice",
-    "en-AU_MadisonVoice",
-    "en-GB_KateV3Voice",
-    "en-GB_KateVoice",
+    "en-AU_HeidiExpressive",
+    "en-AU_JackExpressive",
     "en-GB_CharlotteV3Voice",
     "en-GB_JamesV3Voice",
     "en-GB_KateV3Voice",
     "en-GB_KateVoice",
+    "en-US_AllisonExpressive",
     "en-US_AllisonV2Voice",
     "en-US_AllisonV3Voice",
     "en-US_AllisonVoice",
     "en-US_EmilyV3Voice",
+    "en-US_EmmaExpressive",
     "en-US_HenryV3Voice",
     "en-US_KevinV3Voice",
+    "en-US_LisaExpressive",
     "en-US_LisaV2Voice",
     "en-US_LisaV3Voice",
     "en-US_LisaVoice",
+    "en-US_MichaelExpressive",
     "en-US_MichaelV2Voice",
     "en-US_MichaelV3Voice",
     "en-US_MichaelVoice",
@@ -68,25 +68,15 @@ SUPPORTED_VOICES = [
     "it-IT_FrancescaVoice",
     "ja-JP_EmiV3Voice",
     "ja-JP_EmiVoice",
-    "ko-KR_HyunjunVoice",
-    "ko-KR_SiWooVoice",
-    "ko-KR_YoungmiVoice",
-    "ko-KR_YunaVoice",
-    "nl-NL_EmmaVoice",
-    "nl-NL_LiamVoice",
+    "ko-KR_JinV3Voice",
+    "nl-NL_MerelV3Voice",
     "pt-BR_IsabelaV3Voice",
     "pt-BR_IsabelaVoice",
-    "zh-CN_LiNaVoice",
-    "zh-CN_WangWeiVoice",
-    "zh-CN_ZhangJingVoice",
 ]
 
 DEPRECATED_VOICES = [
-    "ar-AR_OmarVoice",
     "de-DE_BirgitVoice",
     "de-DE_DieterVoice",
-    "en-GB_KateVoice",
-    "en-GB_KateV3Voice",
     "en-US_AllisonVoice",
     "en-US_LisaVoice",
     "en-US_MichaelVoice",
@@ -188,7 +178,7 @@ class WatsonTTSProvider(Provider):
         """Return a list of supported options."""
         return [CONF_VOICE]
 
-    def get_tts_audio(self, message, language=None, options=None):
+    def get_tts_audio(self, message, language, options):
         """Request TTS file from Watson TTS."""
         response = self.service.synthesize(
             text=message, accept=self.output_format, voice=options[CONF_VOICE]

@@ -15,8 +15,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     __version__ as current_version,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.core import HomeAssistant, get_release_channel
+from homeassistant.helpers import config_validation as cv, entity_platform, instance_id
+from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.loader import Integration, async_get_custom_components
 
 from .const import (
@@ -65,9 +67,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Additional/extra data collection
-    channel = get_channel(current_version)
-    huuid = await hass.helpers.instance_id.async_get()
-    system_info = await hass.helpers.system_info.async_get_system_info()
+    channel = get_release_channel()
+    huuid = await instance_id.async_get(hass)
+    system_info = await async_get_system_info(hass)
     custom_components = await async_get_custom_components(hass)
 
     tracing = {}
@@ -98,25 +100,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def update_system_info(now):
         nonlocal system_info
-        system_info = await hass.helpers.system_info.async_get_system_info()
+        system_info = await async_get_system_info(hass)
 
         # Update system info every hour
-        hass.helpers.event.async_call_later(3600, update_system_info)
+        async_call_later(hass, 3600, update_system_info)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, update_system_info)
 
     return True
-
-
-def get_channel(version: str) -> str:
-    """Find channel based on version number."""
-    if "dev0" in version:
-        return "dev"
-    if "dev" in version:
-        return "nightly"
-    if "b" in version:
-        return "beta"
-    return "stable"
 
 
 def process_before_send(
@@ -204,7 +195,7 @@ def process_before_send(
                 "channel": channel,
                 "custom_components": "\n".join(sorted(custom_components)),
                 "integrations": "\n".join(sorted(integrations)),
-                **system_info,  # type: ignore[arg-type]
+                **system_info,
             },
         }
     )

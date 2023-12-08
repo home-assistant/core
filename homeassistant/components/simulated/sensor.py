@@ -1,4 +1,6 @@
 """Adds a simulated sensor."""
+from __future__ import annotations
+
 from datetime import datetime
 import math
 from random import Random
@@ -7,7 +9,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 CONF_AMP = "amplitude"
@@ -29,8 +34,6 @@ DEFAULT_SEED = 999
 DEFAULT_UNIT = "value"
 DEFAULT_RELATIVE_TO_EPOCH = True
 
-ICON = "mdi:chart-line"
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_AMP, default=DEFAULT_AMP): vol.Coerce(float),
@@ -48,7 +51,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the simulated sensor."""
     name = config.get(CONF_NAME)
     unit = config.get(CONF_UNIT)
@@ -68,6 +76,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class SimulatedSensor(SensorEntity):
     """Class for simulated sensor."""
+
+    _attr_icon = "mdi:chart-line"
 
     def __init__(
         self, name, unit, amp, mean, period, phase, fwhm, seed, relative_to_epoch
@@ -111,7 +121,7 @@ class SimulatedSensor(SensorEntity):
         noise = self._random.gauss(mu=0, sigma=fwhm)
         return round(mean + periodic + noise, 3)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the sensor."""
         self._state = self.signal_calc()
 
@@ -124,11 +134,6 @@ class SimulatedSensor(SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
 
     @property
     def native_unit_of_measurement(self):

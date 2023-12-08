@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Helper script to bump the current version."""
 import argparse
-from datetime import datetime
 import re
 import subprocess
 
 from packaging.version import Version
 
 from homeassistant import const
+from homeassistant.util import dt as dt_util
 
 
 def _bump_release(release, bump_type):
@@ -86,10 +86,7 @@ def bump_version(version, bump_type):
         if not version.is_devrelease:
             raise ValueError("Can only be run on dev release")
 
-        to_change["dev"] = (
-            "dev",
-            datetime.utcnow().date().isoformat().replace("-", ""),
-        )
+        to_change["dev"] = ("dev", dt_util.utcnow().strftime("%Y%m%d"))
 
     else:
         assert False, f"Unsupported type: {bump_type}"
@@ -116,8 +113,36 @@ def write_version(version):
         "PATCH_VERSION: Final = .*\n", f'PATCH_VERSION: Final = "{patch}"\n', content
     )
 
-    with open("homeassistant/const.py", "wt") as fil:
-        content = fil.write(content)
+    with open("homeassistant/const.py", "w") as fil:
+        fil.write(content)
+
+
+def write_version_metadata(version: Version) -> None:
+    """Update pyproject.toml file with new version."""
+    with open("pyproject.toml", encoding="utf8") as fp:
+        content = fp.read()
+
+    content = re.sub(r"(version\W+=\W).+\n", f'\\g<1>"{version}"\n', content, count=1)
+
+    with open("pyproject.toml", "w", encoding="utf8") as fp:
+        fp.write(content)
+
+
+def write_ci_workflow(version: Version) -> None:
+    """Update ci workflow with new version."""
+    with open(".github/workflows/ci.yaml") as fp:
+        content = fp.read()
+
+    short_version = ".".join(str(version).split(".", maxsplit=2)[:2])
+    content = re.sub(
+        r"(\n\W+HA_SHORT_VERSION: )\"\d{4}\.\d{1,2}\"\n",
+        f'\\g<1>"{short_version}"\n',
+        content,
+        count=1,
+    )
+
+    with open(".github/workflows/ci.yaml", "w") as fp:
+        fp.write(content)
 
 
 def main():
@@ -133,7 +158,10 @@ def main():
     )
     arguments = parser.parse_args()
 
-    if arguments.commit and subprocess.run(["git", "diff", "--quiet"]).returncode == 1:
+    if (
+        arguments.commit
+        and subprocess.run(["git", "diff", "--quiet"], check=False).returncode == 1
+    ):
         print("Cannot use --commit because git is dirty.")
         return
 
@@ -142,11 +170,14 @@ def main():
     assert bumped > current, "BUG! New version is not newer than old version"
 
     write_version(bumped)
+    write_version_metadata(bumped)
+    write_ci_workflow(bumped)
+    print(bumped)
 
     if not arguments.commit:
         return
 
-    subprocess.run(["git", "commit", "-nam", f"Bumped version to {bumped}"])
+    subprocess.run(["git", "commit", "-nam", f"Bump version to {bumped}"], check=True)
 
 
 def test_bump_version():
@@ -172,7 +203,7 @@ def test_bump_version():
     assert bump_version(Version("0.56.0.dev0"), "minor") == Version("0.56.0")
     assert bump_version(Version("0.56.2.dev0"), "minor") == Version("0.57.0")
 
-    today = datetime.utcnow().date().isoformat().replace("-", "")
+    today = dt_util.utcnow().strftime("%Y%m%d")
     assert bump_version(Version("0.56.0.dev0"), "nightly") == Version(
         f"0.56.0.dev{today}"
     )

@@ -1,63 +1,51 @@
 """Reads vehicle status from StarLine API."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
 from .entity import StarlineEntity
 
-
-@dataclass
-class StarlineRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    name_: str
-
-
-@dataclass
-class StarlineBinarySensorEntityDescription(
-    BinarySensorEntityDescription, StarlineRequiredKeysMixin
-):
-    """Describes Starline binary_sensor entity."""
-
-
-BINARY_SENSOR_TYPES: tuple[StarlineBinarySensorEntityDescription, ...] = (
-    StarlineBinarySensorEntityDescription(
+BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
         key="hbrake",
-        name_="Hand Brake",
+        translation_key="hand_brake",
         device_class=BinarySensorDeviceClass.POWER,
     ),
-    StarlineBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="hood",
-        name_="Hood",
+        translation_key="hood",
         device_class=BinarySensorDeviceClass.DOOR,
     ),
-    StarlineBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="trunk",
-        name_="Trunk",
+        translation_key="trunk",
         device_class=BinarySensorDeviceClass.DOOR,
     ),
-    StarlineBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="alarm",
-        name_="Alarm",
+        translation_key="alarm",
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
-    StarlineBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="door",
-        name_="Doors",
+        translation_key="doors",
         device_class=BinarySensorDeviceClass.LOCK,
     ),
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the StarLine sensors."""
     account: StarlineAccount = hass.data[DOMAIN][entry.entry_id]
     entities = [
@@ -73,16 +61,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class StarlineSensor(StarlineEntity, BinarySensorEntity):
     """Representation of a StarLine binary sensor."""
 
-    entity_description: StarlineBinarySensorEntityDescription
-
     def __init__(
         self,
         account: StarlineAccount,
         device: StarlineDevice,
-        description: StarlineBinarySensorEntityDescription,
+        description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize sensor."""
-        super().__init__(account, device, description.key, description.name_)
+        super().__init__(account, device, description.key)
         self.entity_description = description
 
     @property

@@ -7,14 +7,17 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_WATT_HOUR,
-    POWER_WATT,
-    TEMP_CELSIUS,
-    TIME_SECONDS,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
+    UnitOfTime,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, JUICENET_API, JUICENET_COORDINATOR
 from .entity import JuiceNetDevice
@@ -26,48 +29,48 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="temperature",
-        name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="voltage",
-        name="Voltage",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
     ),
     SensorEntityDescription(
         key="amps",
-        name="Amps",
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="watts",
-        name="Watts",
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="charge_time",
-        name="Charge time",
-        native_unit_of_measurement=TIME_SECONDS,
+        translation_key="charge_time",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         icon="mdi:timer-outline",
     ),
     SensorEntityDescription(
         key="energy_added",
-        name="Energy added",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        translation_key="energy_added",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the JuiceNet Sensors."""
     juicenet_data = hass.data[DOMAIN][config_entry.entry_id]
     api = juicenet_data[JUICENET_API]
@@ -84,11 +87,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class JuiceNetSensorDevice(JuiceNetDevice, SensorEntity):
     """Implementation of a JuiceNet sensor."""
 
-    def __init__(self, device, coordinator, description: SensorEntityDescription):
+    def __init__(
+        self, device, coordinator, description: SensorEntityDescription
+    ) -> None:
         """Initialise the sensor."""
         super().__init__(device, description.key, coordinator)
         self.entity_description = description
-        self._attr_name = f"{self.device.name} {description.name}"
 
     @property
     def icon(self):

@@ -2,17 +2,15 @@
 from __future__ import annotations
 
 from cpuinfo import cpuinfo
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_NAME, FREQUENCY_GIGAHERTZ
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfFrequency
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 
 ATTR_BRAND = "brand"
 ATTR_HZ = "ghz_advertised"
@@ -20,34 +18,6 @@ ATTR_ARCH = "arch"
 
 HZ_ACTUAL = "hz_actual"
 HZ_ADVERTISED = "hz_advertised"
-
-DEFAULT_NAME = "CPU speed"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the CPU speed sensor."""
-    LOGGER.warning(
-        "Configuration of the CPU Speed platform in YAML is deprecated and will be "
-        "removed in Home Assistant 2022.4; Your existing configuration "
-        "has been imported into the UI automatically and can be safely removed "
-        "from your configuration.yaml file"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={CONF_NAME: config[CONF_NAME]},
-        )
-    )
 
 
 async def async_setup_entry(
@@ -62,29 +32,35 @@ async def async_setup_entry(
 class CPUSpeedSensor(SensorEntity):
     """Representation of a CPU sensor."""
 
+    _attr_device_class = SensorDeviceClass.FREQUENCY
     _attr_icon = "mdi:pulse"
-    _attr_name = "CPU Speed"
-    _attr_native_unit_of_measurement = FREQUENCY_GIGAHERTZ
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_native_unit_of_measurement = UnitOfFrequency.GIGAHERTZ
 
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the CPU sensor."""
         self._attr_unique_id = entry.entry_id
+        self._attr_device_info = DeviceInfo(
+            name="CPU Speed",
+            identifiers={(DOMAIN, entry.entry_id)},
+        )
 
     def update(self) -> None:
         """Get the latest data and updates the state."""
         info = cpuinfo.get_cpu_info()
 
         if info and HZ_ACTUAL in info:
-            self._attr_native_value = round(float(info[HZ_ACTUAL][0]) / 10 ** 9, 2)
+            self._attr_native_value = round(float(info[HZ_ACTUAL][0]) / 10**9, 2)
         else:
             self._attr_native_value = None
 
         if info:
             self._attr_extra_state_attributes = {
-                ATTR_ARCH: info["arch_string_raw"],
-                ATTR_BRAND: info["brand_raw"],
+                ATTR_ARCH: info.get("arch_string_raw"),
+                ATTR_BRAND: info.get("brand_raw"),
             }
             if HZ_ADVERTISED in info:
                 self._attr_extra_state_attributes[ATTR_HZ] = round(
-                    info[HZ_ADVERTISED][0] / 10 ** 9, 2
+                    info[HZ_ADVERTISED][0] / 10**9, 2
                 )

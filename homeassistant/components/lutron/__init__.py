@@ -11,9 +11,11 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 DOMAIN = "lutron"
@@ -35,6 +37,7 @@ LUTRON_DEVICES = "lutron_devices"
 # Attribute on events that indicates what action was taken with the button.
 ATTR_ACTION = "action"
 ATTR_FULL_ID = "full_id"
+ATTR_UUID = "uuid"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -50,7 +53,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, base_config):
+def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Set up the Lutron integration."""
     hass.data[LUTRON_BUTTONS] = []
     hass.data[LUTRON_CONTROLLER] = None
@@ -62,7 +65,7 @@ def setup(hass, base_config):
         "binary_sensor": [],
     }
 
-    config = base_config.get(DOMAIN)
+    config = base_config[DOMAIN]
     hass.data[LUTRON_CONTROLLER] = Lutron(
         config[CONF_HOST], config[CONF_USERNAME], config[CONF_PASSWORD]
     )
@@ -114,31 +117,26 @@ def setup(hass, base_config):
 class LutronDevice(Entity):
     """Representation of a Lutron device entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, area_name, lutron_device, controller):
         """Initialize the device."""
         self._lutron_device = lutron_device
         self._controller = controller
         self._area_name = area_name
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        self.hass.async_add_executor_job(
-            self._lutron_device.subscribe, self._update_callback, None
-        )
+        self._lutron_device.subscribe(self._update_callback, None)
 
     def _update_callback(self, _device, _context, _event, _params):
         """Run when invoked by pylutron when the device state changes."""
         self.schedule_update_ha_state()
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return f"{self._area_name} {self._lutron_device.name}"
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def unique_id(self):
@@ -173,6 +171,7 @@ class LutronButton:
         self._button = button
         self._event = "lutron_event"
         self._full_id = slugify(f"{area_name} {name}")
+        self._uuid = button.uuid
 
         button.subscribe(self.button_callback, None)
 
@@ -191,5 +190,10 @@ class LutronButton:
             action = "single"
 
         if action:
-            data = {ATTR_ID: self._id, ATTR_ACTION: action, ATTR_FULL_ID: self._full_id}
+            data = {
+                ATTR_ID: self._id,
+                ATTR_ACTION: action,
+                ATTR_FULL_ID: self._full_id,
+                ATTR_UUID: self._uuid,
+            }
             self._hass.bus.fire(self._event, data)

@@ -1,44 +1,57 @@
 """Support for Zigbee Home Automation devices."""
-
 import asyncio
+import contextlib
+import copy
 import logging
+import os
+import re
 
 import voluptuous as vol
 from zhaquirks import setup as setup_quirks
-from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
+from zigpy.config import CONF_DATABASE, CONF_DEVICE, CONF_DEVICE_PATH
+from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionError
 
-from homeassistant import config_entries, const as ha_const
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_TYPE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
-from . import api
+from . import repairs, websocket_api
 from .core import ZHAGateway
 from .core.const import (
     BAUD_RATES,
     CONF_BAUDRATE,
     CONF_CUSTOM_QUIRKS_PATH,
-    CONF_DATABASE,
     CONF_DEVICE_CONFIG,
     CONF_ENABLE_QUIRKS,
+    CONF_FLOW_CONTROL,
     CONF_RADIO_TYPE,
     CONF_USB_PATH,
     CONF_ZIGPY,
     DATA_ZHA,
-    DATA_ZHA_CONFIG,
-    DATA_ZHA_GATEWAY,
-    DATA_ZHA_PLATFORM_LOADED,
-    DATA_ZHA_SHUTDOWN_TASK,
     DOMAIN,
     PLATFORMS,
     SIGNAL_ADD_ENTITIES,
+    STARTUP_FAILURE_DELAY_S,
+    STARTUP_RETRIES,
     RadioType,
 )
+from .core.device import get_device_automation_triggers
 from .core.discovery import GROUP_PROBE
+from .core.helpers import ZHAData, get_zha_data
+from .radio_manager import ZhaRadioManager
+from .repairs.network_settings_inconsistent import warn_on_inconsistent_network_settings
+from .repairs.wrong_silabs_firmware import (
+    AlreadyRunningEZSP,
+    warn_on_wrong_silabs_firmware,
+)
 
-DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(ha_const.CONF_TYPE): cv.string})
+DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_TYPE): cv.string})
 ZHA_CONFIG_SCHEMA = {
     vol.Optional(CONF_BAUDRATE): cv.positive_int,
     vol.Optional(CONF_DATABASE): cv.string,
@@ -72,75 +85,178 @@ CENTICELSIUS = "C-100"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up ZHA from config."""
-    hass.data[DATA_ZHA] = {}
-
-    if DOMAIN in config:
-        conf = config[DOMAIN]
-        hass.data[DATA_ZHA][DATA_ZHA_CONFIG] = conf
+    zha_data = ZHAData()
+    zha_data.yaml_config = config.get(DOMAIN, {})
+    hass.data[DATA_ZHA] = zha_data
 
     return True
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-):
+def _clean_serial_port_path(path: str) -> str:
+    """Clean the serial port path, applying corrections where necessary."""
+
+    if path.startswith("socket://"):
+        path = path.strip()
+
+    # Removes extraneous brackets from IP addresses (they don't parse in CPython 3.11.4)
+    if re.match(r"^socket://\[\d+\.\d+\.\d+\.\d+\]:\d+$", path):
+        path = path.replace("[", "").replace("]", "")
+
+    return path
+
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up ZHA.
 
     Will automatically load components to support devices found on the network.
     """
 
-    zha_data = hass.data.setdefault(DATA_ZHA, {})
-    config = zha_data.get(DATA_ZHA_CONFIG, {})
+    # Remove brackets around IP addresses, this no longer works in CPython 3.11.4
+    # This will be removed in 2023.11.0
+    path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+    cleaned_path = _clean_serial_port_path(path)
+    data = copy.deepcopy(dict(config_entry.data))
 
-    for platform in PLATFORMS:
-        zha_data.setdefault(platform, [])
+    if path != cleaned_path:
+        _LOGGER.debug("Cleaned serial port path %r -> %r", path, cleaned_path)
+        data[CONF_DEVICE][CONF_DEVICE_PATH] = cleaned_path
+        hass.config_entries.async_update_entry(config_entry, data=data)
 
-    if config.get(CONF_ENABLE_QUIRKS, True):
-        setup_quirks(config)
+    zha_data = get_zha_data(hass)
 
-    zha_gateway = ZHAGateway(hass, config, config_entry)
-    await zha_gateway.async_initialize()
+    if zha_data.yaml_config.get(CONF_ENABLE_QUIRKS, True):
+        setup_quirks(
+            custom_quirks_path=zha_data.yaml_config.get(CONF_CUSTOM_QUIRKS_PATH)
+        )
 
-    zha_data[DATA_ZHA_PLATFORM_LOADED] = []
-    for platform in PLATFORMS:
-        coro = hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        zha_data[DATA_ZHA_PLATFORM_LOADED].append(hass.async_create_task(coro))
+    # temporary code to remove the ZHA storage file from disk.
+    # this will be removed in 2022.10.0
+    storage_path = hass.config.path(STORAGE_DIR, "zha.storage")
+    if os.path.isfile(storage_path):
+        _LOGGER.debug("removing ZHA storage file")
+        await hass.async_add_executor_job(os.remove, storage_path)
+    else:
+        _LOGGER.debug("ZHA storage file does not exist or was already removed")
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    # Load and cache device trigger information early
+    device_registry = dr.async_get(hass)
+    radio_mgr = ZhaRadioManager.from_config_entry(hass, config_entry)
+
+    async with radio_mgr.connect_zigpy_app() as app:
+        for dev in app.devices.values():
+            dev_entry = device_registry.async_get_device(
+                identifiers={(DOMAIN, str(dev.ieee))},
+                connections={(dr.CONNECTION_ZIGBEE, str(dev.ieee))},
+            )
+
+            if dev_entry is None:
+                continue
+
+            zha_data.device_trigger_cache[dev_entry.id] = (
+                str(dev.ieee),
+                get_device_automation_triggers(dev),
+            )
+
+    _LOGGER.debug("Trigger cache: %s", zha_data.device_trigger_cache)
+
+    # Retry setup a few times before giving up to deal with missing serial ports in VMs
+    for attempt in range(STARTUP_RETRIES):
+        try:
+            zha_gateway = await ZHAGateway.async_from_config(
+                hass=hass,
+                config=zha_data.yaml_config,
+                config_entry=config_entry,
+            )
+            break
+        except NetworkSettingsInconsistent as exc:
+            await warn_on_inconsistent_network_settings(
+                hass,
+                config_entry=config_entry,
+                old_state=exc.old_state,
+                new_state=exc.new_state,
+            )
+            raise ConfigEntryError(
+                "Network settings do not match most recent backup"
+            ) from exc
+        except TransientConnectionError as exc:
+            raise ConfigEntryNotReady from exc
+        except Exception as exc:  # pylint: disable=broad-except
+            _LOGGER.debug(
+                "Couldn't start coordinator (attempt %s of %s)",
+                attempt + 1,
+                STARTUP_RETRIES,
+                exc_info=exc,
+            )
+
+            if attempt < STARTUP_RETRIES - 1:
+                await asyncio.sleep(STARTUP_FAILURE_DELAY_S)
+                continue
+
+            if RadioType[config_entry.data[CONF_RADIO_TYPE]] == RadioType.ezsp:
+                try:
+                    # Ignore all exceptions during probing, they shouldn't halt setup
+                    await warn_on_wrong_silabs_firmware(
+                        hass, config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+                    )
+                except AlreadyRunningEZSP as ezsp_exc:
+                    raise ConfigEntryNotReady from ezsp_exc
+
+            raise
+
+    repairs.async_delete_blocking_issues(hass)
+
+    manufacturer = zha_gateway.state.node_info.manufacturer
+    model = zha_gateway.state.node_info.model
+
+    if manufacturer is None and model is None:
+        manufacturer = "Unknown"
+        model = "Unknown"
+
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(CONNECTION_ZIGBEE, str(zha_gateway.application_controller.ieee))},
-        identifiers={(DOMAIN, str(zha_gateway.application_controller.ieee))},
+        connections={(dr.CONNECTION_ZIGBEE, str(zha_gateway.state.node_info.ieee))},
+        identifiers={(DOMAIN, str(zha_gateway.state.node_info.ieee))},
         name="Zigbee Coordinator",
-        manufacturer="ZHA",
-        model=zha_gateway.radio_description,
+        manufacturer=manufacturer,
+        model=model,
+        sw_version=zha_gateway.state.node_info.version,
     )
 
-    api.async_load_api(hass)
+    websocket_api.async_load_api(hass)
 
-    async def async_zha_shutdown(event):
-        """Handle shutdown tasks."""
-        await zha_data[DATA_ZHA_GATEWAY].shutdown()
-        await zha_data[DATA_ZHA_GATEWAY].async_update_device_storage()
+    async def async_shutdown(_: Event) -> None:
+        await zha_gateway.shutdown()
 
-    zha_data[DATA_ZHA_SHUTDOWN_TASK] = hass.bus.async_listen_once(
-        ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown
+    config_entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown)
     )
-    asyncio.create_task(async_load_entities(hass))
+
+    await zha_gateway.async_initialize_devices_and_entities()
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload ZHA config entry."""
-    await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].shutdown()
-    await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_update_device_storage()
+    zha_data = get_zha_data(hass)
+
+    if zha_data.gateway is not None:
+        await zha_data.gateway.shutdown()
+        zha_data.gateway = None
+
+    # clean up any remaining entity metadata
+    # (entities that have been discovered but not yet added to HA)
+    # suppress KeyError because we don't know what state we may
+    # be in when we get here in failure cases
+    with contextlib.suppress(KeyError):
+        for platform in PLATFORMS:
+            del zha_data.platforms[platform]
 
     GROUP_PROBE.cleanup()
-    api.async_unload_api(hass)
+    websocket_api.async_unload_api(hass)
 
     # our components don't have unload methods so no need to look at return values
     await asyncio.gather(
@@ -150,25 +266,10 @@ async def async_unload_entry(
         )
     )
 
-    hass.data[DATA_ZHA][DATA_ZHA_SHUTDOWN_TASK]()
-
     return True
 
 
-async def async_load_entities(hass: HomeAssistant) -> None:
-    """Load entities after integration was setup."""
-    await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_initialize_devices_and_entities()
-    to_setup = hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED]
-    results = await asyncio.gather(*to_setup, return_exceptions=True)
-    for res in results:
-        if isinstance(res, Exception):
-            _LOGGER.warning("Couldn't setup zha platform: %s", res)
-    async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)
-
-
-async def async_migrate_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-):
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
@@ -178,7 +279,7 @@ async def async_migrate_entry(
             CONF_DEVICE: {CONF_DEVICE_PATH: config_entry.data[CONF_USB_PATH]},
         }
 
-        baudrate = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {}).get(CONF_BAUDRATE)
+        baudrate = get_zha_data(hass).yaml_config.get(CONF_BAUDRATE)
         if data[CONF_RADIO_TYPE] != RadioType.deconz and baudrate in BAUD_RATES:
             data[CONF_DEVICE][CONF_BAUDRATE] = baudrate
 
@@ -192,6 +293,24 @@ async def async_migrate_entry(
             data[CONF_RADIO_TYPE] = "znp"
 
         config_entry.version = 3
+        hass.config_entries.async_update_entry(config_entry, data=data)
+
+    if config_entry.version == 3:
+        data = {**config_entry.data}
+
+        if not data[CONF_DEVICE].get(CONF_BAUDRATE):
+            data[CONF_DEVICE][CONF_BAUDRATE] = {
+                "deconz": 38400,
+                "xbee": 57600,
+                "ezsp": 57600,
+                "znp": 115200,
+                "zigate": 115200,
+            }[data[CONF_RADIO_TYPE]]
+
+        if not data[CONF_DEVICE].get(CONF_FLOW_CONTROL):
+            data[CONF_DEVICE][CONF_FLOW_CONTROL] = None
+
+        config_entry.version = 4
         hass.config_entries.async_update_entry(config_entry, data=data)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)

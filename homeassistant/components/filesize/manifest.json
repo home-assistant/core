@@ -1,7 +1,8 @@
 {
   "domain": "filesize",
   "name": "File Size",
+  "codeowners": ["@gjohansson-ST"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/filesize",
-  "codeowners": [],
   "iot_class": "local_polling"
 }

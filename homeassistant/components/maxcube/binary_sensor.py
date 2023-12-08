@@ -1,16 +1,26 @@
 """Support for MAX! binary sensors via MAX! Cube."""
+from __future__ import annotations
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_KEY
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Iterate through all MAX! Devices and add window shutters."""
-    devices = []
+    devices: list[MaxCubeBinarySensorBase] = []
     for handler in hass.data[DATA_KEY].values():
         for device in handler.cube.devices:
             devices.append(MaxCubeBattery(handler, device))
@@ -18,8 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if device.is_windowshutter():
                 devices.append(MaxCubeShutter(handler, device))
 
-    if devices:
-        add_entities(devices)
+    add_entities(devices)
 
 
 class MaxCubeBinarySensorBase(BinarySensorEntity):
@@ -33,7 +42,7 @@ class MaxCubeBinarySensorBase(BinarySensorEntity):
         self._device = device
         self._room = handler.cube.room_by_id(device.room_id)
 
-    def update(self):
+    def update(self) -> None:
         """Get latest data from MAX! Cube."""
         self._cubehandle.update()
 

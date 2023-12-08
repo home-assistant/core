@@ -9,8 +9,8 @@ def get_tradable_asset_pairs(kraken_api: KrakenAPI) -> dict[str, str]:
     tradable_asset_pairs = {}
     asset_pairs_df = kraken_api.get_tradable_asset_pairs()
     for pair in zip(asset_pairs_df.index.values, asset_pairs_df["wsname"]):
-        if not pair[0].endswith(
-            ".d"
-        ):  # Remove darkpools https://support.kraken.com/hc/en-us/articles/360001391906-Introducing-the-Kraken-Dark-Pool
+        # Remove darkpools
+        # https://support.kraken.com/hc/en-us/articles/360001391906-Introducing-the-Kraken-Dark-Pool
+        if not pair[0].endswith(".d"):
             tradable_asset_pairs[pair[1]] = pair[0]
     return tradable_asset_pairs

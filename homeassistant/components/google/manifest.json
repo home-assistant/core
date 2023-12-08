@@ -1,12 +1,11 @@
 {
   "domain": "google",
-  "name": "Google Calendars",
-  "documentation": "https://www.home-assistant.io/integrations/calendar.google/",
-  "requirements": [
-    "google-api-python-client==1.6.4",
-    "httplib2==0.19.0",
-    "oauth2client==4.0.0"
-  ],
-  "codeowners": [],
-  "iot_class": "cloud_polling"
+  "name": "Google Calendar",
+  "codeowners": ["@allenporter"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/calendar.google",
+  "iot_class": "cloud_polling",
+  "loggers": ["googleapiclient"],
+  "requirements": ["gcal-sync==6.0.3", "oauth2client==4.1.3"]
 }

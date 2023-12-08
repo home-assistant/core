@@ -1,16 +1,34 @@
 """Constants for the Shelly integration."""
 from __future__ import annotations
 
+from enum import StrEnum
+from logging import Logger, getLogger
 import re
 from typing import Final
 
-BLOCK: Final = "block"
-DATA_CONFIG_ENTRY: Final = "config_entry"
-DEVICE: Final = "device"
-DOMAIN: Final = "shelly"
-REST: Final = "rest"
-RPC: Final = "rpc"
+from aioshelly.const import (
+    MODEL_BULB,
+    MODEL_BULB_RGBW,
+    MODEL_BUTTON1,
+    MODEL_BUTTON1_V2,
+    MODEL_DIMMER,
+    MODEL_DIMMER_2,
+    MODEL_DUO,
+    MODEL_GAS,
+    MODEL_MOTION,
+    MODEL_MOTION_2,
+    MODEL_RGBW2,
+    MODEL_VALVE,
+    MODEL_VINTAGE_V2,
+    MODEL_WALL_DISPLAY,
+)
+from awesomeversion import AwesomeVersion
 
+DOMAIN: Final = "shelly"
+
+LOGGER: Logger = getLogger(__package__)
+
+DATA_CONFIG_ENTRY: Final = "config_entry"
 CONF_COAP_PORT: Final = "coap_port"
 DEFAULT_COAP_PORT: Final = 5683
 FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
@@ -22,39 +40,36 @@ LIGHT_TRANSITION_MIN_FIRMWARE_DATE: Final = 20210226
 MAX_TRANSITION_TIME: Final = 5000
 
 RGBW_MODELS: Final = (
-    "SHBLB-1",
-    "SHRGBW2",
+    MODEL_BULB,
+    MODEL_RGBW2,
 )
 
 MODELS_SUPPORTING_LIGHT_TRANSITION: Final = (
-    "SHBDUO-1",
-    "SHCB-1",
-    "SHDM-1",
-    "SHDM-2",
-    "SHRGBW2",
-    "SHVIN-1",
+    MODEL_DUO,
+    MODEL_BULB_RGBW,
+    MODEL_DIMMER,
+    MODEL_DIMMER_2,
+    MODEL_RGBW2,
+    MODEL_VINTAGE_V2,
 )
 
 MODELS_SUPPORTING_LIGHT_EFFECTS: Final = (
-    "SHBLB-1",
-    "SHCB-1",
-    "SHRGBW2",
+    MODEL_BULB,
+    MODEL_BULB_RGBW,
+    MODEL_RGBW2,
 )
 
 # Bulbs that support white & color modes
 DUAL_MODE_LIGHT_MODELS: Final = (
-    "SHBLB-1",
-    "SHCB-1",
+    MODEL_BULB,
+    MODEL_BULB_RGBW,
 )
-
-# Used in "_async_update_data" as timeout for polling data from devices.
-POLLING_TIMEOUT_SEC: Final = 18
 
 # Refresh interval for REST sensors
 REST_SENSORS_UPDATE_INTERVAL: Final = 60
 
-# Timeout used for aioshelly calls
-AIOSHELLY_DEVICE_TIMEOUT_SEC: Final = 10
+# Refresh interval for RPC polling sensors
+RPC_SENSORS_POLLING_INTERVAL: Final = 60
 
 # Multiplier used to calculate the "update_interval" for sleeping devices.
 SLEEP_PERIOD_MULTIPLIER: Final = 1.2
@@ -80,7 +95,11 @@ INPUTS_EVENTS_DICT: Final = {
 }
 
 # List of battery devices that maintain a permanent WiFi connection
-BATTERY_DEVICES_WITH_PERMANENT_CONNECTION: Final = ["SHMOS-01"]
+BATTERY_DEVICES_WITH_PERMANENT_CONNECTION: Final = [
+    MODEL_MOTION,
+    MODEL_MOTION_2,
+    MODEL_VALVE,
+]
 
 # Button/Click events for Block & RPC devices
 EVENT_SHELLY_CLICK: Final = "shelly.click"
@@ -102,6 +121,7 @@ RPC_INPUTS_EVENTS_TYPES: Final = {
     "btn_up",
     "single_push",
     "double_push",
+    "triple_push",
     "long_push",
 }
 
@@ -124,7 +144,7 @@ INPUTS_EVENTS_SUBTYPES: Final = {
     "button4": 4,
 }
 
-SHBTN_MODELS: Final = ["SHBTN-1", "SHBTN-2"]
+SHBTN_MODELS: Final = [MODEL_BUTTON1, MODEL_BUTTON1_V2]
 
 STANDARD_RGB_EFFECTS: Final = {
     0: "Off",
@@ -146,7 +166,13 @@ SHBLB_1_RGB_EFFECTS: Final = {
 SHTRV_01_TEMPERATURE_SETTINGS: Final = {
     "min": 4,
     "max": 31,
-    "step": 1,
+    "step": 0.5,
+    "default": 20.0,
+}
+RPC_THERMOSTAT_SETTINGS: Final = {
+    "min": 5,
+    "max": 35,
+    "step": 0.5,
 }
 
 # Kelvin value for colorTemp
@@ -156,8 +182,41 @@ KELVIN_MIN_VALUE_COLOR: Final = 3000
 
 UPTIME_DEVIATION: Final = 5
 
-# Max RPC switch/input key instances
-MAX_RPC_KEY_INSTANCES = 4
-
 # Time to wait before reloading entry upon device config change
 ENTRY_RELOAD_COOLDOWN = 60
+
+SHELLY_GAS_MODELS = [MODEL_GAS]
+
+BLE_MIN_VERSION = AwesomeVersion("0.12.0-beta2")
+
+CONF_BLE_SCANNER_MODE = "ble_scanner_mode"
+
+
+class BLEScannerMode(StrEnum):
+    """BLE scanner mode."""
+
+    DISABLED = "disabled"
+    ACTIVE = "active"
+    PASSIVE = "passive"
+
+
+MAX_PUSH_UPDATE_FAILURES = 5
+PUSH_UPDATE_ISSUE_ID = "push_update_{unique}"
+
+NOT_CALIBRATED_ISSUE_ID = "not_calibrated_{unique}"
+
+GAS_VALVE_OPEN_STATES = ("opening", "opened")
+
+OTA_BEGIN = "ota_begin"
+OTA_ERROR = "ota_error"
+OTA_PROGRESS = "ota_progress"
+OTA_SUCCESS = "ota_success"
+
+GEN1_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen1/#changelog"
+GEN2_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen2/changelog/"
+DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
+    MODEL_WALL_DISPLAY,
+    MODEL_MOTION,
+    MODEL_MOTION_2,
+    MODEL_VALVE,
+)

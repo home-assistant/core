@@ -1,4 +1,6 @@
 """Binary sensor platform integration for Numato USB GPIO expanders."""
+from __future__ import annotations
+
 from functools import partial
 import logging
 
@@ -6,8 +8,10 @@ from numato_gpio import NumatoGpioError
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import DEVICE_DEFAULT_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_BINARY_SENSORS,
@@ -24,7 +28,12 @@ _LOGGER = logging.getLogger(__name__)
 NUMATO_SIGNAL = "numato_signal_{}_{}"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the configured Numato USB GPIO binary sensor ports."""
     if discovery_info is None:
         return
@@ -43,13 +52,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ports = platform[CONF_PORTS]
         for port, port_name in ports.items():
             try:
-
                 api.setup_input(device_id, port)
                 api.edge_detect(device_id, port, partial(read_gpio, device_id))
 
             except NumatoGpioError as err:
                 _LOGGER.error(
-                    "Failed to initialize binary sensor '%s' on Numato device %s port %s: %s",
+                    (
+                        "Failed to initialize binary sensor '%s' on Numato device %s"
+                        " port %s: %s"
+                    ),
                     port_name,
                     device_id,
                     port,
@@ -72,6 +83,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class NumatoGpioBinarySensor(BinarySensorEntity):
     """Represents a binary sensor (input) port of a Numato GPIO expander."""
 
+    _attr_should_poll = False
+
     def __init__(self, name, device_id, port, invert_logic, api):
         """Initialize the Numato GPIO based binary sensor object."""
         self._name = name or DEVICE_DEFAULT_NAME
@@ -81,7 +94,7 @@ class NumatoGpioBinarySensor(BinarySensorEntity):
         self._state = None
         self._api = api
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Connect state update callback."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -98,11 +111,6 @@ class NumatoGpioBinarySensor(BinarySensorEntity):
         self.async_write_ha_state()
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
@@ -112,7 +120,7 @@ class NumatoGpioBinarySensor(BinarySensorEntity):
         """Return the state of the entity."""
         return self._state != self._invert_logic
 
-    def update(self):
+    def update(self) -> None:
         """Update the GPIO state."""
         try:
             self._state = self._api.read_input(self._device_id, self._port)

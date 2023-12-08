@@ -6,25 +6,24 @@ from raincloudy.core import RainCloudy
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
     PERCENTAGE,
-    TIME_DAYS,
-    TIME_MINUTES,
+    UnitOfTime,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
 ALLOWED_WATERING_TIME = [5, 10, 15, 30, 45, 60]
-
-ATTRIBUTION = "Data provided by Melnor Aquatimer.com"
 
 CONF_WATERING_TIME = "watering_minutes"
 
@@ -63,9 +62,9 @@ UNIT_OF_MEASUREMENT_MAP = {
     "is_watering": "",
     "manual_watering": "",
     "next_cycle": "",
-    "rain_delay": TIME_DAYS,
+    "rain_delay": UnitOfTime.DAYS,
     "status": "",
-    "watering_time": TIME_MINUTES,
+    "watering_time": UnitOfTime.MINUTES,
 }
 
 BINARY_SENSORS = ["is_watering", "status"]
@@ -92,7 +91,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Melnor RainCloud component."""
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
@@ -106,8 +105,9 @@ def setup(hass, config):
         hass.data[DATA_RAINCLOUD] = RainCloudHub(raincloud)
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Rain Cloud service: %s", str(ex))
-        hass.components.persistent_notification.create(
-            f"Error: {ex}<br />" "You will need to restart hass after fixing.",
+        persistent_notification.create(
+            hass,
+            f"Error: {ex}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
@@ -136,6 +136,8 @@ class RainCloudHub:
 class RainCloudEntity(Entity):
     """Entity class for RainCloud devices."""
 
+    _attr_attribution = "Data provided by Melnor Aquatimer.com"
+
     def __init__(self, data, sensor_type):
         """Initialize the RainCloud entity."""
         self.data = data
@@ -163,7 +165,7 @@ class RainCloudEntity(Entity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION, "identifier": self.data.serial}
+        return {"identifier": self.data.serial}
 
     @property
     def icon(self):

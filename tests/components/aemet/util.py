@@ -1,93 +1,74 @@
 """Tests for the AEMET OpenData integration."""
+from typing import Any
+from unittest.mock import patch
 
-import requests_mock
+from aemet_opendata.const import ATTR_DATA
 
 from homeassistant.components.aemet import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_value_fixture
+
+FORECAST_DAILY_DATA_MOCK = {
+    ATTR_DATA: load_json_value_fixture("aemet/town-28065-forecast-daily-data.json"),
+}
+
+FORECAST_HOURLY_DATA_MOCK = {
+    ATTR_DATA: load_json_value_fixture("aemet/town-28065-forecast-hourly-data.json"),
+}
+
+STATION_DATA_MOCK = {
+    ATTR_DATA: load_json_value_fixture("aemet/station-3195-data.json"),
+}
+
+STATIONS_DATA_MOCK = {
+    ATTR_DATA: load_json_value_fixture("aemet/station-list-data.json"),
+}
+
+TOWN_DATA_MOCK = {
+    ATTR_DATA: load_json_value_fixture("aemet/town-id28065.json"),
+}
+
+TOWNS_DATA_MOCK = {
+    ATTR_DATA: load_json_value_fixture("aemet/town-list.json"),
+}
 
 
-def aemet_requests_mock(mock):
-    """Mock requests performed to AEMET OpenData API."""
-
-    station_3195_fixture = "aemet/station-3195.json"
-    station_3195_data_fixture = "aemet/station-3195-data.json"
-    station_list_fixture = "aemet/station-list.json"
-    station_list_data_fixture = "aemet/station-list-data.json"
-
-    town_28065_forecast_daily_fixture = "aemet/town-28065-forecast-daily.json"
-    town_28065_forecast_daily_data_fixture = "aemet/town-28065-forecast-daily-data.json"
-    town_28065_forecast_hourly_fixture = "aemet/town-28065-forecast-hourly.json"
-    town_28065_forecast_hourly_data_fixture = (
-        "aemet/town-28065-forecast-hourly-data.json"
-    )
-    town_id28065_fixture = "aemet/town-id28065.json"
-    town_list_fixture = "aemet/town-list.json"
-
-    mock.get(
-        "https://opendata.aemet.es/opendata/api/observacion/convencional/datos/estacion/3195",
-        text=load_fixture(station_3195_fixture),
-    )
-    mock.get(
-        "https://opendata.aemet.es/opendata/sh/208c3ca3",
-        text=load_fixture(station_3195_data_fixture),
-    )
-    mock.get(
-        "https://opendata.aemet.es/opendata/api/observacion/convencional/todas",
-        text=load_fixture(station_list_fixture),
-    )
-    mock.get(
-        "https://opendata.aemet.es/opendata/sh/2c55192f",
-        text=load_fixture(station_list_data_fixture),
-    )
-    mock.get(
-        "https://opendata.aemet.es/opendata/api/prediccion/especifica/municipio/diaria/28065",
-        text=load_fixture(town_28065_forecast_daily_fixture),
-    )
-    mock.get(
-        "https://opendata.aemet.es/opendata/sh/64e29abb",
-        text=load_fixture(town_28065_forecast_daily_data_fixture),
-    )
-    mock.get(
-        "https://opendata.aemet.es/opendata/api/prediccion/especifica/municipio/horaria/28065",
-        text=load_fixture(town_28065_forecast_hourly_fixture),
-    )
-    mock.get(
-        "https://opendata.aemet.es/opendata/sh/18ca1886",
-        text=load_fixture(town_28065_forecast_hourly_data_fixture),
-    )
-    mock.get(
-        "https://opendata.aemet.es/opendata/api/maestro/municipio/id28065",
-        text=load_fixture(town_id28065_fixture),
-    )
-    mock.get(
-        "https://opendata.aemet.es/opendata/api/maestro/municipios",
-        text=load_fixture(town_list_fixture),
-    )
+def mock_api_call(cmd: str, fetch_data: bool = False) -> dict[str, Any]:
+    """Mock AEMET OpenData API calls."""
+    if cmd == "maestro/municipio/id28065":
+        return TOWN_DATA_MOCK
+    if cmd == "maestro/municipios":
+        return TOWNS_DATA_MOCK
+    if cmd == "observacion/convencional/datos/estacion/3195":
+        return STATION_DATA_MOCK
+    if cmd == "observacion/convencional/todas":
+        return STATIONS_DATA_MOCK
+    if cmd == "prediccion/especifica/municipio/diaria/28065":
+        return FORECAST_DAILY_DATA_MOCK
+    if cmd == "prediccion/especifica/municipio/horaria/28065":
+        return FORECAST_HOURLY_DATA_MOCK
+    return {}
 
 
-async def async_init_integration(
-    hass: HomeAssistant,
-    skip_setup: bool = False,
-):
+async def async_init_integration(hass: HomeAssistant):
     """Set up the AEMET OpenData integration in Home Assistant."""
 
-    with requests_mock.mock() as _m:
-        aemet_requests_mock(_m)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: "api-key",
+            CONF_LATITUDE: "40.30403754",
+            CONF_LONGITUDE: "-3.72935236",
+            CONF_NAME: "AEMET",
+        },
+    )
+    config_entry.add_to_hass(hass)
 
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            data={
-                CONF_API_KEY: "mock",
-                CONF_LATITUDE: "40.30403754",
-                CONF_LONGITUDE: "-3.72935236",
-                CONF_NAME: "AEMET",
-            },
-        )
-        entry.add_to_hass(hass)
-
-        if not skip_setup:
-            await hass.config_entries.async_setup(entry.entry_id)
-            await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.aemet.AEMET.api_call",
+        side_effect=mock_api_call,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()

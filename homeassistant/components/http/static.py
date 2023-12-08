@@ -1,7 +1,8 @@
 """Static file handling for HTTP component."""
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
+import mimetypes
 from pathlib import Path
 from typing import Final
 
@@ -9,43 +10,78 @@ from aiohttp import hdrs
 from aiohttp.web import FileResponse, Request, StreamResponse
 from aiohttp.web_exceptions import HTTPForbidden, HTTPNotFound
 from aiohttp.web_urldispatcher import StaticResource
+from lru import LRU  # pylint: disable=no-name-in-module
+
+from homeassistant.core import HomeAssistant
+
+from .const import KEY_HASS
 
 CACHE_TIME: Final = 31 * 86400  # = 1 month
-CACHE_HEADERS: Final[Mapping[str, str]] = {
-    hdrs.CACHE_CONTROL: f"public, max-age={CACHE_TIME}"
-}
+CACHE_HEADER = f"public, max-age={CACHE_TIME}"
+CACHE_HEADERS: Mapping[str, str] = {hdrs.CACHE_CONTROL: CACHE_HEADER}
+PATH_CACHE: MutableMapping[
+    tuple[str, Path, bool], tuple[Path | None, str | None]
+] = LRU(512)
+
+
+def _get_file_path(rel_url: str, directory: Path, follow_symlinks: bool) -> Path | None:
+    """Return the path to file on disk or None."""
+    filename = Path(rel_url)
+    if filename.anchor:
+        # rel_url is an absolute name like
+        # /static/\\machine_name\c$ or /static/D:\path
+        # where the static dir is totally different
+        raise HTTPForbidden
+    filepath: Path = directory.joinpath(filename).resolve()
+    if not follow_symlinks:
+        filepath.relative_to(directory)
+    # on opening a dir, load its contents if allowed
+    if filepath.is_dir():
+        return None
+    if filepath.is_file():
+        return filepath
+    raise FileNotFoundError
 
 
 class CachingStaticResource(StaticResource):
     """Static Resource handler that will add cache headers."""
 
     async def _handle(self, request: Request) -> StreamResponse:
+        """Return requested file from disk as a FileResponse."""
         rel_url = request.match_info["filename"]
-        try:
-            filename = Path(rel_url)
-            if filename.anchor:
-                # rel_url is an absolute name like
-                # /static/\\machine_name\c$ or /static/D:\path
-                # where the static dir is totally different
-                raise HTTPForbidden()
-            filepath = self._directory.joinpath(filename).resolve()
-            if not self._follow_symlinks:
-                filepath.relative_to(self._directory)
-        except (ValueError, FileNotFoundError) as error:
-            # relatively safe
-            raise HTTPNotFound() from error
-        except Exception as error:
-            # perm error or other kind!
-            request.app.logger.exception(error)
-            raise HTTPNotFound() from error
+        key = (rel_url, self._directory, self._follow_symlinks)
+        if (filepath_content_type := PATH_CACHE.get(key)) is None:
+            hass: HomeAssistant = request.app[KEY_HASS]
+            try:
+                filepath = await hass.async_add_executor_job(_get_file_path, *key)
+            except (ValueError, FileNotFoundError) as error:
+                # relatively safe
+                raise HTTPNotFound() from error
+            except HTTPForbidden:
+                # forbidden
+                raise
+            except Exception as error:
+                # perm error or other kind!
+                request.app.logger.exception(error)
+                raise HTTPNotFound() from error
 
-        # on opening a dir, load its contents if allowed
-        if filepath.is_dir():
-            return await super()._handle(request)
-        if filepath.is_file():
+            content_type: str | None = None
+            if filepath is not None:
+                content_type = (mimetypes.guess_type(rel_url))[
+                    0
+                ] or "application/octet-stream"
+            PATH_CACHE[key] = (filepath, content_type)
+        else:
+            filepath, content_type = filepath_content_type
+
+        if filepath and content_type:
             return FileResponse(
                 filepath,
                 chunk_size=self._chunk_size,
-                headers=CACHE_HEADERS,
+                headers={
+                    hdrs.CACHE_CONTROL: CACHE_HEADER,
+                    hdrs.CONTENT_TYPE: content_type,
+                },
             )
-        raise HTTPNotFound
+
+        return await super()._handle(request)

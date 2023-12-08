@@ -4,28 +4,16 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
 import ssl
+from types import MappingProxyType
+from typing import Any, Literal
 
 from aiohttp import CookieJar
 import aiounifi
-from aiounifi.controller import (
-    DATA_CLIENT_REMOVED,
-    DATA_DPI_GROUP,
-    DATA_DPI_GROUP_REMOVED,
-    DATA_EVENT,
-    SIGNAL_CONNECTION_STATE,
-    SIGNAL_DATA,
-)
-from aiounifi.events import (
-    ACCESS_POINT_CONNECTED,
-    GATEWAY_CONNECTED,
-    SWITCH_CONNECTED,
-    WIRED_CLIENT_CONNECTED,
-    WIRELESS_CLIENT_CONNECTED,
-    WIRELESS_GUEST_CONNECTED,
-)
-from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
-import async_timeout
+from aiounifi.interfaces.api_handlers import ItemEvent
+from aiounifi.models.configuration import Configuration
+from aiounifi.models.device import DeviceSetPoePortModeRequest
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -34,22 +22,35 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     Platform,
 )
-from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.helpers import (
+    aiohttp_client,
+    device_registry as dr,
+    entity_registry as er,
+)
+from homeassistant.helpers.device_registry import (
+    DeviceEntry,
+    DeviceEntryType,
+    DeviceInfo,
+)
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 import homeassistant.util.dt as dt_util
 
 from .const import (
+    ATTR_MANUFACTURER,
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
+    CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
-    CONF_POE_CLIENTS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
@@ -60,60 +61,57 @@ from .const import (
     DEFAULT_DETECTION_TIME,
     DEFAULT_DPI_RESTRICTIONS,
     DEFAULT_IGNORE_WIRED_BUG,
-    DEFAULT_POE_CLIENTS,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
     LOGGER,
+    PLATFORMS,
     UNIFI_WIRELESS_CLIENTS,
 )
+from .entity import UnifiEntity, UnifiEntityDescription
 from .errors import AuthenticationRequired, CannotConnect
-from .switch import BLOCK_SWITCH, POE_SWITCH
 
 RETRY_TIMER = 15
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
-PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.SWITCH]
-
-CLIENT_CONNECTED = (
-    WIRED_CLIENT_CONNECTED,
-    WIRELESS_CLIENT_CONNECTED,
-    WIRELESS_GUEST_CONNECTED,
-)
-DEVICE_CONNECTED = (
-    ACCESS_POINT_CONNECTED,
-    GATEWAY_CONNECTED,
-    SWITCH_CONNECTED,
-)
 
 
 class UniFiController:
     """Manages a single UniFi Network instance."""
 
-    def __init__(self, hass, config_entry):
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, api: aiounifi.Controller
+    ) -> None:
         """Initialize the system."""
         self.hass = hass
         self.config_entry = config_entry
+        self.api = api
+
+        self.ws_task: asyncio.Task | None = None
+
         self.available = True
-        self.api = None
-        self.progress = None
-        self.wireless_clients = None
+        self.wireless_clients = hass.data[UNIFI_WIRELESS_CLIENTS]
 
-        self.site_id: str = ""
-        self._site_name = None
-        self._site_role = None
+        self.site = config_entry.data[CONF_SITE_ID]
+        self.is_admin = False
 
-        self._cancel_heartbeat_check = None
-        self._heartbeat_dispatch = {}
-        self._heartbeat_time = {}
+        self._cancel_heartbeat_check: CALLBACK_TYPE | None = None
+        self._heartbeat_time: dict[str, datetime] = {}
 
         self.load_config_entry_options()
 
-        self.entities = {}
+        self.entities: dict[str, str] = {}
+        self.known_objects: set[tuple[str, str]] = set()
 
-    def load_config_entry_options(self):
+        self.poe_command_queue: dict[str, dict[int, str]] = {}
+        self._cancel_poe_command: CALLBACK_TYPE | None = None
+
+    def load_config_entry_options(self) -> None:
         """Store attributes to avoid property call overhead since they are called frequently."""
         options = self.config_entry.options
+
+        # Allow creating entities from clients.
+        self.option_supported_clients: list[str] = options.get(CONF_CLIENT_SOURCE, [])
 
         # Device tracker options
 
@@ -126,7 +124,7 @@ class UniFiController:
             CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
         )
         # Config entry option to not track devices.
-        self.option_track_devices = options.get(
+        self.option_track_devices: bool = options.get(
             CONF_TRACK_DEVICES, DEFAULT_TRACK_DEVICES
         )
         # Config entry option listing what SSIDs are being used to track clients.
@@ -142,135 +140,102 @@ class UniFiController:
 
         # Client control options
 
-        # Config entry option to control poe clients.
-        self.option_poe_clients = options.get(CONF_POE_CLIENTS, DEFAULT_POE_CLIENTS)
         # Config entry option with list of clients to control network access.
-        self.option_block_clients = options.get(CONF_BLOCK_CLIENT, [])
+        self.option_block_clients: list[str] = options.get(CONF_BLOCK_CLIENT, [])
         # Config entry option to control DPI restriction groups.
-        self.option_dpi_restrictions = options.get(
+        self.option_dpi_restrictions: bool = options.get(
             CONF_DPI_RESTRICTIONS, DEFAULT_DPI_RESTRICTIONS
         )
 
         # Statistics sensor options
 
         # Config entry option to allow bandwidth sensors.
-        self.option_allow_bandwidth_sensors = options.get(
+        self.option_allow_bandwidth_sensors: bool = options.get(
             CONF_ALLOW_BANDWIDTH_SENSORS, DEFAULT_ALLOW_BANDWIDTH_SENSORS
         )
         # Config entry option to allow uptime sensors.
-        self.option_allow_uptime_sensors = options.get(
+        self.option_allow_uptime_sensors: bool = options.get(
             CONF_ALLOW_UPTIME_SENSORS, DEFAULT_ALLOW_UPTIME_SENSORS
         )
 
     @property
-    def host(self):
+    def host(self) -> str:
         """Return the host of this controller."""
-        return self.config_entry.data[CONF_HOST]
-
-    @property
-    def site(self):
-        """Return the site of this config entry."""
-        return self.config_entry.data[CONF_SITE_ID]
-
-    @property
-    def site_name(self):
-        """Return the nice name of site."""
-        return self._site_name
-
-    @property
-    def site_role(self):
-        """Return the site user role of this controller."""
-        return self._site_role
-
-    @property
-    def mac(self):
-        """Return the mac address of this controller."""
-        for client in self.api.clients.values():
-            if self.host == client.ip:
-                return client.mac
-        return None
+        host: str = self.config_entry.data[CONF_HOST]
+        return host
 
     @callback
-    def async_unifi_signalling_callback(self, signal, data):
-        """Handle messages back from UniFi library."""
-        if signal == SIGNAL_CONNECTION_STATE:
+    @staticmethod
+    def register_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+        entity_class: type[UnifiEntity],
+        descriptions: tuple[UnifiEntityDescription, ...],
+        requires_admin: bool = False,
+    ) -> None:
+        """Register platform for UniFi entity management."""
+        controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+        if requires_admin and not controller.is_admin:
+            return
+        controller.register_platform_add_entities(
+            entity_class, descriptions, async_add_entities
+        )
 
-            if data == STATE_DISCONNECTED and self.available:
-                LOGGER.warning("Lost connection to UniFi Network")
+    @callback
+    def register_platform_add_entities(
+        self,
+        unifi_platform_entity: type[UnifiEntity],
+        descriptions: tuple[UnifiEntityDescription, ...],
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Subscribe to UniFi API handlers and create entities."""
 
-            if (data == STATE_RUNNING and not self.available) or (
-                data == STATE_DISCONNECTED and self.available
-            ):
-                self.available = data == STATE_RUNNING
-                async_dispatcher_send(self.hass, self.signal_reachable)
+        @callback
+        def async_load_entities(description: UnifiEntityDescription) -> None:
+            """Load and subscribe to UniFi endpoints."""
+            api_handler = description.api_handler_fn(self.api)
 
-                if not self.available:
-                    self.hass.loop.call_later(RETRY_TIMER, self.reconnect, True)
-                else:
-                    LOGGER.info("Connected to UniFi Network")
-
-        elif signal == SIGNAL_DATA and data:
-
-            if DATA_EVENT in data:
-                clients_connected = set()
-                devices_connected = set()
-                wireless_clients_connected = False
-
-                for event in data[DATA_EVENT]:
-
-                    if event.event in CLIENT_CONNECTED:
-                        clients_connected.add(event.mac)
-
-                        if not wireless_clients_connected and event.event in (
-                            WIRELESS_CLIENT_CONNECTED,
-                            WIRELESS_GUEST_CONNECTED,
-                        ):
-                            wireless_clients_connected = True
-
-                    elif event.event in DEVICE_CONNECTED:
-                        devices_connected.add(event.mac)
-
-                if wireless_clients_connected:
-                    self.update_wireless_clients()
-                if clients_connected or devices_connected:
-                    async_dispatcher_send(
-                        self.hass,
-                        self.signal_update,
-                        clients_connected,
-                        devices_connected,
-                    )
-
-            elif DATA_CLIENT_REMOVED in data:
-                async_dispatcher_send(
-                    self.hass, self.signal_remove, data[DATA_CLIENT_REMOVED]
+            @callback
+            def async_add_unifi_entity(obj_ids: list[str]) -> None:
+                """Add UniFi entity."""
+                async_add_entities(
+                    [
+                        unifi_platform_entity(obj_id, self, description)
+                        for obj_id in obj_ids
+                        if (description.key, obj_id) not in self.known_objects
+                        if description.allowed_fn(self, obj_id)
+                        if description.supported_fn(self, obj_id)
+                    ]
                 )
 
-            elif DATA_DPI_GROUP in data:
-                for key in data[DATA_DPI_GROUP]:
-                    if self.api.dpi_groups[key].dpiapp_ids:
-                        async_dispatcher_send(self.hass, self.signal_update)
-                    else:
-                        async_dispatcher_send(self.hass, self.signal_remove, {key})
+            async_add_unifi_entity(list(api_handler))
 
-            elif DATA_DPI_GROUP_REMOVED in data:
-                async_dispatcher_send(
-                    self.hass, self.signal_remove, data[DATA_DPI_GROUP_REMOVED]
+            @callback
+            def async_create_entity(event: ItemEvent, obj_id: str) -> None:
+                """Create new UniFi entity on event."""
+                async_add_unifi_entity([obj_id])
+
+            api_handler.subscribe(async_create_entity, ItemEvent.ADDED)
+
+            @callback
+            def async_options_updated() -> None:
+                """Load new entities based on changed options."""
+                async_add_unifi_entity(list(api_handler))
+
+            self.config_entry.async_on_unload(
+                async_dispatcher_connect(
+                    self.hass, self.signal_options_update, async_options_updated
                 )
+            )
+
+        for description in descriptions:
+            async_load_entities(description)
 
     @property
     def signal_reachable(self) -> str:
         """Integration specific event to signal a change in connection status."""
         return f"unifi-reachable-{self.config_entry.entry_id}"
-
-    @property
-    def signal_update(self) -> str:
-        """Event specific per UniFi entry to signal new data."""
-        return f"unifi-update-{self.config_entry.entry_id}"
-
-    @property
-    def signal_remove(self) -> str:
-        """Event specific per UniFi entry to signal removal of entities."""
-        return f"unifi-remove-{self.config_entry.entry_id}"
 
     @property
     def signal_options_update(self) -> str:
@@ -282,95 +247,33 @@ class UniFiController:
         """Event specific per UniFi device tracker to signal new heartbeat missed."""
         return "unifi-heartbeat-missed"
 
-    def update_wireless_clients(self):
-        """Update set of known to be wireless clients."""
-        new_wireless_clients = set()
-
-        for client_id in self.api.clients:
-            if (
-                client_id not in self.wireless_clients
-                and not self.api.clients[client_id].is_wired
-            ):
-                new_wireless_clients.add(client_id)
-
-        if new_wireless_clients:
-            self.wireless_clients |= new_wireless_clients
-            unifi_wireless_clients = self.hass.data[UNIFI_WIRELESS_CLIENTS]
-            unifi_wireless_clients.update_data(self.wireless_clients, self.config_entry)
-
-    async def async_setup(self):
+    async def initialize(self) -> None:
         """Set up a UniFi Network instance."""
-        try:
-            self.api = await get_controller(
-                self.hass,
-                host=self.config_entry.data[CONF_HOST],
-                username=self.config_entry.data[CONF_USERNAME],
-                password=self.config_entry.data[CONF_PASSWORD],
-                port=self.config_entry.data[CONF_PORT],
-                site=self.config_entry.data[CONF_SITE_ID],
-                verify_ssl=self.config_entry.data[CONF_VERIFY_SSL],
-                async_callback=self.async_unifi_signalling_callback,
-            )
-            await self.api.initialize()
+        await self.api.initialize()
 
-            sites = await self.api.sites()
-            description = await self.api.site_description()
+        assert self.config_entry.unique_id is not None
+        self.is_admin = self.api.sites[self.config_entry.unique_id].role == "admin"
 
-        except CannotConnect as err:
-            raise ConfigEntryNotReady from err
-
-        except AuthenticationRequired as err:
-            raise ConfigEntryAuthFailed from err
-
-        for site in sites.values():
-            if self.site == site["name"]:
-                self.site_id = site["_id"]
-                self._site_name = site["desc"]
-                break
-
-        self._site_role = description[0]["site_role"]
-
-        # Restore clients that are not a part of active clients list.
+        # Restore device tracker clients that are not a part of active clients list.
+        macs: list[str] = []
         entity_registry = er.async_get(self.hass)
         for entry in async_entries_for_config_entry(
             entity_registry, self.config_entry.entry_id
         ):
             if entry.domain == Platform.DEVICE_TRACKER:
-                mac = entry.unique_id.split("-", 1)[0]
-            elif entry.domain == Platform.SWITCH and (
-                entry.unique_id.startswith(BLOCK_SWITCH)
-                or entry.unique_id.startswith(POE_SWITCH)
-            ):
-                mac = entry.unique_id.split("-", 1)[1]
-            else:
-                continue
+                macs.append(entry.unique_id.split("-", 1)[0])
 
-            if mac in self.api.clients or mac not in self.api.clients_all:
-                continue
+        for mac in self.option_supported_clients + self.option_block_clients + macs:
+            if mac not in self.api.clients and mac in self.api.clients_all:
+                self.api.clients.process_raw([dict(self.api.clients_all[mac].raw)])
 
-            client = self.api.clients_all[mac]
-            self.api.clients.process_raw([client.raw])
-            LOGGER.debug(
-                "Restore disconnected client %s (%s)",
-                entry.entity_id,
-                client.mac,
-            )
-
-        wireless_clients = self.hass.data[UNIFI_WIRELESS_CLIENTS]
-        self.wireless_clients = wireless_clients.get_data(self.config_entry)
-        self.update_wireless_clients()
-
-        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
-
-        self.api.start_websocket()
+        self.wireless_clients.update_clients(set(self.api.clients.values()))
 
         self.config_entry.add_update_listener(self.async_config_entry_updated)
 
         self._cancel_heartbeat_check = async_track_time_interval(
             self.hass, self._async_check_for_stale, CHECK_HEARTBEAT_INTERVAL
         )
-
-        return True
 
     @callback
     def async_heartbeat(
@@ -385,18 +288,76 @@ class UniFiController:
             del self._heartbeat_time[unique_id]
 
     @callback
-    def _async_check_for_stale(self, *_) -> None:
+    def _async_check_for_stale(self, *_: datetime) -> None:
         """Check for any devices scheduled to be marked disconnected."""
         now = dt_util.utcnow()
 
+        unique_ids_to_remove = []
         for unique_id, heartbeat_expire_time in self._heartbeat_time.items():
             if now > heartbeat_expire_time:
                 async_dispatcher_send(
                     self.hass, f"{self.signal_heartbeat_missed}_{unique_id}"
                 )
+                unique_ids_to_remove.append(unique_id)
+
+        for unique_id in unique_ids_to_remove:
+            del self._heartbeat_time[unique_id]
+
+    @callback
+    def async_queue_poe_port_command(
+        self, device_id: str, port_idx: int, poe_mode: str
+    ) -> None:
+        """Queue commands to execute them together per device."""
+        if self._cancel_poe_command:
+            self._cancel_poe_command()
+            self._cancel_poe_command = None
+
+        device_queue = self.poe_command_queue.setdefault(device_id, {})
+        device_queue[port_idx] = poe_mode
+
+        async def async_execute_command(now: datetime) -> None:
+            """Execute previously queued commands."""
+            queue = self.poe_command_queue.copy()
+            self.poe_command_queue.clear()
+            for device_id, device_commands in queue.items():
+                device = self.api.devices[device_id]
+                commands = list(device_commands.items())
+                await self.api.request(
+                    DeviceSetPoePortModeRequest.create(device, targets=commands)
+                )
+
+        self._cancel_poe_command = async_call_later(self.hass, 5, async_execute_command)
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """UniFi controller device info."""
+        assert self.config_entry.unique_id is not None
+
+        version: str | None = None
+        if sysinfo := next(iter(self.api.system_information.values()), None):
+            version = sysinfo.version
+
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(UNIFI_DOMAIN, self.config_entry.unique_id)},
+            manufacturer=ATTR_MANUFACTURER,
+            model="UniFi Network Application",
+            name="UniFi Network",
+            sw_version=version,
+        )
+
+    @callback
+    def async_update_device_registry(self) -> DeviceEntry:
+        """Update device registry."""
+        device_registry = dr.async_get(self.hass)
+        return device_registry.async_get_or_create(
+            config_entry_id=self.config_entry.entry_id, **self.device_info
+        )
 
     @staticmethod
-    async def async_config_entry_updated(hass, config_entry) -> None:
+    async def async_config_entry_updated(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> None:
         """Handle signals of config entry being updated.
 
         If config entry is updated due to reauth flow
@@ -408,7 +369,20 @@ class UniFiController:
         async_dispatcher_send(hass, controller.signal_options_update)
 
     @callback
-    def reconnect(self, log=False) -> None:
+    def start_websocket(self) -> None:
+        """Start up connection to websocket."""
+
+        async def _websocket_runner() -> None:
+            """Start websocket."""
+            await self.api.start_websocket()
+            self.available = False
+            async_dispatcher_send(self.hass, self.signal_reachable)
+            self.hass.loop.call_later(RETRY_TIMER, self.reconnect, True)
+
+        self.ws_task = self.hass.loop.create_task(_websocket_runner())
+
+    @callback
+    def reconnect(self, log: bool = False) -> None:
         """Prepare to reconnect UniFi session."""
         if log:
             LOGGER.info("Will try to reconnect to UniFi Network")
@@ -417,9 +391,13 @@ class UniFiController:
     async def async_reconnect(self) -> None:
         """Try to reconnect UniFi Network session."""
         try:
-            async with async_timeout.timeout(5):
+            async with asyncio.timeout(5):
                 await self.api.login()
-                self.api.start_websocket()
+                self.start_websocket()
+
+            if not self.available:
+                self.available = True
+                async_dispatcher_send(self.hass, self.signal_reachable)
 
         except (
             asyncio.TimeoutError,
@@ -430,20 +408,32 @@ class UniFiController:
             self.hass.loop.call_later(RETRY_TIMER, self.reconnect)
 
     @callback
-    def shutdown(self, event) -> None:
+    def shutdown(self, event: Event) -> None:
         """Wrap the call to unifi.close.
 
         Used as an argument to EventBus.async_listen_once.
         """
-        self.api.stop_websocket()
+        if self.ws_task is not None:
+            self.ws_task.cancel()
 
-    async def async_reset(self):
+    async def async_reset(self) -> bool:
         """Reset this controller to default state.
 
         Will cancel any scheduled setup retry and will unload
         the config entry.
         """
-        self.api.stop_websocket()
+        if self.ws_task is not None:
+            self.ws_task.cancel()
+
+            _, pending = await asyncio.wait([self.ws_task], timeout=10)
+
+            if pending:
+                LOGGER.warning(
+                    "Unloading %s (%s) config entry. Task %s did not complete in time",
+                    self.config_entry.title,
+                    self.config_entry.domain,
+                    self.ws_task,
+                )
 
         unload_ok = await self.hass.config_entries.async_unload_platforms(
             self.config_entry, PLATFORMS
@@ -456,45 +446,50 @@ class UniFiController:
             self._cancel_heartbeat_check()
             self._cancel_heartbeat_check = None
 
+        if self._cancel_poe_command:
+            self._cancel_poe_command()
+            self._cancel_poe_command = None
+
         return True
 
 
-async def get_controller(
-    hass, host, username, password, port, site, verify_ssl, async_callback=None
-):
+async def get_unifi_controller(
+    hass: HomeAssistant,
+    config: MappingProxyType[str, Any],
+) -> aiounifi.Controller:
     """Create a controller object and verify authentication."""
-    sslcontext = None
+    ssl_context: ssl.SSLContext | Literal[False] = False
 
-    if verify_ssl:
+    if verify_ssl := config.get(CONF_VERIFY_SSL):
         session = aiohttp_client.async_get_clientsession(hass)
         if isinstance(verify_ssl, str):
-            sslcontext = ssl.create_default_context(cafile=verify_ssl)
+            ssl_context = ssl.create_default_context(cafile=verify_ssl)
     else:
         session = aiohttp_client.async_create_clientsession(
-            hass, verify_ssl=verify_ssl, cookie_jar=CookieJar(unsafe=True)
+            hass, verify_ssl=False, cookie_jar=CookieJar(unsafe=True)
         )
 
     controller = aiounifi.Controller(
-        host,
-        username=username,
-        password=password,
-        port=port,
-        site=site,
-        websession=session,
-        sslcontext=sslcontext,
-        callback=async_callback,
+        Configuration(
+            session,
+            host=config[CONF_HOST],
+            username=config[CONF_USERNAME],
+            password=config[CONF_PASSWORD],
+            port=config[CONF_PORT],
+            site=config[CONF_SITE_ID],
+            ssl_context=ssl_context,
+        )
     )
 
     try:
-        async with async_timeout.timeout(10):
-            await controller.check_unifi_os()
+        async with asyncio.timeout(10):
             await controller.login()
         return controller
 
     except aiounifi.Unauthorized as err:
         LOGGER.warning(
             "Connected to UniFi Network at %s but not registered: %s",
-            host,
+            config[CONF_HOST],
             err,
         )
         raise AuthenticationRequired from err
@@ -504,14 +499,25 @@ async def get_controller(
         aiounifi.BadGateway,
         aiounifi.ServiceUnavailable,
         aiounifi.RequestError,
+        aiounifi.ResponseError,
     ) as err:
-        LOGGER.error("Error connecting to the UniFi Network at %s: %s", host, err)
+        LOGGER.error(
+            "Error connecting to the UniFi Network at %s: %s", config[CONF_HOST], err
+        )
         raise CannotConnect from err
+
+    except aiounifi.Forbidden as err:
+        LOGGER.warning(
+            "Access forbidden to UniFi Network at %s, check access rights: %s",
+            config[CONF_HOST],
+            err,
+        )
+        raise AuthenticationRequired from err
 
     except aiounifi.LoginRequired as err:
         LOGGER.warning(
             "Connected to UniFi Network at %s but login required: %s",
-            host,
+            config[CONF_HOST],
             err,
         )
         raise AuthenticationRequired from err

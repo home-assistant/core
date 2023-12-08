@@ -28,35 +28,32 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import utcnow
 
+from .const import (
+    CONF_CHARGING_INTERVAL,
+    CONF_CLIMATE_INTERVAL,
+    CONF_FORCE_MILES,
+    CONF_INTERVAL,
+    CONF_VALID_REGIONS,
+    DATA_BATTERY,
+    DATA_CHARGING,
+    DATA_CLIMATE,
+    DATA_LEAF,
+    DATA_PLUGGED_IN,
+    DATA_RANGE_AC,
+    DATA_RANGE_AC_OFF,
+    DEFAULT_CHARGING_INTERVAL,
+    DEFAULT_CLIMATE_INTERVAL,
+    DEFAULT_INTERVAL,
+    DOMAIN,
+    INITIAL_UPDATE,
+    MAX_RESPONSE_ATTEMPTS,
+    MIN_UPDATE_INTERVAL,
+    PYCARWINGS2_SLEEP,
+    RESTRICTED_BATTERY,
+    RESTRICTED_INTERVAL,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "nissan_leaf"
-DATA_LEAF = "nissan_leaf_data"
-
-DATA_BATTERY = "battery"
-DATA_CHARGING = "charging"
-DATA_PLUGGED_IN = "plugged_in"
-DATA_CLIMATE = "climate"
-DATA_RANGE_AC = "range_ac_on"
-DATA_RANGE_AC_OFF = "range_ac_off"
-
-CONF_INTERVAL = "update_interval"
-CONF_CHARGING_INTERVAL = "update_interval_charging"
-CONF_CLIMATE_INTERVAL = "update_interval_climate"
-CONF_VALID_REGIONS = ["NNA", "NE", "NCI", "NMA", "NML"]
-CONF_FORCE_MILES = "force_miles"
-
-INITIAL_UPDATE = timedelta(seconds=15)
-MIN_UPDATE_INTERVAL = timedelta(minutes=2)
-DEFAULT_INTERVAL = timedelta(hours=1)
-DEFAULT_CHARGING_INTERVAL = timedelta(minutes=15)
-DEFAULT_CLIMATE_INTERVAL = timedelta(minutes=5)
-RESTRICTED_BATTERY = 2
-RESTRICTED_INTERVAL = timedelta(hours=12)
-
-MAX_RESPONSE_ATTEMPTS = 3
-
-PYCARWINGS2_SLEEP = 30
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -90,7 +87,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = [Platform.SENSOR, Platform.SWITCH, Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH, Platform.BINARY_SENSOR, Platform.BUTTON]
 
 SIGNAL_UPDATE_LEAF = "nissan_leaf_update"
 
@@ -107,8 +104,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def async_handle_update(service: ServiceCall) -> None:
         """Handle service to update leaf data from Nissan servers."""
-        # It would be better if this was changed to use nickname, or
-        # an entity name rather than a vin.
         vin = service.data[ATTR_VIN]
 
         if vin in hass.data[DATA_LEAF]:
@@ -119,8 +114,11 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def async_handle_start_charge(service: ServiceCall) -> None:
         """Handle service to start charging."""
-        # It would be better if this was changed to use nickname, or
-        # an entity name rather than a vin.
+        _LOGGER.warning(
+            "The 'nissan_leaf.start_charge' service is deprecated and has been"
+            "replaced by a dedicated button entity: Please use that to start"
+            "the charge instead"
+        )
         vin = service.data[ATTR_VIN]
 
         if vin in hass.data[DATA_LEAF]:
@@ -479,11 +477,30 @@ class LeafDataStore:
         _LOGGER.debug("Climate result not returned by Nissan servers")
         return False
 
+    async def async_start_charging(self) -> None:
+        """Request to start charging the car. Used by the button platform."""
+        await self.hass.async_add_executor_job(self.leaf.start_charging)
+        self.schedule_update()
+
+    def schedule_update(self) -> None:
+        """Set the next update to be triggered in a minute."""
+
+        # Remove any future updates that may be scheduled
+        if self._remove_listener:
+            self._remove_listener()
+        # Schedule update for one minute in the future - so that previously sent
+        # requests can be processed by Nissan servers or the car.
+        update_at = utcnow() + timedelta(minutes=1)
+        self.next_update = update_at
+        self._remove_listener = async_track_point_in_utc_time(
+            self.hass, self.async_update_data, update_at
+        )
+
 
 class LeafEntity(Entity):
     """Base class for Nissan Leaf entity."""
 
-    def __init__(self, car: Leaf) -> None:
+    def __init__(self, car: LeafDataStore) -> None:
         """Store LeafDataStore upon init."""
         self.car = car
 

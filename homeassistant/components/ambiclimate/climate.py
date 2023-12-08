@@ -1,4 +1,6 @@
 """Support for Ambiclimate ac."""
+from __future__ import annotations
+
 import asyncio
 import logging
 from typing import Any
@@ -6,23 +8,26 @@ from typing import Any
 import ambiclimate
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_TARGET_TEMPERATURE,
+from homeassistant.components.climate import (
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
     ATTR_TEMPERATURE,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     ATTR_VALUE,
@@ -36,8 +41,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
-
 SEND_COMFORT_FEEDBACK_SCHEMA = vol.Schema(
     {vol.Required(ATTR_NAME): cv.string, vol.Required(ATTR_VALUE): cv.string}
 )
@@ -49,15 +52,22 @@ SET_TEMPERATURE_MODE_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Ambicliamte device."""
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the Ambiclimate device."""
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the Ambicliamte device from config entry."""
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Ambiclimate device from config entry."""
     config = entry.data
     websession = async_get_clientsession(hass)
-    store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+    store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
     token_info = await store.async_load()
 
     oauth = ambiclimate.AmbiclimateOAuth(
@@ -88,7 +98,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     tasks = []
     for heater in data_connection.get_devices():
-        tasks.append(heater.update_device_info())
+        tasks.append(asyncio.create_task(heater.update_device_info()))
     await asyncio.wait(tasks)
 
     devs = []
@@ -140,21 +150,22 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class AmbiclimateEntity(ClimateEntity):
     """Representation of a Ambiclimate Thermostat device."""
 
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 1
-    _attr_supported_features = SUPPORT_FLAGS
-    _attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, heater, store):
         """Initialize the thermostat."""
         self._heater = heater
         self._store = store
         self._attr_unique_id = heater.device_id
-        self._attr_name = heater.name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Ambiclimate",
-            name=self.name,
+            name=heater.name,
         )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -163,12 +174,12 @@ class AmbiclimateEntity(ClimateEntity):
             return
         await self._heater.set_target_temperature(temperature)
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVAC_MODE_HEAT:
+        if hvac_mode == HVACMode.HEAT:
             await self._heater.turn_on()
             return
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             await self._heater.turn_off()
 
     async def async_update(self) -> None:
@@ -189,5 +200,5 @@ class AmbiclimateEntity(ClimateEntity):
         self._attr_current_temperature = data.get("temperature")
         self._attr_current_humidity = data.get("humidity")
         self._attr_hvac_mode = (
-            HVAC_MODE_HEAT if data.get("power", "").lower() == "on" else HVAC_MODE_OFF
+            HVACMode.HEAT if data.get("power", "").lower() == "on" else HVACMode.OFF
         )

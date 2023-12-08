@@ -13,15 +13,18 @@ from homeassistant.const import (
     STATE_CLOSED,
     STATE_OPEN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util.dt import utcnow
 
+from .conftest import get_states_response_for_uid
+
 from tests.common import async_fire_time_changed
-from tests.components.freedompro.conftest import get_states_response_for_uid
 
 
 @pytest.mark.parametrize(
-    "entity_id, uid, name, model",
+    ("entity_id", "uid", "name", "model"),
     [
         (
             "cover.blind",
@@ -32,14 +35,19 @@ from tests.components.freedompro.conftest import get_states_response_for_uid
     ],
 )
 async def test_cover_get_state(
-    hass, init_integration, entity_id: str, uid: str, name: str, model: str
-):
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    init_integration,
+    entity_id: str,
+    uid: str,
+    name: str,
+    model: str,
+) -> None:
     """Test states of the cover."""
     init_integration
-    registry = er.async_get(hass)
-    registry_device = dr.async_get(hass)
 
-    device = registry_device.async_get_device({("freedompro", uid)})
+    device = device_registry.async_get_device(identifiers={("freedompro", uid)})
     assert device is not None
     assert device.identifiers == {("freedompro", uid)}
     assert device.manufacturer == "Freedompro"
@@ -51,14 +59,14 @@ async def test_cover_get_state(
     assert state.state == STATE_CLOSED
     assert state.attributes.get("friendly_name") == name
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == uid
 
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["position"] = 100
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
@@ -68,7 +76,7 @@ async def test_cover_get_state(
         assert state
         assert state.attributes.get("friendly_name") == name
 
-        entry = registry.async_get(entity_id)
+        entry = entity_registry.async_get(entity_id)
         assert entry
         assert entry.unique_id == uid
 
@@ -76,7 +84,7 @@ async def test_cover_get_state(
 
 
 @pytest.mark.parametrize(
-    "entity_id, uid, name, model",
+    ("entity_id", "uid", "name", "model"),
     [
         (
             "cover.blind",
@@ -87,23 +95,28 @@ async def test_cover_get_state(
     ],
 )
 async def test_cover_set_position(
-    hass, init_integration, entity_id: str, uid: str, name: str, model: str
-):
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration,
+    entity_id: str,
+    uid: str,
+    name: str,
+    model: str,
+) -> None:
     """Test set position of the cover."""
     init_integration
-    registry = er.async_get(hass)
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_CLOSED
     assert state.attributes.get("friendly_name") == name
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == uid
 
     with patch("homeassistant.components.freedompro.cover.put_state") as mock_put_state:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
             {ATTR_ENTITY_ID: [entity_id], ATTR_POSITION: 33},
@@ -114,7 +127,7 @@ async def test_cover_set_position(
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["position"] = 33
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
@@ -126,7 +139,7 @@ async def test_cover_set_position(
 
 
 @pytest.mark.parametrize(
-    "entity_id, uid, name, model",
+    ("entity_id", "uid", "name", "model"),
     [
         (
             "cover.blind",
@@ -137,19 +150,24 @@ async def test_cover_set_position(
     ],
 )
 async def test_cover_close(
-    hass, init_integration, entity_id: str, uid: str, name: str, model: str
-):
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration,
+    entity_id: str,
+    uid: str,
+    name: str,
+    model: str,
+) -> None:
     """Test close cover."""
     init_integration
-    registry = er.async_get(hass)
 
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["position"] = 100
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
-        await hass.helpers.entity_component.async_update_entity(entity_id)
+        await async_update_entity(hass, entity_id)
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
         await hass.async_block_till_done()
 
@@ -158,12 +176,12 @@ async def test_cover_close(
     assert state.state == STATE_OPEN
     assert state.attributes.get("friendly_name") == name
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == uid
 
     with patch("homeassistant.components.freedompro.cover.put_state") as mock_put_state:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
             {ATTR_ENTITY_ID: [entity_id]},
@@ -173,7 +191,7 @@ async def test_cover_close(
 
     states_response[0]["state"]["position"] = 0
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
@@ -184,7 +202,7 @@ async def test_cover_close(
 
 
 @pytest.mark.parametrize(
-    "entity_id, uid, name, model",
+    ("entity_id", "uid", "name", "model"),
     [
         (
             "cover.blind",
@@ -195,23 +213,28 @@ async def test_cover_close(
     ],
 )
 async def test_cover_open(
-    hass, init_integration, entity_id: str, uid: str, name: str, model: str
-):
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration,
+    entity_id: str,
+    uid: str,
+    name: str,
+    model: str,
+) -> None:
     """Test open cover."""
     init_integration
-    registry = er.async_get(hass)
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_CLOSED
     assert state.attributes.get("friendly_name") == name
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == uid
 
     with patch("homeassistant.components.freedompro.cover.put_state") as mock_put_state:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
             {ATTR_ENTITY_ID: [entity_id]},
@@ -222,7 +245,7 @@ async def test_cover_open(
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["position"] = 100
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))

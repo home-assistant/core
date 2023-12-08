@@ -1,73 +1,76 @@
 """Tests for the Elgato Light button platform."""
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 from elgato import ElgatoError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.components.elgato import init_integration
-from tests.test_util.aiohttp import AiohttpClientMocker
+pytestmark = [
+    pytest.mark.parametrize("device_fixtures", ["key-light-mini"]),
+    pytest.mark.usefixtures("device_fixtures", "init_integration"),
+    pytest.mark.freeze_time("2021-11-13 11:48:00"),
+]
 
 
-@pytest.mark.freeze_time("2021-11-13 11:48:00")
-async def test_button_identify(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+@pytest.mark.parametrize(
+    ("entity_id", "method"),
+    [
+        ("button.frenck_identify", "identify"),
+        ("button.frenck_restart", "restart"),
+    ],
+)
+async def test_buttons(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_elgato: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_id: str,
+    method: str,
 ) -> None:
     """Test the Elgato identify button."""
-    await init_integration(hass, aioclient_mock)
+    assert (state := hass.states.get(entity_id))
+    assert state == snapshot
 
-    entity_registry = er.async_get(hass)
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry == snapshot
 
-    state = hass.states.get("button.identify")
-    assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:help"
-    assert state.state == STATE_UNKNOWN
+    assert entry.device_id
+    assert (device_entry := device_registry.async_get(entry.device_id))
+    assert device_entry == snapshot
 
-    entry = entity_registry.async_get("button.identify")
-    assert entry
-    assert entry.unique_id == "CN11A1A00001_identify"
-    assert entry.entity_category == EntityCategory.CONFIG
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
 
-    with patch(
-        "homeassistant.components.elgato.light.Elgato.identify"
-    ) as mock_identify:
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.identify"},
-            blocking=True,
-        )
+    mocked_method = getattr(mock_elgato, method)
+    assert len(mocked_method.mock_calls) == 1
+    mocked_method.assert_called_with()
 
-    assert len(mock_identify.mock_calls) == 1
-    mock_identify.assert_called_with()
-
-    state = hass.states.get("button.identify")
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == "2021-11-13T11:48:00+00:00"
 
+    mocked_method.side_effect = ElgatoError
 
-async def test_button_identify_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, caplog
-) -> None:
-    """Test an error occurs with the Elgato identify button."""
-    await init_integration(hass, aioclient_mock)
-
-    with patch(
-        "homeassistant.components.elgato.light.Elgato.identify",
-        side_effect=ElgatoError,
-    ) as mock_identify:
+    with pytest.raises(
+        HomeAssistantError,
+        match="An error occurred while communicating with the Elgato Light",
+    ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.identify"},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 
-    await hass.async_block_till_done()
-    assert len(mock_identify.mock_calls) == 1
-    assert "An error occurred while identifying the Elgato Light" in caplog.text
+    assert len(mocked_method.mock_calls) == 2

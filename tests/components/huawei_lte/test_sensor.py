@@ -17,6 +17,6 @@ from homeassistant.const import (
         (">=-51dBm", (-51, SIGNAL_STRENGTH_DECIBELS_MILLIWATT)),
     ),
 )
-def test_format_default(value, expected):
+def test_format_default(value, expected) -> None:
     """Test that default formatter copes with expected values."""
     assert sensor.format_default(value) == expected

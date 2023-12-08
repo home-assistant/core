@@ -1,8 +1,9 @@
 """Provide common Renault fixtures."""
+from collections.abc import Generator
 import contextlib
 from types import MappingProxyType
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from renault_api.kamereon import exceptions, schemas
@@ -16,6 +17,15 @@ from homeassistant.helpers import aiohttp_client
 from .const import MOCK_ACCOUNT_ID, MOCK_CONFIG, MOCK_VEHICLES
 
 from tests.common import MockConfigEntry, load_fixture
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.renault.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 @pytest.fixture(name="vehicle_type", params=MOCK_VEHICLES.keys())
@@ -63,12 +73,6 @@ def patch_get_vehicles(vehicle_type: str):
                 load_fixture(f"renault/vehicle_{vehicle_type}.json")
             )
         ),
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.supports_endpoint",
-        side_effect=MOCK_VEHICLES[vehicle_type]["endpoints_available"],
-    ), patch(
-        "renault_api.renault_vehicle.RenaultVehicle.has_contract_for_endpoint",
-        return_value=True,
     ):
         yield
 
@@ -102,6 +106,16 @@ def _get_fixtures(vehicle_type: str) -> MappingProxyType:
             if "location" in mock_vehicle["endpoints"]
             else load_fixture("renault/no_data.json")
         ).get_attributes(schemas.KamereonVehicleLocationDataSchema),
+        "lock_status": schemas.KamereonVehicleDataResponseSchema.loads(
+            load_fixture(f"renault/{mock_vehicle['endpoints']['lock_status']}")
+            if "lock_status" in mock_vehicle["endpoints"]
+            else load_fixture("renault/no_data.json")
+        ).get_attributes(schemas.KamereonVehicleLockStatusDataSchema),
+        "res_state": schemas.KamereonVehicleDataResponseSchema.loads(
+            load_fixture(f"renault/{mock_vehicle['endpoints']['res_state']}")
+            if "res_state" in mock_vehicle["endpoints"]
+            else load_fixture("renault/no_data.json")
+        ).get_attributes(schemas.KamereonVehicleResStateDataSchema),
     }
 
 
@@ -125,6 +139,12 @@ def patch_fixtures_with_data(vehicle_type: str):
     ), patch(
         "renault_api.renault_vehicle.RenaultVehicle.get_location",
         return_value=mock_fixtures["location"],
+    ), patch(
+        "renault_api.renault_vehicle.RenaultVehicle.get_lock_status",
+        return_value=mock_fixtures["lock_status"],
+    ), patch(
+        "renault_api.renault_vehicle.RenaultVehicle.get_res_state",
+        return_value=mock_fixtures["res_state"],
     ):
         yield
 
@@ -149,6 +169,12 @@ def patch_fixtures_with_no_data():
     ), patch(
         "renault_api.renault_vehicle.RenaultVehicle.get_location",
         return_value=mock_fixtures["location"],
+    ), patch(
+        "renault_api.renault_vehicle.RenaultVehicle.get_lock_status",
+        return_value=mock_fixtures["lock_status"],
+    ), patch(
+        "renault_api.renault_vehicle.RenaultVehicle.get_res_state",
+        return_value=mock_fixtures["res_state"],
     ):
         yield
 
@@ -170,6 +196,12 @@ def _patch_fixtures_with_side_effect(side_effect: Any):
         side_effect=side_effect,
     ), patch(
         "renault_api.renault_vehicle.RenaultVehicle.get_location",
+        side_effect=side_effect,
+    ), patch(
+        "renault_api.renault_vehicle.RenaultVehicle.get_lock_status",
+        side_effect=side_effect,
+    ), patch(
+        "renault_api.renault_vehicle.RenaultVehicle.get_res_state",
         side_effect=side_effect,
     ):
         yield

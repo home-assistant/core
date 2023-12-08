@@ -1,8 +1,9 @@
 {
   "domain": "heatmiser",
   "name": "Heatmiser",
-  "documentation": "https://www.home-assistant.io/integrations/heatmiser",
-  "requirements": ["heatmiserV3==1.1.18"],
   "codeowners": ["@andylockran"],
-  "iot_class": "local_polling"
+  "documentation": "https://www.home-assistant.io/integrations/heatmiser",
+  "iot_class": "local_polling",
+  "loggers": ["heatmiserV3"],
+  "requirements": ["heatmiserV3==1.1.18"]
 }

@@ -27,7 +27,6 @@ TEST_PRIORITY = 180
 TEST_ENTITY_ID_1 = "light.test_instance_1"
 TEST_ENTITY_ID_2 = "light.test_instance_2"
 TEST_ENTITY_ID_3 = "light.test_instance_3"
-TEST_PRIORITY_LIGHT_ENTITY_ID_1 = "light.test_instance_1_priority"
 TEST_TITLE = f"{TEST_HOST}:{TEST_PORT}"
 
 TEST_TOKEN = "sekr1t"
@@ -115,6 +114,7 @@ def create_mock_client() -> Mock:
     mock_client.instances = [
         {"friendly_name": "Test instance 1", "instance": 0, "running": True}
     ]
+    mock_client.remote_url = f"http://{TEST_HOST}:{TEST_PORT_UI}"
 
     return mock_client
 
@@ -151,7 +151,7 @@ async def setup_test_config_entry(
     config_entry = config_entry or add_test_config_entry(hass, options=options)
 
     hyperion_client = hyperion_client or create_mock_client()
-    # pylint: disable=attribute-defined-outside-init
+    # pylint: disable-next=attribute-defined-outside-init
     hyperion_client.instances = [TEST_INSTANCE_1]
 
     with patch(

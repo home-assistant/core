@@ -1,0 +1,13 @@
+{
+  "command": 16,
+  "status": "ok",
+  "data": {
+    "enabled": false,
+    "direction": true,
+    "state": 0,
+    "travel_count": 0,
+    "instantaneous_current": 0,
+    "instantaneous_current_ddt": 0,
+    "average_current": 34
+  }
+}

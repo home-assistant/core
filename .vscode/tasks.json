@@ -10,15 +10,14 @@
         "reveal": "always",
         "panel": "new"
       },
-      "problemMatcher": []
+      "problemMatcher": [],
+      "dependsOn": ["Compile English translations"]
     },
     {
       "label": "Pytest",
       "type": "shell",
-      "command": "pytest --timeout=10 tests",
-      "dependsOn": [
-        "Install all Test Requirements"
-      ],
+      "command": "python3 -m pytest --timeout=10 tests",
+      "dependsOn": ["Install all Test Requirements"],
       "group": {
         "kind": "test",
         "isDefault": true
@@ -30,9 +29,23 @@
       "problemMatcher": []
     },
     {
-      "label": "Flake8",
+      "label": "Pytest (changed tests only)",
       "type": "shell",
-      "command": "pre-commit run flake8 --all-files",
+      "command": "python3 -m pytest --timeout=10 --picked",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Ruff",
+      "type": "shell",
+      "command": "pre-commit run ruff --all-files",
       "group": {
         "kind": "test",
         "isDefault": true
@@ -47,9 +60,7 @@
       "label": "Pylint",
       "type": "shell",
       "command": "pylint homeassistant",
-      "dependsOn": [
-        "Install all Requirements"
-      ],
+      "dependsOn": ["Install all Requirements"],
       "group": {
         "kind": "test",
         "isDefault": true
@@ -64,7 +75,7 @@
       "label": "Code Coverage",
       "detail": "Generate code coverage report for a given integration.",
       "type": "shell",
-      "command": "pytest ./tests/components/${input:integrationName}/ --cov=homeassistant.components.${input:integrationName} --cov-report term-missing --durations-min=1 --durations=0 --numprocesses=auto",
+      "command": "python3 -m pytest ./tests/components/${input:integrationName}/ --cov=homeassistant.components.${input:integrationName} --cov-report term-missing --durations-min=1 --durations=0 --numprocesses=auto",
       "group": {
         "kind": "test",
         "isDefault": true
@@ -116,6 +127,36 @@
         "panel": "new"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Compile English translations",
+      "detail": "In order to test changes to translation files, the translation strings must be compiled into Home Assistant's translation directories.",
+      "type": "shell",
+      "command": "python3 -m script.translations develop --all",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Run scaffold",
+      "detail": "Add new functionality to a integration using a scaffold.",
+      "type": "shell",
+      "command": "python3 -m script.scaffold ${input:scaffoldName} --integration ${input:integrationName}",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Create new integration",
+      "detail": "Use the scaffold to create a new integration.",
+      "type": "shell",
+      "command": "python3 -m script.scaffold integration",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
     }
   ],
   "inputs": [
@@ -123,6 +164,23 @@
       "id": "integrationName",
       "type": "promptString",
       "description": "For which integration should the task run?"
+    },
+    {
+      "id": "scaffoldName",
+      "type": "pickString",
+      "options": [
+        "backup",
+        "config_flow",
+        "config_flow_discovery",
+        "config_flow_helper",
+        "config_flow_oauth2",
+        "device_action",
+        "device_condition",
+        "device_trigger",
+        "reproduce_state",
+        "significant_change"
+      ],
+      "description": "Which scaffold should be run?"
     }
   ]
 }

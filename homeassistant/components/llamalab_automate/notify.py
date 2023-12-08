@@ -1,4 +1,6 @@
 """LlamaLab Automate notification service."""
+from __future__ import annotations
+
 from http import HTTPStatus
 import logging
 
@@ -11,7 +13,9 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://llamalab.com/automate/cloud/message"
@@ -29,7 +33,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> AutomateNotificationService:
     """Get the LlamaLab Automate notification service."""
     secret = config.get(CONF_API_KEY)
     recipient = config.get(CONF_TO)
@@ -66,6 +74,6 @@ class AutomateNotificationService(BaseNotificationService):
             "payload": message,
         }
 
-        response = requests.post(_RESOURCE, json=data)
+        response = requests.post(_RESOURCE, json=data, timeout=10)
         if response.status_code != HTTPStatus.OK:
             _LOGGER.error("Error sending message: %s", response)

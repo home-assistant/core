@@ -1,10 +1,11 @@
 """Support for Lupusec System alarm control panels."""
+from __future__ import annotations
+
 from datetime import timedelta
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
@@ -12,15 +13,21 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as LUPUSEC_DOMAIN, LupusecDevice
-
-ICON = "mdi:security"
 
 SCAN_INTERVAL = timedelta(seconds=2)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up an alarm control panel for a Lupusec device."""
     if discovery_info is None:
         return
@@ -35,13 +42,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
     """An alarm_control_panel implementation for Lupusec."""
 
-    @property
-    def icon(self):
-        """Return the icon."""
-        return ICON
+    _attr_icon = "mdi:security"
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+    )
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the device."""
         if self._device.is_standby:
             state = STATE_ALARM_DISARMED
@@ -55,19 +63,14 @@ class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
             state = None
         return state
 
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
-
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._device.set_away()
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self._device.set_standby()
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._device.set_home()

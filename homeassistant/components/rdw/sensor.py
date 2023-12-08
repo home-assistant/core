@@ -14,8 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -25,30 +24,23 @@ from homeassistant.helpers.update_coordinator import (
 from .const import CONF_LICENSE_PLATE, DOMAIN
 
 
-@dataclass
-class RDWSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(kw_only=True)
+class RDWSensorEntityDescription(SensorEntityDescription):
+    """Describes RDW sensor entity."""
 
     value_fn: Callable[[Vehicle], date | str | float | None]
-
-
-@dataclass
-class RDWSensorEntityDescription(
-    SensorEntityDescription, RDWSensorEntityDescriptionMixin
-):
-    """Describes RDW sensor entity."""
 
 
 SENSORS: tuple[RDWSensorEntityDescription, ...] = (
     RDWSensorEntityDescription(
         key="apk_expiration",
-        name="APK Expiration",
+        translation_key="apk_expiration",
         device_class=SensorDeviceClass.DATE,
         value_fn=lambda vehicle: vehicle.apk_expiration,
     ),
     RDWSensorEntityDescription(
         key="ascription_date",
-        name="Ascription Date",
+        translation_key="ascription_date",
         device_class=SensorDeviceClass.DATE,
         value_fn=lambda vehicle: vehicle.ascription_date,
     ),
@@ -72,15 +64,16 @@ async def async_setup_entry(
     )
 
 
-class RDWSensorEntity(CoordinatorEntity, SensorEntity):
+class RDWSensorEntity(CoordinatorEntity[DataUpdateCoordinator[Vehicle]], SensorEntity):
     """Defines an RDW sensor."""
 
     entity_description: RDWSensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
         *,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[Vehicle],
         license_plate: str,
         description: RDWSensorEntityDescription,
     ) -> None:
@@ -93,7 +86,7 @@ class RDWSensorEntity(CoordinatorEntity, SensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{license_plate}")},
             manufacturer=coordinator.data.brand,
-            name=f"{coordinator.data.brand}: {coordinator.data.license_plate}",
+            name=f"{coordinator.data.brand} {coordinator.data.license_plate}",
             model=coordinator.data.model,
             configuration_url=f"https://ovi.rdw.nl/default.aspx?kenteken={coordinator.data.license_plate}",
         )

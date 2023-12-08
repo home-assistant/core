@@ -1,5 +1,8 @@
 """Support for Orvibo S20 Wifi Smart Switches."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from orvibo.s20 import S20, S20Exception, discover
 import voluptuous as vol
@@ -12,7 +15,10 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SWITCHES,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +42,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities_callback, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities_callback: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up S20 switches."""
 
     switch_data = {}
@@ -83,21 +94,21 @@ class S20Switch(SwitchEntity):
         """Return true if device is on."""
         return self._state
 
-    def update(self):
+    def update(self) -> None:
         """Update device state."""
         try:
             self._state = self._s20.on
         except self._exc:
             _LOGGER.exception("Error while fetching S20 state")
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         try:
             self._s20.on = True
         except self._exc:
             _LOGGER.exception("Error while turning on S20")
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         try:
             self._s20.on = False

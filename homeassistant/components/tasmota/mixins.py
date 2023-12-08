@@ -16,9 +16,9 @@ from homeassistant.components.mqtt import (
     is_connected as mqtt_connected,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .discovery import (
     TASMOTA_DISCOVERY_ENTITY_UPDATED,
@@ -32,10 +32,15 @@ _LOGGER = logging.getLogger(__name__)
 class TasmotaEntity(Entity):
     """Base class for Tasmota entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, tasmota_entity: HATasmotaEntity) -> None:
         """Initialize."""
         self._tasmota_entity = tasmota_entity
         self._unique_id = tasmota_entity.unique_id
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, tasmota_entity.mac)}
+        )
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
@@ -58,13 +63,6 @@ class TasmotaEntity(Entity):
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await self._tasmota_entity.subscribe_topics()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._tasmota_entity.mac)}
-        )
 
     @property
     def name(self) -> str | None:
@@ -159,8 +157,16 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
         self._removed_from_hass = False
         await super().async_added_to_hass()
 
-        async def discovery_callback(config: TasmotaEntityConfig) -> None:
-            """Handle discovery update."""
+        @callback
+        def discovery_callback(config: TasmotaEntityConfig) -> None:
+            """Handle discovery update.
+
+            If the config has changed we will create a task to
+            do the discovery update.
+
+            As this callback can fire when nothing has changed, this
+            is a normal function to avoid task creation until it is needed.
+            """
             _LOGGER.debug(
                 "Got update for entity with hash: %s '%s'",
                 self._discovery_hash,
@@ -169,12 +175,13 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
             if not self._tasmota_entity.config_same(config):
                 # Changed payload: Notify component
                 _LOGGER.debug("Updating component: %s", self.entity_id)
-                await self.discovery_update(config)
+                self.hass.async_create_task(self.discovery_update(config))
             else:
                 # Unchanged payload: Ignore to avoid changing states
                 _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)
 
-        # Set in case the entity has been removed and is re-added, for example when changing entity_id
+        # Set in case the entity has been removed and is re-added,
+        # for example when changing entity_id
         set_discovery_hash(self.hass, self._discovery_hash)
         self.async_on_remove(
             async_dispatcher_connect(

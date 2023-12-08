@@ -1,13 +1,11 @@
 {
   "domain": "ridwell",
   "name": "Ridwell",
+  "codeowners": ["@bachya"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ridwell",
-  "requirements": [
-    "aioridwell==2021.12.2"
-  ],
-  "codeowners": [
-    "@bachya"
-  ],
-  "iot_class": "cloud_polling"
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["aioridwell"],
+  "requirements": ["aioridwell==2023.07.0"]
 }

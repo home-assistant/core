@@ -35,10 +35,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info.ip, discovery_info.macaddress
         )
 
-    async def async_step_discovery(
+    async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
-        """Handle discovery."""
+        """Handle integration discovery."""
         return await self._async_handle_discovery(
             discovery_info[CONF_HOST], discovery_info[CONF_MAC]
         )
@@ -115,7 +115,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         self._discovered_devices = await async_discover_devices(self.hass)
         devices_name = {
-            formatted_mac: f"{device.alias} {device.model} ({device.host}) {formatted_mac}"
+            formatted_mac: (
+                f"{device.alias} {device.model} ({device.host}) {formatted_mac}"
+            )
             for formatted_mac, device in self._discovered_devices.items()
             if formatted_mac not in configured_devices
         }

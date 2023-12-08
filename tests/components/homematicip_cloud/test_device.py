@@ -6,6 +6,7 @@ from homematicip.base.enums import EventType
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .helper import (
@@ -16,16 +17,23 @@ from .helper import (
 )
 
 
-async def test_hmip_load_all_supported_devices(hass, default_mock_hap_factory):
+async def test_hmip_load_all_supported_devices(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Ensure that all supported devices could be loaded."""
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=None, test_groups=None
     )
 
-    assert len(mock_hap.hmip_device_by_entity_id) == 258
+    assert len(mock_hap.hmip_device_by_entity_id) == 272
 
 
-async def test_hmip_remove_device(hass, default_mock_hap_factory):
+async def test_hmip_remove_device(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    default_mock_hap_factory,
+) -> None:
     """Test Remove of hmip device."""
     entity_id = "light.treppe_ch"
     entity_name = "Treppe CH"
@@ -40,9 +48,6 @@ async def test_hmip_remove_device(hass, default_mock_hap_factory):
 
     assert ha_state.state == STATE_ON
     assert hmip_device
-
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
 
     pre_device_count = len(device_registry.devices)
     pre_entity_count = len(entity_registry.entities)
@@ -57,7 +62,13 @@ async def test_hmip_remove_device(hass, default_mock_hap_factory):
     assert len(mock_hap.hmip_device_by_entity_id) == pre_mapping_count - 3
 
 
-async def test_hmip_add_device(hass, default_mock_hap_factory, hmip_config_entry):
+async def test_hmip_add_device(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    default_mock_hap_factory,
+    hmip_config_entry,
+) -> None:
     """Test Remove of hmip device."""
     entity_id = "light.treppe_ch"
     entity_name = "Treppe CH"
@@ -72,9 +83,6 @@ async def test_hmip_add_device(hass, default_mock_hap_factory, hmip_config_entry
 
     assert ha_state.state == STATE_ON
     assert hmip_device
-
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
 
     pre_device_count = len(device_registry.devices)
     pre_entity_count = len(entity_registry.entities)
@@ -94,7 +102,7 @@ async def test_hmip_add_device(hass, default_mock_hap_factory, hmip_config_entry
     ), patch.object(reloaded_hap, "async_connect"), patch.object(
         reloaded_hap, "get_hap", return_value=mock_hap.home
     ), patch(
-        "homeassistant.components.homematicip_cloud.hap.asyncio.sleep"
+        "homeassistant.components.homematicip_cloud.hap.asyncio.sleep",
     ):
         mock_hap.home.fire_create_event(event_type=EventType.DEVICE_ADDED)
         await hass.async_block_till_done()
@@ -105,7 +113,12 @@ async def test_hmip_add_device(hass, default_mock_hap_factory, hmip_config_entry
     assert len(new_hap.hmip_device_by_entity_id) == pre_mapping_count
 
 
-async def test_hmip_remove_group(hass, default_mock_hap_factory):
+async def test_hmip_remove_group(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    default_mock_hap_factory,
+) -> None:
     """Test Remove of hmip group."""
     entity_id = "switch.strom_group"
     entity_name = "Strom Group"
@@ -118,9 +131,6 @@ async def test_hmip_remove_group(hass, default_mock_hap_factory):
 
     assert ha_state.state == STATE_ON
     assert hmip_device
-
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
 
     pre_device_count = len(device_registry.devices)
     pre_entity_count = len(entity_registry.entities)
@@ -135,8 +145,8 @@ async def test_hmip_remove_group(hass, default_mock_hap_factory):
 
 
 async def test_all_devices_unavailable_when_hap_not_connected(
-    hass, default_mock_hap_factory
-):
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test make all devices unavaulable when hap is not connected."""
     entity_id = "light.treppe_ch"
     entity_name = "Treppe CH"
@@ -160,7 +170,7 @@ async def test_all_devices_unavailable_when_hap_not_connected(
     assert ha_state.state == STATE_UNAVAILABLE
 
 
-async def test_hap_reconnected(hass, default_mock_hap_factory):
+async def test_hap_reconnected(hass: HomeAssistant, default_mock_hap_factory) -> None:
     """Test reconnect hap."""
     entity_id = "light.treppe_ch"
     entity_name = "Treppe CH"
@@ -183,14 +193,16 @@ async def test_hap_reconnected(hass, default_mock_hap_factory):
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_UNAVAILABLE
 
-    mock_hap._accesspoint_connected = False  # pylint: disable=protected-access
+    mock_hap._accesspoint_connected = False
     await async_manipulate_test_data(hass, mock_hap.home, "connected", True)
     await hass.async_block_till_done()
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
 
 
-async def test_hap_with_name(hass, mock_connection, hmip_config_entry):
+async def test_hap_with_name(
+    hass: HomeAssistant, mock_connection, hmip_config_entry
+) -> None:
     """Test hap with name."""
     home_name = "TestName"
     entity_id = f"light.{home_name.lower()}_treppe_ch"
@@ -212,7 +224,9 @@ async def test_hap_with_name(hass, mock_connection, hmip_config_entry):
     assert ha_state.attributes["friendly_name"] == entity_name
 
 
-async def test_hmip_reset_energy_counter_services(hass, default_mock_hap_factory):
+async def test_hmip_reset_energy_counter_services(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
     """Test reset_energy_counter service."""
     entity_id = "switch.pc"
     entity_name = "Pc"
@@ -233,16 +247,21 @@ async def test_hmip_reset_energy_counter_services(hass, default_mock_hap_factory
         blocking=True,
     )
     assert hmip_device.mock_calls[-1][0] == "reset_energy_counter"
-    assert len(hmip_device._connection.mock_calls) == 2  # pylint: disable=W0212
+    assert len(hmip_device._connection.mock_calls) == 2
 
     await hass.services.async_call(
         "homematicip_cloud", "reset_energy_counter", {"entity_id": "all"}, blocking=True
     )
     assert hmip_device.mock_calls[-1][0] == "reset_energy_counter"
-    assert len(hmip_device._connection.mock_calls) == 4  # pylint: disable=W0212
+    assert len(hmip_device._connection.mock_calls) == 4
 
 
-async def test_hmip_multi_area_device(hass, default_mock_hap_factory):
+async def test_hmip_multi_area_device(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    default_mock_hap_factory,
+) -> None:
     """Test multi area device. Check if devices are created and referenced."""
     entity_id = "binary_sensor.wired_eingangsmodul_32_fach_channel5"
     entity_name = "Wired Eingangsmodul – 32-fach Channel5"
@@ -257,12 +276,10 @@ async def test_hmip_multi_area_device(hass, default_mock_hap_factory):
     assert ha_state
 
     # get the entity
-    entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(ha_state.entity_id)
     assert entity
 
     # get the device
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entity.device_id)
     assert device.name == "Wired Eingangsmodul – 32-fach"
 

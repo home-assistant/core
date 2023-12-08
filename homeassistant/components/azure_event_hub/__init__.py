@@ -13,9 +13,10 @@ from azure.eventhub.aio import EventHubProducerClient
 from azure.eventhub.exceptions import EventHubError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryNotReady
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import Event, HomeAssistant, State
+from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.helpers.event import async_call_later
@@ -77,9 +78,10 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     if not yaml_config[DOMAIN]:
         return True
     _LOGGER.warning(
-        "Loading Azure Event Hub completely via yaml config is deprecated; Only the \
-        Filter can be set in yaml, the rest is done through a config flow and has \
-        been imported, all other keys but filter can be deleted from configuration.yaml"
+        "Loading Azure Event Hub completely via yaml config is deprecated; Only the"
+        " Filter can be set in yaml, the rest is done through a config flow and has"
+        " been imported, all other keys but filter can be deleted from"
+        " configuration.yaml"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -138,7 +140,7 @@ class AzureEventHub:
         self._max_delay = self._entry.options.get(CONF_MAX_DELAY, DEFAULT_MAX_DELAY)
 
         self._shutdown = False
-        self._queue: asyncio.PriorityQueue[  # pylint: disable=unsubscriptable-object
+        self._queue: asyncio.PriorityQueue[
             tuple[int, tuple[datetime, State | None]]
         ] = asyncio.PriorityQueue()
         self._listener_remover: Callable[[], None] | None = None
@@ -153,7 +155,6 @@ class AzureEventHub:
         Suppress the INFO and below logging on the underlying packages,
         they are very verbose, even at INFO.
         """
-        logging.getLogger("uamqp").setLevel(logging.WARNING)
         logging.getLogger("azure.eventhub").setLevel(logging.WARNING)
         self._listener_remover = self.hass.bus.async_listen(
             MATCH_ALL, self.async_listen

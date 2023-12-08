@@ -5,7 +5,8 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
       "user": {
@@ -23,6 +24,36 @@
           "name": "[%key:common::config_flow::data::name%]",
           "area_id": "[%key:component::yale_smart_alarm::config::step::user::data::area_id%]"
         }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "lock_code_digits": "Number of digits in PIN code for locks"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "power_loss": {
+        "name": "Power loss"
+      },
+      "battery": {
+        "name": "Battery"
+      },
+      "tamper": {
+        "name": "Tamper"
+      },
+      "jam": {
+        "name": "Jam"
+      }
+    },
+    "button": {
+      "panic": {
+        "name": "Panic button"
       }
     }
   }

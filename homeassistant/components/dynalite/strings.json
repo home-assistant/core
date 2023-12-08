@@ -1,0 +1,56 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "title": "Configure Dynalite Connection",
+        "description": "Gateway address to connect to DYNET network"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "services": {
+    "request_area_preset": {
+      "name": "Request area preset",
+      "description": "Requests Dynalite to report the preset for an area.",
+      "fields": {
+        "host": {
+          "name": "[%key:common::config_flow::data::host%]",
+          "description": "Host gateway IP to send to or all configured gateways if not specified."
+        },
+        "area": {
+          "name": "Area",
+          "description": "Area to request the preset reported."
+        },
+        "channel": {
+          "name": "Channel",
+          "description": "Channel to request the preset to be reported from."
+        }
+      }
+    },
+    "request_channel_level": {
+      "name": "Request channel level",
+      "description": "Requests Dynalite to report the level of a specific channel.",
+      "fields": {
+        "host": {
+          "name": "[%key:common::config_flow::data::host%]",
+          "description": "[%key:component::dynalite::services::request_area_preset::fields::host::description%]"
+        },
+        "area": {
+          "name": "[%key:component::dynalite::services::request_area_preset::fields::area::name%]",
+          "description": "Area for the requested channel."
+        },
+        "channel": {
+          "name": "Channel",
+          "description": "Channel to request the level for."
+        }
+      }
+    }
+  }
+}

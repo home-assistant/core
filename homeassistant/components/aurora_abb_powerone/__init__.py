@@ -7,18 +7,19 @@
 # Developer note:
 # vscode devcontainer: use the following to access USB device:
 # "runArgs": ["-e", "GIT_EDITOR=code --wait", "--device=/dev/ttyUSB0"],
+# and add the following to the end of script/bootstrap:
+# sudo chmod 777 /dev/ttyUSB0
 
 import logging
 
-from aurorapy.client import AuroraError, AuroraSerialClient
+from aurorapy.client import AuroraError, AuroraSerialClient, AuroraTimeoutError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .config_flow import validate_and_connect
-from .const import ATTR_SERIAL_NUMBER, DOMAIN
+from .const import DOMAIN, SCAN_INTERVAL
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -30,45 +31,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     comport = entry.data[CONF_PORT]
     address = entry.data[CONF_ADDRESS]
-    ser_client = AuroraSerialClient(address, comport, parity="N", timeout=1)
-    # To handle yaml import attempts in darkeness, (re)try connecting only if
-    # unique_id not yet assigned.
-    if entry.unique_id is None:
-        try:
-            res = await hass.async_add_executor_job(
-                validate_and_connect, hass, entry.data
-            )
-        except AuroraError as error:
-            if "No response after" in str(error):
-                raise ConfigEntryNotReady("No response (could be dark)") from error
-            _LOGGER.error("Failed to connect to inverter: %s", error)
-            return False
-        except OSError as error:
-            if error.errno == 19:  # No such device.
-                _LOGGER.error("Failed to connect to inverter: no such COM port")
-                return False
-            _LOGGER.error("Failed to connect to inverter: %s", error)
-            return False
-        else:
-            # If we got here, the device is now communicating (maybe after
-            # being in darkness). But there's a small risk that the user has
-            # configured via the UI since we last attempted the yaml setup,
-            # which means we'd get a duplicate unique ID.
-            new_id = res[ATTR_SERIAL_NUMBER]
-            # Check if this unique_id has already been used
-            for existing_entry in hass.config_entries.async_entries(DOMAIN):
-                if existing_entry.unique_id == new_id:
-                    _LOGGER.debug(
-                        "Remove already configured config entry for id %s", new_id
-                    )
-                    hass.async_create_task(
-                        hass.config_entries.async_remove(entry.entry_id)
-                    )
-                    return False
-            hass.config_entries.async_update_entry(entry, unique_id=new_id)
+    coordinator = AuroraAbbDataUpdateCoordinator(hass, comport, address)
+    await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = ser_client
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -83,3 +50,60 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
+    """Class to manage fetching AuroraAbbPowerone data."""
+
+    def __init__(self, hass: HomeAssistant, comport: str, address: int) -> None:
+        """Initialize the data update coordinator."""
+        self.available_prev = False
+        self.available = False
+        self.client = AuroraSerialClient(address, comport, parity="N", timeout=1)
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+
+    def _update_data(self) -> dict[str, float]:
+        """Fetch new state data for the sensor.
+
+        This is the only function that should fetch new data for Home Assistant.
+        """
+        data: dict[str, float] = {}
+        self.available_prev = self.available
+        try:
+            self.client.connect()
+
+            # read ADC channel 3 (grid power output)
+            power_watts = self.client.measure(3, True)
+            temperature_c = self.client.measure(21)
+            energy_wh = self.client.cumulated_energy(5)
+            [alarm, *_] = self.client.alarms()
+        except AuroraTimeoutError:
+            self.available = False
+            _LOGGER.debug("No response from inverter (could be dark)")
+        except AuroraError as error:
+            self.available = False
+            raise error
+        else:
+            data["instantaneouspower"] = round(power_watts, 1)
+            data["temp"] = round(temperature_c, 1)
+            data["totalenergy"] = round(energy_wh / 1000, 2)
+            data["alarm"] = alarm
+            self.available = True
+
+        finally:
+            if self.available != self.available_prev:
+                if self.available:
+                    _LOGGER.info("Communication with %s back online", self.name)
+                else:
+                    _LOGGER.warning(
+                        "Communication with %s lost",
+                        self.name,
+                    )
+            if self.client.serline.isOpen():
+                self.client.close()
+
+        return data
+
+    async def _async_update_data(self) -> dict[str, float]:
+        """Update inverter data in the executor."""
+        return await self.hass.async_add_executor_job(self._update_data)

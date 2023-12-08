@@ -1,37 +1,31 @@
 """Provide common mysensors fixtures."""
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, Callable, Generator
+from copy import deepcopy
 import json
-from typing import Any, Callable
-from unittest.mock import MagicMock, patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from mysensors import BaseSyncGateway
 from mysensors.persistence import MySensorsJSONDecoder
 from mysensors.sensor import Sensor
 import pytest
 
-from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
-from homeassistant.components.mysensors import CONF_VERSION, DEFAULT_BAUD_RATE
+from homeassistant.components.mysensors.config_flow import DEFAULT_BAUD_RATE
 from homeassistant.components.mysensors.const import (
     CONF_BAUD_RATE,
     CONF_DEVICE,
     CONF_GATEWAY_TYPE,
     CONF_GATEWAY_TYPE_SERIAL,
-    CONF_GATEWAYS,
+    CONF_VERSION,
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
-
-
-@pytest.fixture(autouse=True)
-def device_tracker_storage(mock_device_tracker_conf: list[Device]) -> list[Device]:
-    """Mock out device tracker known devices storage."""
-    devices = mock_device_tracker_conf
-    return devices
 
 
 @pytest.fixture(name="mqtt")
@@ -62,39 +56,57 @@ async def serial_transport_fixture(
     """Mock a serial transport."""
     with patch(
         "mysensors.gateway_serial.AsyncTransport", autospec=True
-    ) as transport_class, patch("mysensors.AsyncTasks", autospec=True) as tasks_class:
-        tasks = tasks_class.return_value
-        tasks.persistence = MagicMock
+    ) as transport_class, patch("mysensors.task.OTAFirmware", autospec=True), patch(
+        "mysensors.task.load_fw", autospec=True
+    ), patch(
+        "mysensors.task.Persistence",
+        autospec=True,
+    ) as persistence_class:
+        persistence = persistence_class.return_value
 
-        mock_gateway_features(tasks, transport_class, gateway_nodes)
+        mock_gateway_features(persistence, transport_class, gateway_nodes)
 
         yield transport_class
 
 
 def mock_gateway_features(
-    tasks: MagicMock, transport_class: MagicMock, nodes: dict[int, Sensor]
+    persistence: MagicMock, transport_class: MagicMock, nodes: dict[int, Sensor]
 ) -> None:
     """Mock the gateway features."""
 
-    async def mock_start_persistence() -> None:
+    async def mock_schedule_save_sensors() -> None:
         """Load nodes from via persistence."""
         gateway = transport_class.call_args[0][0]
         gateway.sensors.update(nodes)
 
-    tasks.start_persistence.side_effect = mock_start_persistence
+    persistence.schedule_save_sensors = AsyncMock(
+        side_effect=mock_schedule_save_sensors
+    )
+    # For some reason autospeccing does not recognize these methods.
+    persistence.safe_load_sensors = MagicMock()
+    persistence.save_sensors = MagicMock()
 
-    async def mock_start() -> None:
+    async def mock_connect() -> None:
         """Mock the start method."""
+        transport.connect_task = MagicMock()
         gateway = transport_class.call_args[0][0]
         gateway.on_conn_made(gateway)
 
-    tasks.start.side_effect = mock_start
+    transport = transport_class.return_value
+    transport.connect_task = None
+    transport.connect.side_effect = mock_connect
 
 
 @pytest.fixture(name="transport")
 def transport_fixture(serial_transport: MagicMock) -> MagicMock:
     """Return the default mocked transport."""
     return serial_transport
+
+
+@pytest.fixture
+def transport_write(transport: MagicMock) -> MagicMock:
+    """Return the transport mock that accepts string messages."""
+    return transport.return_value.send
 
 
 @pytest.fixture(name="serial_entry")
@@ -118,16 +130,45 @@ def config_entry_fixture(serial_entry: MockConfigEntry) -> MockConfigEntry:
     return serial_entry
 
 
-@pytest.fixture
-async def integration(
+@pytest.fixture(name="integration")
+async def integration_fixture(
     hass: HomeAssistant, transport: MagicMock, config_entry: MockConfigEntry
-) -> AsyncGenerator[tuple[MockConfigEntry, Callable[[str], None]], None]:
+) -> AsyncGenerator[MockConfigEntry, None]:
     """Set up the mysensors integration with a config entry."""
-    device = config_entry.data[CONF_DEVICE]
-    config: dict[str, Any] = {DOMAIN: {CONF_GATEWAYS: [{CONF_DEVICE: device}]}}
+    config: dict[str, Any] = {}
     config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.mysensors.device.Debouncer", autospec=True
+    ) as debouncer_class:
 
-    def receive_message(message_string: str) -> None:
+        def debouncer(
+            *args: Any, function: Callable | None = None, **kwargs: Any
+        ) -> MagicMock:
+            """Mock the debouncer."""
+
+            async def call_debouncer():
+                """Mock call to debouncer."""
+                if function is not None:
+                    function()
+
+            debounce_instance = MagicMock()
+            debounce_instance.async_call.side_effect = call_debouncer
+            return debounce_instance
+
+        debouncer_class.side_effect = debouncer
+
+        await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+        yield config_entry
+
+
+@pytest.fixture
+def receive_message(
+    transport: MagicMock, integration: MockConfigEntry
+) -> Callable[[str], None]:
+    """Receive a message for the gateway."""
+
+    def receive_message_callback(message_string: str) -> None:
         """Receive a message with the transport.
 
         The message_string parameter is a string in the MySensors message format.
@@ -136,15 +177,22 @@ async def integration(
         # node_id;child_id;command;ack;type;payload\n
         gateway.logic(message_string)
 
-    with patch("homeassistant.components.mysensors.device.UPDATE_DELAY", new=0):
-        await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
-        yield config_entry, receive_message
+    return receive_message_callback
+
+
+@pytest.fixture(name="gateway")
+def gateway_fixture(
+    transport: MagicMock, integration: MockConfigEntry
+) -> BaseSyncGateway:
+    """Return a setup gateway."""
+    return transport.call_args[0][0]
 
 
 def load_nodes_state(fixture_path: str) -> dict:
     """Load mysensors nodes fixture."""
-    return json.loads(load_fixture(fixture_path), cls=MySensorsJSONDecoder)
+    return json.loads(
+        load_fixture(fixture_path, integration=DOMAIN), cls=MySensorsJSONDecoder
+    )
 
 
 def update_gateway_nodes(
@@ -155,16 +203,124 @@ def update_gateway_nodes(
     return nodes
 
 
+@pytest.fixture(name="cover_node_binary_state", scope="session")
+def cover_node_binary_state_fixture() -> dict:
+    """Load the cover node state."""
+    return load_nodes_state("cover_node_binary_state.json")
+
+
+@pytest.fixture
+def cover_node_binary(
+    gateway_nodes: dict[int, Sensor], cover_node_binary_state: dict
+) -> Sensor:
+    """Load the cover child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(cover_node_binary_state))
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="cover_node_percentage_state", scope="session")
+def cover_node_percentage_state_fixture() -> dict:
+    """Load the cover node state."""
+    return load_nodes_state("cover_node_percentage_state.json")
+
+
+@pytest.fixture
+def cover_node_percentage(
+    gateway_nodes: dict[int, Sensor], cover_node_percentage_state: dict
+) -> Sensor:
+    """Load the cover child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(cover_node_percentage_state))
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="door_sensor_state", scope="session")
+def door_sensor_state_fixture() -> dict:
+    """Load the door sensor state."""
+    return load_nodes_state("door_sensor_state.json")
+
+
+@pytest.fixture
+def door_sensor(gateway_nodes: dict[int, Sensor], door_sensor_state: dict) -> Sensor:
+    """Load the door sensor."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(door_sensor_state))
+    node = nodes[1]
+    return node
+
+
 @pytest.fixture(name="gps_sensor_state", scope="session")
 def gps_sensor_state_fixture() -> dict:
     """Load the gps sensor state."""
-    return load_nodes_state("mysensors/gps_sensor_state.json")
+    return load_nodes_state("gps_sensor_state.json")
 
 
 @pytest.fixture
 def gps_sensor(gateway_nodes: dict[int, Sensor], gps_sensor_state: dict) -> Sensor:
     """Load the gps sensor."""
-    nodes = update_gateway_nodes(gateway_nodes, gps_sensor_state)
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(gps_sensor_state))
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="dimmer_node_state", scope="session")
+def dimmer_node_state_fixture() -> dict:
+    """Load the dimmer node state."""
+    return load_nodes_state("dimmer_node_state.json")
+
+
+@pytest.fixture
+def dimmer_node(gateway_nodes: dict[int, Sensor], dimmer_node_state: dict) -> Sensor:
+    """Load the dimmer child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(dimmer_node_state))
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="hvac_node_auto_state", scope="session")
+def hvac_node_auto_state_fixture() -> dict:
+    """Load the hvac node auto state."""
+    return load_nodes_state("hvac_node_auto_state.json")
+
+
+@pytest.fixture
+def hvac_node_auto(
+    gateway_nodes: dict[int, Sensor], hvac_node_auto_state: dict
+) -> Sensor:
+    """Load the hvac auto child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(hvac_node_auto_state))
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="hvac_node_cool_state", scope="session")
+def hvac_node_cool_state_fixture() -> dict:
+    """Load the hvac node cool state."""
+    return load_nodes_state("hvac_node_cool_state.json")
+
+
+@pytest.fixture
+def hvac_node_cool(
+    gateway_nodes: dict[int, Sensor], hvac_node_cool_state: dict
+) -> Sensor:
+    """Load the hvac cool child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(hvac_node_cool_state))
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="hvac_node_heat_state", scope="session")
+def hvac_node_heat_state_fixture() -> dict:
+    """Load the hvac node heat state."""
+    return load_nodes_state("hvac_node_heat_state.json")
+
+
+@pytest.fixture
+def hvac_node_heat(
+    gateway_nodes: dict[int, Sensor], hvac_node_heat_state: dict
+) -> Sensor:
+    """Load the hvac heat child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(hvac_node_heat_state))
     node = nodes[1]
     return node
 
@@ -172,7 +328,7 @@ def gps_sensor(gateway_nodes: dict[int, Sensor], gps_sensor_state: dict) -> Sens
 @pytest.fixture(name="power_sensor_state", scope="session")
 def power_sensor_state_fixture() -> dict:
     """Load the power sensor state."""
-    return load_nodes_state("mysensors/power_sensor_state.json")
+    return load_nodes_state("power_sensor_state.json")
 
 
 @pytest.fixture
@@ -183,10 +339,38 @@ def power_sensor(gateway_nodes: dict[int, Sensor], power_sensor_state: dict) -> 
     return node
 
 
+@pytest.fixture(name="rgb_node_state", scope="session")
+def rgb_node_state_fixture() -> dict:
+    """Load the rgb node state."""
+    return load_nodes_state("rgb_node_state.json")
+
+
+@pytest.fixture
+def rgb_node(gateway_nodes: dict[int, Sensor], rgb_node_state: dict) -> Sensor:
+    """Load the rgb child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(rgb_node_state))
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="rgbw_node_state", scope="session")
+def rgbw_node_state_fixture() -> dict:
+    """Load the rgbw node state."""
+    return load_nodes_state("rgbw_node_state.json")
+
+
+@pytest.fixture
+def rgbw_node(gateway_nodes: dict[int, Sensor], rgbw_node_state: dict) -> Sensor:
+    """Load the rgbw child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(rgbw_node_state))
+    node = nodes[1]
+    return node
+
+
 @pytest.fixture(name="energy_sensor_state", scope="session")
 def energy_sensor_state_fixture() -> dict:
     """Load the energy sensor state."""
-    return load_nodes_state("mysensors/energy_sensor_state.json")
+    return load_nodes_state("energy_sensor_state.json")
 
 
 @pytest.fixture
@@ -202,7 +386,7 @@ def energy_sensor(
 @pytest.fixture(name="sound_sensor_state", scope="session")
 def sound_sensor_state_fixture() -> dict:
     """Load the sound sensor state."""
-    return load_nodes_state("mysensors/sound_sensor_state.json")
+    return load_nodes_state("sound_sensor_state.json")
 
 
 @pytest.fixture
@@ -216,7 +400,7 @@ def sound_sensor(gateway_nodes: dict[int, Sensor], sound_sensor_state: dict) -> 
 @pytest.fixture(name="distance_sensor_state", scope="session")
 def distance_sensor_state_fixture() -> dict:
     """Load the distance sensor state."""
-    return load_nodes_state("mysensors/distance_sensor_state.json")
+    return load_nodes_state("distance_sensor_state.json")
 
 
 @pytest.fixture
@@ -229,10 +413,40 @@ def distance_sensor(
     return node
 
 
+@pytest.fixture(name="ir_transceiver_state", scope="session")
+def ir_transceiver_state_fixture() -> dict:
+    """Load the ir transceiver state."""
+    return load_nodes_state("ir_transceiver_state.json")
+
+
+@pytest.fixture
+def ir_transceiver(
+    gateway_nodes: dict[int, Sensor], ir_transceiver_state: dict
+) -> Sensor:
+    """Load the ir transceiver child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(ir_transceiver_state))
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="relay_node_state", scope="session")
+def relay_node_state_fixture() -> dict:
+    """Load the relay node state."""
+    return load_nodes_state("relay_node_state.json")
+
+
+@pytest.fixture
+def relay_node(gateway_nodes: dict[int, Sensor], relay_node_state: dict) -> Sensor:
+    """Load the relay child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(relay_node_state))
+    node = nodes[1]
+    return node
+
+
 @pytest.fixture(name="temperature_sensor_state", scope="session")
 def temperature_sensor_state_fixture() -> dict:
     """Load the temperature sensor state."""
-    return load_nodes_state("mysensors/temperature_sensor_state.json")
+    return load_nodes_state("temperature_sensor_state.json")
 
 
 @pytest.fixture
@@ -241,5 +455,35 @@ def temperature_sensor(
 ) -> Sensor:
     """Load the temperature sensor."""
     nodes = update_gateway_nodes(gateway_nodes, temperature_sensor_state)
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="text_node_state", scope="session")
+def text_node_state_fixture() -> dict:
+    """Load the text node state."""
+    return load_nodes_state("text_node_state.json")
+
+
+@pytest.fixture
+def text_node(gateway_nodes: dict[int, Sensor], text_node_state: dict) -> Sensor:
+    """Load the text child node."""
+    nodes = update_gateway_nodes(gateway_nodes, text_node_state)
+    node = nodes[1]
+    return node
+
+
+@pytest.fixture(name="battery_sensor_state", scope="session")
+def battery_sensor_state_fixture() -> dict:
+    """Load the battery sensor state."""
+    return load_nodes_state("battery_sensor_state.json")
+
+
+@pytest.fixture
+def battery_sensor(
+    gateway_nodes: dict[int, Sensor], battery_sensor_state: dict
+) -> Sensor:
+    """Load the battery sensor."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(battery_sensor_state))
     node = nodes[1]
     return node

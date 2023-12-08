@@ -1,4 +1,6 @@
 """Support for Tado Smart device trackers."""
+from __future__ import annotations
+
 import asyncio
 from collections import namedtuple
 from datetime import timedelta
@@ -6,17 +8,18 @@ from http import HTTPStatus
 import logging
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +28,7 @@ CONF_HOME_ID = "home_id"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -34,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> TadoDeviceScanner | None:
     """Return a Tado scanner."""
     scanner = TadoDeviceScanner(hass, config[DOMAIN])
     return scanner if scanner.success_init else None
@@ -44,7 +47,7 @@ Device = namedtuple("Device", ["mac", "name"])
 
 
 class TadoDeviceScanner(DeviceScanner):
-    """This class gets geofenced devices from Tado."""
+    """Scanner for geofenced devices from Tado."""
 
     def __init__(self, hass, config):
         """Initialize the scanner."""
@@ -91,8 +94,7 @@ class TadoDeviceScanner(DeviceScanner):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     async def _async_update_info(self):
-        """
-        Query Tado for device marked as at home.
+        """Query Tado for device marked as at home.
 
         Returns boolean if scanning successful.
         """
@@ -106,7 +108,7 @@ class TadoDeviceScanner(DeviceScanner):
         last_results = []
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 # Format the URL here, so we can log the template URL if
                 # anything goes wrong without exposing username and password.
                 url = self.tadoapiurl.format(

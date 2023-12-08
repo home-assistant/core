@@ -4,9 +4,9 @@ from datetime import datetime
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
-from tests.components.modern_forms import init_integration, modern_forms_timers_set_mock
+from . import init_integration, modern_forms_timers_set_mock
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -17,7 +17,6 @@ async def test_sensors(
 
     # await init_integration(hass, aioclient_mock)
     await init_integration(hass, aioclient_mock)
-    er.async_get(hass)
 
     # Light timer remaining time
     state = hass.states.get("sensor.modernformsfan_light_sleep_time")
@@ -41,7 +40,6 @@ async def test_active_sensors(
 
     # await init_integration(hass, aioclient_mock)
     await init_integration(hass, aioclient_mock, mock_type=modern_forms_timers_set_mock)
-    er.async_get(hass)
 
     # Light timer remaining time
     state = hass.states.get("sensor.modernformsfan_light_sleep_time")

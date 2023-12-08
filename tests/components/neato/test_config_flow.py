@@ -9,6 +9,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -19,15 +21,17 @@ OAUTH2_TOKEN = VENDOR.token_endpoint
 
 
 async def test_full_flow(
-    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,
         "neato",
         {
             "neato": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
-            "http": {"base_url": "https://example.com"},
         },
     )
 
@@ -74,7 +78,7 @@ async def test_full_flow(
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_abort_if_already_setup(hass: HomeAssistant):
+async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     """Test we abort if Neato is already setup."""
     entry = MockConfigEntry(
         domain=NEATO_DOMAIN,
@@ -86,20 +90,22 @@ async def test_abort_if_already_setup(hass: HomeAssistant):
     result = await hass.config_entries.flow.async_init(
         "neato", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
 async def test_reauth(
-    hass: HomeAssistant, hass_client_no_auth, aioclient_mock, current_request_with_host
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Test initialization of the reauth flow."""
     assert await setup.async_setup_component(
         hass,
         "neato",
         {
             "neato": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
-            "http": {"base_url": "https://example.com"},
         },
     )
 
@@ -113,7 +119,7 @@ async def test_reauth(
     result = await hass.config_entries.flow.async_init(
         "neato", context={"source": config_entries.SOURCE_REAUTH}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     # Confirm reauth flow
@@ -150,7 +156,7 @@ async def test_reauth(
 
     new_entry = hass.config_entries.async_get_entry("my_entry")
 
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result3["type"] == data_entry_flow.FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
     assert new_entry.state == config_entries.ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(NEATO_DOMAIN)) == 1

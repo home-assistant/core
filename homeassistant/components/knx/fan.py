@@ -8,16 +8,16 @@ from xknx import XKNX
 from xknx.devices import Fan as XknxFan
 
 from homeassistant import config_entries
-from homeassistant.components.fan import SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.percentage import (
-    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
+from homeassistant.util.scaling import int_states_in_range
 
 from .const import DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS
 from .knx_entity import KnxEntity
@@ -76,12 +76,12 @@ class KNXFan(KnxEntity, FanEntity):
             await self._device.set_speed(percentage)
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
-        flags = SUPPORT_SET_SPEED
+        flags = FanEntityFeature.SET_SPEED
 
         if self._device.supports_oscillation:
-            flags |= SUPPORT_OSCILLATE
+            flags |= FanEntityFeature.OSCILLATE
 
         return flags
 
@@ -106,7 +106,6 @@ class KNXFan(KnxEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,

@@ -1,4 +1,6 @@
 """Support for departure information for Rhein-Main public transport."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -11,9 +13,12 @@ from RMVtransport.rmvtransport import (
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, CONF_TIMEOUT, TIME_MINUTES
+from homeassistant.const import CONF_NAME, CONF_TIMEOUT, UnitOfTime
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,7 +79,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the RMV departure sensor."""
     timeout = config.get(CONF_TIMEOUT)
 
@@ -90,10 +100,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             next_departure.get(CONF_NAME),
             timeout,
         )
-        for next_departure in config.get(CONF_NEXT_DEPARTURE)
+        for next_departure in config[CONF_NEXT_DEPARTURE]
     ]
 
-    tasks = [sensor.async_update() for sensor in sensors]
+    tasks = [asyncio.create_task(sensor.async_update()) for sensor in sensors]
     if tasks:
         await asyncio.wait(tasks)
 
@@ -105,6 +115,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 class RMVDepartureSensor(SensorEntity):
     """Implementation of an RMV departure sensor."""
+
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
@@ -160,7 +172,6 @@ class RMVDepartureSensor(SensorEntity):
                 "minutes": self.data.departures[0].get("minutes"),
                 "departure_time": self.data.departures[0].get("departure_time"),
                 "product": self.data.departures[0].get("product"),
-                ATTR_ATTRIBUTION: ATTRIBUTION,
             }
         except IndexError:
             return {}
@@ -173,9 +184,9 @@ class RMVDepartureSensor(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return TIME_MINUTES
+        return UnitOfTime.MINUTES
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data and update the state."""
         await self.data.async_update()
 

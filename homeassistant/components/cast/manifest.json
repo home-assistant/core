@@ -1,9 +1,6 @@
 {
   "domain": "cast",
   "name": "Google Cast",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/cast",
-  "requirements": ["pychromecast==10.2.2"],
   "after_dependencies": [
     "cloud",
     "http",
@@ -12,7 +9,11 @@
     "tts",
     "zeroconf"
   ],
-  "zeroconf": ["_googlecast._tcp.local."],
   "codeowners": ["@emontnemery"],
-  "iot_class": "local_polling"
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/cast",
+  "iot_class": "local_polling",
+  "loggers": ["casttube", "pychromecast"],
+  "requirements": ["PyChromecast==13.0.8"],
+  "zeroconf": ["_googlecast._tcp.local."]
 }

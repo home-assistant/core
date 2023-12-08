@@ -1,6 +1,7 @@
 """Support for ADS binary sensors."""
 from __future__ import annotations
 
+import pyads
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -52,9 +53,9 @@ class AdsBinarySensor(AdsEntity, BinarySensorEntity):
         super().__init__(ads_hub, name, ads_var)
         self._attr_device_class = device_class or BinarySensorDeviceClass.MOVING
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register device notification."""
-        await self.async_initialize_device(self._ads_var, self._ads_hub.PLCTYPE_BOOL)
+        await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_BOOL)
 
     @property
     def is_on(self) -> bool:

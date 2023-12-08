@@ -1,8 +1,10 @@
 """Test the Logitech Harmony Hub activity switches."""
-
 from datetime import timedelta
 
+from homeassistant.components import automation, script
+from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.harmony.const import DOMAIN
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -16,7 +18,10 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.helpers import entity_registry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+import homeassistant.helpers.issue_registry as ir
+from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
 
 from .const import ENTITY_PLAY_MUSIC, ENTITY_REMOTE, ENTITY_WATCH_TV, HUB_NAME
@@ -25,8 +30,12 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_connection_state_changes(
-    harmony_client, mock_hc, hass, mock_write_config
-):
+    harmony_client,
+    mock_hc,
+    hass: HomeAssistant,
+    mock_write_config,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Ensure connection changes are reflected in the switch states."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
@@ -41,9 +50,8 @@ async def test_connection_state_changes(
     assert not hass.states.get(ENTITY_PLAY_MUSIC)
 
     # enable switch entities
-    ent_reg = entity_registry.async_get(hass)
-    ent_reg.async_update_entity(ENTITY_WATCH_TV, disabled_by=None)
-    ent_reg.async_update_entity(ENTITY_PLAY_MUSIC, disabled_by=None)
+    entity_registry.async_update_entity(ENTITY_WATCH_TV, disabled_by=None)
+    entity_registry.async_update_entity(ENTITY_PLAY_MUSIC, disabled_by=None)
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -80,7 +88,9 @@ async def test_connection_state_changes(
     assert hass.states.is_state(ENTITY_PLAY_MUSIC, STATE_OFF)
 
 
-async def test_switch_toggles(mock_hc, hass, mock_write_config):
+async def test_switch_toggles(
+    mock_hc, hass: HomeAssistant, mock_write_config, entity_registry: er.EntityRegistry
+) -> None:
     """Ensure calls to the switch modify the harmony state."""
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
@@ -91,9 +101,8 @@ async def test_switch_toggles(mock_hc, hass, mock_write_config):
     await hass.async_block_till_done()
 
     # enable switch entities
-    ent_reg = entity_registry.async_get(hass)
-    ent_reg.async_update_entity(ENTITY_WATCH_TV, disabled_by=None)
-    ent_reg.async_update_entity(ENTITY_PLAY_MUSIC, disabled_by=None)
+    entity_registry.async_update_entity(ENTITY_WATCH_TV, disabled_by=None)
+    entity_registry.async_update_entity(ENTITY_PLAY_MUSIC, disabled_by=None)
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -129,3 +138,62 @@ async def _toggle_switch_and_wait(hass, service_name, entity):
         blocking=True,
     )
     await hass.async_block_till_done()
+
+
+async def test_create_issue(
+    harmony_client,
+    mock_hc,
+    hass: HomeAssistant,
+    mock_write_config,
+    entity_registry_enabled_by_default: None,
+) -> None:
+    """Test we create an issue when an automation or script is using a deprecated entity."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "test",
+                "trigger": {"platform": "state", "entity_id": ENTITY_WATCH_TV},
+                "action": {"service": "switch.turn_on", "entity_id": ENTITY_WATCH_TV},
+            }
+        },
+    )
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                "test": {
+                    "sequence": [
+                        {
+                            "service": "switch.turn_on",
+                            "data": {"entity_id": ENTITY_WATCH_TV},
+                        },
+                    ],
+                }
+            }
+        },
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
+    )
+
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert automations_with_entity(hass, ENTITY_WATCH_TV)[0] == "automation.test"
+    assert scripts_with_entity(hass, ENTITY_WATCH_TV)[0] == "script.test"
+    issue_registry: ir.IssueRegistry = ir.async_get(hass)
+
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_switches")
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_switches_switch.guest_room_watch_tv_automation.test"
+    )
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_switches_switch.guest_room_watch_tv_script.test"
+    )
+
+    assert len(issue_registry.issues) == 3

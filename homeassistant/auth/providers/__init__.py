@@ -22,12 +22,10 @@ from ..auth_store import AuthStore
 from ..const import MFA_SESSION_EXPIRATION
 from ..models import Credentials, RefreshToken, User, UserMeta
 
-# mypy: disallow-any-generics
-
 _LOGGER = logging.getLogger(__name__)
 DATA_REQS = "auth_prov_reqs_processed"
 
-AUTH_PROVIDERS = Registry()
+AUTH_PROVIDERS: Registry[str, type[AuthProvider]] = Registry()
 
 AUTH_PROVIDER_SCHEMA = vol.Schema(
     {
@@ -64,12 +62,12 @@ class AuthProvider:
     @property
     def type(self) -> str:
         """Return type of the provider."""
-        return self.config[CONF_TYPE]  # type: ignore
+        return self.config[CONF_TYPE]  # type: ignore[no-any-return]
 
     @property
     def name(self) -> str:
         """Return the name of the auth provider."""
-        return self.config.get(CONF_NAME, self.DEFAULT_TITLE)
+        return self.config.get(CONF_NAME, self.DEFAULT_TITLE)  # type: ignore[no-any-return]
 
     @property
     def support_mfa(self) -> bool:
@@ -138,7 +136,7 @@ async def auth_provider_from_config(
     hass: HomeAssistant, store: AuthStore, config: dict[str, Any]
 ) -> AuthProvider:
     """Initialize an auth provider from a config."""
-    provider_name = config[CONF_TYPE]
+    provider_name: str = config[CONF_TYPE]
     module = await load_auth_provider_module(hass, provider_name)
 
     try:
@@ -151,7 +149,7 @@ async def auth_provider_from_config(
         )
         raise
 
-    return AUTH_PROVIDERS[provider_name](hass, store, config)  # type: ignore
+    return AUTH_PROVIDERS[provider_name](hass, store, config)
 
 
 async def load_auth_provider_module(
@@ -252,9 +250,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
             auth_module, "async_initialize_login_mfa_step"
         ):
             try:
-                await auth_module.async_initialize_login_mfa_step(  # type: ignore
-                    self.user.id
-                )
+                await auth_module.async_initialize_login_mfa_step(self.user.id)
             except HomeAssistantError:
                 _LOGGER.exception("Error initializing MFA step")
                 return self.async_abort(reason="unknown_error")
@@ -274,7 +270,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
             if not errors:
                 return await self.async_finish(self.credential)
 
-        description_placeholders: dict[str, str | None] = {
+        description_placeholders: dict[str, str] = {
             "mfa_module_name": auth_module.name,
             "mfa_module_id": auth_module.id,
         }
@@ -288,4 +284,4 @@ class LoginFlow(data_entry_flow.FlowHandler):
 
     async def async_finish(self, flow_result: Any) -> FlowResult:
         """Handle the pass of login flow."""
-        return self.async_create_entry(title=self._auth_provider.name, data=flow_result)
+        return self.async_create_entry(data=flow_result)

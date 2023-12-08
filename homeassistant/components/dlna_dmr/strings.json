@@ -34,7 +34,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "not_dmr": "Device is not a supported Digital Media Renderer"
+      "not_dmr": "[%key:component::dlna_dmr::config::abort::not_dmr%]"
     }
   },
   "options": {
@@ -44,7 +44,8 @@
         "data": {
           "listen_port": "Event listener port (random if not set)",
           "callback_url_override": "Event listener callback URL",
-          "poll_availability": "Poll for device availability"
+          "poll_availability": "Poll for device availability",
+          "browse_unfiltered": "Show incompatible media when browsing"
         }
       }
     },

@@ -3,13 +3,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from pyhaversion.consts import HaVersionChannel, HaVersionSource
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_NAME, CONF_SOURCE
+from homeassistant.const import CONF_SOURCE
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.util import slugify
 
 from .const import (
     ATTR_VERSION_SOURCE,
@@ -22,34 +20,27 @@ from .const import (
     DEFAULT_CHANNEL,
     DEFAULT_CONFIGURATION,
     DEFAULT_IMAGE,
-    DEFAULT_NAME,
     DEFAULT_NAME_CURRENT,
-    DEFAULT_NAME_LATEST,
-    DEFAULT_SOURCE,
     DOMAIN,
-    POSTFIX_CONTAINER_NAME,
-    SOURCE_DOKCER,
-    SOURCE_HASSIO,
     STEP_USER,
     STEP_VERSION_SOURCE,
     VALID_BOARDS,
     VALID_CHANNELS,
     VALID_CONTAINER_IMAGES,
     VALID_IMAGES,
-    VERSION_SOURCE_DOCKER_HUB,
     VERSION_SOURCE_LOCAL,
     VERSION_SOURCE_MAP,
-    VERSION_SOURCE_MAP_INVERTED,
-    VERSION_SOURCE_VERSIONS,
 )
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Version."""
 
-    _entry_data: dict[str, Any] = DEFAULT_CONFIGURATION.copy()
-
     VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize the Version config flow."""
+        self._entry_data: dict[str, Any] = DEFAULT_CONFIGURATION.copy()
 
     async def async_step_user(
         self,
@@ -74,8 +65,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._entry_data.update(user_input)
 
         if not self.show_advanced_options or user_input[CONF_SOURCE] in (
-            HaVersionSource.LOCAL,
-            HaVersionSource.HAIO,
+            "local",
+            "haio",
         ):
             return self.async_create_entry(
                 title=self._config_entry_name,
@@ -91,8 +82,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the version_source step."""
         if user_input is None:
             if self._entry_data[CONF_SOURCE] in (
-                HaVersionSource.SUPERVISOR,
-                HaVersionSource.CONTAINER,
+                "supervisor",
+                "container",
             ):
                 data_schema = vol.Schema(
                     {
@@ -101,7 +92,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         ): vol.In(VALID_CHANNELS),
                     }
                 )
-                if self._entry_data[CONF_SOURCE] == HaVersionSource.SUPERVISOR:
+                if self._entry_data[CONF_SOURCE] == "supervisor":
                     data_schema = data_schema.extend(
                         {
                             vol.Required(CONF_IMAGE, default=DEFAULT_IMAGE): vol.In(
@@ -137,22 +128,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=self._config_entry_name, data=self._entry_data
         )
 
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
-        """Import a config entry from configuration.yaml."""
-        self._entry_data = _convert_imported_configuration(import_config)
-
-        for entry in self._async_current_entries():
-            if _fingerprint(entry.data) == _fingerprint(self._entry_data):
-                return self.async_abort(reason="already_configured")
-
-        return self.async_create_entry(
-            title=self._config_entry_name, data=self._entry_data
-        )
-
     @property
     def _config_entry_name(self) -> str:
         """Return the name of the config entry."""
-        if self._entry_data[CONF_SOURCE] == HaVersionSource.LOCAL:
+        if self._entry_data[CONF_SOURCE] == "local":
             return DEFAULT_NAME_CURRENT
 
         name = self._entry_data[CONF_VERSION_SOURCE]
@@ -161,42 +140,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return f"{name} {channel.title()}"
 
         return name
-
-
-def _fingerprint(data) -> str:
-    """Return a fingerprint of the configuration."""
-    configuration = {**DEFAULT_CONFIGURATION, **data}
-    return slugify("_".join(configuration.values()))
-
-
-def _convert_imported_configuration(config: dict[str, Any]) -> Any:
-    """Convert a key from the imported configuration."""
-    data = DEFAULT_CONFIGURATION.copy()
-    if config.get(CONF_BETA):
-        data[CONF_CHANNEL] = HaVersionChannel.BETA
-
-    if (source := config.get(CONF_SOURCE)) and source != DEFAULT_SOURCE:
-        if source == SOURCE_HASSIO:
-            data[CONF_SOURCE] = HaVersionSource.SUPERVISOR
-            data[CONF_VERSION_SOURCE] = VERSION_SOURCE_VERSIONS
-        elif source == SOURCE_DOKCER:
-            data[CONF_SOURCE] = HaVersionSource.CONTAINER
-            data[CONF_VERSION_SOURCE] = VERSION_SOURCE_DOCKER_HUB
-        else:
-            data[CONF_SOURCE] = source
-            data[CONF_VERSION_SOURCE] = VERSION_SOURCE_MAP_INVERTED[source]
-
-    if (image := config.get(CONF_IMAGE)) and image != DEFAULT_IMAGE:
-        if data[CONF_SOURCE] == HaVersionSource.CONTAINER:
-            data[CONF_IMAGE] = f"{config[CONF_IMAGE]}{POSTFIX_CONTAINER_NAME}"
-        else:
-            data[CONF_IMAGE] = config[CONF_IMAGE]
-
-    if (name := config.get(CONF_NAME)) and name != DEFAULT_NAME:
-        data[CONF_NAME] = config[CONF_NAME]
-    else:
-        if data[CONF_SOURCE] == HaVersionSource.LOCAL:
-            data[CONF_NAME] = DEFAULT_NAME_CURRENT
-        else:
-            data[CONF_NAME] = DEFAULT_NAME_LATEST
-    return data

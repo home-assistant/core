@@ -6,6 +6,7 @@ from homeassistant.components import (
     camera,
     climate,
     cover,
+    event,
     fan,
     group,
     humidifier,
@@ -27,18 +28,20 @@ DOMAIN = "google_assistant"
 
 GOOGLE_ASSISTANT_API_ENDPOINT = "/api/google_assistant"
 
-CONF_EXPOSE = "expose"
+CONF_ALIASES = "aliases"
+CONF_CLIENT_EMAIL = "client_email"
 CONF_ENTITY_CONFIG = "entity_config"
+CONF_EXPOSE = "expose"
 CONF_EXPOSE_BY_DEFAULT = "expose_by_default"
 CONF_EXPOSED_DOMAINS = "exposed_domains"
+CONF_PRIVATE_KEY = "private_key"
 CONF_PROJECT_ID = "project_id"
-CONF_ALIASES = "aliases"
+CONF_REPORT_STATE = "report_state"
 CONF_ROOM_HINT = "room"
 CONF_SECURE_DEVICES_PIN = "secure_devices_pin"
-CONF_REPORT_STATE = "report_state"
 CONF_SERVICE_ACCOUNT = "service_account"
-CONF_CLIENT_EMAIL = "client_email"
-CONF_PRIVATE_KEY = "private_key"
+
+DATA_CONFIG = "config"
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
@@ -46,6 +49,7 @@ DEFAULT_EXPOSED_DOMAINS = [
     "binary_sensor",
     "climate",
     "cover",
+    "event",
     "fan",
     "group",
     "humidifier",
@@ -62,29 +66,33 @@ DEFAULT_EXPOSED_DOMAINS = [
     "vacuum",
 ]
 
+# https://developers.google.com/assistant/smarthome/guides
 PREFIX_TYPES = "action.devices.types."
-TYPE_CAMERA = f"{PREFIX_TYPES}CAMERA"
-TYPE_LIGHT = f"{PREFIX_TYPES}LIGHT"
-TYPE_SWITCH = f"{PREFIX_TYPES}SWITCH"
-TYPE_VACUUM = f"{PREFIX_TYPES}VACUUM"
-TYPE_SCENE = f"{PREFIX_TYPES}SCENE"
-TYPE_FAN = f"{PREFIX_TYPES}FAN"
-TYPE_THERMOSTAT = f"{PREFIX_TYPES}THERMOSTAT"
-TYPE_LOCK = f"{PREFIX_TYPES}LOCK"
+TYPE_ALARM = f"{PREFIX_TYPES}SECURITYSYSTEM"
 TYPE_AWNING = f"{PREFIX_TYPES}AWNING"
 TYPE_BLINDS = f"{PREFIX_TYPES}BLINDS"
-TYPE_SHUTTER = f"{PREFIX_TYPES}SHUTTER"
-TYPE_GARAGE = f"{PREFIX_TYPES}GARAGE"
-TYPE_OUTLET = f"{PREFIX_TYPES}OUTLET"
-TYPE_SENSOR = f"{PREFIX_TYPES}SENSOR"
-TYPE_DOOR = f"{PREFIX_TYPES}DOOR"
-TYPE_TV = f"{PREFIX_TYPES}TV"
-TYPE_SPEAKER = f"{PREFIX_TYPES}SPEAKER"
-TYPE_ALARM = f"{PREFIX_TYPES}SECURITYSYSTEM"
-TYPE_SETTOP = f"{PREFIX_TYPES}SETTOP"
-TYPE_HUMIDIFIER = f"{PREFIX_TYPES}HUMIDIFIER"
+TYPE_CAMERA = f"{PREFIX_TYPES}CAMERA"
+TYPE_CURTAIN = f"{PREFIX_TYPES}CURTAIN"
 TYPE_DEHUMIDIFIER = f"{PREFIX_TYPES}DEHUMIDIFIER"
+TYPE_DOOR = f"{PREFIX_TYPES}DOOR"
+TYPE_DOORBELL = f"{PREFIX_TYPES}DOORBELL"
+TYPE_FAN = f"{PREFIX_TYPES}FAN"
+TYPE_GARAGE = f"{PREFIX_TYPES}GARAGE"
+TYPE_HUMIDIFIER = f"{PREFIX_TYPES}HUMIDIFIER"
+TYPE_LIGHT = f"{PREFIX_TYPES}LIGHT"
+TYPE_LOCK = f"{PREFIX_TYPES}LOCK"
+TYPE_OUTLET = f"{PREFIX_TYPES}OUTLET"
 TYPE_RECEIVER = f"{PREFIX_TYPES}AUDIO_VIDEO_RECEIVER"
+TYPE_SCENE = f"{PREFIX_TYPES}SCENE"
+TYPE_SENSOR = f"{PREFIX_TYPES}SENSOR"
+TYPE_SETTOP = f"{PREFIX_TYPES}SETTOP"
+TYPE_SHUTTER = f"{PREFIX_TYPES}SHUTTER"
+TYPE_SPEAKER = f"{PREFIX_TYPES}SPEAKER"
+TYPE_SWITCH = f"{PREFIX_TYPES}SWITCH"
+TYPE_THERMOSTAT = f"{PREFIX_TYPES}THERMOSTAT"
+TYPE_TV = f"{PREFIX_TYPES}TV"
+TYPE_WINDOW = f"{PREFIX_TYPES}WINDOW"
+TYPE_VACUUM = f"{PREFIX_TYPES}VACUUM"
 
 SERVICE_REQUEST_SYNC = "request_sync"
 HOMEGRAPH_URL = "https://homegraph.googleapis.com/"
@@ -95,25 +103,23 @@ REPORT_STATE_BASE_URL = f"{HOMEGRAPH_URL}v1/devices:reportStateAndNotification"
 
 # Error codes used for SmartHomeError class
 # https://developers.google.com/actions/reference/smarthome/errors-exceptions
-ERR_DEVICE_OFFLINE = "deviceOffline"
-ERR_DEVICE_NOT_FOUND = "deviceNotFound"
-ERR_VALUE_OUT_OF_RANGE = "valueOutOfRange"
-ERR_NOT_SUPPORTED = "notSupported"
-ERR_PROTOCOL_ERROR = "protocolError"
-ERR_UNKNOWN_ERROR = "unknownError"
-ERR_FUNCTION_NOT_SUPPORTED = "functionNotSupported"
-ERR_UNSUPPORTED_INPUT = "unsupportedInput"
-ERR_NO_AVAILABLE_CHANNEL = "noAvailableChannel"
-
-ERR_ALREADY_DISARMED = "alreadyDisarmed"
 ERR_ALREADY_ARMED = "alreadyArmed"
+ERR_ALREADY_DISARMED = "alreadyDisarmed"
 ERR_ALREADY_STOPPED = "alreadyStopped"
-
 ERR_CHALLENGE_NEEDED = "challengeNeeded"
 ERR_CHALLENGE_NOT_SETUP = "challengeFailedNotSetup"
-ERR_TOO_MANY_FAILED_ATTEMPTS = "tooManyFailedAttempts"
+ERR_DEVICE_NOT_FOUND = "deviceNotFound"
+ERR_DEVICE_OFFLINE = "deviceOffline"
+ERR_FUNCTION_NOT_SUPPORTED = "functionNotSupported"
+ERR_NO_AVAILABLE_CHANNEL = "noAvailableChannel"
+ERR_NOT_SUPPORTED = "notSupported"
 ERR_PIN_INCORRECT = "pinIncorrect"
+ERR_PROTOCOL_ERROR = "protocolError"
+ERR_TOO_MANY_FAILED_ATTEMPTS = "tooManyFailedAttempts"
+ERR_UNKNOWN_ERROR = "unknownError"
+ERR_UNSUPPORTED_INPUT = "unsupportedInput"
 ERR_USER_CANCELLED = "userCancelled"
+ERR_VALUE_OUT_OF_RANGE = "valueOutOfRange"
 
 # Event types
 EVENT_COMMAND_RECEIVED = "google_assistant_command"
@@ -137,47 +143,70 @@ DOMAIN_TO_GOOGLE_TYPES = {
     media_player.DOMAIN: TYPE_SETTOP,
     scene.DOMAIN: TYPE_SCENE,
     script.DOMAIN: TYPE_SCENE,
-    sensor.DOMAIN: TYPE_SENSOR,
     select.DOMAIN: TYPE_SENSOR,
+    sensor.DOMAIN: TYPE_SENSOR,
     switch.DOMAIN: TYPE_SWITCH,
     vacuum.DOMAIN: TYPE_VACUUM,
 }
 
 DEVICE_CLASS_TO_GOOGLE_TYPES = {
-    (cover.DOMAIN, cover.CoverDeviceClass.GARAGE): TYPE_GARAGE,
-    (cover.DOMAIN, cover.CoverDeviceClass.GATE): TYPE_GARAGE,
-    (cover.DOMAIN, cover.CoverDeviceClass.DOOR): TYPE_DOOR,
-    (cover.DOMAIN, cover.CoverDeviceClass.AWNING): TYPE_AWNING,
-    (cover.DOMAIN, cover.CoverDeviceClass.SHUTTER): TYPE_SHUTTER,
-    (switch.DOMAIN, switch.SwitchDeviceClass.SWITCH): TYPE_SWITCH,
-    (switch.DOMAIN, switch.SwitchDeviceClass.OUTLET): TYPE_OUTLET,
     (binary_sensor.DOMAIN, binary_sensor.BinarySensorDeviceClass.DOOR): TYPE_DOOR,
+    (binary_sensor.DOMAIN, binary_sensor.BinarySensorDeviceClass.LOCK): TYPE_SENSOR,
+    (binary_sensor.DOMAIN, binary_sensor.BinarySensorDeviceClass.OPENING): TYPE_SENSOR,
+    (binary_sensor.DOMAIN, binary_sensor.BinarySensorDeviceClass.WINDOW): TYPE_WINDOW,
     (
         binary_sensor.DOMAIN,
         binary_sensor.BinarySensorDeviceClass.GARAGE_DOOR,
     ): TYPE_GARAGE,
-    (binary_sensor.DOMAIN, binary_sensor.BinarySensorDeviceClass.LOCK): TYPE_SENSOR,
-    (binary_sensor.DOMAIN, binary_sensor.BinarySensorDeviceClass.OPENING): TYPE_SENSOR,
-    (binary_sensor.DOMAIN, binary_sensor.BinarySensorDeviceClass.WINDOW): TYPE_SENSOR,
-    (media_player.DOMAIN, media_player.MediaPlayerDeviceClass.TV): TYPE_TV,
-    (media_player.DOMAIN, media_player.MediaPlayerDeviceClass.SPEAKER): TYPE_SPEAKER,
-    (media_player.DOMAIN, media_player.MediaPlayerDeviceClass.RECEIVER): TYPE_RECEIVER,
-    (sensor.DOMAIN, sensor.SensorDeviceClass.TEMPERATURE): TYPE_SENSOR,
-    (sensor.DOMAIN, sensor.SensorDeviceClass.HUMIDITY): TYPE_SENSOR,
-    (humidifier.DOMAIN, humidifier.HumidifierDeviceClass.HUMIDIFIER): TYPE_HUMIDIFIER,
+    (cover.DOMAIN, cover.CoverDeviceClass.AWNING): TYPE_AWNING,
+    (cover.DOMAIN, cover.CoverDeviceClass.CURTAIN): TYPE_CURTAIN,
+    (cover.DOMAIN, cover.CoverDeviceClass.DOOR): TYPE_DOOR,
+    (cover.DOMAIN, cover.CoverDeviceClass.GARAGE): TYPE_GARAGE,
+    (cover.DOMAIN, cover.CoverDeviceClass.GATE): TYPE_GARAGE,
+    (cover.DOMAIN, cover.CoverDeviceClass.SHUTTER): TYPE_SHUTTER,
+    (cover.DOMAIN, cover.CoverDeviceClass.WINDOW): TYPE_WINDOW,
+    (event.DOMAIN, event.EventDeviceClass.DOORBELL): TYPE_DOORBELL,
     (
         humidifier.DOMAIN,
         humidifier.HumidifierDeviceClass.DEHUMIDIFIER,
     ): TYPE_DEHUMIDIFIER,
+    (humidifier.DOMAIN, humidifier.HumidifierDeviceClass.HUMIDIFIER): TYPE_HUMIDIFIER,
+    (media_player.DOMAIN, media_player.MediaPlayerDeviceClass.RECEIVER): TYPE_RECEIVER,
+    (media_player.DOMAIN, media_player.MediaPlayerDeviceClass.SPEAKER): TYPE_SPEAKER,
+    (media_player.DOMAIN, media_player.MediaPlayerDeviceClass.TV): TYPE_TV,
+    (sensor.DOMAIN, sensor.SensorDeviceClass.AQI): TYPE_SENSOR,
+    (sensor.DOMAIN, sensor.SensorDeviceClass.HUMIDITY): TYPE_SENSOR,
+    (sensor.DOMAIN, sensor.SensorDeviceClass.TEMPERATURE): TYPE_SENSOR,
+    (switch.DOMAIN, switch.SwitchDeviceClass.OUTLET): TYPE_OUTLET,
+    (switch.DOMAIN, switch.SwitchDeviceClass.SWITCH): TYPE_SWITCH,
 }
 
 CHALLENGE_ACK_NEEDED = "ackNeeded"
-CHALLENGE_PIN_NEEDED = "pinNeeded"
 CHALLENGE_FAILED_PIN_NEEDED = "challengeFailedPinNeeded"
+CHALLENGE_PIN_NEEDED = "pinNeeded"
 
 STORE_AGENT_USER_IDS = "agent_user_ids"
+STORE_GOOGLE_LOCAL_WEBHOOK_ID = "local_webhook_id"
 
 SOURCE_CLOUD = "cloud"
 SOURCE_LOCAL = "local"
 
-NOT_EXPOSE_LOCAL = {TYPE_ALARM, TYPE_LOCK}
+NOT_EXPOSE_LOCAL = {TYPE_ALARM, TYPE_LOCK, TYPE_THERMOSTAT}
+
+FAN_SPEEDS = {
+    "5/5": ["High", "Max", "Fast", "5"],
+    "4/5": ["Medium High", "4"],
+    "3/5": ["Medium", "3"],
+    "2/5": ["Medium Low", "2"],
+    "1/5": ["Low", "Min", "Slow", "1"],
+    "4/4": ["High", "Max", "Fast", "4"],
+    "3/4": ["Medium High", "3"],
+    "2/4": ["Medium Low", "2"],
+    "1/4": ["Low", "Min", "Slow", "1"],
+    "3/3": ["High", "Max", "Fast", "3"],
+    "2/3": ["Medium", "2"],
+    "1/3": ["Low", "Min", "Slow", "1"],
+    "2/2": ["High", "Max", "Fast", "2"],
+    "1/2": ["Low", "Min", "Slow", "1"],
+    "1/1": ["Normal", "1"],
+}

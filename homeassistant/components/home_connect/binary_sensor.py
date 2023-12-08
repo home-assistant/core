@@ -2,7 +2,10 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITIES
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTR_VALUE,
@@ -19,7 +22,11 @@ from .entity import HomeConnectEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Home Connect binary sensor."""
 
     def get_entities():
@@ -61,11 +68,11 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
         return bool(self._state)
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true if the binary sensor is available."""
         return self._state is not None
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the binary sensor's status."""
         state = self.device.appliance.status.get(self._update_key, {})
         if not state:

@@ -6,10 +6,10 @@ from dataclasses import dataclass
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.components.humidifier import (
-    SUPPORT_MODES,
     HumidifierDeviceClass,
     HumidifierEntity,
     HumidifierEntityDescription,
+    HumidifierEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -17,8 +17,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
-from .base import EnumTypeData, IntegerTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
+from .base import IntegerTypeData, TuyaEntity
+from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
 
 
 @dataclass
@@ -28,6 +28,7 @@ class TuyaHumidifierEntityDescription(HumidifierEntityDescription):
     # DPCode, to use. If None, the key will be used as DPCode
     dpcode: DPCode | tuple[DPCode, ...] | None = None
 
+    current_humidity: DPCode | None = None
     humidity: DPCode | None = None
 
 
@@ -37,6 +38,7 @@ HUMIDIFIERS: dict[str, TuyaHumidifierEntityDescription] = {
     "cs": TuyaHumidifierEntityDescription(
         key=DPCode.SWITCH,
         dpcode=(DPCode.SWITCH, DPCode.SWITCH_SPRAY),
+        current_humidity=DPCode.HUMIDITY_INDOOR,
         humidity=DPCode.DEHUMIDITY_SET_VALUE,
         device_class=HumidifierDeviceClass.DEHUMIDIFIER,
     ),
@@ -45,6 +47,7 @@ HUMIDIFIERS: dict[str, TuyaHumidifierEntityDescription] = {
     "jsq": TuyaHumidifierEntityDescription(
         key=DPCode.SWITCH,
         dpcode=(DPCode.SWITCH, DPCode.SWITCH_SPRAY),
+        current_humidity=DPCode.HUMIDITY_CURRENT,
         humidity=DPCode.HUMIDITY_SET,
         device_class=HumidifierDeviceClass.HUMIDIFIER,
     ),
@@ -79,9 +82,11 @@ async def async_setup_entry(
 class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
     """Tuya (de)humidifier Device."""
 
-    _set_humidity_type: IntegerTypeData | None = None
+    _current_humidity: IntegerTypeData | None = None
+    _set_humidity: IntegerTypeData | None = None
     _switch_dpcode: DPCode | None = None
     entity_description: TuyaHumidifierEntityDescription
+    _attr_name = None
 
     def __init__(
         self,
@@ -89,37 +94,37 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         device_manager: TuyaDeviceManager,
         description: TuyaHumidifierEntityDescription,
     ) -> None:
-        """Init Tuya (de)humidier."""
+        """Init Tuya (de)humidifier."""
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
-        self._attr_supported_features = 0
 
         # Determine main switch DPCode
-        possible_dpcodes = description.dpcode or description.key
-        if isinstance(possible_dpcodes, DPCode) and possible_dpcodes in device.function:
-            self._switch_dpcode = possible_dpcodes
-        elif isinstance(possible_dpcodes, tuple):
-            self._switch_dpcode = next(
-                (dpcode for dpcode in possible_dpcodes if dpcode in device.function),
-                None,
-            )
+        self._switch_dpcode = self.find_dpcode(
+            description.dpcode or DPCode(description.key), prefer_function=True
+        )
 
         # Determine humidity parameters
-        if description.humidity in device.status_range:
-            type_data = IntegerTypeData.from_json(
-                device.status_range[description.humidity].values
-            )
-            self._set_humidity_type = type_data
-            self._attr_min_humidity = int(type_data.min_scaled)
-            self._attr_max_humidity = int(type_data.max_scaled)
+        if int_type := self.find_dpcode(
+            description.humidity, dptype=DPType.INTEGER, prefer_function=True
+        ):
+            self._set_humidity = int_type
+            self._attr_min_humidity = int(int_type.min_scaled)
+            self._attr_max_humidity = int(int_type.max_scaled)
+
+        # Determine current humidity DPCode
+        if int_type := self.find_dpcode(
+            description.current_humidity,
+            dptype=DPType.INTEGER,
+        ):
+            self._current_humidity = int_type
 
         # Determine mode support and provided modes
-        if DPCode.MODE in device.function:
-            self._attr_supported_features |= SUPPORT_MODES
-            self._attr_available_modes = EnumTypeData.from_json(
-                device.function[DPCode.MODE].values
-            ).range
+        if enum_type := self.find_dpcode(
+            DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
+        ):
+            self._attr_supported_features |= HumidifierEntityFeature.MODES
+            self._attr_available_modes = enum_type.range
 
     @property
     def is_on(self) -> bool:
@@ -136,14 +141,27 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
     @property
     def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
-        if self._set_humidity_type is None:
+        if self._set_humidity is None:
             return None
 
-        humidity = self.device.status.get(self.entity_description.humidity)
+        humidity = self.device.status.get(self._set_humidity.dpcode)
         if humidity is None:
             return None
 
-        return round(self._set_humidity_type.scale_value(humidity))
+        return round(self._set_humidity.scale_value(humidity))
+
+    @property
+    def current_humidity(self) -> int | None:
+        """Return the current humidity."""
+        if self._current_humidity is None:
+            return None
+
+        if (
+            current_humidity := self.device.status.get(self._current_humidity.dpcode)
+        ) is None:
+            return None
+
+        return round(self._current_humidity.scale_value(current_humidity))
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
@@ -153,9 +171,9 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         """Turn the device off."""
         self._send_command([{"code": self._switch_dpcode, "value": False}])
 
-    def set_humidity(self, humidity):
+    def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        if self._set_humidity_type is None:
+        if self._set_humidity is None:
             raise RuntimeError(
                 "Cannot set humidity, device doesn't provide methods to set it"
             )
@@ -163,8 +181,8 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         self._send_command(
             [
                 {
-                    "code": self.entity_description.humidity,
-                    "value": self._set_humidity_type.scale_value_back(humidity),
+                    "code": self._set_humidity.dpcode,
+                    "value": self._set_humidity.scale_value_back(humidity),
                 }
             ]
         )

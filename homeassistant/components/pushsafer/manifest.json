@@ -1,7 +1,7 @@
 {
   "domain": "pushsafer",
   "name": "Pushsafer",
-  "documentation": "https://www.home-assistant.io/integrations/pushsafer",
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/pushsafer",
   "iot_class": "cloud_push"
 }

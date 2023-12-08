@@ -12,6 +12,7 @@ from homeassistant.components.environment_canada.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -51,7 +52,7 @@ def mocked_ec(
     )
 
 
-async def test_create_entry(hass):
+async def test_create_entry(hass: HomeAssistant) -> None:
     """Test creating an entry."""
     with mocked_ec(), patch(
         "homeassistant.components.environment_canada.async_setup_entry",
@@ -64,12 +65,12 @@ async def test_create_entry(hass):
             flow["flow_id"], FAKE_CONFIG
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"] == FAKE_CONFIG
         assert result["title"] == FAKE_TITLE
 
 
-async def test_create_same_entry_twice(hass):
+async def test_create_same_entry_twice(hass: HomeAssistant) -> None:
     """Test duplicate entries."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -89,7 +90,7 @@ async def test_create_same_entry_twice(hass):
             flow["flow_id"], FAKE_CONFIG
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -103,7 +104,7 @@ async def test_create_same_entry_twice(hass):
         (ValueError, "unknown"),
     ],
 )
-async def test_exception_handling(hass, error):
+async def test_exception_handling(hass: HomeAssistant, error) -> None:
     """Test exception handling."""
     exc, base_error = error
     with patch(
@@ -122,7 +123,7 @@ async def test_exception_handling(hass, error):
         assert result["errors"] == {"base": base_error}
 
 
-async def test_lat_lon_not_specified(hass):
+async def test_lat_lon_not_specified(hass: HomeAssistant) -> None:
     """Test that the import step works when coordinates are not specified."""
     with mocked_ec(), patch(
         "homeassistant.components.environment_canada.async_setup_entry",
@@ -135,6 +136,6 @@ async def test_lat_lon_not_specified(hass):
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=fake_config
         )
         await hass.async_block_till_done()
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"] == FAKE_CONFIG
         assert result["title"] == FAKE_TITLE

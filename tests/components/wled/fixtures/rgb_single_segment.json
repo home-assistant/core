@@ -21,7 +21,11 @@
         "start": 0,
         "stop": 30,
         "len": 20,
-        "col": [[255, 159, 0], [0, 0, 0], [0, 0, 0]],
+        "col": [
+          [255, 159, 0],
+          [0, 0, 0],
+          [0, 0, 0]
+        ],
         "fx": 0,
         "sx": 32,
         "ix": 128,
@@ -64,7 +68,8 @@
     "brand": "WLED",
     "product": "DIY light",
     "btype": "bin",
-    "mac": "aabbccddeeff"
+    "mac": "aabbccddeeff",
+    "ip": "127.0.0.1"
   },
   "effects": [
     "Solid",

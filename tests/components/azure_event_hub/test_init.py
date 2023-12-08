@@ -10,6 +10,7 @@ from homeassistant.components import azure_event_hub
 from homeassistant.components.azure_event_hub.const import CONF_SEND_INTERVAL, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -21,7 +22,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 _LOGGER = logging.getLogger(__name__)
 
 
-async def test_import(hass):
+async def test_import(hass: HomeAssistant) -> None:
     """Test the popping of the filter and further import of the config."""
     config = {
         DOMAIN: {
@@ -41,7 +42,7 @@ async def test_import(hass):
     assert await async_setup_component(hass, DOMAIN, config)
 
 
-async def test_filter_only_config(hass):
+async def test_filter_only_config(hass: HomeAssistant) -> None:
     """Test the popping of the filter and further import of the config."""
     config = {
         DOMAIN: {
@@ -58,7 +59,7 @@ async def test_filter_only_config(hass):
     assert await async_setup_component(hass, DOMAIN, config)
 
 
-async def test_unload_entry(hass, entry, mock_create_batch):
+async def test_unload_entry(hass: HomeAssistant, entry, mock_create_batch) -> None:
     """Test being able to unload an entry.
 
     Queue should be empty, so adding events to the batch should not be called,
@@ -70,7 +71,9 @@ async def test_unload_entry(hass, entry, mock_create_batch):
     assert entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_failed_test_connection(hass, mock_get_eventhub_properties):
+async def test_failed_test_connection(
+    hass: HomeAssistant, mock_get_eventhub_properties
+) -> None:
     """Test being able to unload an entry."""
     entry = MockConfigEntry(
         domain=azure_event_hub.DOMAIN,
@@ -84,7 +87,9 @@ async def test_failed_test_connection(hass, mock_get_eventhub_properties):
     assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_send_batch_error(hass, entry_with_one_event, mock_send_batch):
+async def test_send_batch_error(
+    hass: HomeAssistant, entry_with_one_event, mock_send_batch
+) -> None:
     """Test a error in send_batch, including recovering at the next interval."""
     mock_send_batch.reset_mock()
     mock_send_batch.side_effect = [EventHubError("Test"), None]
@@ -104,7 +109,9 @@ async def test_send_batch_error(hass, entry_with_one_event, mock_send_batch):
     mock_send_batch.assert_called_once()
 
 
-async def test_late_event(hass, entry_with_one_event, mock_create_batch):
+async def test_late_event(
+    hass: HomeAssistant, entry_with_one_event, mock_create_batch
+) -> None:
     """Test the check on late events."""
     with patch(
         f"{AZURE_EVENT_HUB_PATH}.utcnow",
@@ -119,7 +126,9 @@ async def test_late_event(hass, entry_with_one_event, mock_create_batch):
         mock_create_batch.add.assert_not_called()
 
 
-async def test_full_batch(hass, entry_with_one_event, mock_create_batch):
+async def test_full_batch(
+    hass: HomeAssistant, entry_with_one_event, mock_create_batch
+) -> None:
     """Test the full batch behaviour."""
     mock_create_batch.add.side_effect = [ValueError, None]
     async_fire_time_changed(
@@ -131,7 +140,7 @@ async def test_full_batch(hass, entry_with_one_event, mock_create_batch):
 
 
 @pytest.mark.parametrize(
-    "filter_schema, tests",
+    ("filter_schema", "tests"),
     [
         (
             {
@@ -176,7 +185,7 @@ async def test_full_batch(hass, entry_with_one_event, mock_create_batch):
                 FilterTest("light.excluded_test", 0),
                 FilterTest("light.excluded", 0),
                 FilterTest("sensor.included_test", 1),
-                FilterTest("climate.included_test", 0),
+                FilterTest("climate.included_test", 1),
             ],
         ),
         (
@@ -198,7 +207,7 @@ async def test_full_batch(hass, entry_with_one_event, mock_create_batch):
     ],
     ids=["allowlist", "denylist", "filtered_allowlist", "filtered_denylist"],
 )
-async def test_filter(hass, entry, tests, mock_create_batch):
+async def test_filter(hass: HomeAssistant, entry, tests, mock_create_batch) -> None:
     """Test different filters.
 
     Filter_schema is also a fixture which is replaced by the filter_schema

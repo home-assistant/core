@@ -1,0 +1,20 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'WasteType.NON_RECYCLABLE': list([
+      '2021-11-01',
+      '2021-12-01',
+    ]),
+    'WasteType.ORGANIC': list([
+      '2021-11-02',
+    ]),
+    'WasteType.PACKAGES': list([
+      '2021-11-03',
+    ]),
+    'WasteType.PAPER': list([
+    ]),
+    'WasteType.TREE': list([
+      '2022-01-06',
+    ]),
+  })
+# ---

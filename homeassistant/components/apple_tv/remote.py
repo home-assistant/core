@@ -1,7 +1,8 @@
 """Remote control support for Apple TV."""
-
 import asyncio
+from collections.abc import Iterable
 import logging
+from typing import Any
 
 from homeassistant.components.remote import (
     ATTR_DELAY_SECS,
@@ -9,7 +10,10 @@ from homeassistant.components.remote import (
     DEFAULT_DELAY_SECS,
     RemoteEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AppleTVEntity
 from .const import DOMAIN
@@ -17,9 +21,22 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
+COMMAND_TO_ATTRIBUTE = {
+    "wakeup": ("power", "turn_on"),
+    "suspend": ("power", "turn_off"),
+    "turn_on": ("power", "turn_on"),
+    "turn_off": ("power", "turn_off"),
+    "volume_up": ("audio", "volume_up"),
+    "volume_down": ("audio", "volume_down"),
+    "home_hold": ("remote_control", "home"),
+}
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Load Apple TV remote based on a config entry."""
     name = config_entry.data[CONF_NAME]
     manager = hass.data[DOMAIN][config_entry.unique_id]
@@ -34,15 +51,15 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
         """Return true if device is on."""
         return self.atv is not None
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.manager.connect()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.manager.disconnect()
 
-    async def async_send_command(self, command, **kwargs):
+    async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
         num_repeats = kwargs[ATTR_NUM_REPEATS]
         delay = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
@@ -53,7 +70,13 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
 
         for _ in range(num_repeats):
             for single_command in command:
-                attr_value = getattr(self.atv.remote_control, single_command, None)
+                attr_value = None
+                if attributes := COMMAND_TO_ATTRIBUTE.get(single_command):
+                    attr_value = self.atv
+                    for attr_name in attributes:
+                        attr_value = getattr(attr_value, attr_name, None)
+                if not attr_value:
+                    attr_value = getattr(self.atv.remote_control, single_command, None)
                 if not attr_value:
                     raise ValueError("Command not found. Exiting sequence")
 

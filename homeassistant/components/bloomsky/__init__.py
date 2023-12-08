@@ -3,14 +3,16 @@ from datetime import timedelta
 from http import HTTPStatus
 import logging
 
-from aiohttp.hdrs import AUTHORIZATION
 import requests
 import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,12 +29,12 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the BloomSky integration."""
     api_key = config[DOMAIN][CONF_API_KEY]
 
     try:
-        bloomsky = BloomSky(api_key, hass.config.units.is_metric)
+        bloomsky = BloomSky(api_key, hass.config.units is METRIC_SYSTEM)
     except RuntimeError:
         return False
 
@@ -65,7 +67,7 @@ class BloomSky:
         _LOGGER.debug("Fetching BloomSky update")
         response = requests.get(
             f"{self.API_URL}?{self._endpoint_argument}",
-            headers={AUTHORIZATION: self._api_key},
+            headers={"Authorization": self._api_key},
             timeout=10,
         )
         if response.status_code == HTTPStatus.UNAUTHORIZED:

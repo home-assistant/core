@@ -1,18 +1,21 @@
 """Support for monitoring a Sense energy sensor."""
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
-    POWER_WATT,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -24,7 +27,6 @@ from .const import (
     DOMAIN,
     FROM_GRID_ID,
     FROM_GRID_NAME,
-    ICON,
     MDI_ICONS,
     NET_PRODUCTION_ID,
     NET_PRODUCTION_NAME,
@@ -82,7 +84,11 @@ def sense_to_mdi(sense_icon):
     return "mdi:{}".format(MDI_ICONS.get(sense_icon, "power-plug"))
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Sense sensor."""
     base_data = hass.data[DOMAIN][config_entry.entry_id]
     data = base_data[SENSE_DATA]
@@ -98,7 +104,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         SENSE_DISCOVERED_DEVICES_DATA
     ]
 
-    devices = [
+    entities: list[SensorEntity] = [
         SenseEnergyDevice(sense_devices_data, device, sense_monitor_id)
         for device in sense_devices
         if device["tags"]["DeviceListAllowed"] == "true"
@@ -109,7 +115,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sensor_type = ACTIVE_SENSOR_TYPE.sensor_type
 
         unique_id = f"{sense_monitor_id}-active-{variant_id}"
-        devices.append(
+        entities.append(
             SenseActiveSensor(
                 data,
                 name,
@@ -122,7 +128,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
 
     for i in range(len(data.active_voltage)):
-        devices.append(SenseVoltageSensor(data, i, sense_monitor_id))
+        entities.append(SenseVoltageSensor(data, i, sense_monitor_id))
 
     for type_id, typ in TRENDS_SENSOR_TYPES.items():
         for variant_id, variant_name in TREND_SENSOR_VARIANTS:
@@ -130,7 +136,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             sensor_type = typ.sensor_type
 
             unique_id = f"{sense_monitor_id}-{type_id}-{variant_id}"
-            devices.append(
+            entities.append(
                 SenseTrendsSensor(
                     data,
                     name,
@@ -143,14 +149,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 )
             )
 
-    async_add_entities(devices)
+    async_add_entities(entities)
 
 
 class SenseActiveSensor(SensorEntity):
     """Implementation of a Sense energy sensor."""
 
-    _attr_icon = ICON
-    _attr_native_unit_of_measurement = POWER_WATT
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
     _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
     _attr_available = False
@@ -175,7 +181,7 @@ class SenseActiveSensor(SensorEntity):
         self._variant_id = variant_id
         self._variant_name = variant_name
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -203,9 +209,10 @@ class SenseActiveSensor(SensorEntity):
 class SenseVoltageSensor(SensorEntity):
     """Implementation of a Sense energy voltage sensor."""
 
-    _attr_native_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
+    _attr_device_class = SensorDeviceClass.VOLTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
     _attr_attribution = ATTRIBUTION
-    _attr_icon = ICON
     _attr_should_poll = False
     _attr_available = False
 
@@ -223,7 +230,7 @@ class SenseVoltageSensor(SensorEntity):
         self._sense_monitor_id = sense_monitor_id
         self._voltage_index = index
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -249,9 +256,8 @@ class SenseTrendsSensor(CoordinatorEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_state_class = SensorStateClass.TOTAL
-    _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
     _attr_attribution = ATTRIBUTION
-    _attr_icon = ICON
     _attr_should_poll = False
 
     def __init__(
@@ -291,13 +297,18 @@ class SenseTrendsSensor(CoordinatorEntity, SensorEntity):
         """Return the state of the sensor."""
         return round(self._data.get_trend(self._sensor_type, self._variant_id), 1)
 
+    @property
+    def last_reset(self):
+        """Return the time when the sensor was last reset, if any."""
+        return self._data.trend_start(self._sensor_type)
+
 
 class SenseEnergyDevice(SensorEntity):
     """Implementation of a Sense energy device."""
 
     _attr_available = False
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = POWER_WATT
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
     _attr_attribution = ATTRIBUTION
     _attr_device_class = SensorDeviceClass.POWER
     _attr_should_poll = False
@@ -311,7 +322,7 @@ class SenseEnergyDevice(SensorEntity):
         self._attr_icon = sense_to_mdi(device["icon"])
         self._sense_devices_data = sense_devices_data
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(

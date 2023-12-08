@@ -9,10 +9,13 @@ from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.components.wemo import wemo_device
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
@@ -65,7 +68,8 @@ async def _async_multiple_call_helper(hass, pywemo_device, call1, call2):
     # One of these two calls will block on `event`. The other will return right
     # away because the `_update_lock` is held.
     done, pending = await asyncio.wait(
-        [call1(), call2()], return_when=asyncio.FIRST_COMPLETED
+        [asyncio.create_task(call1()), asyncio.create_task(call2())],
+        return_when=asyncio.FIRST_COMPLETED,
     )
     _ = [d.result() for d in done]  # Allow any exceptions to be raised.
 
@@ -82,8 +86,8 @@ async def _async_multiple_call_helper(hass, pywemo_device, call1, call2):
 
 
 async def test_async_update_locked_callback_and_update(
-    hass, pywemo_device, wemo_entity
-):
+    hass: HomeAssistant, pywemo_device, wemo_entity
+) -> None:
     """Test that a callback and a state update request can't both happen at the same time.
 
     When a state update is received via a callback from the device at the same time
@@ -96,7 +100,9 @@ async def test_async_update_locked_callback_and_update(
     await _async_multiple_call_helper(hass, pywemo_device, callback, update)
 
 
-async def test_async_update_locked_multiple_updates(hass, pywemo_device, wemo_entity):
+async def test_async_update_locked_multiple_updates(
+    hass: HomeAssistant, pywemo_device, wemo_entity
+) -> None:
     """Test that two hass async_update state updates do not proceed at the same time."""
     coordinator = wemo_device.async_get_coordinator(hass, wemo_entity.device_id)
     await async_setup_component(hass, HA_DOMAIN, {})
@@ -104,7 +110,9 @@ async def test_async_update_locked_multiple_updates(hass, pywemo_device, wemo_en
     await _async_multiple_call_helper(hass, pywemo_device, update, update)
 
 
-async def test_async_update_locked_multiple_callbacks(hass, pywemo_device, wemo_entity):
+async def test_async_update_locked_multiple_callbacks(
+    hass: HomeAssistant, pywemo_device, wemo_entity
+) -> None:
     """Test that two device callback state updates do not proceed at the same time."""
     coordinator = wemo_device.async_get_coordinator(hass, wemo_entity.device_id)
     await async_setup_component(hass, HA_DOMAIN, {})
@@ -113,16 +121,14 @@ async def test_async_update_locked_multiple_callbacks(hass, pywemo_device, wemo_
 
 
 async def test_avaliable_after_update(
-    hass, pywemo_registry, pywemo_device, wemo_entity, domain
-):
+    hass: HomeAssistant, pywemo_registry, pywemo_device, wemo_entity, domain
+) -> None:
     """Test the avaliability when an On call fails and after an update.
 
     This test expects that the pywemo_device Mock has been setup to raise an
     ActionException when the SERVICE_TURN_ON method is called and that the
     state will be On after the update.
     """
-    await async_setup_component(hass, domain, {})
-
     await hass.services.async_call(
         domain,
         SERVICE_TURN_ON,
@@ -134,3 +140,46 @@ async def test_avaliable_after_update(
     pywemo_registry.callbacks[pywemo_device.name](pywemo_device, "", "")
     await hass.async_block_till_done()
     assert hass.states.get(wemo_entity.entity_id).state == STATE_ON
+
+
+async def test_turn_off_state(hass: HomeAssistant, wemo_entity, domain) -> None:
+    """Test that the device state is updated after turning off."""
+    await hass.services.async_call(
+        domain,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: [wemo_entity.entity_id]},
+        blocking=True,
+    )
+    assert hass.states.get(wemo_entity.entity_id).state == STATE_OFF
+
+
+class EntityTestHelpers:
+    """Common state update helpers."""
+
+    async def test_async_update_locked_multiple_updates(
+        self, hass, pywemo_device, wemo_entity
+    ):
+        """Test that two hass async_update state updates do not proceed at the same time."""
+        await test_async_update_locked_multiple_updates(
+            hass, pywemo_device, wemo_entity
+        )
+
+    async def test_async_update_locked_multiple_callbacks(
+        self, hass, pywemo_device, wemo_entity
+    ):
+        """Test that two device callback state updates do not proceed at the same time."""
+        await test_async_update_locked_multiple_callbacks(
+            hass, pywemo_device, wemo_entity
+        )
+
+    async def test_async_update_locked_callback_and_update(
+        self, hass, pywemo_device, wemo_entity
+    ):
+        """Test that a callback and a state update request can't both happen at the same time.
+
+        When a state update is received via a callback from the device at the same time
+        as hass is calling `async_update`, verify that only one of the updates proceeds.
+        """
+        await test_async_update_locked_callback_and_update(
+            hass, pywemo_device, wemo_entity
+        )

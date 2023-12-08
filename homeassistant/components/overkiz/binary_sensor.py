@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import cast
 
 from pyoverkiz.enums import OverkizCommandParam, OverkizState
+from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -25,7 +26,7 @@ from .entity import OverkizDescriptiveEntity
 class OverkizBinarySensorDescriptionMixin:
     """Define an entity description mixin for binary sensor entities."""
 
-    value_fn: Callable[[str], bool]
+    value_fn: Callable[[OverkizStateType], bool]
 
 
 @dataclass
@@ -41,28 +42,28 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
         key=OverkizState.CORE_RAIN,
         name="Rain",
         icon="mdi:weather-rainy",
-        value_fn=lambda state: state == cast(str, OverkizCommandParam.DETECTED),
+        value_fn=lambda state: state == OverkizCommandParam.DETECTED,
     ),
     # SmokeSensor/SmokeSensor
     OverkizBinarySensorDescription(
         key=OverkizState.CORE_SMOKE,
         name="Smoke",
         device_class=BinarySensorDeviceClass.SMOKE,
-        value_fn=lambda state: state == cast(str, OverkizCommandParam.DETECTED),
+        value_fn=lambda state: state == OverkizCommandParam.DETECTED,
     ),
     # WaterSensor/WaterDetectionSensor
     OverkizBinarySensorDescription(
         key=OverkizState.CORE_WATER_DETECTION,
         name="Water",
         icon="mdi:water",
-        value_fn=lambda state: state == cast(str, OverkizCommandParam.DETECTED),
+        value_fn=lambda state: state == OverkizCommandParam.DETECTED,
     ),
     # AirSensor/AirFlowSensor
     OverkizBinarySensorDescription(
         key=OverkizState.CORE_GAS_DETECTION,
         name="Gas",
         device_class=BinarySensorDeviceClass.GAS,
-        value_fn=lambda state: state == cast(str, OverkizCommandParam.DETECTED),
+        value_fn=lambda state: state == OverkizCommandParam.DETECTED,
     ),
     # OccupancySensor/OccupancySensor
     # OccupancySensor/MotionSensor
@@ -70,37 +71,51 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
         key=OverkizState.CORE_OCCUPANCY,
         name="Occupancy",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
-        value_fn=lambda state: state == cast(str, OverkizCommandParam.PERSON_INSIDE),
+        value_fn=lambda state: state == OverkizCommandParam.PERSON_INSIDE,
     ),
     # ContactSensor/WindowWithTiltSensor
     OverkizBinarySensorDescription(
         key=OverkizState.CORE_VIBRATION,
         name="Vibration",
         device_class=BinarySensorDeviceClass.VIBRATION,
-        value_fn=lambda state: state == cast(str, OverkizCommandParam.DETECTED),
+        value_fn=lambda state: state == OverkizCommandParam.DETECTED,
     ),
     # ContactSensor/ContactSensor
     OverkizBinarySensorDescription(
         key=OverkizState.CORE_CONTACT,
         name="Contact",
         device_class=BinarySensorDeviceClass.DOOR,
-        value_fn=lambda state: state == cast(str, OverkizCommandParam.OPEN),
+        value_fn=lambda state: state == OverkizCommandParam.OPEN,
     ),
     # Siren/SirenStatus
     OverkizBinarySensorDescription(
         key=OverkizState.CORE_ASSEMBLY,
         name="Assembly",
         device_class=BinarySensorDeviceClass.PROBLEM,
-        value_fn=lambda state: state == cast(str, OverkizCommandParam.OPEN),
+        value_fn=lambda state: state == OverkizCommandParam.OPEN,
     ),
     # Unknown
     OverkizBinarySensorDescription(
         key=OverkizState.IO_VIBRATION_DETECTED,
         name="Vibration",
         device_class=BinarySensorDeviceClass.VIBRATION,
-        value_fn=lambda state: state == cast(str, OverkizCommandParam.DETECTED),
+        value_fn=lambda state: state == OverkizCommandParam.DETECTED,
+    ),
+    # DomesticHotWaterProduction/WaterHeatingSystem
+    OverkizBinarySensorDescription(
+        key=OverkizState.IO_OPERATING_MODE_CAPABILITIES,
+        name="Energy Demand Status",
+        device_class=BinarySensorDeviceClass.HEAT,
+        value_fn=lambda state: cast(dict, state).get(
+            OverkizCommandParam.ENERGY_DEMAND_STATUS
+        )
+        == 1,
     ),
 ]
+
+SUPPORTED_STATES = {
+    description.key: description for description in BINARY_SENSOR_DESCRIPTIONS
+}
 
 
 async def async_setup_entry(
@@ -112,10 +127,6 @@ async def async_setup_entry(
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[OverkizBinarySensor] = []
 
-    key_supported_states = {
-        description.key: description for description in BINARY_SENSOR_DESCRIPTIONS
-    }
-
     for device in data.coordinator.data.values():
         if (
             device.widget in IGNORED_OVERKIZ_DEVICES
@@ -124,7 +135,7 @@ async def async_setup_entry(
             continue
 
         for state in device.definition.states:
-            if description := key_supported_states.get(state.qualified_name):
+            if description := SUPPORTED_STATES.get(state.qualified_name):
                 entities.append(
                     OverkizBinarySensor(
                         device.device_url,

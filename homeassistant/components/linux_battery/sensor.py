@@ -1,4 +1,6 @@
 """Details about the built-in battery."""
+from __future__ import annotations
+
 import logging
 import os
 
@@ -11,7 +13,10 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.const import ATTR_NAME, CONF_NAME, PERCENTAGE
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +58,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Linux Battery sensor."""
     name = config.get(CONF_NAME)
     battery_id = config.get(CONF_BATTERY)
@@ -66,7 +76,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             os.listdir(os.path.join(DEFAULT_PATH, f"BAT{battery_id}"))
     except FileNotFoundError:
         _LOGGER.error("No battery found")
-        return False
+        return
 
     add_entities([LinuxBatterySensor(name, battery_id, system)], True)
 
@@ -114,7 +124,7 @@ class LinuxBatterySensor(SensorEntity):
             ATTR_VOLTAGE_NOW: self._battery_stat.voltage_now,
         }
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the states."""
         self._battery.update()
         self._battery_stat = self._battery.stat[self._battery_id]

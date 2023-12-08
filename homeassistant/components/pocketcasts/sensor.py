@@ -1,4 +1,6 @@
 """Support for Pocket Casts."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -7,11 +9,13 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON = "mdi:rss"
 
 SENSOR_NAME = "Pocketcasts unlistened episodes"
 
@@ -22,7 +26,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the pocketcasts platform for sensors."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -33,11 +42,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities([PocketCastsSensor(api)], True)
     except OSError as err:
         _LOGGER.error("Connection to server failed: %s", err)
-        return False
 
 
 class PocketCastsSensor(SensorEntity):
     """Representation of a pocket casts sensor."""
+
+    _attr_icon = "mdi:rss"
 
     def __init__(self, api):
         """Initialize the sensor."""
@@ -54,12 +64,7 @@ class PocketCastsSensor(SensorEntity):
         """Return the sensor state."""
         return self._state
 
-    @property
-    def icon(self):
-        """Return the icon for the sensor."""
-        return ICON
-
-    def update(self):
+    def update(self) -> None:
         """Update sensor values."""
         try:
             self._state = len(self._api.new_releases)

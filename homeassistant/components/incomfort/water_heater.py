@@ -11,8 +11,11 @@ from homeassistant.components.water_heater import (
     DOMAIN as WATER_HEATER_DOMAIN,
     WaterHeaterEntity,
 )
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import UnitOfTemperature
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, IncomfortEntity
 
@@ -21,7 +24,12 @@ _LOGGER = logging.getLogger(__name__)
 HEATER_ATTRS = ["display_code", "display_text", "is_burning"]
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up an InComfort/Intouch water_heater device."""
     if discovery_info is None:
         return
@@ -78,12 +86,7 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return 0
+        return UnitOfTemperature.CELSIUS
 
     @property
     def current_operation(self) -> str:

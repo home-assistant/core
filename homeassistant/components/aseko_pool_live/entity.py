@@ -1,17 +1,17 @@
 """Aseko entity."""
 from aioaseko import Unit
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AsekoDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import AsekoDataUpdateCoordinator
 
 
-class AsekoEntity(CoordinatorEntity):
+class AsekoEntity(CoordinatorEntity[AsekoDataUpdateCoordinator]):
     """Representation of an aseko entity."""
 
-    coordinator: AsekoDataUpdateCoordinator
+    _attr_has_entity_name = True
 
     def __init__(self, unit: Unit, coordinator: AsekoDataUpdateCoordinator) -> None:
         """Initialize the aseko entity."""

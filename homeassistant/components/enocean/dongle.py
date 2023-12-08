@@ -7,7 +7,7 @@ from enocean.communicators import SerialCommunicator
 from enocean.protocol.packet import RadioPacket
 import serial
 
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 
 from .const import SIGNAL_RECEIVE_MESSAGE, SIGNAL_SEND_MESSAGE
 
@@ -58,7 +58,7 @@ class EnOceanDongle:
 
         if isinstance(packet, RadioPacket):
             _LOGGER.debug("Received radio packet: %s", packet)
-            self.hass.helpers.dispatcher.dispatcher_send(SIGNAL_RECEIVE_MESSAGE, packet)
+            dispatcher_send(self.hass, SIGNAL_RECEIVE_MESSAGE, packet)
 
 
 def detect():

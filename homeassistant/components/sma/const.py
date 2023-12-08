@@ -11,11 +11,7 @@ PYSMA_DEVICE_INFO = "device_info"
 
 PLATFORMS = [Platform.SENSOR]
 
-CONF_CUSTOM = "custom"
-CONF_FACTOR = "factor"
 CONF_GROUP = "group"
-CONF_KEY = "key"
-CONF_UNIT = "unit"
 
 DEFAULT_SCAN_INTERVAL = 5
 

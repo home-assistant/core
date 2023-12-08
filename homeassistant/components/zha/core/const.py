@@ -6,7 +6,8 @@ import logging
 
 import bellows.zigbee.application
 import voluptuous as vol
-from zigpy.config import CONF_DEVICE_PATH  # noqa: F401 # pylint: disable=unused-import
+import zigpy.application
+import zigpy.types as t
 import zigpy_deconz.zigbee.application
 import zigpy_xbee.zigbee.application
 import zigpy_zigate.zigbee.application
@@ -15,8 +16,7 @@ import zigpy_znp.zigbee.application
 from homeassistant.const import Platform
 import homeassistant.helpers.config_validation as cv
 
-from .typing import CALLABLE_T
-
+ATTR_ACTIVE_COORDINATOR = "active_coordinator"
 ATTR_ARGS = "args"
 ATTR_ATTRIBUTE = "attribute"
 ATTR_ATTRIBUTE_ID = "attribute_id"
@@ -43,10 +43,13 @@ ATTR_NEIGHBORS = "neighbors"
 ATTR_NODE_DESCRIPTOR = "node_descriptor"
 ATTR_NWK = "nwk"
 ATTR_OUT_CLUSTERS = "out_clusters"
+ATTR_PARAMS = "params"
 ATTR_POWER_SOURCE = "power_source"
 ATTR_PROFILE_ID = "profile_id"
 ATTR_QUIRK_APPLIED = "quirk_applied"
 ATTR_QUIRK_CLASS = "quirk_class"
+ATTR_QUIRK_ID = "quirk_id"
+ATTR_ROUTES = "routes"
 ATTR_RSSI = "rssi"
 ATTR_SIGNATURE = "signature"
 ATTR_TYPE = "type"
@@ -61,37 +64,40 @@ ATTR_WARNING_DEVICE_STROBE_INTENSITY = "intensity"
 BAUD_RATES = [2400, 4800, 9600, 14400, 19200, 38400, 57600, 115200, 128000, 256000]
 BINDINGS = "bindings"
 
-CHANNEL_ACCELEROMETER = "accelerometer"
-CHANNEL_BINARY_INPUT = "binary_input"
-CHANNEL_ANALOG_INPUT = "analog_input"
-CHANNEL_ANALOG_OUTPUT = "analog_output"
-CHANNEL_ATTRIBUTE = "attribute"
-CHANNEL_BASIC = "basic"
-CHANNEL_COLOR = "light_color"
-CHANNEL_COVER = "window_covering"
-CHANNEL_DOORLOCK = "door_lock"
-CHANNEL_ELECTRICAL_MEASUREMENT = "electrical_measurement"
-CHANNEL_EVENT_RELAY = "event_relay"
-CHANNEL_FAN = "fan"
-CHANNEL_HUMIDITY = "humidity"
-CHANNEL_SOIL_MOISTURE = "soil_moisture"
-CHANNEL_LEAF_WETNESS = "leaf_wetness"
-CHANNEL_IAS_ACE = "ias_ace"
-CHANNEL_IAS_WD = "ias_wd"
-CHANNEL_IDENTIFY = "identify"
-CHANNEL_ILLUMINANCE = "illuminance"
-CHANNEL_LEVEL = ATTR_LEVEL
-CHANNEL_MULTISTATE_INPUT = "multistate_input"
-CHANNEL_OCCUPANCY = "occupancy"
-CHANNEL_ON_OFF = "on_off"
-CHANNEL_POWER_CONFIGURATION = "power"
-CHANNEL_PRESSURE = "pressure"
-CHANNEL_SHADE = "shade"
-CHANNEL_SMARTENERGY_METERING = "smartenergy_metering"
-CHANNEL_TEMPERATURE = "temperature"
-CHANNEL_THERMOSTAT = "thermostat"
-CHANNEL_ZDO = "zdo"
-CHANNEL_ZONE = ZONE = "ias_zone"
+CLUSTER_HANDLER_ACCELEROMETER = "accelerometer"
+CLUSTER_HANDLER_BINARY_INPUT = "binary_input"
+CLUSTER_HANDLER_ANALOG_INPUT = "analog_input"
+CLUSTER_HANDLER_ANALOG_OUTPUT = "analog_output"
+CLUSTER_HANDLER_ATTRIBUTE = "attribute"
+CLUSTER_HANDLER_BASIC = "basic"
+CLUSTER_HANDLER_COLOR = "light_color"
+CLUSTER_HANDLER_COVER = "window_covering"
+CLUSTER_HANDLER_DEVICE_TEMPERATURE = "device_temperature"
+CLUSTER_HANDLER_DOORLOCK = "door_lock"
+CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT = "electrical_measurement"
+CLUSTER_HANDLER_EVENT_RELAY = "event_relay"
+CLUSTER_HANDLER_FAN = "fan"
+CLUSTER_HANDLER_HUMIDITY = "humidity"
+CLUSTER_HANDLER_HUE_OCCUPANCY = "philips_occupancy"
+CLUSTER_HANDLER_SOIL_MOISTURE = "soil_moisture"
+CLUSTER_HANDLER_LEAF_WETNESS = "leaf_wetness"
+CLUSTER_HANDLER_IAS_ACE = "ias_ace"
+CLUSTER_HANDLER_IAS_WD = "ias_wd"
+CLUSTER_HANDLER_IDENTIFY = "identify"
+CLUSTER_HANDLER_ILLUMINANCE = "illuminance"
+CLUSTER_HANDLER_LEVEL = ATTR_LEVEL
+CLUSTER_HANDLER_MULTISTATE_INPUT = "multistate_input"
+CLUSTER_HANDLER_OCCUPANCY = "occupancy"
+CLUSTER_HANDLER_ON_OFF = "on_off"
+CLUSTER_HANDLER_POWER_CONFIGURATION = "power"
+CLUSTER_HANDLER_PRESSURE = "pressure"
+CLUSTER_HANDLER_SHADE = "shade"
+CLUSTER_HANDLER_SMARTENERGY_METERING = "smartenergy_metering"
+CLUSTER_HANDLER_TEMPERATURE = "temperature"
+CLUSTER_HANDLER_THERMOSTAT = "thermostat"
+CLUSTER_HANDLER_ZDO = "zdo"
+CLUSTER_HANDLER_ZONE = ZONE = "ias_zone"
+CLUSTER_HANDLER_INOVELLI = "inovelli_vzm31sn_cluster"
 
 CLUSTER_COMMAND_SERVER = "server"
 CLUSTER_COMMANDS_CLIENT = "client_commands"
@@ -110,6 +116,7 @@ PLATFORMS = (
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
@@ -120,15 +127,19 @@ CONF_ALARM_FAILED_TRIES = "alarm_failed_tries"
 CONF_ALARM_ARM_REQUIRES_CODE = "alarm_arm_requires_code"
 
 CONF_BAUDRATE = "baudrate"
+CONF_FLOW_CONTROL = "flow_control"
 CONF_CUSTOM_QUIRKS_PATH = "custom_quirks_path"
-CONF_DATABASE = "database_path"
 CONF_DEFAULT_LIGHT_TRANSITION = "default_light_transition"
 CONF_DEVICE_CONFIG = "device_config"
+CONF_ENABLE_ENHANCED_LIGHT_TRANSITION = "enhanced_light_transition"
+CONF_ENABLE_LIGHT_TRANSITIONING_FLAG = "light_transitioning_flag"
+CONF_ALWAYS_PREFER_XY_COLOR_MODE = "always_prefer_xy_color_mode"
+CONF_GROUP_MEMBERS_ASSUME_STATE = "group_members_assume_state"
 CONF_ENABLE_IDENTIFY_ON_JOIN = "enable_identify_on_join"
 CONF_ENABLE_QUIRKS = "enable_quirks"
-CONF_FLOWCONTROL = "flow_control"
 CONF_RADIO_TYPE = "radio_type"
 CONF_USB_PATH = "usb_path"
+CONF_USE_THREAD = "use_thread"
 CONF_ZIGPY = "zigpy_config"
 
 CONF_CONSIDER_UNAVAILABLE_MAINS = "consider_unavailable_mains"
@@ -138,7 +149,13 @@ CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY = 60 * 60 * 6  # 6 hours
 
 CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_DEFAULT_LIGHT_TRANSITION): cv.positive_int,
+        vol.Optional(CONF_DEFAULT_LIGHT_TRANSITION, default=0): vol.All(
+            vol.Coerce(float), vol.Range(min=0, max=2**16 / 10)
+        ),
+        vol.Required(CONF_ENABLE_ENHANCED_LIGHT_TRANSITION, default=False): cv.boolean,
+        vol.Required(CONF_ENABLE_LIGHT_TRANSITIONING_FLAG, default=True): cv.boolean,
+        vol.Required(CONF_ALWAYS_PREFER_XY_COLOR_MODE, default=True): cv.boolean,
+        vol.Required(CONF_GROUP_MEMBERS_ASSUME_STATE, default=True): cv.boolean,
         vol.Required(CONF_ENABLE_IDENTIFY_ON_JOIN, default=True): cv.boolean,
         vol.Optional(
             CONF_CONSIDER_UNAVAILABLE_MAINS,
@@ -164,11 +181,9 @@ CUSTOM_CONFIGURATION = "custom_configuration"
 DATA_DEVICE_CONFIG = "zha_device_config"
 DATA_ZHA = "zha"
 DATA_ZHA_CONFIG = "config"
-DATA_ZHA_BRIDGE_ID = "zha_bridge_id"
 DATA_ZHA_CORE_EVENTS = "zha_core_events"
+DATA_ZHA_DEVICE_TRIGGER_CACHE = "zha_device_trigger_cache"
 DATA_ZHA_GATEWAY = "zha_gateway"
-DATA_ZHA_PLATFORM_LOADED = "platform_loaded"
-DATA_ZHA_SHUTDOWN_TASK = "zha_shutdown_task"
 
 DEBUG_COMP_BELLOWS = "bellows"
 DEBUG_COMP_ZHA = "homeassistant.components.zha"
@@ -209,8 +224,9 @@ MFG_CLUSTER_ID_START = 0xFC00
 POWER_MAINS_POWERED = "Mains"
 POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 
-PRESET_SCHEDULE = "schedule"
-PRESET_COMPLEX = "complex"
+PRESET_SCHEDULE = "Schedule"
+PRESET_COMPLEX = "Complex"
+PRESET_TEMP_MANUAL = "Temporary manual"
 
 ZHA_ALARM_OPTIONS = "zha_alarm_options"
 ZHA_OPTIONS = "zha_options"
@@ -220,17 +236,19 @@ ZHA_CONFIG_SCHEMAS = {
     ZHA_ALARM_OPTIONS: CONF_ZHA_ALARM_SCHEMA,
 }
 
+_ControllerClsType = type[zigpy.application.ControllerApplication]
+
 
 class RadioType(enum.Enum):
     """Possible options for radio type."""
 
-    znp = (
-        "ZNP = Texas Instruments Z-Stack ZNP protocol: CC253x, CC26x2, CC13x2",
-        zigpy_znp.zigbee.application.ControllerApplication,
-    )
     ezsp = (
         "EZSP = Silicon Labs EmberZNet protocol: Elelabs, HUSBZB-1, Telegesis",
         bellows.zigbee.application.ControllerApplication,
+    )
+    znp = (
+        "ZNP = Texas Instruments Z-Stack ZNP protocol: CC253x, CC26x2, CC13x2",
+        zigpy_znp.zigbee.application.ControllerApplication,
     )
     deconz = (
         "deCONZ = dresden elektronik deCONZ protocol: ConBee I/II, RaspBee I/II",
@@ -251,20 +269,20 @@ class RadioType(enum.Enum):
         return [e.description for e in RadioType]
 
     @classmethod
-    def get_by_description(cls, description: str) -> str:
+    def get_by_description(cls, description: str) -> RadioType:
         """Get radio by description."""
         for radio in cls:
             if radio.description == description:
-                return radio.name
+                return radio
         raise ValueError
 
-    def __init__(self, description: str, controller_cls: CALLABLE_T) -> None:
+    def __init__(self, description: str, controller_cls: _ControllerClsType) -> None:
         """Init instance."""
         self._desc = description
         self._ctrl_cls = controller_cls
 
     @property
-    def controller(self) -> CALLABLE_T:
+    def controller(self) -> _ControllerClsType:
         """Return controller class."""
         return self._ctrl_cls
 
@@ -311,15 +329,15 @@ REPORT_CONFIG_OP = (
 
 SENSOR_ACCELERATION = "acceleration"
 SENSOR_BATTERY = "battery"
-SENSOR_ELECTRICAL_MEASUREMENT = CHANNEL_ELECTRICAL_MEASUREMENT
+SENSOR_ELECTRICAL_MEASUREMENT = CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT
 SENSOR_GENERIC = "generic"
-SENSOR_HUMIDITY = CHANNEL_HUMIDITY
-SENSOR_ILLUMINANCE = CHANNEL_ILLUMINANCE
+SENSOR_HUMIDITY = CLUSTER_HANDLER_HUMIDITY
+SENSOR_ILLUMINANCE = CLUSTER_HANDLER_ILLUMINANCE
 SENSOR_METERING = "metering"
-SENSOR_OCCUPANCY = CHANNEL_OCCUPANCY
+SENSOR_OCCUPANCY = CLUSTER_HANDLER_OCCUPANCY
 SENSOR_OPENING = "opening"
-SENSOR_PRESSURE = CHANNEL_PRESSURE
-SENSOR_TEMPERATURE = CHANNEL_TEMPERATURE
+SENSOR_PRESSURE = CLUSTER_HANDLER_PRESSURE
+SENSOR_TEMPERATURE = CLUSTER_HANDLER_TEMPERATURE
 SENSOR_TYPE = "sensor_type"
 
 SIGNAL_ADD_ENTITIES = "zha_add_new_entities"
@@ -362,12 +380,13 @@ WARNING_DEVICE_SQUAWK_MODE_ARMED = 0
 WARNING_DEVICE_SQUAWK_MODE_DISARMED = 1
 
 ZHA_DISCOVERY_NEW = "zha_discovery_new_{}"
-ZHA_CHANNEL_MSG = "zha_channel_message"
-ZHA_CHANNEL_MSG_BIND = "zha_channel_bind"
-ZHA_CHANNEL_MSG_CFG_RPT = "zha_channel_configure_reporting"
-ZHA_CHANNEL_MSG_DATA = "zha_channel_msg_data"
-ZHA_CHANNEL_CFG_DONE = "zha_channel_cfg_done"
-ZHA_CHANNEL_READS_PER_REQ = 5
+ZHA_CLUSTER_HANDLER_MSG = "zha_channel_message"
+ZHA_CLUSTER_HANDLER_MSG_BIND = "zha_channel_bind"
+ZHA_CLUSTER_HANDLER_MSG_CFG_RPT = "zha_channel_configure_reporting"
+ZHA_CLUSTER_HANDLER_MSG_DATA = "zha_channel_msg_data"
+ZHA_CLUSTER_HANDLER_CFG_DONE = "zha_channel_cfg_done"
+ZHA_CLUSTER_HANDLER_READS_PER_REQ = 5
+ZHA_EVENT = "zha_event"
 ZHA_GW_MSG = "zha_gateway_message"
 ZHA_GW_MSG_DEVICE_FULL_INIT = "device_fully_initialized"
 ZHA_GW_MSG_DEVICE_INFO = "device_info"
@@ -382,8 +401,17 @@ ZHA_GW_MSG_LOG_ENTRY = "log_entry"
 ZHA_GW_MSG_LOG_OUTPUT = "log_output"
 ZHA_GW_MSG_RAW_INIT = "raw_device_initialized"
 
-EFFECT_BLINK = 0x00
-EFFECT_BREATHE = 0x01
-EFFECT_OKAY = 0x02
 
-EFFECT_DEFAULT_VARIANT = 0x00
+class Strobe(t.enum8):
+    """Strobe enum."""
+
+    No_Strobe = 0x00
+    Strobe = 0x01
+
+
+STARTUP_FAILURE_DELAY_S = 3
+STARTUP_RETRIES = 3
+
+EZSP_OVERWRITE_EUI64 = (
+    "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"
+)

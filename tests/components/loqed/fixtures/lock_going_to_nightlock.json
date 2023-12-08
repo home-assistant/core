@@ -1,0 +1,8 @@
+{
+  "go_to_state": "NIGHT_LOCK",
+  "go_to_state_numeric": 3,
+  "mac_wifi": "**REDACTED**",
+  "mac_ble": "**REDACTED**",
+  "event_type": "GO_TO_STATE_TWIST_ASSIST_LATCH",
+  "key_local_id": 255
+}

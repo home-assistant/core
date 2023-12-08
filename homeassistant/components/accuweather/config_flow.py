@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import asyncio
+from asyncio import timeout
 from typing import Any
 
 from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
-from async_timeout import timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -17,8 +17,21 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
+)
 
 from .const import CONF_FORECAST, DOMAIN
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_FORECAST, default=False): bool,
+    }
+)
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+}
 
 
 class AccuWeatherFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -84,41 +97,6 @@ class AccuWeatherFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> AccuWeatherOptionsFlowHandler:
+    def async_get_options_flow(config_entry: ConfigEntry) -> SchemaOptionsFlowHandler:
         """Options callback for AccuWeather."""
-        return AccuWeatherOptionsFlowHandler(config_entry)
-
-
-class AccuWeatherOptionsFlowHandler(config_entries.OptionsFlow):
-    """Config flow options for AccuWeather."""
-
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize AccuWeather options flow."""
-        self.config_entry = entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage the options."""
-        return await self.async_step_user()
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle a flow initialized by the user."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_FORECAST,
-                        default=self.config_entry.options.get(CONF_FORECAST, False),
-                    ): bool
-                }
-            ),
-        )
+        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)

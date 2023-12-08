@@ -1,5 +1,4 @@
-"""
-Provide a mock button platform.
+"""Provide a mock button platform.
 
 Call init before using it in your tests to ensure clean test data.
 """

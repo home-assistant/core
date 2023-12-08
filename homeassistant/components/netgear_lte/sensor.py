@@ -1,25 +1,37 @@
 """Support for Netgear LTE sensors."""
-from homeassistant.components.sensor import DOMAIN, SensorEntity
-from homeassistant.exceptions import PlatformNotReady
+from __future__ import annotations
 
-from . import CONF_MONITORED_CONDITIONS, DATA_KEY, LTEEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import CONF_SENSOR, DOMAIN
+from .entity import LTEEntity
 from .sensor_types import SENSOR_SMS, SENSOR_SMS_TOTAL, SENSOR_UNITS, SENSOR_USAGE
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up Netgear LTE sensor devices."""
     if discovery_info is None:
         return
 
-    modem_data = hass.data[DATA_KEY].get_modem_data(discovery_info)
+    modem_data = hass.data[DOMAIN].get_modem_data(discovery_info)
 
     if not modem_data or not modem_data.data:
         raise PlatformNotReady
 
-    sensor_conf = discovery_info[DOMAIN]
+    sensor_conf = discovery_info[CONF_SENSOR]
     monitored_conditions = sensor_conf[CONF_MONITORED_CONDITIONS]
 
-    sensors = []
+    sensors: list[SensorEntity] = []
     for sensor_type in monitored_conditions:
         if sensor_type == SENSOR_SMS:
             sensors.append(SMSUnreadSensor(modem_data, sensor_type))
@@ -63,10 +75,12 @@ class SMSTotalSensor(LTESensor):
 class UsageSensor(LTESensor):
     """Data usage sensor entity."""
 
+    _attr_device_class = SensorDeviceClass.DATA_SIZE
+
     @property
-    def native_value(self):
+    def native_value(self) -> float:
         """Return the state of the sensor."""
-        return round(self.modem_data.data.usage / 1024 ** 2, 1)
+        return round(self.modem_data.data.usage / 1024**2, 1)
 
 
 class GenericSensor(LTESensor):

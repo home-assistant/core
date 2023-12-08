@@ -22,21 +22,21 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
 import os
+from typing import Any
 
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait, CameraEventImageTrait
 from google_nest_sdm.device import Device
 from google_nest_sdm.event import EventImageType, ImageEventBase
-from google_nest_sdm.event_media import EventMediaStore
-from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
-
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_IMAGE,
-    MEDIA_CLASS_VIDEO,
-    MEDIA_TYPE_IMAGE,
-    MEDIA_TYPE_VIDEO,
+from google_nest_sdm.event_media import (
+    ClipPreviewSession,
+    EventMediaStore,
+    ImageSession,
 )
-from homeassistant.components.media_player.errors import BrowseError
+from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
+from google_nest_sdm.transcoder import Transcoder
+
+from homeassistant.components.ffmpeg import get_ffmpeg_manager
+from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
@@ -44,14 +44,14 @@ from homeassistant.components.media_source.models import (
     MediaSourceItem,
     PlayMedia,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import DATE_STR_FORMAT
-from homeassistant.util import dt as dt_util, raise_if_invalid_filename
+from homeassistant.util import dt as dt_util
 
-from .const import DATA_SUBSCRIBER, DOMAIN
-from .device_info import NestDeviceInfo
+from .const import DOMAIN
+from .device_info import NestDeviceInfo, async_nest_devices_by_device_id
 from .events import EVENT_NAME_MAP, MEDIA_SOURCE_EVENT_TITLE_MAP
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,7 +59,8 @@ _LOGGER = logging.getLogger(__name__)
 MEDIA_SOURCE_TITLE = "Nest"
 DEVICE_TITLE_FORMAT = "{device_name}: Recent Events"
 CLIP_TITLE_FORMAT = "{event_name} @ {event_time}"
-EVENT_MEDIA_API_URL_FORMAT = "/api/nest/event_media/{device_id}/{event_id}"
+EVENT_MEDIA_API_URL_FORMAT = "/api/nest/event_media/{device_id}/{event_token}"
+EVENT_THUMBNAIL_URL_FORMAT = "/api/nest/event_media/{device_id}/{event_token}/thumbnail"
 
 STORAGE_KEY = "nest.event_media"
 STORAGE_VERSION = 1
@@ -82,8 +83,15 @@ async def async_get_media_event_store(
         os.makedirs(media_path, exist_ok=True)
 
     await hass.async_add_executor_job(mkdir)
-    store = Store(hass, STORAGE_VERSION, STORAGE_KEY, private=True)
+    store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY, private=True)
     return NestEventMediaStore(hass, subscriber, store, media_path)
+
+
+async def async_get_transcoder(hass: HomeAssistant) -> Transcoder:
+    """Get a nest clip transcoder."""
+    media_path = hass.config.path(MEDIA_PATH)
+    ffmpeg_manager = get_ffmpeg_manager(hass)
+    return Transcoder(ffmpeg_manager.binary, media_path)
 
 
 class NestEventMediaStore(EventMediaStore):
@@ -105,7 +113,7 @@ class NestEventMediaStore(EventMediaStore):
         self,
         hass: HomeAssistant,
         subscriber: GoogleNestSubscriber,
-        store: Store,
+        store: Store[dict[str, Any]],
         media_path: str,
     ) -> None:
         """Initialize NestEventMediaStore."""
@@ -113,26 +121,19 @@ class NestEventMediaStore(EventMediaStore):
         self._subscriber = subscriber
         self._store = store
         self._media_path = media_path
-        self._data: dict | None = None
+        self._data: dict[str, Any] | None = None
         self._devices: Mapping[str, str] | None = {}
 
     async def async_load(self) -> dict | None:
         """Load data."""
         if self._data is None:
             self._devices = await self._get_devices()
-            data = await self._store.async_load()
-            if data is None:
+            if (data := await self._store.async_load()) is None:
                 _LOGGER.debug("Loaded empty event store")
                 self._data = {}
-            elif isinstance(data, dict):
+            else:
                 _LOGGER.debug("Loaded event store with %d records", len(data))
                 self._data = data
-            else:
-                raise ValueError(
-                    "Unexpected data in storage version={}, key={}".format(
-                        STORAGE_VERSION, STORAGE_KEY
-                    )
-                )
         return self._data
 
     async def async_save(self, data: dict) -> None:
@@ -146,21 +147,39 @@ class NestEventMediaStore(EventMediaStore):
 
     def get_media_key(self, device_id: str, event: ImageEventBase) -> str:
         """Return the filename to use for a new event."""
-        # Convert a nest device id to a home assistant device id
-        device_id_str = (
+        if event.event_image_type != EventImageType.IMAGE:
+            raise ValueError("No longer used for video clips")
+        return self.get_image_media_key(device_id, event)
+
+    def _map_device_id(self, device_id: str) -> str:
+        return (
             self._devices.get(device_id, f"{device_id}-unknown_device")
             if self._devices
             else "unknown_device"
         )
-        event_id_str = event.event_session_id
-        try:
-            raise_if_invalid_filename(event_id_str)
-        except ValueError:
-            event_id_str = ""
+
+    def get_image_media_key(self, device_id: str, event: ImageEventBase) -> str:
+        """Return the filename for image media for an event."""
+        device_id_str = self._map_device_id(device_id)
         time_str = str(int(event.timestamp.timestamp()))
         event_type_str = EVENT_NAME_MAP.get(event.event_type, "event")
-        suffix = "jpg" if event.event_image_type == EventImageType.IMAGE else "mp4"
-        return f"{device_id_str}/{time_str}-{event_id_str}-{event_type_str}.{suffix}"
+        return f"{device_id_str}/{time_str}-{event_type_str}.jpg"
+
+    def get_clip_preview_media_key(self, device_id: str, event: ImageEventBase) -> str:
+        """Return the filename for clip preview media for an event session."""
+        device_id_str = self._map_device_id(device_id)
+        time_str = str(int(event.timestamp.timestamp()))
+        event_type_str = EVENT_NAME_MAP.get(event.event_type, "event")
+        return f"{device_id_str}/{time_str}-{event_type_str}.mp4"
+
+    def get_clip_preview_thumbnail_media_key(
+        self, device_id: str, event: ImageEventBase
+    ) -> str:
+        """Return the filename for clip preview thumbnail media for an event session."""
+        device_id_str = self._map_device_id(device_id)
+        time_str = str(int(event.timestamp.timestamp()))
+        event_type_str = EVENT_NAME_MAP.get(event.event_type, "event")
+        return f"{device_id_str}/{time_str}-{event_type_str}_thumb.gif"
 
     def get_media_filename(self, media_key: str) -> str:
         """Return the filename in storage for a media key."""
@@ -225,7 +244,7 @@ class NestEventMediaStore(EventMediaStore):
         devices = {}
         for device in device_manager.devices.values():
             if device_entry := device_registry.async_get_device(
-                {(DOMAIN, device.name)}
+                identifiers={(DOMAIN, device.name)}
             ):
                 devices[device.name] = device_entry.id
         return devices
@@ -236,24 +255,16 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     return NestMediaSource(hass)
 
 
-async def get_media_source_devices(hass: HomeAssistant) -> Mapping[str, Device]:
+@callback
+def async_get_media_source_devices(hass: HomeAssistant) -> Mapping[str, Device]:
     """Return a mapping of device id to eligible Nest event media devices."""
-    if DATA_SUBSCRIBER not in hass.data[DOMAIN]:
-        # Integration unloaded, or is legacy nest integration
-        return {}
-    subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
-    device_manager = await subscriber.async_get_device_manager()
-    device_registry = dr.async_get(hass)
-    devices = {}
-    for device in device_manager.devices.values():
-        if not (
-            CameraEventImageTrait.NAME in device.traits
-            or CameraClipPreviewTrait.NAME in device.traits
-        ):
-            continue
-        if device_entry := device_registry.async_get_device({(DOMAIN, device.name)}):
-            devices[device_entry.id] = device
-    return devices
+    devices = async_nest_devices_by_device_id(hass)
+    return {
+        device_id: device
+        for device_id, device in devices.items()
+        if CameraEventImageTrait.NAME in device.traits
+        or CameraClipPreviewTrait.NAME in device.traits
+    }
 
 
 @dataclass
@@ -265,13 +276,13 @@ class MediaId:
     """
 
     device_id: str
-    event_id: str | None = None
+    event_token: str | None = None
 
     @property
     def identifier(self) -> str:
         """Media identifier represented as a string."""
-        if self.event_id:
-            return f"{self.device_id}/{self.event_id}"
+        if self.event_token:
+            return f"{self.device_id}/{self.event_token}"
         return self.device_id
 
 
@@ -308,24 +319,31 @@ class NestMediaSource(MediaSource):
         media_id: MediaId | None = parse_media_id(item.identifier)
         if not media_id:
             raise Unresolvable("No identifier specified for MediaSourceItem")
-        if not media_id.event_id:
-            raise Unresolvable("Identifier missing an event_id: %s" % item.identifier)
-        devices = await self.devices()
+        devices = async_get_media_source_devices(self.hass)
         if not (device := devices.get(media_id.device_id)):
             raise Unresolvable(
                 "Unable to find device with identifier: %s" % item.identifier
             )
-        events = await _get_events(device)
-        if media_id.event_id not in events:
-            raise Unresolvable(
-                "Unable to find event with identifier: %s" % item.identifier
-            )
-        event = events[media_id.event_id]
+        if not media_id.event_token:
+            # The device resolves to the most recent event if available
+            if not (
+                last_event_id := await _async_get_recent_event_id(media_id, device)
+            ):
+                raise Unresolvable(
+                    "Unable to resolve recent event for device: %s" % item.identifier
+                )
+            media_id = last_event_id
+
+        # Infer content type from the device, since it only supports one
+        # snapshot type (either jpg or mp4 clip)
+        content_type = EventImageType.IMAGE.content_type
+        if CameraClipPreviewTrait.NAME in device.traits:
+            content_type = EventImageType.CLIP_PREVIEW.content_type
         return PlayMedia(
             EVENT_MEDIA_API_URL_FORMAT.format(
-                device_id=media_id.device_id, event_id=media_id.event_id
+                device_id=media_id.device_id, event_token=media_id.event_token
             ),
-            event.event_image_type.content_type,
+            content_type,
         )
 
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
@@ -338,15 +356,22 @@ class NestMediaSource(MediaSource):
         _LOGGER.debug(
             "Browsing media for identifier=%s, media_id=%s", item.identifier, media_id
         )
-        devices = await self.devices()
+        devices = async_get_media_source_devices(self.hass)
         if media_id is None:
             # Browse the root and return child devices
             browse_root = _browse_root()
             browse_root.children = []
             for device_id, child_device in devices.items():
-                browse_root.children.append(
-                    _browse_device(MediaId(device_id), child_device)
-                )
+                browse_device = _browse_device(MediaId(device_id), child_device)
+                if last_event_id := await _async_get_recent_event_id(
+                    MediaId(device_id), child_device
+                ):
+                    browse_device.thumbnail = EVENT_THUMBNAIL_URL_FORMAT.format(
+                        device_id=last_event_id.device_id,
+                        event_token=last_event_id.event_token,
+                    )
+                    browse_device.can_play = True
+                browse_root.children.append(browse_device)
             return browse_root
 
         # Browse either a device or events within a device
@@ -354,35 +379,63 @@ class NestMediaSource(MediaSource):
             raise BrowseError(
                 "Unable to find device with identiifer: %s" % item.identifier
             )
-        if media_id.event_id is None:
+        # Clip previews are a session with multiple possible event types (e.g.
+        # person, motion, etc) and a single mp4
+        if CameraClipPreviewTrait.NAME in device.traits:
+            clips: dict[
+                str, ClipPreviewSession
+            ] = await _async_get_clip_preview_sessions(device)
+            if media_id.event_token is None:
+                # Browse a specific device and return child events
+                browse_device = _browse_device(media_id, device)
+                browse_device.children = []
+                for clip in clips.values():
+                    event_id = MediaId(media_id.device_id, clip.event_token)
+                    browse_device.children.append(
+                        _browse_clip_preview(event_id, device, clip)
+                    )
+                return browse_device
+
+            # Browse a specific event
+            if not (single_clip := clips.get(media_id.event_token)):
+                raise BrowseError(
+                    "Unable to find event with identiifer: %s" % item.identifier
+                )
+            return _browse_clip_preview(media_id, device, single_clip)
+
+        # Image events are 1:1 of media to event
+        images: dict[str, ImageSession] = await _async_get_image_sessions(device)
+        if media_id.event_token is None:
             # Browse a specific device and return child events
             browse_device = _browse_device(media_id, device)
             browse_device.children = []
-            events = await _get_events(device)
-            for child_event in events.values():
-                event_id = MediaId(media_id.device_id, child_event.event_session_id)
+            for image in images.values():
+                event_id = MediaId(media_id.device_id, image.event_token)
                 browse_device.children.append(
-                    _browse_event(event_id, device, child_event)
+                    _browse_image_event(event_id, device, image)
                 )
             return browse_device
 
         # Browse a specific event
-        events = await _get_events(device)
-        if not (event := events.get(media_id.event_id)):
+        if not (single_image := images.get(media_id.event_token)):
             raise BrowseError(
                 "Unable to find event with identiifer: %s" % item.identifier
             )
-        return _browse_event(media_id, device, event)
-
-    async def devices(self) -> Mapping[str, Device]:
-        """Return all event media related devices."""
-        return await get_media_source_devices(self.hass)
+        return _browse_image_event(media_id, device, single_image)
 
 
-async def _get_events(device: Device) -> Mapping[str, ImageEventBase]:
-    """Return relevant events for the specified device."""
-    events = await device.event_media_manager.async_events()
-    return {e.event_session_id: e for e in events}
+async def _async_get_clip_preview_sessions(
+    device: Device,
+) -> dict[str, ClipPreviewSession]:
+    """Return clip preview sessions for the device."""
+    events = await device.event_media_manager.async_clip_preview_sessions()
+    return {e.event_token: e for e in events}
+
+
+async def _async_get_image_sessions(device: Device) -> dict[str, ImageSession]:
+    """Return image events for the device."""
+    events = await device.event_media_manager.async_image_sessions()
+    return {e.event_token: e for e in events}
 
 
 def _browse_root() -> BrowseMediaSource:
@@ -390,9 +443,9 @@ def _browse_root() -> BrowseMediaSource:
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier="",
-        media_class=MEDIA_CLASS_DIRECTORY,
-        media_content_type=MEDIA_TYPE_VIDEO,
-        children_media_class=MEDIA_CLASS_VIDEO,
+        media_class=MediaClass.DIRECTORY,
+        media_content_type=MediaType.VIDEO,
+        children_media_class=MediaClass.VIDEO,
         title=MEDIA_SOURCE_TITLE,
         can_play=False,
         can_expand=True,
@@ -401,15 +454,30 @@ def _browse_root() -> BrowseMediaSource:
     )
 
 
+async def _async_get_recent_event_id(
+    device_id: MediaId, device: Device
+) -> MediaId | None:
+    """Return thumbnail for most recent device event."""
+    if CameraClipPreviewTrait.NAME in device.traits:
+        clips = await device.event_media_manager.async_clip_preview_sessions()
+        if not clips:
+            return None
+        return MediaId(device_id.device_id, next(iter(clips)).event_token)
+    images = await device.event_media_manager.async_image_sessions()
+    if not images:
+        return None
+    return MediaId(device_id.device_id, next(iter(images)).event_token)
+
+
 def _browse_device(device_id: MediaId, device: Device) -> BrowseMediaSource:
     """Return details for the specified device."""
     device_info = NestDeviceInfo(device)
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=device_id.identifier,
-        media_class=MEDIA_CLASS_DIRECTORY,
-        media_content_type=MEDIA_TYPE_VIDEO,
-        children_media_class=MEDIA_CLASS_VIDEO,
+        media_class=MediaClass.DIRECTORY,
+        media_content_type=MediaType.VIDEO,
+        children_media_class=MediaClass.VIDEO,
         title=DEVICE_TITLE_FORMAT.format(device_name=device_info.device_name),
         can_play=False,
         can_expand=True,
@@ -418,21 +486,48 @@ def _browse_device(device_id: MediaId, device: Device) -> BrowseMediaSource:
     )
 
 
-def _browse_event(
-    event_id: MediaId, device: Device, event: ImageEventBase
+def _browse_clip_preview(
+    event_id: MediaId, device: Device, event: ClipPreviewSession
 ) -> BrowseMediaSource:
-    """Build a BrowseMediaSource for a specific event."""
+    """Build a BrowseMediaSource for a specific clip preview event."""
+    types = []
+    for event_type in event.event_types:
+        types.append(MEDIA_SOURCE_EVENT_TITLE_MAP.get(event_type, "Event"))
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=event_id.identifier,
-        media_class=MEDIA_CLASS_IMAGE,
-        media_content_type=MEDIA_TYPE_IMAGE,
+        media_class=MediaClass.IMAGE,
+        media_content_type=MediaType.IMAGE,
+        title=CLIP_TITLE_FORMAT.format(
+            event_name=", ".join(types),
+            event_time=dt_util.as_local(event.timestamp).strftime(DATE_STR_FORMAT),
+        ),
+        can_play=True,
+        can_expand=False,
+        thumbnail=EVENT_THUMBNAIL_URL_FORMAT.format(
+            device_id=event_id.device_id, event_token=event_id.event_token
+        ),
+        children=[],
+    )
+
+
+def _browse_image_event(
+    event_id: MediaId, device: Device, event: ImageSession
+) -> BrowseMediaSource:
+    """Build a BrowseMediaSource for a specific image event."""
+    return BrowseMediaSource(
+        domain=DOMAIN,
+        identifier=event_id.identifier,
+        media_class=MediaClass.IMAGE,
+        media_content_type=MediaType.IMAGE,
         title=CLIP_TITLE_FORMAT.format(
             event_name=MEDIA_SOURCE_EVENT_TITLE_MAP.get(event.event_type, "Event"),
             event_time=dt_util.as_local(event.timestamp).strftime(DATE_STR_FORMAT),
         ),
-        can_play=(event.event_image_type == EventImageType.CLIP_PREVIEW),
+        can_play=False,
         can_expand=False,
-        thumbnail=None,
+        thumbnail=EVENT_THUMBNAIL_URL_FORMAT.format(
+            device_id=event_id.device_id, event_token=event_id.event_token
+        ),
         children=[],
     )

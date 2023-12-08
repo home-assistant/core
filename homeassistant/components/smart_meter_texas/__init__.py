@@ -14,11 +14,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.update_coordinator import (
-    DataUpdateCoordinator,
-    Debouncer,
-    UpdateFailed,
-)
+from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     DATA_COORDINATOR,
@@ -81,9 +78,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_SMART_METER: smart_meter_texas_data,
     }
 
-    asyncio.create_task(coordinator.async_refresh())
+    entry.async_create_background_task(
+        hass, coordinator.async_refresh(), "smart_meter_texas-coordinator-refresh"
+    )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

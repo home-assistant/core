@@ -10,7 +10,8 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PLATFORM_SCHEMA_BASE,
-    SOURCE_TYPE_GPS,
+    SeeCallback,
+    SourceType,
 )
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
@@ -19,9 +20,10 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,7 +47,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA_BASE.extend(
 )
 
 
-def setup_scanner(hass, config: ConfigType, see, discovery_info=None):
+def setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    see: SeeCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
     """Set up the Google Maps Location sharing scanner."""
     scanner = GoogleMapsScanner(hass, config, see)
     return scanner.success_init
@@ -54,7 +61,9 @@ def setup_scanner(hass, config: ConfigType, see, discovery_info=None):
 class GoogleMapsScanner:
     """Representation of an Google Maps location sharing account."""
 
-    def __init__(self, hass, config: ConfigType, see) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config: ConfigType, see: SeeCallback
+    ) -> None:
         """Initialize the scanner."""
         self.see = see
         self.username = config[CONF_USERNAME]
@@ -73,7 +82,8 @@ class GoogleMapsScanner:
 
         except InvalidCookies:
             _LOGGER.error(
-                "The cookie file provided does not provide a valid session. Please create another one and try again"
+                "The cookie file provided does not provide a valid session. Please"
+                " create another one and try again"
             )
             self.success_init = False
 
@@ -90,8 +100,10 @@ class GoogleMapsScanner:
                 and person.accuracy > self.max_gps_accuracy
             ):
                 _LOGGER.info(
-                    "Ignoring %s update because expected GPS "
-                    "accuracy %s is not met: %s",
+                    (
+                        "Ignoring %s update because expected GPS "
+                        "accuracy %s is not met: %s"
+                    ),
                     person.nickname,
                     self.max_gps_accuracy,
                     person.accuracy,
@@ -100,12 +112,19 @@ class GoogleMapsScanner:
 
             last_seen = dt_util.as_utc(person.datetime)
             if last_seen < self._prev_seen.get(dev_id, last_seen):
-                _LOGGER.warning(
-                    "Ignoring %s update because timestamp "
-                    "is older than last timestamp",
+                _LOGGER.debug(
+                    "Ignoring %s update because timestamp is older than last timestamp",
                     person.nickname,
                 )
                 _LOGGER.debug("%s < %s", last_seen, self._prev_seen[dev_id])
+                continue
+            if last_seen == self._prev_seen.get(dev_id):
+                _LOGGER.debug(
+                    "Ignoring %s update because timestamp "
+                    "is the same as the last timestamp %s",
+                    person.nickname,
+                    last_seen,
+                )
                 continue
             self._prev_seen[dev_id] = last_seen
 
@@ -122,7 +141,7 @@ class GoogleMapsScanner:
                 dev_id=dev_id,
                 gps=(person.latitude, person.longitude),
                 picture=person.picture_url,
-                source_type=SOURCE_TYPE_GPS,
+                source_type=SourceType.GPS,
                 gps_accuracy=person.accuracy,
                 attributes=attrs,
             )

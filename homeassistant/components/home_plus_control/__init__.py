@@ -3,19 +3,23 @@ import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 from homepluscontrol.homeplusapi import HomePlusControlApiError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
     dispatcher,
 )
 from homeassistant.helpers.device_registry import async_get as async_get_device_registry
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -50,6 +54,8 @@ PLATFORMS = [Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 
+_ISSUE_MOVE_TO_NETATMO = "move_to_netatmo"
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Legrand Home+ Control component from configuration.yaml."""
@@ -57,6 +63,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if DOMAIN not in config:
         return True
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        _ISSUE_MOVE_TO_NETATMO,
+        is_fixable=False,
+        is_persistent=False,
+        breaks_in_ha_version="2023.12.0",  # Netatmo decided to shutdown the api in december
+        severity=IssueSeverity.WARNING,
+        translation_key=_ISSUE_MOVE_TO_NETATMO,
+        translation_placeholders={
+            "url": "https://www.home-assistant.io/integrations/netatmo/"
+        },
+    )
 
     # Register the implementation from the config information
     config_flow.HomePlusControlFlowHandler.async_register_implementation(
@@ -71,6 +91,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Legrand Home+ Control from a config entry."""
     hass_entry_data = hass.data[DOMAIN].setdefault(entry.entry_id, {})
 
+    async_create_issue(
+        hass,
+        DOMAIN,
+        _ISSUE_MOVE_TO_NETATMO,
+        is_fixable=False,
+        is_persistent=False,
+        breaks_in_ha_version="2023.12.0",  # Netatmo decided to shutdown the api in december
+        severity=IssueSeverity.WARNING,
+        translation_key=_ISSUE_MOVE_TO_NETATMO,
+        translation_placeholders={
+            "url": "https://www.home-assistant.io/integrations/netatmo/"
+        },
+    )
+
     # Retrieve the registered implementation
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -83,7 +117,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api = hass_entry_data[API] = HomePlusControlAsyncApi(hass, entry, implementation)
 
     # Set of entity unique identifiers of this integration
-    uids = hass_entry_data[ENTITY_UIDS] = set()
+    uids: set[str] = set()
+    hass_entry_data[ENTITY_UIDS] = uids
 
     # Integration dispatchers
     hass_entry_data[DISPATCHER_REMOVERS] = []
@@ -100,18 +135,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
-            async with async_timeout.timeout(10):
-                module_data = await api.async_get_modules()
+            async with asyncio.timeout(10):
+                return await api.async_get_modules()
         except HomePlusControlApiError as err:
             raise UpdateFailed(
                 f"Error communicating with API: {err} [{type(err)}]"
             ) from err
 
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        # Name of the data. For logging purposes.
+        name="home_plus_control_module",
+        update_method=async_update_data,
+        # Polling interval. Will only be polled if there are subscribers.
+        update_interval=timedelta(seconds=300),
+    )
+    hass_entry_data[DATA_COORDINATOR] = coordinator
+
+    @callback
+    def _async_update_entities():
+        """Process entities and add or remove them based after an update."""
+        if not (module_data := coordinator.data):
+            return
+
         # Remove obsolete entities from Home Assistant
         entity_uids_to_remove = uids - set(module_data)
         for uid in entity_uids_to_remove:
             uids.remove(uid)
-            device = device_registry.async_get_device({(DOMAIN, uid)})
+            device = device_registry.async_get_device(identifiers={(DOMAIN, uid)})
             device_registry.async_remove_device(device.id)
 
         # Send out signal for new entity addition to Home Assistant
@@ -125,31 +177,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 coordinator,
             )
 
-        return module_data
+    entry.async_on_unload(coordinator.async_add_listener(_async_update_entities))
 
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        # Name of the data. For logging purposes.
-        name="home_plus_control_module",
-        update_method=async_update_data,
-        # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=300),
-    )
-    hass_entry_data[DATA_COORDINATOR] = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async def start_platforms():
-        """Continue setting up the platforms."""
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-                for platform in PLATFORMS
-            )
-        )
-        # Only refresh the coordinator after all platforms are loaded.
-        await coordinator.async_refresh()
-
-    hass.async_create_task(start_platforms())
+    # Only refresh the coordinator after all platforms are loaded.
+    await coordinator.async_refresh()
 
     return True
 
@@ -169,5 +202,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
         # And finally unload the domain config entry data
         hass.data[DOMAIN].pop(config_entry.entry_id)
+
+    async_delete_issue(hass, DOMAIN, _ISSUE_MOVE_TO_NETATMO)
 
     return unload_ok

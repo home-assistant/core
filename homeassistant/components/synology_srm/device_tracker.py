@@ -19,7 +19,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +70,9 @@ ATTRIBUTE_ALIAS = {
 }
 
 
-def get_scanner(hass, config):
+def get_scanner(
+    hass: HomeAssistant, config: ConfigType
+) -> SynologySrmDeviceScanner | None:
     """Validate the configuration and return Synology SRM scanner."""
     scanner = SynologySrmDeviceScanner(config[DOMAIN])
 
@@ -76,7 +80,7 @@ def get_scanner(hass, config):
 
 
 class SynologySrmDeviceScanner(DeviceScanner):
-    """This class scans for devices connected to a Synology SRM router."""
+    """Scanner for devices connected to a Synology SRM router."""
 
     def __init__(self, config):
         """Initialize the scanner."""

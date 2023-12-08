@@ -1,15 +1,13 @@
 """Support for Tuya buttons."""
 from __future__ import annotations
 
-from typing import Any
-
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
@@ -24,33 +22,42 @@ BUTTONS: dict[str, tuple[ButtonEntityDescription, ...]] = {
     "sd": (
         ButtonEntityDescription(
             key=DPCode.RESET_DUSTER_CLOTH,
-            name="Reset Duster Cloth",
+            translation_key="reset_duster_cloth",
             icon="mdi:restart",
             entity_category=EntityCategory.CONFIG,
         ),
         ButtonEntityDescription(
             key=DPCode.RESET_EDGE_BRUSH,
-            name="Reset Edge Brush",
+            translation_key="reset_edge_brush",
             icon="mdi:restart",
             entity_category=EntityCategory.CONFIG,
         ),
         ButtonEntityDescription(
             key=DPCode.RESET_FILTER,
-            name="Reset Filter",
+            translation_key="reset_filter",
             icon="mdi:air-filter",
             entity_category=EntityCategory.CONFIG,
         ),
         ButtonEntityDescription(
             key=DPCode.RESET_MAP,
-            name="Reset Map",
+            translation_key="reset_map",
             icon="mdi:map-marker-remove",
             entity_category=EntityCategory.CONFIG,
         ),
         ButtonEntityDescription(
             key=DPCode.RESET_ROLL_BRUSH,
-            name="Reset Roll Brush",
+            translation_key="reset_roll_brush",
             icon="mdi:restart",
             entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Wake Up Light II
+    # Not documented
+    "hxd": (
+        ButtonEntityDescription(
+            key=DPCode.SWITCH_USB6,
+            translation_key="snooze",
+            icon="mdi:sleep",
         ),
     ),
 }
@@ -70,7 +77,7 @@ async def async_setup_entry(
             device = hass_data.device_manager.device_map[device_id]
             if descriptions := BUTTONS.get(device.category):
                 for description in descriptions:
-                    if description.key in device.function:
+                    if description.key in device.status:
                         entities.append(
                             TuyaButtonEntity(
                                 device, hass_data.device_manager, description
@@ -100,6 +107,6 @@ class TuyaButtonEntity(TuyaEntity, ButtonEntity):
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
 
-    def press(self, **kwargs: Any) -> None:
+    def press(self) -> None:
         """Press the button."""
         self._send_command([{"code": self.entity_description.key, "value": True}])

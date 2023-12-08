@@ -1,0 +1,175 @@
+# serializer version: 1
+# name: test_switches[enable_guest_wifi-async_get_wifi_guest_access-async_set_wifi_guest_access-interval0]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Enable guest Wifi',
+      'icon': 'mdi:wifi',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_title_enable_guest_wifi',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[enable_guest_wifi-async_get_wifi_guest_access-async_set_wifi_guest_access-interval0].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.mock_title_enable_guest_wifi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:wifi',
+    'original_name': 'Enable guest Wifi',
+    'platform': 'devolo_home_network',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1234567890_switch_guest_wifi',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[enable_leds-async_get_led_setting-async_set_led_setting-interval1]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Enable LEDs',
+      'icon': 'mdi:led-off',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_title_enable_leds',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[enable_leds-async_get_led_setting-async_set_led_setting-interval1].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.mock_title_enable_leds',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:led-off',
+    'original_name': 'Enable LEDs',
+    'platform': 'devolo_home_network',
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '1234567890_switch_leds',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update_enable_guest_wifi
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Enable guest Wifi',
+      'icon': 'mdi:wifi',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_title_enable_guest_wifi',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_update_enable_guest_wifi.1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.mock_title_enable_guest_wifi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:wifi',
+    'original_name': 'Enable guest Wifi',
+    'platform': 'devolo_home_network',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_guest_wifi',
+    'unique_id': '1234567890_switch_guest_wifi',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update_enable_leds
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Enable LEDs',
+      'icon': 'mdi:led-off',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.mock_title_enable_leds',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_update_enable_leds.1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.mock_title_enable_leds',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:led-off',
+    'original_name': 'Enable LEDs',
+    'platform': 'devolo_home_network',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch_leds',
+    'unique_id': '1234567890_switch_leds',
+    'unit_of_measurement': None,
+  })
+# ---

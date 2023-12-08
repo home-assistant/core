@@ -26,7 +26,7 @@ async def async_setup_entry(
 class ToloFan(ToloSaunaCoordinatorEntity, FanEntity):
     """Sauna fan control."""
 
-    _attr_name = "Fan"
+    _attr_translation_key = "fan"
 
     def __init__(
         self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry
@@ -43,7 +43,6 @@ class ToloFan(ToloSaunaCoordinatorEntity, FanEntity):
 
     def turn_on(
         self,
-        speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,

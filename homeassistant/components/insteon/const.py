@@ -44,6 +44,7 @@ INSTEON_PLATFORMS = [
     Platform.COVER,
     Platform.FAN,
     Platform.LIGHT,
+    Platform.LOCK,
     Platform.SWITCH,
 ]
 
@@ -70,6 +71,7 @@ CONF_DIM_STEPS = "dim_steps"
 CONF_X10_ALL_UNITS_OFF = "x10_all_units_off"
 CONF_X10_ALL_LIGHTS_ON = "x10_all_lights_on"
 CONF_X10_ALL_LIGHTS_OFF = "x10_all_lights_off"
+CONF_DEV_PATH = "dev_path"
 
 PORT_HUB_V1 = 9761
 PORT_HUB_V2 = 25105
@@ -128,7 +130,6 @@ EVENT_GROUP_OFF = "insteon.button_off"
 EVENT_GROUP_ON_FAST = "insteon.button_on_fast"
 EVENT_GROUP_OFF_FAST = "insteon.button_off_fast"
 EVENT_CONF_BUTTON = "button"
-ON_OFF_EVENTS = "on_off_events"
 
 STATE_NAME_LABEL_MAP = {
     DIMMABLE_LIGHT_MAIN: "Main",
@@ -172,5 +173,6 @@ PROPERTY_NAME = "name"
 PROPERTY_VALUE = "value"
 HA_DEVICE_NOT_FOUND = "ha_device_not_found"
 INSTEON_DEVICE_NOT_FOUND = "insteon_device_not_found"
+MULTIPLE = "multiple"
 
 INSTEON_ADDR_REGEX = re.compile(r"([A-Fa-f0-9]{2}\.?[A-Fa-f0-9]{2}\.?[A-Fa-f0-9]{2})$")

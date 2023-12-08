@@ -1,214 +1,169 @@
 """Train information for departures and delays, provided by Trafikverket."""
+from __future__ import annotations
 
-from datetime import date, datetime, timedelta
-import logging
-
-from pytrafikverket import TrafikverketTrain
-import voluptuous as vol
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
 )
-from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util.dt import as_utc, get_time_zone
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME, UnitOfTime
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
+from .const import ATTRIBUTION, DOMAIN
+from .coordinator import TrainData, TVDataUpdateCoordinator
 
-CONF_TRAINS = "trains"
-CONF_FROM = "from"
-CONF_TO = "to"
-CONF_TIME = "time"
+ATTR_PRODUCT_FILTER = "product_filter"
 
-ATTR_DEPARTURE_STATE = "departure_state"
-ATTR_CANCELED = "canceled"
-ATTR_DELAY_TIME = "number_of_minutes_delayed"
-ATTR_PLANNED_TIME = "planned_time"
-ATTR_ESTIMATED_TIME = "estimated_time"
-ATTR_ACTUAL_TIME = "actual_time"
-ATTR_OTHER_INFORMATION = "other_information"
-ATTR_DEVIATIONS = "deviations"
 
-ICON = "mdi:train"
-SCAN_INTERVAL = timedelta(minutes=5)
+@dataclass
+class TrafikverketRequiredKeysMixin:
+    """Mixin for required keys."""
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_TRAINS): [
-            {
-                vol.Required(CONF_NAME): cv.string,
-                vol.Required(CONF_TO): cv.string,
-                vol.Required(CONF_FROM): cv.string,
-                vol.Optional(CONF_TIME): cv.time,
-                vol.Optional(CONF_WEEKDAY, default=WEEKDAYS): vol.All(
-                    cv.ensure_list, [vol.In(WEEKDAYS)]
-                ),
-            }
-        ],
-    }
+    value_fn: Callable[[TrainData], StateType | datetime]
+
+
+@dataclass
+class TrafikverketSensorEntityDescription(
+    SensorEntityDescription, TrafikverketRequiredKeysMixin
+):
+    """Describes Trafikverket sensor entity."""
+
+
+SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
+    TrafikverketSensorEntityDescription(
+        key="departure_time",
+        translation_key="departure_time",
+        icon="mdi:clock",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda data: data.departure_time,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="departure_state",
+        translation_key="departure_state",
+        icon="mdi:clock",
+        value_fn=lambda data: data.departure_state,
+        device_class=SensorDeviceClass.ENUM,
+        options=["on_time", "delayed", "canceled"],
+    ),
+    TrafikverketSensorEntityDescription(
+        key="cancelled",
+        translation_key="cancelled",
+        icon="mdi:alert",
+        value_fn=lambda data: data.cancelled,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="delayed_time",
+        translation_key="delayed_time",
+        icon="mdi:clock",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        value_fn=lambda data: data.delayed_time,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="planned_time",
+        translation_key="planned_time",
+        icon="mdi:clock",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda data: data.planned_time,
+        entity_registry_enabled_default=False,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="estimated_time",
+        translation_key="estimated_time",
+        icon="mdi:clock",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda data: data.estimated_time,
+        entity_registry_enabled_default=False,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="actual_time",
+        translation_key="actual_time",
+        icon="mdi:clock",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda data: data.actual_time,
+        entity_registry_enabled_default=False,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="other_info",
+        translation_key="other_info",
+        icon="mdi:information-variant",
+        value_fn=lambda data: data.other_info,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="deviation",
+        translation_key="deviation",
+        icon="mdi:alert",
+        value_fn=lambda data: data.deviation,
+    ),
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the departure sensor."""
-    httpsession = async_get_clientsession(hass)
-    train_api = TrafikverketTrain(httpsession, config[CONF_API_KEY])
-    sensors = []
-    station_cache = {}
-    for train in config[CONF_TRAINS]:
-        try:
-            trainstops = [train[CONF_FROM], train[CONF_TO]]
-            for station in trainstops:
-                if station not in station_cache:
-                    station_cache[station] = await train_api.async_get_train_station(
-                        station
-                    )
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Trafikverket sensor entry."""
 
-        except ValueError as station_error:
-            if "Invalid authentication" in station_error.args[0]:
-                _LOGGER.error("Unable to set up up component: %s", station_error)
-                return
-            _LOGGER.error(
-                "Problem when trying station %s to %s. Error: %s ",
-                train[CONF_FROM],
-                train[CONF_TO],
-                station_error,
-            )
-            continue
+    coordinator: TVDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-        sensor = TrainSensor(
-            train_api,
-            train[CONF_NAME],
-            station_cache[train[CONF_FROM]],
-            station_cache[train[CONF_TO]],
-            train[CONF_WEEKDAY],
-            train.get(CONF_TIME),
-        )
-        sensors.append(sensor)
-
-    async_add_entities(sensors, update_before_add=True)
+    async_add_entities(
+        [
+            TrainSensor(coordinator, entry.data[CONF_NAME], entry.entry_id, description)
+            for description in SENSOR_TYPES
+        ]
+    )
 
 
-def next_weekday(fromdate, weekday):
-    """Return the date of the next time a specific weekday happen."""
-    days_ahead = weekday - fromdate.weekday()
-    if days_ahead <= 0:
-        days_ahead += 7
-    return fromdate + timedelta(days_ahead)
-
-
-def next_departuredate(departure):
-    """Calculate the next departuredate from an array input of short days."""
-    today_date = date.today()
-    today_weekday = date.weekday(today_date)
-    if WEEKDAYS[today_weekday] in departure:
-        return today_date
-    for day in departure:
-        next_departure = WEEKDAYS.index(day)
-        if next_departure > today_weekday:
-            return next_weekday(today_date, next_departure)
-    return next_weekday(today_date, WEEKDAYS.index(departure[0]))
-
-
-class TrainSensor(SensorEntity):
+class TrainSensor(CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity):
     """Contains data about a train depature."""
 
-    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    entity_description: TrafikverketSensorEntityDescription
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
-    def __init__(self, train_api, name, from_station, to_station, weekday, time):
+    def __init__(
+        self,
+        coordinator: TVDataUpdateCoordinator,
+        name: str,
+        entry_id: str,
+        entity_description: TrafikverketSensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
-        self._train_api = train_api
-        self._name = name
-        self._from_station = from_station
-        self._to_station = to_station
-        self._weekday = weekday
-        self._time = time
-        self._state = None
-        self._departure_state = None
-        self._delay_in_minutes = None
-        self._timezone = get_time_zone("Europe/Stockholm")
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{entry_id}-{entity_description.key}"
+        self.entity_description = entity_description
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry_id)},
+            name=name,
+            configuration_url="https://api.trafikinfo.trafikverket.se/",
+        )
+        self._update_attr()
 
-    async def async_update(self):
-        """Retrieve latest state."""
-        if self._time is not None:
-            departure_day = next_departuredate(self._weekday)
-            when = datetime.combine(departure_day, self._time).astimezone(
-                self._timezone
-            )
-            try:
-                self._state = await self._train_api.async_get_train_stop(
-                    self._from_station, self._to_station, when
-                )
-            except ValueError as output_error:
-                _LOGGER.error(
-                    "Departure %s encountered a problem: %s", when, output_error
-                )
-        else:
-            when = datetime.now()
-            self._state = await self._train_api.async_get_next_train_stop(
-                self._from_station, self._to_station, when
-            )
-        self._departure_state = self._state.get_state().name
-        self._delay_in_minutes = self._state.get_delay_time()
+    @callback
+    def _update_attr(self) -> None:
+        """Update _attr."""
+        self._attr_native_value = self.entity_description.value_fn(
+            self.coordinator.data
+        )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        self._update_attr()
+        return super()._handle_coordinator_update()
 
     @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        if not self._state:
-            return None
-        attributes = {
-            ATTR_DEPARTURE_STATE: self._departure_state,
-            ATTR_CANCELED: self._state.canceled,
-            ATTR_DELAY_TIME: None,
-            ATTR_PLANNED_TIME: None,
-            ATTR_ESTIMATED_TIME: None,
-            ATTR_ACTUAL_TIME: None,
-            ATTR_OTHER_INFORMATION: None,
-            ATTR_DEVIATIONS: None,
-        }
-        if self._state.other_information:
-            attributes[ATTR_OTHER_INFORMATION] = ", ".join(
-                self._state.other_information
-            )
-        if self._state.deviations:
-            attributes[ATTR_DEVIATIONS] = ", ".join(self._state.deviations)
-        if self._delay_in_minutes:
-            attributes[ATTR_DELAY_TIME] = self._delay_in_minutes.total_seconds() / 60
-        if self._state.advertised_time_at_location:
-            attributes[ATTR_PLANNED_TIME] = as_utc(
-                self._state.advertised_time_at_location.astimezone(self._timezone)
-            ).isoformat()
-        if self._state.estimated_time_at_location:
-            attributes[ATTR_ESTIMATED_TIME] = as_utc(
-                self._state.estimated_time_at_location.astimezone(self._timezone)
-            ).isoformat()
-        if self._state.time_at_location:
-            attributes[ATTR_ACTUAL_TIME] = as_utc(
-                self._state.time_at_location.astimezone(self._timezone)
-            ).isoformat()
-        return attributes
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the icon for the frontend."""
-        return ICON
-
-    @property
-    def native_value(self):
-        """Return the departure state."""
-        if (state := self._state) is not None:
-            if state.time_at_location is not None:
-                return state.time_at_location.astimezone(self._timezone)
-            if state.estimated_time_at_location is not None:
-                return state.estimated_time_at_location.astimezone(self._timezone)
-            return state.advertised_time_at_location.astimezone(self._timezone)
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return additional attributes for Trafikverket Train sensor."""
+        if self.coordinator.data.product_filter:
+            return {ATTR_PRODUCT_FILTER: self.coordinator.data.product_filter}
         return None

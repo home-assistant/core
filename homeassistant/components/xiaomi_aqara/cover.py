@@ -1,5 +1,10 @@
 """Support for Xiaomi curtain."""
+from typing import Any
+
 from homeassistant.components.cover import ATTR_POSITION, CoverEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import XiaomiDevice
 from .const import DOMAIN, GATEWAYS_KEY
@@ -10,7 +15,11 @@ DATA_KEY_PROTO_V1 = "status"
 DATA_KEY_PROTO_V2 = "curtain_status"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Perform the setup for Xiaomi devices."""
     entities = []
     gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
@@ -37,28 +46,28 @@ class XiaomiGenericCover(XiaomiDevice, CoverEntity):
         super().__init__(device, name, xiaomi_hub, config_entry)
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int:
         """Return the current position of the cover."""
         return self._pos
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self.current_cover_position <= 0
 
-    def close_cover(self, **kwargs):
+    def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         self._write_to_hub(self._sid, **{self._data_key: "close"})
 
-    def open_cover(self, **kwargs):
+    def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         self._write_to_hub(self._sid, **{self._data_key: "open"})
 
-    def stop_cover(self, **kwargs):
+    def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self._write_to_hub(self._sid, **{self._data_key: "stop"})
 
-    def set_cover_position(self, **kwargs):
+    def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs.get(ATTR_POSITION)
         if self._data_key == DATA_KEY_PROTO_V2:

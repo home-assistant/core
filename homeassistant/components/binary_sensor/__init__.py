@@ -3,15 +3,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import StrEnum
 import logging
 from typing import Literal, final
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -150,10 +151,12 @@ DEVICE_CLASS_UPDATE = BinarySensorDeviceClass.UPDATE.value
 DEVICE_CLASS_VIBRATION = BinarySensorDeviceClass.VIBRATION.value
 DEVICE_CLASS_WINDOW = BinarySensorDeviceClass.WINDOW.value
 
+# mypy: disallow-any-generics
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for binary sensors."""
-    component = hass.data[DOMAIN] = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent[BinarySensorEntity](
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -163,13 +166,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[BinarySensorEntity] = hass.data[DOMAIN]
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent = hass.data[DOMAIN]
+    component: EntityComponent[BinarySensorEntity] = hass.data[DOMAIN]
     return await component.async_unload_entry(entry)
 
 
@@ -177,19 +180,34 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class BinarySensorEntityDescription(EntityDescription):
     """A class that describes binary sensor entities."""
 
-    device_class: BinarySensorDeviceClass | str | None = None
+    device_class: BinarySensorDeviceClass | None = None
 
 
 class BinarySensorEntity(Entity):
     """Represent a binary sensor."""
 
     entity_description: BinarySensorEntityDescription
-    _attr_device_class: BinarySensorDeviceClass | str | None
+    _attr_device_class: BinarySensorDeviceClass | None
     _attr_is_on: bool | None = None
     _attr_state: None = None
 
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the binary sensor entity is added to hass."""
+        await super().async_internal_added_to_hass()
+        if self.entity_category == EntityCategory.CONFIG:
+            raise HomeAssistantError(
+                f"Entity {self.entity_id} cannot be added as the entity category is set to config"
+            )
+
+    def _default_to_device_class_name(self) -> bool:
+        """Return True if an unnamed entity should be named by its device class.
+
+        For binary sensors this is True if the entity has a device class.
+        """
+        return self.device_class is not None
+
     @property
-    def device_class(self) -> BinarySensorDeviceClass | str | None:
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
             return self._attr_device_class

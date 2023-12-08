@@ -5,13 +5,9 @@ from typing import Any
 
 import pyvera as veraApi
 
-from homeassistant.components.lock import (
-    DOMAIN as PLATFORM_DOMAIN,
-    ENTITY_ID_FORMAT,
-    LockEntity,
-)
+from homeassistant.components.lock import ENTITY_ID_FORMAT, LockEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -32,7 +28,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             VeraLock(device, controller_data)
-            for device in controller_data.devices.get(PLATFORM_DOMAIN)
+            for device in controller_data.devices[Platform.LOCK]
         ],
         True,
     )
@@ -45,24 +41,18 @@ class VeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
         self, vera_device: veraApi.VeraLock, controller_data: ControllerData
     ) -> None:
         """Initialize the Vera device."""
-        self._state = None
         VeraDevice.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     def lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         self.vera_device.lock()
-        self._state = STATE_LOCKED
+        self._attr_is_locked = True
 
     def unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         self.vera_device.unlock()
-        self._state = STATE_UNLOCKED
-
-    @property
-    def is_locked(self) -> bool | None:
-        """Return true if device is on."""
-        return self._state == STATE_LOCKED
+        self._attr_is_locked = False
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -72,7 +62,7 @@ class VeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
         changed_by_name is a string like 'Bob'.
         low_battery is 1 if an alert fired, 0 otherwise.
         """
-        data = super().extra_state_attributes
+        data = super().extra_state_attributes or {}
 
         last_user = self.vera_device.get_last_user_alert()
         if last_user is not None:
@@ -95,6 +85,4 @@ class VeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
 
     def update(self) -> None:
         """Update state by the Vera device callback."""
-        self._state = (
-            STATE_LOCKED if self.vera_device.is_locked(True) else STATE_UNLOCKED
-        )
+        self._attr_is_locked = self.vera_device.is_locked(True)

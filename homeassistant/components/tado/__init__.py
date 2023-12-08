@@ -3,11 +3,10 @@ from datetime import timedelta
 import logging
 
 from PyTado.interface import Tado
-from PyTado.zone import TadoZone
 from requests import RequestException
 import requests.exceptions
 
-from homeassistant.components.climate.const import PRESET_AWAY, PRESET_HOME
+from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -19,9 +18,14 @@ from homeassistant.util import Throttle
 
 from .const import (
     CONF_FALLBACK,
+    CONST_OVERLAY_MANUAL,
+    CONST_OVERLAY_TADO_DEFAULT,
+    CONST_OVERLAY_TADO_MODE,
+    CONST_OVERLAY_TADO_OPTIONS,
     DATA,
     DOMAIN,
     INSIDE_TEMPERATURE_MEASUREMENT,
+    PRESET_AUTO,
     SIGNAL_TADO_UPDATE_RECEIVED,
     TEMP_OFFSET,
     UPDATE_LISTENER,
@@ -51,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
-    fallback = entry.options.get(CONF_FALLBACK, True)
+    fallback = entry.options.get(CONF_FALLBACK, CONST_OVERLAY_TADO_DEFAULT)
 
     tadoconnector = TadoConnector(hass, username, password, fallback)
 
@@ -90,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         UPDATE_LISTENER: update_listener,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -99,11 +103,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
     options = dict(entry.options)
     if CONF_FALLBACK not in options:
-        options[CONF_FALLBACK] = entry.data.get(CONF_FALLBACK, True)
+        options[CONF_FALLBACK] = entry.data.get(
+            CONF_FALLBACK, CONST_OVERLAY_TADO_DEFAULT
+        )
+        hass.config_entries.async_update_entry(entry, options=options)
+
+    if options[CONF_FALLBACK] not in CONST_OVERLAY_TADO_OPTIONS:
+        if options[CONF_FALLBACK]:
+            options[CONF_FALLBACK] = CONST_OVERLAY_TADO_MODE
+        else:
+            options[CONF_FALLBACK] = CONST_OVERLAY_MANUAL
         hass.config_entries.async_update_entry(entry, options=options)
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -139,6 +152,7 @@ class TadoConnector:
         self.data = {
             "device": {},
             "weather": {},
+            "geofence": {},
             "zone": {},
         }
 
@@ -163,11 +177,7 @@ class TadoConnector:
         """Update the registered zones."""
         self.update_devices()
         self.update_zones()
-        self.data["weather"] = self.tado.getWeather()
-        dispatcher_send(
-            self.hass,
-            SIGNAL_TADO_UPDATE_RECEIVED.format(self.home_id, "weather", "data"),
-        )
+        self.update_home()
 
     def update_devices(self):
         """Update the device data from Tado."""
@@ -213,23 +223,8 @@ class TadoConnector:
             _LOGGER.error("Unable to connect to Tado while updating zones")
             return
 
-        for zone in self.zones:
-            zone_id = zone["id"]
-            _LOGGER.debug("Updating zone %s", zone_id)
-            zone_state = TadoZone(zone_states[str(zone_id)], zone_id)
-
-            self.data["zone"][zone_id] = zone_state
-
-            _LOGGER.debug(
-                "Dispatching update to %s zone %s: %s",
-                self.home_id,
-                zone_id,
-                zone_state,
-            )
-            dispatcher_send(
-                self.hass,
-                SIGNAL_TADO_UPDATE_RECEIVED.format(self.home_id, "zone", zone["id"]),
-            )
+        for zone in zone_states:
+            self.update_zone(int(zone))
 
     def update_zone(self, zone_id):
         """Update the internal data from Tado."""
@@ -253,9 +248,28 @@ class TadoConnector:
             SIGNAL_TADO_UPDATE_RECEIVED.format(self.home_id, "zone", zone_id),
         )
 
+    def update_home(self):
+        """Update the home data from Tado."""
+        try:
+            self.data["weather"] = self.tado.getWeather()
+            self.data["geofence"] = self.tado.getHomeState()
+            dispatcher_send(
+                self.hass,
+                SIGNAL_TADO_UPDATE_RECEIVED.format(self.home_id, "home", "data"),
+            )
+        except RuntimeError:
+            _LOGGER.error(
+                "Unable to connect to Tado while updating weather and geofence data"
+            )
+            return
+
     def get_capabilities(self, zone_id):
         """Return the capabilities of the devices."""
         return self.tado.getCapabilities(zone_id)
+
+    def get_auto_geofencing_supported(self):
+        """Return whether the Tado Home supports auto geofencing."""
+        return self.tado.getAutoGeofencingSupported()
 
     def reset_zone_overlay(self, zone_id):
         """Reset the zone back to the default operation."""
@@ -266,11 +280,17 @@ class TadoConnector:
         self,
         presence=PRESET_HOME,
     ):
-        """Set the presence to home or away."""
+        """Set the presence to home, away or auto."""
         if presence == PRESET_AWAY:
             self.tado.setAway()
         elif presence == PRESET_HOME:
             self.tado.setHome()
+        elif presence == PRESET_AUTO:
+            self.tado.setAuto()
+
+        # Update everything when changing modes
+        self.update_zones()
+        self.update_home()
 
     def set_zone_overlay(
         self,
@@ -285,7 +305,10 @@ class TadoConnector:
     ):
         """Set a zone overlay."""
         _LOGGER.debug(
-            "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s, type=%s, mode=%s fan_speed=%s swing=%s",
+            (
+                "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s,"
+                " type=%s, mode=%s fan_speed=%s swing=%s"
+            ),
             zone_id,
             overlay_mode,
             temperature,

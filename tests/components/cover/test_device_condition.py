@@ -1,14 +1,9 @@
 """The tests for Cover device conditions."""
 import pytest
+from pytest_unordered import unordered
 
 import homeassistant.components.automation as automation
-from homeassistant.components.cover import (
-    DOMAIN,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-)
+from homeassistant.components.cover import DOMAIN, CoverEntityFeature
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import (
     CONF_PLATFORM,
@@ -17,32 +12,24 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
     STATE_UNAVAILABLE,
+    EntityCategory,
 )
-from homeassistant.helpers import device_registry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
-    assert_lists_same,
     async_get_device_automation_capabilities,
     async_get_device_automations,
     async_mock_service,
-    mock_device_registry,
-    mock_registry,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
 
 
 @pytest.fixture
@@ -52,37 +39,57 @@ def calls(hass):
 
 
 @pytest.mark.parametrize(
-    "set_state,features_reg,features_state,expected_condition_types",
+    ("set_state", "features_reg", "features_state", "expected_condition_types"),
     [
         (False, 0, 0, []),
-        (False, SUPPORT_CLOSE, 0, ["is_open", "is_closed", "is_opening", "is_closing"]),
-        (False, SUPPORT_OPEN, 0, ["is_open", "is_closed", "is_opening", "is_closing"]),
-        (False, SUPPORT_SET_POSITION, 0, ["is_position"]),
-        (False, SUPPORT_SET_TILT_POSITION, 0, ["is_tilt_position"]),
+        (
+            False,
+            CoverEntityFeature.CLOSE,
+            0,
+            ["is_open", "is_closed", "is_opening", "is_closing"],
+        ),
+        (
+            False,
+            CoverEntityFeature.OPEN,
+            0,
+            ["is_open", "is_closed", "is_opening", "is_closing"],
+        ),
+        (False, CoverEntityFeature.SET_POSITION, 0, ["is_position"]),
+        (False, CoverEntityFeature.SET_TILT_POSITION, 0, ["is_tilt_position"]),
         (True, 0, 0, []),
-        (True, 0, SUPPORT_CLOSE, ["is_open", "is_closed", "is_opening", "is_closing"]),
-        (True, 0, SUPPORT_OPEN, ["is_open", "is_closed", "is_opening", "is_closing"]),
-        (True, 0, SUPPORT_SET_POSITION, ["is_position"]),
-        (True, 0, SUPPORT_SET_TILT_POSITION, ["is_tilt_position"]),
+        (
+            True,
+            0,
+            CoverEntityFeature.CLOSE,
+            ["is_open", "is_closed", "is_opening", "is_closing"],
+        ),
+        (
+            True,
+            0,
+            CoverEntityFeature.OPEN,
+            ["is_open", "is_closed", "is_opening", "is_closing"],
+        ),
+        (True, 0, CoverEntityFeature.SET_POSITION, ["is_position"]),
+        (True, 0, CoverEntityFeature.SET_TILT_POSITION, ["is_tilt_position"]),
     ],
 )
 async def test_get_conditions(
-    hass,
-    device_reg,
-    entity_reg,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     set_state,
     features_reg,
     features_state,
     expected_condition_types,
-):
+) -> None:
     """Test we get the expected conditions from a cover."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         DOMAIN,
         "test",
         "5678",
@@ -102,35 +109,88 @@ async def test_get_conditions(
             "domain": DOMAIN,
             "type": condition,
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": entity_entry.id,
+            "metadata": {"secondary": False},
         }
         for condition in expected_condition_types
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
     )
-    assert_lists_same(conditions, expected_conditions)
+    assert conditions == unordered(expected_conditions)
+
+
+@pytest.mark.parametrize(
+    ("hidden_by", "entity_category"),
+    (
+        (RegistryEntryHider.INTEGRATION, None),
+        (RegistryEntryHider.USER, None),
+        (None, EntityCategory.CONFIG),
+        (None, EntityCategory.DIAGNOSTIC),
+    ),
+)
+async def test_get_conditions_hidden_auxiliary(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    hidden_by,
+    entity_category,
+) -> None:
+    """Test we get the expected conditions from a hidden or auxiliary entity."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        entity_category=entity_category,
+        hidden_by=hidden_by,
+        supported_features=CoverEntityFeature.CLOSE,
+    )
+    expected_conditions = [
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": condition,
+            "device_id": device_entry.id,
+            "entity_id": entity_entry.id,
+            "metadata": {"secondary": True},
+        }
+        for condition in ["is_open", "is_closed", "is_opening", "is_closing"]
+    ]
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
+    assert conditions == unordered(expected_conditions)
 
 
 async def test_get_condition_capabilities(
-    hass, device_reg, entity_reg, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
     """Test we get the expected capabilities from a cover condition."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     ent = platform.ENTITIES[0]
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
 
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
@@ -143,25 +203,65 @@ async def test_get_condition_capabilities(
         assert capabilities == {"extra_fields": []}
 
 
+async def test_get_condition_capabilities_legacy(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
+    """Test we get the expected capabilities from a cover condition."""
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+    ent = platform.ENTITIES[0]
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", ent.unique_id, device_id=device_entry.id
+    )
+
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
+    assert len(conditions) == 4
+    for condition in conditions:
+        condition["entity_id"] = entity_registry.async_get(
+            condition["entity_id"]
+        ).entity_id
+        capabilities = await async_get_device_automation_capabilities(
+            hass, DeviceAutomationType.CONDITION, condition
+        )
+        assert capabilities == {"extra_fields": []}
+
+
 async def test_get_condition_capabilities_set_pos(
-    hass, device_reg, entity_reg, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
     """Test we get the expected capabilities from a cover condition."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     ent = platform.ENTITIES[1]
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
 
     expected_capabilities = {
         "extra_fields": [
@@ -198,24 +298,27 @@ async def test_get_condition_capabilities_set_pos(
 
 
 async def test_get_condition_capabilities_set_tilt_pos(
-    hass, device_reg, entity_reg, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    enable_custom_integrations: None,
+) -> None:
     """Test we get the expected capabilities from a cover condition."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     ent = platform.ENTITIES[3]
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN, "test", ent.unique_id, device_id=device_entry.id
     )
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
 
     expected_capabilities = {
         "extra_fields": [
@@ -251,9 +354,24 @@ async def test_get_condition_capabilities_set_tilt_pos(
             assert capabilities == {"extra_fields": []}
 
 
-async def test_if_state(hass, calls):
+async def test_if_state(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    calls,
+) -> None:
     """Test for turn_on and turn_off conditions."""
-    hass.states.async_set("cover.entity", STATE_OPEN)
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
+
+    hass.states.async_set(entry.entity_id, STATE_OPEN)
 
     assert await async_setup_component(
         hass,
@@ -266,15 +384,19 @@ async def test_if_state(hass, calls):
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
-                            "entity_id": "cover.entity",
+                            "device_id": device_entry.id,
+                            "entity_id": entry.id,
                             "type": "is_open",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_open - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_open "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -284,15 +406,19 @@ async def test_if_state(hass, calls):
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
-                            "entity_id": "cover.entity",
+                            "device_id": device_entry.id,
+                            "entity_id": entry.id,
                             "type": "is_closed",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_closed - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_closed "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -302,15 +428,19 @@ async def test_if_state(hass, calls):
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
-                            "entity_id": "cover.entity",
+                            "device_id": device_entry.id,
+                            "entity_id": entry.id,
                             "type": "is_opening",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_opening - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_opening "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -320,15 +450,19 @@ async def test_if_state(hass, calls):
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
-                            "entity_id": "cover.entity",
+                            "device_id": device_entry.id,
+                            "entity_id": entry.id,
                             "type": "is_closing",
                         }
                     ],
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_closing - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_closing "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -341,21 +475,21 @@ async def test_if_state(hass, calls):
     assert len(calls) == 1
     assert calls[0].data["some"] == "is_open - event - test_event1"
 
-    hass.states.async_set("cover.entity", STATE_CLOSED)
+    hass.states.async_set(entry.entity_id, STATE_CLOSED)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event2")
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data["some"] == "is_closed - event - test_event2"
 
-    hass.states.async_set("cover.entity", STATE_OPENING)
+    hass.states.async_set(entry.entity_id, STATE_OPENING)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event3")
     await hass.async_block_till_done()
     assert len(calls) == 3
     assert calls[2].data["some"] == "is_opening - event - test_event3"
 
-    hass.states.async_set("cover.entity", STATE_CLOSING)
+    hass.states.async_set(entry.entity_id, STATE_CLOSING)
     hass.bus.async_fire("test_event1")
     hass.bus.async_fire("test_event4")
     await hass.async_block_till_done()
@@ -363,13 +497,85 @@ async def test_if_state(hass, calls):
     assert calls[3].data["some"] == "is_closing - event - test_event4"
 
 
-async def test_if_position(hass, calls, caplog, enable_custom_integrations):
+async def test_if_state_legacy(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    calls,
+) -> None:
+    """Test for turn_on and turn_off conditions."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
+
+    hass.states.async_set(entry.entity_id, STATE_OPEN)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event1"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": device_entry.id,
+                            "entity_id": entry.entity_id,
+                            "type": "is_open",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "is_open "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
+    hass.bus.async_fire("test_event1")
+    hass.bus.async_fire("test_event2")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "is_open - event - test_event1"
+
+
+async def test_if_position(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    calls,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
     """Test for position conditions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     ent = platform.ENTITIES[1]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get(ent.entity_id)
+    entity_registry.async_update_entity(entry.entity_id, device_id=device_entry.id)
 
     assert await async_setup_component(
         hass,
@@ -383,22 +589,30 @@ async def test_if_position(hass, calls, caplog, enable_custom_integrations):
                             "conditions": {
                                 "condition": "device",
                                 "domain": DOMAIN,
-                                "device_id": "",
-                                "entity_id": ent.entity_id,
+                                "device_id": device_entry.id,
+                                "entity_id": entry.id,
                                 "type": "is_position",
                                 "above": 45,
                             },
                             "sequence": {
                                 "service": "test.automation",
                                 "data_template": {
-                                    "some": "is_pos_gt_45 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                                    "some": (
+                                        "is_pos_gt_45 "
+                                        "- {{ trigger.platform }} "
+                                        "- {{ trigger.event.event_type }}"
+                                    )
                                 },
                             },
                         },
                         "default": {
                             "service": "test.automation",
                             "data_template": {
-                                "some": "is_pos_not_gt_45 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                                "some": (
+                                    "is_pos_not_gt_45 "
+                                    "- {{ trigger.platform }} "
+                                    "- {{ trigger.event.event_type }}"
+                                )
                             },
                         },
                     },
@@ -409,8 +623,8 @@ async def test_if_position(hass, calls, caplog, enable_custom_integrations):
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
-                            "entity_id": ent.entity_id,
+                            "device_id": device_entry.id,
+                            "entity_id": entry.id,
                             "type": "is_position",
                             "below": 90,
                         }
@@ -418,7 +632,11 @@ async def test_if_position(hass, calls, caplog, enable_custom_integrations):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_pos_lt_90 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_pos_lt_90 "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -428,8 +646,8 @@ async def test_if_position(hass, calls, caplog, enable_custom_integrations):
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
-                            "entity_id": ent.entity_id,
+                            "device_id": device_entry.id,
+                            "entity_id": entry.id,
                             "type": "is_position",
                             "above": 45,
                             "below": 90,
@@ -438,7 +656,11 @@ async def test_if_position(hass, calls, caplog, enable_custom_integrations):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_pos_gt_45_lt_90 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_pos_gt_45_lt_90 "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -492,13 +714,29 @@ async def test_if_position(hass, calls, caplog, enable_custom_integrations):
         assert record.levelname in ("DEBUG", "INFO")
 
 
-async def test_if_tilt_position(hass, calls, caplog, enable_custom_integrations):
+async def test_if_tilt_position(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    calls,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
     """Test for tilt position conditions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
     ent = platform.ENTITIES[3]
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get(ent.entity_id)
+    entity_registry.async_update_entity(entry.entity_id, device_id=device_entry.id)
 
     assert await async_setup_component(
         hass,
@@ -512,22 +750,30 @@ async def test_if_tilt_position(hass, calls, caplog, enable_custom_integrations)
                             "conditions": {
                                 "condition": "device",
                                 "domain": DOMAIN,
-                                "device_id": "",
-                                "entity_id": ent.entity_id,
+                                "device_id": device_entry.id,
+                                "entity_id": entry.id,
                                 "type": "is_tilt_position",
                                 "above": 45,
                             },
                             "sequence": {
                                 "service": "test.automation",
                                 "data_template": {
-                                    "some": "is_pos_gt_45 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                                    "some": (
+                                        "is_pos_gt_45 "
+                                        "- {{ trigger.platform }} "
+                                        "- {{ trigger.event.event_type }}"
+                                    )
                                 },
                             },
                         },
                         "default": {
                             "service": "test.automation",
                             "data_template": {
-                                "some": "is_pos_not_gt_45 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                                "some": (
+                                    "is_pos_not_gt_45 "
+                                    "- {{ trigger.platform }} "
+                                    "- {{ trigger.event.event_type }}"
+                                )
                             },
                         },
                     },
@@ -538,8 +784,8 @@ async def test_if_tilt_position(hass, calls, caplog, enable_custom_integrations)
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
-                            "entity_id": ent.entity_id,
+                            "device_id": device_entry.id,
+                            "entity_id": entry.id,
                             "type": "is_tilt_position",
                             "below": 90,
                         }
@@ -547,7 +793,11 @@ async def test_if_tilt_position(hass, calls, caplog, enable_custom_integrations)
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_pos_lt_90 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_pos_lt_90 "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -557,8 +807,8 @@ async def test_if_tilt_position(hass, calls, caplog, enable_custom_integrations)
                         {
                             "condition": "device",
                             "domain": DOMAIN,
-                            "device_id": "",
-                            "entity_id": ent.entity_id,
+                            "device_id": device_entry.id,
+                            "entity_id": entry.id,
                             "type": "is_tilt_position",
                             "above": 45,
                             "below": 90,
@@ -567,7 +817,11 @@ async def test_if_tilt_position(hass, calls, caplog, enable_custom_integrations)
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_pos_gt_45_lt_90 - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_pos_gt_45_lt_90 "
+                                "- {{ trigger.platform }} "
+                                "- {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },

@@ -17,7 +17,7 @@ async def async_setup_entry(
     LOGGER.debug("Setting up config entry: %s", entry.unique_id)
 
     # Forward setup to the appropriate platform
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

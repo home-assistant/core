@@ -1,0 +1,70 @@
+{
+  "services": {
+    "power_on": {
+      "name": "Power on",
+      "description": "Power on all devices which supports it."
+    },
+    "select_device": {
+      "name": "Select device",
+      "description": "Select HDMI device.",
+      "fields": {
+        "device": {
+          "name": "[%key:common::config_flow::data::device%]",
+          "description": "Address of device to select. Can be entity_id, physical address or alias from configuration."
+        }
+      }
+    },
+    "send_command": {
+      "name": "Send command",
+      "description": "Sends CEC command into HDMI CEC capable adapter.",
+      "fields": {
+        "att": {
+          "name": "Att",
+          "description": "Optional parameters."
+        },
+        "cmd": {
+          "name": "Command",
+          "description": "Command itself. Could be decimal number or string with hexadeximal notation: \"0x10\"."
+        },
+        "dst": {
+          "name": "Destination",
+          "description": "Destination for command. Could be decimal number or string with hexadeximal notation: \"0x10\"."
+        },
+        "raw": {
+          "name": "Raw",
+          "description": "Raw CEC command in format \"00:00:00:00\" where first two digits are source and destination, second byte is command and optional other bytes are command parameters. If raw command specified, other params are ignored."
+        },
+        "src": {
+          "name": "Source",
+          "description": "Source of command. Could be decimal number or string with hexadeximal notation: \"0x10\"."
+        }
+      }
+    },
+    "standby": {
+      "name": "[%key:common::state::standby%]",
+      "description": "Standby all devices which supports it."
+    },
+    "update": {
+      "name": "Update",
+      "description": "Updates devices state from network."
+    },
+    "volume": {
+      "name": "Volume",
+      "description": "Increases or decreases volume of system.",
+      "fields": {
+        "down": {
+          "name": "Down",
+          "description": "Decreases volume x levels."
+        },
+        "mute": {
+          "name": "Mute",
+          "description": "Mutes audio system."
+        },
+        "up": {
+          "name": "Up",
+          "description": "Increases volume x levels."
+        }
+      }
+    }
+  }
+}

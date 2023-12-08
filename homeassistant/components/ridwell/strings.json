@@ -24,5 +24,17 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "next_pickup": {
+        "name": "Next pickup"
+      }
+    },
+    "switch": {
+      "opt_in": {
+        "name": "Opt-in to next pickup"
+      }
+    }
   }
 }
