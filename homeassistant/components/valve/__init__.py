@@ -228,10 +228,9 @@ class ValveEntity(Entity):
 
     def close_valve(self) -> None:
         """Close valve."""
-        if ValveEntityFeature.SET_POSITION | self.supported_features:
-            self.set_valve_position(0)
-        else:
+        if not (ValveEntityFeature.SET_POSITION | self.supported_features):
             raise NotImplementedError()
+        self.set_valve_position(0)
 
     async def async_close_valve(self) -> None:
         """Close valve."""
