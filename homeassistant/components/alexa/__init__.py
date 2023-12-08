@@ -35,6 +35,12 @@ from .const import (
 CONF_FLASH_BRIEFINGS = "flash_briefings"
 CONF_SMART_HOME = "smart_home"
 DEFAULT_LOCALE = "en-US"
+VALID_ENDPOINTS = [
+    "https://api.amazonalexa.com/v3/events",
+    "https://api.eu.amazonalexa.com/v3/events",
+    "https://api.fe.amazonalexa.com/v3/events",
+]
+
 
 ALEXA_ENTITY_SCHEMA = vol.Schema(
     {
@@ -46,7 +52,7 @@ ALEXA_ENTITY_SCHEMA = vol.Schema(
 
 SMART_HOME_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_ENDPOINT): cv.string,
+        vol.Optional(CONF_ENDPOINT): vol.All(vol.Lower, vol.In(VALID_ENDPOINTS)),
         vol.Optional(CONF_CLIENT_ID): cv.string,
         vol.Optional(CONF_CLIENT_SECRET): cv.string,
         vol.Optional(CONF_LOCALE, default=DEFAULT_LOCALE): vol.In(
