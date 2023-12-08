@@ -24,11 +24,30 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "not_in_pairing_mode": "Device not in pairing mode",
+      "incorrect_api_key": "Wrong API key provided",
       "unknown_error": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_not_in_pairing_mode": {
+      "title": "The Decora YAML configuration import failed",
+      "description": "Configuring Decora bluetooth switches using YAML is being removed but there was a connection error importing your YAML configuration.\n\nPut the device in pairing mode and restart Home Assistant to try again or remove the Decora YAML configuration from your configuration.yaml file and continue to [set up the integration](/config/integrations/dashboard/add?domain=decora) manually."
+    },
+    "deprecated_yaml_import_issue_wrong_api_key": {
+      "title": "The Decora YAML configuration import failed",
+      "description": "Configuring Decora bluetooth switches using YAML is being removed but there was an authentication error importing your YAML configuration.\n\nCorrect the YAML configuration and restart Home Assistant to try again or remove the Decora YAML configuration from your configuration.yaml file and continue to [set up the integration](/config/integrations/dashboard/add?domain=decora) manually."
+    },
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "title": "The Decora YAML configuration import failed",
+      "description": "Configuring Decora bluetooth switches using YAML is being removed but there was a connection error importing your YAML configuration.\n\nEnsure the connection to the switch via bluetooth works and restart Home Assistant to try again or remove the Decora YAML configuration from your configuration.yaml file and continue to [set up the integration](/config/integrations/dashboard/add?domain=decora) manually."
+    },
+    "deprecated_yaml_import_issue_unknown_error": {
+      "title": "The Decora YAML configuration import failed",
+      "description": "Configuring Decora bluetooth switches using YAML is being removed but there was an unknown error importing your YAML configuration.\n\nCorrect the YAML configuration and restart Home Assistant to try again or remove the Decora YAML configuration from your configuration.yaml file and continue to [set up the integration](/config/integrations/dashboard/add?domain=decora) manually."
     }
   }
 }

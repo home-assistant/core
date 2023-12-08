@@ -40,6 +40,22 @@ def patch_decora_ble_get_api_key_fail_with_exception(ex):
     )
 
 
+def patch_decora_ble_connect_success():
+    """Patch Decora BLE connect call to return a given value."""
+    return patch(
+        "decora_bleak.DecoraBLEDevice.connect",
+        return_value=None,
+    )
+
+
+def patch_decora_ble_connect_fail_with_exception(ex):
+    """Patch Decora BLE connect call to raise an exception."""
+    return patch(
+        "decora_bleak.DecoraBLEDevice.connect",
+        MagicMock(side_effect=ex),
+    )
+
+
 DECORA_BLE_SERVICE_INFO = BluetoothServiceInfo(
     name="Leviton DD710 v6.4",
     address="11:22:33:44:55:66",
