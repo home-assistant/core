@@ -34,7 +34,11 @@ class SerializationError(HomeAssistantError):
 
 
 def json_loads(__obj: bytes | bytearray | memoryview | str) -> JsonValueType:
-    """Parse JSON data."""
+    """Parse JSON data.
+    
+    This adds a workaround for orjson not handling subclasses of str,
+    https://github.com/ijl/orjson/issues/445.
+    """
     if type(__obj) in (bytes, bytearray, memoryview, str):
         return orjson.loads(__obj)  # type:ignore[no-any-return]
     if isinstance(__obj, str):
