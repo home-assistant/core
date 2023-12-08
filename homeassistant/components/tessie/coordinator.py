@@ -37,7 +37,7 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator):
             update_method=self.async_update_data,
             update_interval=timedelta(seconds=TESSIE_SYNC_INTERVAL),
         )
-        self.api_key: str = api_key
+        self.api_key = api_key
         self.vin: str = vin
         self.session: ClientSession = async_get_clientsession(hass)
         self.data = self._flattern(data)
