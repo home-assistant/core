@@ -35,6 +35,9 @@ from .const import (
 CONF_FLASH_BRIEFINGS = "flash_briefings"
 CONF_SMART_HOME = "smart_home"
 DEFAULT_LOCALE = "en-US"
+
+# Alexa Smart Home API send events gateway endpoints
+# https://developer.amazon.com/en-US/docs/alexa/smarthome/send-events.html#endpoints
 VALID_ENDPOINTS = [
     "https://api.amazonalexa.com/v3/events",
     "https://api.eu.amazonalexa.com/v3/events",
