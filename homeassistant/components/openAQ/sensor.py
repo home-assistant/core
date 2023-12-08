@@ -24,7 +24,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, ICON, OPENAQ_PARAMETERS
+from .const import DOMAIN, ICON_AIR, ICON_TIME, OPENAQ_PARAMETERS
 from .coordinator import OpenAQDataCoordinator
 
 
@@ -129,12 +129,15 @@ class OpenAQSensor(CoordinatorEntity[OpenAQDataCoordinator], SensorEntity):
                 identifiers={(DOMAIN, self.station_id)},
             )
         )
-        self._attr_icon = ICON
+        if self.metric == SensorDeviceClass.TIMESTAMP:
+            self._attr_icon = ICON_TIME
+        else:
+            self._attr_icon = ICON_AIR
 
     @property
     def should_poll(self) -> bool:
         """Return True as entity has to be polled for state."""
-        return True
+        return False  # This is handled using the coordinator
 
     @property
     def state_class(self):
@@ -151,13 +154,6 @@ class OpenAQSensor(CoordinatorEntity[OpenAQDataCoordinator], SensorEntity):
         """Return the state of the sensor, rounding if a number."""
         name = self.entity_description.key
         if self.metric == SensorDeviceClass.TIMESTAMP:
-            if (
-                self.coordinator.data.get(name) is None
-            ):  # The datetime from the response key got updated so we check for both keys
-                return datetime.strptime(
-                    self.coordinator.data.get(self.entity_description.name.lower()),
-                    "%Y-%m-%dT%H:%M:%S%z",  # The datetime from the response will be a string that needs to be converted
-                )
             return datetime.strptime(
                 self.coordinator.data.get(name),
                 "%Y-%m-%dT%H:%M:%S%z",  # The datetime from the response will be a string that needs to be converted
