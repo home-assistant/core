@@ -1954,7 +1954,7 @@ def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
     relative_time_template = (
         '{{relative_time(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}'
     )
-    with patch("homeassistant.util.dt.now", return_value=now):
+    with freeze_time(now):
         result = template.Template(
             relative_time_template,
             hass,
@@ -1991,30 +1991,6 @@ def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
         ).async_render()
         assert result == "1 hour"
 
-        result = template.Template(
-            '{{relative_time(strptime("2000-01-01 03:30:00 -06:00", "%Y-%m-%d %H:%M:%S %z"))}}',
-            hass,
-        ).async_render()
-        assert result == "30 minutes"
-
-        result = template.Template(
-            '{{relative_time(strptime("2000-01-01 08:20:00", "%Y-%m-%d %H:%M:%S"))}}',
-            hass,
-        ).async_render()
-        assert result == "2 hours"
-
-        result = template.Template(
-            '{{relative_time(strptime("2000-01-01 08:20:00", "%Y-%m-%d %H:%M:%S"),depth=2)}}',
-            hass,
-        ).async_render()
-        assert result == "1 hour 40 minutes"
-
-        result = template.Template(
-            '{{relative_time(strptime("2000-01-01 08:00:59", "%Y-%m-%d %H:%M:%S"),depth=10)}}',
-            hass,
-        ).async_render()
-        assert result == "1 hour 59 minutes 1 second"
-
         result1 = str(
             template.strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
         )
@@ -2034,24 +2010,339 @@ def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
         assert result1 == result2
 
         result = template.Template(
-            '{{relative_time(strptime("2000-01-01 11:00:00", "%Y-%m-%d %H:%M:%S"),is_future=True)}}',
-            hass,
-        ).async_render()
-        assert result == "1 hour"
-
-        result = template.Template(
-            '{{relative_time(strptime("2000-01-01 09:59:59", "%Y-%m-%d %H:%M:%S"),is_future=True)}}',
-            hass,
-        ).async_render()
-        assert result == "0 seconds"
-
-        result = template.Template(
             '{{relative_time("string")}}',
             hass,
         ).async_render()
         assert result == "string"
 
         info = template.Template(relative_time_template, hass).async_render_to_info()
+        assert info.has_time is True
+
+
+@patch(
+    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
+    return_value=True,
+)
+def test_time_since(mock_is_safe, hass: HomeAssistant) -> None:
+    """Test time_since method."""
+    hass.config.set_time_zone("UTC")
+    now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+    time_since_template = (
+        '{{time_since(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}'
+    )
+    with freeze_time(now):
+        result = template.Template(
+            time_since_template,
+            hass,
+        ).async_render()
+        assert result == "1 hour"
+
+        result = template.Template(
+            (
+                "{{"
+                "  time_since("
+                "    strptime("
+                '        "2000-01-01 09:00:00 +01:00",'
+                '        "%Y-%m-%d %H:%M:%S %z"'
+                "    )"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "2 hours"
+
+        result = template.Template(
+            (
+                "{{"
+                "  time_since("
+                "    strptime("
+                '       "2000-01-01 03:00:00 -06:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"'
+                "    )"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "1 hour"
+
+        result1 = str(
+            template.strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+        )
+        result2 = template.Template(
+            (
+                "{{"
+                "  time_since("
+                "    strptime("
+                '       "2000-01-01 11:00:00 +00:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"),'
+                "    precision = 2"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result1 == result2
+
+        result = template.Template(
+            (
+                "{{"
+                "  time_since("
+                "    strptime("
+                '        "2000-01-01 09:05:00 +01:00",'
+                '        "%Y-%m-%d %H:%M:%S %z"),'
+                "       precision=2"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "1 hour 55 minutes"
+
+        result = template.Template(
+            (
+                "{{"
+                "  time_since("
+                "    strptime("
+                '       "2000-01-01 02:05:27 -06:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"),'
+                "       precision = 3"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "1 hour 54 minutes 33 seconds"
+        result = template.Template(
+            (
+                "{{"
+                "  time_since("
+                "    strptime("
+                '       "2000-01-01 02:05:27 -06:00",'
+                '       "%Y-%m-%d %H:%M:%S %z")'
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "2 hours"
+        result = template.Template(
+            (
+                "{{"
+                "  time_since("
+                "    strptime("
+                '       "1999-02-01 02:05:27 -06:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"),'
+                "       precision = 0"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "11 months 4 days 1 hour 54 minutes 33 seconds"
+        result = template.Template(
+            (
+                "{{"
+                "  time_since("
+                "    strptime("
+                '       "1999-02-01 02:05:27 -06:00",'
+                '       "%Y-%m-%d %H:%M:%S %z")'
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "11 months"
+        result1 = str(
+            template.strptime("2000-01-01 11:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+        )
+        result2 = template.Template(
+            (
+                "{{"
+                "  time_since("
+                "    strptime("
+                '       "2000-01-01 11:00:00 +00:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"),'
+                "       precision=3"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result1 == result2
+
+        result = template.Template(
+            '{{time_since("string")}}',
+            hass,
+        ).async_render()
+        assert result == "string"
+
+        info = template.Template(time_since_template, hass).async_render_to_info()
+        assert info.has_time is True
+
+
+@patch(
+    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
+    return_value=True,
+)
+def test_time_until(mock_is_safe, hass: HomeAssistant) -> None:
+    """Test time_until method."""
+    hass.config.set_time_zone("UTC")
+    now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+    time_until_template = (
+        '{{time_until(strptime("2000-01-01 11:00:00", "%Y-%m-%d %H:%M:%S"))}}'
+    )
+    with freeze_time(now):
+        result = template.Template(
+            time_until_template,
+            hass,
+        ).async_render()
+        assert result == "1 hour"
+
+        result = template.Template(
+            (
+                "{{"
+                "  time_until("
+                "    strptime("
+                '        "2000-01-01 13:00:00 +01:00",'
+                '        "%Y-%m-%d %H:%M:%S %z"'
+                "    )"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "2 hours"
+
+        result = template.Template(
+            (
+                "{{"
+                "  time_until("
+                "    strptime("
+                '       "2000-01-01 05:00:00 -06:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"'
+                "    )"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "1 hour"
+
+        result1 = str(
+            template.strptime("2000-01-01 09:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+        )
+        result2 = template.Template(
+            (
+                "{{"
+                "  time_until("
+                "    strptime("
+                '       "2000-01-01 09:00:00 +00:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"),'
+                "    precision = 2"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result1 == result2
+
+        result = template.Template(
+            (
+                "{{"
+                "  time_until("
+                "    strptime("
+                '        "2000-01-01 12:05:00 +01:00",'
+                '        "%Y-%m-%d %H:%M:%S %z"),'
+                "       precision=2"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "1 hour 5 minutes"
+
+        result = template.Template(
+            (
+                "{{"
+                "  time_until("
+                "    strptime("
+                '       "2000-01-01 05:54:33 -06:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"),'
+                "       precision = 3"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "1 hour 54 minutes 33 seconds"
+        result = template.Template(
+            (
+                "{{"
+                "  time_until("
+                "    strptime("
+                '       "2000-01-01 05:54:33 -06:00",'
+                '       "%Y-%m-%d %H:%M:%S %z")'
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "2 hours"
+        result = template.Template(
+            (
+                "{{"
+                "  time_until("
+                "    strptime("
+                '       "2001-02-01 05:54:33 -06:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"),'
+                "       precision = 0"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "1 year 1 month 2 days 1 hour 54 minutes 33 seconds"
+        result = template.Template(
+            (
+                "{{"
+                "  time_until("
+                "    strptime("
+                '       "2001-02-01 05:54:33 -06:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"),'
+                "       precision = 4"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result == "1 year 1 month 2 days 2 hours"
+        result1 = str(
+            template.strptime("2000-01-01 09:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
+        )
+        result2 = template.Template(
+            (
+                "{{"
+                "  time_until("
+                "    strptime("
+                '       "2000-01-01 09:00:00 +00:00",'
+                '       "%Y-%m-%d %H:%M:%S %z"),'
+                "       precision=3"
+                "  )"
+                "}}"
+            ),
+            hass,
+        ).async_render()
+        assert result1 == result2
+
+        result = template.Template(
+            '{{time_until("string")}}',
+            hass,
+        ).async_render()
+        assert result == "string"
+
+        info = template.Template(time_until_template, hass).async_render_to_info()
         assert info.has_time is True
 
 
