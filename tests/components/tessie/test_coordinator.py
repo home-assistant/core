@@ -1,8 +1,12 @@
 """Test the Tessie sensor platform."""
+from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.components.tessie.const import DOMAIN, TessieStatus
+import pytest
+
+from homeassistant.components.tessie.coordinator import TESSIE_SYNC_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.util.dt import utcnow
 
 from .common import (
     ERROR_CONNECTION,
@@ -13,52 +17,69 @@ from .common import (
     setup_platform,
 )
 
+from tests.common import async_fire_time_changed
 
-async def test_coordinator(hass: HomeAssistant) -> None:
-    """Tests that the sensors are correct."""
+WAIT = timedelta(seconds=TESSIE_SYNC_INTERVAL)
 
-    entry = await setup_platform(hass)
-    coordinator = hass.data[DOMAIN][entry.entry_id][0]
 
+@pytest.fixture
+def mock_get_state():
+    """Mock get_state function."""
     with patch(
         "homeassistant.components.tessie.coordinator.get_state",
-        return_value=TEST_VEHICLE_STATE_ONLINE,
     ) as mock_get_state:
-        await coordinator.async_refresh()
-        assert coordinator.last_update_success is True
-        assert coordinator.data["state"] == TessieStatus.ONLINE
-        mock_get_state.assert_called_once()
+        yield mock_get_state
 
-    with patch(
-        "homeassistant.components.tessie.coordinator.get_state",
-        return_value=TEST_VEHICLE_STATE_ASLEEP,
-    ) as mock_get_state:
-        await coordinator.async_refresh()
-        assert coordinator.last_update_success is True
-        assert coordinator.data["state"] == TessieStatus.ASLEEP
-        mock_get_state.assert_called_once()
 
-    with patch(
-        "homeassistant.components.tessie.coordinator.get_state",
-        side_effect=ERROR_TIMEOUT,
-    ) as mock_get_state:
-        await coordinator.async_refresh()
-        assert coordinator.last_update_success is True
-        assert coordinator.data["state"] == TessieStatus.OFFLINE
-        mock_get_state.assert_called_once()
+async def test_coordinator_online(hass: HomeAssistant, mock_get_state) -> None:
+    """Tests that the coordinator handles online vehciles."""
 
-    with patch(
-        "homeassistant.components.tessie.coordinator.get_state",
-        side_effect=ERROR_UNKNOWN,
-    ) as mock_get_state:
-        await coordinator.async_refresh()
-        assert coordinator.last_update_success is False
-        mock_get_state.assert_called_once()
+    mock_get_state.return_value = TEST_VEHICLE_STATE_ONLINE
+    await setup_platform(hass)
 
-    with patch(
-        "homeassistant.components.tessie.coordinator.get_state",
-        side_effect=ERROR_CONNECTION,
-    ) as mock_get_state:
-        await coordinator.async_refresh()
-        assert coordinator.last_update_success is False
-        mock_get_state.assert_called_once()
+    async_fire_time_changed(hass, utcnow() + WAIT)
+    await hass.async_block_till_done()
+    mock_get_state.assert_called_once()
+
+
+async def test_coordinator_asleep(hass: HomeAssistant, mock_get_state) -> None:
+    """Tests that the coordinator handles asleep vehicles."""
+
+    mock_get_state.return_value = TEST_VEHICLE_STATE_ASLEEP
+    await setup_platform(hass)
+
+    async_fire_time_changed(hass, utcnow() + WAIT)
+    await hass.async_block_till_done()
+    mock_get_state.assert_called_once()
+
+
+async def test_coordinator_clienterror(hass: HomeAssistant, mock_get_state) -> None:
+    """Tests that the coordinator handles client errors."""
+
+    mock_get_state.side_effect = ERROR_UNKNOWN
+    await setup_platform(hass)
+
+    async_fire_time_changed(hass, utcnow() + WAIT)
+    await hass.async_block_till_done()
+    mock_get_state.assert_called_once()
+
+
+async def test_coordinator_timeout(hass: HomeAssistant, mock_get_state) -> None:
+    """Tests that the coordinator handles timeout errors."""
+
+    mock_get_state.side_effect = ERROR_TIMEOUT
+    await setup_platform(hass)
+
+    async_fire_time_changed(hass, utcnow() + WAIT)
+    await hass.async_block_till_done()
+    mock_get_state.assert_called_once()
+
+
+async def test_coordinator_connection(hass: HomeAssistant, mock_get_state) -> None:
+    """Tests that the coordinator handles connection errors."""
+
+    mock_get_state.side_effect = ERROR_CONNECTION
+    await setup_platform(hass)
+    async_fire_time_changed(hass, utcnow() + WAIT)
+    await hass.async_block_till_done()
+    mock_get_state.assert_called_once()
