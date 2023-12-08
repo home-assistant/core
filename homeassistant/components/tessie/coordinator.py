@@ -38,8 +38,8 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=TESSIE_SYNC_INTERVAL),
         )
         self.api_key = api_key
-        self.vin: str = vin
-        self.session: ClientSession = async_get_clientsession(hass)
+        self.vin = vin
+        self.session = async_get_clientsession(hass)
         self.data = self._flattern(data)
 
     async def async_update_data(self) -> dict[str, Any]:
