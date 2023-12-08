@@ -5,7 +5,6 @@ from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -18,12 +17,10 @@ async def async_setup_entry(
     """Set up Vogel's MotionMount from a config entry."""
     mm: motionmount.MotionMount = hass.data[DOMAIN][entry.entry_id]
 
-    unique_id = format_mac(mm.mac.hex())
-
     async_add_entities(
         (
-            MotionMountExtension(mm, unique_id, entry),
-            MotionMountTurn(mm, unique_id, entry),
+            MotionMountExtension(mm, entry),
+            MotionMountTurn(mm, entry),
         )
     )
 
@@ -36,12 +33,10 @@ class MotionMountExtension(MotionMountEntity, NumberEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_translation_key = "motionmount_extension"
 
-    def __init__(
-        self, mm: motionmount.MotionMount, unique_id: str, config_entry: ConfigEntry
-    ) -> None:
+    def __init__(self, mm: motionmount.MotionMount, config_entry: ConfigEntry) -> None:
         """Initialize Extension number."""
         super().__init__(mm, config_entry)
-        self._attr_unique_id = f"{unique_id}-extension"
+        self._attr_unique_id = f"{self._base_unique_id}-extension"
 
     @property
     def native_value(self) -> float:
@@ -61,12 +56,10 @@ class MotionMountTurn(MotionMountEntity, NumberEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_translation_key = "motionmount_turn"
 
-    def __init__(
-        self, mm: motionmount.MotionMount, unique_id: str, config_entry: ConfigEntry
-    ) -> None:
+    def __init__(self, mm: motionmount.MotionMount, config_entry: ConfigEntry) -> None:
         """Initialize Turn number."""
         super().__init__(mm, config_entry)
-        self._attr_unique_id = f"{unique_id}-turn"
+        self._attr_unique_id = f"{self._base_unique_id}-turn"
 
     @property
     def native_value(self) -> float:

@@ -21,6 +21,13 @@ class MotionMountEntity(Entity):
         self.mm = mm
         mac = format_mac(mm.mac.hex())
 
+        # Create a base unique id
+        if mac == EMPTY_MAC:
+            self._base_unique_id = config_entry.entry_id
+        else:
+            self._base_unique_id = mac
+
+        # Set device info
         self._attr_device_info = DeviceInfo(
             name=mm.name,
             manufacturer="Vogel's",
