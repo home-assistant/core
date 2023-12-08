@@ -1,4 +1,6 @@
 """Tessie integration."""
+import logging
+
 from aiohttp import ClientError, ClientResponseError
 from tessie_api import get_state_of_all_vehicles
 
@@ -13,6 +15,8 @@ from .coordinator import TessieDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tessie config."""
@@ -24,10 +28,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             api_key=api_key,
             only_active=True,
         )
-    except ClientResponseError as e:
-        _LOGGER.error("......")
-        return False
+    except ClientResponseError:
         # Reauth will go here
+        _LOGGER.error("Setup failed, unable to connect to Tessie")
+        return False
     except ClientError as e:
         raise ConfigEntryNotReady from e
 
