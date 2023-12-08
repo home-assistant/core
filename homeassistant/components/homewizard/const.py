@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+import logging
 
 from homewizard_energy.models import Data, Device, State, System
 
@@ -10,6 +11,8 @@ from homeassistant.const import Platform
 
 DOMAIN = "homewizard"
 PLATFORMS = [Platform.BUTTON, Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
+
+LOGGER = logging.getLogger(__package__)
 
 # Platform config.
 CONF_API_ENABLED = "api_enabled"
