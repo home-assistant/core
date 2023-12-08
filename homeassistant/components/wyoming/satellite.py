@@ -9,6 +9,7 @@ import wave
 from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioChunkConverter, AudioStart, AudioStop
 from wyoming.client import AsyncTcpClient
+from wyoming.error import Error
 from wyoming.pipeline import PipelineStage, RunPipeline
 from wyoming.satellite import RunSatellite
 from wyoming.tts import Synthesize, SynthesizeVoice
@@ -227,6 +228,7 @@ class WyomingSatellite:
                     end_stage=end_stage,
                     tts_audio_output="wav",
                     pipeline_id=pipeline_id,
+                    device_id=self.device.device_id,
                 )
             )
 
@@ -321,6 +323,16 @@ class WyomingSatellite:
             if event.data and (tts_output := event.data["tts_output"]):
                 media_id = tts_output["media_id"]
                 self.hass.add_job(self._stream_tts(media_id))
+        elif event.type == assist_pipeline.PipelineEventType.ERROR:
+            # Pipeline error
+            if event.data:
+                self.hass.add_job(
+                    self._client.write_event(
+                        Error(
+                            text=event.data["message"], code=event.data["code"]
+                        ).event()
+                    )
+                )
 
     async def _connect(self) -> None:
         """Connect to satellite over TCP."""
