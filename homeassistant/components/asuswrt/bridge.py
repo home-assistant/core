@@ -55,7 +55,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 _AsusWrtBridgeT = TypeVar("_AsusWrtBridgeT", bound="AsusWrtBridge")
-_FuncType = Callable[[_AsusWrtBridgeT], Awaitable[list[Any] | dict[str, Any]]]
+_FuncType = Callable[
+    [_AsusWrtBridgeT], Awaitable[list[Any] | tuple[Any] | dict[str, Any]]
+]
 _ReturnFuncType = Callable[[_AsusWrtBridgeT], Coroutine[Any, Any, dict[str, Any]]]
 
 
@@ -81,7 +83,7 @@ def handle_errors_and_zip(
 
             if isinstance(data, dict):
                 return dict(zip(keys, list(data.values())))
-            if not isinstance(data, list):
+            if not isinstance(data, (list, tuple)):
                 raise UpdateFailed("Received invalid data type")
             return dict(zip(keys, data))
 
