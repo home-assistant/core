@@ -40,7 +40,7 @@ async def apply_stop_hass(stop_hass: None) -> None:
     """Make sure all hass are stopped."""
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def mock_http_start_stop() -> Generator[None, None, None]:
     """Mock HTTP start and stop."""
     with patch(
@@ -719,7 +719,7 @@ async def test_setup_hass_invalid_core_config(
     event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test it works."""
-    with patch("homeassistant.config.async_notify_setup_error") as mock_notify:
+    with patch("homeassistant.bootstrap.async_notify_setup_error") as mock_notify:
         hass = await bootstrap.async_setup_hass(
             runner.RuntimeConfig(
                 config_dir=get_test_config_dir(),

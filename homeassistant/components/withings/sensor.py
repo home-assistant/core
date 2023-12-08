@@ -424,10 +424,11 @@ ACTIVITY_SENSORS = [
     ),
     WithingsActivitySensorEntityDescription(
         key="activity_floors_climbed_today",
-        value_fn=lambda activity: activity.floors_climbed,
-        translation_key="activity_floors_climbed_today",
+        value_fn=lambda activity: activity.elevation,
+        translation_key="activity_elevation_today",
         icon="mdi:stairs-up",
-        native_unit_of_measurement="floors",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL,
     ),
     WithingsActivitySensorEntityDescription(
@@ -568,10 +569,11 @@ WORKOUT_SENSORS = [
     ),
     WithingsWorkoutSensorEntityDescription(
         key="workout_floors_climbed",
-        value_fn=lambda workout: workout.floors_climbed,
-        translation_key="workout_floors_climbed",
+        value_fn=lambda workout: workout.elevation,
+        translation_key="workout_elevation",
         icon="mdi:stairs-up",
-        native_unit_of_measurement="floors",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
     ),
     WithingsWorkoutSensorEntityDescription(
         key="workout_intensity",

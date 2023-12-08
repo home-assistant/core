@@ -9,7 +9,7 @@ from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 import logging
 from pathlib import Path
-from queue import Queue
+from queue import Empty, Queue
 from threading import Thread
 import time
 from typing import TYPE_CHECKING, Any, Final, cast
@@ -1010,8 +1010,8 @@ class PipelineRun:
         self.tts_engine = engine
         self.tts_options = tts_options
 
-    async def text_to_speech(self, tts_input: str) -> str:
-        """Run text-to-speech portion of pipeline. Returns URL of TTS audio."""
+    async def text_to_speech(self, tts_input: str) -> None:
+        """Run text-to-speech portion of pipeline."""
         self.process_event(
             PipelineEvent(
                 PipelineEventType.TTS_START,
@@ -1024,42 +1024,39 @@ class PipelineRun:
             )
         )
 
-        try:
-            # Synthesize audio and get URL
-            tts_media_id = tts_generate_media_source_id(
-                self.hass,
-                tts_input,
-                engine=self.tts_engine,
-                language=self.pipeline.tts_language,
-                options=self.tts_options,
-            )
-            tts_media = await media_source.async_resolve_media(
-                self.hass,
-                tts_media_id,
-                None,
-            )
-        except Exception as src_error:
-            _LOGGER.exception("Unexpected error during text-to-speech")
-            raise TextToSpeechError(
-                code="tts-failed",
-                message="Unexpected error during text-to-speech",
-            ) from src_error
+        if tts_input := tts_input.strip():
+            try:
+                # Synthesize audio and get URL
+                tts_media_id = tts_generate_media_source_id(
+                    self.hass,
+                    tts_input,
+                    engine=self.tts_engine,
+                    language=self.pipeline.tts_language,
+                    options=self.tts_options,
+                )
+                tts_media = await media_source.async_resolve_media(
+                    self.hass,
+                    tts_media_id,
+                    None,
+                )
+            except Exception as src_error:
+                _LOGGER.exception("Unexpected error during text-to-speech")
+                raise TextToSpeechError(
+                    code="tts-failed",
+                    message="Unexpected error during text-to-speech",
+                ) from src_error
 
-        _LOGGER.debug("TTS result %s", tts_media)
+            _LOGGER.debug("TTS result %s", tts_media)
+            tts_output = {
+                "media_id": tts_media_id,
+                **asdict(tts_media),
+            }
+        else:
+            tts_output = {}
 
         self.process_event(
-            PipelineEvent(
-                PipelineEventType.TTS_END,
-                {
-                    "tts_output": {
-                        "media_id": tts_media_id,
-                        **asdict(tts_media),
-                    }
-                },
-            )
+            PipelineEvent(PipelineEventType.TTS_END, {"tts_output": tts_output})
         )
-
-        return tts_media.url
 
     def _capture_chunk(self, audio_bytes: bytes | None) -> None:
         """Forward audio chunk to various capturing mechanisms."""
@@ -1247,6 +1244,8 @@ def _pipeline_debug_recording_thread_proc(
                 # Chunk of 16-bit mono audio at 16Khz
                 if wav_writer is not None:
                     wav_writer.writeframes(message)
+    except Empty:
+        pass  # occurs when pipeline has unexpected error
     except Exception:  # pylint: disable=broad-exception-caught
         _LOGGER.exception("Unexpected error in debug recording thread")
     finally:
@@ -1315,9 +1314,9 @@ class PipelineInput:
                 if stt_audio_buffer:
                     # Send audio in the buffer first to speech-to-text, then move on to stt_stream.
                     # This is basically an async itertools.chain.
-                    async def buffer_then_audio_stream() -> AsyncGenerator[
-                        ProcessedAudioChunk, None
-                    ]:
+                    async def buffer_then_audio_stream() -> (
+                        AsyncGenerator[ProcessedAudioChunk, None]
+                    ):
                         # Buffered audio
                         for chunk in stt_audio_buffer:
                             yield chunk

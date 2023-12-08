@@ -1,10 +1,8 @@
 """The Overkiz (by Somfy) integration."""
 from __future__ import annotations
 
-import asyncio
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import cast
 
 from aiohttp import ClientError
 from pyoverkiz.client import OverkizClient
@@ -16,7 +14,7 @@ from pyoverkiz.exceptions import (
     NotSuchTokenException,
     TooManyRequestsException,
 )
-from pyoverkiz.models import Device, OverkizServer, Scenario, Setup
+from pyoverkiz.models import Device, OverkizServer, Scenario
 from pyoverkiz.utils import generate_local_server
 
 from homeassistant.config_entries import ConfigEntry
@@ -82,13 +80,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await client.login()
+        setup = await client.get_setup()
 
-        setup, scenarios = await asyncio.gather(
-            *[
-                client.get_setup(),
-                client.get_scenarios(),
-            ]
-        )
+        # Local API does expose scenarios, but they are not functional.
+        # Tracked in https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode/issues/21
+        if api_type == APIType.CLOUD:
+            scenarios = await client.get_scenarios()
+        else:
+            scenarios = []
     except (BadCredentialsException, NotSuchTokenException) as exception:
         raise ConfigEntryAuthFailed("Invalid authentication") from exception
     except TooManyRequestsException as exception:
@@ -97,9 +96,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady("Failed to connect") from exception
     except MaintenanceException as exception:
         raise ConfigEntryNotReady("Server is down for maintenance") from exception
-
-    setup = cast(Setup, setup)
-    scenarios = cast(list[Scenario], scenarios)
 
     coordinator = OverkizDataUpdateCoordinator(
         hass,

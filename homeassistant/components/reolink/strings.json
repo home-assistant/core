@@ -10,6 +10,9 @@
           "use_https": "Enable HTTPS",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Reolink device. For example: '192.168.1.25'."
         }
       },
       "reauth_confirm": {
