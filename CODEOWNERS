@@ -205,7 +205,7 @@ build.json @home-assistant/supervisor
 /tests/components/cloud/ @home-assistant/cloud
 /homeassistant/components/cloudflare/ @ludeeus @ctalkington
 /tests/components/cloudflare/ @ludeeus @ctalkington
-/homeassistant/components/co2signal/ @jpbede
+/homeassistant/components/co2signal/ @jpbede @VIKTORVAV99
 /tests/components/co2signal/ @jpbede
 /homeassistant/components/coinbase/ @tombrien
 /tests/components/coinbase/ @tombrien
