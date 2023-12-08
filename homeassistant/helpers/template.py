@@ -2125,6 +2125,10 @@ def to_json(
 
     option = (
         ORJSON_PASSTHROUGH_OPTIONS
+        # OPT_NON_STR_KEYS is added as a workaround to
+        # ensure subclasses of str are allowed as dict keys
+        # See: https://github.com/ijl/orjson/issues/445
+        | orjson.OPT_NON_STR_KEYS
         | (orjson.OPT_INDENT_2 if pretty_print else 0)
         | (orjson.OPT_SORT_KEYS if sort_keys else 0)
     )
