@@ -17,8 +17,6 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Suez Water from a config entry."""
 
-    hass.data.setdefault(DOMAIN, {})
-
     def get_client() -> SuezClient:
         try:
             client = SuezClient(
@@ -33,7 +31,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except PySuezError:
             raise ConfigEntryNotReady
 
-    hass.data[DOMAIN][entry.entry_id] = await hass.async_add_executor_job(get_client)
+    hass.data.setdefault(DOMAIN, {})[
+        entry.entry_id
+    ] = await hass.async_add_executor_job(get_client)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
