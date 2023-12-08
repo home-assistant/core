@@ -77,6 +77,13 @@ class MockPositionValve(MockEntity, ValveEntity):
         self._target_valve_position = position
         self.async_write_ha_state()
 
+    def stop_valve(self) -> None:
+        """Stop the valve."""
+        self._attr_is_closing = False
+        self._attr_is_opening = False
+        self._target_valve_position = None
+        self.async_write_ha_state()
+
     async def finish_movement(self):
         """Set the value to the saved target and removes intermediate states."""
         self._attr_current_valve_position = self._target_valve_position
