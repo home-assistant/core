@@ -248,6 +248,7 @@ class ValveEntity(Entity):
 
     def set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
+        raise NotImplementedError()
 
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
