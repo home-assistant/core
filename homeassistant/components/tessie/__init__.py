@@ -28,9 +28,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             api_key=api_key,
             only_active=True,
         )
-    except ClientResponseError:
+    except ClientResponseError as ex:
         # Reauth will go here
-        _LOGGER.error("Setup failed, unable to connect to Tessie")
+        _LOGGER.error("Setup failed, unable to connect to Tessie: %s", ex)
         return False
     except ClientError as e:
         raise ConfigEntryNotReady from e
