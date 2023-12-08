@@ -1533,21 +1533,21 @@ def test_bitwise_xor(hass):
             """,
         hass,
     )
-    assert tpl.async_render() == 8 | 8
+    assert tpl.async_render() == 8 ^ 8
     tpl = template.Template(
         """
 {{ 10 | bitwise_xor(2) }}
             """,
         hass,
     )
-    assert tpl.async_render() == 10 | 2
+    assert tpl.async_render() == 10 ^ 2
     tpl = template.Template(
         """
 {{ 8 | bitwise_xor(2) }}
             """,
         hass,
     )
-    assert tpl.async_render() == 8 | 2
+    assert tpl.async_render() == 8 ^ 2
 
 def test_pack(hass, caplog):
     """Test struct pack method."""
