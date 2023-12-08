@@ -550,9 +550,14 @@
     },
     "bangolufsen": {
       "name": "Bang & Olufsen",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "local_push"
+      "integrations": {
+        "bangolufsen": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Bang & Olufsen"
+        }
+      }
     },
     "bayesian": {
       "name": "Bayesian",
