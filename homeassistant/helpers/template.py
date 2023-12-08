@@ -2133,20 +2133,11 @@ def to_json(
         | (orjson.OPT_SORT_KEYS if sort_keys else 0)
     )
 
-    # Test subclasses os str are not handled correctly
-    try:
-        return orjson.dumps(
-            value,
-            option=option,
-            default=_to_json_default,
-        ).decode("utf-8")
-    except TypeError:
-        return json.dumps(
-            value,
-            ensure_ascii=ensure_ascii,
-            indent=2 if pretty_print else None,
-            sort_keys=sort_keys,
-        )
+    return orjson.dumps(
+        value,
+        option=option,
+        default=_to_json_default,
+    ).decode("utf-8")
 
 
 @pass_context
