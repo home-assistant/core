@@ -22,8 +22,8 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
     ) -> None:
         """Initialize common aspects of a Tessie entity."""
         super().__init__(coordinator)
-        self.vin: str = coordinator.vin
-        self.key: str = key
+        self.vin = coordinator.vin
+        self.key = key
 
         car_type = coordinator.data["vehicle_config-car_type"]
 
