@@ -24,6 +24,7 @@ _T = TypeVar("_T")
 class ReolinkChannelEntityDescription(EntityDescription):
     """A class that describes entities for a camera channel."""
 
+    cmd_key: str | None = None
     supported: Callable[[Host, int], bool] = lambda api, ch: True
 
 
@@ -31,6 +32,7 @@ class ReolinkChannelEntityDescription(EntityDescription):
 class ReolinkHostEntityDescription(EntityDescription):
     """A class that describes host entities."""
 
+    cmd_key: str | None = None
     supported: Callable[[Host], bool] = lambda api: True
 
 
@@ -83,6 +85,15 @@ class ReolinkHostCoordinatorEntity(ReolinkBaseCoordinatorEntity[None]):
         super().__init__(reolink_data, reolink_data.device_coordinator)
 
         self._attr_unique_id = f"{self._host.unique_id}_{self.entity_description.key}"
+
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        await super().async_added_to_hass()
+        if (
+            self.entity_description.cmd_key is not None
+            and self.entity_description.cmd_key not in self._host.update_cmd_list
+        ):
+            self._host.update_cmd_list.append(self.entity_description.cmd_key)
 
 
 class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):

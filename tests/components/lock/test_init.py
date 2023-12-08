@@ -9,10 +9,6 @@ import pytest
 from homeassistant.components.lock import (
     ATTR_CODE,
     CONF_DEFAULT_CODE,
-    DOMAIN,
-    SERVICE_LOCK,
-    SERVICE_OPEN,
-    SERVICE_UNLOCK,
     STATE_JAMMED,
     STATE_LOCKED,
     STATE_LOCKING,
@@ -20,11 +16,8 @@ from homeassistant.components.lock import (
     STATE_UNLOCKING,
     LockEntity,
     LockEntityFeature,
-    _async_lock,
-    _async_open,
-    _async_unlock,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -87,7 +80,7 @@ async def test_lock_states(hass: HomeAssistant) -> None:
     assert lock.is_locking
     assert lock.state == STATE_LOCKING
 
-    await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {}))
+    await lock.async_handle_lock_service()
     assert lock.is_locked
     assert lock.state == STATE_LOCKED
 
@@ -95,7 +88,7 @@ async def test_lock_states(hass: HomeAssistant) -> None:
     assert lock.is_unlocking
     assert lock.state == STATE_UNLOCKING
 
-    await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {}))
+    await lock.async_handle_unlock_service()
     assert not lock.is_locked
     assert lock.state == STATE_UNLOCKED
 
@@ -189,12 +182,12 @@ async def test_lock_open_with_code(hass: HomeAssistant) -> None:
     assert lock.state_attributes == {"code_format": r"^\d{4}$"}
 
     with pytest.raises(ValueError):
-        await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {}))
+        await lock.async_handle_open_service()
     with pytest.raises(ValueError):
-        await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {ATTR_CODE: ""}))
+        await lock.async_handle_open_service(code="")
     with pytest.raises(ValueError):
-        await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {ATTR_CODE: "HELLO"}))
-    await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {ATTR_CODE: "1234"}))
+        await lock.async_handle_open_service(code="HELLO")
+    await lock.async_handle_open_service(code="1234")
     assert lock.calls_open.call_count == 1
 
 
@@ -203,16 +196,16 @@ async def test_lock_lock_with_code(hass: HomeAssistant) -> None:
     lock = MockLockEntity(code_format=r"^\d{4}$")
     lock.hass = hass
 
-    await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {ATTR_CODE: "1234"}))
+    await lock.async_handle_unlock_service(code="1234")
     assert not lock.is_locked
 
     with pytest.raises(ValueError):
-        await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {}))
+        await lock.async_handle_lock_service()
     with pytest.raises(ValueError):
-        await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {ATTR_CODE: ""}))
+        await lock.async_handle_lock_service(code="")
     with pytest.raises(ValueError):
-        await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {ATTR_CODE: "HELLO"}))
-    await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {ATTR_CODE: "1234"}))
+        await lock.async_handle_lock_service(code="HELLO")
+    await lock.async_handle_lock_service(code="1234")
     assert lock.is_locked
 
 
@@ -221,18 +214,16 @@ async def test_lock_unlock_with_code(hass: HomeAssistant) -> None:
     lock = MockLockEntity(code_format=r"^\d{4}$")
     lock.hass = hass
 
-    await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {ATTR_CODE: "1234"}))
+    await lock.async_handle_lock_service(code="1234")
     assert lock.is_locked
 
     with pytest.raises(ValueError):
-        await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {}))
+        await lock.async_handle_unlock_service()
     with pytest.raises(ValueError):
-        await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {ATTR_CODE: ""}))
+        await lock.async_handle_unlock_service(code="")
     with pytest.raises(ValueError):
-        await _async_unlock(
-            lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {ATTR_CODE: "HELLO"})
-        )
-    await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {ATTR_CODE: "1234"}))
+        await lock.async_handle_unlock_service(code="HELLO")
+    await lock.async_handle_unlock_service(code="1234")
     assert not lock.is_locked
 
 
@@ -245,17 +236,11 @@ async def test_lock_with_illegal_code(hass: HomeAssistant) -> None:
     lock.hass = hass
 
     with pytest.raises(ValueError):
-        await _async_open(
-            lock, ServiceCall(DOMAIN, SERVICE_OPEN, {ATTR_CODE: "123456"})
-        )
+        await lock.async_handle_open_service(code="123456")
     with pytest.raises(ValueError):
-        await _async_lock(
-            lock, ServiceCall(DOMAIN, SERVICE_LOCK, {ATTR_CODE: "123456"})
-        )
+        await lock.async_handle_lock_service(code="123456")
     with pytest.raises(ValueError):
-        await _async_unlock(
-            lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {ATTR_CODE: "123456"})
-        )
+        await lock.async_handle_unlock_service(code="123456")
 
 
 async def test_lock_with_no_code(hass: HomeAssistant) -> None:
@@ -265,18 +250,18 @@ async def test_lock_with_no_code(hass: HomeAssistant) -> None:
     )
     lock.hass = hass
 
-    await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {}))
+    await lock.async_handle_open_service()
     lock.calls_open.assert_called_with({})
-    await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {}))
+    await lock.async_handle_lock_service()
     lock.calls_lock.assert_called_with({})
-    await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {}))
+    await lock.async_handle_unlock_service()
     lock.calls_unlock.assert_called_with({})
 
-    await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {ATTR_CODE: ""}))
+    await lock.async_handle_open_service(code="")
     lock.calls_open.assert_called_with({})
-    await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {ATTR_CODE: ""}))
+    await lock.async_handle_lock_service(code="")
     lock.calls_lock.assert_called_with({})
-    await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {ATTR_CODE: ""}))
+    await lock.async_handle_unlock_service(code="")
     lock.calls_unlock.assert_called_with({})
 
 
@@ -292,18 +277,18 @@ async def test_lock_with_default_code(hass: HomeAssistant) -> None:
     assert lock.state_attributes == {"code_format": r"^\d{4}$"}
     assert lock._lock_option_default_code == "1234"
 
-    await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {}))
+    await lock.async_handle_open_service()
     lock.calls_open.assert_called_with({ATTR_CODE: "1234"})
-    await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {}))
+    await lock.async_handle_lock_service()
     lock.calls_lock.assert_called_with({ATTR_CODE: "1234"})
-    await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {}))
+    await lock.async_handle_unlock_service()
     lock.calls_unlock.assert_called_with({ATTR_CODE: "1234"})
 
-    await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {ATTR_CODE: ""}))
+    await lock.async_handle_open_service(code="")
     lock.calls_open.assert_called_with({ATTR_CODE: "1234"})
-    await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {ATTR_CODE: ""}))
+    await lock.async_handle_lock_service(code="")
     lock.calls_lock.assert_called_with({ATTR_CODE: "1234"})
-    await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {ATTR_CODE: ""}))
+    await lock.async_handle_unlock_service(code="")
     lock.calls_unlock.assert_called_with({ATTR_CODE: "1234"})
 
 
@@ -316,11 +301,11 @@ async def test_lock_with_provided_and_default_code(hass: HomeAssistant) -> None:
     )
     lock.hass = hass
 
-    await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {ATTR_CODE: "4321"}))
+    await lock.async_handle_open_service(code="4321")
     lock.calls_open.assert_called_with({ATTR_CODE: "4321"})
-    await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {ATTR_CODE: "4321"}))
+    await lock.async_handle_lock_service(code="4321")
     lock.calls_lock.assert_called_with({ATTR_CODE: "4321"})
-    await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {ATTR_CODE: "4321"}))
+    await lock.async_handle_unlock_service(code="4321")
     lock.calls_unlock.assert_called_with({ATTR_CODE: "4321"})
 
 
@@ -337,8 +322,8 @@ async def test_lock_with_illegal_default_code(hass: HomeAssistant) -> None:
     assert lock._lock_option_default_code == "123456"
 
     with pytest.raises(ValueError):
-        await _async_open(lock, ServiceCall(DOMAIN, SERVICE_OPEN, {}))
+        await lock.async_handle_open_service()
     with pytest.raises(ValueError):
-        await _async_lock(lock, ServiceCall(DOMAIN, SERVICE_LOCK, {}))
+        await lock.async_handle_lock_service()
     with pytest.raises(ValueError):
-        await _async_unlock(lock, ServiceCall(DOMAIN, SERVICE_UNLOCK, {}))
+        await lock.async_handle_unlock_service()

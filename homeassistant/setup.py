@@ -263,7 +263,7 @@ async def _async_setup_component(
         if platform_exception.translation_key not in NOTIFY_FOR_TRANSLATION_KEYS:
             continue
         async_notify_setup_error(
-            hass, platform_exception.platform_name, platform_exception.integration_link
+            hass, platform_exception.platform_path, platform_exception.integration_link
         )
     if processed_config is None:
         log_error("Invalid config.")
@@ -538,7 +538,7 @@ def async_get_loaded_integrations(hass: core.HomeAssistant) -> set[str]:
         if "." not in component:
             integrations.add(component)
             continue
-        domain, _, platform = component.partition(".")
+        platform, _, domain = component.partition(".")
         if domain in BASE_PLATFORMS:
             integrations.add(platform)
     return integrations
@@ -563,7 +563,7 @@ def async_start_setup(
     time_taken = dt_util.utcnow() - started
     for unique, domain in unique_components.items():
         del setup_started[unique]
-        integration = domain.rpartition(".")[-1]
+        integration = domain.partition(".")[0]
         if integration in setup_time:
             setup_time[integration] += time_taken
         else:
