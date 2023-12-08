@@ -33,6 +33,9 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_USE_MIDDLEWARE = "middleware"
+
+DEFAULT_USE_MIDDLEWARE = True
 DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "Volkszaehler"
 DEFAULT_PORT = 80
@@ -75,6 +78,7 @@ SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_UUID): cv.string,
+        vol.Optional(CONF_USE_MIDDLEWARE, default=DEFAULT_USE_MIDDLEWARE): cv.boolean,
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -93,6 +97,8 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Volkszaehler sensors."""
 
+    use_middleware: bool = config[CONF_USE_MIDDLEWARE]
+    host: str = config[CONF_HOST]
     host: str = config[CONF_HOST]
     name: str = config[CONF_NAME]
     port: int = config[CONF_PORT]
@@ -100,7 +106,9 @@ async def async_setup_platform(
     conditions: list[str] = config[CONF_MONITORED_CONDITIONS]
 
     session = async_get_clientsession(hass)
-    vz_api = VolkszaehlerData(Volkszaehler(session, uuid, host=host, port=port))
+    vz_api = VolkszaehlerData(
+        Volkszaehler(session, uuid, host=host, port=port, middleware=use_middleware)
+    )
 
     await vz_api.async_update()
 
