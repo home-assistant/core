@@ -25,8 +25,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             only_active=True,
         )
     except ClientResponseError as e:
+        _LOGGER.error("......")
+        return False
         # Reauth will go here
-        raise ConfigEntryNotReady from e
     except ClientError as e:
         raise ConfigEntryNotReady from e
 
