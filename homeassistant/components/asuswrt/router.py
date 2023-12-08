@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
+from pyasuswrt import AsusWrtError
+
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
@@ -219,7 +221,7 @@ class AsusWrtRouter:
         """Set up a AsusWrt router."""
         try:
             await self._api.async_connect()
-        except OSError as exc:
+        except (AsusWrtError, OSError) as exc:
             raise ConfigEntryNotReady from exc
         if not self._api.is_connected:
             raise ConfigEntryNotReady

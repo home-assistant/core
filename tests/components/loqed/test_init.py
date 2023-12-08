@@ -4,6 +4,7 @@ import json
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+import aiohttp
 from loqedAPI import loqed
 
 from homeassistant.components.loqed.const import DOMAIN
@@ -56,6 +57,22 @@ async def test_setup_webhook_in_bridge(
         await hass.async_block_till_done()
 
     lock.registerWebhook.assert_called_with(f"{get_url(hass)}/api/webhook/Webhook_id")
+
+
+async def test_cannot_connect_to_bridge_will_retry(
+    hass: HomeAssistant, config_entry: MockConfigEntry, lock: loqed.Lock
+):
+    """Test webhook setup in loqed bridge."""
+    config: dict[str, Any] = {DOMAIN: {}}
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "loqedAPI.loqed.LoqedAPI.async_get_lock", side_effect=aiohttp.ClientError
+    ):
+        await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_cloudhook_in_bridge(

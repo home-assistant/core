@@ -23,19 +23,11 @@ from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
 
-@dataclass
-class PlugwiseEntityDescriptionMixin:
-    """Mixin values for Plugwise entities."""
-
-    command: Callable[[Smile, str, str, float], Awaitable[None]]
-
-
-@dataclass
-class PlugwiseNumberEntityDescription(
-    NumberEntityDescription, PlugwiseEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class PlugwiseNumberEntityDescription(NumberEntityDescription):
     """Class describing Plugwise Number entities."""
 
+    command: Callable[[Smile, str, str, float], Awaitable[None]]
     key: NumberType
 
 
@@ -54,6 +46,16 @@ NUMBER_TYPES = (
         key="max_dhw_temperature",
         translation_key="max_dhw_temperature",
         command=lambda api, number, dev_id, value: api.set_number_setpoint(
+            number, dev_id, value
+        ),
+        device_class=NumberDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    PlugwiseNumberEntityDescription(
+        key="temperature_offset",
+        translation_key="temperature_offset",
+        command=lambda api, number, dev_id, value: api.set_temperature_offset(
             number, dev_id, value
         ),
         device_class=NumberDeviceClass.TEMPERATURE,
@@ -104,7 +106,11 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
         self._attr_mode = NumberMode.BOX
         self._attr_native_max_value = self.device[description.key]["upper_bound"]
         self._attr_native_min_value = self.device[description.key]["lower_bound"]
-        self._attr_native_step = max(self.device[description.key]["resolution"], 0.5)
+
+        native_step = self.device[description.key]["resolution"]
+        if description.key != "temperature_offset":
+            native_step = max(native_step, 0.5)
+        self._attr_native_step = native_step
 
     @property
     def native_value(self) -> float:

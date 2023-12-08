@@ -97,8 +97,6 @@ RESOURCE_SETUP = {
     vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): TextSelector(),
 }
 
-NONE_SENTINEL = "none"
-
 SENSOR_SETUP = {
     vol.Required(CONF_SELECT): TextSelector(),
     vol.Optional(CONF_INDEX, default=0): NumberSelector(
@@ -106,43 +104,34 @@ SENSOR_SETUP = {
     ),
     vol.Optional(CONF_ATTRIBUTE): TextSelector(),
     vol.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
-    vol.Required(CONF_DEVICE_CLASS, default=NONE_SENTINEL): SelectSelector(
+    vol.Optional(CONF_DEVICE_CLASS): SelectSelector(
         SelectSelectorConfig(
-            options=[NONE_SENTINEL]
-            + sorted(
-                [
-                    cls.value
-                    for cls in SensorDeviceClass
-                    if cls != SensorDeviceClass.ENUM
-                ]
-            ),
+            options=[
+                cls.value for cls in SensorDeviceClass if cls != SensorDeviceClass.ENUM
+            ],
             mode=SelectSelectorMode.DROPDOWN,
             translation_key="device_class",
+            sort=True,
         )
     ),
-    vol.Required(CONF_STATE_CLASS, default=NONE_SENTINEL): SelectSelector(
+    vol.Optional(CONF_STATE_CLASS): SelectSelector(
         SelectSelectorConfig(
-            options=[NONE_SENTINEL] + sorted([cls.value for cls in SensorStateClass]),
+            options=[cls.value for cls in SensorStateClass],
             mode=SelectSelectorMode.DROPDOWN,
             translation_key="state_class",
+            sort=True,
         )
     ),
-    vol.Required(CONF_UNIT_OF_MEASUREMENT, default=NONE_SENTINEL): SelectSelector(
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
         SelectSelectorConfig(
-            options=[NONE_SENTINEL] + sorted([cls.value for cls in UnitOfTemperature]),
+            options=[cls.value for cls in UnitOfTemperature],
             custom_value=True,
             mode=SelectSelectorMode.DROPDOWN,
             translation_key="unit_of_measurement",
+            sort=True,
         )
     ),
 }
-
-
-def _strip_sentinel(options: dict[str, Any]) -> None:
-    """Convert sentinel to None."""
-    for key in (CONF_DEVICE_CLASS, CONF_STATE_CLASS, CONF_UNIT_OF_MEASUREMENT):
-        if options[key] == NONE_SENTINEL:
-            options.pop(key)
 
 
 async def validate_rest_setup(
@@ -171,7 +160,6 @@ async def validate_sensor_setup(
     # Standard behavior is to merge the result with the options.
     # In this case, we want to add a sub-item so we update the options directly.
     sensors: list[dict[str, Any]] = handler.options.setdefault(SENSOR_DOMAIN, [])
-    _strip_sentinel(user_input)
     sensors.append(user_input)
     return {}
 
@@ -203,11 +191,7 @@ async def get_edit_sensor_suggested_values(
 ) -> dict[str, Any]:
     """Return suggested values for sensor editing."""
     idx: int = handler.flow_state["_idx"]
-    suggested_values: dict[str, Any] = dict(handler.options[SENSOR_DOMAIN][idx])
-    for key in (CONF_DEVICE_CLASS, CONF_STATE_CLASS, CONF_UNIT_OF_MEASUREMENT):
-        if not suggested_values.get(key):
-            suggested_values[key] = NONE_SENTINEL
-    return suggested_values
+    return dict(handler.options[SENSOR_DOMAIN][idx])
 
 
 async def validate_sensor_edit(
@@ -217,10 +201,14 @@ async def validate_sensor_edit(
     user_input[CONF_INDEX] = int(user_input[CONF_INDEX])
 
     # Standard behavior is to merge the result with the options.
-    # In this case, we want to add a sub-item so we update the options directly.
+    # In this case, we want to add a sub-item so we update the options directly,
+    # including popping omitted optional schema items.
     idx: int = handler.flow_state["_idx"]
     handler.options[SENSOR_DOMAIN][idx].update(user_input)
-    _strip_sentinel(handler.options[SENSOR_DOMAIN][idx])
+    for key in DATA_SCHEMA_EDIT_SENSOR.schema:
+        if isinstance(key, vol.Optional) and key not in user_input:
+            # Key not present, delete keys old value (if present) too
+            handler.options[SENSOR_DOMAIN][idx].pop(key, None)
     return {}
 
 

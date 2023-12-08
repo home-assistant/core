@@ -42,9 +42,10 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+import homeassistant.helpers.entity_registry as er
 
-from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
-from .controller import UniFiController
+from .const import ATTR_MANUFACTURER
+from .controller import UNIFI_DOMAIN, UniFiController
 from .entity import (
     HandlerT,
     SubscriptionT,
@@ -58,6 +59,14 @@ from .entity import (
 
 CLIENT_BLOCKED = (EventKey.WIRED_CLIENT_BLOCKED, EventKey.WIRELESS_CLIENT_BLOCKED)
 CLIENT_UNBLOCKED = (EventKey.WIRED_CLIENT_UNBLOCKED, EventKey.WIRELESS_CLIENT_UNBLOCKED)
+
+
+@callback
+def async_block_client_allowed_fn(controller: UniFiController, obj_id: str) -> bool:
+    """Check if client is allowed."""
+    if obj_id in controller.option_supported_clients:
+        return True
+    return obj_id in controller.option_block_clients
 
 
 @callback
@@ -198,7 +207,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         has_entity_name=True,
         icon="mdi:ethernet",
-        allowed_fn=lambda controller, obj_id: obj_id in controller.option_block_clients,
+        allowed_fn=async_block_client_allowed_fn,
         api_handler_fn=lambda api: api.clients,
         available_fn=lambda controller, obj_id: controller.available,
         control_fn=async_block_client_control_fn,
@@ -248,7 +257,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         object_fn=lambda api, obj_id: api.outlets[obj_id],
         should_poll=False,
         supported_fn=async_outlet_supports_switching_fn,
-        unique_id_fn=lambda controller, obj_id: f"{obj_id.split('_', 1)[0]}-outlet-{obj_id.split('_', 1)[1]}",
+        unique_id_fn=lambda controller, obj_id: f"outlet-{obj_id}",
     ),
     UnifiSwitchEntityDescription[PortForwarding, PortForward](
         key="Port forward control",
@@ -289,7 +298,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         object_fn=lambda api, obj_id: api.ports[obj_id],
         should_poll=False,
         supported_fn=lambda controller, obj_id: controller.api.ports[obj_id].port_poe,
-        unique_id_fn=lambda controller, obj_id: f"{obj_id.split('_', 1)[0]}-poe-{obj_id.split('_', 1)[1]}",
+        unique_id_fn=lambda controller, obj_id: f"poe-{obj_id}",
     ),
     UnifiSwitchEntityDescription[Wlans, Wlan](
         key="WLAN control",
@@ -314,25 +323,48 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
 )
 
 
+@callback
+def async_update_unique_id(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    """Normalize switch unique ID to have a prefix rather than midfix.
+
+    Introduced with release 2023.12.
+    """
+    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    ent_reg = er.async_get(hass)
+
+    @callback
+    def update_unique_id(obj_id: str, type_name: str) -> None:
+        """Rework unique ID."""
+        new_unique_id = f"{type_name}-{obj_id}"
+        if ent_reg.async_get_entity_id(DOMAIN, UNIFI_DOMAIN, new_unique_id):
+            return
+
+        prefix, _, suffix = obj_id.partition("_")
+        unique_id = f"{prefix}-{type_name}-{suffix}"
+        if entity_id := ent_reg.async_get_entity_id(DOMAIN, UNIFI_DOMAIN, unique_id):
+            ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
+
+    for obj_id in controller.api.outlets:
+        update_unique_id(obj_id, "outlet")
+
+    for obj_id in controller.api.ports:
+        update_unique_id(obj_id, "poe")
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches for UniFi Network integration."""
-    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-
-    if not controller.is_admin:
-        return
-
-    for mac in controller.option_block_clients:
-        if mac not in controller.api.clients and mac in controller.api.clients_all:
-            controller.api.clients.process_raw(
-                [dict(controller.api.clients_all[mac].raw)]
-            )
-
-    controller.register_platform_add_entities(
-        UnifiSwitchEntity, ENTITY_DESCRIPTIONS, async_add_entities
+    async_update_unique_id(hass, config_entry)
+    UniFiController.register_platform(
+        hass,
+        config_entry,
+        async_add_entities,
+        UnifiSwitchEntity,
+        ENTITY_DESCRIPTIONS,
+        requires_admin=True,
     )
 
 

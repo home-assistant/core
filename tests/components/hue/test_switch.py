@@ -14,13 +14,20 @@ async def test_switch(
     await setup_platform(hass, mock_bridge_v2, "switch")
     # there shouldn't have been any requests at this point
     assert len(mock_bridge_v2.mock_requests) == 0
-    # 2 entities should be created from test data
-    assert len(hass.states.async_all()) == 2
+    # 4 entities should be created from test data
+    assert len(hass.states.async_all()) == 4
 
     # test config switch to enable/disable motion sensor
-    test_entity = hass.states.get("switch.hue_motion_sensor_motion")
+    test_entity = hass.states.get("switch.hue_motion_sensor_motion_sensor_enabled")
     assert test_entity is not None
-    assert test_entity.name == "Hue motion sensor Motion"
+    assert test_entity.name == "Hue motion sensor Motion sensor enabled"
+    assert test_entity.state == "on"
+    assert test_entity.attributes["device_class"] == "switch"
+
+    # test config switch to enable/disable a behavior_instance resource (=builtin automation)
+    test_entity = hass.states.get("switch.automation_timer_test")
+    assert test_entity is not None
+    assert test_entity.name == "Automation: Timer Test"
     assert test_entity.state == "on"
     assert test_entity.attributes["device_class"] == "switch"
 
@@ -33,7 +40,7 @@ async def test_switch_turn_on_service(
 
     await setup_platform(hass, mock_bridge_v2, "switch")
 
-    test_entity_id = "switch.hue_motion_sensor_motion"
+    test_entity_id = "switch.hue_motion_sensor_motion_sensor_enabled"
 
     # call the HA turn_on service
     await hass.services.async_call(
@@ -57,7 +64,7 @@ async def test_switch_turn_off_service(
 
     await setup_platform(hass, mock_bridge_v2, "switch")
 
-    test_entity_id = "switch.hue_motion_sensor_motion"
+    test_entity_id = "switch.hue_motion_sensor_motion_sensor_enabled"
 
     # verify the switch is on before we start
     assert hass.states.get(test_entity_id).state == "on"
@@ -96,7 +103,7 @@ async def test_switch_added(hass: HomeAssistant, mock_bridge_v2) -> None:
 
     await setup_platform(hass, mock_bridge_v2, "switch")
 
-    test_entity_id = "switch.hue_mocked_device_motion"
+    test_entity_id = "switch.hue_mocked_device_motion_sensor_enabled"
 
     # verify entity does not exist before we start
     assert hass.states.get(test_entity_id) is None

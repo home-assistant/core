@@ -32,12 +32,13 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.freeze_time("2023-01-19 15:00:00")
 async def test_energy_usage_today(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test the easyEnergy - Energy usage sensors."""
     entry_id = init_integration.entry_id
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     # Current usage energy price sensor
     state = hass.states.get("sensor.easyenergy_today_energy_usage_current_hour_price")
@@ -146,12 +147,13 @@ async def test_energy_usage_today(
 
 @pytest.mark.freeze_time("2023-01-19 15:00:00")
 async def test_energy_return_today(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test the easyEnergy - Energy return sensors."""
     entry_id = init_integration.entry_id
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     # Current return energy price sensor
     state = hass.states.get("sensor.easyenergy_today_energy_return_current_hour_price")
@@ -261,12 +263,13 @@ async def test_energy_return_today(
 
 @pytest.mark.freeze_time("2023-01-19 10:00:00")
 async def test_gas_today(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test the easyEnergy - Gas sensors."""
     entry_id = init_integration.entry_id
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     # Current gas price sensor
     state = hass.states.get("sensor.easyenergy_today_gas_current_hour_price")

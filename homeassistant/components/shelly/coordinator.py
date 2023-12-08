@@ -10,6 +10,7 @@ from typing import Any, Generic, TypeVar, cast
 import aioshelly
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
+from aioshelly.const import MODEL_VALVE
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from aioshelly.rpc_device import RpcDevice, RpcUpdateType
 from awesomeversion import AwesomeVersion
@@ -58,7 +59,7 @@ from .const import (
     UPDATE_PERIOD_MULTIPLIER,
     BLEScannerMode,
 )
-from .utils import device_update_info, get_rpc_device_wakeup_period
+from .utils import get_rpc_device_wakeup_period, update_device_fw_info
 
 _DeviceT = TypeVar("_DeviceT", bound="BlockDevice|RpcDevice")
 
@@ -170,6 +171,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         self._last_input_events_count: dict = {}
         self._last_target_temp: float | None = None
         self._push_update_failures: int = 0
+        self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
 
         entry.async_on_unload(
             self.async_add_listener(self._async_device_updates_handler)
@@ -177,6 +179,19 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
         )
+
+    @callback
+    def async_subscribe_input_events(
+        self, input_event_callback: Callable[[dict[str, Any]], None]
+    ) -> CALLBACK_TYPE:
+        """Subscribe to input events."""
+
+        def _unsubscribe() -> None:
+            self._input_event_listeners.remove(input_event_callback)
+
+        self._input_event_listeners.append(input_event_callback)
+
+        return _unsubscribe
 
     @callback
     def _async_device_updates_handler(self) -> None:
@@ -205,7 +220,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
 
             # Shelly TRV sends information about changing the configuration for no
             # reason, reloading the config entry is not needed for it.
-            if self.model == "SHTRV-01":
+            if self.model == MODEL_VALVE:
                 self._last_cfg_changed = None
 
             # For dual mode bulbs ignore change if it is due to mode/effect change
@@ -242,6 +257,10 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
                 continue
 
             if event_type in INPUTS_EVENTS_DICT:
+                for event_callback in self._input_event_listeners:
+                    event_callback(
+                        {"channel": channel, "event": INPUTS_EVENTS_DICT[event_type]}
+                    )
                 self.hass.bus.async_fire(
                     EVENT_SHELLY_CLICK,
                     {
@@ -277,8 +296,6 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
             raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
         except InvalidAuthError:
             self.entry.async_start_reauth(self.hass)
-        else:
-            device_update_info(self.hass, self.device, self.entry)
 
     @callback
     def _async_handle_update(
@@ -358,16 +375,13 @@ class ShellyRestCoordinator(ShellyCoordinatorBase[BlockDevice]):
 
             if self.device.status["uptime"] > 2 * REST_SENSORS_UPDATE_INTERVAL:
                 return
-            old_firmware = self.device.firmware_version
             await self.device.update_shelly()
-            if self.device.firmware_version == old_firmware:
-                return
         except DeviceConnectionError as err:
             raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
         except InvalidAuthError:
             self.entry.async_start_reauth(self.hass)
         else:
-            device_update_info(self.hass, self.device, self.entry)
+            update_device_fw_info(self.hass, self.device, self.entry)
 
 
 class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
@@ -389,6 +403,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._connection_lock = asyncio.Lock()
         self._event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._ota_event_listeners: list[Callable[[dict[str, Any]], None]] = []
+        self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
 
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
@@ -423,6 +438,19 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             self._ota_event_listeners.remove(ota_event_callback)
 
         self._ota_event_listeners.append(ota_event_callback)
+
+        return _unsubscribe
+
+    @callback
+    def async_subscribe_input_events(
+        self, input_event_callback: Callable[[dict[str, Any]], None]
+    ) -> CALLBACK_TYPE:
+        """Subscribe to input events."""
+
+        def _unsubscribe() -> None:
+            self._input_event_listeners.remove(input_event_callback)
+
+        self._input_event_listeners.append(input_event_callback)
 
         return _unsubscribe
 
@@ -469,6 +497,8 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                 )
                 self.hass.async_create_task(self._debounced_reload.async_call())
             elif event_type in RPC_INPUTS_EVENTS_TYPES:
+                for event_callback in self._input_event_listeners:
+                    event_callback(event)
                 self.hass.bus.async_fire(
                     EVENT_SHELLY_CLICK,
                     {
@@ -499,7 +529,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         LOGGER.debug("Reconnecting to Shelly RPC Device - %s", self.name)
         try:
             await self.device.initialize()
-            device_update_info(self.hass, self.device, self.entry)
+            update_device_fw_info(self.hass, self.device, self.entry)
         except DeviceConnectionError as err:
             raise UpdateFailed(f"Device disconnected: {repr(err)}") from err
         except InvalidAuthError:
@@ -554,7 +584,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         ble_scanner_mode = self.entry.options.get(
             CONF_BLE_SCANNER_MODE, BLEScannerMode.DISABLED
         )
-        if ble_scanner_mode == BLEScannerMode.DISABLED:
+        if ble_scanner_mode == BLEScannerMode.DISABLED and self.connected:
             await async_stop_scanner(self.device)
             return
         if AwesomeVersion(self.device.version) < BLE_MIN_VERSION:
@@ -585,6 +615,8 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             self.hass.async_create_task(self._async_disconnected())
         elif update_type is RpcUpdateType.STATUS:
             self.async_set_updated_data(None)
+            if self.sleep_period:
+                update_device_fw_info(self.hass, self.device, self.entry)
         elif update_type is RpcUpdateType.EVENT and (event := self.device.event):
             self._async_device_event_handler(event)
 

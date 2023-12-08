@@ -40,7 +40,7 @@
       "sensor": {
         "data": {
           "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
-          "state_class": "[%key:component::template::config::step::sensor::data::state_class%]",
+          "state_class": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]",
           "state": "[%key:component::template::config::step::sensor::data::state%]",
           "unit_of_measurement": "[%key:component::template::config::step::sensor::data::unit_of_measurement%]"
         },
@@ -51,7 +51,6 @@
   "selector": {
     "binary_sensor_device_class": {
       "options": {
-        "none": "[%key:component::template::selector::sensor_device_class::options::none%]",
         "battery": "[%key:component::binary_sensor::entity_component::battery::name%]",
         "battery_charging": "[%key:component::binary_sensor::entity_component::battery_charging::name%]",
         "carbon_monoxide": "[%key:component::binary_sensor::entity_component::carbon_monoxide::name%]",
@@ -83,7 +82,6 @@
     },
     "sensor_device_class": {
       "options": {
-        "none": "No device class",
         "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
         "aqi": "[%key:component::sensor::entity_component::aqi::name%]",
         "atmospheric_pressure": "[%key:component::sensor::entity_component::atmospheric_pressure::name%]",
@@ -126,7 +124,7 @@
         "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
         "timestamp": "[%key:component::sensor::entity_component::timestamp::name%]",
         "volatile_organic_compounds": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
-        "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds_parts::name%]",
+        "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
         "voltage": "[%key:component::sensor::entity_component::voltage::name%]",
         "volume": "[%key:component::sensor::entity_component::volume::name%]",
         "volume_storage": "[%key:component::sensor::entity_component::volume_storage::name%]",
@@ -137,7 +135,6 @@
     },
     "sensor_state_class": {
       "options": {
-        "none": "No state class",
         "measurement": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement%]",
         "total": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total%]",
         "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"

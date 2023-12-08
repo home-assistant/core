@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hw_discovery_data = ZHA_HW_DISCOVERY_DATA
     else:
         hw_discovery_data = {
-            "name": "Yellow Multi-PAN",
+            "name": "Yellow Multiprotocol",
             "port": {
                 "path": get_zigbee_socket(),
             },

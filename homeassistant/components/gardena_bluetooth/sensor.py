@@ -88,7 +88,6 @@ DESCRIPTIONS = (
     GardenaBluetoothSensorEntityDescription(
         key=Sensor.measurement_timestamp.uuid,
         translation_key="sensor_measurement_timestamp",
-        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         char=Sensor.measurement_timestamp,

@@ -38,6 +38,9 @@ class TasmotaEntity(Entity):
         """Initialize."""
         self._tasmota_entity = tasmota_entity
         self._unique_id = tasmota_entity.unique_id
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, tasmota_entity.mac)}
+        )
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
@@ -60,13 +63,6 @@ class TasmotaEntity(Entity):
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await self._tasmota_entity.subscribe_topics()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._tasmota_entity.mac)}
-        )
 
     @property
     def name(self) -> str | None:

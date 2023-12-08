@@ -29,6 +29,7 @@ from .const import (
     CONF_SLEEP_PERIOD,
     DOMAIN,
     LOGGER,
+    MODEL_WALL_DISPLAY,
     BLEScannerMode,
 )
 from .coordinator import async_reconnect_soon, get_entry_data
@@ -363,8 +364,10 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
         """Return options flow support for this handler."""
-        return config_entry.data.get("gen") == 2 and not config_entry.data.get(
-            CONF_SLEEP_PERIOD
+        return (
+            config_entry.data.get("gen") == 2
+            and not config_entry.data.get(CONF_SLEEP_PERIOD)
+            and config_entry.data.get("model") != MODEL_WALL_DISPLAY
         )
 
 

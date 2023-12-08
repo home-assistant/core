@@ -6,28 +6,17 @@ import logging
 from typing import Any
 
 from aio_geojson_generic_client.feed_entry import GenericFeedEntry
-import voluptuous as vol
 
-from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_RADIUS,
-    CONF_URL,
-    UnitOfLength,
-)
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.geo_location import GeolocationEvent
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfLength
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import GeoJsonFeedEntityManager
 from .const import (
     ATTR_EXTERNAL_ID,
-    DEFAULT_RADIUS_IN_KM,
     DOMAIN,
     SIGNAL_DELETE_ENTITY,
     SIGNAL_UPDATE_ENTITY,
@@ -35,16 +24,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-# Deprecated.
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_URL): cv.string,
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
-    }
-)
 
 
 async def async_setup_entry(
@@ -70,34 +49,6 @@ async def async_setup_entry(
     # update will fetch data from the feed via HTTP and then process that data.
     entry.async_create_task(hass, manager.async_update())
     _LOGGER.debug("Geolocation setup done")
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the GeoJSON Events platform."""
-    async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2023.12.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "GeoJSON feed",
-        },
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
 
 
 class GeoJsonLocationEvent(GeolocationEvent):

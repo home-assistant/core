@@ -22,7 +22,6 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
-from homeassistant.util.network import is_ipv6_address
 
 from .const import (
     CONF_ALLOW_HUE_GROUPS,
@@ -219,7 +218,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host is already configured and delegate to the import step if not.
         """
         # Ignore if host is IPv6
-        if is_ipv6_address(discovery_info.host):
+        if discovery_info.ip_address.version == 6:
             return self.async_abort(reason="invalid_host")
 
         # abort if we already have exactly this bridge id/host

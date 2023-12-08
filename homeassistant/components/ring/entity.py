@@ -3,7 +3,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from . import ATTRIBUTION, DOMAIN
+from .const import ATTRIBUTION, DOMAIN, RING_DEVICES_COORDINATOR
 
 
 class RingEntityMixin(Entity):
@@ -28,11 +28,15 @@ class RingEntityMixin(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        self.ring_objects["device_data"].async_add_listener(self._update_callback)
+        self.ring_objects[RING_DEVICES_COORDINATOR].async_add_listener(
+            self._update_callback
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect callbacks."""
-        self.ring_objects["device_data"].async_remove_listener(self._update_callback)
+        self.ring_objects[RING_DEVICES_COORDINATOR].async_remove_listener(
+            self._update_callback
+        )
 
     @callback
     def _update_callback(self) -> None:

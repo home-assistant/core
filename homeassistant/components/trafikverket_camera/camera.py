@@ -8,12 +8,11 @@ from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LOCATION
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_DESCRIPTION, ATTR_TYPE, DOMAIN
 from .coordinator import TVDataUpdateCoordinator
+from .entity import TrafikverketCameraEntity
 
 
 async def async_setup_entry(
@@ -29,17 +28,17 @@ async def async_setup_entry(
         [
             TVCamera(
                 coordinator,
-                entry.title,
                 entry.entry_id,
             )
         ],
     )
 
 
-class TVCamera(CoordinatorEntity[TVDataUpdateCoordinator], Camera):
+class TVCamera(TrafikverketCameraEntity, Camera):
     """Implement Trafikverket camera."""
 
-    _attr_has_entity_name = True
+    _unrecorded_attributes = frozenset({ATTR_DESCRIPTION, ATTR_LOCATION})
+
     _attr_name = None
     _attr_translation_key = "tv_camera"
     coordinator: TVDataUpdateCoordinator
@@ -47,21 +46,12 @@ class TVCamera(CoordinatorEntity[TVDataUpdateCoordinator], Camera):
     def __init__(
         self,
         coordinator: TVDataUpdateCoordinator,
-        name: str,
         entry_id: str,
     ) -> None:
         """Initialize the camera."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, entry_id)
         Camera.__init__(self)
         self._attr_unique_id = entry_id
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, entry_id)},
-            manufacturer="Trafikverket",
-            model="v1.0",
-            name=name,
-            configuration_url="https://api.trafikinfo.trafikverket.se/",
-        )
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None

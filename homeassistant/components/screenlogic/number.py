@@ -1,35 +1,28 @@
 """Support for a ScreenLogic number entity."""
-from collections.abc import Callable
+import asyncio
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
 
+from screenlogicpy.const.common import ScreenLogicCommunicationError, ScreenLogicError
 from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
+from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
 from homeassistant.components.number import (
     DOMAIN,
-    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as SL_DOMAIN, ScreenLogicDataPath
+from .const import DOMAIN as SL_DOMAIN
 from .coordinator import ScreenlogicDataUpdateCoordinator
-from .data import (
-    DEVICE_INCLUSION_RULES,
-    PathPart,
-    SupportedValueParameters,
-    build_base_entity_description,
-    get_ha_unit,
-    iterate_expand_group_wildcard,
-    preprocess_supported_values,
-    realize_path_template,
-)
 from .entity import ScreenlogicEntity, ScreenLogicEntityDescription
-from .util import cleanup_excluded_entity, generate_unique_id
+from .util import cleanup_excluded_entity, get_ha_unit
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,47 +30,35 @@ PARALLEL_UPDATES = 1
 
 
 @dataclass
-class SupportedNumberValueParametersMixin:
-    """Mixin for supported predefined data for a ScreenLogic number entity."""
+class ScreenLogicNumberRequiredMixin:
+    """Describes a required mixin for a ScreenLogic number entity."""
 
-    set_value_config: tuple[str, tuple[tuple[PathPart | str | int, ...], ...]]
-    device_class: NumberDeviceClass | None = None
+    set_value_name: str
 
 
 @dataclass
-class SupportedNumberValueParameters(
-    SupportedValueParameters, SupportedNumberValueParametersMixin
+class ScreenLogicNumberDescription(
+    NumberEntityDescription,
+    ScreenLogicEntityDescription,
+    ScreenLogicNumberRequiredMixin,
 ):
-    """Supported predefined data for a ScreenLogic number entity."""
+    """Describes a ScreenLogic number entity."""
 
 
-SET_SCG_CONFIG_FUNC_DATA = (
-    "async_set_scg_config",
-    (
-        (DEVICE.SCG, GROUP.CONFIGURATION, VALUE.POOL_SETPOINT),
-        (DEVICE.SCG, GROUP.CONFIGURATION, VALUE.SPA_SETPOINT),
+SUPPORTED_SCG_NUMBERS = [
+    ScreenLogicNumberDescription(
+        set_value_name="async_set_scg_config",
+        data_root=(DEVICE.SCG, GROUP.CONFIGURATION),
+        key=VALUE.POOL_SETPOINT,
+        entity_category=EntityCategory.CONFIG,
     ),
-)
-
-
-SUPPORTED_DATA: list[
-    tuple[ScreenLogicDataPath, SupportedValueParameters]
-] = preprocess_supported_values(
-    {
-        DEVICE.SCG: {
-            GROUP.CONFIGURATION: {
-                VALUE.POOL_SETPOINT: SupportedNumberValueParameters(
-                    entity_category=EntityCategory.CONFIG,
-                    set_value_config=SET_SCG_CONFIG_FUNC_DATA,
-                ),
-                VALUE.SPA_SETPOINT: SupportedNumberValueParameters(
-                    entity_category=EntityCategory.CONFIG,
-                    set_value_config=SET_SCG_CONFIG_FUNC_DATA,
-                ),
-            }
-        }
-    }
-)
+    ScreenLogicNumberDescription(
+        set_value_name="async_set_scg_config",
+        data_root=(DEVICE.SCG, GROUP.CONFIGURATION),
+        key=VALUE.SPA_SETPOINT,
+        entity_category=EntityCategory.CONFIG,
+    ),
+]
 
 
 async def async_setup_entry(
@@ -91,68 +72,19 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
     gateway = coordinator.gateway
-    data_path: ScreenLogicDataPath
-    value_params: SupportedNumberValueParameters
-    for data_path, value_params in iterate_expand_group_wildcard(
-        gateway, SUPPORTED_DATA
-    ):
-        entity_key = generate_unique_id(*data_path)
 
-        device = data_path[0]
-
-        if not (DEVICE_INCLUSION_RULES.get(device) or value_params.included).test(
-            gateway, data_path
-        ):
-            cleanup_excluded_entity(coordinator, DOMAIN, entity_key)
-            continue
-
-        try:
-            value_data = gateway.get_data(*data_path, strict=True)
-        except KeyError:
-            _LOGGER.debug("Failed to find %s", data_path)
-            continue
-
-        set_value_str, set_value_params = value_params.set_value_config
-        set_value_func = getattr(gateway, set_value_str)
-
-        entity_description_kwargs = {
-            **build_base_entity_description(
-                gateway, entity_key, data_path, value_data, value_params
-            ),
-            "device_class": value_params.device_class,
-            "native_unit_of_measurement": get_ha_unit(value_data),
-            "native_max_value": value_data.get(ATTR.MAX_SETPOINT),
-            "native_min_value": value_data.get(ATTR.MIN_SETPOINT),
-            "native_step": value_data.get(ATTR.STEP),
-            "set_value": set_value_func,
-            "set_value_params": set_value_params,
-        }
-
-        entities.append(
-            ScreenLogicNumber(
-                coordinator,
-                ScreenLogicNumberDescription(**entity_description_kwargs),
-            )
+    for scg_number_description in SUPPORTED_SCG_NUMBERS:
+        scg_number_data_path = (
+            *scg_number_description.data_root,
+            scg_number_description.key,
         )
+        if EQUIPMENT_FLAG.CHLORINATOR not in gateway.equipment_flags:
+            cleanup_excluded_entity(coordinator, DOMAIN, scg_number_data_path)
+            continue
+        if gateway.get_data(*scg_number_data_path):
+            entities.append(ScreenLogicNumber(coordinator, scg_number_description))
 
     async_add_entities(entities)
-
-
-@dataclass
-class ScreenLogicNumberRequiredMixin:
-    """Describes a required mixin for a ScreenLogic number entity."""
-
-    set_value: Callable[..., bool]
-    set_value_params: tuple[tuple[str | int, ...], ...]
-
-
-@dataclass
-class ScreenLogicNumberDescription(
-    NumberEntityDescription,
-    ScreenLogicEntityDescription,
-    ScreenLogicNumberRequiredMixin,
-):
-    """Describes a ScreenLogic number entity."""
 
 
 class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
@@ -166,9 +98,29 @@ class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
         entity_description: ScreenLogicNumberDescription,
     ) -> None:
         """Initialize a ScreenLogic number entity."""
-        self._set_value_func = entity_description.set_value
-        self._set_value_params = entity_description.set_value_params
         super().__init__(coordinator, entity_description)
+        if not asyncio.iscoroutinefunction(
+            func := getattr(self.gateway, entity_description.set_value_name)
+        ):
+            raise TypeError(
+                f"set_value_name '{entity_description.set_value_name}' is not a coroutine"
+            )
+        self._set_value_func: Callable[..., Awaitable[bool]] = func
+        self._attr_native_unit_of_measurement = get_ha_unit(
+            self.entity_data.get(ATTR.UNIT)
+        )
+        if entity_description.native_max_value is None and isinstance(
+            max_val := self.entity_data.get(ATTR.MAX_SETPOINT), int | float
+        ):
+            self._attr_native_max_value = max_val
+        if entity_description.native_min_value is None and isinstance(
+            min_val := self.entity_data.get(ATTR.MIN_SETPOINT), int | float
+        ):
+            self._attr_native_min_value = min_val
+        if entity_description.native_step is None and isinstance(
+            step := self.entity_data.get(ATTR.STEP), int | float
+        ):
+            self._attr_native_step = step
 
     @property
     def native_value(self) -> float:
@@ -178,21 +130,14 @@ class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
 
-        # Current API requires certain values to be set at the same time. This
-        # gathers the existing values and updates the particular value being
-        # set by this entity.
-        args = {}
-        for data_path in self._set_value_params:
-            data_path = realize_path_template(data_path, self._data_path)
-            data_value = data_path[-1]
-            args[data_value] = self.coordinator.gateway.get_value(
-                *data_path, strict=True
-            )
+        # Current API requires int values for the currently supported numbers.
+        value = int(value)
 
-        args[self._data_key] = value
-
-        if self._set_value_func(*args.values()):
-            _LOGGER.debug("Set '%s' to %s", self._data_key, value)
-            await self._async_refresh()
-        else:
-            _LOGGER.debug("Failed to set '%s' to %s", self._data_key, value)
+        try:
+            await self._set_value_func(**{self._data_key: value})
+        except (ScreenLogicCommunicationError, ScreenLogicError) as sle:
+            raise HomeAssistantError(
+                f"Failed to set '{self._data_key}' to {value}: {sle.msg}"
+            ) from sle
+        _LOGGER.debug("Set '%s' to %s", self._data_key, value)
+        await self._async_refresh()

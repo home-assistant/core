@@ -27,18 +27,11 @@ from homeassistant.util import dt as dt_util
 from .const import ATTR_EXPIRES, ATTR_NAME_SERVERS, ATTR_REGISTRAR, ATTR_UPDATED, DOMAIN
 
 
-@dataclass
-class WhoisSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(kw_only=True)
+class WhoisSensorEntityDescription(SensorEntityDescription):
+    """Describes a Whois sensor entity."""
 
     value_fn: Callable[[Domain], datetime | int | str | None]
-
-
-@dataclass
-class WhoisSensorEntityDescription(
-    SensorEntityDescription, WhoisSensorEntityDescriptionMixin
-):
-    """Describes a Whois sensor entity."""
 
 
 def _days_until_expiration(domain: Domain) -> int | None:
