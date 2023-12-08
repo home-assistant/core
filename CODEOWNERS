@@ -524,6 +524,8 @@ build.json @home-assistant/supervisor
 /tests/components/hive/ @Rendili @KJonline
 /homeassistant/components/hlk_sw16/ @jameshilliard
 /tests/components/hlk_sw16/ @jameshilliard
+/homeassistant/components/holiday/ @jrieger
+/tests/components/holiday/ @jrieger
 /homeassistant/components/home_connect/ @DavidMStraub
 /tests/components/home_connect/ @DavidMStraub
 /homeassistant/components/home_plus_control/ @chemaaa
@@ -930,6 +932,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/oralb/ @bdraco @Lash-L
 /tests/components/oralb/ @bdraco @Lash-L
 /homeassistant/components/oru/ @bvlaicu
+/homeassistant/components/osoenergy/ @osohotwateriot
+/tests/components/osoenergy/ @osohotwateriot
 /homeassistant/components/otbr/ @home-assistant/core
 /tests/components/otbr/ @home-assistant/core
 /homeassistant/components/ourgroceries/ @OnFreund

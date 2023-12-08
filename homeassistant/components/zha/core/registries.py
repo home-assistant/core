@@ -253,7 +253,7 @@ class MatchRule:
             else:
                 matches.append(model in self.models)
 
-        if self.quirk_ids and quirk_id:
+        if self.quirk_ids:
             if callable(self.quirk_ids):
                 matches.append(self.quirk_ids(quirk_id))
             else:

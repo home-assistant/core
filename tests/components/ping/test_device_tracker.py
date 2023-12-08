@@ -1,13 +1,17 @@
 """Test the binary sensor platform of ping."""
+from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.device_tracker import legacy
 from homeassistant.components.ping.const import DOMAIN
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
+from homeassistant.util.yaml import dump
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, patch_yaml_files
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -56,7 +60,42 @@ async def test_import_issue_creation(
     )
     await hass.async_block_till_done()
 
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
     issue = issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
     assert issue
+
+
+async def test_import_delete_known_devices(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+):
+    """Test if import deletes known devices."""
+    yaml_devices = {
+        "test": {
+            "hide_if_away": True,
+            "mac": "00:11:22:33:44:55",
+            "name": "Test name",
+            "picture": "/local/test.png",
+            "track": True,
+        },
+    }
+    files = {legacy.YAML_DEVICES: dump(yaml_devices)}
+
+    with patch_yaml_files(files, True), patch(
+        "homeassistant.components.ping.device_tracker.remove_device_from_config"
+    ) as remove_device_from_config:
+        await async_setup_component(
+            hass,
+            "device_tracker",
+            {"device_tracker": {"platform": "ping", "hosts": {"test": "10.10.10.10"}}},
+        )
+        await hass.async_block_till_done()
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(remove_device_from_config.mock_calls) == 1

@@ -41,6 +41,7 @@ class ReolinkNumberEntityDescription(
 NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="zoom",
+        cmd_key="GetZoomFocus",
         translation_key="zoom",
         icon="mdi:magnify",
         mode=NumberMode.SLIDER,
@@ -53,6 +54,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="focus",
+        cmd_key="GetZoomFocus",
         translation_key="focus",
         icon="mdi:focus-field",
         mode=NumberMode.SLIDER,
@@ -68,6 +70,7 @@ NUMBER_ENTITIES = (
     # or when using the "light.floodlight" entity.
     ReolinkNumberEntityDescription(
         key="floodlight_brightness",
+        cmd_key="GetWhiteLed",
         translation_key="floodlight_brightness",
         icon="mdi:spotlight-beam",
         entity_category=EntityCategory.CONFIG,
@@ -80,6 +83,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="volume",
+        cmd_key="GetAudioCfg",
         translation_key="volume",
         icon="mdi:volume-high",
         entity_category=EntityCategory.CONFIG,
@@ -92,6 +96,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="guard_return_time",
+        cmd_key="GetPtzGuard",
         translation_key="guard_return_time",
         icon="mdi:crosshairs-gps",
         entity_category=EntityCategory.CONFIG,
@@ -105,6 +110,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="motion_sensitivity",
+        cmd_key="GetMdAlarm",
         translation_key="motion_sensitivity",
         icon="mdi:motion-sensor",
         entity_category=EntityCategory.CONFIG,
@@ -117,6 +123,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_face_sensititvity",
+        cmd_key="GetAiAlarm",
         translation_key="ai_face_sensititvity",
         icon="mdi:face-recognition",
         entity_category=EntityCategory.CONFIG,
@@ -131,6 +138,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_person_sensititvity",
+        cmd_key="GetAiAlarm",
         translation_key="ai_person_sensititvity",
         icon="mdi:account",
         entity_category=EntityCategory.CONFIG,
@@ -145,6 +153,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_vehicle_sensititvity",
+        cmd_key="GetAiAlarm",
         translation_key="ai_vehicle_sensititvity",
         icon="mdi:car",
         entity_category=EntityCategory.CONFIG,
@@ -159,6 +168,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_pet_sensititvity",
+        cmd_key="GetAiAlarm",
         translation_key="ai_pet_sensititvity",
         icon="mdi:dog-side",
         entity_category=EntityCategory.CONFIG,
@@ -175,6 +185,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_pet_sensititvity",
+        cmd_key="GetAiAlarm",
         translation_key="ai_animal_sensititvity",
         icon="mdi:paw",
         entity_category=EntityCategory.CONFIG,
@@ -189,6 +200,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_face_delay",
+        cmd_key="GetAiAlarm",
         translation_key="ai_face_delay",
         icon="mdi:face-recognition",
         entity_category=EntityCategory.CONFIG,
@@ -205,6 +217,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_person_delay",
+        cmd_key="GetAiAlarm",
         translation_key="ai_person_delay",
         icon="mdi:account",
         entity_category=EntityCategory.CONFIG,
@@ -221,6 +234,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_vehicle_delay",
+        cmd_key="GetAiAlarm",
         translation_key="ai_vehicle_delay",
         icon="mdi:car",
         entity_category=EntityCategory.CONFIG,
@@ -237,6 +251,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_pet_delay",
+        cmd_key="GetAiAlarm",
         translation_key="ai_pet_delay",
         icon="mdi:dog-side",
         entity_category=EntityCategory.CONFIG,
@@ -255,6 +270,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="ai_pet_delay",
+        cmd_key="GetAiAlarm",
         translation_key="ai_animal_delay",
         icon="mdi:paw",
         entity_category=EntityCategory.CONFIG,
@@ -271,6 +287,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="auto_quick_reply_time",
+        cmd_key="GetAutoReply",
         translation_key="auto_quick_reply_time",
         icon="mdi:message-reply-text-outline",
         entity_category=EntityCategory.CONFIG,
@@ -284,6 +301,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="auto_track_limit_left",
+        cmd_key="GetPtzTraceSection",
         translation_key="auto_track_limit_left",
         icon="mdi:angle-acute",
         mode=NumberMode.SLIDER,
@@ -297,6 +315,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="auto_track_limit_right",
+        cmd_key="GetPtzTraceSection",
         translation_key="auto_track_limit_right",
         icon="mdi:angle-acute",
         mode=NumberMode.SLIDER,
@@ -310,6 +329,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="auto_track_disappear_time",
+        cmd_key="GetAiCfg",
         translation_key="auto_track_disappear_time",
         icon="mdi:target-account",
         entity_category=EntityCategory.CONFIG,
@@ -325,6 +345,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="auto_track_stop_time",
+        cmd_key="GetAiCfg",
         translation_key="auto_track_stop_time",
         icon="mdi:target-account",
         entity_category=EntityCategory.CONFIG,
@@ -338,6 +359,7 @@ NUMBER_ENTITIES = (
     ),
     ReolinkNumberEntityDescription(
         key="day_night_switch_threshold",
+        cmd_key="GetIsp",
         translation_key="day_night_switch_threshold",
         icon="mdi:theme-light-dark",
         entity_category=EntityCategory.CONFIG,

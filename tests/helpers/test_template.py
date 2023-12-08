@@ -1853,7 +1853,7 @@ def test_has_value(hass: HomeAssistant) -> None:
 def test_now(mock_is_safe, hass: HomeAssistant) -> None:
     """Test now method."""
     now = dt_util.now()
-    with patch("homeassistant.util.dt.now", return_value=now):
+    with freeze_time(now):
         info = template.Template("{{ now().isoformat() }}", hass).async_render_to_info()
         assert now.isoformat() == info.result()
 
@@ -1867,7 +1867,7 @@ def test_now(mock_is_safe, hass: HomeAssistant) -> None:
 def test_utcnow(mock_is_safe, hass: HomeAssistant) -> None:
     """Test now method."""
     utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow):
+    with freeze_time(utcnow):
         info = template.Template(
             "{{ utcnow().isoformat() }}", hass
         ).async_render_to_info()
@@ -1954,7 +1954,7 @@ def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
     relative_time_template = (
         '{{relative_time(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}'
     )
-    with patch("homeassistant.util.dt.now", return_value=now):
+    with freeze_time(now):
         result = template.Template(
             relative_time_template,
             hass,
@@ -2026,7 +2026,7 @@ def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
 def test_timedelta(mock_is_safe, hass: HomeAssistant) -> None:
     """Test relative_time method."""
     now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
-    with patch("homeassistant.util.dt.now", return_value=now):
+    with freeze_time(now):
         result = template.Template(
             "{{timedelta(seconds=120)}}",
             hass,
