@@ -1955,6 +1955,9 @@ pyopnsense==0.4.0
 # homeassistant.components.opple
 pyoppleio-legacy==1.0.8
 
+# homeassistant.components.osoenergy
+pyosoenergyapi==1.1.3
+
 # homeassistant.components.opentherm_gw
 pyotgw==2.1.3
 
