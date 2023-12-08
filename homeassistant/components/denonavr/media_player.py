@@ -8,7 +8,15 @@ import logging
 from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from denonavr import DenonAVR
-from denonavr.const import POWER_ON, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
+from denonavr.const import (
+    ALL_TELNET_EVENTS,
+    ALL_ZONES,
+    POWER_ON,
+    STATE_OFF,
+    STATE_ON,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 from denonavr.exceptions import (
     AvrCommandError,
     AvrForbiddenError,
@@ -72,6 +80,23 @@ PARALLEL_UPDATES = 1
 SERVICE_GET_COMMAND = "get_command"
 SERVICE_SET_DYNAMIC_EQ = "set_dynamic_eq"
 SERVICE_UPDATE_AUDYSSEY = "update_audyssey"
+
+# HA Telnet events
+TELNET_EVENTS = {
+    "HD",
+    "MS",
+    "MU",
+    "MV",
+    "NS",
+    "NSE",
+    "PS",
+    "SI",
+    "SS",
+    "TF",
+    "ZM",
+    "Z2",
+    "Z3",
+}
 
 _DenonDeviceT = TypeVar("_DenonDeviceT", bound="DenonDevice")
 _R = TypeVar("_R")
@@ -254,7 +279,9 @@ class DenonDevice(MediaPlayerEntity):
     async def _telnet_callback(self, zone, event, parameter) -> None:
         """Process a telnet command callback."""
         # There are multiple checks implemented which reduce unnecessary updates of the ha state machine
-        if zone != self._receiver.zone:
+        if zone not in (self._receiver.zone, ALL_ZONES):
+            return
+        if event not in TELNET_EVENTS:
             return
         # Some updates trigger multiple events like one for artist and one for title for one change
         # We skip every event except the last one
@@ -268,11 +295,11 @@ class DenonDevice(MediaPlayerEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register for telnet events."""
-        self._receiver.register_callback("ALL", self._telnet_callback)
+        self._receiver.register_callback(ALL_TELNET_EVENTS, self._telnet_callback)
 
     async def async_will_remove_from_hass(self) -> None:
         """Clean up the entity."""
-        self._receiver.unregister_callback("ALL", self._telnet_callback)
+        self._receiver.unregister_callback(ALL_TELNET_EVENTS, self._telnet_callback)
 
     @async_log_errors
     async def async_update(self) -> None:

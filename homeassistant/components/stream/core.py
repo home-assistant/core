@@ -4,13 +4,13 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine, Iterable
+from dataclasses import dataclass, field
 import datetime
 from enum import IntEnum
 import logging
 from typing import TYPE_CHECKING, Any
 
 from aiohttp import web
-import attr
 import numpy as np
 
 from homeassistant.components.http.view import HomeAssistantView
@@ -50,15 +50,15 @@ class Orientation(IntEnum):
     ROTATE_RIGHT = 8
 
 
-@attr.s(slots=True)
+@dataclass(slots=True)
 class StreamSettings:
     """Stream settings."""
 
-    ll_hls: bool = attr.ib()
-    min_segment_duration: float = attr.ib()
-    part_target_duration: float = attr.ib()
-    hls_advance_part_limit: int = attr.ib()
-    hls_part_timeout: float = attr.ib()
+    ll_hls: bool
+    min_segment_duration: float
+    part_target_duration: float
+    hls_advance_part_limit: int
+    hls_part_timeout: float
 
 
 STREAM_SETTINGS_NON_LL_HLS = StreamSettings(
@@ -70,39 +70,39 @@ STREAM_SETTINGS_NON_LL_HLS = StreamSettings(
 )
 
 
-@attr.s(slots=True)
+@dataclass(slots=True)
 class Part:
     """Represent a segment part."""
 
-    duration: float = attr.ib()
-    has_keyframe: bool = attr.ib()
+    duration: float
+    has_keyframe: bool
     # video data (moof+mdat)
-    data: bytes = attr.ib()
+    data: bytes
 
 
-@attr.s(slots=True)
+@dataclass(slots=True)
 class Segment:
     """Represent a segment."""
 
-    sequence: int = attr.ib()
+    sequence: int
     # the init of the mp4 the segment is based on
-    init: bytes = attr.ib()
+    init: bytes
     # For detecting discontinuities across stream restarts
-    stream_id: int = attr.ib()
-    start_time: datetime.datetime = attr.ib()
-    _stream_outputs: Iterable[StreamOutput] = attr.ib()
-    duration: float = attr.ib(default=0)
-    parts: list[Part] = attr.ib(factory=list)
+    stream_id: int
+    start_time: datetime.datetime
+    _stream_outputs: Iterable[StreamOutput]
+    duration: float = 0
+    parts: list[Part] = field(default_factory=list)
     # Store text of this segment's hls playlist for reuse
     # Use list[str] for easy appends
-    hls_playlist_template: list[str] = attr.ib(factory=list)
-    hls_playlist_parts: list[str] = attr.ib(factory=list)
+    hls_playlist_template: list[str] = field(default_factory=list)
+    hls_playlist_parts: list[str] = field(default_factory=list)
     # Number of playlist parts rendered so far
-    hls_num_parts_rendered: int = attr.ib(default=0)
+    hls_num_parts_rendered: int = 0
     # Set to true when all the parts are rendered
-    hls_playlist_complete: bool = attr.ib(default=False)
+    hls_playlist_complete: bool = False
 
-    def __attrs_post_init__(self) -> None:
+    def __post_init__(self) -> None:
         """Run after init."""
         for output in self._stream_outputs:
             output.put(self)

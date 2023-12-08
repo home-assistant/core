@@ -26,7 +26,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_sensor_platform(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor platform."""
 
@@ -40,8 +42,6 @@ async def test_sensor_platform(
     )
     await add_mock_config(hass)
 
-    registry = er.async_get(hass)
-
     assert len(aioclient_mock.mock_calls) == 1
 
     # Test First TimeToOn Sensor
@@ -50,7 +50,7 @@ async def test_sensor_platform(
     assert state
     assert int(state.state) == 0
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-timetoOn"
 
@@ -75,7 +75,7 @@ async def test_sensor_platform(
     assert state
     assert int(state.state) == 10
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-timetoOff"
 
@@ -100,7 +100,7 @@ async def test_sensor_platform(
     assert state
     assert int(state.state) == 100
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z01-vent"
 
@@ -110,7 +110,7 @@ async def test_sensor_platform(
     assert state
     assert int(state.state) == 0
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z02-vent"
 
@@ -120,7 +120,7 @@ async def test_sensor_platform(
     assert state
     assert int(state.state) == 40
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z01-signal"
 
@@ -130,7 +130,7 @@ async def test_sensor_platform(
     assert state
     assert int(state.state) == 10
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z02-signal"
 
@@ -139,7 +139,7 @@ async def test_sensor_platform(
 
     assert not hass.states.get(entity_id)
 
-    registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
     await hass.async_block_till_done()
 
     async_fire_time_changed(
@@ -152,6 +152,6 @@ async def test_sensor_platform(
     assert state
     assert int(state.state) == 25
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z01-temp"

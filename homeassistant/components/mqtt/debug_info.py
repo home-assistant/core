@@ -3,11 +3,10 @@ from __future__ import annotations
 
 from collections import deque
 from collections.abc import Callable
+from dataclasses import dataclass
 import datetime as dt
 from functools import wraps
 from typing import TYPE_CHECKING, Any
-
-import attr
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -49,15 +48,15 @@ def log_messages(
     return _decorator
 
 
-@attr.s(slots=True, frozen=True)
+@dataclass
 class TimestampedPublishMessage:
     """MQTT Message."""
 
-    topic: str = attr.ib()
-    payload: PublishPayloadType = attr.ib()
-    qos: int = attr.ib()
-    retain: bool = attr.ib()
-    timestamp: dt.datetime = attr.ib(default=None)
+    topic: str
+    payload: PublishPayloadType
+    qos: int
+    retain: bool
+    timestamp: dt.datetime
 
 
 def log_message(

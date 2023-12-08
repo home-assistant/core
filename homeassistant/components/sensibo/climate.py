@@ -57,6 +57,7 @@ BOOST_INCLUSIVE = "boost_inclusive"
 AVAILABLE_FAN_MODES = {
     "quiet",
     "low",
+    "medium_low",
     "medium",
     "medium_high",
     "high",

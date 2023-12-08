@@ -18,6 +18,7 @@ from collections.abc import (
 )
 import concurrent.futures
 from contextlib import suppress
+from dataclasses import dataclass
 import datetime
 import enum
 import functools
@@ -28,7 +29,17 @@ import re
 import threading
 import time
 from time import monotonic
-from typing import TYPE_CHECKING, Any, Generic, ParamSpec, Self, TypeVar, cast, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generic,
+    Literal,
+    ParamSpec,
+    Self,
+    TypeVar,
+    cast,
+    overload,
+)
 from urllib.parse import urlparse
 
 import voluptuous as vol
@@ -70,7 +81,6 @@ from .exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
-from .helpers.aiohttp_compat import restore_original_aiohttp_cancel_behavior
 from .helpers.json import json_dumps
 from .util import dt as dt_util, location
 from .util.async_ import (
@@ -81,7 +91,7 @@ from .util.async_ import (
 from .util.json import JsonObjectType
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
-from .util.ulid import ulid, ulid_at_time
+from .util.ulid import ulid_at_time, ulid_now
 from .util.unit_system import (
     _CONF_UNIT_SYSTEM_IMPERIAL,
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
@@ -98,12 +108,12 @@ if TYPE_CHECKING:
     from .helpers.entity import StateInfo
 
 
-STAGE_1_SHUTDOWN_TIMEOUT = 100
-STAGE_2_SHUTDOWN_TIMEOUT = 60
-STAGE_3_SHUTDOWN_TIMEOUT = 30
+STOPPING_STAGE_SHUTDOWN_TIMEOUT = 20
+STOP_STAGE_SHUTDOWN_TIMEOUT = 100
+FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT = 60
+CLOSE_STAGE_SHUTDOWN_TIMEOUT = 30
 
 block_async_io.enable()
-restore_original_aiohttp_cancel_behavior()
 
 _T = TypeVar("_T")
 _R = TypeVar("_R")
@@ -124,6 +134,7 @@ DOMAIN = "homeassistant"
 BLOCK_LOG_TIMEOUT = 60
 
 ServiceResponse = JsonObjectType | None
+EntityServiceResponse = dict[str, ServiceResponse]
 
 
 class ConfigSource(enum.StrEnum):
@@ -199,6 +210,18 @@ def is_callback(func: Callable[..., Any]) -> bool:
     return getattr(func, "_hass_callback", False) is True
 
 
+def is_callback_check_partial(target: Callable[..., Any]) -> bool:
+    """Check if function is safe to be called in the event loop.
+
+    This version of is_callback will also check if the target is a partial
+    and walk the chain of partials to find the original function.
+    """
+    check_target = target
+    while isinstance(check_target, functools.partial):
+        check_target = check_target.func
+    return is_callback(check_target)
+
+
 class _Hass(threading.local):
     """Container which makes a HomeAssistant instance available to the event loop."""
 
@@ -220,6 +243,19 @@ def async_get_hass() -> HomeAssistant:
     if not _hass.hass:
         raise HomeAssistantError("async_get_hass called from the wrong thread")
     return _hass.hass
+
+
+@callback
+def get_release_channel() -> Literal["beta", "dev", "nightly", "stable"]:
+    """Find release channel based on version number."""
+    version = __version__
+    if "dev0" in version:
+        return "dev"
+    if "dev" in version:
+        return "nightly"
+    if "b" in version:
+        return "beta"
+    return "stable"
 
 
 @enum.unique
@@ -247,11 +283,12 @@ class HassJob(Generic[_P, _R_co]):
         name: str | None = None,
         *,
         cancel_on_shutdown: bool | None = None,
+        job_type: HassJobType | None = None,
     ) -> None:
         """Create a job object."""
         self.target = target
         self.name = name
-        self.job_type = _get_hassjob_callable_job_type(target)
+        self.job_type = job_type or _get_hassjob_callable_job_type(target)
         self._cancel_on_shutdown = cancel_on_shutdown
 
     @property
@@ -262,6 +299,14 @@ class HassJob(Generic[_P, _R_co]):
     def __repr__(self) -> str:
         """Return the job."""
         return f"<Job {self.name} {self.job_type} {self.target}>"
+
+
+@dataclass(frozen=True)
+class HassJobWithArgs:
+    """Container for a HassJob and arguments."""
+
+    job: HassJob[..., Coroutine[Any, Any, Any] | Any]
+    args: Iterable[Any]
 
 
 def _get_hassjob_callable_job_type(target: Callable[..., Any]) -> HassJobType:
@@ -335,6 +380,7 @@ class HomeAssistant:
         # Timeout handler for Core/Helper namespace
         self.timeout: TimeoutManager = TimeoutManager()
         self._stop_future: concurrent.futures.Future[None] | None = None
+        self._shutdown_jobs: list[HassJobWithArgs] = []
 
     @property
     def is_running(self) -> bool:
@@ -731,6 +777,42 @@ class HomeAssistant:
             for task in pending:
                 _LOGGER.debug("Waited %s seconds for task: %s", wait_time, task)
 
+    @overload
+    @callback
+    def async_add_shutdown_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, Any]], *args: Any
+    ) -> CALLBACK_TYPE:
+        ...
+
+    @overload
+    @callback
+    def async_add_shutdown_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, Any] | Any], *args: Any
+    ) -> CALLBACK_TYPE:
+        ...
+
+    @callback
+    def async_add_shutdown_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, Any] | Any], *args: Any
+    ) -> CALLBACK_TYPE:
+        """Add a HassJob which will be executed on shutdown.
+
+        This method must be run in the event loop.
+
+        hassjob: HassJob
+        args: parameters for method to call.
+
+        Returns function to remove the job.
+        """
+        job_with_args = HassJobWithArgs(hassjob, args)
+        self._shutdown_jobs.append(job_with_args)
+
+        @callback
+        def remove_job() -> None:
+            self._shutdown_jobs.remove(job_with_args)
+
+        return remove_job
+
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
         if self.state == CoreState.not_running:  # just ignore
@@ -764,6 +846,26 @@ class HomeAssistant:
                     "Stopping Home Assistant before startup has completed may fail"
                 )
 
+        # Stage 1 - Run shutdown jobs
+        try:
+            async with self.timeout.async_timeout(STOPPING_STAGE_SHUTDOWN_TIMEOUT):
+                tasks: list[asyncio.Future[Any]] = []
+                for job in self._shutdown_jobs:
+                    task_or_none = self.async_run_hass_job(job.job, *job.args)
+                    if not task_or_none:
+                        continue
+                    tasks.append(task_or_none)
+                if tasks:
+                    asyncio.gather(*tasks, return_exceptions=True)
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                "Timed out waiting for shutdown jobs to complete, the shutdown will"
+                " continue"
+            )
+            self._async_log_running_tasks("run shutdown jobs")
+
+        # Stage 2 - Stop integrations
+
         # Keep holding the reference to the tasks but do not allow them
         # to block shutdown. Only tasks created after this point will
         # be waited for.
@@ -781,33 +883,32 @@ class HomeAssistant:
 
         self.exit_code = exit_code
 
-        # stage 1
         self.state = CoreState.stopping
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         try:
-            async with self.timeout.async_timeout(STAGE_1_SHUTDOWN_TIMEOUT):
+            async with self.timeout.async_timeout(STOP_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for shutdown stage 1 to complete, the shutdown will"
+                "Timed out waiting for integrations to stop, the shutdown will"
                 " continue"
             )
-            self._async_log_running_tasks(1)
+            self._async_log_running_tasks("stop integrations")
 
-        # stage 2
+        # Stage 3 - Final write
         self.state = CoreState.final_write
         self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
         try:
-            async with self.timeout.async_timeout(STAGE_2_SHUTDOWN_TIMEOUT):
+            async with self.timeout.async_timeout(FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for shutdown stage 2 to complete, the shutdown will"
+                "Timed out waiting for final writes to complete, the shutdown will"
                 " continue"
             )
-            self._async_log_running_tasks(2)
+            self._async_log_running_tasks("final write")
 
-        # stage 3
+        # Stage 4 - Close
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
 
@@ -821,12 +922,12 @@ class HomeAssistant:
                 # were awaiting another task
                 continue
             _LOGGER.warning(
-                "Task %s was still running after stage 2 shutdown; "
+                "Task %s was still running after final writes shutdown stage; "
                 "Integrations should cancel non-critical tasks when receiving "
                 "the stop event to prevent delaying shutdown",
                 task,
             )
-            task.cancel("Home Assistant stage 2 shutdown")
+            task.cancel("Home Assistant final writes shutdown stage")
             try:
                 async with asyncio.timeout(0.1):
                     await task
@@ -835,10 +936,12 @@ class HomeAssistant:
             except asyncio.TimeoutError:
                 # Task may be shielded from cancellation.
                 _LOGGER.exception(
-                    "Task %s could not be canceled during stage 3 shutdown", task
+                    "Task %s could not be canceled during final shutdown stage", task
                 )
-            except Exception as ex:  # pylint: disable=broad-except
-                _LOGGER.exception("Task %s error during stage 3 shutdown: %s", task, ex)
+            except Exception as exc:  # pylint: disable=broad-except
+                _LOGGER.exception(
+                    "Task %s error during final shutdown stage: %s", task, exc
+                )
 
         # Prevent run_callback_threadsafe from scheduling any additional
         # callbacks in the event loop as callbacks created on the futures
@@ -848,14 +951,14 @@ class HomeAssistant:
         shutdown_run_callback_threadsafe(self.loop)
 
         try:
-            async with self.timeout.async_timeout(STAGE_3_SHUTDOWN_TIMEOUT):
+            async with self.timeout.async_timeout(CLOSE_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for shutdown stage 3 to complete, the shutdown will"
+                "Timed out waiting for close event to be processed, the shutdown will"
                 " continue"
             )
-            self._async_log_running_tasks(3)
+            self._async_log_running_tasks("close")
 
         self.state = CoreState.stopped
 
@@ -875,10 +978,10 @@ class HomeAssistant:
             ):
                 handle.cancel()
 
-    def _async_log_running_tasks(self, stage: int) -> None:
+    def _async_log_running_tasks(self, stage: str) -> None:
         """Log all running tasks."""
         for task in self._tasks:
-            _LOGGER.warning("Shutdown stage %s: still running: %s", stage, task)
+            _LOGGER.warning("Shutdown stage '%s': still running: %s", stage, task)
 
 
 class Context:
@@ -893,7 +996,7 @@ class Context:
         id: str | None = None,  # pylint: disable=redefined-builtin
     ) -> None:
         """Init the context."""
-        self.id = id or ulid()
+        self.id = id or ulid_now()
         self.user_id = user_id
         self.parent_id = parent_id
         self.origin_event: Event | None = None
@@ -1118,13 +1221,20 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        if event_filter is not None and not is_callback(event_filter):
+        job_type: HassJobType | None = None
+        if event_filter is not None and not is_callback_check_partial(event_filter):
             raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
-        if run_immediately and not is_callback(listener):
-            raise HomeAssistantError(f"Event listener {listener} is not a callback")
+        if run_immediately:
+            if not is_callback_check_partial(listener):
+                raise HomeAssistantError(f"Event listener {listener} is not a callback")
+            job_type = HassJobType.Callback
         return self._async_listen_filterable_job(
             event_type,
-            (HassJob(listener, f"listen {event_type}"), event_filter, run_immediately),
+            (
+                HassJob(listener, f"listen {event_type}", job_type=job_type),
+                event_filter,
+                run_immediately,
+            ),
         )
 
     @callback
@@ -1132,12 +1242,9 @@ class EventBus:
         self, event_type: str, filterable_job: _FilterableJobType
     ) -> CALLBACK_TYPE:
         self._listeners.setdefault(event_type, []).append(filterable_job)
-
-        def remove_listener() -> None:
-            """Remove the listener."""
-            self._async_remove_listener(event_type, filterable_job)
-
-        return remove_listener
+        return functools.partial(
+            self._async_remove_listener, event_type, filterable_job
+        )
 
     def listen_once(
         self,
@@ -1199,7 +1306,11 @@ class EventBus:
         )
 
         filterable_job = (
-            HassJob(_onetime_listener, f"onetime listen {event_type} {listener}"),
+            HassJob(
+                _onetime_listener,
+                f"onetime listen {event_type} {listener}",
+                job_type=HassJobType.Callback,
+            ),
             None,
             False,
         )
@@ -1726,7 +1837,13 @@ class Service:
 
     def __init__(
         self,
-        func: Callable[[ServiceCall], Coroutine[Any, Any, ServiceResponse] | None],
+        func: Callable[
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse]
+            | ServiceResponse
+            | EntityServiceResponse
+            | None,
+        ],
         schema: vol.Schema | None,
         domain: str,
         service: str,
@@ -1817,7 +1934,7 @@ class ServiceRegistry:
         service: str,
         service_func: Callable[
             [ServiceCall],
-            Coroutine[Any, Any, ServiceResponse] | None,
+            Coroutine[Any, Any, ServiceResponse] | ServiceResponse | None,
         ],
         schema: vol.Schema | None = None,
     ) -> None:
@@ -1835,7 +1952,11 @@ class ServiceRegistry:
         domain: str,
         service: str,
         service_func: Callable[
-            [ServiceCall], Coroutine[Any, Any, ServiceResponse] | None
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse]
+            | ServiceResponse
+            | EntityServiceResponse
+            | None,
         ],
         schema: vol.Schema | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
@@ -2106,11 +2227,14 @@ class Config:
         # Dictionary of Media folders that integrations may use
         self.media_dirs: dict[str, str] = {}
 
-        # If Home Assistant is running in safe mode
-        self.safe_mode: bool = False
+        # If Home Assistant is running in recovery mode
+        self.recovery_mode: bool = False
 
         # Use legacy template behavior
         self.legacy_templates: bool = False
+
+        # If Home Assistant is running in safe mode
+        self.safe_mode: bool = False
 
     def distance(self, lat: float, lon: float) -> float | None:
         """Calculate distance from Home Assistant.
@@ -2185,13 +2309,14 @@ class Config:
             "allowlist_external_urls": self.allowlist_external_urls,
             "version": __version__,
             "config_source": self.config_source,
-            "safe_mode": self.safe_mode,
+            "recovery_mode": self.recovery_mode,
             "state": self.hass.state.value,
             "external_url": self.external_url,
             "internal_url": self.internal_url,
             "currency": self.currency,
             "country": self.country,
             "language": self.language,
+            "safe_mode": self.safe_mode,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:

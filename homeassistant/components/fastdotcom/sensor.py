@@ -8,29 +8,28 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfDataRate
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_UPDATED, DOMAIN as FASTDOTCOM_DOMAIN
+from .const import DATA_UPDATED, DOMAIN
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Fast.com sensor."""
-    async_add_entities([SpeedtestSensor(hass.data[FASTDOTCOM_DOMAIN])])
+    async_add_entities([SpeedtestSensor(entry.entry_id, hass.data[DOMAIN])])
 
 
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class SpeedtestSensor(RestoreEntity, SensorEntity):
-    """Implementation of a FAst.com sensor."""
+    """Implementation of a Fast.com sensor."""
 
     _attr_name = "Fast.com Download"
     _attr_device_class = SensorDeviceClass.DATA_RATE
@@ -39,9 +38,10 @@ class SpeedtestSensor(RestoreEntity, SensorEntity):
     _attr_icon = "mdi:speedometer"
     _attr_should_poll = False
 
-    def __init__(self, speedtest_data: dict[str, Any]) -> None:
+    def __init__(self, entry_id: str, speedtest_data: dict[str, Any]) -> None:
         """Initialize the sensor."""
         self._speedtest_data = speedtest_data
+        self._attr_unique_id = entry_id
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

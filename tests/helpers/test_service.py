@@ -465,7 +465,14 @@ async def test_extract_entity_ids(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "group", {})
     await hass.async_block_till_done()
     await hass.components.group.Group.async_create_group(
-        hass, "test", ["light.Ceiling", "light.Kitchen"]
+        hass,
+        "test",
+        created_by_service=False,
+        entity_ids=["light.Ceiling", "light.Kitchen"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
 
     call = ServiceCall("light", "turn_on", {ATTR_ENTITY_ID: "light.Bowl"})

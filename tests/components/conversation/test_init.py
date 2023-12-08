@@ -1307,7 +1307,14 @@ async def test_prepare_reload(hass: HomeAssistant) -> None:
     # Confirm intents are loaded
     assert agent._lang_intents.get(language)
 
-    # Clear cache
+    # Try to clear for a different language
+    await hass.services.async_call("conversation", "reload", {"language": "elvish"})
+    await hass.async_block_till_done()
+
+    # Confirm intents are still loaded
+    assert agent._lang_intents.get(language)
+
+    # Clear cache for all languages
     await hass.services.async_call("conversation", "reload", {})
     await hass.async_block_till_done()
 

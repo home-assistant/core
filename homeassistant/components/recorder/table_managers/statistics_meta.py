@@ -41,10 +41,7 @@ def _generate_get_metadata_stmt(
     """Generate a statement to fetch metadata."""
     stmt = lambda_stmt(lambda: select(*QUERY_STATISTIC_META))
     if statistic_ids:
-        stmt += lambda q: q.where(
-            # https://github.com/python/mypy/issues/2608
-            StatisticsMeta.statistic_id.in_(statistic_ids)  # type:ignore[arg-type]
-        )
+        stmt += lambda q: q.where(StatisticsMeta.statistic_id.in_(statistic_ids))
     if statistic_source is not None:
         stmt += lambda q: q.where(StatisticsMeta.source == statistic_source)
     if statistic_type == "mean":

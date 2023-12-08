@@ -39,7 +39,9 @@ async def test_unload_entry(_, hass: HomeAssistant) -> None:
 
 
 @patch(API_HEAT_METER_SERVICE)
-async def test_migrate_entry(_, hass: HomeAssistant) -> None:
+async def test_migrate_entry(
+    _, hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test successful migration of entry data from version 1 to 2."""
 
     mock_entry_data = {
@@ -59,8 +61,7 @@ async def test_migrate_entry(_, hass: HomeAssistant) -> None:
     mock_entry.add_to_hass(hass)
 
     # Create entity entry to migrate to new unique ID
-    registry = er.async_get(hass)
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
         LANDISGYR_HEAT_METER_DOMAIN,
         "landisgyr_heat_meter_987654321_measuring_range_m3ph",
@@ -74,5 +75,5 @@ async def test_migrate_entry(_, hass: HomeAssistant) -> None:
 
     # Check if entity unique id is migrated successfully
     assert mock_entry.version == 2
-    entity = registry.async_get("sensor.heat_meter_measuring_range")
+    entity = entity_registry.async_get("sensor.heat_meter_measuring_range")
     assert entity.unique_id == "12345_measuring_range_m3ph"

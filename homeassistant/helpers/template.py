@@ -6,7 +6,7 @@ import asyncio
 import base64
 import collections.abc
 from collections.abc import Callable, Collection, Generator, Iterable, MutableMapping
-from contextlib import contextmanager, suppress
+from contextlib import AbstractContextManager, suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
 from functools import cache, lru_cache, partial, wraps
@@ -20,7 +20,7 @@ import re
 import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
-from types import CodeType
+from types import CodeType, TracebackType
 from typing import (
     Any,
     Concatenate,
@@ -504,7 +504,8 @@ class Template:
 
     def ensure_valid(self) -> None:
         """Return if template is valid."""
-        with set_template(self.template, "compiling"):
+        with _template_context_manager as cm:
+            cm.set_template(self.template, "compiling")
             if self.is_static or self._compiled_code is not None:
                 return
 
@@ -1956,6 +1957,41 @@ def is_number(value):
     return True
 
 
+def _is_list(value: Any) -> bool:
+    """Return whether a value is a list."""
+    return isinstance(value, list)
+
+
+def _is_set(value: Any) -> bool:
+    """Return whether a value is a set."""
+    return isinstance(value, set)
+
+
+def _is_tuple(value: Any) -> bool:
+    """Return whether a value is a tuple."""
+    return isinstance(value, tuple)
+
+
+def _to_set(value: Any) -> set[Any]:
+    """Convert value to set."""
+    return set(value)
+
+
+def _to_tuple(value):
+    """Convert value to tuple."""
+    return tuple(value)
+
+
+def _is_datetime(value: Any) -> bool:
+    """Return whether a value is a datetime."""
+    return isinstance(value, datetime)
+
+
+def _is_string_like(value: Any) -> bool:
+    """Return whether a value is a string or string like object."""
+    return isinstance(value, (str, bytes, bytearray))
+
+
 def regex_match(value, find="", ignorecase=False):
     """Match value using regex."""
     if not isinstance(value, str):
@@ -2089,6 +2125,10 @@ def to_json(
 
     option = (
         ORJSON_PASSTHROUGH_OPTIONS
+        # OPT_NON_STR_KEYS is added as a workaround to
+        # ensure subclasses of str are allowed as dict keys
+        # See: https://github.com/ijl/orjson/issues/445
+        | orjson.OPT_NON_STR_KEYS
         | (orjson.OPT_INDENT_2 if pretty_print else 0)
         | (orjson.OPT_SORT_KEYS if sort_keys else 0)
     )
@@ -2178,21 +2218,32 @@ def iif(
     return if_false
 
 
-@contextmanager
-def set_template(template_str: str, action: str) -> Generator:
-    """Store template being parsed or rendered in a Contextvar to aid error handling."""
-    template_cv.set((template_str, action))
-    try:
-        yield
-    finally:
+class TemplateContextManager(AbstractContextManager):
+    """Context manager to store template being parsed or rendered in a ContextVar."""
+
+    def set_template(self, template_str: str, action: str) -> None:
+        """Store template being parsed or rendered in a Contextvar to aid error handling."""
+        template_cv.set((template_str, action))
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        """Raise any exception triggered within the runtime context."""
         template_cv.set(None)
+
+
+_template_context_manager = TemplateContextManager()
 
 
 def _render_with_context(
     template_str: str, template: jinja2.Template, **kwargs: Any
 ) -> str:
     """Store template being rendered in a ContextVar to aid error handling."""
-    with set_template(template_str, "rendering"):
+    with _template_context_manager as cm:
+        cm.set_template(template_str, "rendering")
         return template.render(**kwargs)
 
 
@@ -2387,6 +2438,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["max"] = min_max_from_filter(self.filters["max"], "max")
         self.globals["min"] = min_max_from_filter(self.filters["min"], "min")
         self.globals["is_number"] = is_number
+        self.globals["set"] = _to_set
+        self.globals["tuple"] = _to_tuple
         self.globals["int"] = forgiving_int
         self.globals["pack"] = struct_pack
         self.globals["unpack"] = struct_unpack
@@ -2395,6 +2448,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["bool"] = forgiving_boolean
         self.globals["version"] = version
         self.tests["is_number"] = is_number
+        self.tests["list"] = _is_list
+        self.tests["set"] = _is_set
+        self.tests["tuple"] = _is_tuple
+        self.tests["datetime"] = _is_datetime
+        self.tests["string_like"] = _is_string_like
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
         self.tests["contains"] = contains
@@ -2554,7 +2612,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         return super().is_safe_attribute(obj, attr, value)
 
     @overload
-    def compile(  # type: ignore[misc]
+    def compile(  # type: ignore[overload-overlap]
         self,
         source: str | jinja2.nodes.Template,
         name: str | None = None,

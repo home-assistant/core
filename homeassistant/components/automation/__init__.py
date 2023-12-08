@@ -733,14 +733,14 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
         self.async_write_ha_state()
 
+    def _log_callback(self, level: int, msg: str, **kwargs: Any) -> None:
+        """Log helper callback."""
+        self._logger.log(level, "%s %s", msg, self.name, **kwargs)
+
     async def _async_attach_triggers(
         self, home_assistant_start: bool
     ) -> Callable[[], None] | None:
         """Set up the triggers."""
-
-        def log_cb(level: int, msg: str, **kwargs: Any) -> None:
-            self._logger.log(level, "%s %s", msg, self.name, **kwargs)
-
         this = None
         self.async_write_ha_state()
         if state := self.hass.states.get(self.entity_id):
@@ -763,7 +763,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             self.async_trigger,
             DOMAIN,
             str(self.name),
-            log_cb,
+            self._log_callback,
             home_assistant_start,
             variables,
         )

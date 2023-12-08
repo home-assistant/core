@@ -34,17 +34,21 @@ from tests.common import async_fire_time_changed
     ],
 )
 async def test_sensor_get_state(
-    hass: HomeAssistant, init_integration, entity_id: str, uid: str, name: str
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration,
+    entity_id: str,
+    uid: str,
+    name: str,
 ) -> None:
     """Test states of the sensor."""
     init_integration
-    registry = er.async_get(hass)
 
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes.get("friendly_name") == name
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == uid
 
@@ -68,7 +72,7 @@ async def test_sensor_get_state(
         assert state
         assert state.attributes.get("friendly_name") == name
 
-        entry = registry.async_get(entity_id)
+        entry = entity_registry.async_get(entity_id)
         assert entry
         assert entry.unique_id == uid
 

@@ -5,7 +5,7 @@ import asyncio
 from datetime import datetime, timedelta
 import ssl
 from types import MappingProxyType
-from typing import Any
+from typing import Any, Literal
 
 from aiohttp import CookieJar
 import aiounifi
@@ -20,9 +20,14 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers import aiohttp_client, device_registry as dr
+from homeassistant.helpers import (
+    aiohttp_client,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
     DeviceEntryType,
@@ -33,6 +38,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 import homeassistant.util.dt as dt_util
 
@@ -41,6 +47,7 @@ from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
+    CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
@@ -103,6 +110,9 @@ class UniFiController:
         """Store attributes to avoid property call overhead since they are called frequently."""
         options = self.config_entry.options
 
+        # Allow creating entities from clients.
+        self.option_supported_clients: list[str] = options.get(CONF_CLIENT_SOURCE, [])
+
         # Device tracker options
 
         # Config entry option to not track clients.
@@ -131,7 +141,7 @@ class UniFiController:
         # Client control options
 
         # Config entry option with list of clients to control network access.
-        self.option_block_clients = options.get(CONF_BLOCK_CLIENT, [])
+        self.option_block_clients: list[str] = options.get(CONF_BLOCK_CLIENT, [])
         # Config entry option to control DPI restriction groups.
         self.option_dpi_restrictions: bool = options.get(
             CONF_DPI_RESTRICTIONS, DEFAULT_DPI_RESTRICTIONS
@@ -244,7 +254,16 @@ class UniFiController:
         assert self.config_entry.unique_id is not None
         self.is_admin = self.api.sites[self.config_entry.unique_id].role == "admin"
 
-        for mac in self.option_block_clients:
+        # Restore device tracker clients that are not a part of active clients list.
+        macs: list[str] = []
+        entity_registry = er.async_get(self.hass)
+        for entry in async_entries_for_config_entry(
+            entity_registry, self.config_entry.entry_id
+        ):
+            if entry.domain == Platform.DEVICE_TRACKER:
+                macs.append(entry.unique_id.split("-", 1)[0])
+
+        for mac in self.option_supported_clients + self.option_block_clients + macs:
             if mac not in self.api.clients and mac in self.api.clients_all:
                 self.api.clients.process_raw([dict(self.api.clients_all[mac].raw)])
 
@@ -302,7 +321,7 @@ class UniFiController:
             self.poe_command_queue.clear()
             for device_id, device_commands in queue.items():
                 device = self.api.devices[device_id]
-                commands = [(idx, mode) for idx, mode in device_commands.items()]
+                commands = list(device_commands.items())
                 await self.api.request(
                     DeviceSetPoePortModeRequest.create(device, targets=commands)
                 )
@@ -439,7 +458,7 @@ async def get_unifi_controller(
     config: MappingProxyType[str, Any],
 ) -> aiounifi.Controller:
     """Create a controller object and verify authentication."""
-    ssl_context: ssl.SSLContext | bool = False
+    ssl_context: ssl.SSLContext | Literal[False] = False
 
     if verify_ssl := config.get(CONF_VERIFY_SSL):
         session = aiohttp_client.async_get_clientsession(hass)
@@ -486,6 +505,14 @@ async def get_unifi_controller(
             "Error connecting to the UniFi Network at %s: %s", config[CONF_HOST], err
         )
         raise CannotConnect from err
+
+    except aiounifi.Forbidden as err:
+        LOGGER.warning(
+            "Access forbidden to UniFi Network at %s, check access rights: %s",
+            config[CONF_HOST],
+            err,
+        )
+        raise AuthenticationRequired from err
 
     except aiounifi.LoginRequired as err:
         LOGGER.warning(
