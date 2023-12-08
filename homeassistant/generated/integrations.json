@@ -286,6 +286,12 @@
       "integration_type": "virtual",
       "supported_by": "energyzero"
     },
+    "aosmith": {
+      "name": "A. O. Smith",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "apache_kafka": {
       "name": "Apache Kafka",
       "integration_type": "hub",

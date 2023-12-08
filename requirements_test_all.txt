@@ -175,6 +175,9 @@ aioairzone==0.6.9
 # homeassistant.components.ambient_station
 aioambient==2023.04.0
 
+# homeassistant.components.apcupsd
+aioapcaccess==0.4.2
+
 # homeassistant.components.aseko_pool_live
 aioaseko==0.0.2
 
@@ -396,9 +399,6 @@ anova-wifi==0.10.0
 
 # homeassistant.components.anthemav
 anthemav==1.4.1
-
-# homeassistant.components.apcupsd
-apcaccess==0.0.13
 
 # homeassistant.components.weatherkit
 apple_weatherkit==1.1.2
@@ -811,7 +811,7 @@ hole==0.8.0
 holidays==0.37
 
 # homeassistant.components.frontend
-home-assistant-frontend==20231206.0
+home-assistant-frontend==20231208.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2023.12.05
@@ -1176,6 +1176,9 @@ pushover_complete==1.1.1
 
 # homeassistant.components.pvoutput
 pvo==2.1.1
+
+# homeassistant.components.aosmith
+py-aosmith==1.0.1
 
 # homeassistant.components.canary
 py-canary==0.5.3
@@ -1597,7 +1600,7 @@ pysoma==0.0.12
 pyspcwebgw==0.7.0
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.6.3
+pysqueezebox==0.7.1
 
 # homeassistant.components.switchbee
 pyswitchbee==1.8.0
