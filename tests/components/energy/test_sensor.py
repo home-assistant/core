@@ -924,7 +924,7 @@ async def test_cost_sensor_handle_late_price_sensor(
     await setup_integration(hass)
 
     state = hass.states.get("sensor.energy_consumption_cost")
-    assert state.state == "unknown"
+    assert state.state == "0.0"
 
     # Energy use bumped by 10 kWh, price sensor still not yet available
     hass.states.async_set(
@@ -935,7 +935,7 @@ async def test_cost_sensor_handle_late_price_sensor(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_consumption_cost")
-    assert state.state == "unknown"
+    assert state.state == "0.0"
 
     # Energy use bumped by 10 kWh, price sensor now available
     hass.states.async_set("sensor.energy_price", "1", price_attributes)
@@ -947,7 +947,7 @@ async def test_cost_sensor_handle_late_price_sensor(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_consumption_cost")
-    assert state.state == "0.0"
+    assert state.state == "20.0"
 
     # Energy use bumped by 10 kWh, price sensor available
     hass.states.async_set(
@@ -958,7 +958,7 @@ async def test_cost_sensor_handle_late_price_sensor(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_consumption_cost")
-    assert state.state == "10.0"
+    assert state.state == "30.0"
 
     # Energy use bumped by 10 kWh, price sensor no longer available
     hass.states.async_set("sensor.energy_price", "unknown", price_attributes)
@@ -970,7 +970,7 @@ async def test_cost_sensor_handle_late_price_sensor(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_consumption_cost")
-    assert state.state == "10.0"
+    assert state.state == "30.0"
 
     # Energy use bumped by 10 kWh, price sensor again available
     hass.states.async_set("sensor.energy_price", "2", price_attributes)
@@ -982,7 +982,7 @@ async def test_cost_sensor_handle_late_price_sensor(
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.energy_consumption_cost")
-    assert state.state == "50.0"
+    assert state.state == "70.0"
 
 
 @pytest.mark.parametrize(
