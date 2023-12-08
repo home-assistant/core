@@ -6,6 +6,7 @@ import logging
 from typing import Any, TypedDict
 
 from aiohttp.client_exceptions import ClientConnectorError
+from mozart_api.exceptions import ApiException
 from mozart_api.mozart_client import MozartClient
 import voluptuous as vol
 
@@ -100,19 +101,19 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             self._client = MozartClient(self._host, urllib3_logging_level=logging.ERROR)
 
             # Try to get information from Beolink self method.
-            try:
-                async with self._client:
+            async with self._client:
+                try:
                     beolink_self = await self._client.get_beolink_self(
                         _request_timeout=3
                     )
-
-            except (TimeoutError, ClientConnectorError) as error:
-                return self.async_abort(
-                    reason={
-                        TimeoutError: "timeout_error",
-                        ClientConnectorError: "client_connector_error",
-                    }[type(error)]
-                )
+                except (ApiException, ClientConnectorError, TimeoutError) as error:
+                    return self.async_abort(
+                        reason={
+                            ApiException: "api_exception",
+                            ClientConnectorError: "client_connector_error",
+                            TimeoutError: "timeout_error",
+                        }[type(error)]
+                    )
 
             self._beolink_jid = beolink_self.jid
             self._serial_number = beolink_self.jid.split(".")[2].split("@")[0]

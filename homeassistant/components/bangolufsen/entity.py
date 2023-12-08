@@ -1,8 +1,6 @@
 """Entity representing a Bang & Olufsen device."""
 from __future__ import annotations
 
-from collections.abc import Callable
-import logging
 from typing import cast
 
 from mozart_api.models import (
@@ -27,8 +25,11 @@ from .const import DOMAIN
 class BangOlufsenVariables:
     """Shared variables for various classes."""
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Initialize the object."""
+
+        # Set the MozartClient
+        self._client = client
 
         # get the input from the config entry.
         self.entry: ConfigEntry = entry
@@ -39,12 +40,6 @@ class BangOlufsenVariables:
         self._host: str = self.entry.data[CONF_HOST]
         self._name: str = self.entry.title
         self._unique_id: str = cast(str, self.entry.unique_id)
-
-        self._client: MozartClient = MozartClient(
-            host=self._host,
-            websocket_reconnect=True,
-            urllib3_logging_level=logging.ERROR,
-        )
 
         # Objects that get directly updated by notifications.
         self._playback_metadata: PlaybackContentMetadata = PlaybackContentMetadata()
@@ -62,10 +57,10 @@ class BangOlufsenEntity(Entity, BangOlufsenVariables):
 
     _attr_has_entity_name = True
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Initialize the object."""
-        BangOlufsenVariables.__init__(self, entry)
-        self._dispatchers: list[Callable] = []
+        Entity.__init__(self)
+        BangOlufsenVariables.__init__(self, entry, client)
 
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
         self._attr_device_class = None
@@ -77,7 +72,3 @@ class BangOlufsenEntity(Entity, BangOlufsenVariables):
         self._attr_available = connection_state
 
         self.async_write_ha_state()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Close API client."""
-        await self._client.close()

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import cast
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -17,5 +15,7 @@ def get_device(hass: HomeAssistant | None, unique_id: str) -> DeviceEntry | None
         return None
 
     device_registry = dr.async_get(hass)
-    device = cast(DeviceEntry, device_registry.async_get_device({(DOMAIN, unique_id)}))
+    device = device_registry.async_get_device({(DOMAIN, unique_id)})
+    assert device
+
     return device

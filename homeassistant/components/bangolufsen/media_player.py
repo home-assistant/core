@@ -29,7 +29,7 @@ from mozart_api.models import (
     VolumeSettings,
     VolumeState,
 )
-from mozart_api.mozart_client import get_highest_resolution_artwork
+from mozart_api.mozart_client import MozartClient, get_highest_resolution_artwork
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -51,6 +51,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
+from . import BangOlufsenData
 from .const import (
     BANGOLUFSEN_MEDIA_TYPE,
     BANGOLUFSEN_STATES,
@@ -96,10 +97,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Media Player entity from config entry."""
+    data: BangOlufsenData = hass.data[DOMAIN][config_entry.entry_id]
+
     # Add MediaPlayer entity
-    async_add_entities(
-        new_entities=[BangOlufsenMediaPlayer(config_entry)], update_before_add=True
-    )
+    async_add_entities(new_entities=[BangOlufsenMediaPlayer(config_entry, data.client)])
 
 
 class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
@@ -109,9 +110,9 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
     _attr_icon = "mdi:speaker-wireless"
     _attr_supported_features = BANGOLUFSEN_FEATURES
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Initialize the media player."""
-        super().__init__(entry)
+        super().__init__(entry, client)
 
         self._beolink_jid: str = self.entry.data[CONF_BEOLINK_JID]
         self._default_volume: int = self.entry.data[CONF_DEFAULT_VOLUME]

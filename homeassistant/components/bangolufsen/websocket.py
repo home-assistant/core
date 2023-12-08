@@ -16,6 +16,7 @@ from mozart_api.models import (
     VolumeState,
     WebsocketNotificationTag,
 )
+from mozart_api.mozart_client import MozartClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -36,10 +37,12 @@ _LOGGER = logging.getLogger(__name__)
 class BangOlufsenWebsocket(BangOlufsenVariables):
     """The WebSocket listeners."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, client: MozartClient
+    ) -> None:
         """Initialize the WebSocket listeners."""
 
-        BangOlufsenVariables.__init__(self, entry)
+        BangOlufsenVariables.__init__(self, entry, client)
 
         self.hass = hass
 
