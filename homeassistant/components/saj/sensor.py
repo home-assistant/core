@@ -197,7 +197,9 @@ class SAJsensor(SensorEntity):
             self._attr_state_class = SensorStateClass.MEASUREMENT
         if pysaj_sensor.name == "total_yield":
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-
+        if pysaj_sensor.name == "today_yield":
+            self._attr_state_class = SensorStateClass.TOTAL
+            
         self._attr_unique_id = f"{serialnumber}_{pysaj_sensor.name}"
         native_uom = SAJ_UNIT_MAPPINGS[pysaj_sensor.unit]
         self._attr_native_unit_of_measurement = native_uom
