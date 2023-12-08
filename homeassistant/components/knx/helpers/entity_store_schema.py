@@ -17,19 +17,23 @@ from ..validation import (
 BASE_ENTITY_SCHEMA = vol.Schema(
     {
         vol.Required("name"): str,
-        vol.Required("device_id"): vol.Maybe(str),
-        vol.Required("entity_category"): vol.Maybe(ENTITY_CATEGORIES_SCHEMA),
-        vol.Required("sync_state"): sync_state_validator,
+        vol.Optional("device_id", default=None): vol.Maybe(str),
+        vol.Optional("entity_category", default=None): vol.Any(
+            ENTITY_CATEGORIES_SCHEMA, vol.SetTo(None)
+        ),
+        vol.Optional("sync_state", default=True): sync_state_validator,
     }
 )
 
 SWITCH_SCHEMA = BASE_ENTITY_SCHEMA.extend(
     {
-        vol.Required("device_class"): vol.Maybe(SWITCH_DEVICE_CLASSES_SCHEMA),
-        vol.Required("invert"): bool,
+        vol.Optional("device_class", default=None): vol.Maybe(
+            SWITCH_DEVICE_CLASSES_SCHEMA
+        ),
+        vol.Optional("invert", default=False): bool,
         vol.Required("switch_address"): ga_list_validator,
         vol.Required("switch_state_address"): ga_list_validator_optional,
-        vol.Required("respond_to_read"): bool,
+        vol.Optional("respond_to_read", default=False): bool,
     }
 )
 
@@ -59,9 +63,4 @@ CREATE_ENTITY_BASE_SCHEMA = {
 UPDATE_ENTITY_BASE_SCHEMA = {
     vol.Required("unique_id"): str,
     **CREATE_ENTITY_BASE_SCHEMA,
-}
-
-LOOKUP_ENTITY_SCHEMA = {
-    vol.Required("platform"): vol.Coerce(Platform),
-    vol.Required("unique_id"): str,
 }

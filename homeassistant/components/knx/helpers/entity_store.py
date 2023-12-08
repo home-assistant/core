@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Final
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.util.uuid import random_uuid_hex
@@ -61,9 +61,24 @@ class KNXEntityStore:
         if unique_id in self.data.setdefault(platform, {}):
             raise EntityStoreException("Unique id already used.")
         self.async_add_entity[platform](unique_id, data)
-        # store data after entity is added to make sure config doesn't raise exceptions
+        # store data after entity was added to be sure config didn't raise exceptions
         self.data[platform][unique_id] = data
         await self._store.async_save(self.data)
+
+    @callback
+    def get_entity_config(self, entity_id: str) -> dict[str, Any]:
+        """Return KNX entity configuration."""
+        entity_registry = er.async_get(self.hass)
+        if (entry := entity_registry.async_get(entity_id)) is None:
+            raise EntityStoreException(f"Entity not found: {entity_id}")
+        try:
+            return {
+                "platform": entry.domain,
+                "unique_id": entry.unique_id,
+                "data": self.data[entry.domain][entry.unique_id],
+            }
+        except KeyError as err:
+            raise EntityStoreException(f"Entity data not found: {entity_id}") from err
 
     async def update_entity(
         self, platform: Platform, unique_id: str, data: dict[str, Any]
@@ -79,18 +94,31 @@ class KNXEntityStore:
         self.data[platform][unique_id] = data
         await self._store.async_save(self.data)
 
-    async def delete_entity(self, platform: Platform, unique_id: str) -> None:
+    async def delete_entity(self, entity_id: str) -> None:
         """Delete an existing entity."""
+        entity_registry = er.async_get(self.hass)
+        if (entry := entity_registry.async_get(entity_id)) is None:
+            raise EntityStoreException(f"Entity not found: {entity_id}")
         try:
-            del self.data[platform][unique_id]
+            del self.data[entry.domain][entry.unique_id]
         except KeyError as err:
             raise EntityStoreException(
-                f"Entity not found in {platform}: {unique_id}"
+                f"Entity not found in {entry.domain}: {entry.unique_id}"
             ) from err
-        _entity_id = self.entities.pop(unique_id).entity_id
-        entity_registry = er.async_get(self.hass)
-        entity_registry.async_remove(_entity_id)
+        try:
+            del self.entities[entry.unique_id]
+        except KeyError:
+            _LOGGER.warning("Entity not initialized when deleted: %s", entity_id)
+        entity_registry.async_remove(entity_id)
         await self._store.async_save(self.data)
+
+    def get_entity_entries(self) -> list[er.RegistryEntry]:
+        """Get entity_ids of all configured entities by platform."""
+        return [
+            entity.registry_entry
+            for entity in self.entities.values()
+            if entity.registry_entry is not None
+        ]
 
 
 class EntityStoreException(Exception):

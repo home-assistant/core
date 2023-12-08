@@ -17,7 +17,6 @@ from .helpers.entity_store import EntityStoreException
 from .helpers.entity_store_schema import (
     CREATE_ENTITY_BASE_SCHEMA,
     ENTITY_STORE_DATA_SCHEMA,
-    LOOKUP_ENTITY_SCHEMA,
     UPDATE_ENTITY_BASE_SCHEMA,
 )
 from .telegrams import TelegramDict
@@ -41,6 +40,7 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_update_entity)
     websocket_api.async_register_command(hass, ws_delete_entity)
     websocket_api.async_register_command(hass, ws_get_entity_config)
+    websocket_api.async_register_command(hass, ws_get_entity_entries)
 
     if DOMAIN not in hass.data.get("frontend_panels", {}):
         await hass.http.async_register_static_paths(
@@ -292,7 +292,7 @@ async def ws_update_entity(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "knx/delete_entity",
-        **LOOKUP_ENTITY_SCHEMA,
+        vol.Required("entity_id"): str,
     }
 )
 @websocket_api.async_response
@@ -304,7 +304,7 @@ async def ws_delete_entity(
     """Delete entity from entity store and remove it."""
     knx: KNXModule = hass.data[DOMAIN]
     try:
-        await knx.entity_store.delete_entity(msg["platform"], msg["unique_id"])
+        await knx.entity_store.delete_entity(msg["entity_id"])
     except EntityStoreException as err:
         connection.send_error(
             msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
@@ -316,8 +316,28 @@ async def ws_delete_entity(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
+        vol.Required("type"): "knx/get_entity_entries",
+    }
+)
+@callback
+def ws_get_entity_entries(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Get entities configured from entity store."""
+    knx: KNXModule = hass.data[DOMAIN]
+    entity_entries = [
+        entry.extended_dict for entry in knx.entity_store.get_entity_entries()
+    ]
+    connection.send_result(msg["id"], entity_entries)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
         vol.Required("type"): "knx/get_entity_config",
-        **LOOKUP_ENTITY_SCHEMA,
+        vol.Required("entity_id"): str,
     }
 )
 @callback
@@ -329,7 +349,7 @@ def ws_get_entity_config(
     """Get entity configuration from entity store."""
     knx: KNXModule = hass.data[DOMAIN]
     try:
-        config = knx.entity_store.data[msg["platform"]][msg["unique_id"]]
+        config = knx.entity_store.get_entity_config(msg["entity_id"])
     except KeyError:
         connection.send_error(
             msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, "Entity not found."
