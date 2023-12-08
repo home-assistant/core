@@ -45,6 +45,19 @@ def __get_date(date_input: str | None) -> date | datetime:
     )
 
 
+def __serialize_prices(prices: list[dict[str, float | datetime]]) -> ServiceResponse:
+    """Serialize prices to service response."""
+    return {
+        "prices": [
+            {
+                key: str(value) if isinstance(value, datetime) else value
+                for key, value in timestamp_price.items()
+            }
+            for timestamp_price in prices
+        ]
+    }
+
+
 async def __get_prices(
     coordinator: EasyEnergyDataUpdateCoordinator,
     call: ServiceCall,
@@ -66,7 +79,7 @@ async def __get_prices(
             end_date=end,
             vat=vat,
         )
-        return {"prices": data.timestamp_prices}
+        return __serialize_prices(data.timestamp_prices)
     data = await coordinator.easyenergy.energy_prices(
         start_date=start,
         end_date=end,
@@ -74,8 +87,8 @@ async def __get_prices(
     )
 
     if price_type == PriceType.ENERGY_USAGE:
-        return {"prices": data.timestamp_usage_prices}
-    return {"prices": data.timestamp_return_prices}
+        return __serialize_prices(data.timestamp_usage_prices)
+    return __serialize_prices(data.timestamp_return_prices)
 
 
 async def async_setup_services(
