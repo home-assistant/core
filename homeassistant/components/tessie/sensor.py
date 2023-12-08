@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -59,18 +60,21 @@ DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="charge_state-charger_actual_current",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="charge_state-charge_rate",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="charge_state-battery_range",
@@ -90,6 +94,7 @@ DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="drive_state-shift_state",
@@ -103,6 +108,7 @@ DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.MILES,
         device_class=SensorDeviceClass.DISTANCE,
         suggested_display_precision=0,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="vehicle_state-tpms_pressure_fl",
@@ -111,6 +117,7 @@ DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfPressure.PSI,
         device_class=SensorDeviceClass.PRESSURE,
         suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="vehicle_state-tpms_pressure_fr",
@@ -119,6 +126,7 @@ DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfPressure.PSI,
         device_class=SensorDeviceClass.PRESSURE,
         suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="vehicle_state-tpms_pressure_rl",
@@ -127,6 +135,7 @@ DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfPressure.PSI,
         device_class=SensorDeviceClass.PRESSURE,
         suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="vehicle_state-tpms_pressure_rr",
@@ -135,6 +144,7 @@ DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfPressure.PSI,
         device_class=SensorDeviceClass.PRESSURE,
         suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="climate_state-inside_temp",
@@ -156,6 +166,7 @@ DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="climate_state-passenger_temp_setting",
@@ -163,6 +174,7 @@ DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -174,10 +186,10 @@ async def async_setup_entry(
     coordinators = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-            TessieSensorEntity(coordinator, description)
-            for coordinator in coordinators
-            for description in DESCRIPTIONS
-            if description.key in coordinator.data
+        TessieSensorEntity(coordinator, description)
+        for coordinator in coordinators
+        for description in DESCRIPTIONS
+        if description.key in coordinator.data
     )
 
 
