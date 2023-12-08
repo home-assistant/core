@@ -283,7 +283,6 @@ class HaBleakClientWrapper(BleakClient):
                 self.__disconnected_callback
             ),
             timeout=self.__timeout,
-            hass=manager.hass,
         )
         if debug_logging:
             # Only lookup the description if we are going to log it
