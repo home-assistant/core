@@ -1301,6 +1301,7 @@ async def test_event_differs_timezone(
     }
 
 
+@pytest.mark.freeze_time("2023-11-30 12:15:00 +00:00")
 async def test_invalid_rrule_fix(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
