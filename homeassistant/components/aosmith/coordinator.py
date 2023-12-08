@@ -29,20 +29,20 @@ class AOSmithCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         """Fetch latest data from API."""
         try:
             devices = await self.client.get_devices()
-
-            mode_pending = any(
-                device.get("data", {}).get("modePending") for device in devices
-            )
-            setpoint_pending = any(
-                device.get("data", {}).get("temperatureSetpointPending")
-                for device in devices
-            )
-
-            if mode_pending or setpoint_pending:
-                self.update_interval = FAST_INTERVAL
-            else:
-                self.update_interval = REGULAR_INTERVAL
-
-            return {device.get("junctionId"): device for device in devices}
         except (AOSmithInvalidCredentialsException, AOSmithUnknownException) as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+        mode_pending = any(
+            device.get("data", {}).get("modePending") for device in devices
+        )
+        setpoint_pending = any(
+            device.get("data", {}).get("temperatureSetpointPending")
+            for device in devices
+        )
+
+        if mode_pending or setpoint_pending:
+            self.update_interval = FAST_INTERVAL
+        else:
+            self.update_interval = REGULAR_INTERVAL
+
+        return {device.get("junctionId"): device for device in devices}
