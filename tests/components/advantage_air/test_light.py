@@ -1,6 +1,7 @@
 """Test the Advantage Air Switch Platform."""
 
-import pytest
+
+from unittest.mock import AsyncMock
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -12,25 +13,14 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import add_mock_config, patch_get, patch_update
-
-
-@pytest.fixture
-def mock_get():
-    """Fixture to patch the Advantage Air async_get method."""
-    with patch_get() as mock_get:
-        yield mock_get
-
-
-@pytest.fixture
-def mock_update():
-    """Fixture to patch the Advantage Air async_get method."""
-    with patch_update() as mock_get:
-        yield mock_get
+from . import add_mock_config
 
 
 async def test_light(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_get, mock_update
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_get: AsyncMock,
+    mock_update: AsyncMock,
 ) -> None:
     """Test light setup."""
 
@@ -93,7 +83,10 @@ async def test_light(
 
 
 async def test_things_light(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_get, mock_update
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_get: AsyncMock,
+    mock_update: AsyncMock,
 ) -> None:
     """Test things lights."""
 

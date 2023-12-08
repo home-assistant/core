@@ -1,30 +1,26 @@
 """Test the Advantage Air Update Platform."""
-import pytest
+
+from unittest.mock import AsyncMock
 
 from homeassistant.components.advantage_air.const import DOMAIN
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import add_mock_config, patch_get
+from . import add_mock_config
 
 from tests.common import load_json_object_fixture
 
 TEST_NEEDS_UPDATE = load_json_object_fixture("needsUpdate.json", DOMAIN)
 
 
-@pytest.fixture
-def mock_get():
-    """Fixture to patch the Advantage Air async_get method."""
-    with patch_get(return_value=TEST_NEEDS_UPDATE) as mock_get:
-        yield mock_get
-
-
 async def test_update_platform(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_get
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_get: AsyncMock,
 ) -> None:
     """Test update platform."""
-
+    mock_get.return_value = TEST_NEEDS_UPDATE
     await add_mock_config(hass)
 
     entity_id = "update.testname_app"
