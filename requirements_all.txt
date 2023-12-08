@@ -1300,6 +1300,9 @@ nessclient==1.0.0
 # homeassistant.components.netdata
 netdata==1.1.0
 
+# homeassistant.components.network
+netifaces==0.11.0
+
 # homeassistant.components.nmap_tracker
 netmap==0.7.0.2
 

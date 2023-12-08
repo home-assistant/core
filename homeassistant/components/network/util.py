@@ -7,13 +7,46 @@ import socket
 from typing import cast
 
 import ifaddr
+import netifaces
 
 from homeassistant.core import callback
 
 from .const import MDNS_TARGET_IP
-from .models import Adapter, IPv4ConfiguredAddress, IPv6ConfiguredAddress
+from .models import Adapter, Gateway, IPv4ConfiguredAddress, IPv6ConfiguredAddress
 
 _LOGGER = logging.getLogger(__name__)
+
+_GatewayType = tuple[str, str, bool] | tuple[str, str]
+
+
+async def async_load_gateways() -> list[Gateway]:
+    """Load gateways."""
+    raw: dict[
+        str | int, dict[str | int, _GatewayType] | list[_GatewayType]
+    ] = netifaces.gateways()  # pylint: disable=c-extension-no-member
+    raw.pop("default", None)
+    raw_gateways_by_index = cast(dict[str, list[_GatewayType]], raw)
+    gateways: list[Gateway] = []
+    for index, raw_gateways in raw_gateways_by_index.items():
+        for raw_gateway in raw_gateways:
+            if len(raw_gateway) == 3:
+                address, interface, default = raw_gateway
+            else:
+                address, interface = raw_gateway
+                default = False
+            try:
+                ip_addr = ip_address(address)
+            except ValueError:
+                continue
+            gateways.append(
+                Gateway(
+                    index,
+                    ip_addr,
+                    interface,
+                    default,
+                )
+            )
+    return gateways
 
 
 async def async_load_adapters() -> list[Adapter]:

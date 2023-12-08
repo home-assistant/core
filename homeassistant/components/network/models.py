@@ -1,6 +1,8 @@
 """Models helper class for the network integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+from ipaddress import IPv4Address, IPv6Address
 from typing import TypedDict
 
 
@@ -30,3 +32,13 @@ class Adapter(TypedDict):
     default: bool
     ipv6: list[IPv6ConfiguredAddress]
     ipv4: list[IPv4ConfiguredAddress]
+
+
+@dataclass(slots=True)
+class Gateway:
+    """Configured network gateways."""
+
+    index: str
+    address: IPv4Address | IPv6Address
+    interface: str
+    default: bool
