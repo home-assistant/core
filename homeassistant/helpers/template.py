@@ -2125,12 +2125,15 @@ def to_json(
 
     option = (
         ORJSON_PASSTHROUGH_OPTIONS
+        # OPT_NON_STR_KEYS is added as a work-a-round to
+        # ensure subclasses os str are not handled correctly
+        # See: https://github.com/ijl/orjson/issues/445
+        | orjson.OPT_NON_STR_KEYS
         | (orjson.OPT_INDENT_2 if pretty_print else 0)
         | (orjson.OPT_SORT_KEYS if sort_keys else 0)
     )
 
-    # Fall back on json.dumps in subclasses os str are not handled correctly
-    # See: https://github.com/ijl/orjson/issues/445
+    # Test subclasses os str are not handled correctly
     try:
         return orjson.dumps(
             value,
