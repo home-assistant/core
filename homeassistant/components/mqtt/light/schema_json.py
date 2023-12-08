@@ -406,7 +406,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                         values["color_temp"],
                         self.entity_id,
                     )
-                # Allow deprecated color mode to switch back to color_temp
+                # Allow to switch back to color_temp
                 if "color" not in values:
                     self._attr_hs_color = None
 
