@@ -20,7 +20,7 @@ async def test_unknown_failure(hass: HomeAssistant) -> None:
     """Test init with an authentication failure."""
 
     entry = await setup_platform(hass, side_effect=ERROR_UNKNOWN)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_connection_failure(hass: HomeAssistant) -> None:
