@@ -64,6 +64,17 @@ async def test_form_invalid_access_token(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_access_token"}
 
+    # Complete the flow
+    with patch(
+        "homeassistant.components.tessie.config_flow.get_state_of_all_vehicles",
+        return_value=TEST_STATE_OF_ALL_VEHICLES,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            TEST_CONFIG,
+        )
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+
 
 async def test_form_invalid_response(hass: HomeAssistant) -> None:
     """Test invalid auth is handled."""
@@ -84,6 +95,17 @@ async def test_form_invalid_response(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
+    # Complete the flow
+    with patch(
+        "homeassistant.components.tessie.config_flow.get_state_of_all_vehicles",
+        return_value=TEST_STATE_OF_ALL_VEHICLES,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            TEST_CONFIG,
+        )
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+
 
 async def test_form_network_issue(hass: HomeAssistant) -> None:
     """Test network issues are handled."""
@@ -103,3 +125,14 @@ async def test_form_network_issue(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    # Complete the flow
+    with patch(
+        "homeassistant.components.tessie.config_flow.get_state_of_all_vehicles",
+        return_value=TEST_STATE_OF_ALL_VEHICLES,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            TEST_CONFIG,
+        )
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
