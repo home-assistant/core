@@ -170,17 +170,15 @@ class PingDeviceTracker(CoordinatorEntity[PingUpdateCoordinator], ScannerEntity)
     @property
     def is_connected(self) -> bool:
         """Return true if ping returns is_alive or considered home."""
-        now = dt_util.utcnow()
-
         if self.coordinator.data.is_alive:
             self._first_offline = None
-        elif not self.coordinator.data.is_alive and self._first_offline is None:
+            return True
+
+        now = dt_util.utcnow()
+        if self._first_offline is None:
             self._first_offline = now
 
-        return (
-            self._first_offline is not None
-            and (self._first_offline + self._consider_home_interval) > now
-        ) or self.coordinator.data.is_alive
+        return (self._first_offline + self._consider_home_interval) > now
 
     @property
     def entity_registry_enabled_default(self) -> bool:

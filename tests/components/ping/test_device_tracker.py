@@ -54,18 +54,18 @@ async def test_setup_and_update(
         return_value=Host(address="10.10.10.10", packets_sent=10, rtts=[]),
     ):
         # we need to travel two times into the future to run the update twice
-        freezer.tick(timedelta(minutes=5, seconds=1))
+        freezer.tick(timedelta(minutes=1, seconds=10))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-        freezer.tick(timedelta(minutes=5, seconds=1))
+        freezer.tick(timedelta(minutes=4, seconds=10))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     assert (state := hass.states.get("device_tracker.10_10_10_10"))
     assert state.state == "not_home"
 
-    freezer.tick(timedelta(minutes=5, seconds=1))
+    freezer.tick(timedelta(minutes=1, seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
