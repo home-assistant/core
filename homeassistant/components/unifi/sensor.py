@@ -36,21 +36,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import (
-    DEVICE_ADOPTING,
-    DEVICE_ADOPTION_FAILED,
-    DEVICE_CONNECTED,
-    DEVICE_DELETING,
-    DEVICE_DISCONNECTED,
-    DEVICE_FIRMWARE_MISMATCH,
-    DEVICE_HEARTBEAT_MISSED,
-    DEVICE_INFORM_ERROR,
-    DEVICE_ISOLATED,
-    DEVICE_PENDING,
-    DEVICE_PROVISIONING,
-    DEVICE_UNKNOWN,
-    DEVICE_UPGRADING,
-)
+from .const import DEVICE_STATES
 from .controller import UniFiController
 from .entity import (
     HandlerT,
@@ -156,33 +142,7 @@ class UnifiSensorEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
 @callback
 def async_device_state_value_fn(controller: UniFiController, device: Device) -> str:
     """Retrieve the state of the device."""
-    match device.state:
-        case 0:
-            return DEVICE_DISCONNECTED
-        case 1:
-            return DEVICE_CONNECTED
-        case 2:
-            return DEVICE_PENDING
-        case 3:
-            return DEVICE_FIRMWARE_MISMATCH
-        case 4:
-            return DEVICE_UPGRADING
-        case 5:
-            return DEVICE_PROVISIONING
-        case 6:
-            return DEVICE_HEARTBEAT_MISSED
-        case 7:
-            return DEVICE_ADOPTING
-        case 8:
-            return DEVICE_DELETING
-        case 9:
-            return DEVICE_INFORM_ERROR
-        case 10:
-            return DEVICE_ADOPTION_FAILED
-        case 11:
-            return DEVICE_ISOLATED
-        case _:
-            return DEVICE_UNKNOWN
+    return DEVICE_STATES[device.state]
 
 
 @dataclass
@@ -407,21 +367,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         supported_fn=lambda controller, obj_id: True,
         unique_id_fn=lambda controller, obj_id: f"device_state-{obj_id}",
         value_fn=async_device_state_value_fn,
-        options=[
-            DEVICE_DISCONNECTED,
-            DEVICE_CONNECTED,
-            DEVICE_PENDING,
-            DEVICE_FIRMWARE_MISMATCH,
-            DEVICE_UPGRADING,
-            DEVICE_PROVISIONING,
-            DEVICE_HEARTBEAT_MISSED,
-            DEVICE_ADOPTING,
-            DEVICE_DELETING,
-            DEVICE_INFORM_ERROR,
-            DEVICE_ADOPTION_FAILED,
-            DEVICE_ISOLATED,
-            DEVICE_UNKNOWN,
-        ],
+        options=list(DEVICE_STATES.values()),
     ),
 )
 

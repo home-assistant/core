@@ -2,6 +2,8 @@
 
 import logging
 
+from aiounifi.models.device import DeviceState
+
 from homeassistant.const import Platform
 
 LOGGER = logging.getLogger(__package__)
@@ -47,17 +49,18 @@ BLOCK_SWITCH = "block"
 DPI_SWITCH = "dpi"
 OUTLET_SWITCH = "outlet"
 
-# Device States
-DEVICE_DISCONNECTED = "Disconnected"
-DEVICE_CONNECTED = "Connected"
-DEVICE_PENDING = "Pending"
-DEVICE_FIRMWARE_MISMATCH = "Firmware Mismatch"
-DEVICE_UPGRADING = "Upgrading"
-DEVICE_PROVISIONING = "Provisioning"
-DEVICE_HEARTBEAT_MISSED = "Heartbeat Missed"
-DEVICE_ADOPTING = "Adopting"
-DEVICE_DELETING = "Deleting"
-DEVICE_INFORM_ERROR = "Inform Error"
-DEVICE_ADOPTION_FAILED = "Adoption Failed"
-DEVICE_ISOLATED = "Isolated"
-DEVICE_UNKNOWN = "Unknown"
+DEVICE_STATES = {
+    DeviceState.DISCONNECTED: "Disconnected",
+    DeviceState.CONNECTED: "Connected",
+    DeviceState.PENDING: "Pending",
+    DeviceState.FIRMWARE_MISMATCH: "Firmware Mismatch",
+    DeviceState.UPGRADING: "Upgrading",
+    DeviceState.PROVISIONING: "Provisioning",
+    DeviceState.HEARTBEAT_MISSED: "Heartbeat Missed",
+    DeviceState.ADOPTING: "Adopting",
+    DeviceState.DELETING: "Deleting",
+    DeviceState.INFORM_ERROR: "Inform Error",
+    DeviceState.ADOPTION_FALIED: "Adoption Failed",
+    DeviceState.ISOLATED: "Isolated",
+    DeviceState.UNKNOWN: "Unknown",
+}

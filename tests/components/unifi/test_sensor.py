@@ -3,6 +3,7 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
+from aiounifi.models.device import DeviceState
 from aiounifi.models.message import MessageKey
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -20,19 +21,7 @@ from homeassistant.components.unifi.const import (
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
-    DEVICE_ADOPTING,
-    DEVICE_ADOPTION_FAILED,
-    DEVICE_CONNECTED,
-    DEVICE_DELETING,
-    DEVICE_DISCONNECTED,
-    DEVICE_FIRMWARE_MISMATCH,
-    DEVICE_HEARTBEAT_MISSED,
-    DEVICE_INFORM_ERROR,
-    DEVICE_ISOLATED,
-    DEVICE_PENDING,
-    DEVICE_PROVISIONING,
-    DEVICE_UNKNOWN,
-    DEVICE_UPGRADING,
+    DEVICE_STATES,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, EntityCategory
@@ -967,30 +956,14 @@ async def test_device_state(
 
     await setup_unifi_integration(hass, aioclient_mock, devices_response=[device])
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
-    assert hass.states.get("sensor.device_state").state == "Connected"
 
     ent_reg = er.async_get(hass)
     assert (
         ent_reg.async_get("sensor.device_state").entity_category
         is EntityCategory.DIAGNOSTIC
     )
-    DEVICE_STATE = [
-        DEVICE_DISCONNECTED,
-        DEVICE_CONNECTED,
-        DEVICE_PENDING,
-        DEVICE_FIRMWARE_MISMATCH,
-        DEVICE_UPGRADING,
-        DEVICE_PROVISIONING,
-        DEVICE_HEARTBEAT_MISSED,
-        DEVICE_ADOPTING,
-        DEVICE_DELETING,
-        DEVICE_INFORM_ERROR,
-        DEVICE_ADOPTION_FAILED,
-        DEVICE_ISOLATED,
-        DEVICE_UNKNOWN,
-    ]
 
-    for i in range(13):
+    for i in list(map(int, DeviceState)):
         device["state"] = i
         mock_unifi_websocket(message=MessageKey.DEVICE, data=device)
-        assert hass.states.get("sensor.device_state").state == DEVICE_STATE[i]
+        assert hass.states.get("sensor.device_state").state == DEVICE_STATES[i]
