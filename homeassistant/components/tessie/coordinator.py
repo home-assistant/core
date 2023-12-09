@@ -8,6 +8,7 @@ from aiohttp import ClientResponseError
 from tessie_api import get_state
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -57,7 +58,9 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator):
                 # Vehicle is offline, only update state and dont throw error
                 self.data["state"] = TessieStatus.OFFLINE
                 return self.data
-            # Reauth will go here
+            if e.status == HTTPStatus.UNAUTHORIZED:
+                # Auth Token is no longer valid
+                raise ConfigEntryAuthFailed from e
             raise e
 
         self.did_first_update = True

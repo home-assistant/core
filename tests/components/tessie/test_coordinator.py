@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
 from .common import (
+    ERROR_AUTH,
     ERROR_CONNECTION,
     ERROR_TIMEOUT,
     ERROR_UNKNOWN,
@@ -79,6 +80,17 @@ async def test_coordinator_timeout(hass: HomeAssistant, mock_get_state) -> None:
     await hass.async_block_till_done()
     mock_get_state.assert_called_once()
     assert hass.states.get("sensor.test_status").state == TessieStatus.OFFLINE
+
+
+async def test_coordinator_auth(hass: HomeAssistant, mock_get_state) -> None:
+    """Tests that the coordinator handles timeout errors."""
+
+    mock_get_state.side_effect = ERROR_AUTH
+    await setup_platform(hass)
+
+    async_fire_time_changed(hass, utcnow() + WAIT)
+    await hass.async_block_till_done()
+    mock_get_state.assert_called_once()
 
 
 async def test_coordinator_connection(hass: HomeAssistant, mock_get_state) -> None:
