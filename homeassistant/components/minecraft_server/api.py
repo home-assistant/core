@@ -61,21 +61,19 @@ class MinecraftServerNotInitializedError(Exception):
 class MinecraftServer:
     """Minecraft Server wrapper class for 3rd party library mcstatus."""
 
-    _server: BedrockServer | JavaServer
+    _server: BedrockServer | JavaServer | None
 
     def __init__(
         self, hass: HomeAssistant, server_type: MinecraftServerType, address: str
     ) -> None:
         """Initialize server instance."""
-        self._initialized = False
+        self._server = None
         self._hass = hass
         self._server_type = server_type
         self._address = address
 
     async def async_initialize(self) -> None:
         """Perform async initialization of server instance."""
-        self._initialized = True
-
         try:
             if self._server_type == MinecraftServerType.JAVA_EDITION:
                 self._server = await JavaServer.async_lookup(self._address)
@@ -89,7 +87,6 @@ class MinecraftServer:
             ) from error
 
         self._server.timeout = DATA_UPDATE_TIMEOUT
-        self._address = self._address
 
         _LOGGER.debug(
             "%s server instance created with address '%s'",
@@ -110,7 +107,7 @@ class MinecraftServer:
         """Get updated data from the server, supporting both Java and Bedrock Edition servers."""
         status_response: BedrockStatusResponse | JavaStatusResponse
 
-        if not self._initialized:
+        if self._server is None:
             raise MinecraftServerNotInitializedError()
 
         try:
