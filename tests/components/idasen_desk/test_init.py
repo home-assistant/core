@@ -59,8 +59,6 @@ async def test_reconnect_on_bluetooth_callback(
     with mock.patch(
         "homeassistant.components.idasen_desk.bluetooth.async_register_callback"
     ) as mock_register_callback:
-        # callback = mock_register_callback.return_value
-        # callback.side_effect = lambda *args: args[1]
         await init_integration(hass)
         assert len(hass.config_entries.async_entries(DOMAIN)) == 1
         mock_desk_api.connect.assert_called_once()

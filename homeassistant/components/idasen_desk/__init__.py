@@ -121,7 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         service_info: bluetooth.BluetoothServiceInfoBleak,
         change: bluetooth.BluetoothChange,
     ) -> None:
-        """Update from a bluetooth callback to ensure that a new BLEDevice is fetched."""
+        """Update from a Bluetooth callback to ensure that a new BLEDevice is fetched."""
         _LOGGER.debug("Bluetooth callback triggered. Reconnecting")
         hass.async_create_task(coordinator.async_connect())
 
