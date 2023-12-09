@@ -544,7 +544,7 @@ dbus-fast==2.20.0
 # homeassistant.components.debugpy
 debugpy==1.8.0
 
-# homeassistant.components.decora_ble
+# homeassistant.components.decora
 decora_bleak==0.2.2
 
 # homeassistant.components.ihc

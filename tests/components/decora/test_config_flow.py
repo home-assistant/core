@@ -9,7 +9,7 @@ from decora_bleak import (
 )
 
 from homeassistant import config_entries
-from homeassistant.components.decora_ble.const import DOMAIN
+from homeassistant.components.decora.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_API_KEY, CONF_DEVICES, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -18,10 +18,10 @@ from . import (
     DECORA_BLE_SERVICE_INFO,
     NOT_DECORA_BLE_SERVICE_INFO,
     patch_async_ble_device_from_address,
-    patch_decora_ble_connect_fail_with_exception,
-    patch_decora_ble_connect_success,
-    patch_decora_ble_get_api_key,
-    patch_decora_ble_get_api_key_fail_with_exception,
+    patch_decora_connect_fail_with_exception,
+    patch_decora_connect_success,
+    patch_decora_get_api_key,
+    patch_decora_get_api_key_fail_with_exception,
 )
 
 from tests.common import MockConfigEntry
@@ -56,7 +56,7 @@ async def test_async_step_bluetooth_creates_entity_when_api_key_found(
 
     with patch_async_ble_device_from_address(
         DECORA_BLE_SERVICE_INFO
-    ), patch_decora_ble_get_api_key("A1B2C3D4"):
+    ), patch_decora_get_api_key("A1B2C3D4"):
         device_configuration_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"], user_input={CONF_NAME: "Garage Lights"}
         )
@@ -120,7 +120,7 @@ async def test_async_step_bluetooth_errors_on_device_not_in_pairing_mode(
 
     with patch_async_ble_device_from_address(
         DECORA_BLE_SERVICE_INFO
-    ), patch_decora_ble_get_api_key_fail_with_exception(DeviceNotInPairingModeError):
+    ), patch_decora_get_api_key_fail_with_exception(DeviceNotInPairingModeError):
         device_configuration_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"], user_input={CONF_NAME: "Garage Lights"}
         )
@@ -141,7 +141,7 @@ async def test_async_step_bluetooth_errors_on_device_connection_problems(
 
     with patch_async_ble_device_from_address(
         DECORA_BLE_SERVICE_INFO
-    ), patch_decora_ble_get_api_key_fail_with_exception(DeviceConnectionError):
+    ), patch_decora_get_api_key_fail_with_exception(DeviceConnectionError):
         device_configuration_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"], user_input={CONF_NAME: "Garage Lights"}
         )
@@ -167,7 +167,7 @@ async def test_async_step_user_initial_form_when_decora_device(
 ) -> None:
     """Test structure of initial form."""
     with patch(
-        "homeassistant.components.decora_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.decora.config_flow.async_discovered_service_info",
         return_value=[DECORA_BLE_SERVICE_INFO],
     ):
         init_result = await hass.config_entries.flow.async_init(
@@ -185,7 +185,7 @@ async def test_async_step_user_aborts_when_only_device_is_not_decora(
 ) -> None:
     """Test aborting if device discovered is not a Decora device."""
     with patch(
-        "homeassistant.components.decora_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.decora.config_flow.async_discovered_service_info",
         return_value=[NOT_DECORA_BLE_SERVICE_INFO],
     ):
         init_result = await hass.config_entries.flow.async_init(
@@ -208,7 +208,7 @@ async def test_async_step_user_aborts_when_configured_decora_device_is_only_devi
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.decora_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.decora.config_flow.async_discovered_service_info",
         return_value=[DECORA_BLE_SERVICE_INFO],
     ):
         init_result = await hass.config_entries.flow.async_init(
@@ -225,7 +225,7 @@ async def test_async_step_user_creates_entity_when_api_key_found(
 ) -> None:
     """Test entity creation when things are right."""
     with patch(
-        "homeassistant.components.decora_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.decora.config_flow.async_discovered_service_info",
         return_value=[DECORA_BLE_SERVICE_INFO],
     ):
         init_result = await hass.config_entries.flow.async_init(
@@ -239,7 +239,7 @@ async def test_async_step_user_creates_entity_when_api_key_found(
 
     with patch_async_ble_device_from_address(
         DECORA_BLE_SERVICE_INFO
-    ), patch_decora_ble_get_api_key("A1B2C3D4"):
+    ), patch_decora_get_api_key("A1B2C3D4"):
         device_configuration_result = await hass.config_entries.flow.async_configure(
             user_result["flow_id"],
             user_input={CONF_NAME: "Garage Lights"},
@@ -258,7 +258,7 @@ async def test_async_step_user_creates_entity_when_api_key_found(
 async def test_async_step_user_errors_on_no_device(hass: HomeAssistant) -> None:
     """Test showing an error if the device cannot be connected to over bluetooth."""
     with patch(
-        "homeassistant.components.decora_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.decora.config_flow.async_discovered_service_info",
         return_value=[DECORA_BLE_SERVICE_INFO],
     ):
         init_result = await hass.config_entries.flow.async_init(
@@ -285,7 +285,7 @@ async def test_async_step_user_errors_on_device_not_in_pairing_mode(
 ) -> None:
     """Test showing an error if the device is not in pairing mode."""
     with patch(
-        "homeassistant.components.decora_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.decora.config_flow.async_discovered_service_info",
         return_value=[DECORA_BLE_SERVICE_INFO],
     ):
         init_result = await hass.config_entries.flow.async_init(
@@ -299,7 +299,7 @@ async def test_async_step_user_errors_on_device_not_in_pairing_mode(
 
     with patch_async_ble_device_from_address(
         DECORA_BLE_SERVICE_INFO
-    ), patch_decora_ble_get_api_key_fail_with_exception(DeviceNotInPairingModeError):
+    ), patch_decora_get_api_key_fail_with_exception(DeviceNotInPairingModeError):
         device_configuration_result = await hass.config_entries.flow.async_configure(
             user_result["flow_id"],
             user_input={CONF_NAME: "Garage Lights"},
@@ -314,7 +314,7 @@ async def test_async_step_user_errors_on_device_connection_problems(
 ) -> None:
     """Test showing an error if the device is not in pairing mode."""
     with patch(
-        "homeassistant.components.decora_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.decora.config_flow.async_discovered_service_info",
         return_value=[DECORA_BLE_SERVICE_INFO],
     ):
         init_result = await hass.config_entries.flow.async_init(
@@ -328,7 +328,7 @@ async def test_async_step_user_errors_on_device_connection_problems(
 
     with patch_async_ble_device_from_address(
         DECORA_BLE_SERVICE_INFO
-    ), patch_decora_ble_get_api_key_fail_with_exception(DeviceConnectionError):
+    ), patch_decora_get_api_key_fail_with_exception(DeviceConnectionError):
         device_configuration_result = await hass.config_entries.flow.async_configure(
             user_result["flow_id"],
             user_input={CONF_NAME: "Garage Lights"},
@@ -343,7 +343,7 @@ async def test_async_step_user_errors_on_unknown_exception(
 ) -> None:
     """Test showing an error if the device is not in pairing mode."""
     with patch(
-        "homeassistant.components.decora_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.decora.config_flow.async_discovered_service_info",
         return_value=[DECORA_BLE_SERVICE_INFO],
     ):
         init_result = await hass.config_entries.flow.async_init(
@@ -357,7 +357,7 @@ async def test_async_step_user_errors_on_unknown_exception(
 
     with patch_async_ble_device_from_address(
         DECORA_BLE_SERVICE_INFO
-    ), patch_decora_ble_get_api_key_fail_with_exception(Exception):
+    ), patch_decora_get_api_key_fail_with_exception(Exception):
         device_configuration_result = await hass.config_entries.flow.async_configure(
             user_result["flow_id"],
             user_input={CONF_NAME: "Garage Lights"},
@@ -377,7 +377,7 @@ async def test_async_step_import_shows_user_form_when_decora_device(
         }
     }
     with patch(
-        "homeassistant.components.decora_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.decora.config_flow.async_discovered_service_info",
         return_value=[],
     ):
         init_result = await hass.config_entries.flow.async_init(
@@ -406,7 +406,7 @@ async def test_async_step_import_aborts_when_device_already_configured(
     }
 
     with patch(
-        "homeassistant.components.decora_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.decora.config_flow.async_discovered_service_info",
         return_value=[],
     ):
         init_result = await hass.config_entries.flow.async_init(
@@ -437,7 +437,7 @@ async def test_async_step_import_shows_user_form_when_only_one_decora_device_set
         }
     }
     with patch(
-        "homeassistant.components.decora_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.decora.config_flow.async_discovered_service_info",
         return_value=[],
     ):
         init_result = await hass.config_entries.flow.async_init(
@@ -459,7 +459,7 @@ async def test_async_step_import_creates_entry_when_imported_device_is_given_a_n
         }
     }
     with patch(
-        "homeassistant.components.decora_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.decora.config_flow.async_discovered_service_info",
         return_value=[],
     ):
         init_result = await hass.config_entries.flow.async_init(
@@ -472,7 +472,7 @@ async def test_async_step_import_creates_entry_when_imported_device_is_given_a_n
 
     with patch_async_ble_device_from_address(
         DECORA_BLE_SERVICE_INFO
-    ), patch_decora_ble_connect_success():
+    ), patch_decora_connect_success():
         device_configuration_result = await hass.config_entries.flow.async_configure(
             user_result["flow_id"],
             user_input={CONF_NAME: "Garage Lights"},
@@ -498,7 +498,7 @@ async def test_async_step_import_shows_errors_on_imported_device_cannot_be_conne
         }
     }
     with patch(
-        "homeassistant.components.decora_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.decora.config_flow.async_discovered_service_info",
         return_value=[],
     ):
         init_result = await hass.config_entries.flow.async_init(
@@ -511,7 +511,7 @@ async def test_async_step_import_shows_errors_on_imported_device_cannot_be_conne
 
     with patch_async_ble_device_from_address(
         DECORA_BLE_SERVICE_INFO
-    ), patch_decora_ble_connect_fail_with_exception(DeviceConnectionError):
+    ), patch_decora_connect_fail_with_exception(DeviceConnectionError):
         device_configuration_result = await hass.config_entries.flow.async_configure(
             user_result["flow_id"],
             user_input={CONF_NAME: "Garage Lights"},
@@ -531,7 +531,7 @@ async def test_async_step_import_shows_errors_on_imported_device_with_the_wrong_
         }
     }
     with patch(
-        "homeassistant.components.decora_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.decora.config_flow.async_discovered_service_info",
         return_value=[],
     ):
         init_result = await hass.config_entries.flow.async_init(
@@ -544,7 +544,7 @@ async def test_async_step_import_shows_errors_on_imported_device_with_the_wrong_
 
     with patch_async_ble_device_from_address(
         DECORA_BLE_SERVICE_INFO
-    ), patch_decora_ble_connect_fail_with_exception(IncorrectAPIKeyError):
+    ), patch_decora_connect_fail_with_exception(IncorrectAPIKeyError):
         device_configuration_result = await hass.config_entries.flow.async_configure(
             user_result["flow_id"],
             user_input={CONF_NAME: "Garage Lights"},
@@ -564,7 +564,7 @@ async def test_async_step_import_shows_errors_on_no_device(
         }
     }
     with patch(
-        "homeassistant.components.decora_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.decora.config_flow.async_discovered_service_info",
         return_value=[],
     ):
         init_result = await hass.config_entries.flow.async_init(
@@ -595,7 +595,7 @@ async def test_async_step_import_shows_errors_on_unknown_exception(
         }
     }
     with patch(
-        "homeassistant.components.decora_ble.config_flow.async_discovered_service_info",
+        "homeassistant.components.decora.config_flow.async_discovered_service_info",
         return_value=[],
     ):
         init_result = await hass.config_entries.flow.async_init(
@@ -608,7 +608,7 @@ async def test_async_step_import_shows_errors_on_unknown_exception(
 
     with patch_async_ble_device_from_address(
         DECORA_BLE_SERVICE_INFO
-    ), patch_decora_ble_connect_fail_with_exception(Exception):
+    ), patch_decora_connect_fail_with_exception(Exception):
         device_configuration_result = await hass.config_entries.flow.async_configure(
             user_result["flow_id"],
             user_input={CONF_NAME: "Garage Lights"},

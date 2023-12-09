@@ -59,7 +59,7 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "service_data_uuid": "0000fcd2-0000-1000-8000-00805f9b34fb",
     },
     {
-        "domain": "decora_ble",
+        "domain": "decora",
         "service_uuid": "0000ff00-0000-1000-8000-00805f9b34fb",
     },
     {

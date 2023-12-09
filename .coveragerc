@@ -200,9 +200,8 @@ omit =
     homeassistant/components/daikin/switch.py
     homeassistant/components/danfoss_air/*
     homeassistant/components/ddwrt/device_tracker.py
+    homeassistant/components/decora/__init__.py
     homeassistant/components/decora/light.py
-    homeassistant/components/decora_ble/__init__.py
-    homeassistant/components/decora_ble/light.py
     homeassistant/components/decora_wifi/light.py
     homeassistant/components/delijn/*
     homeassistant/components/deluge/__init__.py

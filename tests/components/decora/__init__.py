@@ -11,7 +11,7 @@ from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 def patch_async_setup_entry(return_value=True):
     """Patch async setup entry to return True."""
     return patch(
-        "homeassistant.components.decora_ble.async_setup_entry",
+        "homeassistant.components.decora.async_setup_entry",
         return_value=return_value,
     )
 
@@ -24,7 +24,7 @@ def patch_async_ble_device_from_address(return_value: BluetoothServiceInfoBleak 
     )
 
 
-def patch_decora_ble_get_api_key(return_value: str):
+def patch_decora_get_api_key(return_value: str):
     """Patch Decora BLE api key call to return a given value."""
     return patch(
         "decora_bleak.DecoraBLEDevice.get_api_key",
@@ -32,7 +32,7 @@ def patch_decora_ble_get_api_key(return_value: str):
     )
 
 
-def patch_decora_ble_get_api_key_fail_with_exception(ex):
+def patch_decora_get_api_key_fail_with_exception(ex):
     """Patch Decora BLE api key call to raise an exception."""
     return patch(
         "decora_bleak.DecoraBLEDevice.get_api_key",
@@ -40,7 +40,7 @@ def patch_decora_ble_get_api_key_fail_with_exception(ex):
     )
 
 
-def patch_decora_ble_connect_success():
+def patch_decora_connect_success():
     """Patch Decora BLE connect call to return a given value."""
     return patch(
         "decora_bleak.DecoraBLEDevice.connect",
@@ -48,7 +48,7 @@ def patch_decora_ble_connect_success():
     )
 
 
-def patch_decora_ble_connect_fail_with_exception(ex):
+def patch_decora_connect_fail_with_exception(ex):
     """Patch Decora BLE connect call to raise an exception."""
     return patch(
         "decora_bleak.DecoraBLEDevice.connect",

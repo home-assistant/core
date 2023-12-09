@@ -250,8 +250,8 @@ build.json @home-assistant/supervisor
 /tests/components/debugpy/ @frenck
 /homeassistant/components/deconz/ @Kane610
 /tests/components/deconz/ @Kane610
-/homeassistant/components/decora_ble/ @ColinCampbell
-/tests/components/decora_ble/ @ColinCampbell
+/homeassistant/components/decora/ @ColinCampbell
+/tests/components/decora/ @ColinCampbell
 /homeassistant/components/default_config/ @home-assistant/core
 /tests/components/default_config/ @home-assistant/core
 /homeassistant/components/delijn/ @bollewolle @Emilv2

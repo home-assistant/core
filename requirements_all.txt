@@ -552,7 +552,6 @@ blockchain==1.4.4
 # homeassistant.components.bluemaestro
 bluemaestro-ble==0.2.3
 
-# homeassistant.components.decora
 # homeassistant.components.zengge
 # bluepy==1.3.0
 
@@ -667,9 +666,6 @@ debugpy==1.8.0
 # decora-wifi==1.4
 
 # homeassistant.components.decora
-# decora==0.6
-
-# homeassistant.components.decora_ble
 decora_bleak==0.2.2
 
 # homeassistant.components.ihc
