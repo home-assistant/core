@@ -28,7 +28,7 @@ from evohomeasync2.schema.const import (
     SZ_TIMING_MODE,
     SZ_UNTIL,
 )
-import voluptuous as vol
+import voluptuous as vol  # type: ignore[import-untyped]
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -40,7 +40,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv  # noqa: E402
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
