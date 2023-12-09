@@ -43,6 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             data=vehicle["last_state"],
         )
         for vehicle in vehicles["results"]
+        if vehicle["last_state"] is not None
     ]
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
