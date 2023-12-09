@@ -43,9 +43,7 @@ async def test_methods(hass: HomeAssistant) -> None:
         APIHelper, "authenticate", return_value=SUNWEG_LOGIN_RESPONSE
     ), patch.object(APIHelper, "listPlants", return_value=[plant]), patch.object(
         APIHelper, "plant", return_value=plant
-    ), patch.object(
-        APIHelper, "inverter", return_value=inverter
-    ), patch.object(
+    ), patch.object(APIHelper, "inverter", return_value=inverter), patch.object(
         APIHelper, "complete_inverter"
     ):
         assert await async_setup_component(hass, DOMAIN, mock_entry.data)
