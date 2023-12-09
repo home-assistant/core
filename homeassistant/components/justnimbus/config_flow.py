@@ -42,10 +42,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
-        await self.async_set_unique_id(
-            f"{user_input[CONF_CLIENT_ID]}{user_input[CONF_ZIP_CODE]}"
-        )
-        self._abort_if_unique_id_configured()
+        unique_id = f"{user_input[CONF_CLIENT_ID]}{user_input[CONF_ZIP_CODE]}"
+        await self.async_set_unique_id(unique_id=unique_id)
+        if not self.reauth_entry:
+            self._abort_if_unique_id_configured()
 
         client = justnimbus.JustNimbusClient(
             client_id=user_input[CONF_CLIENT_ID], zip_code=user_input[CONF_ZIP_CODE]
@@ -60,7 +60,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            return self.async_create_entry(title="JustNimbus", data=user_input)
+            if not self.reauth_entry:
+                return self.async_create_entry(title="JustNimbus", data=user_input)
+            self.hass.config_entries.async_update_entry(
+                self.reauth_entry, data=user_input, unique_id=unique_id
+            )
+
+            # Reload the config entry otherwise devices will remain unavailable
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
+            )
+            return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -71,15 +81,4 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Dialog that informs the user that reauth is required."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
-            )
         return await self.async_step_user()
