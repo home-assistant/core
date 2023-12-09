@@ -9,29 +9,25 @@ from asyncio import Future
 from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING, cast
 
+from habluetooth import BluetoothScanningMode
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 
 from .base_scanner import BaseHaScanner, BluetoothScannerDevice
 from .const import DATA_MANAGER
-from .manager import BluetoothManager
+from .manager import HomeAssistantBluetoothManager
 from .match import BluetoothCallbackMatcher
-from .models import (
-    BluetoothCallback,
-    BluetoothChange,
-    BluetoothScanningMode,
-    ProcessAdvertisementCallback,
-)
+from .models import BluetoothCallback, BluetoothChange, ProcessAdvertisementCallback
 from .wrappers import HaBleakScannerWrapper
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
 
 
-def _get_manager(hass: HomeAssistant) -> BluetoothManager:
+def _get_manager(hass: HomeAssistant) -> HomeAssistantBluetoothManager:
     """Get the bluetooth manager."""
-    return cast(BluetoothManager, hass.data[DATA_MANAGER])
+    return cast(HomeAssistantBluetoothManager, hass.data[DATA_MANAGER])
 
 
 @hass_callback

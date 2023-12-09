@@ -79,6 +79,13 @@ class DSMRSensorEntityDescription(SensorEntityDescription):
 
 SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
+        key="timestamp",
+        obis_reference=obis_references.P1_MESSAGE_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    DSMRSensorEntityDescription(
         key="current_electricity_usage",
         translation_key="current_electricity_usage",
         obis_reference=obis_references.CURRENT_ELECTRICITY_USAGE,

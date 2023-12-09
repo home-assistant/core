@@ -209,21 +209,26 @@ class IsWorkdaySensor(BinarySensorEntity):
 
     async def async_update(self) -> None:
         """Get date and look whether it is a holiday."""
+        self._attr_is_on = self.date_is_workday(dt_util.now())
+
+    async def check_date(self, check_date: date) -> ServiceResponse:
+        """Service to check if date is workday or not."""
+        return {"workday": self.date_is_workday(check_date)}
+
+    def date_is_workday(self, check_date: date) -> bool:
+        """Check if date is workday."""
         # Default is no workday
-        self._attr_is_on = False
+        is_workday = False
 
         # Get ISO day of the week (1 = Monday, 7 = Sunday)
-        adjusted_date = dt_util.now() + timedelta(days=self._days_offset)
+        adjusted_date = check_date + timedelta(days=self._days_offset)
         day = adjusted_date.isoweekday() - 1
         day_of_week = ALLOWED_DAYS[day]
 
         if self.is_include(day_of_week, adjusted_date):
-            self._attr_is_on = True
+            is_workday = True
 
         if self.is_exclude(day_of_week, adjusted_date):
-            self._attr_is_on = False
+            is_workday = False
 
-    async def check_date(self, check_date: date) -> ServiceResponse:
-        """Check if date is workday or not."""
-        holiday_date = check_date in self._obj_holidays
-        return {"workday": not holiday_date}
+        return is_workday
