@@ -4,7 +4,7 @@ from http import HTTPStatus
 import logging
 from typing import Any
 
-from aiohttp import ClientResponseError, ClientSession
+from aiohttp import ClientResponseError
 from tessie_api import get_state
 
 from homeassistant.core import HomeAssistant
