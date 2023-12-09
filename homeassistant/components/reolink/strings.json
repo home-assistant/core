@@ -14,7 +14,7 @@
         "data_description": {
           "host": "The hostname or IP address of your Reolink device. For example: '192.168.1.25'.",
           "port": "The port to connect to the Reolink device. For HTTP normally: '80', for HTTPS normally '443'.",
-          "use_https": "Use a HTTPS (SSL) or HTTP connection to the Reolink device.",
+          "use_https": "Use a HTTPS (SSL) connection to the Reolink device.",
           "username": "Username to login to the Reolink device itself. Not the Reolink cloud account.",
           "password": "Password to login to the Reolink device itself. Not the Reolink cloud account."
         }
