@@ -1101,7 +1101,11 @@ def mock_network() -> Generator[None, None, None]:
     with patch(
         "homeassistant.components.network.util.ifaddr.get_adapters",
         return_value=[
-            Mock(nice_name="eth0", ips=[Mock(is_IPv6=False, ip="10.10.10.10")], index=0)
+            Mock(
+                nice_name="eth0",
+                ips=[Mock(is_IPv6=False, ip="10.10.10.10", network_prefix=24)],
+                index=0,
+            )
         ],
     ):
         yield
