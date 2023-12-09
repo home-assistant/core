@@ -4,13 +4,16 @@ from unittest.mock import patch
 from justnimbus.exceptions import InvalidClientID, JustNimbusError
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.justnimbus.const import CONF_ZIP_CODE, DOMAIN
 from homeassistant.const import CONF_CLIENT_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
+
+FIXTURE_USER_INPUT = {CONF_CLIENT_ID: "test_id", CONF_ZIP_CODE: "test_zip"}
+FIXTURE_UNIQUE_ID = "test_idtest_zip"
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -57,7 +60,7 @@ async def test_form_errors(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"],
-            user_input={CONF_CLIENT_ID: "test_id", CONF_ZIP_CODE: "test_zip"},
+            user_input=FIXTURE_USER_INPUT,
         )
 
     assert result2["type"] == FlowResultType.FORM
@@ -71,8 +74,8 @@ async def test_abort_already_configured(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="JustNimbus",
-        data={CONF_CLIENT_ID: "test_id", CONF_ZIP_CODE: "test_zip"},
-        unique_id="test_idtest_zip",
+        data=FIXTURE_USER_INPUT,
+        unique_id=FIXTURE_UNIQUE_ID,
     )
     entry.add_to_hass(hass)
 
@@ -84,10 +87,7 @@ async def test_abort_already_configured(hass: HomeAssistant) -> None:
 
     result2 = await hass.config_entries.flow.async_configure(
         flow_id=result["flow_id"],
-        user_input={
-            CONF_CLIENT_ID: "test_id",
-            CONF_ZIP_CODE: "test_zip",
-        },
+        user_input=FIXTURE_USER_INPUT,
     )
 
     assert result2.get("type") == FlowResultType.ABORT
@@ -102,17 +102,48 @@ async def _set_up_justnimbus(hass: HomeAssistant, flow_id: str) -> None:
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             flow_id=flow_id,
-            user_input={
-                CONF_CLIENT_ID: "test_id",
-                CONF_ZIP_CODE: "test_zip",
-            },
+            user_input=FIXTURE_USER_INPUT,
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "JustNimbus"
-    assert result2["data"] == {
-        CONF_CLIENT_ID: "test_id",
-        CONF_ZIP_CODE: "test_zip",
-    }
+    assert result2["data"] == FIXTURE_USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reauth_flow(hass: HomeAssistant) -> None:
+    """Test reauth works."""
+    with patch(
+        "homeassistant.components.justnimbus.config_flow.justnimbus.JustNimbusClient.get_data",
+        return_value=False,
+    ):
+        mock_config = MockConfigEntry(
+            domain=DOMAIN, unique_id=FIXTURE_UNIQUE_ID, data=FIXTURE_USER_INPUT
+        )
+        mock_config.add_to_hass(hass)
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": mock_config.entry_id,
+            },
+            data=FIXTURE_USER_INPUT,
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.justnimbus.config_flow.justnimbus.JustNimbusClient.get_data",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            FIXTURE_USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result2["reason"] == "reauth_successful"
