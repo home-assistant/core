@@ -16,7 +16,7 @@
         "data": {
           "access_token": "[%key:common::config_flow::data::access_token%]"
         },
-        "description": "Enter your access token from [my.tessie.com/settings/api](https://my.tessie.com/settings/api)",
+        "description": "[%key:component::tessie::config::step::user::description%]",
         "title": "[%key:common::config_flow::title::reauth%]"
       }
     }
