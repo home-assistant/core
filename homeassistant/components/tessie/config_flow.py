@@ -38,7 +38,7 @@ class TessieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except ClientResponseError as e:
                 if e.status == HTTPStatus.UNAUTHORIZED:
-                    errors["base"] = "invalid_access_token"
+                    errors[CONF_ACCESS_TOKEN] = "invalid_access_token"
                 else:
                     errors["base"] = "unknown"
             except ClientConnectionError:
