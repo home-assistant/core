@@ -4,6 +4,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
+from . import reload_satellite
+
 
 async def test_satellite_enabled(
     hass: HomeAssistant,
@@ -30,3 +32,10 @@ async def test_satellite_enabled(
     assert state is not None
     assert state.state == STATE_OFF
     assert not satellite_device.is_enabled
+
+    # test restore
+    satellite_device = await reload_satellite(hass, satellite_config_entry.entry_id)
+
+    state = hass.states.get(satellite_enabled_id)
+    assert state is not None
+    assert state.state == STATE_OFF

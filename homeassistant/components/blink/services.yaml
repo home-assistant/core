@@ -8,6 +8,10 @@ trigger_camera:
       domain: camera
 
 save_video:
+  target:
+    entity:
+      integration: blink
+      domain: camera
   fields:
     name:
       required: true
@@ -21,6 +25,10 @@ save_video:
         text:
 
 save_recent_clips:
+  target:
+    entity:
+      integration: blink
+      domain: camera
   fields:
     name:
       required: true
@@ -34,6 +42,10 @@ save_recent_clips:
         text:
 
 send_pin:
+  target:
+    entity:
+      integration: blink
+      domain: camera
   fields:
     pin:
       example: "abc123"

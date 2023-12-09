@@ -14,6 +14,7 @@ import time
 from typing import Any
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
+from freezegun import freeze_time
 import pytest
 from pytest_unordered import unordered
 import voluptuous as vol
@@ -1129,7 +1130,7 @@ async def test_statemachine_last_changed_not_updated_on_same_state(
 
     future = dt_util.utcnow() + timedelta(hours=10)
 
-    with patch("homeassistant.util.dt.utcnow", return_value=future):
+    with freeze_time(future):
         hass.states.async_set("light.Bowl", "on", {"attr": "triggers_change"})
         await hass.async_block_till_done()
 
