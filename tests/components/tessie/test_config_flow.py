@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.tessie.const import DOMAIN
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -62,7 +63,7 @@ async def test_form_invalid_access_token(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_access_token"}
+    assert result2["errors"] == {CONF_ACCESS_TOKEN: "invalid_access_token"}
 
     # Complete the flow
     with patch(
