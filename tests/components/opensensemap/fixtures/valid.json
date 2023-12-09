@@ -1,0 +1,103 @@
+{
+  "_id": "6107df25c4aab8001b94e043",
+  "createdAt": "2021-08-02T12:03:49.808Z",
+  "updatedAt": "2023-12-08T13:08:47.724Z",
+  "name": "Stadtb\u00fccherei M\u00fcnster",
+  "currentLocation": {
+    "timestamp": "2021-08-02T12:03:49.802Z",
+    "coordinates": [7.631133, 51.962788],
+    "type": "Point"
+  },
+  "exposure": "outdoor",
+  "sensors": [
+    {
+      "title": "Temperatur",
+      "unit": "\u00b0C",
+      "sensorType": "HDC1080",
+      "icon": "osem-thermometer",
+      "_id": "6107df25c4aab8001b94e04a",
+      "lastMeasurement": {
+        "value": "4.9",
+        "createdAt": "2023-12-08T13:08:47.652Z"
+      }
+    },
+    {
+      "title": "rel. Luftfeuchte",
+      "unit": "%",
+      "sensorType": "HDC1080",
+      "icon": "osem-humidity",
+      "_id": "6107df25c4aab8001b94e049",
+      "lastMeasurement": {
+        "value": "100",
+        "createdAt": "2023-12-08T13:08:47.652Z"
+      }
+    },
+    {
+      "title": "Luftdruck",
+      "unit": "hPa",
+      "sensorType": "BMP280",
+      "icon": "osem-barometer",
+      "_id": "6107df25c4aab8001b94e048",
+      "lastMeasurement": {
+        "value": "1000.8",
+        "createdAt": "2023-12-08T13:08:47.652Z"
+      }
+    },
+    {
+      "title": "Beleuchtungsst\u00e4rke",
+      "unit": "lx",
+      "sensorType": "TSL45315",
+      "icon": "osem-brightness",
+      "_id": "6107df25c4aab8001b94e047",
+      "lastMeasurement": {
+        "value": "350",
+        "createdAt": "2023-12-08T13:08:47.652Z"
+      }
+    },
+    {
+      "title": "UV-Intensit\u00e4t",
+      "unit": "\u03bcW/cm\u00b2",
+      "sensorType": "VEML6070",
+      "icon": "osem-brightness",
+      "_id": "6107df25c4aab8001b94e046",
+      "lastMeasurement": {
+        "value": "11",
+        "createdAt": "2023-12-08T13:08:47.652Z"
+      }
+    },
+    {
+      "title": "PM10",
+      "unit": "\u00b5g/m\u00b3",
+      "sensorType": "SDS 011",
+      "icon": "osem-cloud",
+      "_id": "6107df25c4aab8001b94e045",
+      "lastMeasurement": {
+        "value": "39.3",
+        "createdAt": "2023-12-08T13:08:47.652Z"
+      }
+    },
+    {
+      "title": "PM2.5",
+      "unit": "\u00b5g/m\u00b3",
+      "sensorType": "SDS 011",
+      "icon": "osem-cloud",
+      "_id": "6107df25c4aab8001b94e044",
+      "lastMeasurement": {
+        "value": "11.4",
+        "createdAt": "2023-12-08T13:08:47.652Z"
+      }
+    }
+  ],
+  "model": "homeV2Lora",
+  "lastMeasurementAt": "2023-12-08T13:08:47.652Z",
+  "loc": [
+    {
+      "geometry": {
+        "timestamp": "2021-08-02T12:03:49.802Z",
+        "coordinates": [7.631133, 51.962788],
+        "type": "Point"
+      },
+      "type": "Feature"
+    }
+  ]
+}

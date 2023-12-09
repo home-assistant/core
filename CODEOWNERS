@@ -948,6 +948,8 @@ build.json @home-assistant/supervisor
 /tests/components/opengarage/ @danielhiversen
 /homeassistant/components/openhome/ @bazwilliams
 /tests/components/openhome/ @bazwilliams
+/homeassistant/components/opensensemap/ @gnumpi
+/tests/components/opensensemap/ @gnumpi
 /homeassistant/components/opensky/ @joostlek
 /tests/components/opensky/ @joostlek
 /homeassistant/components/opentherm_gw/ @mvn23

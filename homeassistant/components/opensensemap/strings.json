@@ -1,0 +1,24 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_id": "The provided id is not a valid station id."
+    },
+    "error": {
+      "invalid_id": "The provided id is not a valid station id."
+    },
+    "step": {
+      "user": {
+        "description": "Enter a opensensemap station id.",
+        "data": {
+          "station_id": "Station Id",
+          "name": "Name"
+        },
+        "data_description": {
+          "name": "Take the opensensemap station name if emtpy."
+        }
+      }
+    },
+    "flow_title": "{name}"
+  }
+}
