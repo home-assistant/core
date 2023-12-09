@@ -12,12 +12,12 @@ import pytest
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
-    BaseHaRemoteScanner,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfo,
     BluetoothServiceInfoBleak,
     HaBluetoothConnector,
+    HomeAssistantRemoteScanner,
     async_ble_device_from_address,
     async_get_advertisement_callback,
     async_get_fallback_availability_interval,
@@ -56,7 +56,7 @@ from tests.common import async_fire_time_changed, load_fixture
 @pytest.fixture
 def register_hci0_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
     """Register an hci0 scanner."""
-    hci0_scanner = FakeScanner(hass, "hci0", "hci0")
+    hci0_scanner = FakeScanner("hci0", "hci0")
     cancel = bluetooth.async_register_scanner(hass, hci0_scanner, True)
     yield
     cancel()
@@ -65,7 +65,7 @@ def register_hci0_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
 @pytest.fixture
 def register_hci1_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
     """Register an hci1 scanner."""
-    hci1_scanner = FakeScanner(hass, "hci1", "hci1")
+    hci1_scanner = FakeScanner("hci1", "hci1")
     cancel = bluetooth.async_register_scanner(hass, hci1_scanner, True)
     yield
     cancel()
@@ -562,7 +562,7 @@ async def test_switching_adapters_when_one_goes_away(
 ) -> None:
     """Test switching adapters when one goes away."""
     cancel_hci2 = bluetooth.async_register_scanner(
-        hass, FakeScanner(hass, "hci2", "hci2"), True
+        hass, FakeScanner("hci2", "hci2"), True
     )
 
     address = "44:44:33:11:23:45"
@@ -612,7 +612,7 @@ async def test_switching_adapters_when_one_stop_scanning(
     hass: HomeAssistant, enable_bluetooth: None, register_hci0_scanner: None
 ) -> None:
     """Test switching adapters when stops scanning."""
-    hci2_scanner = FakeScanner(hass, "hci2", "hci2")
+    hci2_scanner = FakeScanner("hci2", "hci2")
     cancel_hci2 = bluetooth.async_register_scanner(hass, hci2_scanner, True)
 
     address = "44:44:33:11:23:45"
@@ -704,7 +704,7 @@ async def test_goes_unavailable_connectable_only_and_recovers(
         BluetoothScanningMode.ACTIVE,
     )
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(HomeAssistantRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -877,7 +877,7 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
         BluetoothScanningMode.ACTIVE,
     )
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(HomeAssistantRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:

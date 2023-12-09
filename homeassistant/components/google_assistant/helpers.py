@@ -59,7 +59,11 @@ LOCAL_SDK_MIN_VERSION = AwesomeVersion("2.1.5")
 @callback
 def _get_registry_entries(
     hass: HomeAssistant, entity_id: str
-) -> tuple[er.RegistryEntry | None, dr.DeviceEntry | None, ar.AreaEntry | None,]:
+) -> tuple[
+    er.RegistryEntry | None,
+    dr.DeviceEntry | None,
+    ar.AreaEntry | None,
+]:
     """Get registry entries."""
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
@@ -682,8 +686,12 @@ class GoogleEntity:
             return device
 
         # Add Matter info
-        if "matter" in self.hass.config.components and (
-            matter_info := matter.get_matter_device_info(self.hass, device_entry.id)
+        if (
+            "matter" in self.hass.config.components
+            and any(x for x in device_entry.identifiers if x[0] == "matter")
+            and (
+                matter_info := matter.get_matter_device_info(self.hass, device_entry.id)
+            )
         ):
             device["matterUniqueId"] = matter_info["unique_id"]
             device["matterOriginalVendorId"] = matter_info["vendor_id"]

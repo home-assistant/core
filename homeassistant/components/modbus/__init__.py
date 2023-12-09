@@ -63,6 +63,18 @@ from .const import (  # noqa: F401
     CONF_CLOSE_COMM_ON_ERROR,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
+    CONF_FAN_MODE_AUTO,
+    CONF_FAN_MODE_DIFFUSE,
+    CONF_FAN_MODE_FOCUS,
+    CONF_FAN_MODE_HIGH,
+    CONF_FAN_MODE_LOW,
+    CONF_FAN_MODE_MEDIUM,
+    CONF_FAN_MODE_MIDDLE,
+    CONF_FAN_MODE_OFF,
+    CONF_FAN_MODE_ON,
+    CONF_FAN_MODE_REGISTER,
+    CONF_FAN_MODE_TOP,
+    CONF_FAN_MODE_VALUES,
     CONF_FANS,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
@@ -100,7 +112,6 @@ from .const import (  # noqa: F401
     CONF_STOPBITS,
     CONF_SWAP,
     CONF_SWAP_BYTE,
-    CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_TARGET_TEMP,
@@ -123,6 +134,7 @@ from .const import (  # noqa: F401
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
     duplicate_entity_validator,
+    duplicate_fan_mode_validator,
     duplicate_modbus_validator,
     nan_validator,
     number_validator,
@@ -179,9 +191,10 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_SCALE, default=1): number_validator,
         vol.Optional(CONF_OFFSET, default=0): number_validator,
         vol.Optional(CONF_PRECISION, default=0): cv.positive_int,
-        vol.Optional(CONF_SWAP, default=CONF_SWAP_NONE): vol.In(
+        vol.Optional(
+            CONF_SWAP,
+        ): vol.In(
             [
-                CONF_SWAP_NONE,
                 CONF_SWAP_BYTE,
                 CONF_SWAP_WORD,
                 CONF_SWAP_WORD_BYTE,
@@ -264,6 +277,26 @@ CLIMATE_SCHEMA = vol.All(
                     },
                     vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
                 }
+            ),
+            vol.Optional(CONF_FAN_MODE_REGISTER): vol.Maybe(
+                vol.All(
+                    {
+                        CONF_ADDRESS: cv.positive_int,
+                        CONF_FAN_MODE_VALUES: {
+                            vol.Optional(CONF_FAN_MODE_ON): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_OFF): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_AUTO): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_LOW): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_MEDIUM): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_HIGH): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_TOP): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_MIDDLE): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_FOCUS): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_DIFFUSE): cv.positive_int,
+                        },
+                    },
+                    duplicate_fan_mode_validator,
+                ),
             ),
         }
     ),

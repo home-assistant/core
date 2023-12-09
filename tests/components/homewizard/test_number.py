@@ -41,7 +41,7 @@ async def test_number_entities(
     assert snapshot == device_entry
 
     # Test unknown handling
-    assert state.state == "100"
+    assert state.state == "100.0"
 
     mock_homewizardenergy.state.return_value.brightness = None
 
@@ -64,10 +64,13 @@ async def test_number_entities(
     )
 
     assert len(mock_homewizardenergy.state_set.mock_calls) == 1
-    mock_homewizardenergy.state_set.assert_called_with(brightness=127)
+    mock_homewizardenergy.state_set.assert_called_with(brightness=129)
 
     mock_homewizardenergy.state_set.side_effect = RequestError
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"^An error occurred while communicating with HomeWizard device$",
+    ):
         await hass.services.async_call(
             number.DOMAIN,
             SERVICE_SET_VALUE,
@@ -79,7 +82,10 @@ async def test_number_entities(
         )
 
     mock_homewizardenergy.state_set.side_effect = DisabledError
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"^The local API of the HomeWizard device is disabled$",
+    ):
         await hass.services.async_call(
             number.DOMAIN,
             SERVICE_SET_VALUE,
@@ -91,7 +97,7 @@ async def test_number_entities(
         )
 
 
-@pytest.mark.parametrize("device_fixture", ["HWE-WTR", "SDM230", "SDM630"])
+@pytest.mark.parametrize("device_fixture", ["HWE-P1", "HWE-WTR", "SDM230", "SDM630"])
 async def test_entities_not_created_for_device(hass: HomeAssistant) -> None:
-    """Does not load button when device has no support for it."""
+    """Does not load number when device has no support for it."""
     assert not hass.states.get("number.device_status_light_brightness")

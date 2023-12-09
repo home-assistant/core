@@ -3,15 +3,13 @@ from datetime import timedelta
 import time
 from unittest.mock import patch
 
+from habluetooth.advertisement_tracker import ADVERTISING_TIMES_NEEDED
 import pytest
 
 from homeassistant.components.bluetooth import (
     async_get_learned_advertising_interval,
     async_register_scanner,
     async_track_unavailable,
-)
-from homeassistant.components.bluetooth.advertisement_tracker import (
-    ADVERTISING_TIMES_NEEDED,
 )
 from homeassistant.components.bluetooth.const import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
@@ -352,7 +350,7 @@ async def test_advertisment_interval_longer_than_adapter_stack_timeout_adapter_c
     )
     switchbot_device_went_unavailable = False
 
-    scanner = FakeScanner(hass, "new", "fake_adapter")
+    scanner = FakeScanner("new", "fake_adapter")
     cancel_scanner = async_register_scanner(hass, scanner, False)
 
     @callback

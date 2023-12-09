@@ -46,7 +46,7 @@ def disable_request_retry_delay():
     with patch(
         "homeassistant.components.zha.core.cluster_handlers.RETRYABLE_REQUEST_DECORATOR",
         zigpy.util.retryable_request(tries=3, delay=0),
-    ):
+    ), patch("homeassistant.components.zha.STARTUP_FAILURE_DELAY_S", 0.01):
         yield
 
 
@@ -83,8 +83,8 @@ class _FakeApp(ControllerApplication):
     async def permit_ncp(self, time_s: int = 60):
         pass
 
-    async def permit_with_key(
-        self, node: zigpy.types.EUI64, code: bytes, time_s: int = 60
+    async def permit_with_link_key(
+        self, node: zigpy.types.EUI64, link_key: zigpy.types.KeyData, time_s: int = 60
     ):
         pass
 

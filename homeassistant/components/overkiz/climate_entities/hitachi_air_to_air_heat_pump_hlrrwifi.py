@@ -245,12 +245,13 @@ class HitachiAirToAirHeatPumpHLRRWIFI(OverkizEntity, ClimateEntity):
             MODE_CHANGE_STATE,
             OverkizCommandParam.AUTO,
         ).lower()  # Overkiz can return states that have uppercase characters which are not accepted back as commands
-        if hvac_mode.replace(
-            " ", ""
-        ) in [  # Overkiz can return states like 'auto cooling' or 'autoHeating' that are not valid commands and need to be converted to 'auto'
-            OverkizCommandParam.AUTOCOOLING,
-            OverkizCommandParam.AUTOHEATING,
-        ]:
+        if (
+            hvac_mode.replace(" ", "")
+            in [  # Overkiz can return states like 'auto cooling' or 'autoHeating' that are not valid commands and need to be converted to 'auto'
+                OverkizCommandParam.AUTOCOOLING,
+                OverkizCommandParam.AUTOHEATING,
+            ]
+        ):
             hvac_mode = OverkizCommandParam.AUTO
 
         swing_mode = self._control_backfill(

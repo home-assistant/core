@@ -149,7 +149,11 @@ MOCK_CONFIG = {
     "light:0": {"name": "test light_0"},
     "switch:0": {"name": "test switch_0"},
     "cover:0": {"name": "test cover_0"},
-    "thermostat:0": {"id": 0, "enable": True, "type": "heating"},
+    "thermostat:0": {
+        "id": 0,
+        "enable": True,
+        "type": "heating",
+    },
     "sys": {
         "ui_data": {},
         "device": {"name": "Test name"},
@@ -176,7 +180,7 @@ MOCK_SHELLY_RPC = {
     "auth_en": False,
     "auth_domain": None,
     "profile": "cover",
-    "relay_operational": False,
+    "relay_in_thermostat": True,
 }
 
 MOCK_STATUS_COAP = {

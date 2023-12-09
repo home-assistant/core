@@ -245,11 +245,11 @@ async def async_check_config_schema(
             for config in config_items:
                 try:
                     schema(config)
-                except vol.Invalid as ex:
+                except vol.Invalid as exc:
                     integration = await async_get_integration(hass, DOMAIN)
                     # pylint: disable-next=protected-access
                     message = conf_util.format_schema_error(
-                        hass, ex, domain, config, integration.documentation
+                        hass, exc, domain, config, integration.documentation
                     )
                     raise ServiceValidationError(
                         message,
@@ -258,7 +258,7 @@ async def async_check_config_schema(
                         translation_placeholders={
                             "domain": domain,
                         },
-                    ) from ex
+                    ) from exc
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

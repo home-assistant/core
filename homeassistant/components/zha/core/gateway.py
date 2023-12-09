@@ -11,7 +11,7 @@ import itertools
 import logging
 import re
 import time
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple, Self
 
 from zigpy.application import ControllerApplication
 from zigpy.config import (
@@ -24,15 +24,14 @@ from zigpy.config import (
 )
 import zigpy.device
 import zigpy.endpoint
-from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionError
 import zigpy.group
+from zigpy.state import State
 from zigpy.types.named import EUI64
 
 from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -66,8 +65,6 @@ from .const import (
     SIGNAL_ADD_ENTITIES,
     SIGNAL_GROUP_MEMBERSHIP_CHANGE,
     SIGNAL_REMOVE,
-    STARTUP_FAILURE_DELAY_S,
-    STARTUP_RETRIES,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
     ZHA_GW_MSG,
@@ -123,10 +120,6 @@ class DevicePairingStatus(Enum):
 class ZHAGateway:
     """Gateway that handles events that happen on the ZHA Zigbee network."""
 
-    # -- Set in async_initialize --
-    application_controller: ControllerApplication
-    radio_description: str
-
     def __init__(
         self, hass: HomeAssistant, config: ConfigType, config_entry: ConfigEntry
     ) -> None:
@@ -135,7 +128,8 @@ class ZHAGateway:
         self._config = config
         self._devices: dict[EUI64, ZHADevice] = {}
         self._groups: dict[int, ZHAGroup] = {}
-        self.coordinator_zha_device: ZHADevice | None = None
+        self.application_controller: ControllerApplication = None
+        self.coordinator_zha_device: ZHADevice = None  # type: ignore[assignment]
         self._device_registry: collections.defaultdict[
             EUI64, list[EntityReference]
         ] = collections.defaultdict(list)
@@ -147,13 +141,11 @@ class ZHAGateway:
         self._log_relay_handler = LogRelayHandler(hass, self)
         self.config_entry = config_entry
         self._unsubs: list[Callable[[], None]] = []
+        self.shutting_down = False
 
     def get_application_controller_data(self) -> tuple[ControllerApplication, dict]:
         """Get an uninitialized instance of a zigpy `ControllerApplication`."""
-        radio_type = self.config_entry.data[CONF_RADIO_TYPE]
-
-        app_controller_cls = RadioType[radio_type].controller
-        self.radio_description = RadioType[radio_type].description
+        radio_type = RadioType[self.config_entry.data[CONF_RADIO_TYPE]]
 
         app_config = self._config.get(CONF_ZIGPY, {})
         database = self._config.get(
@@ -170,7 +162,7 @@ class ZHAGateway:
         # event loop, when a connection to a TCP coordinator fails in a specific way
         if (
             CONF_USE_THREAD not in app_config
-            and RadioType[radio_type] is RadioType.ezsp
+            and radio_type is RadioType.ezsp
             and app_config[CONF_DEVICE][CONF_DEVICE_PATH].startswith("socket://")
         ):
             app_config[CONF_USE_THREAD] = False
@@ -189,47 +181,39 @@ class ZHAGateway:
         ):
             app_config.setdefault(CONF_NWK, {})[CONF_NWK_CHANNEL] = 15
 
-        return app_controller_cls, app_controller_cls.SCHEMA(app_config)
+        return radio_type.controller, radio_type.controller.SCHEMA(app_config)
+
+    @classmethod
+    async def async_from_config(
+        cls, hass: HomeAssistant, config: ConfigType, config_entry: ConfigEntry
+    ) -> Self:
+        """Create an instance of a gateway from config objects."""
+        instance = cls(hass, config, config_entry)
+        await instance.async_initialize()
+        return instance
 
     async def async_initialize(self) -> None:
         """Initialize controller and connect radio."""
         discovery.PROBE.initialize(self.hass)
         discovery.GROUP_PROBE.initialize(self.hass)
 
+        self.shutting_down = False
+
         app_controller_cls, app_config = self.get_application_controller_data()
-        self.application_controller = await app_controller_cls.new(
+        app = await app_controller_cls.new(
             config=app_config,
             auto_form=False,
             start_radio=False,
         )
 
         try:
-            for attempt in range(STARTUP_RETRIES):
-                try:
-                    await self.application_controller.startup(auto_form=True)
-                except TransientConnectionError as exc:
-                    raise ConfigEntryNotReady from exc
-                except NetworkSettingsInconsistent:
-                    raise
-                except Exception as exc:  # pylint: disable=broad-except
-                    _LOGGER.debug(
-                        "Couldn't start %s coordinator (attempt %s of %s)",
-                        self.radio_description,
-                        attempt + 1,
-                        STARTUP_RETRIES,
-                        exc_info=exc,
-                    )
-
-                    if attempt == STARTUP_RETRIES - 1:
-                        raise exc
-
-                    await asyncio.sleep(STARTUP_FAILURE_DELAY_S)
-                else:
-                    break
+            await app.startup(auto_form=True)
         except Exception:
             # Explicitly shut down the controller application on failure
-            await self.application_controller.shutdown()
+            await app.shutdown()
             raise
+
+        self.application_controller = app
 
         zha_data = get_zha_data(self.hass)
         zha_data.gateway = self
@@ -243,6 +227,17 @@ class ZHAGateway:
 
         self.application_controller.add_listener(self)
         self.application_controller.groups.add_listener(self)
+
+    def connection_lost(self, exc: Exception) -> None:
+        """Handle connection lost event."""
+        if self.shutting_down:
+            return
+
+        _LOGGER.debug("Connection to the radio was lost: %r", exc)
+
+        self.hass.async_create_task(
+            self.hass.config_entries.async_reload(self.config_entry.entry_id)
+        )
 
     def _find_coordinator_device(self) -> zigpy.device.Device:
         zigpy_coordinator = self.application_controller.get_device(nwk=0x0000)
@@ -258,6 +253,7 @@ class ZHAGateway:
     @callback
     def async_load_devices(self) -> None:
         """Restore ZHA devices from zigpy application state."""
+
         for zigpy_device in self.application_controller.devices.values():
             zha_device = self._async_get_or_create_device(zigpy_device, restored=True)
             delta_msg = "not known"
@@ -280,6 +276,7 @@ class ZHAGateway:
     @callback
     def async_load_groups(self) -> None:
         """Initialize ZHA groups."""
+
         for group_id in self.application_controller.groups:
             group = self.application_controller.groups[group_id]
             zha_group = self._async_get_or_create_group(group)
@@ -521,9 +518,9 @@ class ZHAGateway:
             entity_registry.async_remove(entry.entity_id)
 
     @property
-    def coordinator_ieee(self) -> EUI64:
-        """Return the active coordinator's IEEE address."""
-        return self.application_controller.state.node_info.ieee
+    def state(self) -> State:
+        """Return the active coordinator's network state."""
+        return self.application_controller.state
 
     @property
     def devices(self) -> dict[EUI64, ZHADevice]:
@@ -711,6 +708,7 @@ class ZHAGateway:
         group_id: int | None = None,
     ) -> ZHAGroup | None:
         """Create a new Zigpy Zigbee group."""
+
         # we start with two to fill any gaps from a user removing existing groups
 
         if group_id is None:
@@ -758,19 +756,13 @@ class ZHAGateway:
     async def shutdown(self) -> None:
         """Stop ZHA Controller Application."""
         _LOGGER.debug("Shutting down ZHA ControllerApplication")
+        self.shutting_down = True
+
         for unsubscribe in self._unsubs:
             unsubscribe()
         for device in self.devices.values():
             device.async_cleanup_handles()
-        # shutdown is called when the config entry unloads are processed
-        # there are cases where unloads are processed because of a failure of
-        # some sort and the application controller may not have been
-        # created yet
-        if (
-            hasattr(self, "application_controller")
-            and self.application_controller is not None
-        ):
-            await self.application_controller.shutdown()
+        await self.application_controller.shutdown()
 
     def handle_message(
         self,

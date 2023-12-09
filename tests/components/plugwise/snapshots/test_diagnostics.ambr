@@ -500,6 +500,7 @@
       'cooling_present': False,
       'gateway_id': 'fe799307f1624099878210aa0b9f1475',
       'heater_id': '90986d591dcd426cae3ec3e8111ff730',
+      'item_count': 315,
       'notifications': dict({
         'af82e4ccf9c548528166d38e560662a4': dict({
           'warning': "Node Plug (with MAC address 000D6F000D13CB01, in room 'n.a.') has been unreachable since 23:03 2020-01-18. Please check the connection and restart the device.",
