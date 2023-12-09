@@ -41,6 +41,7 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator):
         self.vin = vin
         self.session = async_get_clientsession(hass)
         self.data = self._flattern(data)
+        self.did_first_update = False
 
     async def async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Tessie API."""
@@ -49,7 +50,7 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator):
                 session=self.session,
                 api_key=self.api_key,
                 vin=self.vin,
-                use_cache=False,
+                use_cache=self.did_first_update,
             )
         except ClientResponseError as e:
             if e.status == HTTPStatus.REQUEST_TIMEOUT:
@@ -59,6 +60,7 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator):
             # Reauth will go here
             raise e
 
+        self.did_first_update = True
         if vehicle["state"] == TessieStatus.ONLINE:
             # Vehicle is online, all data is fresh
             return self._flattern(vehicle)
