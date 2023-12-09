@@ -340,7 +340,7 @@ async def test_service_called_with_unloaded_entry(
     await hass.async_block_till_done()
     await mock_config_entry.async_unload(hass)
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, CAMERA_NAME)})
+    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "12345")})
 
     assert device_entry
 
