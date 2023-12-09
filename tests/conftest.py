@@ -1125,7 +1125,7 @@ def mock_get_source_ip() -> Generator[None, None, None]:
         yield
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def mock_zeroconf() -> Generator[None, None, None]:
     """Mock zeroconf."""
     from zeroconf import DNSCache  # pylint: disable=import-outside-toplevel
@@ -1142,7 +1142,7 @@ def mock_zeroconf() -> Generator[None, None, None]:
         yield mock_zc
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def mock_async_zeroconf(mock_zeroconf: None) -> Generator[None, None, None]:
     """Mock AsyncZeroconf."""
     from zeroconf import DNSCache, Zeroconf  # pylint: disable=import-outside-toplevel
