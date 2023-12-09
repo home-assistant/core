@@ -17,6 +17,10 @@ trigger_camera:
           integration: blink
 
 save_video:
+  target:
+    entity:
+      integration: blink
+      domain: camera
   fields:
     device_id:
       required: true
@@ -35,6 +39,10 @@ save_video:
         text:
 
 save_recent_clips:
+  target:
+    entity:
+      integration: blink
+      domain: camera
   fields:
     device_id:
       required: true
@@ -53,6 +61,10 @@ save_recent_clips:
         text:
 
 send_pin:
+  target:
+    entity:
+      integration: blink
+      domain: camera
   fields:
     device_id:
       required: true
