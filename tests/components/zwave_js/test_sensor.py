@@ -200,10 +200,12 @@ async def test_energy_sensors(
 
 
 async def test_basic_cc_sensor(
-    hass: HomeAssistant, client, basic_cc_sensor, integration
+    hass: HomeAssistant, client, multisensor_6, integration
 ) -> None:
     """Test a Basic CC sensor gets discovered correctly."""
-    assert hass.states.get("sensor.basic_cc_sensor") is not None
+    state = hass.states.get("sensor.multisensor_6_basic")
+    assert state is not None
+    assert state.state == 255.0
 
 
 async def test_disabled_notification_sensor(

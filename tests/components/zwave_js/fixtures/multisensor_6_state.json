@@ -90,21 +90,6 @@
       "value": 255
     },
     {
-      "commandClassName": "Basic",
-      "commandClass": 32,
-      "endpoint": 0,
-      "property": "targetValue",
-      "propertyName": "targetValue",
-      "metadata": {
-        "type": "number",
-        "readable": true,
-        "writeable": true,
-        "min": 0,
-        "max": 99,
-        "label": "Target value"
-      }
-    },
-    {
       "commandClassName": "Binary Sensor",
       "commandClass": 48,
       "endpoint": 0,

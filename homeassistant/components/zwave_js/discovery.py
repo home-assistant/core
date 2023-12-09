@@ -1058,9 +1058,7 @@ DISCOVERY_SCHEMAS = [
         ),
         required_values=[
             ZWaveValueDiscoverySchema(
-                command_class={
-                    CommandClass.BASIC,
-                },
+                command_class={CommandClass.BASIC},
                 type={ValueType.NUMBER},
                 property={TARGET_VALUE_PROPERTY},
             )
@@ -1077,9 +1075,7 @@ DISCOVERY_SCHEMAS = [
         ),
         absent_values=[
             ZWaveValueDiscoverySchema(
-                command_class={
-                    CommandClass.BASIC,
-                },
+                command_class={CommandClass.BASIC},
                 type={ValueType.NUMBER},
                 property={TARGET_VALUE_PROPERTY},
             )
