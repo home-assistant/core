@@ -25,10 +25,6 @@ class TessieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize."""
-        self._reauth_entry: ConfigEntry | None = None
-
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
     ) -> FlowResult:
