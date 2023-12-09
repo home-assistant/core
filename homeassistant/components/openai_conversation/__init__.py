@@ -87,7 +87,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except openai.OpenAIError as err:
             raise HomeAssistantError(f"Error generating image: {err}") from err
 
-        return response.data[0].model_dump(exclude=["b64_json"])
+        return response.data[0].model_dump(exclude={"b64_json"})
 
     hass.services.async_register(
         DOMAIN,
@@ -206,7 +206,7 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
             )
 
         _LOGGER.debug("Response %s", result)
-        response = result.choices[0].message.model_dump(include=["role", "content"])
+        response = result.choices[0].message.model_dump(include={"role", "content"})
         messages.append(response)
         self.history[conversation_id] = messages
 
