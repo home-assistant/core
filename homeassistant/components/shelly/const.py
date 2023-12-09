@@ -22,7 +22,6 @@ from aioshelly.const import (
     MODEL_VINTAGE_V2,
     MODEL_WALL_DISPLAY,
 )
-from awesomeversion import AwesomeVersion
 
 DOMAIN: Final = "shelly"
 
@@ -186,8 +185,6 @@ UPTIME_DEVIATION: Final = 5
 ENTRY_RELOAD_COOLDOWN = 60
 
 SHELLY_GAS_MODELS = [MODEL_GAS]
-
-BLE_MIN_VERSION = AwesomeVersion("0.12.0-beta2")
 
 CONF_BLE_SCANNER_MODE = "ble_scanner_mode"
 
