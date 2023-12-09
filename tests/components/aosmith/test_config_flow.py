@@ -121,3 +121,42 @@ async def test_reauth_flow(
 
         assert result2["type"] == FlowResultType.ABORT
         assert result2["reason"] == "reauth_successful"
+
+
+async def test_reauth_flow_wrong_account(
+    freezer: FrozenDateTimeFactory,
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test reauth aborts when trying to use a different email address."""
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+
+    mock_client.get_devices.side_effect = AOSmithInvalidCredentialsException(
+        "Authentication error"
+    )
+    freezer.tick(REGULAR_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "user"
+
+    new_fixture_user_input = FIXTURE_USER_INPUT.copy()
+    new_fixture_user_input[CONF_EMAIL] = "different_email@example.com"
+
+    with patch(
+        "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_devices",
+        return_value=[],
+    ), patch("homeassistant.components.aosmith.async_setup_entry", return_value=True):
+        result2 = await hass.config_entries.flow.async_configure(
+            flows[0]["flow_id"],
+            new_fixture_user_input,
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] == FlowResultType.ABORT
+        assert result2["reason"] == "reauth_wrong_account"

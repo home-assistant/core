@@ -36,6 +36,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             unique_id = user_input[CONF_EMAIL].lower()
             await self.async_set_unique_id(unique_id)
+
+            if self._reauth_entry and self._reauth_entry.unique_id != self.unique_id:
+                return self.async_abort(reason="reauth_wrong_account")
+
             if not self._reauth_entry:
                 self._abort_if_unique_id_configured()
 
