@@ -19,5 +19,3 @@ class TessieStatus(StrEnum):
     ASLEEP = "asleep"
     ONLINE = "online"
     OFFLINE = "offline"
-
-
