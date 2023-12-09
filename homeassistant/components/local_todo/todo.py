@@ -63,9 +63,11 @@ def _todo_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
     """Convert TodoItem dataclass items to dictionary of attributes for ical consumption."""
     result: dict[str, str] = {}
     for name, value in obj:
+        if value is None:
+            continue
         if name == "status":
             result[name] = ICS_TODO_STATUS_MAP_INV[value]
-        elif value is not None:
+        else:
             result[name] = value
     return result
 
@@ -88,6 +90,9 @@ class LocalTodoListEntity(TodoListEntity):
         | TodoListEntityFeature.DELETE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.MOVE_TODO_ITEM
+        | TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
+        | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
+        | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
     _attr_should_poll = False
 
@@ -113,6 +118,8 @@ class LocalTodoListEntity(TodoListEntity):
                 status=ICS_TODO_STATUS_MAP.get(
                     item.status or TodoStatus.NEEDS_ACTION, TodoItemStatus.NEEDS_ACTION
                 ),
+                due=item.due,
+                description=item.description,
             )
             for item in self._calendar.todos
         ]

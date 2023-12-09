@@ -1,4 +1,38 @@
 # serializer version: 1
+# name: test_sensor[electricity last transmitted]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.electricity_teststrasse_1_last_transmitted',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last transmitted',
+    'platform': 'discovergy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_transmitted',
+    'unique_id': 'abc123-last_transmitted',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[electricity last transmitted].1
+  None
+# ---
 # name: test_sensor[electricity total consumption]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -98,8 +132,42 @@
     'entity_id': 'sensor.electricity_teststrasse_1_total_power',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '531.75',
+    'state': '0.0',
   })
+# ---
+# name: test_sensor[gas last transmitted]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.gas_teststrasse_1_last_transmitted',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last transmitted',
+    'platform': 'discovergy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_transmitted',
+    'unique_id': 'def456-last_transmitted',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[gas last transmitted].1
+  None
 # ---
 # name: test_sensor[gas total consumption]
   EntityRegistryEntrySnapshot({

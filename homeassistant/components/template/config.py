@@ -12,8 +12,11 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config import async_log_schema_error, config_without_domain
 from homeassistant.const import CONF_BINARY_SENSORS, CONF_SENSORS, CONF_UNIQUE_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import async_validate_trigger_config
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.setup import async_notify_setup_error
 
 from . import (
     binary_sensor as binary_sensor_platform,
@@ -64,7 +67,7 @@ CONFIG_SECTION_SCHEMA = vol.Schema(
 )
 
 
-async def async_validate_config(hass, config):
+async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType:
     """Validate config."""
     if DOMAIN not in config:
         return config
@@ -81,6 +84,7 @@ async def async_validate_config(hass, config):
                 )
         except vol.Invalid as err:
             async_log_schema_error(err, DOMAIN, cfg, hass)
+            async_notify_setup_error(hass, DOMAIN)
             continue
 
         legacy_warn_printed = False

@@ -17,6 +17,7 @@ from pydeconz.models.sensor.generic_status import GenericStatus
 from pydeconz.models.sensor.humidity import Humidity
 from pydeconz.models.sensor.light_level import LightLevel
 from pydeconz.models.sensor.moisture import Moisture
+from pydeconz.models.sensor.particulate_matter import ParticulateMatter
 from pydeconz.models.sensor.power import Power
 from pydeconz.models.sensor.pressure import Pressure
 from pydeconz.models.sensor.switch import Switch
@@ -83,6 +84,7 @@ T = TypeVar(
     Humidity,
     LightLevel,
     Moisture,
+    ParticulateMatter,
     Power,
     Pressure,
     Temperature,
@@ -212,6 +214,17 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=1,
+    ),
+    DeconzSensorDescription[ParticulateMatter](
+        key="particulate_matter_pm2_5",
+        supported_fn=lambda device: device.measured_value is not None,
+        update_key="measured_value",
+        value_fn=lambda device: device.measured_value,
+        instance_check=ParticulateMatter,
+        name_suffix="PM25",
+        device_class=SensorDeviceClass.PM25,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ),
     DeconzSensorDescription[Power](
         key="power",

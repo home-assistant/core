@@ -40,7 +40,7 @@ async def apply_stop_hass(stop_hass: None) -> None:
     """Make sure all hass are stopped."""
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def mock_http_start_stop() -> Generator[None, None, None]:
     """Mock HTTP start and stop."""
     with patch(
@@ -719,17 +719,19 @@ async def test_setup_hass_invalid_core_config(
     event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test it works."""
-    hass = await bootstrap.async_setup_hass(
-        runner.RuntimeConfig(
-            config_dir=get_test_config_dir(),
-            verbose=False,
-            log_rotate_days=10,
-            log_file="",
-            log_no_color=False,
-            skip_pip=True,
-            recovery_mode=False,
-        ),
-    )
+    with patch("homeassistant.bootstrap.async_notify_setup_error") as mock_notify:
+        hass = await bootstrap.async_setup_hass(
+            runner.RuntimeConfig(
+                config_dir=get_test_config_dir(),
+                verbose=False,
+                log_rotate_days=10,
+                log_file="",
+                log_no_color=False,
+                skip_pip=True,
+                recovery_mode=False,
+            ),
+        )
+        assert len(mock_notify.mock_calls) == 1
 
     assert "recovery_mode" in hass.config.components
 
@@ -1011,7 +1013,10 @@ async def test_bootstrap_dependencies(
     with patch(
         "homeassistant.setup.loader.async_get_integrations",
         side_effect=mock_async_get_integrations,
-    ), patch("homeassistant.config.async_process_component_config", return_value={}):
+    ), patch(
+        "homeassistant.config.async_process_component_config",
+        return_value=config_util.IntegrationConfigInfo({}, []),
+    ):
         bootstrap.async_set_domains_to_be_loaded(hass, {integration})
         await bootstrap.async_setup_multi_components(hass, {integration}, {})
         await hass.async_block_till_done()

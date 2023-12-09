@@ -47,6 +47,11 @@
       "camera_armed": {
         "name": "Camera armed"
       }
+    },
+    "switch": {
+      "camera_motion": {
+        "name": "Camera motion detection"
+      }
     }
   },
   "services": {
@@ -95,6 +100,23 @@
           "description": "PIN received from blink. Leave empty if you only received a verification email."
         }
       }
+    }
+  },
+  "exceptions": {
+    "invalid_device": {
+      "message": "Device '{target}' is not a {domain} device"
+    },
+    "device_not_found": {
+      "message": "Device '{target}' not found in device registry"
+    },
+    "no_path": {
+      "message": "Can't write to directory {target}, no access to path!"
+    },
+    "cant_write": {
+      "message": "Can't write to file"
+    },
+    "not_loaded": {
+      "message": "{target} is not loaded"
     }
   }
 }

@@ -190,7 +190,8 @@ class RestoreStateData:
                 state, self.entities[state.entity_id].extra_restore_state_data, now
             )
             for state in all_states
-            if state.entity_id in self.entities and
+            if state.entity_id in self.entities
+            and
             # Ignore all states that are entity registry placeholders
             not state.attributes.get(ATTR_RESTORED)
         ]

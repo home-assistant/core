@@ -508,7 +508,7 @@ async def test_restore_entity_end_to_end(
     await hass.async_block_till_done()
     assert component_setup.called
 
-    assert f"{DOMAIN}.{PLATFORM}" in hass.config.components
+    assert f"{PLATFORM}.{DOMAIN}" in hass.config.components
     assert len(setup_called) == 1
 
     platform = async_get_platform_without_config_entry(hass, PLATFORM, DOMAIN)

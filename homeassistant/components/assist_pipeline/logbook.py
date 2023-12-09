@@ -29,7 +29,7 @@ def async_describe_events(
         if device:
             device_name = device.name_by_user or device.name or "Unknown device"
 
-        message = f"{device_name} started recording audio"
+        message = f"{device_name} captured an audio sample"
 
         return {
             LOGBOOK_ENTRY_NAME: device_name,

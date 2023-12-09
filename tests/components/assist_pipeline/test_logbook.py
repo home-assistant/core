@@ -38,5 +38,5 @@ async def test_recording_event(
     assert event[logbook.LOGBOOK_ENTRY_NAME] == "My Satellite"
     assert event[logbook.LOGBOOK_ENTRY_DOMAIN] == assist_pipeline.DOMAIN
     assert (
-        event[logbook.LOGBOOK_ENTRY_MESSAGE] == "My Satellite started recording audio"
+        event[logbook.LOGBOOK_ENTRY_MESSAGE] == "My Satellite captured an audio sample"
     )

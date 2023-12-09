@@ -94,7 +94,7 @@ def get_node_from_device_entry(
     )
 
     if device_id_full is None:
-        raise ValueError(f"Device {device.id} is not a Matter device")
+        return None
 
     device_id = device_id_full.lstrip(device_id_type_prefix)
     matter_client = matter.matter_client

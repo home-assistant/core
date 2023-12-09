@@ -5,6 +5,7 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
+from zhaquirks.quirk_ids import TUYA_PLUG_ONOFF
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.foundation import Status
 
@@ -364,6 +365,17 @@ class InovelliSmartBulbMode(ZHASwitchConfigurationEntity):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_INOVELLI, models={"VZM35-SN"}
+)
+class InovelliSmartFanMode(ZHASwitchConfigurationEntity):
+    """Inovelli smart fan mode control."""
+
+    _unique_id_suffix = "smart_fan_mode"
+    _attribute_name = "smart_fan_mode"
+    _attr_translation_key = "smart_fan_mode"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_INOVELLI,
 )
 class InovelliDoubleTapUpEnabled(ZHASwitchConfigurationEntity):
@@ -488,8 +500,7 @@ class AqaraPetFeederChildLock(ZHASwitchConfigurationEntity):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_ON_OFF,
-    models={"TS011F"},
+    cluster_handler_names=CLUSTER_HANDLER_ON_OFF, quirk_ids=TUYA_PLUG_ONOFF
 )
 class TuyaChildLockSwitch(ZHASwitchConfigurationEntity):
     """Representation of a child lock configuration entity."""

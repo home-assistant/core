@@ -267,7 +267,7 @@ async def async_test_home_assistant(event_loop, load_registries=True):
             "homeassistant.helpers.restore_state.RestoreStateData.async_setup_dump",
             return_value=None,
         ), patch(
-            "homeassistant.helpers.restore_state.start.async_at_start"
+            "homeassistant.helpers.restore_state.start.async_at_start",
         ):
             await asyncio.gather(
                 ar.async_load(hass),
@@ -297,6 +297,7 @@ def async_mock_service(
     schema: vol.Schema | None = None,
     response: ServiceResponse = None,
     supports_response: SupportsResponse | None = None,
+    raise_exception: Exception | None = None,
 ) -> list[ServiceCall]:
     """Set up a fake service & return a calls log list to this service."""
     calls = []
@@ -305,6 +306,8 @@ def async_mock_service(
     def mock_service_log(call):  # pylint: disable=unnecessary-lambda
         """Mock service call."""
         calls.append(call)
+        if raise_exception is not None:
+            raise raise_exception
         return response
 
     if supports_response is None:
@@ -984,7 +987,10 @@ def assert_setup_component(count, domain=None):
     async def mock_psc(hass, config_input, integration):
         """Mock the prepare_setup_component to capture config."""
         domain_input = integration.domain
-        res = await async_process_component_config(hass, config_input, integration)
+        integration_config_info = await async_process_component_config(
+            hass, config_input, integration
+        )
+        res = integration_config_info.config
         config[domain_input] = None if res is None else res.get(domain_input)
         _LOGGER.debug(
             "Configuration for %s, Validated: %s, Original %s",
@@ -992,7 +998,7 @@ def assert_setup_component(count, domain=None):
             config[domain_input],
             config_input.get(domain_input),
         )
-        return res
+        return integration_config_info
 
     assert isinstance(config, dict)
     with patch("homeassistant.config.async_process_component_config", mock_psc):
@@ -1301,11 +1307,12 @@ async def get_system_health_info(hass: HomeAssistant, domain: str) -> dict[str, 
 @contextmanager
 def mock_config_flow(domain: str, config_flow: type[ConfigFlow]) -> None:
     """Mock a config flow handler."""
-    assert domain not in config_entries.HANDLERS
+    handler = config_entries.HANDLERS.get(domain)
     config_entries.HANDLERS[domain] = config_flow
     _LOGGER.info("Adding mock config flow: %s", domain)
     yield
-    config_entries.HANDLERS.pop(domain)
+    if handler:
+        config_entries.HANDLERS[domain] = handler
 
 
 def mock_integration(
@@ -1420,7 +1427,7 @@ ANY = _HA_ANY()
 def raise_contains_mocks(val: Any) -> None:
     """Raise for mocks."""
     if isinstance(val, Mock):
-        raise TypeError
+        raise TypeError(val)
 
     if isinstance(val, dict):
         for dict_value in val.values():

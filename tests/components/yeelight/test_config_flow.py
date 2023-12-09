@@ -440,9 +440,11 @@ async def test_manual_no_capabilities(hass: HomeAssistant) -> None:
     ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
         f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
     ), patch(
-        f"{MODULE}.async_setup", return_value=True
+        f"{MODULE}.async_setup",
+        return_value=True,
     ), patch(
-        f"{MODULE}.async_setup_entry", return_value=True
+        f"{MODULE}.async_setup_entry",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
