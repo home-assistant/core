@@ -1547,7 +1547,7 @@ pyrympro==0.0.7
 pysabnzbd==1.1.1
 
 # homeassistant.components.schlage
-pyschlage==2023.11.0
+pyschlage==2023.12.0
 
 # homeassistant.components.sensibo
 pysensibo==1.0.36
@@ -1912,6 +1912,9 @@ subarulink==0.7.9
 
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
+
+# homeassistant.components.sunweg
+sunweg==2.0.0
 
 # homeassistant.components.surepetcare
 surepy==0.8.0
