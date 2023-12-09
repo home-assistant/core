@@ -5,22 +5,12 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    },
     "step": {
       "user": {
         "data": {
           "access_token": "[%key:common::config_flow::data::access_token%]"
         },
         "description": "Enter your access token from [my.tessie.com/settings/api](https://my.tessie.com/settings/api)."
-      },
-      "reauth_confirm": {
-        "data": {
-          "access_token": "[%key:common::config_flow::data::access_token%]"
-        },
-        "description": "Enter your access token from [my.tessie.com/settings/api](https://my.tessie.com/settings/api)",
-        "title": "[%key:common::config_flow::title::reauth%]"
       }
     }
   },
