@@ -30,6 +30,7 @@ from .entity import TessieEntity
 
 PARALLEL_UPDATES = 0
 
+
 DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="state",
@@ -99,7 +100,7 @@ DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="drive_state-shift_state",
         icon="mdi:car-shift-pattern",
-        options=["P", "D", "R", "N"],
+        options=["p", "d", "r", "n"],
         device_class=SensorDeviceClass.ENUM,
     ),
     SensorEntityDescription(
@@ -212,5 +213,5 @@ class TessieSensorEntity(TessieEntity, SensorEntity):
         """Return the state of the sensor."""
         if isinstance(self.value, str):
             # Make value lower case for translation
-            self.value.lower()
+            return self.value.lower()
         return self.value
