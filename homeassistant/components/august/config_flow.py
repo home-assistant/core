@@ -13,7 +13,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import aiohttp_client
 
 from .const import (
     CONF_ACCESS_TOKEN_CACHE_FILE,
@@ -26,6 +25,7 @@ from .const import (
 )
 from .exceptions import CannotConnect, InvalidAuth, RequireValidation
 from .gateway import AugustGateway
+from .util import async_create_august_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -159,10 +159,7 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Set up the gateway."""
         if self._august_gateway is not None:
             return self._august_gateway
-        # Create an aiohttp session instead of using the default one since the
-        # default one is likely to trigger august's WAF if another integration
-        # is also using Cloudflare
-        self._aiohttp_session = aiohttp_client.async_create_clientsession(self.hass)
+        self._aiohttp_session = async_create_august_clientsession(self.hass)
         self._august_gateway = AugustGateway(self.hass, self._aiohttp_session)
         return self._august_gateway
 

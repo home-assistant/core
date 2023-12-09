@@ -59,13 +59,16 @@ class FitbitOAuth2Implementation(AuthImplementation):
             resp = await session.post(self.token_url, data=data, headers=self._headers)
             resp.raise_for_status()
         except aiohttp.ClientResponseError as err:
-            error_body = await resp.text()
-            _LOGGER.debug("Client response error body: %s", error_body)
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                error_body = await resp.text() if not session.closed else ""
+                _LOGGER.debug(
+                    "Client response error status=%s, body=%s", err.status, error_body
+                )
             if err.status == HTTPStatus.UNAUTHORIZED:
-                raise FitbitAuthException from err
-            raise FitbitApiException from err
+                raise FitbitAuthException(f"Unauthorized error: {err}") from err
+            raise FitbitApiException(f"Server error response: {err}") from err
         except aiohttp.ClientError as err:
-            raise FitbitApiException from err
+            raise FitbitApiException(f"Client connection error: {err}") from err
         return cast(dict, await resp.json())
 
     @property

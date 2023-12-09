@@ -14,7 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN
+from .const import DOMAIN, RING_API, RING_DEVICES, RING_NOTIFICATIONS_COORDINATOR
 from .entity import RingEntityMixin
 
 
@@ -53,8 +53,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Ring binary sensors from a config entry."""
-    ring = hass.data[DOMAIN][config_entry.entry_id]["api"]
-    devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
+    ring = hass.data[DOMAIN][config_entry.entry_id][RING_API]
+    devices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
 
     entities = [
         RingBinarySensor(config_entry.entry_id, ring, device, description)
@@ -90,13 +90,15 @@ class RingBinarySensor(RingEntityMixin, BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
-        self.ring_objects["dings_data"].async_add_listener(self._dings_update_callback)
+        self.ring_objects[RING_NOTIFICATIONS_COORDINATOR].async_add_listener(
+            self._dings_update_callback
+        )
         self._dings_update_callback()
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect callbacks."""
         await super().async_will_remove_from_hass()
-        self.ring_objects["dings_data"].async_remove_listener(
+        self.ring_objects[RING_NOTIFICATIONS_COORDINATOR].async_remove_listener(
             self._dings_update_callback
         )
 

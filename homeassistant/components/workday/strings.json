@@ -19,7 +19,8 @@
           "workdays": "Workdays",
           "add_holidays": "Add holidays",
           "remove_holidays": "Remove Holidays",
-          "province": "Subdivision of country"
+          "province": "Subdivision of country",
+          "language": "Language for named holidays"
         },
         "data_description": {
           "excludes": "List of workdays to exclude",
@@ -27,7 +28,8 @@
           "workdays": "List of workdays",
           "add_holidays": "Add custom holidays as YYYY-MM-DD or as range using `,` as separator",
           "remove_holidays": "Remove holidays as YYYY-MM-DD, as range using `,` as separator or by using partial of name",
-          "province": "State, Territory, Province, Region of Country"
+          "province": "State, Territory, Province, Region of Country",
+          "language": "Choose the language you want to configure named holidays after"
         }
       }
     },
@@ -48,7 +50,8 @@
           "workdays": "[%key:component::workday::config::step::options::data::workdays%]",
           "add_holidays": "[%key:component::workday::config::step::options::data::add_holidays%]",
           "remove_holidays": "[%key:component::workday::config::step::options::data::remove_holidays%]",
-          "province": "[%key:component::workday::config::step::options::data::province%]"
+          "province": "[%key:component::workday::config::step::options::data::province%]",
+          "language": "[%key:component::workday::config::step::options::data::language%]"
         },
         "data_description": {
           "excludes": "[%key:component::workday::config::step::options::data_description::excludes%]",
@@ -56,7 +59,8 @@
           "workdays": "[%key:component::workday::config::step::options::data_description::workdays%]",
           "add_holidays": "[%key:component::workday::config::step::options::data_description::add_holidays%]",
           "remove_holidays": "[%key:component::workday::config::step::options::data_description::remove_holidays%]",
-          "province": "[%key:component::workday::config::step::options::data_description::province%]"
+          "province": "[%key:component::workday::config::step::options::data_description::province%]",
+          "language": "[%key:component::workday::config::step::options::data_description::language%]"
         }
       }
     },
@@ -126,6 +130,35 @@
               "province": "[%key:component::workday::issues::bad_country::fix_flow::step::province::data_description::province%]"
             }
           }
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "workday": {
+        "state_attributes": {
+          "workdays": {
+            "name": "[%key:component::workday::config::step::options::data::workdays%]"
+          },
+          "excludes": {
+            "name": "[%key:component::workday::config::step::options::data::excludes%]"
+          },
+          "days_offset": {
+            "name": "[%key:component::workday::config::step::options::data::days_offset%]"
+          }
+        }
+      }
+    }
+  },
+  "services": {
+    "check_date": {
+      "name": "Check date",
+      "description": "Check if date is workday.",
+      "fields": {
+        "check_date": {
+          "name": "Date",
+          "description": "Date to check if workday."
         }
       }
     }

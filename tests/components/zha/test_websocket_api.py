@@ -62,7 +62,7 @@ from .conftest import (
 )
 from .data import BASE_CUSTOM_CONFIGURATION, CONFIG_WITH_ALARM_OPTIONS
 
-from tests.common import MockUser
+from tests.common import MockConfigEntry, MockUser
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
@@ -295,10 +295,12 @@ async def test_get_zha_config_with_alarm(
 
 
 async def test_update_zha_config(
-    zha_client, app_controller: ControllerApplication
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    zha_client,
+    app_controller: ControllerApplication,
 ) -> None:
     """Test updating ZHA custom configuration."""
-
     configuration: dict = deepcopy(CONFIG_WITH_ALARM_OPTIONS)
     configuration["data"]["zha_options"]["default_light_transition"] = 10
 
@@ -312,10 +314,12 @@ async def test_update_zha_config(
         msg = await zha_client.receive_json()
         assert msg["success"]
 
-        await zha_client.send_json({ID: 6, TYPE: "zha/configuration"})
-        msg = await zha_client.receive_json()
-        configuration = msg["result"]
-        assert configuration == configuration
+    await zha_client.send_json({ID: 6, TYPE: "zha/configuration"})
+    msg = await zha_client.receive_json()
+    configuration = msg["result"]
+    assert configuration == configuration
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 async def test_device_not_found(zha_client) -> None:

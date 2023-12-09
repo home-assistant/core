@@ -145,9 +145,7 @@ async def setup_subaru_config_entry(
         return_value=vehicle_status,
     ), patch(
         MOCK_API_UPDATE,
-    ), patch(
-        MOCK_API_FETCH, side_effect=fetch_effect
-    ):
+    ), patch(MOCK_API_FETCH, side_effect=fetch_effect):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 

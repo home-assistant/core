@@ -1,6 +1,7 @@
 """Repairs implementation for supervisor integration."""
+from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from types import MethodType
 from typing import Any
 
@@ -116,7 +117,12 @@ class SupervisorIssueRepairFlow(RepairsFlow):
         return self.async_create_entry(data={})
 
     @staticmethod
-    def _async_step(suggestion: Suggestion) -> Callable:
+    def _async_step(
+        suggestion: Suggestion,
+    ) -> Callable[
+        [SupervisorIssueRepairFlow, dict[str, str] | None],
+        Coroutine[Any, Any, FlowResult],
+    ]:
         """Generate a step handler for a suggestion."""
 
         async def _async_step(

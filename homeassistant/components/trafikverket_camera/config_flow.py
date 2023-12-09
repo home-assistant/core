@@ -14,7 +14,7 @@ from pytrafikverket.trafikverket_camera import CameraInfo, TrafikverketCamera
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_ID
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -25,7 +25,7 @@ from .const import CONF_LOCATION, DOMAIN
 class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Trafikverket Camera integration."""
 
-    VERSION = 2
+    VERSION = 3
 
     entry: config_entries.ConfigEntry | None
 
@@ -53,10 +53,7 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if camera_info:
             camera_id = camera_info.camera_id
-            if _location := camera_info.location:
-                camera_location = _location
-            else:
-                camera_location = camera_info.camera_name
+            camera_location = camera_info.camera_name or "Trafikverket Camera"
 
         return (errors, camera_location, camera_id)
 
@@ -76,9 +73,7 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             api_key = user_input[CONF_API_KEY]
 
             assert self.entry is not None
-            errors, _, _ = await self.validate_input(
-                api_key, self.entry.data[CONF_LOCATION]
-            )
+            errors, _, _ = await self.validate_input(api_key, self.entry.data[CONF_ID])
 
             if not errors:
                 self.hass.config_entries.async_update_entry(
@@ -121,10 +116,7 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=camera_location,
-                    data={
-                        CONF_API_KEY: api_key,
-                        CONF_LOCATION: camera_location,
-                    },
+                    data={CONF_API_KEY: api_key, CONF_ID: camera_id},
                 )
 
         return self.async_show_form(

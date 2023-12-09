@@ -1,7 +1,6 @@
 """Unit tests for the Todoist integration."""
-from collections.abc import Generator
 from http import HTTPStatus
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -10,15 +9,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture(autouse=True)
-def mock_platforms() -> Generator[AsyncMock, None, None]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.todoist.PLATFORMS", return_value=[]
-    ) as mock_setup_entry:
-        yield mock_setup_entry
 
 
 async def test_load_unload(

@@ -28,34 +28,27 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.issue_registry as ir
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 
 
-async def test_state_platform_yaml(hass: HomeAssistant) -> None:
+async def test_state_integration_yaml(hass: HomeAssistant) -> None:
     """Test with none state."""
     with tempfile.TemporaryDirectory() as tempdirname:
         path = os.path.join(tempdirname, "switch_status")
-        assert await setup.async_setup_component(
+        await setup.async_setup_component(
             hass,
-            SWITCH_DOMAIN,
+            DOMAIN,
             {
-                SWITCH_DOMAIN: [
+                "command_line": [
                     {
-                        "platform": "command_line",
-                        "switches": {
-                            "test": {
-                                "command_on": f"echo 1 > {path}",
-                                "command_off": f"echo 0 > {path}",
-                                "friendly_name": "Test",
-                                "icon_template": (
-                                    '{% if value=="1" %} mdi:on {% else %} mdi:off {% endif %}'
-                                ),
-                            }
-                        },
-                    },
+                        "switch": {
+                            "command_on": f"echo 1 > {path}",
+                            "command_off": f"echo 0 > {path}",
+                            "name": "Test",
+                        }
+                    }
                 ]
             },
         )
@@ -82,36 +75,6 @@ async def test_state_platform_yaml(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: "switch.test"},
             blocking=True,
         )
-
-        entity_state = hass.states.get("switch.test")
-        assert entity_state
-        assert entity_state.state == STATE_OFF
-
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_switch")
-    assert issue.translation_key == "deprecated_platform_yaml"
-
-
-async def test_state_integration_yaml(hass: HomeAssistant) -> None:
-    """Test with none state."""
-    with tempfile.TemporaryDirectory() as tempdirname:
-        path = os.path.join(tempdirname, "switch_status")
-        await setup.async_setup_component(
-            hass,
-            DOMAIN,
-            {
-                "command_line": [
-                    {
-                        "switch": {
-                            "command_on": f"echo 1 > {path}",
-                            "command_off": f"echo 0 > {path}",
-                            "name": "Test",
-                        }
-                    }
-                ]
-            },
-        )
-        await hass.async_block_till_done()
 
         entity_state = hass.states.get("switch.test")
         assert entity_state
@@ -485,27 +448,6 @@ async def test_switch_command_state_value_exceptions(
         await hass.async_block_till_done()
         assert check_output.call_count == 2
         assert "Error trying to exec command" in caplog.text
-
-
-async def test_no_switches_platform_yaml(
-    caplog: pytest.LogCaptureFixture, hass: HomeAssistant
-) -> None:
-    """Test with no switches."""
-
-    assert await setup.async_setup_component(
-        hass,
-        SWITCH_DOMAIN,
-        {
-            SWITCH_DOMAIN: [
-                {
-                    "platform": "command_line",
-                    "switches": {},
-                },
-            ]
-        },
-    )
-    await hass.async_block_till_done()
-    assert "No switches" in caplog.text
 
 
 async def test_unique_id(

@@ -449,7 +449,10 @@ class ControllerEvents:
                     "remove_entity"
                 ),
             )
-        elif reason == RemoveNodeReason.RESET:
+            # We don't want to remove the device so we can keep the user customizations
+            return
+
+        if reason == RemoveNodeReason.RESET:
             device_name = device.name_by_user or device.name or f"Node {node.node_id}"
             identifier = get_network_identifier_for_notification(
                 self.hass, self.config_entry, self.driver_events.driver.controller
@@ -471,8 +474,8 @@ class ControllerEvents:
                 "Device Was Factory Reset!",
                 f"{DOMAIN}.node_reset_and_removed.{dev_id[1]}",
             )
-        else:
-            self.remove_device(device)
+
+        self.remove_device(device)
 
     @callback
     def async_on_identify(self, event: dict) -> None:

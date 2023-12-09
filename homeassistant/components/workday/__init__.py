@@ -1,9 +1,10 @@
 """Sensor to indicate whether the current day is a workday."""
 from __future__ import annotations
 
-from holidays import list_supported_countries
+from holidays import HolidayBase, country_holidays, list_supported_countries
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_LANGUAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -16,6 +17,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     country: str | None = entry.options.get(CONF_COUNTRY)
     province: str | None = entry.options.get(CONF_PROVINCE)
+
+    if country and CONF_LANGUAGE not in entry.options:
+        cls: HolidayBase = country_holidays(country, subdiv=province)
+        default_language = cls.default_language
+        new_options = entry.options.copy()
+        new_options[CONF_LANGUAGE] = default_language
+        hass.config_entries.async_update_entry(entry, options=new_options)
 
     if country and country not in list_supported_countries():
         async_create_issue(

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from typing import Any
+import uuid
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
@@ -33,6 +34,7 @@ from .const import (
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_GOOGLE_SETTINGS_VERSION,
+    PREF_INSTANCE_ID,
     PREF_REMOTE_DOMAIN,
     PREF_TTS_DEFAULT_VOICE,
     PREF_USERNAME,
@@ -89,6 +91,13 @@ class CloudPreferences:
                 {
                     **self._prefs,
                     PREF_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
+                }
+            )
+        if PREF_INSTANCE_ID not in self._prefs:
+            await self._save_prefs(
+                {
+                    **self._prefs,
+                    PREF_INSTANCE_ID: uuid.uuid4().hex,
                 }
             )
 
@@ -265,6 +274,11 @@ class CloudPreferences:
         return self._prefs.get(PREF_CLOUDHOOKS, {})  # type: ignore[no-any-return]
 
     @property
+    def instance_id(self) -> str | None:
+        """Return the instance ID."""
+        return self._prefs.get(PREF_INSTANCE_ID)
+
+    @property
     def tts_default_voice(self) -> tuple[str, str]:
         """Return the default TTS voice."""
         return self._prefs.get(PREF_TTS_DEFAULT_VOICE, DEFAULT_TTS_DEFAULT_VOICE)  # type: ignore[no-any-return]
@@ -320,6 +334,7 @@ class CloudPreferences:
             PREF_GOOGLE_ENTITY_CONFIGS: {},
             PREF_GOOGLE_SETTINGS_VERSION: GOOGLE_SETTINGS_VERSION,
             PREF_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
+            PREF_INSTANCE_ID: uuid.uuid4().hex,
             PREF_GOOGLE_SECURE_DEVICES_PIN: None,
             PREF_REMOTE_DOMAIN: None,
             PREF_USERNAME: username,
