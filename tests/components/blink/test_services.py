@@ -11,13 +11,7 @@ from homeassistant.components.blink.const import (
     SERVICE_SEND_PIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    CONF_FILE_PATH,
-    CONF_FILENAME,
-    CONF_NAME,
-    CONF_PIN,
-)
+from homeassistant.const import ATTR_DEVICE_ID, CONF_FILE_PATH, CONF_FILENAME, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -94,7 +88,6 @@ async def test_video_service_calls(
             SERVICE_SAVE_VIDEO,
             {
                 ATTR_DEVICE_ID: [device_entry.id],
-                CONF_NAME: CAMERA_NAME,
                 CONF_FILENAME: FILENAME,
             },
             blocking=True,
@@ -108,7 +101,6 @@ async def test_video_service_calls(
         SERVICE_SAVE_VIDEO,
         {
             ATTR_DEVICE_ID: [device_entry.id],
-            CONF_NAME: CAMERA_NAME,
             CONF_FILENAME: FILENAME,
         },
         blocking=True,
@@ -121,7 +113,6 @@ async def test_video_service_calls(
             SERVICE_SAVE_VIDEO,
             {
                 ATTR_DEVICE_ID: ["bad-device_id"],
-                CONF_NAME: CAMERA_NAME,
                 CONF_FILENAME: FILENAME,
             },
             blocking=True,
@@ -135,7 +126,6 @@ async def test_video_service_calls(
             SERVICE_SAVE_VIDEO,
             {
                 ATTR_DEVICE_ID: [device_entry.id],
-                CONF_NAME: CAMERA_NAME,
                 CONF_FILENAME: FILENAME,
             },
             blocking=True,
@@ -171,7 +161,6 @@ async def test_picture_service_calls(
             SERVICE_SAVE_RECENT_CLIPS,
             {
                 ATTR_DEVICE_ID: [device_entry.id],
-                CONF_NAME: CAMERA_NAME,
                 CONF_FILE_PATH: FILENAME,
             },
             blocking=True,
@@ -185,7 +174,6 @@ async def test_picture_service_calls(
         SERVICE_SAVE_RECENT_CLIPS,
         {
             ATTR_DEVICE_ID: [device_entry.id],
-            CONF_NAME: CAMERA_NAME,
             CONF_FILE_PATH: FILENAME,
         },
         blocking=True,
@@ -202,7 +190,6 @@ async def test_picture_service_calls(
             SERVICE_SAVE_RECENT_CLIPS,
             {
                 ATTR_DEVICE_ID: [device_entry.id],
-                CONF_NAME: CAMERA_NAME,
                 CONF_FILE_PATH: FILENAME,
             },
             blocking=True,
@@ -214,7 +201,6 @@ async def test_picture_service_calls(
             SERVICE_SAVE_RECENT_CLIPS,
             {
                 ATTR_DEVICE_ID: ["bad-device_id"],
-                CONF_NAME: CAMERA_NAME,
                 CONF_FILE_PATH: FILENAME,
             },
             blocking=True,
@@ -265,14 +251,12 @@ async def test_pin_service_calls(
         (
             SERVICE_SAVE_RECENT_CLIPS,
             {
-                CONF_NAME: CAMERA_NAME,
                 CONF_FILE_PATH: FILENAME,
             },
         ),
         (
             SERVICE_SAVE_VIDEO,
             {
-                CONF_NAME: CAMERA_NAME,
                 CONF_FILENAME: FILENAME,
             },
         ),
@@ -329,14 +313,12 @@ async def test_service_called_with_non_blink_device(
         (
             SERVICE_SAVE_RECENT_CLIPS,
             {
-                CONF_NAME: CAMERA_NAME,
                 CONF_FILE_PATH: FILENAME,
             },
         ),
         (
             SERVICE_SAVE_VIDEO,
             {
-                CONF_NAME: CAMERA_NAME,
                 CONF_FILENAME: FILENAME,
             },
         ),
@@ -358,7 +340,7 @@ async def test_service_called_with_unloaded_entry(
     await hass.async_block_till_done()
     await mock_config_entry.async_unload(hass)
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "12345")})
+    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, CAMERA_NAME)})
 
     assert device_entry
 

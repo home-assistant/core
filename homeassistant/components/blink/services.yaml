@@ -23,11 +23,6 @@ save_video:
       selector:
         device:
           integration: blink
-    name:
-      required: true
-      example: "Living Room"
-      selector:
-        text:
     filename:
       required: true
       example: "/tmp/video.mp4"
@@ -41,11 +36,6 @@ save_recent_clips:
       selector:
         device:
           integration: blink
-    name:
-      required: true
-      example: "Living Room"
-      selector:
-        text:
     file_path:
       required: true
       example: "/tmp"

@@ -79,10 +79,6 @@
       "name": "Save video",
       "description": "Saves last recorded video clip to local file.",
       "fields": {
-        "name": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "description": "Name of camera to grab video from."
-        },
         "filename": {
           "name": "File name",
           "description": "Filename to writable path (directory may need to be included in allowlist_external_dirs in config)."
@@ -97,10 +93,6 @@
       "name": "Save recent clips",
       "description": "Saves all recent video clips to local directory with file pattern \"%Y%m%d_%H%M%S_{name}.mp4\".",
       "fields": {
-        "name": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "description": "Name of camera to grab recent clips from."
-        },
         "file_path": {
           "name": "Output directory",
           "description": "Directory name of writable path (directory may need to be included in allowlist_external_dirs in config)."

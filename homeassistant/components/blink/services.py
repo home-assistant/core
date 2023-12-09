@@ -4,13 +4,7 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    CONF_FILE_PATH,
-    CONF_FILENAME,
-    CONF_NAME,
-    CONF_PIN,
-)
+from homeassistant.const import ATTR_DEVICE_ID, CONF_FILE_PATH, CONF_FILENAME, CONF_PIN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
@@ -33,7 +27,6 @@ SERVICE_UPDATE_SCHEMA = vol.Schema(
 SERVICE_SAVE_VIDEO_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
-        vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_FILENAME): cv.string,
     }
 )
@@ -46,7 +39,6 @@ SERVICE_SEND_PIN_SCHEMA = vol.Schema(
 SERVICE_SAVE_RECENT_CLIPS_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
-        vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_FILE_PATH): cv.string,
     }
 )
@@ -96,7 +88,9 @@ def setup_services(hass: HomeAssistant) -> None:
 
     async def async_handle_save_video_service(call: ServiceCall) -> None:
         """Handle save video service calls."""
-        camera_name = call.data[CONF_NAME]
+        registry = dr.async_get(hass)
+        device = registry.async_get(call.data[ATTR_DEVICE_ID][0])
+        camera_name = device.name if device else ""
         video_path = call.data[CONF_FILENAME]
         if not hass.config.is_allowed_path(video_path):
             raise ServiceValidationError(
@@ -119,7 +113,9 @@ def setup_services(hass: HomeAssistant) -> None:
 
     async def async_handle_save_recent_clips_service(call: ServiceCall) -> None:
         """Save multiple recent clips to output directory."""
-        camera_name = call.data[CONF_NAME]
+        registry = dr.async_get(hass)
+        device = registry.async_get(call.data[ATTR_DEVICE_ID][0])
+        camera_name = device.name if device else ""
         clips_dir = call.data[CONF_FILE_PATH]
         if not hass.config.is_allowed_path(clips_dir):
             raise ServiceValidationError(
