@@ -432,6 +432,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         for mode in self._device.status.supported_ac_modes:
             if (state := AC_MODE_TO_STATE.get(mode)) is not None:
                 modes.add(state)
+                STATE_TO_AC_MODE[state] = mode
             else:
                 _LOGGER.debug(
                     "Device %s (%s) returned an invalid supported AC mode: %s",
