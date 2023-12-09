@@ -3,15 +3,13 @@ from datetime import timedelta
 import time
 from unittest.mock import patch
 
+from habluetooth.advertisement_tracker import ADVERTISING_TIMES_NEEDED
 import pytest
 
 from homeassistant.components.bluetooth import (
     async_get_learned_advertising_interval,
     async_register_scanner,
     async_track_unavailable,
-)
-from homeassistant.components.bluetooth.advertisement_tracker import (
-    ADVERTISING_TIMES_NEEDED,
 )
 from homeassistant.components.bluetooth.const import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,

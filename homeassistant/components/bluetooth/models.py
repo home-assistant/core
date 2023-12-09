@@ -17,13 +17,6 @@ MANAGER: BluetoothManager | None = None
 MONOTONIC_TIME: Final = monotonic_time_coarse
 
 
-class BluetoothScanningMode(Enum):
-    """The mode of scanning for bluetooth devices."""
-
-    PASSIVE = "passive"
-    ACTIVE = "active"
-
-
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
 BluetoothCallback = Callable[[BluetoothServiceInfoBleak, BluetoothChange], None]
 ProcessAdvertisementCallback = Callable[[BluetoothServiceInfoBleak], bool]
