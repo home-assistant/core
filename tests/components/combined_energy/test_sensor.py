@@ -46,6 +46,7 @@ class TestCombinedEnergyReadingsSensor:
                     water_volume_value=[123.0, 126.7],
                 ),
             },
+            last_update_success=True,
         )
 
     def test_available__where_device_and_entity_is_found(self, hass, coordinator):
