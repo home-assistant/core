@@ -1233,6 +1233,22 @@ def test_to_json(hass: HomeAssistant) -> None:
     with pytest.raises(TemplateError):
         template.Template("{{ {'Foo': now()} | to_json }}", hass).async_render()
 
+    # Test special case where substring class cannot be rendered
+    # See: https://github.com/ijl/orjson/issues/445
+    class MyStr(str):
+        pass
+
+    expected_result = '{"mykey1":11.0,"mykey2":"myvalue2","mykey3":["opt3b","opt3a"]}'
+    test_dict = {
+        MyStr("mykey2"): "myvalue2",
+        MyStr("mykey1"): 11.0,
+        MyStr("mykey3"): ["opt3b", "opt3a"],
+    }
+    actual_result = template.Template(
+        "{{ test_dict | to_json(sort_keys=True) }}", hass
+    ).async_render(parse_result=False, variables={"test_dict": test_dict})
+    assert actual_result == expected_result
+
 
 def test_to_json_ensure_ascii(hass: HomeAssistant) -> None:
     """Test the object to JSON string filter."""
