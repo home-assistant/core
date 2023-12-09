@@ -4,7 +4,6 @@ import socket
 from unittest.mock import call, patch
 
 import linknlink.exceptions as llke
-import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
@@ -16,15 +15,6 @@ from . import get_device
 
 DEVICE_HELLO = "homeassistant.components.linknlink.config_flow.llk.hello"
 DEVICE_FACTORY = "homeassistant.components.linknlink.config_flow.llk.gendevice"
-
-
-@pytest.fixture(autouse=True)
-def linknlink_setup_fixture():
-    """Mock linknlink entry setup."""
-    with patch(
-        "homeassistant.components.linknlink.async_setup", return_value=True
-    ), patch("homeassistant.components.linknlink.async_setup_entry", return_value=True):
-        yield
 
 
 async def test_flow_user_works(hass: HomeAssistant) -> None:

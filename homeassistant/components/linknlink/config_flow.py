@@ -301,7 +301,7 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_import(self, import_info):
-        """Import a device."""
+        """Handle a flow initiated by configuration file."""
         self._async_abort_entries_match({CONF_HOST: import_info[CONF_HOST]})
         return await self.async_step_user(import_info)
 

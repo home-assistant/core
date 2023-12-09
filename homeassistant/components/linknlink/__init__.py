@@ -5,14 +5,10 @@ from dataclasses import dataclass, field
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .device import LinknLinkDevice
 from .heartbeat import LinknLinkHeartbeat
-
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @dataclass
@@ -24,14 +20,10 @@ class linknlinkData:
     heartbeat: LinknLinkHeartbeat | None = None
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the linknlink integration."""
-    hass.data[DOMAIN] = linknlinkData()
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a linknlink device from a config entry."""
+    if not hass.data.get(DOMAIN):
+        hass.data[DOMAIN] = linknlinkData()
     data: linknlinkData = hass.data[DOMAIN]
 
     device = LinknLinkDevice(hass, entry)
