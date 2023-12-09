@@ -1,11 +1,13 @@
 """Common fixtures for the canvas tests."""
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from homeassistant.components.instructure.const import DOMAIN
 from homeassistant.core import HomeAssistant
+
+from . import MOCK_ANNOUNCEMENTS, MOCK_ASSIGNMENTS, MOCK_CONVERSATIONS, MOCK_GRADES
 
 from tests.common import MockConfigEntry
 
@@ -19,21 +21,34 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         yield mock_setup_entry
 
 
+@pytest.fixture
+def mock_api() -> Generator[None, MagicMock, None]:
+    """Return a mock CanvasAPI object."""
+    with patch("homeassistant.components.instructure.CanvasAPI", autospec=True) as mock:
+        mock_instance = mock.return_value
+        mock_instance.async_get_upcoming_assignments = AsyncMock(
+            return_value=MOCK_ASSIGNMENTS
+        )
+        mock_instance.async_get_announcements = AsyncMock(
+            return_value=MOCK_ANNOUNCEMENTS
+        )
+        mock_instance.async_get_conversations = AsyncMock(
+            return_value=MOCK_CONVERSATIONS
+        )
+        mock_instance.async_get_grades = AsyncMock(return_value=MOCK_GRADES)
+        yield mock_instance
+
+
 @pytest.fixture(name="mock_config_entry")
-def fixture_mock_config_entry() -> MockConfigEntry:
+async def fixture_mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return a mock config entry."""
-    return MockConfigEntry(
+    mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
+        entry_id="0797477940f9f91760ab6051d3fb0df0",
+        title="Canvas",
         data={"host_prefix": "chalmers", "access_token": "mock_access_token"},
         options={"courses": {"25271": "DAT265 / DIT588 Software evolution project"}},
     )
-
-
-@pytest.fixture(name="mock_integration")
-async def fixture_mock_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Return a mock ConfigEntry setup for the integration."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

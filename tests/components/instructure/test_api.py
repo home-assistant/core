@@ -1,102 +1,167 @@
-"""Test the canvas config flow."""
-# from unittest.mock import AsyncMock
+"""Unit Tests for the CanvasAPI class."""
 
-# import pytest
+import json
+from unittest.mock import AsyncMock, patch
 
-# from homeassistant import config_entries
-# from homeassistant.components.instructure.canvas_api import CanvasAPI
-# from homeassistant.components.instructure.const import DOMAIN
-# from homeassistant.components.instructure.coordinator import CanvasUpdateCoordinator
-# from homeassistant.core import HomeAssistant
+from homeassistant.components.instructure.canvas_api import CanvasAPI
 
-# TEST_ACCESS_TOKEN = "test_access_token"
-# TEST_HOST_PREFIX = "chalmers"
+from . import MOCK_ANNOUNCEMENTS, MOCK_CONVERSATIONS, MOCK_TWO_ASSIGNMENTS
 
-# # Get one course
-# # Get multiple courses
-# # get one assignment which due date passed and assignment submitted
-# # get one assignment which due date passed and assignment not submitted
-# # Get one assignment which due date is not passed and assignment submitted
-# # Get one assignment which due date is not passed and assignment not submitted
-# # ....
-
-# # - Bu fonksiyondan çıkan output benim course objesi ile aynı mı? => ASAGI YUKARI AYNI BAXI DEEGERLER SET EDILMEMIS
-# # - Config flowu mocklamam lazım galiba burada. Onları hallet. Tek tek neleri mocklamam lazım karar ver
-# # - Printleyerek debug yapacağız.
-# # - Enrty ve hass'ı printleceğim.
-# # {
-# #         "entry_id": "20b0eff56f836452061aede3117f9ac8",
-# #         "version": 1,
-# #         "domain": "instructure",
-# #         "title": "Canvas",
-# #         "data": {
-# #           "host_prefix": "chalmers",
-# #           "access_token": "12523~XXIpQXiDpoNnq7S7fZv21Z3yTVyjLbsR31kzjKLXO7hDGKw1gRpIe2jywr8S67YW"
-# #         },
-# #         "options": {
-# #           "courses": {
-# #             "25271": "DAT265 / DIT588 Software evolution project"
-# #           }
-# #         },
-# #         "pref_disable_new_entities": false,
-# #         "pref_disable_polling": false,
-# #         "source": "user",
-# #         "unique_id": null,
-# #         "disabled_by": null
-# # }
-# # async def test_async_get_courses(hass: HomeAssistant) -> None:
-# #     """Test the get courses method."""
-
-# #     entry = MockConfigEntry(domain=DOMAIN, data={
-# #         "host_prefix": "chalmers",
-# #         'access_token': 'mock_access_token'
-# #     }, options={
-# #         'courses':{"DAT265 / DIT588 Software evolution project"}})
-
-# #     entry.add_to_hass(hass)
-# #     with patch(
-# #             "homeassistant.components.instructure.CanvasAPI.async_get_courses", return_value=COURSES,
-# #         ):
-# #         await hass.config_entries.async_setup(entry.entry_id)
-# #         await hass.async_block_till_done()
-# #         assert entry.state is config_entries.ConfigEntryState.LOADED
-# #         assert DOMAIN in hass.data
-# #         print(hass.data[DOMAIN][entry.entry_id])
-# #         assert hass.data[DOMAIN][entry.entry_id]['coordinator'].selected_courses is COURSES['id']
-
-# pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+host = "https://chalmers.instructure.com/api/v1"
+access_token = "mock_access_token"
+canvas_api = CanvasAPI(host, access_token)
 
 
-# async def test_async_get_assignments(
-#     hass: HomeAssistant, mock_setup_entry: AsyncMock
-# ) -> None:
-#     """Create a mock CanvasUpdateCoordinator object."""
-#     print(hass)
-#     print(hass.data)
-#     result = await hass.config_entries.flow.async_init(
-#         DOMAIN, context={"source": config_entries.SOURCE_USER}
-#     )
+@patch("httpx.AsyncClient.get")
+async def test_async_make_get_request_success(mock_get) -> None:
+    """Test successful GET request."""
+    mock_get.return_value = AsyncMock(
+        status_code=200, content=json.dumps({"key": "value"}).encode("utf-8")
+    )
 
-#     result = await hass.config_entries.flow.async_configure(
-#         result["flow_id"],
-#         user_input={
-#             "host_prefix": TEST_HOST_PREFIX,
-#             "access_token": TEST_ACCESS_TOKEN,
-#         },
-#     )
+    response = await canvas_api.async_make_get_request("/courses")
+    assert response.status_code == 200
+    assert json.loads(response.content) == {"key": "value"}
 
-#     course_ids = ["course1", "course2"]
-#     expected_assignments = {
-#         "assignment-1": {"id": 1, "due_at": "2023-12-20T00:00:00Z"},
-#         "assignment-2": {"id": 2, "due_at": "2023-12-21T00:00:00Z"},
-#     }
-#     mock_api = AsyncMock(spec=CanvasAPI)
-#     mock_api.async_get_upcoming_assignments = AsyncMock(
-#         return_value=expected_assignments
-#     )
-#     coordinator = CanvasUpdateCoordinator(hass=hass, entry=AsyncMock(), api=mock_api)
-#     await coordinator.async_update_data()
-#     assignments = await mock_api.async_get_upcoming_assignments(course_ids)
 
-#     # Assert that the returned assignments match the expected assignments
-#     assert assignments == expected_assignments
+@patch("httpx.AsyncClient.get")
+async def test_async_make_get_request_failure(mock_get) -> None:
+    """Test failed GET request."""
+    mock_get.return_value = AsyncMock(status_code=404)
+
+    response = await canvas_api.async_make_get_request("/courses")
+    assert response.status_code == 404
+
+
+@patch("httpx.AsyncClient.get")
+async def test_async_test_authentication(mock_get) -> None:
+    """Test authentication check."""
+    mock_get.return_value = AsyncMock(status_code=200)
+
+    result = await canvas_api.async_test_authentication()
+    assert result
+
+
+@patch("httpx.AsyncClient.get")
+async def test_async_get_courses(mock_get) -> None:
+    """Test getting courses."""
+    mock_get.return_value = AsyncMock(
+        status_code=200,
+        content=json.dumps([{"id": 1, "name": "Test Course"}]).encode("utf-8"),
+    )
+
+    courses = await canvas_api.async_get_courses()
+    assert len(courses) == 1
+    assert courses[0]["name"] == "Test Course"
+    assert courses[0]["id"] == 1
+
+
+@patch("httpx.AsyncClient.get")
+async def test_async_get_courses_empty_result(mock_get) -> None:
+    """Test getting courses."""
+    mock_get.return_value = AsyncMock(
+        status_code=200, content=json.dumps([{}]).encode("utf-8")
+    )
+
+    courses = await canvas_api.async_get_courses()
+    assert len(courses) == 1
+    assert courses == [{}]
+    assert courses[0] == {}
+
+
+@patch("httpx.AsyncClient.get")
+async def test_async_get_conversations(mock_get) -> None:
+    """Test getting conversations."""
+    mock_get.return_value = AsyncMock(
+        status_code=200,
+        content=json.dumps(
+            [
+                {
+                    "id": 1,
+                    "subject": "Test Conversation",
+                    "workflow_state": "unread",
+                    "context_name": "Test Course",
+                    "participants": [{"name": "Test Sender"}],
+                    "last_message": "This is a test message.",
+                    "last_message_at": "2023-12-05T15:30:00Z",
+                }
+            ]
+        ).encode("utf-8"),
+    )
+
+    conversations = await canvas_api.async_get_conversations()
+
+    expected_conversation = MOCK_CONVERSATIONS["conversation-1"]
+    actual_conversation = conversations["conversation-1"]
+    assert expected_conversation == actual_conversation
+
+
+@patch("httpx.AsyncClient.get")
+async def test_async_get_announcements(mock_get) -> None:
+    """Test getting announcements."""
+    mock_get.return_value = AsyncMock(
+        status_code=200,
+        content=json.dumps(
+            [
+                {
+                    "id": 1,
+                    "title": "Test Announcement",
+                    "read_state": "unread",
+                    "html_url": "https://canvas.example.com/announcements/1",
+                    "posted_at": "2023-12-01T09:00:00Z",
+                }
+            ]
+        ).encode("utf-8"),
+    )
+
+    announcements = await canvas_api.async_get_announcements(["course_id"])
+    assert MOCK_ANNOUNCEMENTS["announcement-1"] == announcements["announcement-1"]
+
+
+@patch("httpx.AsyncClient.get")
+async def test_async_get_upcoming_assignments(mock_get) -> None:
+    """Test getting upcoming assignments."""
+    mock_get.return_value = AsyncMock(
+        status_code=200,
+        content=json.dumps(
+            [
+                {
+                    "id": 1,
+                    "name": "Test Assignment 1",
+                    "due_at": MOCK_TWO_ASSIGNMENTS["assignment-1"]["due_at"],
+                    "html_url": "https://canvas.example.com/assignments/1",
+                },
+                {
+                    "id": 2,
+                    "name": "Test Assignment 2",
+                    "due_at": MOCK_TWO_ASSIGNMENTS["assignment-2"]["due_at"],
+                    "html_url": "https://canvas.example.com/assignments/2",
+                },
+            ]
+        ).encode("utf-8"),
+    )
+
+    assignments = await canvas_api.async_get_upcoming_assignments(["course_id"])
+
+    assert MOCK_TWO_ASSIGNMENTS["assignment-1"] == assignments["assignment-1"]
+    # NOTE
+    # Second assignment filtered because we only display upcoming assignments less than 15 days
+
+
+# TODO correct this!
+# @patch("httpx.AsyncClient.get")
+# async def test_async_get_grades(mock_get) -> None:
+#     """Test getting grades."""
+#     mock_get.return_value = AsyncMock(status_code=200, content=json.dumps([
+#         {
+#             "id": 1,
+#             "assignment_id": "assignment-1",
+#             "grade": "A",
+#             "score": 95,
+#             "submission_type": "online_text_entry",
+#         }
+#     ]).encode("utf-8"))
+
+#     grades = await canvas_api.async_get_grades(["course_id"])
+
+#     assert MOCK_GRADES["grade-1"] == grades.get("submission-4")
