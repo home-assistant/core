@@ -94,16 +94,16 @@ def _to_ics_fields(item: TodoItem) -> dict[str, Any]:
     """Convert a TodoItem to the set of add or update arguments."""
     item_data: dict[str, Any] = {}
     if summary := item.summary:
-        item_data["summary"] = summary
+        item_data["SUMMARY"] = summary
     if status := item.status:
-        item_data["status"] = TODO_STATUS_MAP_INV.get(status, "NEEDS-ACTION")
+        item_data["STATUS"] = TODO_STATUS_MAP_INV.get(status, "NEEDS-ACTION")
     if due := item.due:
         if isinstance(due, datetime):
-            item_data["due"] = dt_util.as_utc(due).strftime("%Y%m%dT%H%M%SZ")
+            item_data["DUE"] = dt_util.as_utc(due).strftime("%Y%m%dT%H%M%SZ")
         else:
-            item_data["due"] = due.strftime("%Y%m%d")
+            item_data["DUE"] = due.strftime("%Y%m%d")
     if description := item.description:
-        item_data["description"] = description
+        item_data["DESCRIPTION"] = description
     return item_data
 
 
