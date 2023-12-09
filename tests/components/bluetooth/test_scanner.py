@@ -25,6 +25,7 @@ from . import (
     async_setup_with_one_adapter,
     generate_advertisement_data,
     generate_ble_device,
+    patch_bluetooth_time,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -226,9 +227,8 @@ async def test_recovery_from_dbus_restart(
     mock_discovered = [MagicMock()]
 
     # Ensure we don't restart the scanner if we don't need to
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=start_time_monotonic + 10,
+    with patch_bluetooth_time(
+        start_time_monotonic + 10,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
         await hass.async_block_till_done()
@@ -236,9 +236,8 @@ async def test_recovery_from_dbus_restart(
     assert called_start == 1
 
     # Fire a callback to reset the timer
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=start_time_monotonic,
+    with patch_bluetooth_time(
+        start_time_monotonic,
     ):
         _callback(
             generate_ble_device("44:44:33:11:23:42", "any_name"),
@@ -246,9 +245,8 @@ async def test_recovery_from_dbus_restart(
         )
 
     # Ensure we don't restart the scanner if we don't need to
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=start_time_monotonic + 20,
+    with patch_bluetooth_time(
+        start_time_monotonic + 20,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
         await hass.async_block_till_done()
@@ -256,9 +254,8 @@ async def test_recovery_from_dbus_restart(
     assert called_start == 1
 
     # We hit the timer, so we restart the scanner
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=start_time_monotonic + SCANNER_WATCHDOG_TIMEOUT + 20,
+    with patch_bluetooth_time(
+        start_time_monotonic + SCANNER_WATCHDOG_TIMEOUT + 20,
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL + timedelta(seconds=20)
@@ -301,9 +298,8 @@ async def test_adapter_recovery(hass: HomeAssistant, one_adapter: None) -> None:
     scanner = MockBleakScanner()
     start_time_monotonic = time.monotonic()
 
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=start_time_monotonic,
+    with patch_bluetooth_time(
+        start_time_monotonic,
     ), patch(
         "habluetooth.scanner.OriginalBleakScanner",
         return_value=scanner,
@@ -316,9 +312,8 @@ async def test_adapter_recovery(hass: HomeAssistant, one_adapter: None) -> None:
     mock_discovered = [MagicMock()]
 
     # Ensure we don't restart the scanner if we don't need to
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=start_time_monotonic + 10,
+    with patch_bluetooth_time(
+        start_time_monotonic + 10,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
         await hass.async_block_till_done()
@@ -326,9 +321,8 @@ async def test_adapter_recovery(hass: HomeAssistant, one_adapter: None) -> None:
     assert called_start == 1
 
     # Ensure we don't restart the scanner if we don't need to
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=start_time_monotonic + 20,
+    with patch_bluetooth_time(
+        start_time_monotonic + 20,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
         await hass.async_block_till_done()
@@ -336,9 +330,8 @@ async def test_adapter_recovery(hass: HomeAssistant, one_adapter: None) -> None:
     assert called_start == 1
 
     # We hit the timer with no detections, so we reset the adapter and restart the scanner
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=start_time_monotonic
+    with patch_bluetooth_time(
+        start_time_monotonic
         + SCANNER_WATCHDOG_TIMEOUT
         + SCANNER_WATCHDOG_INTERVAL.total_seconds(),
     ), patch(
@@ -390,9 +383,8 @@ async def test_adapter_scanner_fails_to_start_first_time(
     scanner = MockBleakScanner()
     start_time_monotonic = time.monotonic()
 
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=start_time_monotonic,
+    with patch_bluetooth_time(
+        start_time_monotonic,
     ), patch(
         "habluetooth.scanner.OriginalBleakScanner",
         return_value=scanner,
@@ -405,9 +397,8 @@ async def test_adapter_scanner_fails_to_start_first_time(
     mock_discovered = [MagicMock()]
 
     # Ensure we don't restart the scanner if we don't need to
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=start_time_monotonic + 10,
+    with patch_bluetooth_time(
+        start_time_monotonic + 10,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
         await hass.async_block_till_done()
@@ -415,9 +406,8 @@ async def test_adapter_scanner_fails_to_start_first_time(
     assert called_start == 1
 
     # Ensure we don't restart the scanner if we don't need to
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=start_time_monotonic + 20,
+    with patch_bluetooth_time(
+        start_time_monotonic + 20,
     ):
         async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
         await hass.async_block_till_done()
@@ -425,9 +415,8 @@ async def test_adapter_scanner_fails_to_start_first_time(
     assert called_start == 1
 
     # We hit the timer with no detections, so we reset the adapter and restart the scanner
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=start_time_monotonic
+    with patch_bluetooth_time(
+        start_time_monotonic
         + SCANNER_WATCHDOG_TIMEOUT
         + SCANNER_WATCHDOG_INTERVAL.total_seconds(),
     ), patch(
@@ -441,9 +430,8 @@ async def test_adapter_scanner_fails_to_start_first_time(
 
     # We hit the timer again the previous start call failed, make sure
     # we try again
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=start_time_monotonic
+    with patch_bluetooth_time(
+        start_time_monotonic
         + SCANNER_WATCHDOG_TIMEOUT
         + SCANNER_WATCHDOG_INTERVAL.total_seconds(),
     ), patch(
@@ -504,9 +492,8 @@ async def test_adapter_fails_to_start_and_takes_a_bit_to_init(
     with patch(
         "habluetooth.scanner.ADAPTER_INIT_TIME",
         0,
-    ), patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=start_time_monotonic,
+    ), patch_bluetooth_time(
+        start_time_monotonic,
     ), patch(
         "habluetooth.scanner.OriginalBleakScanner",
         return_value=scanner,
@@ -555,9 +542,8 @@ async def test_restart_takes_longer_than_watchdog_time(
     with patch(
         "habluetooth.scanner.ADAPTER_INIT_TIME",
         0,
-    ), patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=start_time_monotonic,
+    ), patch_bluetooth_time(
+        start_time_monotonic,
     ), patch(
         "habluetooth.scanner.OriginalBleakScanner",
         return_value=scanner,
@@ -568,9 +554,8 @@ async def test_restart_takes_longer_than_watchdog_time(
 
         # Now force a recover adapter 2x
         for _ in range(2):
-            with patch(
-                "habluetooth.base_scanner.MONOTONIC_TIME",
-                return_value=start_time_monotonic
+            with patch_bluetooth_time(
+                start_time_monotonic
                 + SCANNER_WATCHDOG_TIMEOUT
                 + SCANNER_WATCHDOG_INTERVAL.total_seconds(),
             ):
