@@ -35,6 +35,7 @@ TUYA_STATUS_TO_HA = {
     "goto_pos": STATE_CLEANING,
     "mop_clean": STATE_CLEANING,
     "part_clean": STATE_CLEANING,
+    "pause": STATE_PAUSED,
     "paused": STATE_PAUSED,
     "pick_zone_clean": STATE_CLEANING,
     "pos_arrived": STATE_CLEANING,
