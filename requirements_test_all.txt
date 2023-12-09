@@ -1943,6 +1943,9 @@ tesla-powerwall==0.3.19
 # homeassistant.components.tesla_wall_connector
 tesla-wall-connector==1.0.2
 
+# homeassistant.components.tessie
+tessie-api==0.0.9
+
 # homeassistant.components.thermobeacon
 thermobeacon-ble==0.6.0
 
