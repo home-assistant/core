@@ -210,4 +210,7 @@ class TessieSensorEntity(TessieEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
+        if isinstance(self.value, str):
+            # Make value lower case for translation
+            self.value.lower()
         return self.value
