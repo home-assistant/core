@@ -157,7 +157,6 @@ MOCK_CONFIG = {
     "sys": {
         "ui_data": {},
         "device": {"name": "Test name"},
-        "wakeup_period": 0,
     },
 }
 

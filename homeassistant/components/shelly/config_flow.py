@@ -39,7 +39,6 @@ from .utils import (
     get_info_auth,
     get_info_gen,
     get_model_name,
-    get_rpc_device_sleep_period,
     get_rpc_device_wakeup_period,
     get_ws_context,
     mac_address_from_name,
@@ -78,9 +77,7 @@ async def validate_input(
         )
         await rpc_device.shutdown()
 
-        sleep_period = get_rpc_device_sleep_period(
-            rpc_device.config
-        ) or get_rpc_device_wakeup_period(rpc_device.status)
+        sleep_period = get_rpc_device_wakeup_period(rpc_device.status)
 
         return {
             "title": rpc_device.name,
