@@ -12,7 +12,6 @@ from aioshelly.exceptions import (
     InvalidAuthError,
 )
 from aioshelly.rpc_device import RpcDevice
-from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
@@ -24,7 +23,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
-    BLE_MIN_VERSION,
     CONF_BLE_SCANNER_MODE,
     CONF_SLEEP_PERIOD,
     DOMAIN,
@@ -32,14 +30,13 @@ from .const import (
     MODEL_WALL_DISPLAY,
     BLEScannerMode,
 )
-from .coordinator import async_reconnect_soon, get_entry_data
+from .coordinator import async_reconnect_soon
 from .utils import (
     get_block_device_sleep_period,
     get_coap_context,
     get_info_auth,
     get_info_gen,
     get_model_name,
-    get_rpc_device_sleep_period,
     get_rpc_device_wakeup_period,
     get_ws_context,
     mac_address_from_name,
@@ -78,9 +75,7 @@ async def validate_input(
         )
         await rpc_device.shutdown()
 
-        sleep_period = get_rpc_device_sleep_period(
-            rpc_device.config
-        ) or get_rpc_device_wakeup_period(rpc_device.status)
+        sleep_period = get_rpc_device_wakeup_period(rpc_device.status)
 
         return {
             "title": rpc_device.name,
@@ -383,15 +378,6 @@ class OptionsFlowHandler(OptionsFlow):
     ) -> FlowResult:
         """Handle options flow."""
         if user_input is not None:
-            entry_data = get_entry_data(self.hass)[self.config_entry.entry_id]
-            if user_input[CONF_BLE_SCANNER_MODE] != BLEScannerMode.DISABLED and (
-                not entry_data.rpc
-                or AwesomeVersion(entry_data.rpc.device.version) < BLE_MIN_VERSION
-            ):
-                return self.async_abort(
-                    reason="ble_unsupported",
-                    description_placeholders={"ble_min_version": BLE_MIN_VERSION},
-                )
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(

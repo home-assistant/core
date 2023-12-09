@@ -19,7 +19,6 @@ from .common import (
 
 from tests.common import MockConfigEntry
 
-
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 

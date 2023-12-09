@@ -134,7 +134,10 @@ async def test_block_device_rgb_bulb(
         ColorMode.COLOR_TEMP,
         ColorMode.RGB,
     ]
-    assert attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.EFFECT
+    assert (
+        attributes[ATTR_SUPPORTED_FEATURES]
+        == LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
+    )
     assert len(attributes[ATTR_EFFECT_LIST]) == 4
     assert attributes[ATTR_EFFECT] == "Off"
 
@@ -232,7 +235,7 @@ async def test_block_device_white_bulb(
     assert state.state == STATE_ON
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
-    assert attributes[ATTR_SUPPORTED_FEATURES] == 0
+    assert attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
 
     # Turn off
     mock_block_device.blocks[LIGHT_BLOCK_ID].set_state.reset_mock()
