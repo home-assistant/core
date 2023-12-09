@@ -71,9 +71,6 @@
           "ble_scanner_mode": "Bluetooth scanner mode"
         }
       }
-    },
-    "abort": {
-      "ble_unsupported": "Bluetooth support requires firmware version {ble_min_version} or newer."
     }
   },
   "selector": {

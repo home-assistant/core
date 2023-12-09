@@ -49,7 +49,6 @@ from .utils import (
     get_block_device_sleep_period,
     get_coap_context,
     get_device_entry_gen,
-    get_rpc_device_sleep_period,
     get_rpc_device_wakeup_period,
     get_ws_context,
 )
@@ -266,9 +265,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
 
         if sleep_period is None:
             data = {**entry.data}
-            data[CONF_SLEEP_PERIOD] = get_rpc_device_sleep_period(
-                device.config
-            ) or get_rpc_device_wakeup_period(device.status)
+            data[CONF_SLEEP_PERIOD] = get_rpc_device_wakeup_period(device.status)
             hass.config_entries.async_update_entry(entry, data=data)
 
         hass.async_create_task(_async_rpc_device_setup())
