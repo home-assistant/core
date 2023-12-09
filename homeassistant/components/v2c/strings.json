@@ -6,7 +6,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "Hostname or IP address fo your V2C Trydan EVSE."
+          "host": "Hostname or IP address of your V2C Trydan EVSE."
         }
       }
     },

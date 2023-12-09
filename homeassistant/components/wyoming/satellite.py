@@ -9,6 +9,7 @@ import wave
 from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioChunkConverter, AudioStart, AudioStop
 from wyoming.client import AsyncTcpClient
+from wyoming.error import Error
 from wyoming.pipeline import PipelineStage, RunPipeline
 from wyoming.satellite import RunSatellite
 from wyoming.tts import Synthesize, SynthesizeVoice
@@ -60,6 +61,7 @@ class WyomingSatellite:
 
         self.device.set_is_enabled_listener(self._enabled_changed)
         self.device.set_pipeline_listener(self._pipeline_changed)
+        self.device.set_audio_settings_listener(self._audio_settings_changed)
 
     async def run(self) -> None:
         """Run and maintain a connection to satellite."""
@@ -131,6 +133,12 @@ class WyomingSatellite:
 
     def _pipeline_changed(self) -> None:
         """Run when device pipeline changes."""
+
+        # Cancel any running pipeline
+        self._audio_queue.put_nowait(None)
+
+    def _audio_settings_changed(self) -> None:
+        """Run when device audio settings."""
 
         # Cancel any running pipeline
         self._audio_queue.put_nowait(None)
@@ -227,6 +235,12 @@ class WyomingSatellite:
                     end_stage=end_stage,
                     tts_audio_output="wav",
                     pipeline_id=pipeline_id,
+                    audio_settings=assist_pipeline.AudioSettings(
+                        noise_suppression_level=self.device.noise_suppression_level,
+                        auto_gain_dbfs=self.device.auto_gain,
+                        volume_multiplier=self.device.volume_multiplier,
+                    ),
+                    device_id=self.device.device_id,
                 )
             )
 
@@ -321,6 +335,16 @@ class WyomingSatellite:
             if event.data and (tts_output := event.data["tts_output"]):
                 media_id = tts_output["media_id"]
                 self.hass.add_job(self._stream_tts(media_id))
+        elif event.type == assist_pipeline.PipelineEventType.ERROR:
+            # Pipeline error
+            if event.data:
+                self.hass.add_job(
+                    self._client.write_event(
+                        Error(
+                            text=event.data["message"], code=event.data["code"]
+                        ).event()
+                    )
+                )
 
     async def _connect(self) -> None:
         """Connect to satellite over TCP."""

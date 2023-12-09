@@ -1036,6 +1036,19 @@ def update_config(path: str, dev_id: str, device: Device) -> None:
         out.write(dump(device_config))
 
 
+def remove_device_from_config(hass: HomeAssistant, device_id: str) -> None:
+    """Remove device from YAML configuration file."""
+    path = hass.config.path(YAML_DEVICES)
+    devices = load_yaml_config_file(path)
+    devices.pop(device_id)
+    dumped = dump(devices)
+
+    with open(path, "r+", encoding="utf8") as out:
+        out.seek(0)
+        out.truncate()
+        out.write(dumped)
+
+
 def get_gravatar_for_email(email: str) -> str:
     """Return an 80px Gravatar for the given email address.
 
