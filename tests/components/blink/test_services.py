@@ -3,7 +3,11 @@ from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 
-from homeassistant.components.blink.const import DOMAIN, SERVICE_SEND_PIN
+from homeassistant.components.blink.const import (
+    DOMAIN,
+    SERVICE_REFRESH,
+    SERVICE_SEND_PIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_PIN
 from homeassistant.core import HomeAssistant
@@ -15,6 +19,44 @@ from tests.common import MockConfigEntry
 CAMERA_NAME = "Camera 1"
 FILENAME = "blah"
 PIN = "1234"
+
+
+async def test_refresh_service_calls(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test refrest service calls."""
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "12345")})
+
+    assert device_entry
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_blink_api.refresh.call_count == 1
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REFRESH,
+        {ATTR_DEVICE_ID: [device_entry.id]},
+        blocking=True,
+    )
+
+    assert mock_blink_api.refresh.call_count == 2
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_REFRESH,
+            {ATTR_DEVICE_ID: ["bad-device_id"]},
+            blocking=True,
+        )
 
 
 async def test_pin_service_calls(

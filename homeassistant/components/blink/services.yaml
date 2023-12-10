@@ -1,10 +1,12 @@
 # Describes the format for available Blink services
 
 blink_update:
-  target:
-    entity:
-      integration: blink
-      domain: camera
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: blink
 
 trigger_camera:
   target:
@@ -38,10 +40,10 @@ save_recent_clips:
 
 send_pin:
   fields:
-    device_id:
+    config_entry_id:
       required: true
       selector:
-        device:
+        config_entry:
           integration: blink
     pin:
       example: "abc123"

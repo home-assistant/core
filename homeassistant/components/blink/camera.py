@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_FILE_PATH, CONF_FILENAME
+from homeassistant.const import CONF_FILE_PATH, CONF_FILENAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_platform
@@ -24,7 +24,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     DEFAULT_BRAND,
     DOMAIN,
-    SERVICE_REFRESH,
     SERVICE_SAVE_RECENT_CLIPS,
     SERVICE_SAVE_VIDEO,
     SERVICE_TRIGGER,
@@ -36,23 +35,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_VIDEO_CLIP = "video"
 ATTR_IMAGE = "image"
 PARALLEL_UPDATES = 1
-SERVICE_SAVE_VIDEO_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
-        vol.Required(CONF_FILENAME): cv.string,
-    }
-)
-SERVICE_SAVE_RECENT_CLIPS_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
-        vol.Required(CONF_FILE_PATH): cv.string,
-    }
-)
-SERVICE_UPDATE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
 
 
 async def async_setup_entry(
@@ -71,13 +53,14 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(SERVICE_TRIGGER, {}, "trigger_camera")
     platform.async_register_entity_service(
-        SERVICE_SAVE_RECENT_CLIPS, SERVICE_SAVE_RECENT_CLIPS_SCHEMA, "save_recent_clips"
+        SERVICE_SAVE_RECENT_CLIPS,
+        vol.Schema({vol.Required(CONF_FILE_PATH): cv.string}),
+        "save_recent_clips",
     )
     platform.async_register_entity_service(
-        SERVICE_SAVE_VIDEO, SERVICE_SAVE_VIDEO_SCHEMA, "save_video"
-    )
-    platform.async_register_entity_service(
-        SERVICE_REFRESH, SERVICE_UPDATE_SCHEMA, "refresh"
+        SERVICE_SAVE_VIDEO,
+        vol.Sechema({vol.Required(CONF_FILENAME): cv.string}),
+        "save_video",
     )
 
 
@@ -193,7 +176,3 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
                 translation_domain=DOMAIN,
                 translation_key="cant_write",
             ) from err
-
-    async def refresh(self):
-        """Call blink to refresh info."""
-        await self.coordinator.api.refresh(force_cache=True)

@@ -10,17 +10,17 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 
-from .const import DOMAIN, SERVICE_SEND_PIN
+from .const import ATTR_CONFIG_ENTRY_ID, DOMAIN, SERVICE_REFRESH, SERVICE_SEND_PIN
 from .coordinator import BlinkUpdateCoordinator
 
 SERVICE_UPDATE_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required(ATTR_CONFIG_ENTRY_ID): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 SERVICE_SEND_PIN_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required(ATTR_CONFIG_ENTRY_ID): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_PIN): cv.string,
     }
 )
@@ -76,8 +76,14 @@ def setup_services(hass: HomeAssistant) -> None:
                 call.data[CONF_PIN],
             )
 
+    async def blink_refresh(call: ServiceCall):
+        """Call blink to refresh info."""
+        for coordinator in collect_coordinators(call.data[ATTR_DEVICE_ID]):
+            await coordinator.api.refresh(force_cache=True)
+
     # Register all the above services
     service_mapping = [
+        (blink_refresh, SERVICE_REFRESH, SERVICE_UPDATE_SCHEMA),
         (send_pin, SERVICE_SEND_PIN, SERVICE_SEND_PIN_SCHEMA),
     ]
 
