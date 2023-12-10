@@ -329,7 +329,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==6.1.0
+aioshelly==7.0.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1547,7 +1547,7 @@ pyrympro==0.0.7
 pysabnzbd==1.1.1
 
 # homeassistant.components.schlage
-pyschlage==2023.11.0
+pyschlage==2023.12.0
 
 # homeassistant.components.sensibo
 pysensibo==1.0.36
@@ -1913,6 +1913,9 @@ subarulink==0.7.9
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
 
+# homeassistant.components.sunweg
+sunweg==2.0.0
+
 # homeassistant.components.surepetcare
 surepy==0.8.0
 
@@ -1939,6 +1942,9 @@ tesla-powerwall==0.3.19
 
 # homeassistant.components.tesla_wall_connector
 tesla-wall-connector==1.0.2
+
+# homeassistant.components.tessie
+tessie-api==0.0.9
 
 # homeassistant.components.thermobeacon
 thermobeacon-ble==0.6.0

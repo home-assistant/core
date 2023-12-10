@@ -57,11 +57,23 @@
   "services": {
     "blink_update": {
       "name": "Update",
-      "description": "Forces a refresh."
+      "description": "Forces a refresh.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "The Blink device id."
+        }
+      }
     },
     "trigger_camera": {
       "name": "Trigger camera",
-      "description": "Requests camera to take new image."
+      "description": "Requests camera to take new image.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "The Blink device id."
+        }
+      }
     },
     "save_video": {
       "name": "Save video",
@@ -74,6 +86,10 @@
         "filename": {
           "name": "File name",
           "description": "Filename to writable path (directory may need to be included in allowlist_external_dirs in config)."
+        },
+        "device_id": {
+          "name": "Device ID",
+          "description": "The Blink device id."
         }
       }
     },
@@ -88,6 +104,10 @@
         "file_path": {
           "name": "Output directory",
           "description": "Directory name of writable path (directory may need to be included in allowlist_external_dirs in config)."
+        },
+        "device_id": {
+          "name": "Device ID",
+          "description": "The Blink device id."
         }
       }
     },
@@ -98,6 +118,10 @@
         "pin": {
           "name": "Pin",
           "description": "PIN received from blink. Leave empty if you only received a verification email."
+        },
+        "device_id": {
+          "name": "Device ID",
+          "description": "The Blink device id."
         }
       }
     }
