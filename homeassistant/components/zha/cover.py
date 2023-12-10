@@ -131,7 +131,7 @@ class ZhaCover(ZhaEntity, CoverEntity):
         Consider cover closed only if both tilt and lift are 100.
         If cover doesn't support tilt, only care about lift.
 
-        This is not required by the API, but it is only used internally.
+        This is not required by the API, but it is used internally.
         """
         if self._current_position is None:
             return None
@@ -186,7 +186,7 @@ class ZhaCover(ZhaEntity, CoverEntity):
                 elif self._position_history[-1] > self._position_history[0]:
                     self._async_update_state(STATE_OPENING)
                 else:
-                    # tilt-only movement are typically so short that we rather keep the state
+                    # tilt-only movements are typically so short that we rather keep the state
                     self.async_write_ha_state()
                 
 
@@ -203,11 +203,7 @@ class ZhaCover(ZhaEntity, CoverEntity):
 
     @callback
     def _async_update_state(self, state):
-        """
-        Inform HASS of current state.
-        
-        In case of opening/closing states, schedule a timer to clear movement.
-        """
+        """Inform HASS of current state."""
         self.debug("Setting state: %s", state)
         self._state = state
         self.async_write_ha_state()
