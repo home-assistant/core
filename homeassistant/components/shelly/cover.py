@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from aioshelly.block_device import Block
+from aioshelly.const import RPC_GENERATIONS
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -15,7 +16,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import RPC_GENERATIONS
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .entity import ShellyBlockEntity, ShellyRpcEntity
 from .utils import get_device_entry_gen, get_rpc_key_ids

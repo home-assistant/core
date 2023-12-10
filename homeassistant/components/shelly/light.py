@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import MODEL_BULB
+from aioshelly.const import MODEL_BULB, RPC_GENERATIONS
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -31,7 +31,6 @@ from .const import (
     MAX_TRANSITION_TIME,
     MODELS_SUPPORTING_LIGHT_TRANSITION,
     RGBW_MODELS,
-    RPC_GENERATIONS,
     SHBLB_1_RGB_EFFECTS,
     STANDARD_RGB_EFFECTS,
 )

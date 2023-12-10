@@ -4,6 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final, cast
 
+from aioshelly.const import RPC_GENERATIONS
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -16,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import CONF_SLEEP_PERIOD, RPC_GENERATIONS
+from .const import CONF_SLEEP_PERIOD
 from .entity import (
     BlockEntityDescription,
     RestEntityDescription,

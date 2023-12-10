@@ -5,6 +5,8 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, Generic, TypeVar
 
+from aioshelly.const import RPC_GENERATIONS
+
 from homeassistant.components.button import (
     ButtonDeviceClass,
     ButtonEntity,
@@ -19,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from .const import LOGGER, RPC_GENERATIONS, SHELLY_GAS_MODELS
+from .const import LOGGER, SHELLY_GAS_MODELS
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .utils import get_device_entry_gen
 

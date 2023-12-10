@@ -6,6 +6,7 @@ from typing import Any, Final
 
 from aioshelly.block_device import BlockDevice, BlockUpdateType
 from aioshelly.common import ConnectionOptions
+from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -36,7 +37,6 @@ from .const import (
     DOMAIN,
     LOGGER,
     PUSH_UPDATE_ISSUE_ID,
-    RPC_GENERATIONS,
 )
 from .coordinator import (
     ShellyBlockCoordinator,

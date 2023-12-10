@@ -7,12 +7,14 @@ from typing import Any, cast
 from aiohttp.web import Request, WebSocketResponse
 from aioshelly.block_device import COAP, Block, BlockDevice
 from aioshelly.const import (
+    BLOCK_GENERATIONS,
     MODEL_1L,
     MODEL_DIMMER,
     MODEL_DIMMER_2,
     MODEL_EM3,
     MODEL_I3,
     MODEL_NAMES,
+    RPC_GENERATIONS,
 )
 from aioshelly.rpc_device import RpcDevice, WsServer
 
@@ -31,7 +33,6 @@ from homeassistant.util.dt import utcnow
 
 from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
-    BLOCK_GENERATIONS,
     CONF_COAP_PORT,
     DEFAULT_COAP_PORT,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
@@ -39,7 +40,6 @@ from .const import (
     GEN1_RELEASE_URL,
     GEN2_RELEASE_URL,
     LOGGER,
-    RPC_GENERATIONS,
     RPC_INPUTS_EVENTS_TYPES,
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,

@@ -6,6 +6,7 @@ from dataclasses import asdict, dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
+from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 
 from homeassistant.components.climate import (
@@ -37,7 +38,6 @@ from .const import (
     DOMAIN,
     LOGGER,
     NOT_CALIBRATED_ISSUE_ID,
-    RPC_GENERATIONS,
     RPC_THERMOSTAT_SETTINGS,
     SHTRV_01_TEMPERATURE_SETTINGS,
 )

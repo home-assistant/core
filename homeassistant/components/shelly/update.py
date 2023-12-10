@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Final, cast
 
+from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
 from homeassistant.components.update import (
@@ -23,14 +24,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import (
-    CONF_SLEEP_PERIOD,
-    OTA_BEGIN,
-    OTA_ERROR,
-    OTA_PROGRESS,
-    OTA_SUCCESS,
-    RPC_GENERATIONS,
-)
+from .const import CONF_SLEEP_PERIOD, OTA_BEGIN, OTA_ERROR, OTA_PROGRESS, OTA_SUCCESS
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
 from .entity import (
     RestEntityDescription,

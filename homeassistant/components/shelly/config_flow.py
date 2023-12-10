@@ -6,6 +6,7 @@ from typing import Any, Final
 
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions, get_info
+from aioshelly.const import BLOCK_GENERATIONS, RPC_GENERATIONS
 from aioshelly.exceptions import (
     DeviceConnectionError,
     FirmwareUnsupported,
@@ -23,13 +24,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import (
-    BLOCK_GENERATIONS,
     CONF_BLE_SCANNER_MODE,
     CONF_SLEEP_PERIOD,
     DOMAIN,
     LOGGER,
     MODEL_WALL_DISPLAY,
-    RPC_GENERATIONS,
     BLEScannerMode,
 )
 from .coordinator import async_reconnect_soon

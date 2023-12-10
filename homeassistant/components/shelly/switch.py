@@ -5,14 +5,14 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import MODEL_2, MODEL_25, MODEL_GAS
+from aioshelly.const import MODEL_2, MODEL_25, MODEL_GAS, RPC_GENERATIONS
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import GAS_VALVE_OPEN_STATES, MODEL_WALL_DISPLAY, RPC_GENERATIONS
+from .const import GAS_VALVE_OPEN_STATES, MODEL_WALL_DISPLAY
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .entity import (
     BlockEntityDescription,

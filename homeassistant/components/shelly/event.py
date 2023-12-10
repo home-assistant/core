@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final
 
 from aioshelly.block_device import Block
-from aioshelly.const import MODEL_I3
+from aioshelly.const import MODEL_I3, RPC_GENERATIONS
 
 from homeassistant.components.event import (
     DOMAIN as EVENT_DOMAIN,
@@ -22,7 +22,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
-    RPC_GENERATIONS,
     RPC_INPUTS_EVENTS_TYPES,
     SHIX3_1_INPUTS_EVENTS_TYPES,
 )
