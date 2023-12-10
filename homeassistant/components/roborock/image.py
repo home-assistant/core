@@ -2,11 +2,13 @@
 import asyncio
 import io
 from itertools import chain
+from typing import Any
 
 from roborock import RoborockCommand
 from vacuum_map_parser_base.config.color import ColorsPalette
 from vacuum_map_parser_base.config.image_config import ImageConfig
 from vacuum_map_parser_base.config.size import Sizes
+from vacuum_map_parser_base.map_data import CalibrationPoints, Room
 from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 
 from homeassistant.components.image import ImageEntity
@@ -18,7 +20,16 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, IMAGE_CACHE_INTERVAL, IMAGE_DRAWABLES, MAP_SLEEP
+from .const import (
+    ATTR_CALIBRATION_POINTS,
+    ATTR_IS_SELECTED,
+    ATTR_MAP_FLAG,
+    ATTR_ROOMS,
+    DOMAIN,
+    IMAGE_CACHE_INTERVAL,
+    IMAGE_DRAWABLES,
+    MAP_SLEEP,
+)
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntity
 
@@ -65,6 +76,8 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         )
         self._attr_image_last_updated = dt_util.utcnow()
         self.map_flag = map_flag
+        self.calibration_points: CalibrationPoints | None = None
+        self.rooms: dict[int, Room] | None = None
         self.cached_map = self._create_image(starting_map)
 
     @property
@@ -112,7 +125,19 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
             raise HomeAssistantError("Something went wrong creating the map.")
         img_byte_arr = io.BytesIO()
         parsed_map.image.data.save(img_byte_arr, format="PNG")
+        self.calibration_points = parsed_map.calibration()
+        self.rooms = parsed_map.rooms
         return img_byte_arr.getvalue()
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes."""
+        return {
+            ATTR_CALIBRATION_POINTS: self.calibration_points,
+            ATTR_IS_SELECTED: self.is_selected,
+            ATTR_MAP_FLAG: self.map_flag,
+            ATTR_ROOMS: self.rooms,
+        }
 
 
 async def create_coordinator_maps(

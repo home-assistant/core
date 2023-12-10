@@ -29,3 +29,9 @@ IMAGE_DRAWABLES: list[Drawable] = [
 IMAGE_CACHE_INTERVAL = 90
 
 MAP_SLEEP = 3
+
+# Extra state attributes for Images
+ATTR_CALIBRATION_POINTS = "calibration_points"
+ATTR_IS_SELECTED = "is_selected"
+ATTR_MAP_FLAG = "map_flag"
+ATTR_ROOMS = "rooms"
