@@ -99,9 +99,11 @@ def _to_ics_fields(item: TodoItem) -> dict[str, Any]:
         item_data["status"] = TODO_STATUS_MAP_INV.get(status, "NEEDS-ACTION")
     if due := item.due:
         if isinstance(due, datetime):
-            item_data["due"] = dt_util.as_utc(due).strftime("%Y%m%dT%H%M%SZ")
+            item_data["due"] = dt_util.as_utc(due)
+        elif isinstance(due, date):
+            item_data["due"] = due
         else:
-            item_data["due"] = due.strftime("%Y%m%d")
+            item_data["due"] = dt_util.as_utc(dt_util.parse_datetime(due))
     if description := item.description:
         item_data["description"] = description
     return item_data
