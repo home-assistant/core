@@ -1,5 +1,6 @@
 """Unit Tests for the CanvasAPI class."""
 
+from datetime import UTC, datetime, timedelta
 import json
 from unittest.mock import AsyncMock, patch
 
@@ -18,6 +19,7 @@ from . import (
 host = "https://chalmers.instructure.com/api/v1"
 access_token = "mock_access_token"
 canvas_api = CanvasAPI(host, access_token)
+ISO_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 
 @patch("httpx.AsyncClient.get")
@@ -213,6 +215,32 @@ async def test_async_get_assignments_empty_result(mock_get) -> None:
 #     grades = await canvas_api.async_get_grades(["course_id"])
 
 #     assert MOCK_GRADES["grade-1"] == grades.get("submission-4")
+
+
+@patch("httpx.AsyncClient.get")
+async def test_async_get_grades(mock_get) -> None:
+    """Test getting grades."""
+    current_time = datetime.now(UTC)
+    past_time = current_time - timedelta(days=15)
+    mock_get.return_value = AsyncMock(
+        status_code=200,
+        content=json.dumps(
+            [
+                {
+                    "id": 1,
+                    "graded_at": past_time.strftime(ISO_DATETIME_FORMAT),
+                    "assignment_id": "assignment-1",
+                    "grade": "A",
+                    "score": 95,
+                    "submission_type": "online_text_entry",
+                }
+            ]
+        ).encode("utf-8"),
+    )
+
+    grades = await canvas_api.async_get_grades(["course_id"])
+    assert len(grades) == 1
+    assert list(grades.keys())[0].startswith("submission-")
 
 
 @patch("httpx.AsyncClient.get")
