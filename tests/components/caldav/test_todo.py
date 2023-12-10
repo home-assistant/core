@@ -1,4 +1,5 @@
 """The tests for the webdav todo component."""
+from datetime import date, datetime, UTC
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
@@ -200,12 +201,16 @@ async def test_supported_components(
         ),
         (
             {"due_date": "2023-11-18"},
-            {"status": "NEEDS-ACTION", "summary": "Cheese", "due": "20231118"},
+            {"status": "NEEDS-ACTION", "summary": "Cheese", "due": date(2023, 11, 18)},
             {**RESULT_ITEM, "due": "2023-11-18"},
         ),
         (
             {"due_datetime": "2023-11-18T08:30:00-06:00"},
-            {"status": "NEEDS-ACTION", "summary": "Cheese", "due": "20231118T143000Z"},
+            {
+                "status": "NEEDS-ACTION",
+                "summary": "Cheese",
+                "due": datetime(2023, 11, 18, 14, 30, 00, tzinfo=UTC),
+            },
             {**RESULT_ITEM, "due": "2023-11-18T08:30:00-06:00"},
         ),
         (
@@ -311,7 +316,7 @@ async def test_add_item_failure(
         ),
         (
             {"due_date": "2023-11-18"},
-            ["SUMMARY:Cheese", "DUE:20231118"],
+            ["SUMMARY:Cheese", "DUE;VALUE=DATE:20231118"],
             "1",
             {**RESULT_ITEM, "due": "2023-11-18"},
         ),
