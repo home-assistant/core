@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from homeassistant.components.instructure.canvas_api import CanvasAPI
 
 from . import (
+    ANNOUNCEMENT_ENTITY_CONSTANT,
     CONVERSATION_ENTITY_CONSTANT,
     MOCK_ANNOUNCEMENTS,
     MOCK_CONVERSATIONS,
@@ -133,6 +134,20 @@ async def test_async_get_announcements(mock_get) -> None:
 
     announcements = await canvas_api.async_get_announcements(["course_id"])
     assert MOCK_ANNOUNCEMENTS["announcement-1"] == announcements["announcement-1"]
+
+
+@patch("httpx.AsyncClient.get")
+async def test_async_get_announcements_empty_result(mock_get) -> None:
+    """Test getting announcements with an empty result."""
+    mock_get.return_value = AsyncMock(
+        status_code=200,
+        content=json.dumps([]).encode("utf-8"),
+    )
+
+    announcements = await canvas_api.async_get_announcements(["course_id"])
+
+    assert len(announcements) == 1
+    assert announcements == {f"announcement-{ANNOUNCEMENT_ENTITY_CONSTANT}": {}}
 
 
 @patch("httpx.AsyncClient.get")
