@@ -24,7 +24,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data=FIXTURE_USER_INPUT,
-        unique_id="unique_id",
+        unique_id=FIXTURE_USER_INPUT[CONF_EMAIL],
     )
 
 
