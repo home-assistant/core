@@ -82,7 +82,7 @@ class MockPositionValve(MockEntity, ValveEntity):
         self._attr_is_closing = False
         self._attr_is_opening = False
         self._target_valve_position = None
-        self._attr_is_closed = self._target_valve_position == 0
+        self._attr_is_closed = self._attr_current_valve_position == 0
         self.async_write_ha_state()
 
     async def finish_movement(self):
