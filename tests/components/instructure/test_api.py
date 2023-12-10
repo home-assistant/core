@@ -5,7 +5,12 @@ from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.instructure.canvas_api import CanvasAPI
 
-from . import MOCK_ANNOUNCEMENTS, MOCK_CONVERSATIONS, MOCK_TWO_ASSIGNMENTS
+from . import (
+    CONVERSATION_ENTITY_CONSTANT,
+    MOCK_ANNOUNCEMENTS,
+    MOCK_CONVERSATIONS,
+    MOCK_TWO_ASSIGNMENTS,
+)
 
 host = "https://chalmers.instructure.com/api/v1"
 access_token = "mock_access_token"
@@ -94,6 +99,18 @@ async def test_async_get_conversations(mock_get) -> None:
     expected_conversation = MOCK_CONVERSATIONS["conversation-1"]
     actual_conversation = conversations["conversation-1"]
     assert expected_conversation == actual_conversation
+
+
+@patch("httpx.AsyncClient.get")
+async def test_async_get_conversations_empty_result(mock_get) -> None:
+    """Test getting conversations with empty result."""
+    mock_get.return_value = AsyncMock(
+        status_code=200,
+        content=json.dumps([]).encode("utf-8"),
+    )
+    conversations = await canvas_api.async_get_conversations()
+    assert len(conversations) == 1
+    assert conversations == {f"conversation-{CONVERSATION_ENTITY_CONSTANT}": {}}
 
 
 @patch("httpx.AsyncClient.get")
