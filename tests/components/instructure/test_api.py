@@ -7,6 +7,7 @@ from homeassistant.components.instructure.canvas_api import CanvasAPI
 
 from . import (
     ANNOUNCEMENT_ENTITY_CONSTANT,
+    ASSIGNMENT_ENTITY_CONSTANT,
     CONVERSATION_ENTITY_CONSTANT,
     MOCK_ANNOUNCEMENTS,
     MOCK_CONVERSATIONS,
@@ -178,6 +179,20 @@ async def test_async_get_upcoming_assignments(mock_get) -> None:
     assert MOCK_TWO_ASSIGNMENTS["assignment-1"] == assignments["assignment-1"]
     # NOTE
     # Second assignment filtered because we only display upcoming assignments less than 15 days
+
+
+@patch("httpx.AsyncClient.get")
+async def test_async_get_assignments_empty_result(mock_get) -> None:
+    """Test getting assignments with an empty result."""
+    mock_get.return_value = AsyncMock(
+        status_code=200,
+        content=json.dumps([]).encode("utf-8"),
+    )
+
+    assignments = await canvas_api.async_get_upcoming_assignments(["course_id"])
+
+    assert len(assignments) == 1
+    assert assignments == {f"assignment-{ASSIGNMENT_ENTITY_CONSTANT}": {}}
 
 
 # TODO correct this!
