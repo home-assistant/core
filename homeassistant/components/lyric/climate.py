@@ -352,36 +352,39 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                     heatSetpoint=target_temp_low,
                     mode=mode,
                 )
-            except LYRIC_EXCEPTIONS as exception:
-                _LOGGER.error(exception)
+            except LYRIC_EXCEPTIONS as err:
+                raise HomeAssistantError("Failed to set heat/cool setpoints") from err
+
             await self.coordinator.async_refresh()
         else:
             temp = kwargs.get(ATTR_TEMPERATURE)
             _LOGGER.debug("Set temperature: %s", temp)
-            try:
-                if self.hvac_mode == HVACMode.COOL:
+            if self.hvac_mode == HVACMode.COOL:
+                try:
                     await self._update_thermostat(
                         self.location, device, coolSetpoint=temp
                     )
-                else:
+                except LYRIC_EXCEPTIONS as err:
+                    raise HomeAssistantError("Failed to set cool setpoint") from err
+            else:
+                try:
                     await self._update_thermostat(
                         self.location, device, heatSetpoint=temp
                     )
-            except LYRIC_EXCEPTIONS as exception:
-                _LOGGER.error(exception)
+                except LYRIC_EXCEPTIONS as err:
+                    raise HomeAssistantError("Failed to set heat setpoint") from err
+
             await self.coordinator.async_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         _LOGGER.debug("HVAC mode: %s", hvac_mode)
-        try:
-            match self._attr_thermostat_type:
-                case LyricThermostatType.TCC:
-                    await self._async_set_hvac_mode_tcc(hvac_mode)
-                case LyricThermostatType.LCC:
-                    await self._async_set_hvac_mode_lcc(hvac_mode)
-        except LYRIC_EXCEPTIONS as exception:
-            _LOGGER.error(exception)
+        match self._attr_thermostat_type:
+            case LyricThermostatType.TCC:
+                await self._async_set_hvac_mode_tcc(hvac_mode)
+            case LyricThermostatType.LCC:
+                await self._async_set_hvac_mode_lcc(hvac_mode)
+
         await self.coordinator.async_refresh()
 
     async def _async_set_hvac_mode_tcc(self, hvac_mode: HVACMode) -> None:
@@ -396,48 +399,73 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                     "HVAC mode passed to lyric: %s",
                     HVAC_MODES[LYRIC_HVAC_MODE_COOL],
                 )
+                try:
+                    await self._update_thermostat(
+                        self.location,
+                        self.device,
+                        mode=HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
+                        autoChangeoverActive=False,
+                    )
+                except LYRIC_EXCEPTIONS as err:
+                    raise HomeAssistantError("Failed to set HVAC mode to heat") from err
+
+                # Sleep 3 seconds before proceeding
+                await asyncio.sleep(3)
+
+                _LOGGER.debug(
+                    "HVAC mode passed to lyric: %s",
+                    HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
+                )
+                try:
+                    await self._update_thermostat(
+                        self.location,
+                        self.device,
+                        mode=HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
+                        autoChangeoverActive=True,
+                    )
+                except LYRIC_EXCEPTIONS as err:
+                    raise HomeAssistantError(
+                        "Failed to enable autoChangeoverActive"
+                    ) from err
+            else:
+                _LOGGER.debug(
+                    "HVAC mode passed to lyric: %s",
+                    HVAC_MODES[self.device.changeableValues.mode],
+                )
+                try:
+                    await self._update_thermostat(
+                        self.location, self.device, autoChangeoverActive=True
+                    )
+                except LYRIC_EXCEPTIONS as err:
+                    raise HomeAssistantError(
+                        "Failed to enable autoChangeoverActive"
+                    ) from err
+        else:
+            _LOGGER.debug("HVAC mode passed to lyric: %s", LYRIC_HVAC_MODES[hvac_mode])
+            try:
                 await self._update_thermostat(
                     self.location,
                     self.device,
                     mode=HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
                     autoChangeoverActive=False,
                 )
-                # Sleep 3 seconds before proceeding
-                await asyncio.sleep(3)
-                _LOGGER.debug(
-                    "HVAC mode passed to lyric: %s",
-                    HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
-                )
-                await self._update_thermostat(
-                    self.location,
-                    self.device,
-                    mode=HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
-                    autoChangeoverActive=True,
-                )
-            else:
-                _LOGGER.debug(
-                    "HVAC mode passed to lyric: %s",
-                    HVAC_MODES[self.device.changeableValues.mode],
-                )
-                await self._update_thermostat(
-                    self.location, self.device, autoChangeoverActive=True
-                )
-        else:
-            _LOGGER.debug("HVAC mode passed to lyric: %s", LYRIC_HVAC_MODES[hvac_mode])
+            except LYRIC_EXCEPTIONS as err:
+                raise HomeAssistantError(
+                    f"Failed to set HVAC mode to {LYRIC_HVAC_MODES[hvac_mode]}"
+                ) from err
+
+    async def _async_set_hvac_mode_lcc(self, hvac_mode: HVACMode) -> None:
+        _LOGGER.debug("HVAC mode passed to lyric: %s", LYRIC_HVAC_MODES[hvac_mode])
+        try:
             await self._update_thermostat(
                 self.location,
                 self.device,
                 mode=LYRIC_HVAC_MODES[hvac_mode],
-                autoChangeoverActive=False,
             )
-
-    async def _async_set_hvac_mode_lcc(self, hvac_mode: HVACMode) -> None:
-        _LOGGER.debug("HVAC mode passed to lyric: %s", LYRIC_HVAC_MODES[hvac_mode])
-        await self._update_thermostat(
-            self.location,
-            self.device,
-            mode=LYRIC_HVAC_MODES[hvac_mode],
-        )
+        except LYRIC_EXCEPTIONS as err:
+            raise HomeAssistantError(
+                f"Failed to set HVAC mode to {LYRIC_HVAC_MODES[hvac_mode]}"
+            ) from err
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset (PermanentHold, HoldUntil, NoHold, VacationHold) mode."""
@@ -446,8 +474,11 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             await self._update_thermostat(
                 self.location, self.device, thermostatSetpointStatus=preset_mode
             )
-        except LYRIC_EXCEPTIONS as exception:
-            _LOGGER.error(exception)
+        except LYRIC_EXCEPTIONS as err:
+            raise HomeAssistantError(
+                f"Failed to set thermostatSetpointStatus to {preset_mode}"
+            ) from err
+
         await self.coordinator.async_refresh()
 
     async def async_set_hold_time(self, time_period: str) -> None:
@@ -460,23 +491,30 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
                 thermostatSetpointStatus=PRESET_HOLD_UNTIL,
                 nextPeriodTime=time_period,
             )
-        except LYRIC_EXCEPTIONS as exception:
-            _LOGGER.error(exception)
+        except LYRIC_EXCEPTIONS as err:
+            raise HomeAssistantError(
+                f"Failed to set nextPeriodTime to {time_period}"
+            ) from err
+
         await self.coordinator.async_refresh()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         _LOGGER.debug("Set fan mode: %s", fan_mode)
         try:
-            _LOGGER.debug("Fan mode passed to lyric: %s", LYRIC_FAN_MODES[fan_mode])
-            await self._update_fan(
-                self.location, self.device, mode=LYRIC_FAN_MODES[fan_mode]
-            )
-        except LYRIC_EXCEPTIONS as exception:
-            _LOGGER.error(exception)
+            lyric_fan_mode = LYRIC_FAN_MODES[fan_mode]
         except KeyError:
-            _LOGGER.error(
-                "The fan mode requested does not have a corresponding mode in lyric: %s",
-                fan_mode,
-            )
+            raise HomeAssistantError(
+                "The fan mode requested does not have a corresponding mode in lyric: "
+                f"{fan_mode}"
+            ) from None
+
+        try:
+            _LOGGER.debug("Fan mode passed to lyric: %s", lyric_fan_mode)
+            await self._update_fan(self.location, self.device, mode=lyric_fan_mode)
+        except LYRIC_EXCEPTIONS as err:
+            raise HomeAssistantError(
+                f"Failed to set fan mode to {lyric_fan_mode}"
+            ) from err
+
         await self.coordinator.async_refresh()
