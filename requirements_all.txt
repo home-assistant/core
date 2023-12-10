@@ -1292,7 +1292,7 @@ mypermobil==0.1.6
 nad-receiver==0.3.0
 
 # homeassistant.components.keenetic_ndms2
-ndms2-client==0.1.2
+ndms2-client==0.1.3
 
 # homeassistant.components.ness_alarm
 nessclient==1.0.0
