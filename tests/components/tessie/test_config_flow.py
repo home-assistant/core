@@ -15,21 +15,10 @@ from .common import (
     ERROR_CONNECTION,
     ERROR_UNKNOWN,
     TEST_CONFIG,
-    TEST_STATE_OF_ALL_VEHICLES,
     setup_platform,
 )
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def mock_get_state_of_all_vehicles():
-    """Mock get_state_of_all_vehicles function."""
-    with patch(
-        "homeassistant.components.tessie.config_flow.get_state_of_all_vehicles",
-        return_value=TEST_STATE_OF_ALL_VEHICLES,
-    ) as mock_get_state_of_all_vehicles:
-        yield mock_get_state_of_all_vehicles
 
 
 async def test_form(hass: HomeAssistant, mock_get_state_of_all_vehicles) -> None:
