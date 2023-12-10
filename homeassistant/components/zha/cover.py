@@ -5,7 +5,7 @@ import asyncio
 import collections
 import functools
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
 from zigpy.zcl.foundation import Status
@@ -73,9 +73,6 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-_PositionHistoryRecord = collections.namedtuple("_PositionHistoryRecord", ["datetime", "lift", "tilt"])
-
-
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_COVER)
 class ZhaCover(ZhaEntity, CoverEntity):
     """
@@ -93,7 +90,7 @@ class ZhaCover(ZhaEntity, CoverEntity):
         self._cover_cluster_handler = self.cluster_handlers.get(CLUSTER_HANDLER_COVER)
         self._current_position = None
         self._tilt_position = None
-        self._position_history = collections.deque(maxlen=2)
+        self._position_history = collections.deque(maxlen=2)  # we only need to compute trend
         self._cancel_clear_movement_timer = None
 
     async def async_added_to_hass(self) -> None:
@@ -171,18 +168,31 @@ class ZhaCover(ZhaEntity, CoverEntity):
         elif attr_name == "current_position_tilt_percentage":
             self._tilt_position = 100 - value
         self._touch_position()
+        if self._cancel_clear_movement_timer:
+            self._cancel_clear_movement_timer()
         if self.is_closed:
             self._async_update_state(STATE_CLOSED)
         elif self._is_open:
             self._async_update_state(STATE_OPEN)
         else:
-            # somewhere in between fully closed and fully open
-            # TODO handle external updates by looking at position history trend
-            self._async_update_state()
+            if self._state in (STATE_OPENING, STATE_CLOSING):
+                # if movement is in progress, schedule a timer to clear it
+                self._cancel_clear_movement_timer = async_call_later(self.hass, MOVEMENT_TIMEOUT, self._clear_movement)
+                self.async_write_ha_state()
+            else:
+                # otherwise, compute direction based on position history and start movement
+                if self._position_history[-1] < self._position_history[0]:
+                    self._async_update_state(STATE_CLOSING)
+                elif self._position_history[-1] > self._position_history[0]:
+                    self._async_update_state(STATE_OPENING)
+                else:
+                    # tilt-only movement are typically so short that we rather keep the state
+                    self.async_write_ha_state()
+                
 
     def _touch_position(self):
-        """Store current timestamp, lift and tilt into position history."""
-        self._position_history.append(_PositionHistoryRecord(datetime.now(), self._current_position, self._tilt_position))
+        """Store current position into a history."""
+        self._position_history.append(self._current_position)
 
     @callback
     def _clear_movement(self, _=None):
@@ -192,20 +202,15 @@ class ZhaCover(ZhaEntity, CoverEntity):
         self._cancel_clear_movement_timer = None
 
     @callback
-    def _async_update_state(self, state=None):
+    def _async_update_state(self, state):
         """
         Inform HASS of current state.
         
         In case of opening/closing states, schedule a timer to clear movement.
         """
-        if state:
-            self.debug("Setting state: %s", state)
-            self._state = state
+        self.debug("Setting state: %s", state)
+        self._state = state
         self.async_write_ha_state()
-        if self._state in (STATE_OPENING, STATE_CLOSING):
-            if self._cancel_clear_movement_timer:
-                self._cancel_clear_movement_timer()
-            self._cancel_clear_movement_timer = async_call_later(self.hass, MOVEMENT_TIMEOUT, self._clear_movement)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the window cover."""
