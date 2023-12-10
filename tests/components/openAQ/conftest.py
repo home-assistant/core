@@ -30,20 +30,21 @@ class MockAQClient:
 class OpenAQMock:
     """Mock of openaq client."""
 
-    def __init__(self, fixture_locations):
+    def __init__(self, fixture_locations, fixture_measurements):
         """Create Mock of openaq client with mocked values."""
         location = LocationsResponse.load(
             load_json_value_fixture(fixture_locations, DOMAIN)
         )
         self.locations = {10496: location}
+        self.fixture_measurements = fixture_measurements
         self.measurements = self
 
     def list(self, locations_id, page, limit, date_from):
         """Override list method in openaq library with mocked data."""
-        fixture_measurements: str = "measurements_good.json"
+        # fixture_measurements: str = "measurements_good.json"
 
         measurements = MeasurementsResponse.load(
-            load_json_value_fixture(fixture_measurements, DOMAIN)
+            load_json_value_fixture(self.fixture_measurements, DOMAIN)
         )
         return measurements
 
@@ -67,9 +68,14 @@ async def mock_setup_integration(
 ) -> Callable[[MockConfigEntry], Awaitable[None]]:
     """Fixture for setting up the component."""
 
-    async def func(mock_config_entry: MockConfigEntry, location: str) -> None:
+    async def func(
+        mock_config_entry: MockConfigEntry, location: str, fixture_measurements
+    ) -> None:
         mock_config_entry.add_to_hass(hass)
-        with patch("openaq.OpenAQ.__new__", return_value=OpenAQMock(location)):
+        with patch(
+            "openaq.OpenAQ.__new__",
+            return_value=OpenAQMock(location, fixture_measurements),
+        ):
             assert await async_setup_component(hass, DOMAIN, {})
             await hass.async_block_till_done()
 
