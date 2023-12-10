@@ -267,5 +267,22 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "command_failed": {
+      "message": "Error while calling {command} with {params}."
+    },
+    "home_data_fail": {
+      "message": "Failed getting Roborock home_data."
+    },
+    "invalid_credentials": {
+      "message": "Invalid credentials."
+    },
+    "map_failure": {
+      "message": "Something went wrong creating the map."
+    },
+    "no_coordinators": {
+      "message": "No coordinators were able to successfully setup."
+    }
   }
 }

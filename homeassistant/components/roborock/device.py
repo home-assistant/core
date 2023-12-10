@@ -15,6 +15,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import RoborockDataUpdateCoordinator
+from .const import DOMAIN
 
 
 class RoborockEntity(Entity):
@@ -49,9 +50,16 @@ class RoborockEntity(Entity):
             response: dict = await self._api.send_command(command, params)
         except RoborockException as err:
             raise HomeAssistantError(
-                f"Error while calling {command.name if isinstance(command, RoborockCommand) else command} with {params}"
+                f"Error while calling {command} with {params}.",
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": command.name
+                    if isinstance(command, RoborockCommand)
+                    else command,
+                    "params": str(params),
+                },
             ) from err
-
         return response
 
 
