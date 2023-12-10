@@ -354,10 +354,10 @@ async def test_add_item_service_raises(
         (
             {
                 "item": "Submit forms",
-                "due_date_time": f"2023-11-17T17:00:00{TEST_OFFSET}",
+                "due_datetime": f"2023-11-17T17:00:00{TEST_OFFSET}",
             },
             ValueError,
-            "does not support setting field 'due_date_time'",
+            "does not support setting field 'due_datetime'",
         ),
     ],
 )
@@ -396,7 +396,7 @@ async def test_add_item_service_invalid_input(
         ),
         (
             TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM,
-            {"item": "New item", "due_date_time": f"2023-11-13T17:00:00{TEST_OFFSET}"},
+            {"item": "New item", "due_datetime": f"2023-11-13T17:00:00{TEST_OFFSET}"},
             TodoItem(
                 summary="New item",
                 status=TodoItemStatus.NEEDS_ACTION,
@@ -405,7 +405,7 @@ async def test_add_item_service_invalid_input(
         ),
         (
             TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM,
-            {"item": "New item", "due_date_time": "2023-11-13T17:00:00+00:00"},
+            {"item": "New item", "due_datetime": "2023-11-13T17:00:00+00:00"},
             TodoItem(
                 summary="New item",
                 status=TodoItemStatus.NEEDS_ACTION,
@@ -414,7 +414,7 @@ async def test_add_item_service_invalid_input(
         ),
         (
             TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM,
-            {"item": "New item", "due_date_time": "2023-11-13"},
+            {"item": "New item", "due_datetime": "2023-11-13"},
             TodoItem(
                 summary="New item",
                 status=TodoItemStatus.NEEDS_ACTION,
@@ -663,7 +663,7 @@ async def test_update_item_service_invalid_input(
 @pytest.mark.parametrize(
     ("update_data"),
     [
-        ({"due_date_time": f"2023-11-13T17:00:00{TEST_OFFSET}"}),
+        ({"due_datetime": f"2023-11-13T17:00:00{TEST_OFFSET}"}),
         ({"due_date": "2023-11-13"}),
         ({"description": "Submit revised draft"}),
     ],
@@ -697,7 +697,7 @@ async def test_update_todo_item_field_unsupported(
         ),
         (
             TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM,
-            {"due_date_time": f"2023-11-13T17:00:00{TEST_OFFSET}"},
+            {"due_datetime": f"2023-11-13T17:00:00{TEST_OFFSET}"},
             TodoItem(
                 uid="1",
                 due=datetime.datetime(2023, 11, 13, 17, 0, 0, tzinfo=TEST_TIMEZONE),

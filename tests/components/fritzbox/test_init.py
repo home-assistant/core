@@ -296,7 +296,7 @@ async def test_remove_device(
     )
     response = await ws_client.receive_json()
     assert not response["success"]
-    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["code"] == "home_assistant_error"
     await hass.async_block_till_done()
 
     # try to delete orphan_device
