@@ -164,7 +164,10 @@ class WebDavTodoListEntity(TodoListEntity):
         except (requests.ConnectionError, DAVError) as err:
             raise HomeAssistantError(f"CalDAV lookup error: {err}") from err
         vtodo = todo.icalendar_component  # type: ignore[attr-defined]
-        vtodo.update(**_to_ics_fields(item))
+        updated_fields = _to_ics_fields(item)
+        if "due" in updated_fields:
+            todo.set_due(updated_fields.pop("due"))
+        vtodo.update(**updated_fields)
         try:
             await self.hass.async_add_executor_job(
                 partial(
