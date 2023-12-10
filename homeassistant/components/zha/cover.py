@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+import collections
 import functools
 import logging
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 from zigpy.zcl.foundation import Status
@@ -25,6 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -50,6 +53,8 @@ _LOGGER = logging.getLogger(__name__)
 
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.COVER)
 
+MOVEMENT_TIMEOUT = timedelta(seconds=2)
+"""If no update is received from cover for X seconds, the movement is considered stopped."""
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -70,9 +75,17 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
+_PositionHistoryRecord = collections.namedtuple("_PositionHistoryRecord", ["datetime", "lift", "tilt"])
+
+
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_COVER)
 class ZhaCover(ZhaEntity, CoverEntity):
-    """Representation of a ZHA cover."""
+    """
+    Representation of a ZHA cover.
+    
+    Covers doesn't have a way to report movement, they are only reporting changes in lift / tilt.
+    That's why we track history of these reports and judge the (lack of) movement + direction based on that.
+    """
 
     _attr_translation_key: str = "cover"
 
@@ -82,6 +95,8 @@ class ZhaCover(ZhaEntity, CoverEntity):
         self._cover_cluster_handler = self.cluster_handlers.get(CLUSTER_HANDLER_COVER)
         self._current_position = None
         self._tilt_position = None
+        self._position_history = collections.deque(maxlen=2)
+        self._cancel_clear_movement_timer = None
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
@@ -114,6 +129,20 @@ class ZhaCover(ZhaEntity, CoverEntity):
         return self._current_position == 0 and getattr(self, "_tilt_position", 0) == 0
 
     @property
+    def _is_open(self) -> bool | None:
+        """
+        Return if the cover is open.
+        
+        Consider cover closed only if both tilt and lift are 100.
+        If cover doesn't support tilt, only care about lift.
+
+        This is not required by the API, but it is only used internally.
+        """
+        if self._current_position is None:
+            return None
+        return self._current_position == 100 and getattr(self, "_tilt_position", 100) == 100
+
+    @property
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self._state == STATE_OPENING
@@ -144,22 +173,51 @@ class ZhaCover(ZhaEntity, CoverEntity):
             self._current_position = 100 - value
         elif attr_name == "current_position_tilt_percentage":
             self._tilt_position = 100 - value
+        self._touch_position()
+        if self.is_closed:
+            self._async_update_state(STATE_CLOSED)
+        elif self._is_open:
+            self._async_update_state(STATE_OPEN)
+        else:
+            # somewhere in between fully closed and fully open
+            # TODO handle external updates by looking at position history trend
+            self._async_update_state()
 
-        if self._current_position == 0:
-            self._state = STATE_CLOSED
-        elif self._current_position == 100:
-            self._state = STATE_OPEN
-        self.async_write_ha_state()
+    def _touch_position(self):
+        """Store current timestamp, lift and tilt into position history."""
+        self._position_history.append(_PositionHistoryRecord(datetime.now(), self._current_position, self._tilt_position))
+    
+    @property
+    def _has_recent_position_update(self) -> bool:
+        """Return if the cover received position update within past MOVEMENT_TIMEOUT seconds."""
+        return datetime.now() - self._position_history[-1].datetime < MOVEMENT_TIMEOUT
+    
+    @callback
+    def _clear_movement(self, now):
+        """Clear the moving status of the cover if there is no recent update."""
+        if not self._has_recent_position_update:
+            self._async_update_state(STATE_CLOSED if self.is_closed else STATE_OPEN)
+        self._cancel_clear_movement_timer = None
 
     @callback
-    def _async_update_state(self, state):
-        """Handle state update from cluster handler."""
-        _LOGGER.debug("state=%s", state)
-        self._state = state
+    def _async_update_state(self, state=None):
+        """
+        Inform HASS of current state.
+        
+        In case of opening/closing states, schedule a timer to clear movement.
+        """
+        if state:
+            _LOGGER.debug("state=%s", state)
+            self._state = state
         self.async_write_ha_state()
+        if state in (STATE_OPENING, STATE_CLOSING):
+            if self._cancel_clear_movement_timer:
+                self._cancel_clear_movement_timer()
+            self._cancel_clear_movement_timer = async_call_later(self.hass, MOVEMENT_TIMEOUT, self._clear_movement)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the window cover."""
+        self._touch_position()
         res = await self._cover_cluster_handler.up_open()
         if res[1] is not Status.SUCCESS:
             raise HomeAssistantError(f"Failed to open cover: {res[1]}")
@@ -167,6 +225,7 @@ class ZhaCover(ZhaEntity, CoverEntity):
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
+        self._touch_position()
         res = await self._cover_cluster_handler.go_to_tilt_percentage(0)
         if res[1] is not Status.SUCCESS:
             raise HomeAssistantError(f"Failed to open cover tilt: {res[1]}")
@@ -174,6 +233,7 @@ class ZhaCover(ZhaEntity, CoverEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the window cover."""
+        self._touch_position()
         res = await self._cover_cluster_handler.down_close()
         if res[1] is not Status.SUCCESS:
             raise HomeAssistantError(f"Failed to close cover: {res[1]}")
@@ -181,6 +241,7 @@ class ZhaCover(ZhaEntity, CoverEntity):
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
+        self._touch_position()
         res = await self._cover_cluster_handler.go_to_tilt_percentage(100)
         if res[1] is not Status.SUCCESS:
             raise HomeAssistantError(f"Failed to close cover tilt: {res[1]}")
@@ -188,6 +249,7 @@ class ZhaCover(ZhaEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the roller shutter to a specific position."""
+        self._touch_position()
         new_pos = kwargs[ATTR_POSITION]
         res = await self._cover_cluster_handler.go_to_lift_percentage(100 - new_pos)
         if res[1] is not Status.SUCCESS:
@@ -198,6 +260,7 @@ class ZhaCover(ZhaEntity, CoverEntity):
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover til to a specific position."""
+        self._touch_position()
         new_pos = kwargs[ATTR_TILT_POSITION]
         res = await self._cover_cluster_handler.go_to_tilt_percentage(100 - new_pos)
         if res[1] is not Status.SUCCESS:
@@ -208,6 +271,7 @@ class ZhaCover(ZhaEntity, CoverEntity):
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the window cover."""
+        self._touch_position()
         res = await self._cover_cluster_handler.stop()
         if res[1] is not Status.SUCCESS:
             raise HomeAssistantError(f"Failed to stop cover: {res[1]}")
@@ -216,6 +280,12 @@ class ZhaCover(ZhaEntity, CoverEntity):
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
         await self.async_stop_cover()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel the movement timer when entity is removed."""
+        if self._cancel_clear_movement_timer:
+            self._cancel_clear_movement_timer()
+        await super().async_will_remove_from_hass()
 
 
 @MULTI_MATCH(
