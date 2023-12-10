@@ -35,10 +35,10 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
             # Some Bedrock Edition servers mimic a Java Edition server, therefore check for a Bedrock Edition server first.
             for server_type in MinecraftServerType:
+                api = MinecraftServer(self.hass, server_type, address)
+
                 try:
-                    api = await self.hass.async_add_executor_job(
-                        MinecraftServer, server_type, address
-                    )
+                    await api.async_initialize()
                 except MinecraftServerAddressError:
                     pass
                 else:
