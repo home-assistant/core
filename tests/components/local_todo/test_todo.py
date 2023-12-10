@@ -71,7 +71,7 @@ def set_time_zone(hass: HomeAssistant) -> None:
         ({}, {}),
         ({"due_date": "2023-11-17"}, {"due": "2023-11-17"}),
         (
-            {"due_date_time": "2023-11-17T11:30:00+00:00"},
+            {"due_datetime": "2023-11-17T11:30:00+00:00"},
             {"due": "2023-11-17T05:30:00-06:00"},
         ),
         ({"description": "Additional detail"}, {"description": "Additional detail"}),
@@ -118,7 +118,7 @@ async def test_add_item(
         ({}, {}),
         ({"due_date": "2023-11-17"}, {"due": "2023-11-17"}),
         (
-            {"due_date_time": "2023-11-17T11:30:00+00:00"},
+            {"due_datetime": "2023-11-17T11:30:00+00:00"},
             {"due": "2023-11-17T05:30:00-06:00"},
         ),
         ({"description": "Additional detail"}, {"description": "Additional detail"}),
@@ -213,7 +213,7 @@ async def test_bulk_remove(
         ({"status": "completed"}, {"status": "completed"}, "0"),
         ({"due_date": "2023-11-17"}, {"due": "2023-11-17"}, "1"),
         (
-            {"due_date_time": "2023-11-17T11:30:00+00:00"},
+            {"due_datetime": "2023-11-17T11:30:00+00:00"},
             {"due": "2023-11-17T05:30:00-06:00"},
             "1",
         ),

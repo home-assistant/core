@@ -6,7 +6,7 @@ DOMAIN = "todo"
 
 ATTR_DUE = "due"
 ATTR_DUE_DATE = "due_date"
-ATTR_DUE_DATE_TIME = "due_date_time"
+ATTR_DUE_DATETIME = "due_datetime"
 ATTR_DESCRIPTION = "description"
 
 

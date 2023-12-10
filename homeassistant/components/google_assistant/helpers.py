@@ -686,8 +686,12 @@ class GoogleEntity:
             return device
 
         # Add Matter info
-        if "matter" in self.hass.config.components and (
-            matter_info := matter.get_matter_device_info(self.hass, device_entry.id)
+        if (
+            "matter" in self.hass.config.components
+            and any(x for x in device_entry.identifiers if x[0] == "matter")
+            and (
+                matter_info := matter.get_matter_device_info(self.hass, device_entry.id)
+            )
         ):
             device["matterUniqueId"] = matter_info["unique_id"]
             device["matterOriginalVendorId"] = matter_info["vendor_id"]

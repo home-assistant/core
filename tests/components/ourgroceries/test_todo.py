@@ -142,12 +142,20 @@ async def test_update_todo_item_status(
 
 
 @pytest.mark.parametrize(
-    ("items"), [[{"id": "12345", "name": "Soda", "categoryId": "test_category"}]]
+    ("items", "category"),
+    [
+        (
+            [{"id": "12345", "name": "Soda", "categoryId": "test_category"}],
+            "test_category",
+        ),
+        ([{"id": "12345", "name": "Uncategorized"}], None),
+    ],
 )
 async def test_update_todo_item_summary(
     hass: HomeAssistant,
     setup_integration: None,
     ourgroceries: AsyncMock,
+    category: str | None,
 ) -> None:
     """Test for updating an item summary."""
 
@@ -171,7 +179,7 @@ async def test_update_todo_item_summary(
     )
     assert ourgroceries.change_item_on_list
     args = ourgroceries.change_item_on_list.call_args
-    assert args.args == ("test_list", "12345", "test_category", "Milk")
+    assert args.args == ("test_list", "12345", category, "Milk")
 
 
 @pytest.mark.parametrize(
