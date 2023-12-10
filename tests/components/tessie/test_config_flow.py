@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.tessie.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -18,6 +20,16 @@ from .common import (
 )
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def mock_get_state_of_all_vehicles():
+    """Mock get_state_of_all_vehicles function."""
+    with patch(
+        "homeassistant.components.tessie.config_flow.get_state_of_all_vehicles",
+        return_value=TEST_STATE_OF_ALL_VEHICLES,
+    ) as mock_get_state_of_all_vehicles:
+        yield mock_get_state_of_all_vehicles
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -142,39 +154,34 @@ async def test_form_network_issue(hass: HomeAssistant) -> None:
     assert result3["type"] == FlowResultType.CREATE_ENTRY
 
 
-async def test_reauth(hass: HomeAssistant) -> None:
+async def test_reauth(hass: HomeAssistant, mock_get_state_of_all_vehicles) -> None:
     """Test reauth flow."""
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         data=TEST_CONFIG,
-        unique_id="abc",
     )
     mock_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
+    result1 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
             "entry_id": mock_entry.entry_id,
         },
         data=TEST_CONFIG,
     )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert not result["errors"]
+    assert result1["type"] == FlowResultType.FORM
+    assert result1["step_id"] == "reauth_confirm"
+    assert not result1["errors"]
 
     with patch(
-        "homeassistant.components.tessie.config_flow.get_state_of_all_vehicles",
-        return_value=TEST_STATE_OF_ALL_VEHICLES,
-    ) as mock_get_state_of_all_vehicles, patch(
         "homeassistant.components.tessie.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+            result1["flow_id"],
             TEST_CONFIG,
         )
         await hass.async_block_till_done()
@@ -186,9 +193,21 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert mock_entry.data == TEST_CONFIG
 
 
-async def test_reauth_error_auth(hass: HomeAssistant) -> None:
-    """Test reauth flow that fails."""
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (ERROR_AUTH, {"base": "invalid_access_token"}),
+        (ERROR_UNKNOWN, {"base": "unknown"}),
+        (ERROR_CONNECTION, {"base": "cannot_connect"}),
+    ],
+)
+async def test_reauth_errors(
+    hass: HomeAssistant, mock_get_state_of_all_vehicles, side_effect, error
+) -> None:
+    """Test reauth flows that failscript/."""
+
     mock_entry = await setup_platform(hass)
+    mock_get_state_of_all_vehicles.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -200,71 +219,22 @@ async def test_reauth_error_auth(hass: HomeAssistant) -> None:
         data=TEST_CONFIG,
     )
 
-    with patch(
-        "homeassistant.components.tessie.config_flow.get_state_of_all_vehicles",
-        side_effect=ERROR_AUTH,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            TEST_CONFIG,
-        )
-        await hass.async_block_till_done()
-
-        assert result2["type"] == FlowResultType.FORM
-        assert result2["errors"] == {"base": "invalid_access_token"}
-
-
-async def test_reauth_error_unknown(hass: HomeAssistant) -> None:
-    """Test reauth flow that fails."""
-    mock_entry = await setup_platform(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=TEST_CONFIG,
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        TEST_CONFIG,
     )
-
-    with patch(
-        "homeassistant.components.tessie.config_flow.get_state_of_all_vehicles",
-        side_effect=ERROR_UNKNOWN,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            TEST_CONFIG,
-        )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result2["errors"] == error
 
-
-async def test_reauth_error_connection(hass: HomeAssistant) -> None:
-    """Test reauth flow that fails."""
-    mock_entry = await setup_platform(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
-        },
-        data=TEST_CONFIG,
+    # Complete the flow
+    mock_get_state_of_all_vehicles.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        TEST_CONFIG,
     )
-
-    with patch(
-        "homeassistant.components.tessie.config_flow.get_state_of_all_vehicles",
-        side_effect=ERROR_CONNECTION,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            TEST_CONFIG,
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert "errors" not in result3
+    assert result3["type"] == FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
+    assert mock_entry.data == TEST_CONFIG
