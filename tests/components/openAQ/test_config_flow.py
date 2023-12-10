@@ -1,8 +1,12 @@
 """Test the OpenAQ config flow."""
 
+from unittest import mock
+
 from homeassistant import data_entry_flow
 from homeassistant.components.openAQ.config_flow import ConfigFlow
 from homeassistant.core import HomeAssistant
+
+from .conftest import MockAQClient
 
 # Define an invalid user input with an invalid location ID
 INVALID_USER_INPUT = {
@@ -18,9 +22,11 @@ USER_INPUT = {
 
 
 # Define a test case that uses the mock_aq_client_no_sensors fixture
-async def test_config_flow_invalid_location(
-    hass: HomeAssistant, mock_aq_client_no_sensors
-):
+@mock.patch(
+    "homeassistant.components.openAQ.config_flow.AQClient",
+    return_value=MockAQClient(mock.Mock(sensors=[], locality="Valid location")),
+)
+async def test_config_flow_invalid_location(hass: HomeAssistant):
     """Test the OpenAQ config flow with invalid user input."""
     # Initialize the config flow
     flow = ConfigFlow()
@@ -35,9 +41,13 @@ async def test_config_flow_invalid_location(
 
 
 # Define a test case that uses the mock_aq_client_valid_data fixture
-async def test_config_flow_valid_location(
-    hass: HomeAssistant, mock_aq_client_valid_data
-):
+@mock.patch(
+    "homeassistant.components.openAQ.config_flow.AQClient",
+    return_value=MockAQClient(
+        mock.Mock(sensors=["pm25", "o3"], locality="Valid Location")
+    ),
+)
+async def test_config_flow_valid_location(hass: HomeAssistant):
     """Test the OpenAQ config flow with valid user input and mocked data."""
     # Initialize the config flow
     flow = ConfigFlow()

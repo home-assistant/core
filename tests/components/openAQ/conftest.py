@@ -15,6 +15,18 @@ from tests.common import MockConfigEntry, load_json_value_fixture
 ComponentSetup = Callable[[MockConfigEntry], Awaitable[None]]
 
 
+class MockAQClient:
+    """Mock for AQClient that simulates a successful response."""
+
+    def __init__(self, devices):
+        """Initialize the mock AQClient."""
+        self.devices = devices
+
+    def get_device(self):
+        """Simulate getting device data from AQClient."""
+        return self.devices
+
+
 class OpenAQMock:
     """Mock of openaq client."""
 
