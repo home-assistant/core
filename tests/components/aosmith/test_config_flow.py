@@ -8,7 +8,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.aosmith.const import DOMAIN, REGULAR_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_EMAIL
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -107,7 +107,7 @@ async def test_reauth_flow(
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
-    assert flows[0]["step_id"] == "user"
+    assert flows[0]["step_id"] == "reauth_confirm"
 
     with patch(
         "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_devices",
@@ -115,7 +115,7 @@ async def test_reauth_flow(
     ), patch("homeassistant.components.aosmith.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             flows[0]["flow_id"],
-            FIXTURE_USER_INPUT,
+            {CONF_PASSWORD: FIXTURE_USER_INPUT[CONF_PASSWORD]},
         )
         await hass.async_block_till_done()
 
@@ -123,13 +123,13 @@ async def test_reauth_flow(
         assert result2["reason"] == "reauth_successful"
 
 
-async def test_reauth_flow_wrong_account(
+async def test_reauth_flow_retry(
     freezer: FrozenDateTimeFactory,
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test reauth aborts when trying to use a different email address."""
+    """Test reauth works with retry."""
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
@@ -143,20 +143,32 @@ async def test_reauth_flow_wrong_account(
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
-    assert flows[0]["step_id"] == "user"
+    assert flows[0]["step_id"] == "reauth_confirm"
 
-    new_fixture_user_input = FIXTURE_USER_INPUT.copy()
-    new_fixture_user_input[CONF_EMAIL] = "different_email@example.com"
+    # First attempt at reauth - authentication fails again
+    with patch(
+        "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_devices",
+        side_effect=AOSmithInvalidCredentialsException("Authentication error"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            flows[0]["flow_id"],
+            {CONF_PASSWORD: FIXTURE_USER_INPUT[CONF_PASSWORD]},
+        )
+        await hass.async_block_till_done()
 
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["errors"] == {"base": "invalid_auth"}
+
+    # Second attempt at reauth - authentication succeeds
     with patch(
         "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_devices",
         return_value=[],
     ), patch("homeassistant.components.aosmith.async_setup_entry", return_value=True):
-        result2 = await hass.config_entries.flow.async_configure(
+        result3 = await hass.config_entries.flow.async_configure(
             flows[0]["flow_id"],
-            new_fixture_user_input,
+            {CONF_PASSWORD: FIXTURE_USER_INPUT[CONF_PASSWORD]},
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == FlowResultType.ABORT
-        assert result2["reason"] == "reauth_wrong_account"
+        assert result3["type"] == FlowResultType.ABORT
+        assert result3["reason"] == "reauth_successful"
