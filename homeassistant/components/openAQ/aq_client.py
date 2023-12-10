@@ -36,15 +36,6 @@ class AQClient:
         _LOGGER.debug("Locations API error: %s", response)
         return None
 
-    def get_history(self):
-        """Get the last 24 hours of metrices."""
-        response = self.client.measurements.list(  # The response should return all data that the station has sent the last day
-            locations_id=self.location_id,
-            date_from=datetime.datetime.now(tz=datetime.UTC)
-            - datetime.timedelta(hours=24),
-        )
-        return response
-
     def get_latest_metrices(self):
         """Get latest measurements."""
 
