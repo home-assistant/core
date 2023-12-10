@@ -49,8 +49,6 @@ if TYPE_CHECKING:
     from .core.cluster_handlers import ClusterHandler
     from .core.device import ZHADevice
 
-_LOGGER = logging.getLogger(__name__)
-
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.COVER)
 
 MOVEMENT_TIMEOUT = timedelta(seconds=2)
@@ -168,7 +166,6 @@ class ZhaCover(ZhaEntity, CoverEntity):
     @callback
     def async_set_position(self, attr_id, attr_name, value):
         """Handle position update from cluster handler."""
-        _LOGGER.debug("setting position: %s %s %s", attr_id, attr_name, value)
         if attr_name == "current_position_lift_percentage":
             self._current_position = 100 - value
         elif attr_name == "current_position_tilt_percentage":
@@ -186,17 +183,12 @@ class ZhaCover(ZhaEntity, CoverEntity):
     def _touch_position(self):
         """Store current timestamp, lift and tilt into position history."""
         self._position_history.append(_PositionHistoryRecord(datetime.now(), self._current_position, self._tilt_position))
-    
-    @property
-    def _has_recent_position_update(self) -> bool:
-        """Return if the cover received position update within past MOVEMENT_TIMEOUT seconds."""
-        return datetime.now() - self._position_history[-1].datetime < MOVEMENT_TIMEOUT
-    
+
     @callback
-    def _clear_movement(self, now):
+    def _clear_movement(self, _=None):
         """Clear the moving status of the cover if there is no recent update."""
-        if not self._has_recent_position_update:
-            self._async_update_state(STATE_CLOSED if self.is_closed else STATE_OPEN)
+        self.debug("No movement reported for %s", MOVEMENT_TIMEOUT)
+        self._async_update_state(STATE_CLOSED if self.is_closed else STATE_OPEN)
         self._cancel_clear_movement_timer = None
 
     @callback
@@ -207,10 +199,10 @@ class ZhaCover(ZhaEntity, CoverEntity):
         In case of opening/closing states, schedule a timer to clear movement.
         """
         if state:
-            _LOGGER.debug("state=%s", state)
+            self.debug("Setting state: %s", state)
             self._state = state
         self.async_write_ha_state()
-        if state in (STATE_OPENING, STATE_CLOSING):
+        if self._state in (STATE_OPENING, STATE_CLOSING):
             if self._cancel_clear_movement_timer:
                 self._cancel_clear_movement_timer()
             self._cancel_clear_movement_timer = async_call_later(self.hass, MOVEMENT_TIMEOUT, self._clear_movement)
