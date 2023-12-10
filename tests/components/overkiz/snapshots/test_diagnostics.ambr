@@ -1,6 +1,7 @@
 # serializer version: 1
 # name: test_device_diagnostics
   dict({
+    'api_type': 'cloud',
     'device': dict({
       'controllable_name': 'rts:RollerShutterRTSComponent',
       'device_url': 'rts://****-****-6867/16756006',
@@ -969,6 +970,7 @@
 # ---
 # name: test_diagnostics
   dict({
+    'api_type': 'cloud',
     'execution_history': list([
     ]),
     'server': 'somfy_europe',

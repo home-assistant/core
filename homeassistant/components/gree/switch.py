@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import COORDINATORS, DISPATCH_DEVICE_DISCOVERED, DISPATCHERS, DOMAIN
+from .const import COORDINATORS, DISPATCH_DEVICE_DISCOVERED, DOMAIN
 from .entity import GreeEntity
 
 
@@ -32,10 +32,6 @@ class GreeRequiredKeysMixin:
 @dataclass
 class GreeSwitchEntityDescription(SwitchEntityDescription, GreeRequiredKeysMixin):
     """Describes Gree switch entity."""
-
-    # GreeSwitch does not support UNDEFINED or None,
-    # restrict the type to str.
-    name: str = ""
 
 
 def _set_light(device: Device, value: bool) -> None:
@@ -66,33 +62,33 @@ def _set_anion(device: Device, value: bool) -> None:
 GREE_SWITCHES: tuple[GreeSwitchEntityDescription, ...] = (
     GreeSwitchEntityDescription(
         icon="mdi:lightbulb",
-        name="Panel Light",
-        key="light",
+        key="Panel Light",
+        translation_key="light",
         get_value_fn=lambda d: d.light,
         set_value_fn=_set_light,
     ),
     GreeSwitchEntityDescription(
-        name="Quiet",
-        key="quiet",
+        key="Quiet",
+        translation_key="quiet",
         get_value_fn=lambda d: d.quiet,
         set_value_fn=_set_quiet,
     ),
     GreeSwitchEntityDescription(
-        name="Fresh Air",
-        key="fresh_air",
+        key="Fresh Air",
+        translation_key="fresh_air",
         get_value_fn=lambda d: d.fresh_air,
         set_value_fn=_set_fresh_air,
     ),
     GreeSwitchEntityDescription(
-        name="XFan",
-        key="xfan",
+        key="XFan",
+        translation_key="xfan",
         get_value_fn=lambda d: d.xfan,
         set_value_fn=_set_xfan,
     ),
     GreeSwitchEntityDescription(
         icon="mdi:pine-tree",
-        name="Health mode",
-        key="anion",
+        key="Health mode",
+        translation_key="health_mode",
         get_value_fn=lambda d: d.anion,
         set_value_fn=_set_anion,
         entity_registry_enabled_default=False,
@@ -102,7 +98,7 @@ GREE_SWITCHES: tuple[GreeSwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Gree HVAC device from a config entry."""
@@ -119,7 +115,7 @@ async def async_setup_entry(
     for coordinator in hass.data[DOMAIN][COORDINATORS]:
         init_device(coordinator)
 
-    hass.data[DOMAIN][DISPATCHERS].append(
+    entry.async_on_unload(
         async_dispatcher_connect(hass, DISPATCH_DEVICE_DISCOVERED, init_device)
     )
 
@@ -134,7 +130,7 @@ class GreeSwitch(GreeEntity, SwitchEntity):
         """Initialize the Gree device."""
         self.entity_description = description
 
-        super().__init__(coordinator, description.name)
+        super().__init__(coordinator, description.key)
 
     @property
     def is_on(self) -> bool:

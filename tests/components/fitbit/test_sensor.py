@@ -279,7 +279,6 @@ async def test_device_battery(
         "type": "scale",
     }
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("sensor.aria_air_battery")
     assert entry
     assert entry.unique_id == f"{PROFILE_USER_ID}_devices/battery_016713257"
@@ -809,3 +808,60 @@ async def test_device_battery_level_reauth_required(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["step_id"] == "reauth_confirm"
+
+
+@pytest.mark.parametrize(
+    ("scopes", "response_data", "expected_state"),
+    [
+        (["heartrate"], {}, "unknown"),
+        (
+            ["heartrate"],
+            {
+                "restingHeartRate": 120,
+            },
+            "120",
+        ),
+        (
+            ["heartrate"],
+            {
+                "restingHeartRate": 0,
+            },
+            "0",
+        ),
+    ],
+    ids=("missing", "valid", "zero"),
+)
+async def test_resting_heart_rate_responses(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    register_timeseries: Callable[[str, dict[str, Any]], None],
+    response_data: dict[str, Any],
+    expected_state: str,
+) -> None:
+    """Test resting heart rate sensor with various values from response."""
+
+    register_timeseries(
+        "activities/heart",
+        timeseries_response(
+            "activities-heart",
+            {
+                "customHeartRateZones": [],
+                "heartRateZones": [
+                    {
+                        "caloriesOut": 0,
+                        "max": 220,
+                        "min": 159,
+                        "minutes": 0,
+                        "name": "Peak",
+                    },
+                ],
+                **response_data,
+            },
+        ),
+    )
+    assert await integration_setup()
+
+    state = hass.states.get("sensor.resting_heart_rate")
+    assert state
+    assert state.state == expected_state

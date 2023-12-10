@@ -120,6 +120,7 @@ homeassistant.components.energy.*
 homeassistant.components.esphome.*
 homeassistant.components.event.*
 homeassistant.components.evil_genius_labs.*
+homeassistant.components.faa_delays.*
 homeassistant.components.fan.*
 homeassistant.components.fastdotcom.*
 homeassistant.components.feedreader.*
@@ -127,6 +128,7 @@ homeassistant.components.file_upload.*
 homeassistant.components.filesize.*
 homeassistant.components.filter.*
 homeassistant.components.fitbit.*
+homeassistant.components.flexit_bacnet.*
 homeassistant.components.flux_led.*
 homeassistant.components.forecast_solar.*
 homeassistant.components.fritz.*
@@ -150,6 +152,7 @@ homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
 homeassistant.components.here_travel_time.*
 homeassistant.components.history.*
+homeassistant.components.holiday.*
 homeassistant.components.homeassistant.exposed_entities
 homeassistant.components.homeassistant.triggers.event
 homeassistant.components.homeassistant_alerts.*
@@ -202,6 +205,7 @@ homeassistant.components.ld2410_ble.*
 homeassistant.components.lidarr.*
 homeassistant.components.lifx.*
 homeassistant.components.light.*
+homeassistant.components.linear_garage_door.*
 homeassistant.components.litejet.*
 homeassistant.components.litterrobot.*
 homeassistant.components.local_ip.*
@@ -263,6 +267,7 @@ homeassistant.components.proximity.*
 homeassistant.components.prusalink.*
 homeassistant.components.pure_energie.*
 homeassistant.components.purpleair.*
+homeassistant.components.pushbullet.*
 homeassistant.components.pvoutput.*
 homeassistant.components.qnap_qsw.*
 homeassistant.components.radarr.*
@@ -312,6 +317,7 @@ homeassistant.components.statistics.*
 homeassistant.components.steamist.*
 homeassistant.components.stookalert.*
 homeassistant.components.stream.*
+homeassistant.components.streamlabswater.*
 homeassistant.components.sun.*
 homeassistant.components.surepetcare.*
 homeassistant.components.switch.*

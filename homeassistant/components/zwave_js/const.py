@@ -99,6 +99,7 @@ SERVICE_REFRESH_VALUE = "refresh_value"
 SERVICE_RESET_METER = "reset_meter"
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
 SERVICE_SET_LOCK_USERCODE = "set_lock_usercode"
+SERVICE_SET_LOCK_CONFIGURATION = "set_lock_configuration"
 SERVICE_SET_VALUE = "set_value"
 
 ATTR_NODES = "nodes"
@@ -106,6 +107,8 @@ ATTR_NODES = "nodes"
 ATTR_CONFIG_PARAMETER = "parameter"
 ATTR_CONFIG_PARAMETER_BITMASK = "bitmask"
 ATTR_CONFIG_VALUE = "value"
+ATTR_VALUE_SIZE = "value_size"
+ATTR_VALUE_FORMAT = "value_format"
 # refresh value
 ATTR_REFRESH_ALL_VALUES = "refresh_all_values"
 # multicast
@@ -116,6 +119,13 @@ ATTR_METER_TYPE_NAME = "meter_type_name"
 # invoke CC API
 ATTR_METHOD_NAME = "method_name"
 ATTR_PARAMETERS = "parameters"
+# lock set configuration
+ATTR_AUTO_RELOCK_TIME = "auto_relock_time"
+ATTR_BLOCK_TO_BLOCK = "block_to_block"
+ATTR_HOLD_AND_RELEASE_TIME = "hold_and_release_time"
+ATTR_LOCK_TIMEOUT = "lock_timeout"
+ATTR_OPERATION_TYPE = "operation_type"
+ATTR_TWIST_ASSIST = "twist_assist"
 
 ADDON_SLUG = "core_zwave_js"
 

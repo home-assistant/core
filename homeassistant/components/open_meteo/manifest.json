@@ -7,5 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/open_meteo",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": ["open-meteo==0.2.1"]
+  "requirements": ["open-meteo==0.3.1"]
 }

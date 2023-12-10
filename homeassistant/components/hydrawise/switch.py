@@ -1,8 +1,10 @@
 """Support for Hydrawise cloud switches."""
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any
 
+from pydrawise.schema import Zone
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -17,6 +19,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ALLOWED_WATERING_TIME,
@@ -76,58 +79,44 @@ async def async_setup_entry(
     coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]
-    default_watering_timer = DEFAULT_WATERING_TIME
-
-    entities = [
-        HydrawiseSwitch(
-            data=zone,
-            coordinator=coordinator,
-            description=description,
-            default_watering_timer=default_watering_timer,
-        )
-        for zone in coordinator.api.relays
+    async_add_entities(
+        HydrawiseSwitch(coordinator, description, controller, zone)
+        for controller in coordinator.data.controllers
+        for zone in controller.zones
         for description in SWITCH_TYPES
-    ]
-
-    async_add_entities(entities)
+    )
 
 
 class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
     """A switch implementation for Hydrawise device."""
 
-    def __init__(
-        self,
-        *,
-        data: dict[str, Any],
-        coordinator: HydrawiseDataUpdateCoordinator,
-        description: SwitchEntityDescription,
-        default_watering_timer: int,
-    ) -> None:
-        """Initialize a switch for Hydrawise device."""
-        super().__init__(data=data, coordinator=coordinator, description=description)
-        self._default_watering_timer = default_watering_timer
+    zone: Zone
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        zone_number = self.data["relay"]
         if self.entity_description.key == "manual_watering":
-            self.coordinator.api.run_zone(self._default_watering_timer, zone_number)
+            await self.coordinator.api.start_zone(
+                self.zone, custom_run_duration=DEFAULT_WATERING_TIME
+            )
         elif self.entity_description.key == "auto_watering":
-            self.coordinator.api.suspend_zone(0, zone_number)
+            await self.coordinator.api.resume_zone(self.zone)
+        self._attr_is_on = True
+        self.async_write_ha_state()
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        zone_number = self.data["relay"]
         if self.entity_description.key == "manual_watering":
-            self.coordinator.api.run_zone(0, zone_number)
+            await self.coordinator.api.stop_zone(self.zone)
         elif self.entity_description.key == "auto_watering":
-            self.coordinator.api.suspend_zone(365, zone_number)
+            await self.coordinator.api.suspend_zone(
+                self.zone, dt_util.now() + timedelta(days=365)
+            )
+        self._attr_is_on = False
+        self.async_write_ha_state()
 
     def _update_attrs(self) -> None:
         """Update state attributes."""
-        zone_number = self.data["relay"]
-        timestr = self.coordinator.api.relays_by_zone_number[zone_number]["timestr"]
         if self.entity_description.key == "manual_watering":
-            self._attr_is_on = timestr == "Now"
+            self._attr_is_on = self.zone.scheduled_runs.current_run is not None
         elif self.entity_description.key == "auto_watering":
-            self._attr_is_on = timestr not in {"", "Now"}
+            self._attr_is_on = self.zone.status.suspended_until is None

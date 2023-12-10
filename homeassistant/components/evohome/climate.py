@@ -150,6 +150,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
             self._attr_unique_id = f"{evo_device.zoneId}z"
         else:
             self._attr_unique_id = evo_device.zoneId
+        self._evo_id = evo_device.zoneId
 
         self._attr_name = evo_device.name
 
@@ -189,24 +190,27 @@ class EvoZone(EvoChild, EvoClimateEntity):
         )
 
     @property
-    def hvac_mode(self) -> HVACMode:
+    def hvac_mode(self) -> HVACMode | None:
         """Return the current operating mode of a Zone."""
-        if self._evo_tcs.systemModeStatus["mode"] in (EVO_AWAY, EVO_HEATOFF):
+        if self._evo_tcs.system_mode in (EVO_AWAY, EVO_HEATOFF):
             return HVACMode.AUTO
-        is_off = self.target_temperature <= self.min_temp
-        return HVACMode.OFF if is_off else HVACMode.HEAT
+        if self.target_temperature is None:
+            return None
+        if self.target_temperature <= self.min_temp:
+            return HVACMode.OFF
+        return HVACMode.HEAT
 
     @property
-    def target_temperature(self) -> float:
+    def target_temperature(self) -> float | None:
         """Return the target temperature of a Zone."""
-        return self._evo_device.setpointStatus["targetHeatTemperature"]
+        return self._evo_device.target_heat_temperature
 
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
-        if self._evo_tcs.systemModeStatus["mode"] in (EVO_AWAY, EVO_HEATOFF):
-            return TCS_PRESET_TO_HA.get(self._evo_tcs.systemModeStatus["mode"])
-        return EVO_PRESET_TO_HA.get(self._evo_device.setpointStatus["setpointMode"])
+        if self._evo_tcs.system_mode in (EVO_AWAY, EVO_HEATOFF):
+            return TCS_PRESET_TO_HA.get(self._evo_tcs.system_mode)
+        return EVO_PRESET_TO_HA.get(self._evo_device.mode)
 
     @property
     def min_temp(self) -> float:
@@ -214,7 +218,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
         The default is 5, but is user-configurable within 5-35 (in Celsius).
         """
-        return self._evo_device.setpointCapabilities["minHeatSetpoint"]
+        return self._evo_device.min_heat_setpoint
 
     @property
     def max_temp(self) -> float:
@@ -222,17 +226,17 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
         The default is 35, but is user-configurable within 5-35 (in Celsius).
         """
-        return self._evo_device.setpointCapabilities["maxHeatSetpoint"]
+        return self._evo_device.max_heat_setpoint
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature."""
         temperature = kwargs["temperature"]
 
         if (until := kwargs.get("until")) is None:
-            if self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
+            if self._evo_device.mode == EVO_FOLLOW:
                 await self._update_schedule()
                 until = dt_util.parse_datetime(self.setpoints.get("next_sp_from", ""))
-            elif self._evo_device.setpointStatus["setpointMode"] == EVO_TEMPOVER:
+            elif self._evo_device.mode == EVO_TEMPOVER:
                 until = dt_util.parse_datetime(self._evo_device.setpointStatus["until"])
 
         until = dt_util.as_utc(until) if until else None
@@ -272,7 +276,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
             await self._evo_broker.call_client_api(self._evo_device.reset_mode())
             return
 
-        temperature = self._evo_device.setpointStatus["targetHeatTemperature"]
+        temperature = self._evo_device.target_heat_temperature
 
         if evo_preset_mode == EVO_TEMPOVER:
             await self._update_schedule()
@@ -311,6 +315,7 @@ class EvoController(EvoClimateEntity):
         super().__init__(evo_broker, evo_device)
 
         self._attr_unique_id = evo_device.systemId
+        self._evo_id = evo_device.systemId
         self._attr_name = evo_device.location.name
 
         modes = [m["systemMode"] for m in evo_broker.config["allowedSystemModes"]]
@@ -352,7 +357,7 @@ class EvoController(EvoClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return the current operating mode of a Controller."""
-        tcs_mode = self._evo_tcs.systemModeStatus["mode"]
+        tcs_mode = self._evo_tcs.system_mode
         return HVACMode.OFF if tcs_mode == EVO_HEATOFF else HVACMode.HEAT
 
     @property
@@ -362,16 +367,18 @@ class EvoController(EvoClimateEntity):
         Controllers do not have a current temp, but one is expected by HA.
         """
         temps = [
-            z.temperatureStatus["temperature"]
+            z.temperature
             for z in self._evo_tcs.zones.values()
-            if z.temperatureStatus["isAvailable"]
+            if z.temperature is not None
         ]
         return round(sum(temps) / len(temps), 1) if temps else None
 
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
-        return TCS_PRESET_TO_HA.get(self._evo_tcs.systemModeStatus["mode"])
+        if not self._evo_tcs.system_mode:
+            return None
+        return TCS_PRESET_TO_HA.get(self._evo_tcs.system_mode)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Raise exception as Controllers don't have a target temperature."""

@@ -26,7 +26,7 @@ class V2CBaseEntity(CoordinatorEntity[V2CUpdateCoordinator]):
         super().__init__(coordinator)
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.evse.host)},
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer="V2C",
             model="Trydan",
             name=coordinator.name,

@@ -1,4 +1,5 @@
 """Pushbullet Notification provider."""
+from __future__ import annotations
 
 from typing import Any
 
@@ -10,7 +11,7 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from .const import DATA_UPDATED
 
 
-class PushBulletNotificationProvider(Listener):
+class PushBulletNotificationProvider(Listener):  # type: ignore[misc]
     """Provider for an account, leading to one or more sensors."""
 
     def __init__(self, hass: HomeAssistant, pushbullet: PushBullet) -> None:

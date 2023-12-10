@@ -110,6 +110,10 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "EC0BAE*",
     },
     {
+        "domain": "broadlink",
+        "macaddress": "780F77*",
+    },
+    {
         "domain": "dlink",
         "hostname": "dsp-w215",
     },

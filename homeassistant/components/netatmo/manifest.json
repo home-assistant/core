@@ -7,7 +7,7 @@
   "dependencies": ["application_credentials", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/netatmo",
   "homekit": {
-    "models": ["Healty Home Coach", "Netatmo Relay", "Presence", "Welcome"]
+    "models": ["Healthy Home Coach", "Netatmo Relay", "Presence", "Welcome"]
   },
   "integration_type": "hub",
   "iot_class": "cloud_polling",

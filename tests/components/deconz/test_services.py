@@ -349,7 +349,10 @@ async def test_service_refresh_devices_trigger_no_state_update(
 
 
 async def test_remove_orphaned_entries_service(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test service works and also don't remove more than expected."""
     data = {
@@ -374,7 +377,6 @@ async def test_remove_orphaned_entries_service(
     with patch.dict(DECONZ_WEB_REQUEST, data):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "123")},
@@ -391,7 +393,6 @@ async def test_remove_orphaned_entries_service(
         == 5  # Host, gateway, light, switch and orphan
     )
 
-    entity_registry = er.async_get(hass)
     entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
         DECONZ_DOMAIN,

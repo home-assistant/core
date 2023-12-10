@@ -270,6 +270,8 @@ class HaBleakClientWrapper(BleakClient):
         """Connect to the specified GATT server."""
         assert models.MANAGER is not None
         manager = models.MANAGER
+        if manager.shutdown:
+            raise BleakError("Bluetooth is already shutdown")
         if debug_logging := _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug("%s: Looking for backend to connect", self.__address)
         wrapped_backend = self._async_get_best_available_backend_and_device(manager)
@@ -281,7 +283,6 @@ class HaBleakClientWrapper(BleakClient):
                 self.__disconnected_callback
             ),
             timeout=self.__timeout,
-            hass=manager.hass,
         )
         if debug_logging:
             # Only lookup the description if we are going to log it

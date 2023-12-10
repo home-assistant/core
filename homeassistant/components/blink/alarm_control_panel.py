@@ -104,4 +104,3 @@ class BlinkSyncModuleHA(
             raise HomeAssistantError("Blink failed to arm camera away") from er
 
         await self.coordinator.async_refresh()
-        self.async_write_ha_state()

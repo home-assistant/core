@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Generator, Sequence
 import logging
+import math
 from typing import Any, TypeVar
 
 import voluptuous as vol
@@ -13,7 +14,11 @@ from zwave_js_server.const.command_class.notification import NotificationType
 from zwave_js_server.exceptions import FailedZWaveCommand, SetValueFailed
 from zwave_js_server.model.endpoint import Endpoint
 from zwave_js_server.model.node import Node as ZwaveNode
-from zwave_js_server.model.value import ValueDataType, get_value_id_str
+from zwave_js_server.model.value import (
+    ConfigurationValueFormat,
+    ValueDataType,
+    get_value_id_str,
+)
 from zwave_js_server.util.multicast import async_multicast_set_value
 from zwave_js_server.util.node import (
     async_bulk_set_partial_config_parameters,
@@ -58,6 +63,13 @@ def parameter_name_does_not_need_bitmask(
     return val
 
 
+def check_base_2(val: int) -> int:
+    """Check if value is a power of 2."""
+    if not math.log2(val).is_integer():
+        raise vol.Invalid("Value must be a power of 2.")
+    return val
+
+
 def broadcast_command(val: dict[str, Any]) -> dict[str, Any]:
     """Validate that the service call is for a broadcast command."""
     if val.get(const.ATTR_BROADCAST):
@@ -78,10 +90,10 @@ def get_valid_responses_from_results(
 
 
 def raise_exceptions_from_results(
-    zwave_objects: Sequence[ZwaveNode | Endpoint],
-    results: Sequence[Any],
+    zwave_objects: Sequence[T], results: Sequence[Any]
 ) -> None:
     """Raise list of exceptions from a list of results."""
+    errors: Sequence[tuple[T, Any]]
     if errors := [
         tup for tup in zip(zwave_objects, results) if isinstance(tup[1], Exception)
     ]:
@@ -263,9 +275,18 @@ class ZWaveServices:
                         vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(
                             vol.Coerce(int), BITMASK_SCHEMA, cv.string
                         ),
+                        vol.Inclusive(const.ATTR_VALUE_SIZE, "raw"): vol.All(
+                            vol.Coerce(int), vol.Range(min=1, max=4), check_base_2
+                        ),
+                        vol.Inclusive(const.ATTR_VALUE_FORMAT, "raw"): vol.Coerce(
+                            ConfigurationValueFormat
+                        ),
                     },
                     cv.has_at_least_one_key(
                         ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_AREA_ID
+                    ),
+                    cv.has_at_most_one_key(
+                        const.ATTR_CONFIG_PARAMETER_BITMASK, const.ATTR_VALUE_SIZE
                     ),
                     parameter_name_does_not_need_bitmask,
                     get_nodes_from_service_data,
@@ -487,7 +508,33 @@ class ZWaveServices:
         property_or_property_name = service.data[const.ATTR_CONFIG_PARAMETER]
         property_key = service.data.get(const.ATTR_CONFIG_PARAMETER_BITMASK)
         new_value = service.data[const.ATTR_CONFIG_VALUE]
+        value_size = service.data.get(const.ATTR_VALUE_SIZE)
+        value_format = service.data.get(const.ATTR_VALUE_FORMAT)
 
+        nodes_without_endpoints: set[ZwaveNode] = set()
+        # Remove nodes that don't have the specified endpoint
+        for node in nodes:
+            if endpoint not in node.endpoints:
+                nodes_without_endpoints.add(node)
+        nodes = nodes.difference(nodes_without_endpoints)
+        if not nodes:
+            raise HomeAssistantError(
+                "None of the specified nodes have the specified endpoint"
+            )
+        if nodes_without_endpoints and _LOGGER.isEnabledFor(logging.WARNING):
+            _LOGGER.warning(
+                (
+                    "The following nodes do not have endpoint %x and will be "
+                    "skipped: %s"
+                ),
+                endpoint,
+                nodes_without_endpoints,
+            )
+
+        # If value_size isn't provided, we will use the utility function which includes
+        # additional checks and protections. If it is provided, we will use the
+        # node.async_set_raw_config_parameter_value method which calls the
+        # Configuration CC set API.
         results = await asyncio.gather(
             *(
                 async_set_config_parameter(
@@ -497,23 +544,42 @@ class ZWaveServices:
                     property_key=property_key,
                     endpoint=endpoint,
                 )
+                if value_size is None
+                else node.endpoints[endpoint].async_set_raw_config_parameter_value(
+                    new_value,
+                    property_or_property_name,
+                    property_key=property_key,
+                    value_size=value_size,
+                    value_format=value_format,
+                )
                 for node in nodes
             ),
             return_exceptions=True,
         )
-        nodes_list = list(nodes)
-        for node, result in get_valid_responses_from_results(nodes_list, results):
-            zwave_value = result[0]
-            cmd_status = result[1]
-            if cmd_status == CommandStatus.ACCEPTED:
-                msg = "Set configuration parameter %s on Node %s with value %s"
-            else:
-                msg = (
-                    "Added command to queue to set configuration parameter %s on Node "
-                    "%s with value %s. Parameter will be set when the device wakes up"
-                )
-            _LOGGER.info(msg, zwave_value, node, new_value)
-        raise_exceptions_from_results(nodes_list, results)
+
+        def process_results(
+            nodes_or_endpoints_list: list[T], _results: list[Any]
+        ) -> None:
+            """Process results for given nodes or endpoints."""
+            for node_or_endpoint, result in get_valid_responses_from_results(
+                nodes_or_endpoints_list, _results
+            ):
+                zwave_value = result[0]
+                cmd_status = result[1]
+                if cmd_status.status == CommandStatus.ACCEPTED:
+                    msg = "Set configuration parameter %s on Node %s with value %s"
+                else:
+                    msg = (
+                        "Added command to queue to set configuration parameter %s on %s "
+                        "with value %s. Parameter will be set when the device wakes up"
+                    )
+                _LOGGER.info(msg, zwave_value, node_or_endpoint, new_value)
+            raise_exceptions_from_results(nodes_or_endpoints_list, _results)
+
+        if value_size is None:
+            process_results(list(nodes), results)
+        else:
+            process_results([node.endpoints[endpoint] for node in nodes], results)
 
     async def async_bulk_set_partial_config_parameters(
         self, service: ServiceCall
@@ -605,7 +671,7 @@ class ZWaveServices:
         results = await asyncio.gather(*coros, return_exceptions=True)
         nodes_list = list(nodes)
         # multiple set_values my fail so we will track the entire list
-        set_value_failed_nodes_list: list[ZwaveNode | Endpoint] = []
+        set_value_failed_nodes_list: list[ZwaveNode] = []
         set_value_failed_error_list: list[SetValueFailed] = []
         for node_, result in get_valid_responses_from_results(nodes_list, results):
             if result and result.status not in SET_VALUE_SUCCESS:

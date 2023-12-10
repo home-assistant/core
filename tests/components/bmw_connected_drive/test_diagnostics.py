@@ -45,6 +45,7 @@ async def test_config_entry_diagnostics(
 async def test_device_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
     bmw_fixture,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -56,7 +57,6 @@ async def test_device_diagnostics(
 
     mock_config_entry = await setup_mocked_integration(hass)
 
-    device_registry = dr.async_get(hass)
     reg_device = device_registry.async_get_device(
         identifiers={(DOMAIN, "WBY00000000REXI01")},
     )
@@ -73,6 +73,7 @@ async def test_device_diagnostics(
 async def test_device_diagnostics_vehicle_not_found(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
     bmw_fixture,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -84,7 +85,6 @@ async def test_device_diagnostics_vehicle_not_found(
 
     mock_config_entry = await setup_mocked_integration(hass)
 
-    device_registry = dr.async_get(hass)
     reg_device = device_registry.async_get_device(
         identifiers={(DOMAIN, "WBY00000000REXI01")},
     )
