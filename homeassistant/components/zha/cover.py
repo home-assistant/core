@@ -103,10 +103,15 @@ class ZhaCover(ZhaEntity, CoverEntity):
 
     @property
     def is_closed(self) -> bool | None:
-        """Return if the cover is closed."""
-        if self.current_cover_position is None:
+        """
+        Return if the cover is closed.
+        
+        Consider cover closed only if both tilt and lift are 0.
+        If cover doesn't support tilt, only care about lift.
+        """
+        if self._current_position is None:
             return None
-        return self.current_cover_position == 0
+        return self._current_position == 0 and getattr(self, "_tilt_position", 0) == 0
 
     @property
     def is_opening(self) -> bool:
