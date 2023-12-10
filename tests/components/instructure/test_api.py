@@ -9,6 +9,7 @@ from . import (
     ANNOUNCEMENT_ENTITY_CONSTANT,
     ASSIGNMENT_ENTITY_CONSTANT,
     CONVERSATION_ENTITY_CONSTANT,
+    GRADES_ENTITY_CONSTANT,
     MOCK_ANNOUNCEMENTS,
     MOCK_CONVERSATIONS,
     MOCK_TWO_ASSIGNMENTS,
@@ -212,3 +213,17 @@ async def test_async_get_assignments_empty_result(mock_get) -> None:
 #     grades = await canvas_api.async_get_grades(["course_id"])
 
 #     assert MOCK_GRADES["grade-1"] == grades.get("submission-4")
+
+
+@patch("httpx.AsyncClient.get")
+async def test_async_get_grades_empty_result(mock_get) -> None:
+    """Test getting grades with an empty result."""
+    mock_get.return_value = AsyncMock(
+        status_code=200,
+        content=json.dumps([]).encode("utf-8"),
+    )
+
+    grades = await canvas_api.async_get_grades(["course_id"])
+
+    assert len(grades) == 1
+    assert grades == {f"submission-{GRADES_ENTITY_CONSTANT}": {}}
