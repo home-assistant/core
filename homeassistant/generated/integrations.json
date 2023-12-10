@@ -5545,6 +5545,12 @@
       "config_flow": true,
       "iot_class": "calculated"
     },
+    "sunweg": {
+      "name": "Sun WEG",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "supervisord": {
       "name": "Supervisord",
       "integration_type": "hub",
@@ -5795,6 +5801,12 @@
           "name": "Tesla Wall Connector"
         }
       }
+    },
+    "tessie": {
+      "name": "Tessie",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "tfiac": {
       "name": "Tfiac",
