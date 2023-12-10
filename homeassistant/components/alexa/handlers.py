@@ -1322,7 +1322,7 @@ async def async_api_set_range(
         range_value = int(range_value)
         if supported & cover.CoverEntityFeature.CLOSE_TILT and range_value == 0:
             service = cover.SERVICE_CLOSE_COVER_TILT
-        elif supported & cover.CoverEntityFeature.CLOSE_TILT and range_value == 100:
+        elif supported & cover.CoverEntityFeature.OPEN_TILT and range_value == 100:
             service = cover.SERVICE_OPEN_COVER_TILT
         else:
             service = cover.SERVICE_SET_COVER_TILT_POSITION
@@ -1333,7 +1333,7 @@ async def async_api_set_range(
         range_value = int(range_value)
         if range_value == 0:
             service = fan.SERVICE_TURN_OFF
-        elif supported and fan.FanEntityFeature.SET_SPEED:
+        elif supported & fan.FanEntityFeature.SET_SPEED:
             service = fan.SERVICE_SET_PERCENTAGE
             data[fan.ATTR_PERCENTAGE] = range_value
         else:

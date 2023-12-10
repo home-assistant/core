@@ -1937,6 +1937,18 @@ async def test_group(hass: HomeAssistant) -> None:
             CoverEntityFeature.SET_POSITION,
             "cover.set_cover_position",
         ),
+        (
+            0,
+            0,
+            CoverEntityFeature.SET_POSITION | CoverEntityFeature.OPEN,
+            "cover.set_cover_position",
+        ),
+        (
+            100,
+            100,
+            CoverEntityFeature.SET_POSITION | CoverEntityFeature.CLOSE,
+            "cover.set_cover_position",
+        ),
     ],
     ids=[
         "position_30_open_close",
@@ -1946,6 +1958,8 @@ async def test_group(hass: HomeAssistant) -> None:
         "position_0_no_open_close",
         "position_60_no_open_close",
         "position_100_no_open_close",
+        "position_0_no_close",
+        "position_100_no_open",
     ],
 )
 async def test_cover_position(
@@ -3621,6 +3635,18 @@ async def test_presence_sensor(hass: HomeAssistant) -> None:
             CoverEntityFeature.SET_TILT_POSITION,
             "cover.set_cover_tilt_position",
         ),
+        (
+            0,
+            0,
+            CoverEntityFeature.SET_TILT_POSITION | CoverEntityFeature.OPEN_TILT,
+            "cover.set_cover_tilt_position",
+        ),
+        (
+            100,
+            100,
+            CoverEntityFeature.SET_TILT_POSITION | CoverEntityFeature.CLOSE_TILT,
+            "cover.set_cover_tilt_position",
+        ),
     ],
     ids=[
         "tilt_position_30_open_close",
@@ -3630,6 +3656,8 @@ async def test_presence_sensor(hass: HomeAssistant) -> None:
         "tilt_position_0_no_open_close",
         "tilt_position_60_no_open_close",
         "tilt_position_100_no_open_close",
+        "tilt_position_0_no_close",
+        "tilt_position_100_no_open",
     ],
 )
 async def test_cover_tilt_position(
