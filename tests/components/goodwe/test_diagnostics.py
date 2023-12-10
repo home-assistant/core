@@ -20,6 +20,7 @@ async def test_entry_diagnostics(
     mock_inverter: MagicMock,
 ) -> None:
     """Test config entry diagnostics."""
+
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "localhost", CONF_MODEL_FAMILY: "ET"},

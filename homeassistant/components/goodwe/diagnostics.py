@@ -21,6 +21,7 @@ async def async_get_config_entry_diagnostics(
         "config_entry": config_entry.as_dict(),
         "inverter": {
             "model_name": inverter.model_name,
+            "rated_power": inverter.rated_power,
             "firmware": inverter.firmware,
             "arm_firmware": inverter.arm_firmware,
             "dsp1_version": inverter.dsp1_version,

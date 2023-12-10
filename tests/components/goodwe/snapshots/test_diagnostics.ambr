@@ -20,13 +20,14 @@
     }),
     'inverter': dict({
       'arm_firmware': 'dummy.arm.version',
-      'arm_svn_version': 1,
+      'arm_svn_version': 2,
       'arm_version': 1,
-      'dsp1_version': 0,
-      'dsp2_version': 0,
-      'dsp_svn_version': 0,
+      'dsp1_version': 3,
+      'dsp2_version': 4,
+      'dsp_svn_version': 5,
       'firmware': 'dummy.fw.version',
       'model_name': 'MOCK',
+      'rated_power': 10000,
     }),
   })
 # ---
