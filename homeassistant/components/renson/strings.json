@@ -133,12 +133,6 @@
           "breeze": "[%key:component::renson::entity::sensor::ventilation_level::state::breeze%]"
         }
       },
-      "start_day_time": {
-        "name": "Start day time"
-      },
-      "start_night_time": {
-        "name": "Start night time"
-      },
       "day_pollution_level": {
         "name": "Day pollution level",
         "state": {
