@@ -257,6 +257,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         updated_ip_port = {
             "AccessoryIP": discovery_info.host,
+            "AccessoryIPs": discovery_info.addresses,
             "AccessoryPort": discovery_info.port,
         }
         # If the device is already paired and known to us we should monitor c#
