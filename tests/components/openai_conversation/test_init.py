@@ -2,7 +2,12 @@
 from unittest.mock import AsyncMock, patch
 
 from httpx import Response
-from openai import RateLimitError
+from openai import (
+    APIConnectionError,
+    AuthenticationError,
+    BadRequestError,
+    RateLimitError,
+)
 from openai.types.chat.chat_completion import ChatCompletion, Choice
 from openai.types.chat.chat_completion_message import ChatCompletionMessage
 from openai.types.completion_usage import CompletionUsage
@@ -15,6 +20,7 @@ from homeassistant.components import conversation
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry as ar, device_registry as dr, intent
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -323,3 +329,34 @@ async def test_generate_image_service_error(
             blocking=True,
             return_response=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (APIConnectionError(request=None), "Connection error"),
+        (
+            AuthenticationError(
+                response=Response(status_code=None, request=""), body=None, message=None
+            ),
+            "Invalid API key",
+        ),
+        (
+            BadRequestError(
+                response=Response(status_code=None, request=""), body=None, message=None
+            ),
+            "openai_conversation integration not ready yet: None",
+        ),
+    ],
+)
+async def test_init_error(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, caplog, side_effect, error
+) -> None:
+    """Test initialization errors."""
+    with patch(
+        "openai.resources.models.AsyncModels.list",
+        side_effect=side_effect,
+    ):
+        assert await async_setup_component(hass, "openai_conversation", {})
+        await hass.async_block_till_done()
+        assert error in caplog.text
