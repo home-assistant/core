@@ -322,7 +322,7 @@ async def test_add_item_failure(
         ),
         (
             {"due_datetime": "2023-11-18T08:30:00-06:00"},
-            ["SUMMARY:Cheese", "DUE:20231118T143000Z"],
+            ["SUMMARY:Cheese", "DUE;TZID=America/Regina:20231118T083000"],
             "1",
             {**RESULT_ITEM, "due": "2023-11-18T08:30:00-06:00"},
         ),
