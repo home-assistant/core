@@ -3,7 +3,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
-from lmcloud.const import MODEL_GS3_AV, MODEL_GS3_MP, MODEL_LM, MODEL_LMU
+from lmcloud.const import LaMarzoccoModel
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -99,10 +99,10 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         control_fn=lambda client, state: client.set_power(state),
         is_on_fn=lambda client: client.current_status["power"],
         extra_attributes={
-            MODEL_GS3_AV: ATTR_MAP_MAIN_GS3_AV,
-            MODEL_GS3_MP: None,
-            MODEL_LM: None,
-            MODEL_LMU: None,
+            LaMarzoccoModel.GS3_AV: ATTR_MAP_MAIN_GS3_AV,
+            LaMarzoccoModel.GS3_MP: None,
+            LaMarzoccoModel.LINEA_MINI: None,
+            LaMarzoccoModel.LINEA_MICRA: None,
         },
     ),
     LaMarzoccoSwitchEntityDescription(
@@ -113,10 +113,10 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         is_on_fn=lambda client: client.current_status["global_auto"] == "Enabled",
         entity_category=EntityCategory.CONFIG,
         extra_attributes={
-            MODEL_GS3_AV: ATTR_MAP_AUTO_ON_OFF,
-            MODEL_GS3_MP: ATTR_MAP_AUTO_ON_OFF,
-            MODEL_LM: ATTR_MAP_AUTO_ON_OFF,
-            MODEL_LMU: ATTR_MAP_AUTO_ON_OFF,
+            LaMarzoccoModel.GS3_AV: ATTR_MAP_AUTO_ON_OFF,
+            LaMarzoccoModel.GS3_MP: ATTR_MAP_AUTO_ON_OFF,
+            LaMarzoccoModel.LINEA_MINI: ATTR_MAP_AUTO_ON_OFF,
+            LaMarzoccoModel.LINEA_MICRA: ATTR_MAP_AUTO_ON_OFF,
         },
     ),
     LaMarzoccoSwitchEntityDescription(
@@ -127,9 +127,9 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         is_on_fn=lambda client: client.current_status["enable_prebrewing"],
         entity_category=EntityCategory.CONFIG,
         extra_attributes={
-            MODEL_GS3_AV: ATTR_MAP_PREBREW_GS3_AV,
-            MODEL_LM: ATTR_MAP_PREBREW_LM,
-            MODEL_LMU: ATTR_MAP_PREBREW_LM,
+            LaMarzoccoModel.GS3_AV: ATTR_MAP_PREBREW_GS3_AV,
+            LaMarzoccoModel.LINEA_MINI: ATTR_MAP_PREBREW_LM,
+            LaMarzoccoModel.LINEA_MICRA: ATTR_MAP_PREBREW_LM,
         },
     ),
     LaMarzoccoSwitchEntityDescription(
@@ -140,9 +140,9 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         is_on_fn=lambda client: client.current_status["enable_preinfusion"],
         entity_category=EntityCategory.CONFIG,
         extra_attributes={
-            MODEL_GS3_AV: ATTR_MAP_PREINFUSION_GS3_AV,
-            MODEL_LM: ATTR_MAP_PREINFUSION_LM,
-            MODEL_LMU: ATTR_MAP_PREINFUSION_LM,
+            LaMarzoccoModel.GS3_AV: ATTR_MAP_PREINFUSION_GS3_AV,
+            LaMarzoccoModel.LINEA_MINI: ATTR_MAP_PREINFUSION_LM,
+            LaMarzoccoModel.LINEA_MICRA: ATTR_MAP_PREINFUSION_LM,
         },
     ),
     LaMarzoccoSwitchEntityDescription(
