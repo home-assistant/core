@@ -102,8 +102,6 @@ def _to_ics_fields(item: TodoItem) -> dict[str, Any]:
             item_data["due"] = dt_util.as_utc(due)
         elif isinstance(due, date):
             item_data["due"] = due
-        else:
-            item_data["due"] = dt_util.as_utc(dt_util.parse_datetime(due))
     if description := item.description:
         item_data["description"] = description
     return item_data
