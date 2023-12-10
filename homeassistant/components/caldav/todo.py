@@ -161,7 +161,7 @@ class WebDavTodoListEntity(TodoListEntity):
         vtodo = todo.icalendar_component  # type: ignore[attr-defined]
         updated_fields = _to_ics_fields(item)
         if "due" in updated_fields:
-            todo.set_due(updated_fields.pop("due"))
+            todo.set_due(updated_fields.pop("due"))  # type: ignore[attr-defined]
         vtodo.update(**updated_fields)
         try:
             await self.hass.async_add_executor_job(
