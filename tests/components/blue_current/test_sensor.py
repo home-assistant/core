@@ -59,7 +59,7 @@ charge_point_entity_ids = {
     "total_cost": "total_cost",
     "average_current": "avg_current",
     "average_voltage": "avg_voltage",
-    "total_kw": "total_kw",
+    "total_power": "total_kw",
     "vehicle_status": "vehicle_status",
     "energy_usage": "actual_kwh",
     "max_usage": "max_usage",

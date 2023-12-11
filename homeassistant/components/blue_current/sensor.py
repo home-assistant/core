@@ -9,6 +9,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CURRENCY_EURO,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -117,7 +118,7 @@ SENSORS = (
     ),
     SensorEntityDescription(
         key="total_cost",
-        native_unit_of_measurement="EUR",
+        native_unit_of_measurement=CURRENCY_EURO,
         device_class=SensorDeviceClass.MONETARY,
         translation_key="total_cost",
     ),
@@ -259,11 +260,11 @@ class ChargePointSensor(ChargepointEntity, SensorEntity):
                 self._attr_native_value is None or self._attr_native_value < new_value
             ):
                 return
-            self._attr_available = True
+            self.has_value = True
             self._attr_native_value = new_value
 
         elif self.key not in TIMESTAMP_KEYS:
-            self._attr_available = False
+            self.has_value = False
 
 
 class GridSensor(BlueCurrentEntity, SensorEntity):
@@ -288,8 +289,8 @@ class GridSensor(BlueCurrentEntity, SensorEntity):
         new_value = self.connector.grid.get(self.key)
 
         if new_value is not None:
-            self._attr_available = True
+            self.has_value = True
             self._attr_native_value = new_value
 
         else:
-            self._attr_available = False
+            self.has_value = False

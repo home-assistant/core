@@ -7,12 +7,7 @@ from bluecurrent_api.client import Client
 from bluecurrent_api.exceptions import RequestLimitReached, WebsocketError
 import pytest
 
-from homeassistant.components.blue_current import (
-    DOMAIN,
-    Connector,
-    async_setup_entry,
-    set_entities_unavalible,
-)
+from homeassistant.components.blue_current import DOMAIN, Connector, async_setup_entry
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -49,39 +44,6 @@ async def test_config_not_ready(hass: HomeAssistant) -> None:
         config_entry.add_to_hass(hass)
 
         await async_setup_entry(hass, config_entry)
-
-
-async def test_set_entities_unavalible(hass: HomeAssistant) -> None:
-    """Tests set_entities_unavailable."""
-
-    data = {"101": {"model_type": "hidden", "evse_id": "101", "name": ""}}
-
-    charge_point = {
-        "actual_v1": 14,
-        "actual_v2": 18,
-        "actual_v3": 15,
-        "actual_p1": 19,
-        "actual_p2": 14,
-        "actual_p3": 15,
-    }
-
-    entity_ids = [
-        "voltage_phase_1",
-        "voltage_phase_2",
-        "voltage_phase_3",
-        "current_phase_1",
-        "current_phase_2",
-        "current_phase_3",
-    ]
-
-    await init_integration(hass, "sensor", data, charge_point)
-
-    set_entities_unavalible(hass, "uuid")
-
-    for entity_id in entity_ids:
-        state = hass.states.get(f"sensor.101_{entity_id}")
-        assert state
-        assert state.state == "unavailable"
 
 
 async def test_on_data(hass: HomeAssistant) -> None:

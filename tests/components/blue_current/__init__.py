@@ -31,6 +31,7 @@ async def init_integration(
         self.client = client
         self.charge_points = data
         self.grid = grid
+        self.available = True
 
     with patch(
         "homeassistant.components.blue_current.PLATFORMS", [platform]

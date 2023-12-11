@@ -68,7 +68,7 @@
         "name": "Average current"
       },
       "total_kw": {
-        "name": "Total kw"
+        "name": "Total power"
       },
       "actual_kwh": {
         "name": "Energy usage"

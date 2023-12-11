@@ -14,15 +14,9 @@ from bluecurrent_api.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_NAME,
-    CONF_API_TOKEN,
-    EVENT_HOMEASSISTANT_STOP,
-    Platform,
-)
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.const import ATTR_NAME, CONF_API_TOKEN, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
@@ -45,6 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     client = Client()
     api_token = config_entry.data[CONF_API_TOKEN]
     connector = Connector(hass, config_entry, client)
+
     try:
         await connector.connect(api_token)
     except InvalidApiToken:
@@ -60,33 +55,21 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data[DOMAIN][config_entry.entry_id] = connector
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    async def _async_disconnect_websocket(_: Event) -> None:
-        await connector.disconnect()
-
-    config_entry.async_on_unload(
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, _async_disconnect_websocket
-        )
-    )
+    config_entry.async_on_unload(connector.disconnect)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload the Blue Current config entry."""
-    connector: Connector = hass.data[DOMAIN].pop(config_entry.entry_id)
-    hass.async_create_task(connector.disconnect())
 
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(config_entry.entry_id)
 
-
-def set_entities_unavalible(hass: HomeAssistant, config_id: str) -> None:
-    """Set all Blue Current entities to unavailable."""
-    registry = er.async_get(hass)
-    entries = er.async_entries_for_config_entry(registry, config_id)
-
-    for entry in entries:
-        entry.write_unavailable_state(hass)
+    return unload_ok
 
 
 class Connector:
@@ -101,10 +84,12 @@ class Connector:
         self.client: Client = client
         self.charge_points: dict[str, dict] = {}
         self.grid: dict[str, Any] = {}
+        self.available = False
 
     async def connect(self, token: str) -> None:
         """Register on_data and connect to the websocket."""
         await self.client.connect(token)
+        self.available = True
 
     async def on_data(self, message: dict) -> None:
         """Handle received data."""
@@ -179,12 +164,12 @@ class Connector:
             self.hass.loop.create_task(self.start_loop())
             await self.client.get_charge_points()
         except RequestLimitReached:
-            set_entities_unavalible(self.hass, self.config.entry_id)
+            self.available = False
             async_call_later(
                 self.hass, self.client.get_next_reset_delta(), self.reconnect
             )
         except WebsocketError:
-            set_entities_unavalible(self.hass, self.config.entry_id)
+            self.available = False
             async_call_later(self.hass, LARGE_DELAY, self.reconnect)
 
     async def disconnect(self) -> None:

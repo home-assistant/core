@@ -19,6 +19,7 @@ class BlueCurrentEntity(Entity):
         """Initialize the entity."""
         self.connector: Connector = connector
         self.signal: str = signal
+        self.has_value: bool = False
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -32,6 +33,11 @@ class BlueCurrentEntity(Entity):
         self.async_on_remove(async_dispatcher_connect(self.hass, self.signal, update))
 
         self.update_from_latest_data()
+
+    @property
+    def available(self) -> bool:
+        """Return entity availability."""
+        return self.connector.available and self.has_value
 
     @callback
     def update_from_latest_data(self) -> None:
