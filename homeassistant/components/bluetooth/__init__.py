@@ -21,11 +21,15 @@ from bluetooth_adapters import (
     adapter_unique_name,
     get_adapters,
 )
+from bluetooth_data_tools import monotonic_time_coarse as MONOTONIC_TIME
 from habluetooth import (
+    BaseHaScanner,
+    BluetoothScannerDevice,
     BluetoothScanningMode,
     HaBluetoothConnector,
     HaScanner,
     ScannerStartError,
+    set_manager,
 )
 from home_assistant_bluetooth import BluetoothServiceInfo, BluetoothServiceInfoBleak
 
@@ -65,11 +69,7 @@ from .api import (
     async_set_fallback_availability_interval,
     async_track_unavailable,
 )
-from .base_scanner import (
-    BaseHaScanner,
-    BluetoothScannerDevice,
-    HomeAssistantRemoteScanner,
-)
+from .base_scanner import HomeAssistantRemoteScanner
 from .const import (
     BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
     CONF_ADAPTER,
@@ -81,7 +81,7 @@ from .const import (
     LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS,
     SOURCE_LOCAL,
 )
-from .manager import MONOTONIC_TIME, HomeAssistantBluetoothManager
+from .manager import HomeAssistantBluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
 from .models import BluetoothCallback, BluetoothChange
 from .storage import BluetoothStorage
@@ -146,6 +146,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     manager = HomeAssistantBluetoothManager(
         hass, integration_matcher, bluetooth_adapters, bluetooth_storage, slot_manager
     )
+    set_manager(manager)
     await manager.async_setup()
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, lambda event: manager.async_stop()

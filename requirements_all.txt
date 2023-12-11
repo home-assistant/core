@@ -1396,7 +1396,7 @@ open-garage==0.2.0
 open-meteo==0.3.1
 
 # homeassistant.components.openai_conversation
-openai==0.27.2
+openai==1.3.8
 
 # homeassistant.components.opencv
 # opencv-python-headless==4.6.0.66
@@ -2357,7 +2357,7 @@ renault-api==0.2.0
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.8.2
+reolink-aio==0.8.3
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
