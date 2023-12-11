@@ -29,7 +29,6 @@ class LaMarzoccoEntity(CoordinatorEntity[LmApiCoordinator]):
     def __init__(
         self,
         coordinator: LmApiCoordinator,
-        hass: HomeAssistant,
         entity_description: LaMarzoccoEntityDescription,
     ) -> None:
         """Initialize the entity."""
