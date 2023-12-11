@@ -277,7 +277,7 @@ class ValveEntity(Entity):
     def _get_toggle_function(
         self, fns: dict[str, Callable[_P, _R]]
     ) -> Callable[_P, _R]:
-        if ValveEntityFeature.STOP | self.supported_features and (
+        if self.supported_features & ValveEntityFeature.STOP and (
             self.is_closing or self.is_opening
         ):
             return fns["stop"]
