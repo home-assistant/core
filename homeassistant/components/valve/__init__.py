@@ -133,10 +133,10 @@ class ValveEntity(Entity):
     _attr_is_closed: bool | None = None
     _attr_is_closing: bool | None = None
     _attr_is_opening: bool | None = None
+    _attr_reports_position: bool
     _attr_supported_features: ValveEntityFeature = ValveEntityFeature(0)
 
-    _valve_is_last_toggle_direction_open = True
-    _attr_reports_position: bool
+    __is_last_toggle_direction_open = True
 
     @property
     def reports_position(self) -> bool:
@@ -170,10 +170,10 @@ class ValveEntity(Entity):
         """Return the state of the valve."""
         reports_position = self.reports_position
         if self.is_opening:
-            self._valve_is_last_toggle_direction_open = True
+            self.__is_last_toggle_direction_open = True
             return STATE_OPENING
         if self.is_closing:
-            self._valve_is_last_toggle_direction_open = False
+            self.__is_last_toggle_direction_open = False
             return STATE_CLOSING
         if reports_position is True:
             if (current_valve_position := self.current_valve_position) is None:
@@ -249,7 +249,7 @@ class ValveEntity(Entity):
             return await self.async_stop_valve()
         if self.is_closed:
             return await self.async_handle_open_valve()
-        if self._valve_is_last_toggle_direction_open:
+        if self.__is_last_toggle_direction_open:
             return await self.async_handle_close_valve()
         return await self.async_handle_open_valve()
 
