@@ -22,6 +22,8 @@ from homeassistant.const import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_STOP_COVER,
+    STATE_OPEN,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -340,3 +342,51 @@ async def test_updating_manually(
     )
     await hass.async_block_till_done()
     assert called
+
+
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            "command_line": [
+                {
+                    "cover": {
+                        "command_state": "echo 10",
+                        "name": "Test",
+                        "availability": '{{ states("sensor.input1")=="on" }}',
+                    },
+                }
+            ]
+        }
+    ],
+)
+async def test_availability(hass: HomeAssistant, load_yaml_integration: None) -> None:
+    """Test availability."""
+
+    hass.states.async_set("sensor.input1", "on")
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(minutes=1),
+    )
+    await hass.async_block_till_done()
+
+    entity_state = hass.states.get("cover.test")
+    assert entity_state
+    assert entity_state.state == STATE_OPEN
+
+    hass.states.async_set("sensor.input1", "off")
+    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.command_line.utils.subprocess.check_output",
+        return_value=b"50\n",
+    ):
+        # Give time for template to load
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow() + timedelta(minutes=1),
+        )
+        await hass.async_block_till_done()
+
+    entity_state = hass.states.get("cover.test")
+    assert entity_state
+    assert entity_state.state == STATE_UNAVAILABLE

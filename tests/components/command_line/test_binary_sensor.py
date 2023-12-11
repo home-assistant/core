@@ -15,7 +15,7 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -289,3 +289,54 @@ async def test_updating_manually(
     )
     await hass.async_block_till_done()
     assert called
+
+
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            "command_line": [
+                {
+                    "binary_sensor": {
+                        "name": "Test",
+                        "command": "echo 10",
+                        "payload_on": "1.0",
+                        "payload_off": "0",
+                        "value_template": "{{ value | multiply(0.1) }}",
+                        "availability": '{{ states("sensor.input1")=="on" }}',
+                    }
+                }
+            ]
+        }
+    ],
+)
+async def test_availability(hass: HomeAssistant, load_yaml_integration: None) -> None:
+    """Test availability."""
+
+    hass.states.async_set("sensor.input1", "on")
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(minutes=1),
+    )
+    await hass.async_block_till_done()
+
+    entity_state = hass.states.get("binary_sensor.test")
+    assert entity_state
+    assert entity_state.state == STATE_ON
+
+    hass.states.async_set("sensor.input1", "off")
+    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.command_line.utils.subprocess.check_output",
+        return_value=b"0",
+    ):
+        # Give time for template to load
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow() + timedelta(minutes=1),
+        )
+        await hass.async_block_till_done()
+
+    entity_state = hass.states.get("binary_sensor.test")
+    assert entity_state
+    assert entity_state.state == STATE_UNAVAILABLE
