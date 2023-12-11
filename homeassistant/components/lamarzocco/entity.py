@@ -12,7 +12,7 @@ from .const import DOMAIN
 from .coordinator import LmApiCoordinator
 
 
-@dataclass
+@dataclass(kw_only = True)
 class LaMarzoccoEntityDescription(EntityDescription):
     """Description for all LM entities."""
 
