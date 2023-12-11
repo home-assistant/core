@@ -13,7 +13,6 @@ from homeassistant.components.valve import (
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_PLATFORM,
     SERVICE_SET_VALVE_POSITION,
     SERVICE_TOGGLE,
     STATE_CLOSED,
@@ -25,7 +24,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
@@ -45,6 +43,8 @@ class MockFlow(ConfigFlow):
 
 class MockValveEntity(ValveEntity):
     """Mock valve device to use in tests."""
+
+    _target_valve_position: int
 
     def __init__(
         self,
@@ -66,8 +66,30 @@ class MockValveEntity(ValveEntity):
             self._attr_device_class = device_class
 
     def set_valve_position(self, position: int) -> None:
-        """Mock implementantion for setting the valve's position."""
-        self._attr_current_valve_position = position
+        """Set the valve to opening or closing towards a target percentage."""
+        if position > self._attr_current_valve_position:
+            self._attr_is_closing = False
+            self._attr_is_opening = True
+        else:
+            self._attr_is_closing = True
+            self._attr_is_opening = False
+        self._target_valve_position = position
+        self.async_write_ha_state()
+
+    def stop_valve(self) -> None:
+        """Stop the valve."""
+        self._attr_is_closing = False
+        self._attr_is_opening = False
+        self._target_valve_position = None
+        self._attr_is_closed = self._attr_current_valve_position == 0
+        self.async_write_ha_state()
+
+    async def finish_movement(self):
+        """Set the value to the saved target and removes intermediate states."""
+        self._attr_current_valve_position = self._target_valve_position
+        self._attr_is_closing = False
+        self._attr_is_opening = False
+        self.async_write_ha_state()
 
 
 class MockBinaryValveEntity(ValveEntity):
@@ -87,6 +109,10 @@ class MockBinaryValveEntity(ValveEntity):
         self._attr_is_closed = is_closed
         self._attr_reports_position = False
 
+    def open_valve(self) -> None:
+        """Open the valve."""
+        self._attr_is_closed = False
+
     def close_valve(self) -> None:
         """Mock implementantion for sync close function."""
         self._attr_is_closed = True
@@ -101,8 +127,22 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
         yield
 
 
-async def test_valve_setup(hass: HomeAssistant) -> None:
-    """Test setup and tear down of valve platform and entity."""
+@pytest.fixture
+def mock_config_entry(hass) -> tuple[MockConfigEntry, list[ValveEntity]]:
+    """Mock a config entry which sets up a couple of valve entities."""
+    entities = [
+        MockBinaryValveEntity(
+            is_closed=False,
+            features=ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE,
+        ),
+        MockValveEntity(
+            current_position=50,
+            features=ValveEntityFeature.OPEN
+            | ValveEntityFeature.CLOSE
+            | ValveEntityFeature.STOP
+            | ValveEntityFeature.SET_POSITION,
+        ),
+    ]
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
@@ -130,16 +170,13 @@ async def test_valve_setup(hass: HomeAssistant) -> None:
         ),
     )
 
-    entity1 = MockValveEntity()
-    entity1.entity_id = "valve.mock_valve"
-
     async def async_setup_entry_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
         """Set up test platform via config entry."""
-        async_add_entities([entity1])
+        async_add_entities(entities)
 
     mock_platform(
         hass,
@@ -150,33 +187,46 @@ async def test_valve_setup(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=TEST_DOMAIN)
     config_entry.add_to_hass(hass)
 
+    return (config_entry, entities)
+
+
+async def test_valve_setup(hass: HomeAssistant, mock_config_entry) -> None:
+    """Test setup and tear down of valve platform and entity."""
+    config_entry = mock_config_entry[0]
+
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+    entity_id = mock_config_entry[1][0].entity_id
 
     assert config_entry.state == ConfigEntryState.LOADED
-    assert hass.states.get(entity1.entity_id)
+    assert hass.states.get(entity_id)
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
-    entity_state = hass.states.get(entity1.entity_id)
+    entity_state = hass.states.get(entity_id)
 
     assert entity_state
     assert entity_state.state == STATE_UNAVAILABLE
 
 
-async def test_services(hass: HomeAssistant) -> None:
+async def test_services(hass: HomeAssistant, mock_config_entry) -> None:
     """Test the provided services."""
-    platform = getattr(hass.components, "test.valve")
+    # platform = getattr(hass.components, "test.valve")
 
-    platform.init()
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
+    # platform.init()
+    # assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    # await hass.async_block_till_done()
 
     # ent1 = valve without position
     # ent2 = valve with position
-    ent1, ent2 = platform.ENTITIES
+    # ent1, ent2 = platform.ENTITIES
+    config_entry = mock_config_entry[0]
+    ent1, ent2 = mock_config_entry[1]
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Test init all valves should be open
     assert is_open(hass, ent1)
