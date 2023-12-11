@@ -52,7 +52,7 @@ dependencies    = [
     "python-slugify==4.0.1",
     "PyYAML==6.0.1",
     "requests==2.31.0",
-    "typing-extensions>=4.8.0,<5.0",
+    "typing-extensions>=4.9.0,<5.0",
     "ulid-transform==0.9.0",
     "voluptuous==0.13.1",
     "voluptuous-serialize==2.6.0",
