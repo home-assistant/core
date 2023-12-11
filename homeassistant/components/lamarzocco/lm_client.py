@@ -33,8 +33,8 @@ class LaMarzoccoClient(LMCloud):
 
     async def connect(self) -> None:
         """Connect to the machine."""
-        assert self.entry
-        assert self.hass
+        if not self.entry or not self.hass:
+            raise RuntimeError("Cannot connect without entry and hass")
 
         _LOGGER.debug("Initializing Cloud API")
         await self._init_cloud_api(

@@ -4,12 +4,6 @@ from unittest.mock import MagicMock
 import pytest
 
 from homeassistant.components.lamarzocco.const import DOMAIN
-from homeassistant.components.lamarzocco.switch import (
-    ATTR_MAP_AUTO_ON_OFF,
-    ATTR_MAP_MAIN_GS3_AV,
-    ATTR_MAP_PREBREW_GS3_AV,
-    ATTR_MAP_PREINFUSION_GS3_AV,
-)
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -44,10 +38,6 @@ async def test_main(
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "GS01234 Main"
     assert state.attributes.get(ATTR_ICON) == "mdi:power"
     assert state.state == STATE_ON
-
-    # test extra attributes
-    for key in ATTR_MAP_MAIN_GS3_AV:
-        assert state.attributes.get(key) == 1023
 
     entry = entity_registry.async_get(state.entity_id)
     assert entry
@@ -105,13 +95,6 @@ async def test_auto_on_off(
     assert state.attributes.get(ATTR_ICON) == "mdi:alarm"
     assert state.state == STATE_ON
 
-    # test extra attributes
-    for key in ATTR_MAP_AUTO_ON_OFF:
-        if "auto" in key:
-            assert state.attributes.get(key) == "Disabled"
-        else:
-            assert state.attributes.get(key) == "00:00"
-
     entry = entity_registry.async_get(state.entity_id)
     assert entry
     assert entry.device_id
@@ -168,13 +151,6 @@ async def test_prebrew(
     assert state.attributes.get(ATTR_ICON) == "mdi:water"
     assert state.state == STATE_ON
 
-    # test extra attributes
-    for key in ATTR_MAP_PREBREW_GS3_AV:
-        if "ton" in key:
-            assert state.attributes.get(key) == 3
-        else:
-            assert state.attributes.get(key) == 5
-
     entry = entity_registry.async_get(state.entity_id)
     assert entry
     assert entry.device_id
@@ -230,10 +206,6 @@ async def test_preinfusion(
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "GS01234 Preinfusion"
     assert state.attributes.get(ATTR_ICON) == "mdi:water"
     assert state.state == STATE_OFF
-
-    # test extra attributes
-    for key in ATTR_MAP_PREINFUSION_GS3_AV:
-        assert state.attributes.get(key) == 4
 
     entry = entity_registry.async_get(state.entity_id)
     assert entry

@@ -37,7 +37,7 @@
           "host": "[%key:common::config_flow::data::ip%]"
         },
         "data_description": {
-          "host": "Local IP address of the machine"
+          "host": "[%key:component::lamarzocco::config::step::machine_selection::data_description::host%]"
         }
       },
       "reauth_confirm": {
