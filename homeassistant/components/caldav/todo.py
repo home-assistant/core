@@ -98,10 +98,7 @@ def _to_ics_fields(item: TodoItem) -> dict[str, Any]:
     if status := item.status:
         item_data["status"] = TODO_STATUS_MAP_INV.get(status, "NEEDS-ACTION")
     if due := item.due:
-        if isinstance(due, datetime):
-            item_data["due"] = dt_util.as_utc(due).strftime("%Y%m%dT%H%M%SZ")
-        else:
-            item_data["due"] = due.strftime("%Y%m%d")
+        item_data["due"] = due
     if description := item.description:
         item_data["description"] = description
     return item_data
@@ -162,7 +159,10 @@ class WebDavTodoListEntity(TodoListEntity):
         except (requests.ConnectionError, DAVError) as err:
             raise HomeAssistantError(f"CalDAV lookup error: {err}") from err
         vtodo = todo.icalendar_component  # type: ignore[attr-defined]
-        vtodo.update(**_to_ics_fields(item))
+        updated_fields = _to_ics_fields(item)
+        if "due" in updated_fields:
+            todo.set_due(updated_fields.pop("due"))  # type: ignore[attr-defined]
+        vtodo.update(**updated_fields)
         try:
             await self.hass.async_add_executor_job(
                 partial(
