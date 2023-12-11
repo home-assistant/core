@@ -9,6 +9,7 @@ from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -966,7 +967,7 @@ async def test_entity_description_fallback() -> None:
     ent_with_description = entity.Entity()
     ent_with_description.entity_description = entity.EntityDescription(key="test")
 
-    for field in dataclasses.fields(entity.EntityDescription):
+    for field in dataclasses.fields(entity.EntityDescription._dataclass):
         if field.name == "key":
             continue
 
@@ -1657,3 +1658,51 @@ async def test_change_entity_id(
     assert len(result) == 2
     assert len(ent.added_calls) == 3
     assert len(ent.remove_calls) == 2
+
+
+def test_entity_description_as_dataclass(snapshot: SnapshotAssertion):
+    """Test EntityDescription behaves like a dataclass."""
+
+    obj = entity.EntityDescription("blah", device_class="test")
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        obj.name = "mutate"
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        delattr(obj, "name")
+
+    assert obj == snapshot
+    assert obj == entity.EntityDescription("blah", device_class="test")
+    assert repr(obj) == snapshot
+
+
+def test_extending_entity_description(snapshot: SnapshotAssertion):
+    """Test extending entity descriptions."""
+
+    @dataclasses.dataclass(frozen=True)
+    class FrozenEntityDescription(entity.EntityDescription):
+        extra: str = None
+
+    obj = FrozenEntityDescription("blah", extra="foo", name="name")
+    assert obj == snapshot
+    assert obj == FrozenEntityDescription("blah", extra="foo", name="name")
+    assert repr(obj) == snapshot
+
+    # Try mutating
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        obj.name = "mutate"
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        delattr(obj, "name")
+
+    @dataclasses.dataclass
+    class ThawedEntityDescription(entity.EntityDescription):
+        extra: str = None
+
+    obj = ThawedEntityDescription("blah", extra="foo", name="name")
+    assert obj == snapshot
+    assert obj == ThawedEntityDescription("blah", extra="foo", name="name")
+    assert repr(obj) == snapshot
+
+    # Try mutating
+    obj.name = "mutate"
+    assert obj.name == "mutate"
+    delattr(obj, "key")
+    assert not hasattr(obj, "key")
