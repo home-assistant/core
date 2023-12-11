@@ -4,7 +4,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntFlag, StrEnum
-import functools as ft
 import logging
 from typing import Any, final
 
@@ -218,7 +217,7 @@ class ValveEntity(Entity):
 
     async def async_open_valve(self) -> None:
         """Open the valve."""
-        await self.hass.async_add_executor_job(ft.partial(self.open_valve))
+        await self.hass.async_add_executor_job(self.open_valve)
 
     @final
     async def async_handle_open_valve(self) -> None:
@@ -233,7 +232,7 @@ class ValveEntity(Entity):
 
     async def async_close_valve(self) -> None:
         """Close valve."""
-        await self.hass.async_add_executor_job(ft.partial(self.close_valve))
+        await self.hass.async_add_executor_job(self.close_valve)
 
     @final
     async def async_handle_close_valve(self) -> None:
@@ -260,9 +259,7 @@ class ValveEntity(Entity):
 
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
-        await self.hass.async_add_executor_job(
-            ft.partial(self.set_valve_position, position)
-        )
+        await self.hass.async_add_executor_job(self.set_valve_position, position)
 
     def stop_valve(self) -> None:
         """Stop the valve."""
@@ -270,4 +267,4 @@ class ValveEntity(Entity):
 
     async def async_stop_valve(self) -> None:
         """Stop the valve."""
-        await self.hass.async_add_executor_job(ft.partial(self.stop_valve))
+        await self.hass.async_add_executor_job(self.stop_valve)
