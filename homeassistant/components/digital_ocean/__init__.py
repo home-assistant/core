@@ -8,7 +8,7 @@ import digitalocean
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
@@ -98,13 +98,20 @@ class DigitalOcean:
         self, domain_name, record_name, record_value, record_type="A"
     ):
         """Update the appointed DNS record with the desired value."""
-        domain = digitalocean.Domain(token=self._access_token, name=domain_name)
+
         try:
+            domain = digitalocean.Domain(
+                token=self._access_token, name=domain_name
+            )
             records = domain.get_records()
         except digitalocean.baseapi.NotFoundError as exc:  # pragma: no cover
             raise DomainRecordsNotFound(
                 f"Could not find records in domain {domain_name}"
             ) from exc
+        except digitalocean.baseapi.Error as e:
+            raise HomeAssistantError(
+                f"Unexpected error taking to DigitalOcean's API: {e}"
+            ) from e
 
         for record in records:
             if record.name == record_name and record.type == record_type:
@@ -114,8 +121,14 @@ class DigitalOcean:
                         f"of domain {domain_name}: value already set",
                     )
                 record.data = record_value
-                record.save()
-                return True
+                try:
+                    record.save()
+                    return True
+                except digitalocean.baseapi.Error as e:
+                    raise HomeAssistantError(
+                        f"Unexpected error taking to DigitalOcean's API: {e}"
+                    ) from e
+
         raise DomainRecordsNotFound(
             f"Cold not find record {record_name} ({record_type}) "
             f"in domain {domain_name}"
