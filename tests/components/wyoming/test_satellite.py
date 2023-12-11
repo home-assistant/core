@@ -322,11 +322,12 @@ async def test_satellite_disabled(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry, service: WyomingService
     ):
         satellite = original_make_satellite(hass, config_entry, service)
-        satellite.device.is_enabled = False
+        satellite.device.set_is_enabled(False)
 
         return satellite
 
     async def on_disabled(self):
+        self.device.set_is_enabled(True)
         on_disabled_event.set()
 
     with patch(
@@ -368,11 +369,19 @@ async def test_satellite_restart(hass: HomeAssistant) -> None:
 
 async def test_satellite_reconnect(hass: HomeAssistant) -> None:
     """Test satellite reconnect call after connection refused."""
-    on_reconnect_event = asyncio.Event()
+    num_reconnects = 0
+    reconnect_event = asyncio.Event()
+    stopped_event = asyncio.Event()
 
     async def on_reconnect(self):
-        self.stop()
-        on_reconnect_event.set()
+        nonlocal num_reconnects
+        num_reconnects += 1
+        if num_reconnects >= 2:
+            reconnect_event.set()
+            self.stop()
+
+    async def on_stopped(self):
+        stopped_event.set()
 
     with patch(
         "homeassistant.components.wyoming.data.load_wyoming_info",
@@ -383,10 +392,14 @@ async def test_satellite_reconnect(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.wyoming.satellite.WyomingSatellite.on_reconnect",
         on_reconnect,
+    ), patch(
+        "homeassistant.components.wyoming.satellite.WyomingSatellite.on_stopped",
+        on_stopped,
     ):
         await setup_config_entry(hass)
         async with asyncio.timeout(1):
-            await on_reconnect_event.wait()
+            await reconnect_event.wait()
+            await stopped_event.wait()
 
 
 async def test_satellite_disconnect_before_pipeline(hass: HomeAssistant) -> None:
