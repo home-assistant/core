@@ -89,7 +89,8 @@ class LaMarzoccoSwitchEntityDescription(
     LaMarzoccoSwitchEntityDescriptionMixin,
 ):
     """Description of an La Marzocco Switch."""
-
+    control_fn: Callable[[LaMarzoccoClient, bool], Coroutine[Any, Any, bool]]
+    is_on_fn: Callable[[LaMarzoccoClient], bool]
 
 ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
     LaMarzoccoSwitchEntityDescription(
