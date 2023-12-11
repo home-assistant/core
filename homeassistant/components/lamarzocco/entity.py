@@ -11,12 +11,6 @@ from .const import DOMAIN
 from .coordinator import LmApiCoordinator
 
 
-@dataclass(kw_only=True)
-class LaMarzoccoEntityDescription(EntityDescription):
-    """Description for all LM entities."""
-
-    extra_attributes: dict[str, Any] = field(default_factory=dict)
-
 
 @dataclass
 class LaMarzoccoEntity(CoordinatorEntity[LmApiCoordinator]):
