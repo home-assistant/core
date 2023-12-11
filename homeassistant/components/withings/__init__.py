@@ -193,10 +193,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = withings_data
 
     register_lock = asyncio.Lock()
+    webhooks_registered = False
 
     async def unregister_webhook(
         _: Any,
     ) -> None:
+        nonlocal webhooks_registered
         async with register_lock:
             LOGGER.debug(
                 "Unregister Withings webhook (%s)", entry.data[CONF_WEBHOOK_ID]
@@ -205,11 +207,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await async_unsubscribe_webhooks(client)
             for coordinator in withings_data.coordinators:
                 coordinator.webhook_subscription_listener(False)
+            webhooks_registered = False
 
     async def register_webhook(
         _: Any,
     ) -> None:
+        nonlocal webhooks_registered
         async with register_lock:
+            if webhooks_registered:
+                return
             if cloud.async_active_subscription(hass):
                 webhook_url = await _async_cloudhook_generate_url(hass, entry)
             else:
@@ -243,6 +249,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.async_on_unload(
                 hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
             )
+            webhooks_registered = True
 
     async def manage_cloudhook(state: cloud.CloudConnectionState) -> None:
         LOGGER.debug("Cloudconnection state changed to %s", state)
