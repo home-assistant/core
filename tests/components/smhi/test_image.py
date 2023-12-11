@@ -19,6 +19,15 @@ def map_image_content():
         return map_file.read()
 
 
+@pytest.fixture
+def resize_image_content():
+    """Fixture providing the content of a map image."""
+    with open(
+        "tests/components/smhi/test_images/changedSizeTestImage.png", "rb"
+    ) as map_file:
+        return map_file.read()
+
+
 def test_combine_radar_images(radar_image_content, map_image_content):
     """Test the combine_radar_images function."""
     result_image = RadarImage.combine_radar_images(
@@ -30,4 +39,23 @@ def test_combine_radar_images(radar_image_content, map_image_content):
 
     # Check the dimensions of the result image
     expected_dimensions = (471, 887)  # The exact dimensions for radar images from SMHI
+    assert result_image.size == expected_dimensions
+
+
+def test_combine_radar_images_different_sizes(
+    radar_image_content, resize_image_content
+):
+    """Test the combine_radar_images function, with different image sizes."""
+    result_image = RadarImage.combine_radar_images(
+        radar_image_content, resize_image_content
+    )
+
+    # Check if the result is an instance of the Image class
+    assert isinstance(result_image, Image.Image)
+
+    # Check the dimensions of the result image
+    expected_dimensions = (
+        128,
+        128,
+    )  # The exact dimensions for the test image that is resized too
     assert result_image.size == expected_dimensions
