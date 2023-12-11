@@ -241,22 +241,6 @@ class EntityDescription(metaclass=FrozenOrThawed, frozen_or_thawed=True):
     unit_of_measurement: str | None = None
 
 
-@dataclass(frozen=True, slots=True)
-class CalculatedState:
-    """Container with state and attributes.
-
-    Returned by Entity._async_calculate_state.
-    """
-
-    state: str
-    # The union of all attributes, after overriding with entity registry settings
-    attributes: dict[str, Any]
-    # Capability attributes returned by the capability_attributes property
-    capability_attributes: Mapping[str, Any] | None
-    # Attributes which may be overridden by the entity registry
-    shadowed_attributes: Mapping[str, Any]
-
-
 class Entity(ABC):
     """An abstract class for Home Assistant entities."""
 
@@ -797,8 +781,17 @@ class Entity(ABC):
         return f"{device_name} {name}" if device_name else name
 
     @callback
-    def _async_calculate_state(self) -> CalculatedState:
-        """Calculate state string and attribute mapping."""
+    def _async_calculate_state(
+        self,
+    ) -> tuple[str, dict[str, Any], Mapping[str, Any] | None, Mapping[str, Any]]:
+        """Calculate state string and attribute mapping.
+
+        Returns a tuple (state, attr, capability_attr, shadowed_attr).
+        state - the stringified state
+        attr - the attribute dictionary
+        capability_attr - a mapping with capability attributes
+        shadowed_attr - a mapping with attributes which may be overridden
+        """
         entry = self.registry_entry
 
         capability_attr = self.capability_attributes
@@ -843,7 +836,7 @@ class Entity(ABC):
         if (supported_features := self.supported_features) is not None:
             attr[ATTR_SUPPORTED_FEATURES] = supported_features
 
-        return CalculatedState(state, attr, capability_attr, shadowed_attr)
+        return (state, attr, capability_attr, shadowed_attr)
 
     @callback
     def _async_write_ha_state(self) -> None:
@@ -869,16 +862,16 @@ class Entity(ABC):
             return
 
         start = timer()
-        state = self._async_calculate_state()
+        state, attr, capabilities, shadowed_attr = self._async_calculate_state()
         end = timer()
 
         if entry:
             # Make sure capabilities in the entity registry are up to date. Capabilities
             # include capability attributes, device class and supported features
-            original_device_class = state.shadowed_attributes[ATTR_DEVICE_CLASS]
-            supported_features: int = state.attributes.get(ATTR_SUPPORTED_FEATURES) or 0
+            original_device_class: str | None = shadowed_attr[ATTR_DEVICE_CLASS]
+            supported_features: int = attr.get(ATTR_SUPPORTED_FEATURES) or 0
             if (
-                state.capability_attributes != entry.capabilities
+                capabilities != entry.capabilities
                 or original_device_class != entry.original_device_class
                 or supported_features != entry.supported_features
             ):
@@ -888,7 +881,7 @@ class Entity(ABC):
                     capabilities_updated_at.append(time_now)
                     while time_now - capabilities_updated_at[0] > 3600:
                         capabilities_updated_at.popleft()
-                    if len(capabilities_updated_at) > CAPABILITIES_UPDATE_LIMIT:
+                    if len(capabilities_updated_at) >= CAPABILITIES_UPDATE_LIMIT:
                         self.__capabilities_updated_at_reported = True
                         report_issue = self._suggest_report_issue()
                         _LOGGER.warning(
@@ -903,7 +896,7 @@ class Entity(ABC):
                 entity_registry = er.async_get(self.hass)
                 self.registry_entry = entity_registry.async_update_entity(
                     self.entity_id,
-                    capabilities=state.capability_attributes,
+                    capabilities=capabilities,
                     original_device_class=original_device_class,
                     supported_features=supported_features,
                 )
@@ -921,7 +914,7 @@ class Entity(ABC):
 
         # Overwrite properties that have been set in the config file.
         if customize := hass.data.get(DATA_CUSTOMIZE):
-            state.attributes.update(customize.get(entity_id))
+            attr.update(customize.get(entity_id))
 
         if (
             self._context_set is not None
@@ -934,8 +927,8 @@ class Entity(ABC):
         try:
             hass.states.async_set(
                 entity_id,
-                state.state,
-                state.attributes,
+                state,
+                attr,
                 self.force_update,
                 self._context,
                 self._state_info,

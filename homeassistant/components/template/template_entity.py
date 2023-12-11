@@ -430,17 +430,14 @@ class TemplateEntity(Entity):
             return
 
         try:
-            calculated_state = self._async_calculate_state()
-            validate_state(calculated_state.state)
+            state, attrs, _, _ = self._async_calculate_state()
+            validate_state(state)
         except Exception as err:  # pylint: disable=broad-exception-caught
             self._preview_callback(None, None, None, str(err))
         else:
             assert self._template_result_info
             self._preview_callback(
-                calculated_state.state,
-                calculated_state.attributes,
-                self._template_result_info.listeners,
-                None,
+                state, attrs, self._template_result_info.listeners, None
             )
 
     @callback
