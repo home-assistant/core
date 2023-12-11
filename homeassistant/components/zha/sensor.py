@@ -119,9 +119,9 @@ class Sensor(ZhaEntity, SensorEntity):
     """Base ZHA sensor."""
 
     _attribute_name: int | str | None = None
-    _decimals: int = 1
     _divisor: int = 1
     _multiplier: int | float = 1
+    _attr_suggested_display_precision: int = 1
 
     def __init__(
         self,
@@ -178,11 +178,7 @@ class Sensor(ZhaEntity, SensorEntity):
 
     def formatter(self, value: int | enum.IntEnum) -> int | float | str | None:
         """Numeric pass-through formatter."""
-        if self._decimals > 0:
-            return round(
-                float(value * self._multiplier) / self._divisor, self._decimals
-            )
-        return round(float(value * self._multiplier) / self._divisor)
+        return float(value * self._multiplier) / self._divisor
 
 
 @MULTI_MATCH(
@@ -208,6 +204,7 @@ class Battery(Sensor):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_suggested_display_precision: int = 0
 
     @classmethod
     def create_entity(
@@ -233,7 +230,7 @@ class Battery(Sensor):
         # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
         if not isinstance(value, numbers.Number) or value == -1:
             return None
-        value = round(value / 2)
+        value = value / 2
         return value
 
     @property
@@ -293,9 +290,7 @@ class ElectricalMeasurement(Sensor):
         )
         divisor = getattr(self._cluster_handler, f"{self._div_mul_prefix}_divisor")
         value = float(value * multiplier) / divisor
-        if value < 100 and divisor > 1:
-            return round(value, self._decimals)
-        return round(value)
+        return value
 
 
 @MULTI_MATCH(
@@ -429,10 +424,11 @@ class Illuminance(Sensor):
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.ILLUMINANCE
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = LIGHT_LUX
+    _attr_suggested_display_precision: int = 0
 
     def formatter(self, value: int) -> int:
         """Convert illumination data."""
-        return round(pow(10, ((value - 1) / 10000)))
+        return pow(10, ((value - 1) / 10000))
 
 
 @MULTI_MATCH(
@@ -502,6 +498,7 @@ class SmartEnergySummation(SmartEnergyMetering):
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENERGY
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
     _attr_translation_key: str = "summation_delivered"
+    _attr_suggested_display_precision: int = 3
 
     unit_of_measure_map = {
         0x00: UnitOfEnergy.KILO_WATT_HOUR,
@@ -528,7 +525,7 @@ class SmartEnergySummation(SmartEnergyMetering):
             float(self._cluster_handler.multiplier * value)
             / self._cluster_handler.divisor
         )
-        return round(cooked, 3)
+        return cooked
 
 
 @MULTI_MATCH(
@@ -635,7 +632,7 @@ class Pressure(Sensor):
     _attribute_name = "measured_value"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.PRESSURE
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _decimals = 0
+    _attr_suggested_display_precision: int = 0
     _attr_native_unit_of_measurement = UnitOfPressure.HPA
 
 
@@ -673,7 +670,7 @@ class CarbonDioxideConcentration(Sensor):
     _attribute_name = "measured_value"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.CO2
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _decimals = 0
+    _attr_suggested_display_precision: int = 0
     _multiplier = 1e6
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
 
@@ -686,7 +683,7 @@ class CarbonMonoxideConcentration(Sensor):
     _attribute_name = "measured_value"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.CO
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _decimals = 0
+    _attr_suggested_display_precision: int = 0
     _multiplier = 1e6
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
 
@@ -700,7 +697,7 @@ class VOCLevel(Sensor):
     _attribute_name = "measured_value"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _decimals = 0
+    _attr_suggested_display_precision: int = 0
     _multiplier = 1e6
     _attr_native_unit_of_measurement = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 
@@ -719,7 +716,7 @@ class PPBVOCLevel(Sensor):
         SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS
     )
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _decimals = 0
+    _attr_suggested_display_precision: int = 0
     _multiplier = 1
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_BILLION
 
@@ -732,7 +729,7 @@ class PM25(Sensor):
     _attribute_name = "measured_value"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.PM25
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _decimals = 0
+    _attr_suggested_display_precision: int = 0
     _multiplier = 1
     _attr_native_unit_of_measurement = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 
@@ -745,7 +742,7 @@ class FormaldehydeConcentration(Sensor):
     _attribute_name = "measured_value"
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_translation_key: str = "formaldehyde"
-    _decimals = 0
+    _attr_suggested_display_precision: int = 0
     _multiplier = 1e6
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
 
