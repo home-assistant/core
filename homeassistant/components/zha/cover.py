@@ -174,20 +174,17 @@ class ZhaCover(ZhaEntity, CoverEntity):
             self._async_update_state(STATE_CLOSED)
         elif self._is_open:
             self._async_update_state(STATE_OPEN)
+        elif self._position_history[-1] < self._position_history[0] and self._state != STATE_CLOSING:
+            self._async_update_state(STATE_CLOSING)
+        elif self._position_history[-1] > self._position_history[0] and self._state != STATE_OPENING:
+            self._async_update_state(STATE_OPENING)
         else:
-            if self._state in (STATE_OPENING, STATE_CLOSING):
-                # if movement is in progress, schedule a timer to clear it
-                self._cancel_clear_movement_timer = async_call_later(self.hass, MOVEMENT_TIMEOUT, self._clear_movement)
-                self.async_write_ha_state()
-            else:
-                # otherwise, compute direction based on position history and start movement
-                if self._position_history[-1] < self._position_history[0]:
-                    self._async_update_state(STATE_CLOSING)
-                elif self._position_history[-1] > self._position_history[0]:
-                    self._async_update_state(STATE_OPENING)
-                else:
-                    # tilt-only movements are typically so short that we rather keep the state
-                    self.async_write_ha_state()
+            # either tilt-only movement or lift movement in progress -> keep the state, only refresh positions
+            self.async_write_ha_state()
+
+        # if movement is in progress, schedule a timer to clear it
+        if self._state in (STATE_OPENING, STATE_CLOSING):
+            self._cancel_clear_movement_timer = async_call_later(self.hass, MOVEMENT_TIMEOUT, self._clear_movement)
                 
 
     def _touch_position(self):
