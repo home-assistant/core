@@ -894,6 +894,7 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
             """Clear all devices."""
             self._discovered_device_advertisement_datas.clear()
             self._discovered_device_timestamps.clear()
+            self._previous_service_info.clear()
 
     new_info_callback = async_get_advertisement_callback(hass)
     connector = (
