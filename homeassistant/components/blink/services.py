@@ -70,6 +70,7 @@ def setup_services(hass: HomeAssistant) -> None:
             await coordinator.api.refresh(force_cache=True)
 
     # Register all the above services
+    # Refresh service will be depreciated on 6/2024
     service_mapping = [
         (blink_refresh, SERVICE_REFRESH, SERVICE_UPDATE_SCHEMA),
         (send_pin, SERVICE_SEND_PIN, SERVICE_SEND_PIN_SCHEMA),
