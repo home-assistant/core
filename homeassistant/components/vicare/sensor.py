@@ -213,6 +213,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getFuelCellGasConsumptionToday(),
         unit_getter=lambda api: api.getFuelCellGasConsumptionUnit(),
         state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
     ),
     ViCareSensorEntityDescription(
         key="gas_consumption_fuelcell_this_week",
@@ -220,6 +221,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getFuelCellGasConsumptionThisWeek(),
         unit_getter=lambda api: api.getFuelCellGasConsumptionUnit(),
         state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
     ),
     ViCareSensorEntityDescription(
         key="gas_consumption_fuelcell_this_month",
@@ -227,6 +229,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getFuelCellGasConsumptionThisMonth(),
         unit_getter=lambda api: api.getFuelCellGasConsumptionUnit(),
         state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
     ),
     ViCareSensorEntityDescription(
         key="gas_consumption_fuelcell_this_year",
@@ -234,6 +237,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getFuelCellGasConsumptionThisYear(),
         unit_getter=lambda api: api.getFuelCellGasConsumptionUnit(),
         state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
     ),
     ViCareSensorEntityDescription(
         key="gas_consumption_total_today",
@@ -241,6 +245,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getGasConsumptionTotalToday(),
         unit_getter=lambda api: api.getGasConsumptionUnit(),
         state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
     ),
     ViCareSensorEntityDescription(
         key="gas_consumption_total_this_week",
@@ -248,6 +253,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getGasConsumptionTotalThisWeek(),
         unit_getter=lambda api: api.getGasConsumptionUnit(),
         state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
     ),
     ViCareSensorEntityDescription(
         key="gas_consumption_total_this_month",
@@ -255,6 +261,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getGasConsumptionTotalThisMonth(),
         unit_getter=lambda api: api.getGasConsumptionUnit(),
         state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
     ),
     ViCareSensorEntityDescription(
         key="gas_consumption_total_this_year",
@@ -262,6 +269,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getGasConsumptionTotalThisYear(),
         unit_getter=lambda api: api.getGasConsumptionUnit(),
         state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
     ),
     ViCareSensorEntityDescription(
         key="gas_summary_consumption_heating_currentday",
