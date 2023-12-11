@@ -47,7 +47,7 @@ class SpeedtestSensor(
         super().__init__(coordinator)
         self._attr_unique_id = entry_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.config_entry.entry_id)},
+            identifiers={(DOMAIN, entry_id)},
             name=DEFAULT_NAME,
             entry_type=DeviceEntryType.SERVICE,
             configuration_url="https://www.fast.com/",
