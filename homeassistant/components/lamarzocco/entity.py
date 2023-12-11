@@ -1,7 +1,6 @@
 """Base class for the La Marzocco entities."""
 
-from dataclasses import dataclass, field
-from typing import Any
+from dataclasses import dataclass
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -11,18 +10,17 @@ from .const import DOMAIN
 from .coordinator import LmApiCoordinator
 
 
-
 @dataclass
 class LaMarzoccoEntity(CoordinatorEntity[LmApiCoordinator]):
     """Common elements for all entities."""
 
-    entity_description: LaMarzoccoEntityDescription
+    entity_description: EntityDescription
     _attr_has_entity_name: bool = True
 
     def __init__(
         self,
         coordinator: LmApiCoordinator,
-        entity_description: LaMarzoccoEntityDescription,
+        entity_description: EntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)

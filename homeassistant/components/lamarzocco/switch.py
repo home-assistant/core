@@ -10,14 +10,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
+from .entity import LaMarzoccoEntity
 from .lm_client import LaMarzoccoClient
 
 
 @dataclass(kw_only=True)
 class LaMarzoccoSwitchEntityDescription(
     SwitchEntityDescription,
-    LaMarzoccoEntityDescription,
 ):
     """Description of an La Marzocco Switch."""
 
@@ -59,7 +58,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
     ),
     LaMarzoccoSwitchEntityDescription(
         key="steam_boiler_enable",
-        translation_key="steam_boiler_enable",
+        translation_key="steam_boiler",
         icon="mdi:water-boiler",
         control_fn=lambda client, state: client.set_steam_boiler_enable(state),
         is_on_fn=lambda client: client.current_status["steam_boiler_enable"],
@@ -77,8 +76,7 @@ async def async_setup_entry(
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
-        LaMarzoccoSwitchEntity(coordinator, description)
-        for description in ENTITIES
+        LaMarzoccoSwitchEntity(coordinator, description) for description in ENTITIES
     )
 
 

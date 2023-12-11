@@ -64,8 +64,8 @@
       "preinfusion": {
         "name": "Preinfusion"
       },
-      "steam_boiler_enable": {
-        "name": "Steam boiler enable"
+      "steam_boiler": {
+        "name": "Steam boiler"
       }
     }
   }

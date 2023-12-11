@@ -22,7 +22,7 @@ class LaMarzoccoClient(LMCloud):
 
     def __init__(
         self,
-        hass: HomeAssistant | None = None,
+        hass: HomeAssistant,
         entry: ConfigEntry | None = None,
         callback_websocket_notify: Callable[[], None] | None = None,
     ) -> None:
@@ -33,8 +33,8 @@ class LaMarzoccoClient(LMCloud):
 
     async def connect(self) -> None:
         """Connect to the machine."""
-        if not self.entry or not self.hass:
-            raise RuntimeError("Cannot connect without entry and hass")
+        if not self.entry:
+            raise RuntimeError("ConfigEntry not set")
 
         _LOGGER.debug("Initializing Cloud API")
         await self._init_cloud_api(
