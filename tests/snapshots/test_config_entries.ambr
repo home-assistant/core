@@ -5,8 +5,7 @@
     }),
     'disabled_by': None,
     'domain': 'test',
-    'entry_id': 'f9433f98998f7acaf038858e66b5f308',
-    'minor_version': 1,
+    'entry_id': 'mock-entry',
     'options': dict({
     }),
     'pref_disable_new_entities': False,

@@ -695,7 +695,7 @@ async def test_as_dict(snapshot: SnapshotAssertion) -> None:
         "_setup_again_job",
     }
 
-    entry = MockConfigEntry()
+    entry = MockConfigEntry(entry_id="mock-entry")
 
     # Make sure the expected keys are present
     dict_repr = entry.as_dict()
