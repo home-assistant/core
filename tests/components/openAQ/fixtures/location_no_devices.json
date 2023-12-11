@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "name": "openaq-api",
+    "website": "/",
+    "page": 1,
+    "limit": 100,
+    "found": 1
+  },
+  "results": [
+    {
+      "id": 10496,
+      "name": "SE0004A",
+      "locality": "Västra Götaland",
+      "timezone": "Europe/Stockholm",
+      "country": { "id": 116, "code": "SE", "name": "Sweden" },
+      "owner": { "id": 4, "name": "Unknown Governmental Organization" },
+      "provider": { "id": 197, "name": "EEA Sweden" },
+      "isMobile": "False",
+      "isMonitor": "True",
+      "instruments": [{ "id": 2, "name": "Government Monitor" }],
+      "sensors": [],
+      "coordinates": { "latitude": 57.70860999951551, "longitude": 11.97 },
+      "bounds": [11.97, 57.70860999951551, 11.97, 57.70860999951551],
+      "distance": "None",
+      "datetimeFirst": {
+        "utc": "2020-05-06T22:00:00+00:00",
+        "local": "2020-05-07T00:00:00+02:00"
+      },
+      "datetimeLast": {
+        "utc": "2023-12-08T11:00:00+00:00",
+        "local": "2023-12-08T12:00:00+01:00"
+      }
+    }
+  ]
+}
