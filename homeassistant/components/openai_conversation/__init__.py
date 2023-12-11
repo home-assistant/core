@@ -66,7 +66,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 breaks_in_ha_version="2024.7.0",
                 is_fixable=False,
                 is_persistent=True,
-                learn_more_url="https://platform.openai.com/docs/api-reference/images/create",
+                learn_more_url="https://www.home-assistant.io/integrations/openai_conversation/",
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="image_size_deprecated_format",
             )
