@@ -19,7 +19,7 @@ class FastdotcomDataUpdateCoordindator(DataUpdateCoordinator[float]):
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the coordinator for Fast.com."""
         super().__init__(
-            self.hass,
+            hass,
             LOGGER,
             name=DOMAIN,
             update_interval=timedelta(hours=DEFAULT_INTERVAL),
