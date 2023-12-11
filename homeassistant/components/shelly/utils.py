@@ -267,15 +267,6 @@ def get_block_device_sleep_period(settings: dict[str, Any]) -> int:
     return sleep_period * 60  # minutes to seconds
 
 
-def get_rpc_device_sleep_period(config: dict[str, Any]) -> int:
-    """Return the device sleep period in seconds or 0 for non sleeping devices.
-
-    sys.sleep.wakeup_period value is deprecated and not available in Shelly
-    firmware 1.0.0 or later.
-    """
-    return cast(int, config["sys"].get("sleep", {}).get("wakeup_period", 0))
-
-
 def get_rpc_device_wakeup_period(status: dict[str, Any]) -> int:
     """Return the device wakeup period in seconds or 0 for non sleeping devices."""
     return cast(int, status["sys"].get("wakeup_period", 0))

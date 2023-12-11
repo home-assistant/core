@@ -24,11 +24,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DUAL_MODE_LIGHT_MODELS,
-    FIRMWARE_PATTERN,
     KELVIN_MAX_VALUE,
     KELVIN_MIN_VALUE_COLOR,
     KELVIN_MIN_VALUE_WHITE,
-    LIGHT_TRANSITION_MIN_FIRMWARE_DATE,
     LOGGER,
     MAX_TRANSITION_TIME,
     MODELS_SUPPORTING_LIGHT_TRANSITION,
@@ -155,12 +153,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
             self._attr_supported_features |= LightEntityFeature.EFFECT
 
         if coordinator.model in MODELS_SUPPORTING_LIGHT_TRANSITION:
-            match = FIRMWARE_PATTERN.search(coordinator.device.settings.get("fw", ""))
-            if (
-                match is not None
-                and int(match[0]) >= LIGHT_TRANSITION_MIN_FIRMWARE_DATE
-            ):
-                self._attr_supported_features |= LightEntityFeature.TRANSITION
+            self._attr_supported_features |= LightEntityFeature.TRANSITION
 
     @property
     def is_on(self) -> bool:
