@@ -59,7 +59,7 @@ async def async_setup_entry(
     )
     platform.async_register_entity_service(
         SERVICE_SAVE_VIDEO,
-        vol.Sechema({vol.Required(CONF_FILENAME): cv.string}),
+        vol.Schema({vol.Required(CONF_FILENAME): cv.string}),
         "save_video",
     )
 

@@ -60,20 +60,14 @@
       "description": "Forces a refresh.",
       "fields": {
         "config_entry_id": {
-          "name": "Config Entry ID",
-          "description": "The Blink Config Entry id."
+          "name": "Integration ID",
+          "description": "The Blink Integration id."
         }
       }
     },
     "trigger_camera": {
       "name": "Trigger camera",
-      "description": "Requests camera to take new image.",
-      "fields": {
-        "device_id": {
-          "name": "Device ID",
-          "description": "The Blink device id."
-        }
-      }
+      "description": "Requests camera to take new image."
     },
     "save_video": {
       "name": "Save video",
@@ -104,18 +98,15 @@
           "description": "PIN received from blink. Leave empty if you only received a verification email."
         },
         "config_entry_id": {
-          "name": "Config Entry ID",
-          "description": "The Blink device id."
+          "name": "Integration ID",
+          "description": "The Blink Integration id."
         }
       }
     }
   },
   "exceptions": {
-    "invalid_device": {
-      "message": "Device '{target}' is not a {domain} device"
-    },
-    "device_not_found": {
-      "message": "Device '{target}' not found in device registry"
+    "integration_not_found": {
+      "message": "Integraion '{target}' not found in registry"
     },
     "no_path": {
       "message": "Can't write to directory {target}, no access to path!"
