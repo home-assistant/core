@@ -188,21 +188,3 @@ async def test_importing_invalid_auth(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "invalid_auth"
-
-
-async def test_import_already_configured(hass: HomeAssistant) -> None:
-    """Test we abort import when entry is already configured."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="test-username",
-        data=MOCK_DATA,
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=MOCK_DATA
-    )
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"

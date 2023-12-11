@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
@@ -81,21 +81,7 @@ class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Import the yaml config."""
         await self.async_set_unique_id(user_input[CONF_USERNAME])
-        try:
-            self._abort_if_unique_id_configured()
-        except AbortFlow:
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                "deprecated_yaml_import_issue_already_configured",
-                breaks_in_ha_version="2024.7.0",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_yaml_import_issue_already_configured",
-                translation_placeholders=ISSUE_PLACEHOLDER,
-            )
-            return self.async_abort(reason="already_configured")
+        self._abort_if_unique_id_configured()
         try:
             await self.hass.async_add_executor_job(validate_input, user_input)
         except CannotConnect:
