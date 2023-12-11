@@ -26,7 +26,7 @@ def mock_config_entry() -> MockConfigEntry:
         title="My LaMarzocco",
         domain=DOMAIN,
         data=USER_INPUT,
-        unique_id="very_unique",
+        unique_id="GS01234",
     )
 
 

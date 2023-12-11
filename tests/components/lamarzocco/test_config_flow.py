@@ -1,4 +1,6 @@
 """Test the La Marzocco config flow."""
+import pytest
+
 from unittest.mock import MagicMock
 
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
@@ -21,8 +23,6 @@ from . import (
 )
 
 from tests.common import MockConfigEntry
-
-
 
 
 async def test_form(hass: HomeAssistant, mock_lamarzocco: MagicMock) -> None:
@@ -56,7 +56,15 @@ async def test_form(hass: HomeAssistant, mock_lamarzocco: MagicMock) -> None:
 
     assert len(mock_lamarzocco.check_local_connection.mock_calls) == 1
 
-    # test abort if already configured
+
+async def test_form_abort_already_configured(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test we abort if already configured."""
+    mock_config_entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -294,10 +302,12 @@ async def test_reauth_flow(
     assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1
 
 
-async def test_reauth_errors(
-    hass: HomeAssistant, mock_lamarzocco: MagicMock, mock_config_entry: MockConfigEntry
+async def test_no_machines(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the reauth flow errors."""
+    """Test no machines."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -322,7 +332,34 @@ async def test_reauth_errors(
 
     assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1
 
-    mock_lamarzocco.get_all_machines.side_effect = AuthFail("")
+
+@pytest.mark.parametrize(
+    ("side_effect", "reason"),
+    [
+        (AuthFail(""), "invalid_auth"),
+        (RequestNotSuccessful(""), "cannot_connect"),
+    ],
+)
+async def test_reauth_errors(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    reason: str,
+) -> None:
+    """Test the reauth errors."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "unique_id": mock_config_entry.unique_id,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=mock_config_entry.data,
+    )
+    mock_lamarzocco.get_all_machines.side_effect = side_effect
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -330,18 +367,6 @@ async def test_reauth_errors(
     )
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result2["errors"] == {"base": reason}
 
-    assert len(mock_lamarzocco.get_all_machines.mock_calls) == 2
-
-    mock_lamarzocco.get_all_machines.side_effect = RequestNotSuccessful("")
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        LOGIN_INFO,
-    )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-    assert len(mock_lamarzocco.get_all_machines.mock_calls) == 3
+    assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1

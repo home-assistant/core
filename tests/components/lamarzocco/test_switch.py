@@ -52,6 +52,7 @@ async def test_main(
     assert device.identifiers == {(DOMAIN, "GS01234")}
     assert device.manufacturer == "La Marzocco"
     assert device.name == "GS01234"
+    assert device.serial_number == "GS01234"
     assert device.sw_version == "1.1"
 
     await hass.services.async_call(
@@ -108,6 +109,7 @@ async def test_auto_on_off(
     assert device.identifiers == {(DOMAIN, "GS01234")}
     assert device.manufacturer == "La Marzocco"
     assert device.name == "GS01234"
+    assert device.serial_number == "GS01234"
     assert device.sw_version == "1.1"
 
     await hass.services.async_call(
@@ -164,6 +166,7 @@ async def test_prebrew(
     assert device.identifiers == {(DOMAIN, "GS01234")}
     assert device.manufacturer == "La Marzocco"
     assert device.name == "GS01234"
+    assert device.serial_number == "GS01234"
     assert device.sw_version == "1.1"
 
     await hass.services.async_call(
@@ -220,6 +223,7 @@ async def test_preinfusion(
     assert device.identifiers == {(DOMAIN, "GS01234")}
     assert device.manufacturer == "La Marzocco"
     assert device.name == "GS01234"
+    assert device.serial_number == "GS01234"
     assert device.sw_version == "1.1"
 
     await hass.services.async_call(
@@ -256,17 +260,17 @@ async def test_steam_boiler_enable(
     """Test the La Marzocco Steam Boiler switch."""
     mock_lamarzocco.set_steam_boiler_enable.return_value = None
 
-    state = hass.states.get("switch.GS01234_steam_boiler_enable")
+    state = hass.states.get("switch.GS01234_steam_boiler")
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "GS01234 Steam Boiler Enable"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "GS01234 Steam Boiler"
     assert state.attributes.get(ATTR_ICON) == "mdi:water-boiler"
     assert state.state == STATE_ON
 
     entry = entity_registry.async_get(state.entity_id)
     assert entry
     assert entry.device_id
-    assert entry.unique_id == "GS01234_steam_boiler_enable"
+    assert entry.unique_id == "GS01234_steam_boiler"
 
     device = device_registry.async_get(entry.device_id)
     assert device
@@ -276,6 +280,7 @@ async def test_steam_boiler_enable(
     assert device.identifiers == {(DOMAIN, "GS01234")}
     assert device.manufacturer == "La Marzocco"
     assert device.name == "GS01234"
+    assert device.serial_number == "GS01234"
     assert device.sw_version == "1.1"
 
     await hass.services.async_call(
