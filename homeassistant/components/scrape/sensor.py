@@ -112,9 +112,12 @@ async def async_setup_entry(
             Template(value_string, hass) if value_string is not None else None
         )
 
-        trigger_entity_config = {CONF_NAME: name}
+        trigger_entity_config: dict[str, str | Template | None] = {CONF_NAME: name}
         for key in TRIGGER_ENTITY_OPTIONS:
             if key not in sensor_config:
+                continue
+            if key == CONF_AVAILABILITY:
+                trigger_entity_config[key] = Template(sensor_config[key], hass)
                 continue
             trigger_entity_config[key] = sensor_config[key]
 
