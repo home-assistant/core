@@ -79,8 +79,6 @@ async def async_setup_entry(
     async_add_entities(
         LaMarzoccoSwitchEntity(coordinator, description)
         for description in ENTITIES
-        if not description.extra_attributes
-        or coordinator.data.model_name in description.extra_attributes
     )
 
 
