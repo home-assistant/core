@@ -70,11 +70,11 @@ class WyomingSatellite:
             while self.is_running:
                 try:
                     # Check if satellite has been disabled
-                    if not self.device.is_enabled:
+                    while not self.device.is_enabled:
                         await self.on_disabled()
                         if not self.is_running:
                             # Satellite was stopped while waiting to be enabled
-                            break
+                            return
 
                     # Connect and run pipeline loop
                     await self._run_once()
@@ -86,7 +86,7 @@ class WyomingSatellite:
             # Ensure sensor is off
             self.device.set_is_active(False)
 
-        await self.on_stopped()
+            await self.on_stopped()
 
     def stop(self) -> None:
         """Signal satellite task to stop running."""
@@ -129,6 +129,7 @@ class WyomingSatellite:
             self._audio_queue.put_nowait(None)
 
         self._enabled_changed_event.set()
+        self._enabled_changed_event.clear()
 
     def _pipeline_changed(self) -> None:
         """Run when device pipeline changes."""
@@ -243,8 +244,16 @@ class WyomingSatellite:
                     chunk = AudioChunk.from_event(client_event)
                     chunk = self._chunk_converter.convert(chunk)
                     self._audio_queue.put_nowait(chunk.audio)
+                elif AudioStop.is_type(client_event.type):
+                    # Stop pipeline
+                    _LOGGER.debug("Client requested pipeline to stop")
+                    self._audio_queue.put_nowait(b"")
+                    break
                 else:
                     _LOGGER.debug("Unexpected event from satellite: %s", client_event)
+
+            # Ensure task finishes
+            await _pipeline_task
 
             _LOGGER.debug("Pipeline finished")
 
@@ -336,11 +345,22 @@ class WyomingSatellite:
 
     async def _connect(self) -> None:
         """Connect to satellite over TCP."""
+        await self._disconnect()
+
         _LOGGER.debug(
             "Connecting to satellite at %s:%s", self.service.host, self.service.port
         )
         self._client = AsyncTcpClient(self.service.host, self.service.port)
         await self._client.connect()
+
+    async def _disconnect(self) -> None:
+        """Disconnect if satellite is currently connected."""
+        if self._client is None:
+            return
+
+        _LOGGER.debug("Disconnecting from satellite")
+        await self._client.disconnect()
+        self._client = None
 
     async def _stream_tts(self, media_id: str) -> None:
         """Stream TTS WAV audio to satellite in chunks."""
