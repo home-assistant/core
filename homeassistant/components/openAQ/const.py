@@ -4,17 +4,16 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import Platform
 
 DOMAIN = "openAQ"
-SENSOR_ID = "sensorid"
-DEFAULT_SENSOR_ID = "1234"
 
 API_KEY_ID = "api_id"
-CITY_ID = "city_id"
 LOCATION_ID = "location_id"
 THIRD_FIELD = "test"
 COUNTRY = "country"
 LOCATION = "location"
 
 SENSOR = "sensor"
+
+# All parameters we are searching for in the response we get from a station
 OPENAQ_PARAMETERS = {
     "pm25": SensorDeviceClass.PM25,
     "pm10": SensorDeviceClass.PM10,
@@ -32,7 +31,8 @@ OPENAQ_PARAMETERS = {
 }
 
 
-ICON = "mdi:air-filter"
+ICON_AIR = "mdi:air-filter"
+ICON_TIME = "mdi:clock-time-four-outline"
 
 PLATFORMS = [
     Platform.SENSOR,

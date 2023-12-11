@@ -1,0 +1,256 @@
+# Home Assistant Dashboard Replication Guide
+
+## Prerequisites
+
+Before you begin, ensure that you have set up your development environment for Home Assistant. Instructions for setting up the environment can be found [here](https://developers.home-assistant.io/docs/development_environment/).
+
+Use this specific fork of the Home Assistant core repository: [grace43/core](https://github.com/grace43/core).
+
+## Setup Steps
+
+### Step 1: Running the Docker Image
+
+Ensure that you have a Docker image of Home Assistant running. If you are unsure about this step, please refer back to the development environment setup guide linked in the prerequisites.
+
+### Step 2: Update the Main Branch
+
+Switch to the main development branch (`dev`) and pull the latest changes to stay updated:
+`git pull`
+
+### Step 3: Installing HACS
+
+Home Assistant Community Store (HACS) can be installed by executing these steps:
+Change your directory to custom_components in your Home Assistant configuration directory:
+`cd /workspaces/core/config/custom_components`
+Once in this directory,run the HACS installation script:
+`wget -O - https://get.hacs.xyz | bash -`
+This will download and execute the script required to install HACS in your Home Assistant setup.
+
+### Step 4: Restart Docker
+
+After installing HACS you need to restart docker to reflect the changes.
+Do not rebuild a new container, use the same once just reload window
+Once its up and running check if you are on the correct branch if not do step 2 or any specific branch changes you want to test then go to step 5
+
+### Step 5: Starting Home Assistant
+
+To start an instance of Home Assistant, use the following command:
+`hass`
+If you dont have the necessary files they will get generated first then the instance will start.
+
+### Step 6: Open port on a private window
+
+Go to a browser and check (http://localhost:8123/) This link is found on the docker image.
+If you dont use a private window, after making a few changes to the dashboard you will have to clear your cache
+
+### Step 7: Setup HomeAssitant
+
+Create a username and password remember these
+Enter location as gothenburg
+Click next
+
+### Step 8: Setup HACS
+
+Once on the dashboard, on the left side menu click on settings>> Device and Services
+On the bottom right, click the button labeled "Add Integration."
+Once you click on the "Add Integration" button, search for the HACS integration. If installed correctly, you will find an integration named "HACS."
+
+Click on the "HACS" integration, and it will guide you through the setup process. You may need to log in to your GitHub account and verify using a provided code. This is a standard procedure. Once completed, a message indicating "Successfully Finished" will appear.
+
+On your Home Assistant dashboard, you should now see the "HACS" option in the right sidebar menu.
+
+### Step 8: Install extensions from HACS
+
+On the left side menu, click on "HACS." By default, the filter will show a clear text field. Click on it to view the complete list of available extensions.
+
+Once that's done, begin selecting and installing the following extensions:
+
+1. `Multiple-entity-row`
+2. `Metrology - Metro + Fluent + Windows Themes` - by mmak.es
+3. `Noctis`
+4. `themable-grid`
+
+### Step 8: Create openAQ Dashboard
+
+On the left side menu, click on "Settings" >> "Dashboards."
+
+On the Dashboards page, click on the "Add Dashboard" button. In the dialog that appears, enter the title as "openAQ." Then, select an air filter icon and click on "Create."
+
+Once that's done, click on the newly created "openAQ" dashboard and set it as the default on this device. Also, ensure that the "Show in sidebar" option is enabled.
+
+Next, the default dashboard is typically called "Overview." Click on it and select "Remove as default on this device." If this is not possible, simply making "openAQ" the default should suffice.
+
+Finally, if you do not want the "Overview" dashboard to be displayed in the left side menu, follow the steps mentioned in Step 9 to remove the menu item.
+
+### Step 9: Use the extensions
+
+On the left side menu, click on your profile icon. Scroll down and look for the field named "Theme." Change the default theme to "Fluent Orange," assuming that all the extensions mentioned in Step 7 have been installed.
+
+Next, just below the "Theme" field, click "Edit" on the field labeled "Change the order and hide items from the sidebar."
+
+In the left side menu, you will see the active menu items and an "X" icon, which indicates items that can be deleted. Remove the following menu items:
+
+1. Developer Tools
+2. Media
+3. Logbook
+4. Map
+5. Energy
+
+Then, click on "Done."
+
+### Step 10: Add openAQ integration
+
+Go to "Settings" >> "Devices and Services."
+
+Click on "Add Integration."
+
+Search for the "openAQ" integration.
+
+Click on the integration. In the dialog that appears, you will see two fields:
+
+- Field 1: Location ID
+- Field 2: API Key
+
+We will use two regions: Västra Götaland and Uppsala.
+
+- Location ID for Västra Götaland: `10496`
+- Location ID for Uppsala: `270746`
+- API Key for both regions: `0ce03655421037c966e7f831503000dc93c80a8fc14a434c6406f0adbbfaa61e`
+
+### Step 11: Create openAQ Tabs
+
+On the left side menu, click on the "openAQ" dashboard.
+
+Once on the dashboard, click on the three dots in the upper right corner of the screen. This will enable editing of the dashboard.
+
+First, ensure the dashboard is clean and no cards exist.
+
+Edit the title and name it "Air Quality Data."
+
+Add two more tabs by clicking on the "+" icon. Your dashboard should now have 3 tabs named:
+
+- Tab 1: Pollutants
+- Tab 2: Västra Götaland
+- Tab 3: Uppsala
+
+### Step 11: Add pollutants tab cards
+
+Now, let's start adding the necessary cards in each tab, beginning with Tab 1: Pollutants.
+
+Click on "Pollutants," then click "Add Card."
+
+On this tab, you will use 3 cards:
+
+1. Vertical Card
+2. Custom: Themable Grid
+3. Markdown Card
+
+Add the cards in the above order.
+
+When selecting Card 1, click on "Show Code Editor" and paste the following code:
+type: vertical-stack
+cards:
+
+- graph: line
+  type: sensor
+  entity: sensor.nitrogen_dioxide_2
+  detail: 1
+  hours_to_show: 24
+  name: NO2 levels for Västra Götaland
+  theme: noctis
+- graph: line
+  type: sensor
+  entity: sensor.nitrogen_dioxide_3
+  detail: 2
+  name: NO2 levels for Uppsala
+  theme: noctis
+  hours_to_show: 24
+
+When selecting Card 2, click on "Show Code Editor" and paste the following code:
+type: custom:themable-grid
+
+When selecting Card 3, click on "Show Code Editor" and paste the following code:
+
+type: markdown
+content: >-
+**OpenAQ Data:** This page shows how Nitrogen Dioxide levels in each region
+have fluctuated over the past 24 hours.
+theme: noctis
+
+### Step 12: Add Region 1 tab2 cards
+
+Next Tab 2: Västra Götaland.(can be your own region)
+Click on the tab, then click "Add Card."
+On this tab, you will use 3 cards:
+
+1. Vertical Card
+2. Custom: Themable Grid
+3. History Graph Card
+
+Add the cards in the above order.
+
+When selecting Card 1, click on "Show Code Editor" and paste the following code:
+type: vertical-stack
+cards:
+
+- type: entities
+  entities:
+  - entity: sensor.nitrogen_dioxide_2
+    secondary_info: last-updated
+    name: NO2 Concentration levels
+  - entity: sensor.pm10
+    name: PM10 (Coarse Particulate Matter)
+    secondary_info: last-updated
+  - entity: sensor.pm25
+    secondary_info: last-updated
+    name: PM2.5 (Fine particulate matter)
+    title: Main pollutants in the area
+    theme: noctis
+- type: markdown
+  content: >2
+
+            <img src="https://icones.pro/wp-content/uploads/2022/02/icone-de-cloche-et-d-alerte-rouge.png" alt="Alert Icon" width="13" height="13">**Values to Watch Out For:**
+
+
+        **PM2.5 (Fine Particulate Matter):** Levels above 35.4 µg/m³ are
+        considered unhealthy.
+
+
+        **PM10 (Coarse Particulate Matter)** Levels above 154 µg/m³ are considered
+        unhealthy.
+
+
+        **Nitrogen Dioxide (NO2):** Levels above 100 µg/m³ are considered
+        unhealthy.
+      theme: noctis
+
+  When selecting Card 2, click on "Show Code Editor" and paste the following code:
+  type: custom:themable-grid
+
+When selecting Card 3, click on "Show Code Editor" and paste the following code:
+type: history-graph
+entities:
+
+- entity: sensor.pm10
+- entity: sensor.pm25
+- entity: sensor.nitrogen_dioxide_2
+  title: Compare data in the past 12 hours
+  hours_to_show: 12
+
+### Step 12: Add Region2 tab3 cards
+
+This tab uses the same cards as step 11 the difference is the entities been shown on card 1 and 3 should be specific to region2
+So in this case entities for card 3 will be:
+
+- entity: sensor.nitrogen_dioxide_3
+- entity: sensor.pm10_2
+- entity: sensor.pm25_2
+
+And the entities for card 1 will be:
+entities: - entity: sensor.nitrogen_dioxide_3
+name: NO2 Concentration Levels
+secondary_info: last-updated - entity: sensor.pm10_2
+name: PM10 (Coarse Particulate Matter)
+secondary_info: last-updated - entity: sensor.pm25
+name: PM2.5 (Fine particulate matter)
+secondary_info: last-updated
