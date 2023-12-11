@@ -95,7 +95,6 @@ def test_detect_radio_hardware_failure(hass: HomeAssistant) -> None:
         assert _detect_radio_hardware(hass, SKYCONNECT_DEVICE) == HardwareType.OTHER
 
 
-@patch("homeassistant.components.zha.STARTUP_RETRIES", new=1)
 @pytest.mark.parametrize(
     ("detected_hardware", "expected_learn_more_url"),
     [
@@ -189,7 +188,6 @@ async def test_multipan_firmware_no_repair_on_probe_failure(
     assert issue is None
 
 
-@patch("homeassistant.components.zha.STARTUP_RETRIES", new=1)
 async def test_multipan_firmware_retry_on_probe_ezsp(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
