@@ -40,7 +40,6 @@ from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant, legacy_api_password
 from homeassistant.components.device_tracker.legacy import Device
-from homeassistant.components.network.models import Adapter, IPv4ConfiguredAddress
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
@@ -383,7 +382,7 @@ def reset_hass_threading_local_object() -> Generator[None, None, None]:
     ha._hass.__dict__.clear()
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def bcrypt_cost() -> Generator[None, None, None]:
     """Run with reduced rounds during tests, to speed up uses."""
     import bcrypt
@@ -1096,21 +1095,18 @@ async def mqtt_mock_entry(
         yield _setup_mqtt_entry
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="session")
 def mock_network() -> Generator[None, None, None]:
     """Mock network."""
-    mock_adapter = Adapter(
-        name="eth0",
-        index=0,
-        enabled=True,
-        auto=True,
-        default=True,
-        ipv4=[IPv4ConfiguredAddress(address="10.10.10.10", network_prefix=24)],
-        ipv6=[],
-    )
     with patch(
-        "homeassistant.components.network.network.async_load_adapters",
-        return_value=[mock_adapter],
+        "homeassistant.components.network.util.ifaddr.get_adapters",
+        return_value=[
+            Mock(
+                nice_name="eth0",
+                ips=[Mock(is_IPv6=False, ip="10.10.10.10", network_prefix=24)],
+                index=0,
+            )
+        ],
     ):
         yield
 
@@ -1544,7 +1540,7 @@ async def mock_enable_bluetooth(
     await hass.async_block_till_done()
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def mock_bluetooth_adapters() -> Generator[None, None, None]:
     """Fixture to mock bluetooth adapters."""
     with patch(
@@ -1574,14 +1570,14 @@ def mock_bleak_scanner_start() -> Generator[MagicMock, None, None]:
     # Late imports to avoid loading bleak unless we need it
 
     # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.bluetooth import scanner as bluetooth_scanner
+    from habluetooth import scanner as bluetooth_scanner
 
     # We need to drop the stop method from the object since we patched
     # out start and this fixture will expire before the stop method is called
     # when EVENT_HOMEASSISTANT_STOP is fired.
     bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()  # type: ignore[assignment]
     with patch(
-        "homeassistant.components.bluetooth.scanner.OriginalBleakScanner.start",
+        "habluetooth.scanner.OriginalBleakScanner.start",
     ) as mock_bleak_scanner_start:
         yield mock_bleak_scanner_start
 

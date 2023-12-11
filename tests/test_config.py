@@ -2043,7 +2043,7 @@ async def test_component_config_validation_error(
 
     for domain_with_label in config:
         integration = await async_get_integration(
-            hass, domain_with_label.partition(" ")[0]
+            hass, cv.domain_key(domain_with_label)
         )
         await config_util.async_process_component_and_handle_errors(
             hass,
@@ -2088,7 +2088,7 @@ async def test_component_config_validation_error_with_docs(
 
     for domain_with_label in config:
         integration = await async_get_integration(
-            hass, domain_with_label.partition(" ")[0]
+            hass, cv.domain_key(domain_with_label)
         )
         await config_util.async_process_component_and_handle_errors(
             hass,
@@ -2207,3 +2207,36 @@ async def test_yaml_error(
         if record.levelno == logging.ERROR
     ]
     assert error_records == snapshot
+
+
+def test_extract_domain_configs() -> None:
+    """Test the extraction of domain configuration."""
+    config = {
+        "zone": None,
+        "zoner": None,
+        "zone ": None,
+        "zone Hallo": None,
+        "zone 100": None,
+    }
+
+    assert {"zone", "zone Hallo", "zone 100"} == set(
+        config_util.extract_domain_configs(config, "zone")
+    )
+
+
+def test_config_per_platform() -> None:
+    """Test config per platform method."""
+    config = OrderedDict(
+        [
+            ("zone", {"platform": "hello"}),
+            ("zoner", None),
+            ("zone Hallo", [1, {"platform": "hello 2"}]),
+            ("zone 100", None),
+        ]
+    )
+
+    assert [
+        ("hello", config["zone"]),
+        (None, 1),
+        ("hello 2", config["zone Hallo"][1]),
+    ] == list(config_util.config_per_platform(config, "zone"))

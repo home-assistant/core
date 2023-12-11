@@ -8,6 +8,7 @@ from email.mime.text import MIMEText
 import email.utils
 import logging
 import os
+from pathlib import Path
 import smtplib
 
 import voluptuous as vol
@@ -31,6 +32,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -193,10 +195,15 @@ class MailNotificationService(BaseNotificationService):
         if data := kwargs.get(ATTR_DATA):
             if ATTR_HTML in data:
                 msg = _build_html_msg(
-                    message, data[ATTR_HTML], images=data.get(ATTR_IMAGES, [])
+                    self.hass,
+                    message,
+                    data[ATTR_HTML],
+                    images=data.get(ATTR_IMAGES, []),
                 )
             else:
-                msg = _build_multipart_msg(message, images=data.get(ATTR_IMAGES, []))
+                msg = _build_multipart_msg(
+                    self.hass, message, images=data.get(ATTR_IMAGES, [])
+                )
         else:
             msg = _build_text_msg(message)
 
@@ -241,13 +248,34 @@ def _build_text_msg(message):
     return MIMEText(message)
 
 
-def _attach_file(atch_name, content_id=""):
+def _attach_file(hass, atch_name, content_id=""):
     """Create a message attachment.
 
     If MIMEImage is successful and content_id is passed (HTML), add images in-line.
     Otherwise add them as attachments.
     """
     try:
+        file_path = Path(atch_name).parent
+        if os.path.exists(file_path) and not hass.config.is_allowed_path(
+            str(file_path)
+        ):
+            allow_list = "allowlist_external_dirs"
+            file_name = os.path.basename(atch_name)
+            url = "https://www.home-assistant.io/docs/configuration/basic/"
+            raise ServiceValidationError(
+                f"Cannot send email with attachment '{file_name}' "
+                f"from directory '{file_path}' which is not secure to load data from. "
+                f"Only folders added to `{allow_list}` are accessible. "
+                f"See {url} for more information.",
+                translation_domain=DOMAIN,
+                translation_key="remote_path_not_allowed",
+                translation_placeholders={
+                    "allow_list": allow_list,
+                    "file_path": file_path,
+                    "file_name": file_name,
+                    "url": url,
+                },
+            )
         with open(atch_name, "rb") as attachment_file:
             file_bytes = attachment_file.read()
     except FileNotFoundError:
@@ -277,22 +305,22 @@ def _attach_file(atch_name, content_id=""):
     return attachment
 
 
-def _build_multipart_msg(message, images):
+def _build_multipart_msg(hass, message, images):
     """Build Multipart message with images as attachments."""
-    _LOGGER.debug("Building multipart email with image attachment(s)")
+    _LOGGER.debug("Building multipart email with image attachme_build_html_msgnt(s)")
     msg = MIMEMultipart()
     body_txt = MIMEText(message)
     msg.attach(body_txt)
 
     for atch_name in images:
-        attachment = _attach_file(atch_name)
+        attachment = _attach_file(hass, atch_name)
         if attachment:
             msg.attach(attachment)
 
     return msg
 
 
-def _build_html_msg(text, html, images):
+def _build_html_msg(hass, text, html, images):
     """Build Multipart message with in-line images and rich HTML (UTF-8)."""
     _LOGGER.debug("Building HTML rich email")
     msg = MIMEMultipart("related")
@@ -303,7 +331,7 @@ def _build_html_msg(text, html, images):
 
     for atch_name in images:
         name = os.path.basename(atch_name)
-        attachment = _attach_file(atch_name, name)
+        attachment = _attach_file(hass, atch_name, name)
         if attachment:
             msg.attach(attachment)
     return msg

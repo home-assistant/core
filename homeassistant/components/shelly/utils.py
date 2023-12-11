@@ -267,15 +267,6 @@ def get_block_device_sleep_period(settings: dict[str, Any]) -> int:
     return sleep_period * 60  # minutes to seconds
 
 
-def get_rpc_device_sleep_period(config: dict[str, Any]) -> int:
-    """Return the device sleep period in seconds or 0 for non sleeping devices.
-
-    sys.sleep.wakeup_period value is deprecated and not available in Shelly
-    firmware 1.0.0 or later.
-    """
-    return cast(int, config["sys"].get("sleep", {}).get("wakeup_period", 0))
-
-
 def get_rpc_device_wakeup_period(status: dict[str, Any]) -> int:
     """Return the device wakeup period in seconds or 0 for non sleeping devices."""
     return cast(int, status["sys"].get("wakeup_period", 0))
@@ -430,10 +421,3 @@ def get_release_url(gen: int, model: str, beta: bool) -> str | None:
         return None
 
     return GEN1_RELEASE_URL if gen == 1 else GEN2_RELEASE_URL
-
-
-def is_relay_used_as_actuator(relay_id: int, mac: str, config: dict[str, Any]) -> bool:
-    """Return True if an internal relay is used as the thermostat actuator."""
-    return f"{mac}/c/switch:{relay_id}".lower() in config[f"thermostat:{relay_id}"].get(
-        "actuator", ""
-    )

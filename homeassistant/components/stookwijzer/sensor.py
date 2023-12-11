@@ -29,7 +29,7 @@ async def async_setup_entry(
 class StookwijzerSensor(SensorEntity):
     """Defines a Stookwijzer binary sensor."""
 
-    _attr_attribution = "Data provided by atlasleefomgeving.nl"
+    _attr_attribution = "Data provided by stookwijzer.nu"
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_has_entity_name = True
     _attr_name = None
@@ -43,9 +43,9 @@ class StookwijzerSensor(SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{entry.entry_id}")},
             name="Stookwijzer",
-            manufacturer="Atlas Leefomgeving",
+            manufacturer="stookwijzer.nu",
             entry_type=DeviceEntryType.SERVICE,
-            configuration_url="https://www.atlasleefomgeving.nl/stookwijzer",
+            configuration_url="https://www.stookwijzer.nu",
         )
 
     def update(self) -> None:

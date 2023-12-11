@@ -33,9 +33,17 @@ class SerializationError(HomeAssistantError):
     """Error serializing the data to JSON."""
 
 
-json_loads: Callable[[bytes | bytearray | memoryview | str], JsonValueType]
-json_loads = orjson.loads
-"""Parse JSON data."""
+def json_loads(__obj: bytes | bytearray | memoryview | str) -> JsonValueType:
+    """Parse JSON data.
+
+    This adds a workaround for orjson not handling subclasses of str,
+    https://github.com/ijl/orjson/issues/445.
+    """
+    if type(__obj) in (bytes, bytearray, memoryview, str):
+        return orjson.loads(__obj)  # type:ignore[no-any-return]
+    if isinstance(__obj, str):
+        return orjson.loads(str(__obj))  # type:ignore[no-any-return]
+    return orjson.loads(__obj)  # type:ignore[no-any-return]
 
 
 def json_loads_array(__obj: bytes | bytearray | memoryview | str) -> JsonArrayType:

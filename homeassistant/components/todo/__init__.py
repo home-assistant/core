@@ -35,7 +35,7 @@ from .const import (
     ATTR_DESCRIPTION,
     ATTR_DUE,
     ATTR_DUE_DATE,
-    ATTR_DUE_DATE_TIME,
+    ATTR_DUE_DATETIME,
     DOMAIN,
     TodoItemStatus,
     TodoListEntityFeature,
@@ -73,7 +73,7 @@ TODO_ITEM_FIELDS = [
         required_feature=TodoListEntityFeature.SET_DUE_DATE_ON_ITEM,
     ),
     TodoItemFieldDescription(
-        service_field=ATTR_DUE_DATE_TIME,
+        service_field=ATTR_DUE_DATETIME,
         validation=vol.All(cv.datetime, dt_util.as_local),
         todo_item_field=ATTR_DUE,
         required_feature=TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM,
@@ -89,9 +89,7 @@ TODO_ITEM_FIELDS = [
 TODO_ITEM_FIELD_SCHEMA = {
     vol.Optional(desc.service_field): desc.validation for desc in TODO_ITEM_FIELDS
 }
-TODO_ITEM_FIELD_VALIDATIONS = [
-    cv.has_at_most_one_key(ATTR_DUE_DATE, ATTR_DUE_DATE_TIME)
-]
+TODO_ITEM_FIELD_VALIDATIONS = [cv.has_at_most_one_key(ATTR_DUE_DATE, ATTR_DUE_DATETIME)]
 
 
 def _validate_supported_features(
