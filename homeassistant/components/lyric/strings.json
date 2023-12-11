@@ -44,6 +44,35 @@
       }
     }
   },
+  "exceptions": {
+    "set_heat_cool_setpoints_failed": {
+      "message": "Failed to set heat and cool setpoints"
+    },
+    "set_heat_setpoint_failed": {
+      "message": "Failed to set heat setpoint"
+    },
+    "set_cool_setpoint_failed": {
+      "message": "Failed to set cool setpoint"
+    },
+    "set_hvac_mode_failed": {
+      "message": "Failed to set HVAC mode to {mode}"
+    },
+    "activate_auto_changeover_failed": {
+      "message": "Failed to activate auto-changeover"
+    },
+    "set_setpoint_status_failed": {
+      "message": "Failed to set setpoint status to {mode}"
+    },
+    "set_next_period_time_failed": {
+      "message": "Failed to set next period time to {time}"
+    },
+    "invalid_fan_mode": {
+      "message": "The fan mode requested does not have a corresponding mode in Lyric: {mode}"
+    },
+    "set_fan_mode_failed": {
+      "message": "Failed to set fan mode to {mode}"
+    }
+  },
   "services": {
     "set_hold_time": {
       "name": "Set Hold Time",
