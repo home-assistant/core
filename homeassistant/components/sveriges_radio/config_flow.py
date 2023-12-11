@@ -6,7 +6,6 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -114,30 +113,30 @@ class SverigesRadioConfigFlow(ConfigFlow, domain=DOMAIN):
     #     )
 
 
-class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
-    """Handle Sveriges Radio traffic area options."""
+# class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
+#     """Handle Sveriges Radio traffic area options."""
 
-    def __init__(self, config_entry) -> None:
-        """Initialize the config flow handler."""
-        super().__init__(config_entry=config_entry)
-        self._attr_config_entry = config_entry
+#     def __init__(self, config_entry) -> None:
+#         """Initialize the config flow handler."""
+#         super().__init__(config_entry=config_entry)
+#         self._attr_config_entry = config_entry
 
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage Sveriges Radio traffic area options."""
-        errors: dict[str, Any] = {}
+#     async def async_step_init(
+#         self, user_input: dict[str, Any] | None = None
+#     ) -> FlowResult:
+#         """Manage Sveriges Radio traffic area options."""
+#         errors: dict[str, Any] = {}
 
-        # Check that input area is valid
-        if user_input is not None:
-            if not (_filter := user_input.get(CONF_AREA)) or _filter == "":
-                user_input[CONF_AREA] = None
-            # user_input[CONF_NAME] = TITLE
-            return self.async_create_entry(title=TITLE, data=user_input)
+#         # Check that input area is valid
+#         if user_input is not None:
+#             if not (_filter := user_input.get(CONF_AREA)) or _filter == "":
+#                 user_input[CONF_AREA] = None
+#             # user_input[CONF_NAME] = TITLE
+#             return self.async_create_entry(title=TITLE, data=user_input)
 
-        return self.async_show_form(
-            step_id="init", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-        )
+#         return self.async_show_form(
+#             step_id="init", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+#         )
 
 
 class CannotConnect(HomeAssistantError):

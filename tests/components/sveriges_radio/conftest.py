@@ -22,13 +22,13 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 @pytest.fixture(name="config_entry")
 def config_entry_fixture():
-    """Create a mock SR config entry."""
+    """Create a mock Sveriges Radio config entry."""
     return MockConfigEntry(domain=DOMAIN, title="Sveriges_radio")
 
 
 @pytest.fixture
 def async_setup_sr(hass: HomeAssistant, config_entry):
-    """Return a coroutine to set up a SR integration instance on demand."""
+    """Return a coroutine to set up a Sveriges Radio integration instance on demand."""
 
     async def _wrapper():
         config_entry.add_to_hass(hass)
