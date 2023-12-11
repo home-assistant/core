@@ -74,19 +74,10 @@ ATTR_MAP_PREINFUSION_GS3_AV = [
 ]
 
 
-@dataclass
-class LaMarzoccoSwitchEntityDescriptionMixin:
-    """Description of an La Marzocco Switch."""
-
-    control_fn: Callable[[LaMarzoccoClient, bool], Coroutine[Any, Any, bool]]
-    is_on_fn: Callable[[LaMarzoccoClient], bool]
-
-
-@dataclass
+@dataclass(kw_only = True)
 class LaMarzoccoSwitchEntityDescription(
     SwitchEntityDescription,
     LaMarzoccoEntityDescription,
-    LaMarzoccoSwitchEntityDescriptionMixin,
 ):
     """Description of an La Marzocco Switch."""
     control_fn: Callable[[LaMarzoccoClient, bool], Coroutine[Any, Any, bool]]
