@@ -45,7 +45,7 @@ async def async_setup_platform(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Fast.com from a config entry."""
-    coordinator = FastdotcomDataUpdateCoordindator(hass, entry)
+    coordinator = FastdotcomDataUpdateCoordindator(hass)
 
     async def _request_refresh(event: Event) -> None:
         """Request a refresh."""
