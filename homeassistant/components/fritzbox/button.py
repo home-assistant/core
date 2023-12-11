@@ -19,17 +19,17 @@ async def async_setup_entry(
     coordinator = get_coordinator(hass, entry.entry_id)
 
     @callback
-    def _add_entities() -> None:
+    def _add_entities(templates: set[str] | None = None) -> None:
         """Add templates."""
-        if not coordinator.new_templates:
+        if not templates and not coordinator.new_templates:
             return
-        async_add_entities(
-            FritzBoxTemplate(coordinator, ain) for ain in coordinator.new_templates
-        )
+        if not templates:
+            templates = coordinator.new_templates
+        async_add_entities(FritzBoxTemplate(coordinator, ain) for ain in templates)
 
     entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
-    _add_entities()
+    _add_entities(set(coordinator.data.templates.keys()))
 
 
 class FritzBoxTemplate(FritzBoxEntity, ButtonEntity):
