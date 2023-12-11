@@ -97,21 +97,9 @@ class RadarImage(ImageEntity):
                     _LOGGER.error("Failed to fetch map from SMHI API")
                     return None
 
-                # Open the radar and map image to combine them
-                radar_image_io = BytesIO(radar_image_content)
-                radar_image = Image.open(radar_image_io)
-
-                actual_map_io = BytesIO(actual_map_content)
-                actual_map_image = Image.open(actual_map_io)
-
-                # Resize radar image to match actual map dimensions (adjust as needed)
-                radar_image = radar_image.resize(actual_map_image.size)
-
-                # Combine the actual map and radar images using alpha compositing
-                combined_image = Image.alpha_composite(
-                    actual_map_image.convert("RGBA"), radar_image.convert("RGBA")
+                combined_image: Image.Image = self.combine_radar_images(
+                    radar_image_content, actual_map_content
                 )
-
                 # Convert the combined image to bytes and set entity attributes
                 output_bytes = BytesIO()
                 combined_image.save(output_bytes, format="PNG")
@@ -123,6 +111,37 @@ class RadarImage(ImageEntity):
         except UnidentifiedImageError as img_err:
             _LOGGER.error("Error opening image retrieved from SMHI API: %s", img_err)
             return None
+
+    @staticmethod
+    def combine_radar_images(
+        radar_image_content: bytes, map_image_content: bytes
+    ) -> Image.Image:
+        """Combine the radar image with the map.
+
+        Args:
+            radar_image_content: The content of the radar image as bytes.
+            map_image_content: The content of the map image as bytes.
+
+        Returns:
+            Image: The combined image.
+
+        This method opens the radar and map images, resizes the radar image to match the map dimensions, and combines them using alpha compositing.
+        """
+        # Open the radar and map image to combine them
+        radar_image_io = BytesIO(radar_image_content)
+        radar_image = Image.open(radar_image_io)
+
+        actual_map_io = BytesIO(map_image_content)
+        actual_map_image = Image.open(actual_map_io)
+
+        # Resize radar image to match actual map dimensions
+        radar_image = radar_image.resize(actual_map_image.size)
+
+        combined_image: Image.Image = Image.alpha_composite(
+            actual_map_image.convert("RGBA"), radar_image.convert("RGBA")
+        )
+        # Combine the actual map and radar images using alpha compositing
+        return combined_image
 
     @property
     def name(self) -> str:
