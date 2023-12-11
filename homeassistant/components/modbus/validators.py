@@ -120,15 +120,12 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     slave_count = config.get(CONF_SLAVE_COUNT, config.get(CONF_VIRTUAL_COUNT))
     validator = DEFAULT_STRUCT_FORMAT[data_type].validate_parm
     swap_type = config.get(CONF_SWAP)
-    swap_type_validator = (
-        {
-            CONF_SWAP_BYTE: validator.swap_byte,
-            CONF_SWAP_WORD: validator.swap_word,
-            CONF_SWAP_WORD_BYTE: validator.swap_word,
-        }[swap_type]
-        if swap_type
-        else OPTIONAL
-    )
+    swap_dict = {
+        CONF_SWAP_BYTE: validator.swap_byte,
+        CONF_SWAP_WORD: validator.swap_word,
+        CONF_SWAP_WORD_BYTE: validator.swap_word,
+    }
+    swap_type_validator = swap_dict[swap_type] if swap_type else OPTIONAL
     for entry in (
         (count, validator.count, CONF_COUNT),
         (structure, validator.structure, CONF_STRUCTURE),
