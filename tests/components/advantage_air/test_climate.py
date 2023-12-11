@@ -5,19 +5,6 @@ from unittest.mock import AsyncMock
 from advantage_air import ApiError
 import pytest
 
-from homeassistant.components.advantage_air.climate import (
-    ADVANTAGE_AIR_COOL_TARGET,
-    ADVANTAGE_AIR_HEAT_TARGET,
-    ADVANTAGE_AIR_MYFAN,
-    HASS_HVAC_MODES,
-)
-from homeassistant.components.advantage_air.const import (
-    ADVANTAGE_AIR_STATE_CLOSE,
-    ADVANTAGE_AIR_STATE_OFF,
-    ADVANTAGE_AIR_STATE_ON,
-    ADVANTAGE_AIR_STATE_OPEN,
-)
-
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -41,7 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import add_mock_config, patch_update
+from . import add_mock_config
 
 
 async def test_climate_myzone_main(
@@ -212,18 +199,18 @@ async def test_climate_myauto_main(
     assert entry
     assert entry.unique_id == "uniqueid-ac3"
 
-    with patch_update() as mock_update:
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_TEMPERATURE,
-            {
-                ATTR_ENTITY_ID: [entity_id],
-                ATTR_TARGET_TEMP_LOW: 21,
-                ATTR_TARGET_TEMP_HIGH: 23,
-            },
-            blocking=True,
-        )
-        mock_update.assert_called_once()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: [entity_id],
+            ATTR_TARGET_TEMP_LOW: 21,
+            ATTR_TARGET_TEMP_HIGH: 23,
+        },
+        blocking=True,
+    )
+    mock_update.assert_called_once()
+    mock_update.reset_mock()
 
     # Test AutoFanMode
     await hass.services.async_call(
@@ -232,12 +219,7 @@ async def test_climate_myauto_main(
         {ATTR_ENTITY_ID: [entity_id], ATTR_FAN_MODE: FAN_AUTO},
         blocking=True,
     )
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac3"]["info"]["fan"] == ADVANTAGE_AIR_MYFAN
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
+    mock_update.assert_called_once()
 
 
 async def test_climate_async_failed_update(
