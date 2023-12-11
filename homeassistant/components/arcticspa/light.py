@@ -51,14 +51,10 @@ class SpaLight(CoordinatedEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         await self.device.api.async_set_lights(LightState["ON"])
-        self.status.lights = LightState[
-            "ON"
-        ]  # Temporary solution because of API filtering.
+        self.status.lights = LightState["ON"]
 
     @async_refresh_after
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self.device.api.async_set_lights(LightState["OFF"])
-        self.status.lights = LightState[
-            "ON"
-        ]  # Temporary solution because of API filtering.
+        self.status.lights = LightState["ON"]

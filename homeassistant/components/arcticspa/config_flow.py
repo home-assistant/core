@@ -31,11 +31,6 @@ def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data[CONF_API_KEY]
-    # )
 
     device = Device(data[CONF_API_KEY])
 
