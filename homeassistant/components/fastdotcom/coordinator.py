@@ -5,6 +5,7 @@ from datetime import timedelta
 
 from fastdotcom import fast_com
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -14,10 +15,14 @@ from .const import DEFAULT_INTERVAL, DOMAIN, LOGGER
 class FastdotcomDataUpdateCoordindator(DataUpdateCoordinator[float]):
     """Class to manage fetching Fast.com data API."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the coordinator for Fast.com."""
+        self.hass = hass
+        self.config_entry = config_entry
         super().__init__(
-            hass,
+            self.hass,
             LOGGER,
             name=DOMAIN,
             update_interval=timedelta(hours=DEFAULT_INTERVAL),
