@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -183,7 +183,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 def cleanup_disconnected_cams(
     hass: HomeAssistant, config_entry_id: str, host: ReolinkHost
 ) -> None:
-    """Clean-up disconnected camera channels or channels where a different model camera is connected."""
+    """Clean-up disconnected camera channels."""
     if not host.api.is_nvr:
         return
 
@@ -206,14 +206,16 @@ def cleanup_disconnected_cams(
         if ch not in host.api.channels:
             remove = True
             _LOGGER.debug(
-                "Removing Reolink device %s, since no camera is connected to NVR channel %s anymore",
+                "Removing Reolink device %s, "
+                "since no camera is connected to NVR channel %s anymore",
                 device.name,
                 ch,
             )
         if ch_model not in [device.model, "Unknown"]:
             remove = True
             _LOGGER.debug(
-                "Removing Reolink device %s, since the camera model connected to channel %s changed from %s to %s",
+                "Removing Reolink device %s, "
+                "since the camera model connected to channel %s changed from %s to %s",
                 device.name,
                 ch,
                 device.model,
@@ -222,12 +224,5 @@ def cleanup_disconnected_cams(
         if not remove:
             continue
 
-        # clean entity and device registry
-        entity_reg = er.async_get(hass)
-        entities = er.async_entries_for_device(
-            entity_reg, device.id, include_disabled_entities=True
-        )
-        for entity in entities:
-            entity_reg.async_remove(entity.entity_id)
-
+        # clean device registry and associated entities
         device_reg.async_remove_device(device.id)

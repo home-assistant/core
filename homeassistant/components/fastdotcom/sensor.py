@@ -24,7 +24,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fast.com sensor."""
-    async_add_entities([SpeedtestSensor(hass.data[DOMAIN])])
+    async_add_entities([SpeedtestSensor(entry.entry_id, hass.data[DOMAIN])])
 
 
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
@@ -38,9 +38,10 @@ class SpeedtestSensor(RestoreEntity, SensorEntity):
     _attr_icon = "mdi:speedometer"
     _attr_should_poll = False
 
-    def __init__(self, speedtest_data: dict[str, Any]) -> None:
+    def __init__(self, entry_id: str, speedtest_data: dict[str, Any]) -> None:
         """Initialize the sensor."""
         self._speedtest_data = speedtest_data
+        self._attr_unique_id = entry_id
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

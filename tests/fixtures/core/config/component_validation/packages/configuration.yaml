@@ -68,3 +68,10 @@ homeassistant:
     pack_custom_validator_bad_2:
       # This always raises ValueError
       custom_validator_bad_2:
+    # Invalid domains
+    pack_iot_domain_space:
+      "iot_domain ":
+    pack_empty:
+      "":
+    pack_5:
+      5:
