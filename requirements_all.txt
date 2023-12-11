@@ -1803,7 +1803,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.5.2
+pyinsteon==1.5.3
 
 # homeassistant.components.intesishome
 pyintesishome==1.8.0
