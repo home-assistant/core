@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import setup
@@ -731,14 +732,16 @@ async def test_updating_manually(
         }
     ],
 )
-async def test_availability(hass: HomeAssistant, load_yaml_integration: None) -> None:
+async def test_availability(
+    hass: HomeAssistant,
+    load_yaml_integration: None,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test availability."""
 
     hass.states.async_set("sensor.input1", "on")
-    async_fire_time_changed(
-        hass,
-        dt_util.utcnow() + timedelta(minutes=1),
-    )
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     entity_state = hass.states.get("switch.test")
@@ -751,11 +754,8 @@ async def test_availability(hass: HomeAssistant, load_yaml_integration: None) ->
         "homeassistant.components.command_line.utils.subprocess.check_output",
         return_value=b"50\n",
     ):
-        # Give time for template to load
-        async_fire_time_changed(
-            hass,
-            dt_util.utcnow() + timedelta(minutes=1),
-        )
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     entity_state = hass.states.get("switch.test")
