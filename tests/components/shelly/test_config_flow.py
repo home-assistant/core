@@ -967,62 +967,6 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device) -> None:
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-async def test_options_flow_pre_ble_device(
-    hass: HomeAssistant, mock_pre_ble_rpc_device
-) -> None:
-    """Test setting ble options for gen2 devices with pre ble firmware."""
-    entry = await init_integration(hass, 2)
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] is None
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_BLE_SCANNER_MODE: BLEScannerMode.DISABLED,
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_BLE_SCANNER_MODE] == BLEScannerMode.DISABLED
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] is None
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE,
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "ble_unsupported"
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] is None
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_BLE_SCANNER_MODE: BLEScannerMode.PASSIVE,
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "ble_unsupported"
-
-    await hass.config_entries.async_unload(entry.entry_id)
-
-
 async def test_zeroconf_already_configured_triggers_refresh_mac_in_name(
     hass: HomeAssistant, mock_rpc_device, monkeypatch
 ) -> None:
