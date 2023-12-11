@@ -77,11 +77,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_OPEN_VALVE, {}, "async_open_valve", [ValveEntityFeature.OPEN]
+        SERVICE_OPEN_VALVE, {}, "async_handle_open_valve", [ValveEntityFeature.OPEN]
     )
 
     component.async_register_entity_service(
-        SERVICE_CLOSE_VALVE, {}, "async_close_valve", [ValveEntityFeature.CLOSE]
+        SERVICE_CLOSE_VALVE, {}, "async_handle_close_valve", [ValveEntityFeature.CLOSE]
     )
 
     component.async_register_entity_service(
@@ -218,29 +218,39 @@ class ValveEntity(Entity):
 
     def open_valve(self) -> None:
         """Open the valve."""
-        if not ValveEntityFeature.SET_POSITION | self.supported_features:
-            raise NotImplementedError()
-        self.set_valve_position(100)
+        raise NotImplementedError()
 
     async def async_open_valve(self) -> None:
         """Open the valve."""
         await self.hass.async_add_executor_job(ft.partial(self.open_valve))
 
+    @final
+    async def async_handle_open_valve(self) -> None:
+        """Open the valve."""
+        if self.supported_features & ValveEntityFeature.SET_POSITION:
+            return await self.async_set_valve_position(100)
+        await self.async_open_valve()
+
     def close_valve(self) -> None:
         """Close valve."""
-        if not (ValveEntityFeature.SET_POSITION | self.supported_features):
-            raise NotImplementedError()
-        self.set_valve_position(0)
+        raise NotImplementedError()
 
     async def async_close_valve(self) -> None:
         """Close valve."""
         await self.hass.async_add_executor_job(ft.partial(self.close_valve))
 
+    @final
+    async def async_handle_close_valve(self) -> None:
+        """Close the valve."""
+        if self.supported_features & ValveEntityFeature.SET_POSITION:
+            return await self.async_set_valve_position(0)
+        await self.async_close_valve()
+
     async def async_toggle(self) -> None:
         """Toggle the entity."""
         fns = {
-            "open": self.async_open_valve,
-            "close": self.async_close_valve,
+            "open": self.async_handle_open_valve,
+            "close": self.async_handle_close_valve,
             "stop": self.async_stop_valve,
         }
         function = self._get_toggle_function(fns)
