@@ -7,17 +7,18 @@ from unittest.mock import patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import AdvertisementHistory
+from habluetooth.manager import FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
 import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
-    BaseHaRemoteScanner,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfo,
     BluetoothServiceInfoBleak,
     HaBluetoothConnector,
+    HomeAssistantRemoteScanner,
     async_ble_device_from_address,
     async_get_advertisement_callback,
     async_get_fallback_availability_interval,
@@ -30,9 +31,6 @@ from homeassistant.components.bluetooth import (
 from homeassistant.components.bluetooth.const import (
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
-)
-from homeassistant.components.bluetooth.manager import (
-    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
@@ -48,6 +46,7 @@ from . import (
     inject_advertisement_with_source,
     inject_advertisement_with_time_and_source,
     inject_advertisement_with_time_and_source_connectable,
+    patch_bluetooth_time,
 )
 
 from tests.common import async_fire_time_changed, load_fixture
@@ -56,7 +55,7 @@ from tests.common import async_fire_time_changed, load_fixture
 @pytest.fixture
 def register_hci0_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
     """Register an hci0 scanner."""
-    hci0_scanner = FakeScanner(hass, "hci0", "hci0")
+    hci0_scanner = FakeScanner("hci0", "hci0")
     cancel = bluetooth.async_register_scanner(hass, hci0_scanner, True)
     yield
     cancel()
@@ -65,7 +64,7 @@ def register_hci0_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
 @pytest.fixture
 def register_hci1_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
     """Register an hci1 scanner."""
-    hci1_scanner = FakeScanner(hass, "hci1", "hci1")
+    hci1_scanner = FakeScanner("hci1", "hci1")
     cancel = bluetooth.async_register_scanner(hass, hci1_scanner, True)
     yield
     cancel()
@@ -562,7 +561,7 @@ async def test_switching_adapters_when_one_goes_away(
 ) -> None:
     """Test switching adapters when one goes away."""
     cancel_hci2 = bluetooth.async_register_scanner(
-        hass, FakeScanner(hass, "hci2", "hci2"), True
+        hass, FakeScanner("hci2", "hci2"), True
     )
 
     address = "44:44:33:11:23:45"
@@ -612,7 +611,7 @@ async def test_switching_adapters_when_one_stop_scanning(
     hass: HomeAssistant, enable_bluetooth: None, register_hci0_scanner: None
 ) -> None:
     """Test switching adapters when stops scanning."""
-    hci2_scanner = FakeScanner(hass, "hci2", "hci2")
+    hci2_scanner = FakeScanner("hci2", "hci2")
     cancel_hci2 = bluetooth.async_register_scanner(hass, hci2_scanner, True)
 
     address = "44:44:33:11:23:45"
@@ -704,7 +703,7 @@ async def test_goes_unavailable_connectable_only_and_recovers(
         BluetoothScanningMode.ACTIVE,
     )
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(HomeAssistantRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -877,7 +876,7 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
         BluetoothScanningMode.ACTIVE,
     )
 
-    class FakeScanner(BaseHaRemoteScanner):
+    class FakeScanner(HomeAssistantRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -962,9 +961,8 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
         return_value=[{"flow_id": "mock_flow_id"}],
     ) as mock_async_progress_by_init_data_type, patch.object(
         hass.config_entries.flow, "async_abort"
-    ) as mock_async_abort, patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+    ) as mock_async_abort, patch_bluetooth_time(
+        monotonic_now + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -1105,9 +1103,8 @@ async def test_set_fallback_interval_small(
     )
 
     monotonic_now = start_monotonic_time + 2
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    with patch_bluetooth_time(
+        monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -1170,9 +1167,8 @@ async def test_set_fallback_interval_big(
     # Check that device hasn't expired after a day
 
     monotonic_now = start_monotonic_time + 86400
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    with patch_bluetooth_time(
+        monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -1184,9 +1180,8 @@ async def test_set_fallback_interval_big(
     # Try again after it has expired
 
     monotonic_now = start_monotonic_time + 604800
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    with patch_bluetooth_time(
+        monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)

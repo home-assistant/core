@@ -1,9 +1,8 @@
 """The tests for the UniFi Network device tracker platform."""
 from datetime import timedelta
-from unittest.mock import patch
 
 from aiounifi.models.message import MessageKey
-from freezegun.api import FrozenDateTimeFactory
+from freezegun.api import FrozenDateTimeFactory, freeze_time
 
 from homeassistant import config_entries
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
@@ -72,7 +71,7 @@ async def test_tracked_wireless_clients(
     # Change time to mark client as away
 
     new_time = dt_util.utcnow() + controller.option_detection_time
-    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+    with freeze_time(new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
 
@@ -293,6 +292,7 @@ async def test_tracked_wireless_clients_event_source(
 async def test_tracked_devices(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
     mock_unifi_websocket,
     mock_device_registry,
 ) -> None:
@@ -351,9 +351,9 @@ async def test_tracked_devices(
     # Change of time can mark device not_home outside of expected reporting interval
 
     new_time = dt_util.utcnow() + timedelta(seconds=90)
-    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
-        async_fire_time_changed(hass, new_time)
-        await hass.async_block_till_done()
+    freezer.move_to(new_time)
+    async_fire_time_changed(hass, new_time)
+    await hass.async_block_till_done()
 
     assert hass.states.get("device_tracker.device_1").state == STATE_NOT_HOME
     assert hass.states.get("device_tracker.device_2").state == STATE_HOME
@@ -712,7 +712,7 @@ async def test_option_ssid_filter(
     await hass.async_block_till_done()
 
     new_time = dt_util.utcnow() + controller.option_detection_time
-    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+    with freeze_time(new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
 
@@ -740,7 +740,7 @@ async def test_option_ssid_filter(
     # Time pass to mark client as away
 
     new_time += controller.option_detection_time
-    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+    with freeze_time(new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
 
@@ -759,7 +759,7 @@ async def test_option_ssid_filter(
     await hass.async_block_till_done()
 
     new_time += controller.option_detection_time
-    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+    with freeze_time(new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
 
@@ -808,7 +808,7 @@ async def test_wireless_client_go_wired_issue(
 
     # Pass time
     new_time = dt_util.utcnow() + controller.option_detection_time
-    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+    with freeze_time(new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
 
@@ -877,7 +877,7 @@ async def test_option_ignore_wired_bug(
 
     # pass time
     new_time = dt_util.utcnow() + controller.option_detection_time
-    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+    with freeze_time(new_time):
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
 
@@ -939,11 +939,18 @@ async def test_restoring_client(
     )
 
     registry = er.async_get(hass)
-    registry.async_get_or_create(
+    registry.async_get_or_create(  # Unique ID updated
         TRACKER_DOMAIN,
         UNIFI_DOMAIN,
         f'{restored["mac"]}-site_id',
         suggested_object_id=restored["hostname"],
+        config_entry=config_entry,
+    )
+    registry.async_get_or_create(  # Unique ID already updated
+        TRACKER_DOMAIN,
+        UNIFI_DOMAIN,
+        f'site_id-{client["mac"]}',
+        suggested_object_id=client["hostname"],
         config_entry=config_entry,
     )
 

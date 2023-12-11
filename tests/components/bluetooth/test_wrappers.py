@@ -2,31 +2,41 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import contextmanager
 from unittest.mock import patch
 
 import bleak
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 from bleak.exc import BleakError
+from habluetooth.usage import (
+    install_multiple_bleak_catcher,
+    uninstall_multiple_bleak_catcher,
+)
 import pytest
 
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
-    BaseHaRemoteScanner,
     BluetoothServiceInfoBleak,
     HaBluetoothConnector,
+    HomeAssistantBluetoothManager,
+    HomeAssistantRemoteScanner,
     async_get_advertisement_callback,
-)
-from homeassistant.components.bluetooth.usage import (
-    install_multiple_bleak_catcher,
-    uninstall_multiple_bleak_catcher,
 )
 from homeassistant.core import HomeAssistant
 
 from . import _get_manager, generate_advertisement_data, generate_ble_device
 
 
-class FakeScanner(BaseHaRemoteScanner):
+@contextmanager
+def mock_shutdown(manager: HomeAssistantBluetoothManager) -> None:
+    """Mock shutdown of the HomeAssistantBluetoothManager."""
+    manager.shutdown = True
+    yield
+    manager.shutdown = False
+
+
+class FakeScanner(HomeAssistantRemoteScanner):
     """Fake scanner."""
 
     def __init__(
@@ -133,7 +143,7 @@ def install_bleak_catcher_fixture():
 def mock_platform_client_fixture():
     """Fixture that mocks the platform client."""
     with patch(
-        "homeassistant.components.bluetooth.wrappers.get_platform_client_backend_type",
+        "habluetooth.wrappers.get_platform_client_backend_type",
         return_value=FakeBleakClient,
     ):
         yield
@@ -143,7 +153,7 @@ def mock_platform_client_fixture():
 def mock_platform_client_that_fails_to_connect_fixture():
     """Fixture that mocks the platform client that fails to connect."""
     with patch(
-        "homeassistant.components.bluetooth.wrappers.get_platform_client_backend_type",
+        "habluetooth.wrappers.get_platform_client_backend_type",
         return_value=FakeBleakClientFailsToConnect,
     ):
         yield
@@ -153,7 +163,7 @@ def mock_platform_client_that_fails_to_connect_fixture():
 def mock_platform_client_that_raises_on_connect_fixture():
     """Fixture that mocks the platform client that fails to connect."""
     with patch(
-        "homeassistant.components.bluetooth.wrappers.get_platform_client_backend_type",
+        "habluetooth.wrappers.get_platform_client_backend_type",
         return_value=FakeBleakClientRaisesOnConnect,
     ):
         yield
@@ -332,27 +342,27 @@ async def test_we_switch_adapters_on_failure(
             return True
 
     with patch(
-        "homeassistant.components.bluetooth.wrappers.get_platform_client_backend_type",
+        "habluetooth.wrappers.get_platform_client_backend_type",
         return_value=FakeBleakClientFailsHCI0Only,
     ):
         assert await client.connect() is False
 
     with patch(
-        "homeassistant.components.bluetooth.wrappers.get_platform_client_backend_type",
+        "habluetooth.wrappers.get_platform_client_backend_type",
         return_value=FakeBleakClientFailsHCI0Only,
     ):
         assert await client.connect() is False
 
     # After two tries we should switch to hci1
     with patch(
-        "homeassistant.components.bluetooth.wrappers.get_platform_client_backend_type",
+        "habluetooth.wrappers.get_platform_client_backend_type",
         return_value=FakeBleakClientFailsHCI0Only,
     ):
         assert await client.connect() is True
 
     # ..and we remember that hci1 works as long as the client doesn't change
     with patch(
-        "homeassistant.components.bluetooth.wrappers.get_platform_client_backend_type",
+        "habluetooth.wrappers.get_platform_client_backend_type",
         return_value=FakeBleakClientFailsHCI0Only,
     ):
         assert await client.connect() is True
@@ -361,7 +371,7 @@ async def test_we_switch_adapters_on_failure(
     client = bleak.BleakClient(ble_device)
 
     with patch(
-        "homeassistant.components.bluetooth.wrappers.get_platform_client_backend_type",
+        "habluetooth.wrappers.get_platform_client_backend_type",
         return_value=FakeBleakClientFailsHCI0Only,
     ):
         assert await client.connect() is False
@@ -382,7 +392,7 @@ async def test_raise_after_shutdown(
         hass
     )
     # hci0 has 2 slots, hci1 has 1 slot
-    with patch.object(manager, "shutdown", True):
+    with mock_shutdown(manager):
         ble_device = hci0_device_advs["00:00:00:00:00:01"][0]
         client = bleak.BleakClient(ble_device)
         with pytest.raises(BleakError, match="shutdown"):

@@ -457,8 +457,8 @@ async def async_setup_entity_entry_helper(
                 if TYPE_CHECKING:
                     assert entity_class is not None
                 entities.append(entity_class(hass, config, entry, None))
-            except vol.Invalid as ex:
-                error = str(ex)
+            except vol.Invalid as exc:
+                error = str(exc)
                 config_file = getattr(yaml_config, "__config_file__", "?")
                 line = getattr(yaml_config, "__line__", "?")
                 issue_id = hex(hash(frozenset(yaml_config)))

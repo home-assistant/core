@@ -18,6 +18,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
     CountrySelector,
     CountrySelectorConfig,
+    LanguageSelector,
+    LanguageSelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -62,14 +64,14 @@ def add_province_and_language_to_schema(
     _country = country_holidays(country=country)
     if country_default_language := (_country.default_language):
         selectable_languages = _country.supported_languages
+        new_selectable_languages = []
+        for lang in selectable_languages:
+            new_selectable_languages.append(lang[:2])
         language_schema = {
             vol.Optional(
                 CONF_LANGUAGE, default=country_default_language
-            ): SelectSelector(
-                SelectSelectorConfig(
-                    options=list(selectable_languages),
-                    mode=SelectSelectorMode.DROPDOWN,
-                )
+            ): LanguageSelector(
+                LanguageSelectorConfig(languages=new_selectable_languages)
             )
         }
 
@@ -109,12 +111,25 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
 
     year: int = dt_util.now().year
     if country := user_input.get(CONF_COUNTRY):
+        language = user_input.get(CONF_LANGUAGE)
+        province = user_input.get(CONF_PROVINCE)
         obj_holidays = country_holidays(
             country=country,
-            subdiv=user_input.get(CONF_PROVINCE),
+            subdiv=province,
             years=year,
-            language=user_input.get(CONF_LANGUAGE),
+            language=language,
         )
+        if (
+            supported_languages := obj_holidays.supported_languages
+        ) and language == "en":
+            for lang in supported_languages:
+                if lang.startswith("en"):
+                    obj_holidays = country_holidays(
+                        country,
+                        subdiv=province,
+                        years=year,
+                        language=lang,
+                    )
     else:
         obj_holidays = HolidayBase(years=year)
 
@@ -140,6 +155,14 @@ DATA_SCHEMA_SETUP = vol.Schema(
 
 DATA_SCHEMA_OPT = vol.Schema(
     {
+        vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS): SelectSelector(
+            SelectSelectorConfig(
+                options=ALLOWED_DAYS,
+                multiple=True,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key="days",
+            )
+        ),
         vol.Optional(CONF_EXCLUDES, default=DEFAULT_EXCLUDES): SelectSelector(
             SelectSelectorConfig(
                 options=ALLOWED_DAYS,
@@ -150,14 +173,6 @@ DATA_SCHEMA_OPT = vol.Schema(
         ),
         vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): NumberSelector(
             NumberSelectorConfig(min=-10, max=10, step=1, mode=NumberSelectorMode.BOX)
-        ),
-        vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS): SelectSelector(
-            SelectSelectorConfig(
-                options=ALLOWED_DAYS,
-                multiple=True,
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key="days",
-            )
         ),
         vol.Optional(CONF_ADD_HOLIDAYS, default=[]): SelectSelector(
             SelectSelectorConfig(
