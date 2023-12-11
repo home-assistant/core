@@ -683,6 +683,7 @@ class ConfigEntry:
         return {
             "entry_id": self.entry_id,
             "version": self.version,
+            "minor_version": self.minor_version,
             "domain": self.domain,
             "title": self.title,
             "data": dict(self.data),
