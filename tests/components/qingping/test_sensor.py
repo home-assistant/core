@@ -1,7 +1,6 @@
 """Test the Qingping sensors."""
 from datetime import timedelta
 import time
-from unittest.mock import patch
 
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
@@ -22,6 +21,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import (
     inject_bluetooth_service_info,
     patch_all_discovered_devices,
+    patch_bluetooth_time,
 )
 
 
@@ -82,9 +82,8 @@ async def test_binary_sensor_restore_state(hass: HomeAssistant) -> None:
     # Fastforward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now,
+    with patch_bluetooth_time(
+        monotonic_now,
     ), patch_all_discovered_devices([]):
         async_fire_time_changed(
             hass,
