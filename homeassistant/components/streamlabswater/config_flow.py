@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
@@ -62,21 +62,7 @@ class StreamlabsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Import the yaml config."""
-        try:
-            self._async_abort_entries_match(user_input)
-        except AbortFlow:
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                "deprecated_yaml_import_issue_already_configured",
-                breaks_in_ha_version="2024.7.0",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_yaml_import_issue_already_configured",
-                translation_placeholders=ISSUE_PLACEHOLDER,
-            )
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match(user_input)
         try:
             await validate_input(self.hass, user_input[CONF_API_KEY])
         except CannotConnect:

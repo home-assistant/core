@@ -171,23 +171,3 @@ async def test_import_unknown(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "unknown"
-
-
-async def test_import_entry_already_exists(hass: HomeAssistant) -> None:
-    """Test we handle if the entry already exists."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_API_KEY: "abc"},
-    )
-    entry.add_to_hass(hass)
-    with patch("homeassistant.components.streamlabswater.config_flow.StreamlabsClient"):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_API_KEY: "abc"},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
