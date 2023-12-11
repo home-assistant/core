@@ -1920,9 +1920,9 @@ def median(*args: Any, default: Any = _SENTINEL) -> Any:
     if len(args) == 0:
         raise TypeError("average expected at least 1 argument, got 0")
 
-    # If first argument is iterable and more than 1 argument provided but not a named
+    # If first argument is a list or tuple and more than 1 argument provided but not a named
     # default, then use 2nd argument as default.
-    if isinstance(args[0], Iterable):
+    if isinstance(args[0], list | tuple):
         median_list = args[0]
         if len(args) > 1 and default is _SENTINEL:
             default = args[1]
