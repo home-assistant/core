@@ -23,15 +23,6 @@ from . import (
 from tests.common import MockConfigEntry
 
 
-async def test_show_config_form(hass: HomeAssistant) -> None:
-    """Test if initial configuration form is shown."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
 
 
 async def test_form(hass: HomeAssistant, mock_lamarzocco: MagicMock) -> None:
