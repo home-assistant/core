@@ -49,14 +49,16 @@ class RoborockEntity(Entity):
         try:
             response: dict = await self._api.send_command(command, params)
         except RoborockException as err:
+            if isinstance(command, RoborockCommand):
+                command_name = command.name
+            else:
+                command_name = command
             raise HomeAssistantError(
                 f"Error while calling {command}.",
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
                 translation_placeholders={
-                    "command": command.name
-                    if isinstance(command, RoborockCommand)
-                    else command,
+                    "command": command_name,
                 },
             ) from err
         return response
