@@ -5,6 +5,10 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components import conversation
+from homeassistant.components.conversation.const import (
+    ATTR_TRANSLATED_STATE,
+    ATTR_UNTRANSLATED_STATE,
+)
 from homeassistant.components.homeassistant.exposed_entities import (
     async_get_assistant_settings,
 )
@@ -228,6 +232,31 @@ async def test_unexposed_entities_skipped(
     assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
     assert len(result.response.matched_states) == 1
     assert result.response.matched_states[0].entity_id == exposed_light.entity_id
+
+
+async def test_state_translations(
+    hass: HomeAssistant,
+    init_components,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test setting state attributes for translated/untranslated state."""
+    exposed_light = entity_registry.async_get_or_create("light", "demo", "1234")
+    hass.states.async_set(
+        exposed_light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "demo light"}
+    )
+
+    with patch(
+        "homeassistant.components.conversation.default_agent.template.Template.async_render"
+    ) as render_response:
+        result = await conversation.async_converse(
+            hass, "is the demo light off", None, Context()
+        )
+        assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
+        state_attributes = (
+            render_response.call_args[0][0].get("query").get("matched")[0].attributes
+        )
+        assert state_attributes.get(ATTR_TRANSLATED_STATE) == "Off"
+        assert state_attributes.get(ATTR_UNTRANSLATED_STATE) == "off"
 
 
 async def test_trigger_sentences(hass: HomeAssistant, init_components) -> None:
