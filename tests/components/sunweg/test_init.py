@@ -10,6 +10,7 @@ from sunweg.plant import Plant
 
 from homeassistant.components.sunweg import SunWEGData
 from homeassistant.components.sunweg.const import DOMAIN
+from homeassistant.components.sunweg.device_type import DeviceType
 from homeassistant.components.sunweg.sensor_types.sensor_entity_description import (
     SunWEGSensorEntityDescription,
 )
@@ -93,9 +94,9 @@ async def test_sunwegdata_get_api_value_none() -> None:
     api = MagicMock()
     data = SunWEGData(api, 123456)
     data.data = deepcopy(SUNWEG_PLANT_RESPONSE)
-    assert data.get_api_value("variable", "inverter", 0, "deep_name") is None
+    assert data.get_api_value("variable", DeviceType.INVERTER, 0, "deep_name") is None
     data.data.inverters.append(deepcopy(SUNWEG_INVERTER_RESPONSE))
-    assert data.get_api_value("variable", "invalid type", 21255, "deep_name") is None
+    assert data.get_api_value("variable", DeviceType.STRING, 21255, "deep_name") is None
 
 
 async def test_sunwegdata_get_data_drop_threshold() -> None:
@@ -109,15 +110,24 @@ async def test_sunwegdata_get_data_drop_threshold() -> None:
     entity_description.previous_value_drop_threshold = 0.1
     data.get_api_value.return_value = 3.0
     assert (
-        data.get_data(entity_description=entity_description, device_type="total") == 3.0
+        data.get_data(
+            entity_description=entity_description, device_type=DeviceType.TOTAL
+        )
+        == 3.0
     )
     data.get_api_value.return_value = 2.91
     assert (
-        data.get_data(entity_description=entity_description, device_type="total") == 3.0
+        data.get_data(
+            entity_description=entity_description, device_type=DeviceType.TOTAL
+        )
+        == 3.0
     )
     data.get_api_value.return_value = 2.8
     assert (
-        data.get_data(entity_description=entity_description, device_type="total") == 2.8
+        data.get_data(
+            entity_description=entity_description, device_type=DeviceType.TOTAL
+        )
+        == 2.8
     )
 
 
@@ -132,13 +142,22 @@ async def test_sunwegdata_get_data_never_reset() -> None:
     entity_description.never_resets = True
     data.get_api_value.return_value = 3.0
     assert (
-        data.get_data(entity_description=entity_description, device_type="total") == 3.0
+        data.get_data(
+            entity_description=entity_description, device_type=DeviceType.TOTAL
+        )
+        == 3.0
     )
     data.get_api_value.return_value = 0
     assert (
-        data.get_data(entity_description=entity_description, device_type="total") == 3.0
+        data.get_data(
+            entity_description=entity_description, device_type=DeviceType.TOTAL
+        )
+        == 3.0
     )
     data.get_api_value.return_value = 2.8
     assert (
-        data.get_data(entity_description=entity_description, device_type="total") == 2.8
+        data.get_data(
+            entity_description=entity_description, device_type=DeviceType.TOTAL
+        )
+        == 2.8
     )

@@ -20,6 +20,7 @@ from homeassistant.helpers.typing import StateType
 
 from . import SunWEGData
 from .const import CONF_PLANT_ID, DEFAULT_PLANT_ID, DOMAIN
+from .device_type import DeviceType
 from .sensor_types.inverter import INVERTER_SENSOR_TYPES
 from .sensor_types.phase import PHASE_SENSOR_TYPES
 from .sensor_types.sensor_entity_description import SunWEGSensorEntityDescription
@@ -67,7 +68,7 @@ async def async_setup_entry(
             name=f"{name} Total",
             unique_id=f"{plant_id}-{description.key}",
             description=description,
-            device_type="total",
+            device_type=DeviceType.TOTAL,
         )
         for description in TOTAL_SENSOR_TYPES
     ]
@@ -80,7 +81,7 @@ async def async_setup_entry(
                 name=f"{device.name}",
                 unique_id=f"{device.sn}-{description.key}",
                 description=description,
-                device_type="inverter",
+                device_type=DeviceType.INVERTER,
                 inverter_id=device.id,
             )
             for device in devices
@@ -96,7 +97,7 @@ async def async_setup_entry(
                 unique_id=f"{device.sn}-{phase.name}-{description.key}",
                 description=description,
                 inverter_id=device.id,
-                device_type="phase",
+                device_type=DeviceType.PHASE,
                 deep_name=phase.name,
             )
             for device in devices
@@ -113,7 +114,7 @@ async def async_setup_entry(
                 unique_id=f"{device.sn}-{string.name}-{description.key}",
                 description=description,
                 inverter_id=device.id,
-                device_type="string",
+                device_type=DeviceType.STRING,
                 deep_name=string.name,
             )
             for device in devices
@@ -137,7 +138,7 @@ class SunWEGInverter(SensorEntity):
         name: str,
         unique_id: str,
         description: SunWEGSensorEntityDescription,
-        device_type: str,
+        device_type: DeviceType,
         inverter_id: int = 0,
         deep_name: str | None = None,
     ) -> None:

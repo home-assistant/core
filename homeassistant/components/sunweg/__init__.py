@@ -14,6 +14,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util import Throttle
 
 from .const import CONF_PLANT_ID, DOMAIN, PLATFORMS
+from .device_type import DeviceType
 from .sensor_types.sensor_entity_description import SunWEGSensorEntityDescription
 
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
@@ -74,12 +75,12 @@ class SunWEGData:
     def get_api_value(
         self,
         variable: str,
-        device_type: str,
+        device_type: DeviceType,
         inverter_id: int = 0,
         deep_name: str | None = None,
     ):
         """Retrieve from a Plant the desired variable value."""
-        if device_type == "total":
+        if device_type == DeviceType.TOTAL:
             return self.data.__dict__.get(variable)
 
         inverter_list = [i for i in self.data.inverters if i.id == inverter_id]
@@ -87,13 +88,13 @@ class SunWEGData:
             return None
         inverter = inverter_list[0]
 
-        if device_type == "inverter":
+        if device_type == DeviceType.INVERTER:
             return inverter.__dict__.get(variable)
-        if device_type == "phase":
+        if device_type == DeviceType.PHASE:
             for phase in inverter.phases:
                 if phase.name == deep_name:
                     return phase.__dict__.get(variable)
-        elif device_type == "string":
+        elif device_type == DeviceType.STRING:
             for mppt in inverter.mppts:
                 for string in mppt.strings:
                     if string.name == deep_name:
@@ -103,7 +104,7 @@ class SunWEGData:
     def get_data(
         self,
         entity_description: SunWEGSensorEntityDescription,
-        device_type: str,
+        device_type: DeviceType,
         inverter_id: int = 0,
         deep_name: str | None = None,
     ) -> StateType | datetime.datetime:
@@ -113,13 +114,13 @@ class SunWEGData:
             entity_description.name,
         )
         variable = entity_description.api_variable_key
-        previous_metric = entity_description.native_unit_of_measurement
+        previous_unit = entity_description.native_unit_of_measurement
         api_value = self.get_api_value(variable, device_type, inverter_id, deep_name)
         previous_value = self.previous_values.get(variable)
         return_value = api_value
-        if entity_description.api_variable_metric is not None:
+        if entity_description.api_variable_unit is not None:
             entity_description.native_unit_of_measurement = self.get_api_value(
-                entity_description.api_variable_metric,
+                entity_description.api_variable_unit,
                 device_type,
                 inverter_id,
                 deep_name,
@@ -130,7 +131,7 @@ class SunWEGData:
             entity_description.previous_value_drop_threshold is not None
             and previous_value is not None
             and api_value is not None
-            and previous_metric == entity_description.native_unit_of_measurement
+            and previous_unit == entity_description.native_unit_of_measurement
         ):
             _LOGGER.debug(
                 (
