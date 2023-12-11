@@ -168,12 +168,16 @@ def build_x10_schema(
     dim_steps=22,
 ):
     """Build the X10 schema for config flow."""
+    if platform == "light":
+        dim_steps_schema = vol.Required(CONF_DIM_STEPS, default=dim_steps)
+    else:
+        dim_steps_schema = vol.Optional(CONF_DIM_STEPS, default=dim_steps)
     return vol.Schema(
         {
             vol.Required(CONF_HOUSECODE, default=housecode): vol.In(HC_LOOKUP.keys()),
             vol.Required(CONF_UNITCODE, default=unitcode): vol.In(range(1, 17)),
             vol.Required(CONF_PLATFORM, default=platform): vol.In(X10_PLATFORMS),
-            vol.Optional(CONF_DIM_STEPS, default=dim_steps): vol.In(range(1, 255)),
+            dim_steps_schema: vol.Range(min=0, max=255),
         }
     )
 
