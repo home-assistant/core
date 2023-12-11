@@ -215,7 +215,7 @@ class DomainBlueprints:
     def _load_blueprint(self, blueprint_path) -> Blueprint:
         """Load a blueprint."""
         try:
-            blueprint_data = yaml.load_yaml(self.blueprint_folder / blueprint_path)
+            blueprint_data = yaml.load_yaml_dict(self.blueprint_folder / blueprint_path)
         except FileNotFoundError as err:
             raise FailedToLoad(
                 self.domain,
@@ -225,7 +225,6 @@ class DomainBlueprints:
         except HomeAssistantError as err:
             raise FailedToLoad(self.domain, blueprint_path, err) from err
 
-        assert isinstance(blueprint_data, dict)
         return Blueprint(
             blueprint_data, expected_domain=self.domain, path=blueprint_path
         )
