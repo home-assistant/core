@@ -51,6 +51,7 @@ FLOWS = {
         "apple_tv",
         "aranet",
         "arcam_fmj",
+        "arcticspa",
         "aseko_pool_live",
         "asuswrt",
         "atag",

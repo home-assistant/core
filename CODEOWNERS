@@ -106,6 +106,8 @@ build.json @home-assistant/supervisor
 /tests/components/aranet/ @aschmitz @thecode
 /homeassistant/components/arcam_fmj/ @elupus
 /tests/components/arcam_fmj/ @elupus
+/homeassistant/components/arcticspa/ @greg-szabo
+/tests/components/arcticspa/ @greg-szabo
 /homeassistant/components/arris_tg2492lg/ @vanbalken
 /homeassistant/components/aseko_pool_live/ @milanmeu
 /tests/components/aseko_pool_live/ @milanmeu
