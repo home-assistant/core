@@ -1,13 +1,12 @@
 """Support for Valve devices."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntFlag, StrEnum
 import functools as ft
 import logging
-from typing import Any, ParamSpec, TypeVar, final
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -38,9 +37,6 @@ DOMAIN = "valve"
 SCAN_INTERVAL = timedelta(seconds=15)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
-_P = ParamSpec("_P")
-_R = TypeVar("_R")
 
 
 class ValveDeviceClass(StrEnum):
@@ -248,13 +244,15 @@ class ValveEntity(Entity):
 
     async def async_toggle(self) -> None:
         """Toggle the entity."""
-        fns = {
-            "open": self.async_handle_open_valve,
-            "close": self.async_handle_close_valve,
-            "stop": self.async_stop_valve,
-        }
-        function = self._get_toggle_function(fns)
-        await function()
+        if self.supported_features & ValveEntityFeature.STOP and (
+            self.is_closing or self.is_opening
+        ):
+            return await self.async_stop_valve()
+        if self.is_closed:
+            return await self.async_handle_open_valve()
+        if self._valve_is_last_toggle_direction_open:
+            return await self.async_handle_close_valve()
+        return await self.async_handle_open_valve()
 
     def set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
@@ -273,16 +271,3 @@ class ValveEntity(Entity):
     async def async_stop_valve(self) -> None:
         """Stop the valve."""
         await self.hass.async_add_executor_job(ft.partial(self.stop_valve))
-
-    def _get_toggle_function(
-        self, fns: dict[str, Callable[_P, _R]]
-    ) -> Callable[_P, _R]:
-        if self.supported_features & ValveEntityFeature.STOP and (
-            self.is_closing or self.is_opening
-        ):
-            return fns["stop"]
-        if self.is_closed:
-            return fns["open"]
-        if self._valve_is_last_toggle_direction_open:
-            return fns["close"]
-        return fns["open"]
