@@ -270,10 +270,10 @@
   },
   "exceptions": {
     "command_failed": {
-      "message": "Error while calling {command} with {params}."
+      "message": "Error while calling {command}."
     },
     "home_data_fail": {
-      "message": "Failed getting Roborock home_data."
+      "message": "Failed getting Roborock home data."
     },
     "invalid_credentials": {
       "message": "Invalid credentials."
@@ -282,7 +282,7 @@
       "message": "Something went wrong creating the map."
     },
     "no_coordinators": {
-      "message": "No coordinators were able to successfully setup."
+      "message": "No devices were able to successfully setup."
     }
   }
 }

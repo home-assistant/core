@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from err
     except RoborockException as err:
         raise ConfigEntryNotReady(
-            "Failed getting Roborock home_data.",
+            "Failed getting Roborock home data.",
             translation_domain=DOMAIN,
             translation_key="home_data_fail",
         ) from err
@@ -66,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ]
     if len(valid_coordinators) == 0:
         raise ConfigEntryNotReady(
-            "No coordinators were able to successfully setup.",
+            "No devices were able to successfully setup.",
             translation_domain=DOMAIN,
             translation_key="no_coordinators",
         )
