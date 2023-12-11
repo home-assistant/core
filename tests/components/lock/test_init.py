@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
-from tests.testing_config.custom_components.test.lock import MockLock
+from .conftest import MockLock
 
 TEST_LOCK_ENTITY_ID = "lock.test_lock"
 
@@ -44,6 +44,10 @@ async def test_lock_default(hass: HomeAssistant, mock_lock_entity: MockLock) -> 
 
     assert mock_lock_entity.code_format is None
     assert mock_lock_entity.state is None
+    assert mock_lock_entity.is_jammed is None
+    assert mock_lock_entity.is_locked is None
+    assert mock_lock_entity.is_locking is None
+    assert mock_lock_entity.is_unlocking is None
 
 
 async def test_lock_states(hass: HomeAssistant, mock_lock_entity: MockLock) -> None:
@@ -55,7 +59,8 @@ async def test_lock_states(hass: HomeAssistant, mock_lock_entity: MockLock) -> N
     assert mock_lock_entity.is_locking
     assert mock_lock_entity.state == STATE_LOCKING
 
-    await help_test_async_lock_service(hass, SERVICE_LOCK)
+    mock_lock_entity._attr_is_locked = True
+    mock_lock_entity._attr_is_locking = False
     assert mock_lock_entity.is_locked
     assert mock_lock_entity.state == STATE_LOCKED
 
@@ -63,7 +68,8 @@ async def test_lock_states(hass: HomeAssistant, mock_lock_entity: MockLock) -> N
     assert mock_lock_entity.is_unlocking
     assert mock_lock_entity.state == STATE_UNLOCKING
 
-    await help_test_async_lock_service(hass, SERVICE_UNLOCK)
+    mock_lock_entity._attr_is_locked = False
+    mock_lock_entity._attr_is_unlocking = False
     assert not mock_lock_entity.is_locked
     assert mock_lock_entity.state == STATE_UNLOCKED
 
@@ -74,14 +80,19 @@ async def test_lock_states(hass: HomeAssistant, mock_lock_entity: MockLock) -> N
 
 
 @pytest.mark.parametrize(
-    ("default_code", "code_format", "supported_features"),
-    [("1234", r"^\d{4}$", LockEntityFeature.OPEN)],
+    ("code_format", "supported_features"),
+    [(r"^\d{4}$", LockEntityFeature.OPEN)],
 )
 async def test_set_mock_lock_options(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_lock_entity: MockLock,
 ) -> None:
     """Test mock attributes and default code stored in the registry."""
+    entity_registry.async_update_entity_options(
+        "lock.test_lock", "lock", {CONF_DEFAULT_CODE: "1234"}
+    )
+    await hass.async_block_till_done()
 
     assert mock_lock_entity._lock_option_default_code == "1234"
     state = hass.states.get(TEST_LOCK_ENTITY_ID)
@@ -90,13 +101,15 @@ async def test_set_mock_lock_options(
     assert state.attributes["supported_features"] == LockEntityFeature.OPEN
 
 
-@pytest.mark.parametrize(("default_code", "code_format"), [("1234", r"^\d{4}$")])
+@pytest.mark.parametrize("code_format", [r"^\d{4}$"])
 async def test_default_code_option_update(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_lock_entity: MockLock,
 ) -> None:
     """Test default code stored in the registry is updated."""
+
+    assert mock_lock_entity._lock_option_default_code == ""
 
     entity_registry.async_update_entity_options(
         "lock.test_lock", "lock", {CONF_DEFAULT_CODE: "4321"}
@@ -225,13 +238,17 @@ async def test_lock_with_no_code(
 
 
 @pytest.mark.parametrize(
-    ("default_code", "code_format", "supported_features"),
-    [("1234", r"^\d{4}$", LockEntityFeature.OPEN)],
+    ("code_format", "supported_features"),
+    [(r"^\d{4}$", LockEntityFeature.OPEN)],
 )
 async def test_lock_with_default_code(
-    hass: HomeAssistant, mock_lock_entity: MockLock
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_lock_entity: MockLock
 ) -> None:
     """Test lock entity with default code."""
+    entity_registry.async_update_entity_options(
+        "lock.test_lock", "lock", {CONF_DEFAULT_CODE: "1234"}
+    )
+    await hass.async_block_till_done()
 
     assert mock_lock_entity.state_attributes == {"code_format": r"^\d{4}$"}
     assert mock_lock_entity._lock_option_default_code == "1234"
@@ -256,13 +273,18 @@ async def test_lock_with_default_code(
 
 
 @pytest.mark.parametrize(
-    ("default_code", "code_format", "supported_features"),
-    [("123456", r"^\d{4}$", LockEntityFeature.OPEN)],
+    ("code_format", "supported_features"),
+    [(r"^\d{4}$", LockEntityFeature.OPEN)],
 )
 async def test_lock_with_illegal_default_code(
-    hass: HomeAssistant, mock_lock_entity: MockLock
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_lock_entity: MockLock
 ) -> None:
     """Test lock entity with illegal default code."""
+    entity_registry.async_update_entity_options(
+        "lock.test_lock", "lock", {CONF_DEFAULT_CODE: "123456"}
+    )
+    await hass.async_block_till_done()
+
     assert mock_lock_entity.state_attributes == {"code_format": r"^\d{4}$"}
     assert mock_lock_entity._lock_option_default_code == ""
 
