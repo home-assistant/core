@@ -10,6 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 
+from tests.common import MockConfigEntry
+
 
 async def test_full_user_flow(hass: HomeAssistant, mock_setup_entry) -> None:
     """Test the full user configuration flow."""
@@ -75,7 +77,9 @@ async def test_flow_cannot_connect(hass: HomeAssistant, mock_setup_entry) -> Non
         }
 
 
-async def test_import_flow(hass: HomeAssistant, mock_setup_entry) -> None:
+async def test_import_flow(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, mock_setup_entry
+) -> None:
     """Test importing yaml config."""
 
     with patch(
@@ -93,5 +97,18 @@ async def test_import_flow(hass: HomeAssistant, mock_setup_entry) -> None:
         assert result["data"] == {
             CONF_API_KEY: "yaml-api-key",
         }
-    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 1
+
+
+async def test_import_flow_already_exists(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test importing yaml config where entry already exists."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_API_KEY: "yaml-api-key"})
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_API_KEY: "yaml-api-key"}
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
     assert len(issue_registry.issues) == 1
