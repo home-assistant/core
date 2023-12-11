@@ -54,12 +54,12 @@ async def async_setup_entry(
     platform.async_register_entity_service(SERVICE_TRIGGER, {}, "trigger_camera")
     platform.async_register_entity_service(
         SERVICE_SAVE_RECENT_CLIPS,
-        vol.Schema({vol.Required(CONF_FILE_PATH): cv.string}),
+        {vol.Required(CONF_FILE_PATH): cv.string},
         "save_recent_clips",
     )
     platform.async_register_entity_service(
         SERVICE_SAVE_VIDEO,
-        vol.Schema({vol.Required(CONF_FILENAME): cv.string}),
+        {vol.Required(CONF_FILENAME): cv.string},
         "save_video",
     )
 
