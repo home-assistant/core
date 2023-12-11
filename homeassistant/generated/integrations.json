@@ -286,6 +286,12 @@
       "integration_type": "virtual",
       "supported_by": "energyzero"
     },
+    "aosmith": {
+      "name": "A. O. Smith",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "apache_kafka": {
       "name": "Apache Kafka",
       "integration_type": "hub",
@@ -4150,6 +4156,12 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "osoenergy": {
+      "name": "OSO Energy",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "osramlightify": {
       "name": "Osramlightify",
       "integration_type": "hub",
@@ -4953,6 +4965,11 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "scl": {
+      "name": "Seattle City Light (SCL)",
+      "integration_type": "virtual",
+      "supported_by": "opower"
+    },
     "scrape": {
       "name": "Scrape",
       "integration_type": "hub",
@@ -5528,6 +5545,12 @@
       "config_flow": true,
       "iot_class": "calculated"
     },
+    "sunweg": {
+      "name": "Sun WEG",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "supervisord": {
       "name": "Supervisord",
       "integration_type": "hub",
@@ -5778,6 +5801,12 @@
           "name": "Tesla Wall Connector"
         }
       }
+    },
+    "tessie": {
+      "name": "Tessie",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "tfiac": {
       "name": "Tfiac",

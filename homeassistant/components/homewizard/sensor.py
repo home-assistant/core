@@ -436,7 +436,6 @@ async def async_setup_entry(
 ) -> None:
     """Initialize sensors."""
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
         HomeWizardSensorEntity(coordinator, description)
         for description in SENSORS
