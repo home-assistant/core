@@ -13,12 +13,12 @@ import pytest
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
+    BaseHaRemoteScanner,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfo,
     BluetoothServiceInfoBleak,
     HaBluetoothConnector,
-    HomeAssistantRemoteScanner,
     async_ble_device_from_address,
     async_get_advertisement_callback,
     async_get_fallback_availability_interval,
@@ -703,7 +703,7 @@ async def test_goes_unavailable_connectable_only_and_recovers(
         BluetoothScanningMode.ACTIVE,
     )
 
-    class FakeScanner(HomeAssistantRemoteScanner):
+    class FakeScanner(BaseHaRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -725,7 +725,6 @@ async def test_goes_unavailable_connectable_only_and_recovers(
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
     connectable_scanner = FakeScanner(
-        hass,
         "connectable",
         "connectable",
         new_info_callback,
@@ -749,7 +748,6 @@ async def test_goes_unavailable_connectable_only_and_recovers(
     )
 
     not_connectable_scanner = FakeScanner(
-        hass,
         "not_connectable",
         "not_connectable",
         new_info_callback,
@@ -800,7 +798,6 @@ async def test_goes_unavailable_connectable_only_and_recovers(
     cancel_unavailable()
 
     connectable_scanner_2 = FakeScanner(
-        hass,
         "connectable",
         "connectable",
         new_info_callback,
@@ -876,7 +873,7 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
         BluetoothScanningMode.ACTIVE,
     )
 
-    class FakeScanner(HomeAssistantRemoteScanner):
+    class FakeScanner(BaseHaRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -903,7 +900,6 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
     non_connectable_scanner = FakeScanner(
-        hass,
         "connectable",
         "connectable",
         new_info_callback,

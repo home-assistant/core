@@ -11,9 +11,9 @@ from habluetooth.wrappers import HaBleakClientWrapper, HaBleakScannerWrapper
 import pytest
 
 from homeassistant.components.bluetooth import (
+    BaseHaRemoteScanner,
     BaseHaScanner,
     HaBluetoothConnector,
-    HomeAssistantRemoteScanner,
 )
 from homeassistant.core import HomeAssistant
 
@@ -154,7 +154,7 @@ async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}, rssi=-100
     )
 
-    class FakeScanner(HomeAssistantRemoteScanner):
+    class FakeScanner(BaseHaRemoteScanner):
         @property
         def discovered_devices(self) -> list[BLEDevice]:
             """Return a list of discovered devices."""
@@ -182,7 +182,6 @@ async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
         MockBleakClient, "esp32_has_connection_slot", lambda: True
     )
     scanner = FakeScanner(
-        hass,
         "esp32_has_connection_slot",
         "esp32_has_connection_slot",
         lambda info: None,
@@ -267,7 +266,7 @@ async def test_ble_device_with_proxy_client_out_of_connections(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
 
-    class FakeScanner(HomeAssistantRemoteScanner):
+    class FakeScanner(BaseHaRemoteScanner):
         @property
         def discovered_devices(self) -> list[BLEDevice]:
             """Return a list of discovered devices."""
@@ -292,7 +291,7 @@ async def test_ble_device_with_proxy_client_out_of_connections(
             return None
 
     connector = HaBluetoothConnector(MockBleakClient, "esp32", lambda: False)
-    scanner = FakeScanner(hass, "esp32", "esp32", lambda info: None, connector, True)
+    scanner = FakeScanner("esp32", "esp32", lambda info: None, connector, True)
     cancel = manager.async_register_scanner(scanner, True)
     inject_advertisement_with_source(
         hass, switchbot_proxy_device_no_connection_slot, switchbot_adv, "esp32"
@@ -332,7 +331,7 @@ async def test_ble_device_with_proxy_clear_cache(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
 
-    class FakeScanner(HomeAssistantRemoteScanner):
+    class FakeScanner(BaseHaRemoteScanner):
         @property
         def discovered_devices(self) -> list[BLEDevice]:
             """Return a list of discovered devices."""
@@ -357,7 +356,7 @@ async def test_ble_device_with_proxy_clear_cache(
             return None
 
     connector = HaBluetoothConnector(MockBleakClient, "esp32", lambda: True)
-    scanner = FakeScanner(hass, "esp32", "esp32", lambda info: None, connector, True)
+    scanner = FakeScanner("esp32", "esp32", lambda info: None, connector, True)
     cancel = manager.async_register_scanner(scanner, True)
     inject_advertisement_with_source(
         hass, switchbot_proxy_device_with_connection_slot, switchbot_adv, "esp32"
@@ -435,7 +434,7 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         "esp32_no_connection_slot",
     )
 
-    class FakeScanner(HomeAssistantRemoteScanner):
+    class FakeScanner(BaseHaRemoteScanner):
         @property
         def discovered_devices(self) -> list[BLEDevice]:
             """Return a list of discovered devices."""
@@ -463,7 +462,6 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         MockBleakClient, "esp32_has_connection_slot", lambda: True
     )
     scanner = FakeScanner(
-        hass,
         "esp32_has_connection_slot",
         "esp32_has_connection_slot",
         lambda info: None,
@@ -549,7 +547,7 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         "esp32_no_connection_slot",
     )
 
-    class FakeScanner(HomeAssistantRemoteScanner):
+    class FakeScanner(BaseHaRemoteScanner):
         @property
         def discovered_devices(self) -> list[BLEDevice]:
             """Return a list of discovered devices."""
@@ -577,7 +575,6 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         MockBleakClient, "esp32_has_connection_slot", lambda: True
     )
     scanner = FakeScanner(
-        hass,
         "esp32_has_connection_slot",
         "esp32_has_connection_slot",
         lambda info: None,
