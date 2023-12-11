@@ -1326,8 +1326,7 @@ class Entity(ABC):
         )
 
 
-@dataclasses.dataclass(slots=True)
-class ToggleEntityDescription(EntityDescription):
+class ToggleEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes toggle entities."""
 
 

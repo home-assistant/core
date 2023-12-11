@@ -1,7 +1,6 @@
 """The lawn mower integration."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import final
@@ -65,8 +64,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class LawnMowerEntityEntityDescription(EntityDescription):
+class LawnMowerEntityEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes lawn mower entities."""
 
 
