@@ -3,9 +3,8 @@ from __future__ import annotations
 
 import asyncio
 import collections
-import functools
-import logging
 from datetime import timedelta
+import functools
 from typing import TYPE_CHECKING, Any
 
 from zigpy.zcl.foundation import Status
@@ -27,9 +26,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 
 from .core import discovery
 from .core.const import (
@@ -75,9 +74,8 @@ async def async_setup_entry(
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_COVER)
 class ZhaCover(ZhaEntity, CoverEntity):
-    """
-    Representation of a ZHA cover.
-    
+    """Representation of a ZHA cover.
+
     Covers doesn't have a way to report movement, they are only reporting changes in lift / tilt.
     That's why we track history of these reports and judge the (lack of) movement + direction based on that.
     """
@@ -113,9 +111,8 @@ class ZhaCover(ZhaEntity, CoverEntity):
 
     @property
     def is_closed(self) -> bool | None:
-        """
-        Return if the cover is closed.
-        
+        """Return if the cover is closed.
+
         Consider cover closed only if both tilt and lift are 0.
         If cover doesn't support tilt, only care about lift.
         """
@@ -125,9 +122,8 @@ class ZhaCover(ZhaEntity, CoverEntity):
 
     @property
     def _is_open(self) -> bool | None:
-        """
-        Return if the cover is open.
-        
+        """Return if the cover is open.
+
         Consider cover closed only if both tilt and lift are 100.
         If cover doesn't support tilt, only care about lift.
 
@@ -185,7 +181,7 @@ class ZhaCover(ZhaEntity, CoverEntity):
         # if movement is in progress, schedule a timer to clear it
         if self._state in (STATE_OPENING, STATE_CLOSING):
             self._cancel_clear_movement_timer = async_call_later(self.hass, MOVEMENT_TIMEOUT, self._clear_movement)
-                
+
 
     def _touch_position(self):
         """Store current position into a history."""
