@@ -41,6 +41,7 @@ async def test_form(hass: HomeAssistant, mock_lamarzocco: MagicMock) -> None:
     )
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
+    assert result["step_id"] == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
