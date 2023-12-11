@@ -23,7 +23,6 @@ from typing import (
     final,
 )
 
-from typing_extensions import dataclass_transform
 import voluptuous as vol
 
 from homeassistant.backports.functools import cached_property
@@ -220,17 +219,7 @@ class EntityPlatformState(Enum):
     REMOVED = auto()
 
 
-@dataclass_transform(
-    field_specifiers=(dataclasses.field, dataclasses.Field),
-    kw_only_default=True,  # Set to allow setting kw_only in child classes
-)
-class _EntityDescriptionBase:
-    """Add PEP 681 decorator (dataclass transform)."""
-
-
-class EntityDescription(
-    _EntityDescriptionBase, metaclass=FrozenOrThawed, frozen_or_thawed=True
-):
+class EntityDescription(metaclass=FrozenOrThawed, frozen_or_thawed=True):
     """A class that describes Home Assistant entities."""
 
     # This is the key identifier for this entity

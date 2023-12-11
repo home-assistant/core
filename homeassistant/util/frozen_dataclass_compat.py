@@ -9,6 +9,8 @@ import dataclasses
 import sys
 from typing import Any
 
+from typing_extensions import dataclass_transform
+
 
 def _class_fields(cls: type, kw_only: bool) -> list[tuple[str, Any, Any]]:
     """Return a list of dataclass fields.
@@ -41,6 +43,10 @@ def _class_fields(cls: type, kw_only: bool) -> list[tuple[str, Any, Any]]:
     return [(field.name, field.type, field) for field in cls_fields]
 
 
+@dataclass_transform(
+    field_specifiers=(dataclasses.field, dataclasses.Field),
+    kw_only_default=True,  # Set to allow setting kw_only in child classes
+)
 class FrozenOrThawed(type):
     """Metaclass which which makes classes which behave like a dataclass.
 
