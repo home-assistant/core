@@ -15,7 +15,6 @@ from .const import DEFAULT_INTERVAL, DOMAIN, LOGGER
 class FastdotcomDataUpdateCoordindator(DataUpdateCoordinator[float]):
     """Class to manage fetching Fast.com data API."""
 
-    config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the coordinator for Fast.com."""
