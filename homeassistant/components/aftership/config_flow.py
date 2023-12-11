@@ -51,8 +51,6 @@ class AfterShipConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import configuration from yaml."""
-        self._async_abort_entries_match({CONF_API_KEY: config[CONF_API_KEY]})
-
         async_create_issue(
             self.hass,
             HOMEASSISTANT_DOMAIN,
@@ -67,6 +65,8 @@ class AfterShipConfigFlow(ConfigFlow, domain=DOMAIN):
                 "integration_title": "AfterShip",
             },
         )
+
+        self._async_abort_entries_match({CONF_API_KEY: config[CONF_API_KEY]})
         return self.async_create_entry(
             title=config.get(CONF_NAME, "AfterShip"),
             data={CONF_API_KEY: config[CONF_API_KEY]},
