@@ -2,12 +2,6 @@
 
 from unittest.mock import AsyncMock
 
-from homeassistant.components.advantage_air.const import (
-    ADVANTAGE_AIR_AUTOFAN_ENABLED,
-    ADVANTAGE_AIR_STATE_OFF,
-    ADVANTAGE_AIR_STATE_ON,
-)
-
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
