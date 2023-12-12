@@ -54,6 +54,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def _request_refresh_service(call: ServiceCall) -> None:
         """Request a refresh via the service."""
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "service_deprecation",
+            breaks_in_ha_version="2024.7.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_deprecation",
+        )
         await coordinator.async_request_refresh()
 
     if hass.state == CoreState.running:
@@ -64,17 +74,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     hass.services.async_register(DOMAIN, "speedtest", _request_refresh_service)
-
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        "service_deprecation",
-        breaks_in_ha_version="2024.6.0",
-        is_fixable=True,
-        is_persistent=True,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="service_deprecation",
-    )
 
     await hass.config_entries.async_forward_entry_setups(
         entry,
