@@ -233,6 +233,42 @@ MEASUREMENT_SENSORS: dict[
         translation_key="vascular_age",
         entity_registry_enabled_default=False,
     ),
+    MeasurementType.VISCERAL_FAT: WithingsMeasurementSensorEntityDescription(
+        key="visceral_fat",
+        measurement_type=MeasurementType.VISCERAL_FAT,
+        translation_key="visceral_fat",
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.FAT_MASS_FOR_SEGMENTS: WithingsMeasurementSensorEntityDescription(
+        key="fat_mass_for_segments",
+        measurement_type=MeasurementType.FAT_MASS_FOR_SEGMENTS,
+        translation_key="fat_mass_for_segments",
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.MUSCLE_MASS_FOR_SEGMENTS: WithingsMeasurementSensorEntityDescription(
+        key="muscle_mass_for_segments",
+        measurement_type=MeasurementType.MUSCLE_MASS_FOR_SEGMENTS,
+        translation_key="muscle_mass_for_segments",
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.ELECTRODERMAL_ACTIVITY_FEET: WithingsMeasurementSensorEntityDescription(
+        key="electrodermal_activity_feet",
+        measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_FEET,
+        translation_key="electrodermal_activity_feet",
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.ELECTRODERMAL_ACTIVITY_LEFT_FOOT: WithingsMeasurementSensorEntityDescription(
+        key="electrodermal_activity_left_foot",
+        measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_LEFT_FOOT,
+        translation_key="electrodermal_activity_left_foot",
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.ELECTRODERMAL_ACTIVITY_RIGHT_FOOT: WithingsMeasurementSensorEntityDescription(
+        key="electrodermal_activity_right_foot",
+        measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_RIGHT_FOOT,
+        translation_key="electrodermal_activity_right_foot",
+        entity_registry_enabled_default=False,
+    ),
 }
 
 
