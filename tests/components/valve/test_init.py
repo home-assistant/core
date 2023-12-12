@@ -22,7 +22,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from tests.common import (
@@ -74,7 +74,7 @@ class MockValveEntity(ValveEntity):
             self._attr_is_closing = True
             self._attr_is_opening = False
         self._target_valve_position = position
-        self.async_write_ha_state()
+        self.async_schedule_update_ha_state()
 
     def stop_valve(self) -> None:
         """Stop the valve."""
@@ -82,9 +82,10 @@ class MockValveEntity(ValveEntity):
         self._attr_is_opening = False
         self._target_valve_position = None
         self._attr_is_closed = self._attr_current_valve_position == 0
-        self.async_write_ha_state()
+        self.async_schedule_update_ha_state()
 
-    async def finish_movement(self):
+    @callback
+    def finish_movement(self):
         """Set the value to the saved target and removes intermediate states."""
         self._attr_current_valve_position = self._target_valve_position
         self._attr_is_closing = False
@@ -213,15 +214,6 @@ async def test_valve_setup(hass: HomeAssistant, mock_config_entry) -> None:
 
 async def test_services(hass: HomeAssistant, mock_config_entry) -> None:
     """Test the provided services."""
-    # platform = getattr(hass.components, "test.valve")
-
-    # platform.init()
-    # assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    # await hass.async_block_till_done()
-
-    # ent1 = valve without position
-    # ent2 = valve with position
-    # ent1, ent2 = platform.ENTITIES
     config_entry = mock_config_entry[0]
     ent1, ent2 = mock_config_entry[1]
 
@@ -239,7 +231,7 @@ async def test_services(hass: HomeAssistant, mock_config_entry) -> None:
     # entities without stop should be closed and with stop should be closing
     assert is_closed(hass, ent1)
     assert is_closing(hass, ent2)
-    await ent2.finish_movement()
+    ent2.finish_movement()
     assert is_closed(hass, ent2)
 
     # call basic toggle services and set different valve position states
