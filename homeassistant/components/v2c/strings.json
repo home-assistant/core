@@ -57,13 +57,13 @@
         "name": "Lock EVSE"
       },
       "timer": {
-        "name": "Charge Point Timer"
+        "name": "Charge point timer"
       },
       "dynamic": {
-        "name": "Dynamic Intensity Modulation"
+        "name": "Dynamic intensity modulation"
       },
       "pause_dynamic": {
-        "name": "Pause Dynamic Control Modulation"
+        "name": "Pause dynamic control modulation"
       }
     }
   }
