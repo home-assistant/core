@@ -1253,6 +1253,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/subaru/ @G-Two
 /tests/components/subaru/ @G-Two
 /homeassistant/components/suez_water/ @ooii
+/tests/components/suez_water/ @ooii
 /homeassistant/components/sun/ @Swamp-Ig
 /tests/components/sun/ @Swamp-Ig
 /homeassistant/components/sunweg/ @rokam
