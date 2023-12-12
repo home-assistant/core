@@ -53,10 +53,10 @@ async def test_from_import(hass: HomeAssistant) -> None:
     assert state.state == "5.0"
 
 
-async def test_not_start_until_hass_started(
+async def test_delayed_speedtest_during_startup(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test unload an entry."""
+    """Test delayed speedtest during startup."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="UNIQUE_TEST_ID",
