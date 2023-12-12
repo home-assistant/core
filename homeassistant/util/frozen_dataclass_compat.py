@@ -101,7 +101,11 @@ class FrozenOrThawed(type):
             cls._make_dataclass(name, bases, True)
 
         def __new__(*args: Any, **kwargs: Any) -> object:
-            """Create a new instance."""
+            """Create a new instance.
+
+            The function has no named arguments to avoid name collisions with dataclass
+            field names.
+            """
             cls, *_args = args
             if dataclasses.is_dataclass(cls):
                 return object.__new__(cls)
