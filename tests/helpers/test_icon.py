@@ -8,7 +8,6 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import icon
-from homeassistant.setup import async_setup_component
 
 
 def test_battery_icon() -> None:
@@ -84,14 +83,17 @@ async def test_get_icons(hass: HomeAssistant) -> None:
     icons = await icon.async_get_icons(hass, "entity")
     assert icons == {}
 
-    assert await async_setup_component(hass, "switch", {"switch": {"platform": "test"}})
+    hass.config.components.add("test_package")
     await hass.async_block_till_done()
 
     icons = await icon.async_get_icons(hass, "entity")
 
-    assert icons["component.switch.test.entity.something.state.home"] == "mdi:home"
     assert (
-        icons["component.switch.test.entity.something.state.away"] == "mdi:home-outline"
+        icons["component.test_package.entity.switch.something.state.home"] == "mdi:home"
+    )
+    assert (
+        icons["component.test_package.entity.switch.something.state.away"]
+        == "mdi:home-outline"
     )
 
 
@@ -185,12 +187,3 @@ async def test_caching(hass: HomeAssistant) -> None:
             hass, "entity_component", integrations={"media_player"}
         )
         assert len(mock_load.mock_calls) == 1
-
-
-async def test_custom_component_icons(
-    hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
-    """Test getting icons from custom components."""
-    hass.config.components.add("test_embedded")
-    hass.config.components.add("test_package")
-    assert await icon.async_get_icons(hass, "entity") == {}
