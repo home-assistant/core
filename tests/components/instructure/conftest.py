@@ -7,7 +7,13 @@ import pytest
 from homeassistant.components.instructure.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from . import MOCK_ANNOUNCEMENTS, MOCK_ASSIGNMENTS, MOCK_CONVERSATIONS, MOCK_GRADES
+from . import (
+    MOCK_ANNOUNCEMENTS,
+    MOCK_ASSIGNMENTS,
+    MOCK_CONVERSATIONS,
+    MOCK_GRADES,
+    MOCK_QUICK_LINKS,
+)
 
 from tests.common import MockConfigEntry
 
@@ -36,6 +42,7 @@ def mock_api() -> Generator[None, MagicMock, None]:
             return_value=MOCK_CONVERSATIONS
         )
         mock_instance.async_get_grades = AsyncMock(return_value=MOCK_GRADES)
+        mock_instance.get_quick_links = AsyncMock(return_value=MOCK_QUICK_LINKS)
         yield mock_instance
 
 
