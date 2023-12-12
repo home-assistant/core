@@ -44,6 +44,7 @@ class MockFlow(ConfigFlow):
 class MockValveEntity(ValveEntity):
     """Mock valve device to use in tests."""
 
+    _attr_should_poll = False
     _target_valve_position: int
 
     def __init__(
@@ -74,7 +75,7 @@ class MockValveEntity(ValveEntity):
             self._attr_is_closing = True
             self._attr_is_opening = False
         self._target_valve_position = position
-        self.async_schedule_update_ha_state()
+        self.schedule_update_ha_state()
 
     def stop_valve(self) -> None:
         """Stop the valve."""
@@ -82,7 +83,7 @@ class MockValveEntity(ValveEntity):
         self._attr_is_opening = False
         self._target_valve_position = None
         self._attr_is_closed = self._attr_current_valve_position == 0
-        self.async_schedule_update_ha_state()
+        self.schedule_update_ha_state()
 
     @callback
     def finish_movement(self):
