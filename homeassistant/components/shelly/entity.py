@@ -190,6 +190,10 @@ def async_setup_rpc_attribute_entities(
             if description.sub_key not in coordinator.device.status[
                 key
             ] and not description.supported(coordinator.device.status[key]):
+                if description.sub_key in coordinator.device.config[key]:
+                    entities.append(
+                        sensor_class(coordinator, key, sensor_id, description)
+                    )
                 continue
 
             # Filter and remove entities that according to settings/status
@@ -370,6 +374,11 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         self._attr_name = get_rpc_entity_name(coordinator.device, key)
 
     @property
+    def config(self) -> dict:
+        """Device config by entity key."""
+        return cast(dict, self.coordinator.device.config[self.key])
+
+    @property
     def status(self) -> dict:
         """Device status by entity key."""
         return cast(dict, self.coordinator.device.status[self.key])
@@ -522,7 +531,12 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
     @property
     def sub_status(self) -> Any:
         """Device status by entity key."""
-        return self.status[self.entity_description.sub_key]
+        if self.entity_description.sub_key in self.status:
+            return self.status[self.entity_description.sub_key]
+        if self.entity_description.sub_key in self.config:
+            return self.config[self.entity_description.sub_key]
+
+        return None
 
     @property
     def attribute_value(self) -> StateType:

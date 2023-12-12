@@ -220,3 +220,22 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
     MODEL_MOTION_2,
     MODEL_VALVE,
 )
+
+
+TARGET_STATE_ATTR_NAME: Final = "set_state"
+TARGET_STATE_ATTR_DEFAULT_VALUE: Final = "Toggle"
+ALL_DEVICES_ATTR_NAME: Final = "all_devices"
+ALL_DEVICES_ATTR_DEFAULT_VALUE: Final = False
+
+# Services
+SERVICE_RELOAD = "reload"
+SERVICE_CHANGE_BUTTON_STATE = "change_button_state"
+
+
+class ButtonType(StrEnum):
+    """The possible states of a button."""
+
+    Toggle = "toggle"
+    Momentary = "momentary"
+    Edge = "edge"
+    Detached = "detached"

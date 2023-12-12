@@ -1,7 +1,14 @@
 {
   "domain": "shelly",
   "name": "Shelly",
-  "codeowners": ["@balloob", "@bieniu", "@thecode", "@chemelli74", "@bdraco"],
+  "codeowners": [
+    "@balloob",
+    "@bieniu",
+    "@thecode",
+    "@chemelli74",
+    "@bdraco",
+    "@Moshiker"
+  ],
   "config_flow": true,
   "dependencies": ["bluetooth", "http"],
   "documentation": "https://www.home-assistant.io/integrations/shelly",

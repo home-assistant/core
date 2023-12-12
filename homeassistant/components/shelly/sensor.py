@@ -351,6 +351,18 @@ REST_SENSORS: Final = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    "buttonstate": RestSensorDescription(
+        key="switch",
+        # sub_key="btn_type",
+        name="Button State",
+        icon="mdi:button-pointer",
+        device_class=SensorDeviceClass.ENUM,
+        state_class=SensorStateClass.MEASUREMENT,
+        options=["toggle", "detached", "momentary", "edge"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=True,
+    ),
 }
 
 
@@ -904,6 +916,19 @@ RPC_SENSORS: Final = {
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "buttonstate": RpcSensorDescription(
+        key="switch",
+        sub_key="in_mode",
+        name="Button State",
+        icon="mdi:button-pointer",
+        device_class=SensorDeviceClass.ENUM,
+        state_class=SensorStateClass.MEASUREMENT,
+        options=["follow", "detached", "momentary", "flip"],
+        available=lambda status: status is not None,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=True,
     ),
 }
 

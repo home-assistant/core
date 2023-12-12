@@ -18,6 +18,7 @@ from awesomeversion import AwesomeVersion
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import (
@@ -59,7 +60,7 @@ from .const import (
     UPDATE_PERIOD_MULTIPLIER,
     BLEScannerMode,
 )
-from .utils import get_rpc_device_wakeup_period, update_device_fw_info
+from .utils import get_rpc_device_wakeup_period, get_rpc_key_ids, update_device_fw_info
 
 _DeviceT = TypeVar("_DeviceT", bound="BlockDevice|RpcDevice")
 
@@ -120,7 +121,7 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
     @property
     def sw_version(self) -> str:
         """Firmware version of the device."""
-        return self.device.firmware_version if self.device.initialized else ""
+        return str(self.device.firmware_version) if self.device.initialized else ""
 
     @property
     def sleep_period(self) -> int:
@@ -179,6 +180,22 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         entry.async_on_unload(
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._handle_ha_stop)
         )
+
+    async def action_change_button(self, target_state: str) -> bool:
+        """Change the state of the shelly button."""
+
+        for relay in self.device.settings["relays"]:
+            LOGGER.debug(f"Button Type before: {relay['btn_type']}")
+            await self.device.http_request(
+                "get", "settings/relay/0", {"btn_type": target_state}
+            )
+            # asyncio.run(self.device.update_settings())
+            # LOGGER.debug(
+            #     f"Button Type after: {self.device.settings['relays'][device_id]['btn_type']}"
+            # )
+            LOGGER.debug(self.device.name)
+
+        return True
 
     @callback
     def async_subscribe_input_events(
@@ -425,6 +442,54 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
 
         update_interval = SLEEP_PERIOD_MULTIPLIER * wakeup_period
         self.update_interval = timedelta(seconds=update_interval)
+
+        return True
+
+    async def action_change_button(self, target_state: str) -> bool:
+        """Change the state of the shelly button."""
+
+        if self.connected is None or self.connected is False:
+            LOGGER.debug(f"{self.device.name} is not connected, passing..")
+            self.entry.async_start_reauth(self.hass)
+
+            return False
+
+        try:
+            config = self.device.config
+            switch_key_ids = get_rpc_key_ids(self.device.status, "switch")
+
+            for id_ in switch_key_ids:
+                switch_id = f"switch:{id_}"
+                if switch_id in config:
+                    if config[switch_id]["name"]:
+                        try:
+                            params = {
+                                "id": id_,
+                                "config": {"in_mode": f"{target_state}"},
+                            }
+                            await self.device.call_rpc("Switch.SetConfig", params)
+                            LOGGER.debug(
+                                f", relay {switch_id}: {config[switch_id]['name']} button status: {config[switch_id]['in_mode']}"
+                            )
+                        except DeviceConnectionError as err:
+                            LOGGER.error(err)
+                            raise HomeAssistantError(
+                                f"Call RPC for {self.device.name} connection error, method: Switch.SetConfig, params:"
+                                f" {params}, error: {repr(err)}"
+                            ) from err
+                        except RpcCallError as err:
+                            raise HomeAssistantError(
+                                f"Call RPC for {self.device.name} connection error, method: Switch.SetConfig, params:"
+                                f" {params}, error: {repr(err)}"
+                            ) from err
+                        except InvalidAuthError:
+                            self.entry.async_start_reauth(self.hass)
+                            return False
+        except Exception as err:  # pylint: disable=broad-exception-caught
+            LOGGER.error(
+                f"Error while trying to change the RPC shelly button state: {str(err)}"
+            )
+            return False
 
         return True
 
@@ -695,6 +760,21 @@ def get_rpc_coordinator_by_device_id(
 
             if coordinator := entry_data.rpc:
                 return coordinator
+
+    return None
+
+
+def get_shelly_coordinator_from_entry_data(
+    device: ShellyEntryData
+) -> ShellyBlockCoordinator | ShellyRpcCoordinator | None:
+    """Get the shelly coordinator from entry data (check if the old generation or the modern)."""
+    # Block or Rest type - Generation 1
+    if device.block:
+        return device.block
+
+    # RPC or RPCPolling type - Generation 2
+    if device.rpc:
+        return device.rpc
 
     return None
 

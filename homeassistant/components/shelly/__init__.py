@@ -45,6 +45,7 @@ from .coordinator import (
     ShellyRpcPollingCoordinator,
     get_entry_data,
 )
+from .service import async_setup_services
 from .utils import (
     get_block_device_sleep_period,
     get_coap_context,
@@ -101,6 +102,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if (conf := config.get(DOMAIN)) is not None:
         hass.data[DOMAIN][CONF_COAP_PORT] = conf[CONF_COAP_PORT]
+
+    # Services
+    await async_setup_services(hass)
 
     return True
 
