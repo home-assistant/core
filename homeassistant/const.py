@@ -1051,6 +1051,58 @@ DATA_RATE_GIBIBYTES_PER_SECOND: Final = "GiB/s"
 """Deprecated: please use UnitOfDataRate.GIBIBYTES_PER_SECOND"""
 
 
+UNITS_OF_MEASUREMENT: Final[frozenset[str]] = frozenset(
+    {
+        unit
+        for unit_type in (
+            UnitOfApparentPower,
+            UnitOfPower,
+            UnitOfEnergy,
+            UnitOfElectricCurrent,
+            UnitOfElectricPotential,
+            UnitOfTemperature,
+            UnitOfTime,
+            UnitOfLength,
+            UnitOfFrequency,
+            UnitOfPressure,
+            UnitOfSoundPressure,
+            UnitOfVolume,
+            UnitOfVolumeFlowRate,
+            UnitOfMass,
+            UnitOfIrradiance,
+            UnitOfVolumetricFlux,
+            UnitOfPrecipitationDepth,
+            UnitOfSpeed,
+            UnitOfInformation,
+            UnitOfDataRate,
+        )
+        for unit in unit_type
+    }
+).union(
+    {
+        POWER_VOLT_AMPERE_REACTIVE,
+        DEGREE,
+        CURRENCY_EURO,
+        CURRENCY_DOLLAR,
+        CURRENCY_CENT,
+        AREA_SQUARE_METERS,
+        CONDUCTIVITY,
+        LIGHT_LUX,
+        UV_INDEX,
+        PERCENTAGE,
+        REVOLUTIONS_PER_MINUTE,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
+        CONCENTRATION_PARTS_PER_CUBIC_METER,
+        CONCENTRATION_PARTS_PER_MILLION,
+        CONCENTRATION_PARTS_PER_BILLION,
+        SIGNAL_STRENGTH_DECIBELS,
+        SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    }
+)
+
+
 # States
 COMPRESSED_STATE_STATE = "s"
 COMPRESSED_STATE_ATTRIBUTES = "a"
