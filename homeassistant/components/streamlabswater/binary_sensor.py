@@ -24,7 +24,7 @@ async def async_setup_entry(
 
     entities = []
 
-    for location_id in coordinator.data.values():
+    for location_id in coordinator.data:
         entities.append(StreamlabsAwayMode(coordinator, location_id))
 
     async_add_entities(entities)
@@ -39,16 +39,16 @@ class StreamlabsAwayMode(CoordinatorEntity[StreamlabsCoordinator], BinarySensorE
         self._location_id = location_id
 
     @property
-    def data(self) -> StreamlabsData:
+    def location_data(self) -> StreamlabsData:
         """Returns the data object."""
         return self.coordinator.data[self._location_id]
 
     @property
     def name(self) -> str:
         """Return the name for away mode."""
-        return f"{self.data.name} {NAME_AWAY_MODE}"
+        return f"{self.location_data.name} {NAME_AWAY_MODE}"
 
     @property
     def is_on(self) -> bool:
         """Return if away mode is on."""
-        return self.data.is_away
+        return self.location_data.is_away

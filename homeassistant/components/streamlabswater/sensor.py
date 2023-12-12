@@ -51,19 +51,19 @@ class StreamLabsDailyUsage(CoordinatorEntity[StreamlabsCoordinator], SensorEntit
         self._location_id = location_id
 
     @property
-    def data(self) -> StreamlabsData:
+    def location_data(self) -> StreamlabsData:
         """Returns the data object."""
         return self.coordinator.data[self._location_id]
 
     @property
     def name(self) -> str:
         """Return the name for daily usage."""
-        return f"{self.data.name} {NAME_DAILY_USAGE}"
+        return f"{self.location_data.name} {NAME_DAILY_USAGE}"
 
     @property
     def native_value(self) -> float:
         """Return the current daily usage."""
-        return self.data.daily_usage
+        return self.location_data.daily_usage
 
 
 class StreamLabsMonthlyUsage(StreamLabsDailyUsage):
@@ -72,12 +72,12 @@ class StreamLabsMonthlyUsage(StreamLabsDailyUsage):
     @property
     def name(self) -> str:
         """Return the name for monthly usage."""
-        return f"{self.data.name} {NAME_MONTHLY_USAGE}"
+        return f"{self.location_data.name} {NAME_MONTHLY_USAGE}"
 
     @property
     def native_value(self) -> float:
         """Return the current monthly usage."""
-        return self.data.monthly_usage
+        return self.location_data.monthly_usage
 
 
 class StreamLabsYearlyUsage(StreamLabsDailyUsage):
@@ -86,9 +86,9 @@ class StreamLabsYearlyUsage(StreamLabsDailyUsage):
     @property
     def name(self) -> str:
         """Return the name for yearly usage."""
-        return f"{self.data.name} {NAME_YEARLY_USAGE}"
+        return f"{self.location_data.name} {NAME_YEARLY_USAGE}"
 
     @property
     def native_value(self) -> float:
         """Return the current yearly usage."""
-        return self.data.yearly_usage
+        return self.location_data.yearly_usage
