@@ -106,6 +106,7 @@ __all__ = [
     "async_scanner_by_source",
     "async_scanner_count",
     "async_scanner_devices_by_address",
+    "async_get_advertisement_callback",
     "BaseHaScanner",
     "HomeAssistantRemoteScanner",
     "BluetoothCallbackMatcher",
@@ -287,9 +288,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     passive = entry.options.get(CONF_PASSIVE)
     mode = BluetoothScanningMode.PASSIVE if passive else BluetoothScanningMode.ACTIVE
-    new_info_callback = async_get_advertisement_callback(hass)
     manager: HomeAssistantBluetoothManager = hass.data[DATA_MANAGER]
-    scanner = HaScanner(mode, adapter, address, new_info_callback)
+    scanner = HaScanner(mode, adapter, address)
     try:
         scanner.async_setup()
     except RuntimeError as err:

@@ -20,7 +20,6 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     HaBluetoothConnector,
     async_ble_device_from_address,
-    async_get_advertisement_callback,
     async_get_fallback_availability_interval,
     async_get_learned_advertising_interval,
     async_scanner_count,
@@ -720,14 +719,12 @@ async def test_goes_unavailable_connectable_only_and_recovers(
                 MONOTONIC_TIME(),
             )
 
-    new_info_callback = async_get_advertisement_callback(hass)
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
     connectable_scanner = FakeScanner(
         "connectable",
         "connectable",
-        new_info_callback,
         connector,
         True,
     )
@@ -750,7 +747,6 @@ async def test_goes_unavailable_connectable_only_and_recovers(
     not_connectable_scanner = FakeScanner(
         "not_connectable",
         "not_connectable",
-        new_info_callback,
         connector,
         False,
     )
@@ -800,7 +796,6 @@ async def test_goes_unavailable_connectable_only_and_recovers(
     connectable_scanner_2 = FakeScanner(
         "connectable",
         "connectable",
-        new_info_callback,
         connector,
         True,
     )
@@ -896,14 +891,12 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
             self._discovered_device_timestamps.clear()
             self._previous_service_info.clear()
 
-    new_info_callback = async_get_advertisement_callback(hass)
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
     non_connectable_scanner = FakeScanner(
         "connectable",
         "connectable",
-        new_info_callback,
         connector,
         False,
     )
