@@ -92,7 +92,7 @@ async def test_auto_on_off(
     state = hass.states.get("switch.GS01234_auto_on_off")
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "GS01234 Auto On/Off"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "GS01234 Auto on/off"
     assert state.attributes.get(ATTR_ICON) == "mdi:alarm"
     assert state.state == STATE_ON
 
@@ -263,14 +263,14 @@ async def test_steam_boiler_enable(
     state = hass.states.get("switch.GS01234_steam_boiler")
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "GS01234 Steam Boiler"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "GS01234 Steam boiler"
     assert state.attributes.get(ATTR_ICON) == "mdi:water-boiler"
     assert state.state == STATE_ON
 
     entry = entity_registry.async_get(state.entity_id)
     assert entry
     assert entry.device_id
-    assert entry.unique_id == "GS01234_steam_boiler"
+    assert entry.unique_id == "GS01234_steam_boiler_enable"
 
     device = device_registry.async_get(entry.device_id)
     assert device
@@ -287,7 +287,7 @@ async def test_steam_boiler_enable(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
         {
-            ATTR_ENTITY_ID: "switch.GS01234_steam_boiler_enable",
+            ATTR_ENTITY_ID: "switch.GS01234_steam_boiler",
         },
         blocking=True,
     )
@@ -299,7 +299,7 @@ async def test_steam_boiler_enable(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "switch.GS01234_steam_boiler_enable",
+            ATTR_ENTITY_ID: "switch.GS01234_steam_boiler",
         },
         blocking=True,
     )

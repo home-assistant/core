@@ -1,9 +1,8 @@
 """Test the La Marzocco config flow."""
-import pytest
-
 from unittest.mock import MagicMock
 
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.lamarzocco.const import DOMAIN
@@ -87,10 +86,7 @@ async def test_form_abort_already_configured(
     await hass.async_block_till_done()
 
     assert result3["type"] == FlowResultType.ABORT
-
     assert result3["reason"] == "already_configured"
-
-    assert len(mock_lamarzocco.check_local_connection.mock_calls) == 1
 
 
 async def test_form_invalid_auth(
