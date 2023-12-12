@@ -2,7 +2,7 @@
 from collections.abc import Callable
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, call, patch
 
 import pytest
 
@@ -13,6 +13,7 @@ from homeassistant.components.person import (
     ATTR_SOURCE,
     ATTR_USER_ID,
     DOMAIN,
+    ListPersonsView,
 )
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
@@ -31,6 +32,7 @@ from homeassistant.setup import async_setup_component
 from .conftest import DEVICE_TRACKER, DEVICE_TRACKER_2
 
 from tests.common import MockUser, mock_component, mock_restore_cache
+from tests.components.auth import BASE_CONFIG, async_setup_auth
 from tests.test_util import mock_real_ip
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -910,3 +912,42 @@ async def test_list_persons(
     assert resp.status == status_code
     result = await resp.json()
     assert result == expected_fn(admin)
+
+
+@pytest.mark.parametrize(
+    ("auth_provider_configs", "register_expected"),
+    [
+        (BASE_CONFIG, False),
+        ([{"type": "homeassistant", "expose_users_on_local_network": True}], True),
+        ([{"type": "homeassistant"}], True),
+        ([{"type": "homeassistant", "expose_users_on_local_network": False}], False),
+    ],
+)
+async def test_list_persons_view_register(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    socket_enabled: None,
+    hass_admin_user: MockUser,
+    auth_provider_configs: list[dict[str, Any]],
+    register_expected: bool,
+) -> None:
+    """Test if the list persion view is registered on different auth configs."""
+
+    await async_setup_auth(
+        hass,
+        aiohttp_client,
+        auth_provider_configs,
+    )
+    hass.http.register_view = mock = Mock()
+
+    user_id = hass_admin_user.id
+    admin = {"id": "1234", "name": "Admin", "user_id": user_id, "picture": "/bla"}
+    config = {
+        DOMAIN: [
+            admin,
+            {"id": "5678", "name": "Only a person"},
+        ]
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    assert (call(ListPersonsView) in mock.call_args_list) == register_expected

@@ -4,7 +4,7 @@ from __future__ import annotations
 from http import HTTPStatus
 from ipaddress import ip_address
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp import web
 import voluptuous as vol
@@ -58,6 +58,8 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.network import is_local
 
+if TYPE_CHECKING:
+    from homeassistant.auth.providers.homeassistant import HassAuthProvider
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_SOURCE = "source"
@@ -334,6 +336,17 @@ The following persons point at invalid users:
     return filtered
 
 
+def _setup_list_persons_view(hass: HomeAssistant):
+    """Set up the list persons view if homeassistant provider is set up and exposing is enabled."""
+    for provider in hass.auth.auth_providers:
+        if (
+            provider.type == "homeassistant"
+            and cast("HassAuthProvider", provider).expose_users_on_local_network
+        ):
+            hass.http.register_view(ListPersonsView)
+            return
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the person component."""
     entity_component = EntityComponent[Person](_LOGGER, DOMAIN, hass)
@@ -391,7 +404,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, DOMAIN, SERVICE_RELOAD, async_reload_yaml
     )
 
-    hass.http.register_view(ListPersonsView)
+    _setup_list_persons_view(hass)
 
     return True
 

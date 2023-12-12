@@ -68,10 +68,11 @@ async def _test_fetch_auth_providers_home_assistant(
     aiohttp_client: ClientSessionGenerator,
     ip: str,
     additional_expected_fn: Callable[[User], dict[str, Any]],
+    auth_provider_config: dict[str, Any],
 ) -> None:
     """Test fetching auth providers for homeassistant auth provider."""
     client = await async_setup_auth(
-        hass, aiohttp_client, [{"type": "homeassistant"}], custom_ip=ip
+        hass, aiohttp_client, [auth_provider_config], custom_ip=ip
     )
 
     provider = hass.auth.auth_providers[0]
@@ -106,7 +107,7 @@ async def test_fetch_auth_providers_home_assistant_person_not_loaded(
 ) -> None:
     """Test fetching auth providers for homeassistant auth provider, where person integration is not loaded."""
     await _test_fetch_auth_providers_home_assistant(
-        hass, aiohttp_client, ip, lambda _: {}
+        hass, aiohttp_client, ip, lambda _: {}, {"type": "homeassistant"}
     )
 
 
@@ -119,11 +120,19 @@ async def test_fetch_auth_providers_home_assistant_person_not_loaded(
         ("2001:db8::1", False),
     ],
 )
+@pytest.mark.parametrize(
+    ("auth_provider_config"),
+    [
+        ({"type": "homeassistant"}),
+        ({"type": "homeassistant", "expose_users_on_local_network": True}),
+    ],
+)
 async def test_fetch_auth_providers_home_assistant_person_loaded(
     hass: HomeAssistant,
     aiohttp_client: ClientSessionGenerator,
     ip: str,
     is_local: bool,
+    auth_provider_config: dict[str, Any],
 ) -> None:
     """Test fetching auth providers for homeassistant auth provider, where person integration is loaded."""
     domain = "person"
@@ -135,6 +144,35 @@ async def test_fetch_auth_providers_home_assistant_person_loaded(
         aiohttp_client,
         ip,
         lambda user: {"users": {user.id: user.name}} if is_local else {},
+        auth_provider_config,
+    )
+
+
+@pytest.mark.parametrize(
+    ("ip"),
+    [
+        ("192.168.0.10"),
+        ("::ffff:192.168.0.10"),
+        ("1.2.3.4"),
+        ("2001:db8::1"),
+    ],
+)
+async def test_fetch_auth_providers_home_assistant_person_loaded_users_not_exposed(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    ip: str,
+) -> None:
+    """Test fetching auth providers for homeassistant auth provider, where person integration is loaded."""
+    domain = "person"
+    config = {domain: {"id": "1234", "name": "test person"}}
+    assert await async_setup_component(hass, domain, config)
+
+    await _test_fetch_auth_providers_home_assistant(
+        hass,
+        aiohttp_client,
+        ip,
+        lambda _: {},
+        {"type": "homeassistant", "expose_users_on_local_network": False},
     )
 
 

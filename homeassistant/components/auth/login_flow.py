@@ -96,6 +96,7 @@ from homeassistant.util.network import is_local
 from . import indieauth
 
 if TYPE_CHECKING:
+    from homeassistant.auth.providers.homeassistant import HassAuthProvider
     from homeassistant.auth.providers.trusted_networks import (
         TrustedNetworksAuthProvider,
     )
@@ -181,6 +182,7 @@ class AuthProvidersView(HomeAssistantView):
                     continue
             elif (
                 provider.type == "homeassistant"
+                and cast("HassAuthProvider", provider).expose_users_on_local_network
                 and not cloud_connection
                 and is_local(remote_address)
                 and "person" in hass.config.components

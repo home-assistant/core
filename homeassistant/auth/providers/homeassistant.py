@@ -31,7 +31,18 @@ def _disallow_id(conf: dict[str, Any]) -> dict[str, Any]:
     return conf
 
 
-CONFIG_SCHEMA = vol.All(AUTH_PROVIDER_SCHEMA, _disallow_id)
+EXPOSE_USERS_ON_LOCAL_NETWORK = "expose_users_on_local_network"
+
+
+CONFIG_SCHEMA = vol.All(
+    AUTH_PROVIDER_SCHEMA.extend(
+        {
+            vol.Optional(EXPOSE_USERS_ON_LOCAL_NETWORK, default=True): bool,
+        },
+        extra=vol.PREVENT_EXTRA,
+    ),
+    _disallow_id,
+)
 
 
 @callback
@@ -224,6 +235,11 @@ class HassAuthProvider(AuthProvider):
         super().__init__(*args, **kwargs)
         self.data: Data | None = None
         self._init_lock = asyncio.Lock()
+
+    @property
+    def expose_users_on_local_network(self) -> bool:
+        """Return if users are exposed on local network."""
+        return self.config[EXPOSE_USERS_ON_LOCAL_NETWORK]  # type: ignore[no-any-return]
 
     async def async_initialize(self) -> None:
         """Initialize the auth provider."""
