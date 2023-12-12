@@ -17,7 +17,7 @@
         "title": "Update of Access Keys required",
         "description": "tedee needs an updated access key, because the existing one is invalid or might have expired.",
         "data": {
-          "local_access_token": "Local Access Token (optional)"
+          "local_access_token": "[%key:component::tedee::config::step::user::data::local_access_token%]"
         }
       }
     },

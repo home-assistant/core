@@ -2,6 +2,7 @@
 from unittest.mock import MagicMock
 
 from pytedee_async import TedeeClientException, TedeeLocalAuthException
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.tedee.const import (
@@ -96,7 +97,7 @@ async def test_flow(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
     }
 
 
-async def test_config_flow_errors(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
+async def test_local_bridge_errors(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
     """Test the config flow errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -118,7 +119,31 @@ async def test_config_flow_errors(hass: HomeAssistant, mock_tedee: MagicMock) ->
     assert result2["errors"] == {CONF_HOST: "invalid_host"}
     assert len(mock_tedee.get_locks.mock_calls) == 1
 
-    mock_tedee.get_locks.side_effect = TedeeLocalAuthException("Invalid token")
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (TedeeClientException("boom."), {CONF_HOST: "invalid_host"}),
+        (
+            TedeeLocalAuthException("boom."),
+            {CONF_LOCAL_ACCESS_TOKEN: "invalid_api_key"},
+        ),
+    ],
+)
+async def test_config_flow_errors(
+    hass: HomeAssistant,
+    mock_tedee: MagicMock,
+    side_effect: Exception,
+    error: dict[str, str],
+) -> None:
+    """Test the config flow errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+
+    mock_tedee.get_locks.side_effect = side_effect
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -129,21 +154,8 @@ async def test_config_flow_errors(hass: HomeAssistant, mock_tedee: MagicMock) ->
     )
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {CONF_LOCAL_ACCESS_TOKEN: "invalid_api_key"}
-    assert len(mock_tedee.get_locks.mock_calls) == 2
-
-    mock_tedee.get_locks.side_effect = Exception()
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.x",
-            CONF_LOCAL_ACCESS_TOKEN: "token",
-        },
-    )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {CONF_HOST: "invalid_host"}
-    assert len(mock_tedee.get_locks.mock_calls) == 3
+    assert result2["errors"] == error
+    assert len(mock_tedee.get_locks.mock_calls) == 1
 
 
 async def test_show_reauth(
