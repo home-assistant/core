@@ -1,0 +1,23 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "not_dir": "Configured path is not a directory",
+      "not_readable_dir": "Configured path is not readable",
+      "not_allowed_dir": "Configured path is not in allowlist"
+    },
+    "step": {
+      "user": {
+        "description": "Press submit for initial setup. On the created config entry, press configure to add sensors for selected processes"
+      }
+    }
+  },
+  "issues": {
+    "not_allowed_path": {
+      "title": "The Folder Watcher YAML configuration could not be imported",
+      "description": "Configuring Folder Watcher using YAML is being removed but your configuration\ncould not be imported as the folder {path} is not in the configured allowlist.\n\nPlease add it to your allowlist and restart Home Assistant to import it and fix this issue."
+    }
+  }
+}
