@@ -5,10 +5,10 @@ from krisinformation import crisis_alerter as krisinformation
 
 from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfLength
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_START, UnitOfLength
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_COUNTY
@@ -63,15 +63,22 @@ class KrisInformationGeolocationEvent(GeolocationEvent):
 async def async_setup_entry(
     hass: HomeAssistant,
     config: ConfigEntry,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Demo geolocations."""
     manager = KrisInformationGeolocationManager(
-        hass, add_entities, krisinformation.CrisisAlerter(config.data.get(CONF_COUNTY))
+        hass,
+        async_add_entities,
+        krisinformation.CrisisAlerter(config.data.get(CONF_COUNTY)),
     )
 
-    await hass.async_add_executor_job(manager.init_regular_updates)
+    # await hass.async_add_executor_job()
+    async def start_feed_manager(event: Event) -> None:
+        """Start feed manager."""
+        await manager.init_regular_updates()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_feed_manager)
 
 
 class KrisInformationGeolocationManager:
@@ -80,12 +87,12 @@ class KrisInformationGeolocationManager:
     def __init__(
         self,
         hass: HomeAssistant,
-        add_entities: AddEntitiesCallback,
+        async_add_entities: AddEntitiesCallback,
         crisis_alerter: krisinformation.CrisisAlerter,
     ) -> None:
         """Initialise the demo geolocation event manager."""
         self._hass = hass
-        self._add_entities = add_entities
+        self._async_add_entities = async_add_entities
         self._events: list[KrisInformationGeolocationEvent] = []
         self._crisis_alerter = crisis_alerter
         _LOGGER.info("INIT KRISINFO MANAGER")
@@ -98,23 +105,26 @@ class KrisInformationGeolocationManager:
             headline, latitude, longitude, UnitOfLength.KILOMETERS
         )
 
-    def init_regular_updates(self) -> None:
+    async def init_regular_updates(self) -> None:
         """Schedule regular updates based on configured time interval."""
-        self._update()
-        track_time_interval(
+        await self._update()
+
+        async_track_time_interval(
             self._hass,
-            lambda now: self._update(),
+            self._update,
             MIN_TIME_BETWEEN_UPDATES,
             cancel_on_shutdown=True,
         )
 
-    def _update(self) -> None:
+    async def _update(self, _=None) -> None:
         """Remove events and add new random events."""
         new_events = []
         self._events.clear()
-        events = self._crisis_alerter.vmas(is_test=True)
+        events = await self._hass.async_add_executor_job(
+            self._crisis_alerter.vmas, True
+        )
         for event in events:
-            new_event = self._generate_random_event(
+            new_event = KrisInformationGeolocationEvent(
                 event["Headline"],
                 event["Area"][0]["GeometryInformation"]["PoleOfInInaccessibility"][
                     "coordinates"
@@ -122,7 +132,8 @@ class KrisInformationGeolocationManager:
                 event["Area"][0]["GeometryInformation"]["PoleOfInInaccessibility"][
                     "coordinates"
                 ][0],
+                UnitOfLength.KILOMETERS,
             )
             new_events.append(new_event)
             self._events.append(new_event)
-        self._add_entities(new_events)
+        self._async_add_entities(new_events)
