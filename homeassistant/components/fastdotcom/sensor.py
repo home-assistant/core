@@ -32,7 +32,7 @@ class SpeedtestSensor(
 ):
     """Implementation of a Fast.com sensor."""
 
-    _attr_name = "Fast.com Download"
+    _attr_name = None
     _attr_device_class = SensorDeviceClass.DATA_RATE
     _attr_native_unit_of_measurement = UnitOfDataRate.MEGABITS_PER_SECOND
     _attr_state_class = SensorStateClass.MEASUREMENT
