@@ -9,7 +9,7 @@ from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 import logging
 from pathlib import Path
-from queue import Queue
+from queue import Empty, Queue
 from threading import Thread
 import time
 from typing import TYPE_CHECKING, Any, Final, cast
@@ -1010,8 +1010,8 @@ class PipelineRun:
         self.tts_engine = engine
         self.tts_options = tts_options
 
-    async def text_to_speech(self, tts_input: str) -> str:
-        """Run text-to-speech portion of pipeline. Returns URL of TTS audio."""
+    async def text_to_speech(self, tts_input: str) -> None:
+        """Run text-to-speech portion of pipeline."""
         self.process_event(
             PipelineEvent(
                 PipelineEventType.TTS_START,
@@ -1057,8 +1057,6 @@ class PipelineRun:
         self.process_event(
             PipelineEvent(PipelineEventType.TTS_END, {"tts_output": tts_output})
         )
-
-        return tts_media.url
 
     def _capture_chunk(self, audio_bytes: bytes | None) -> None:
         """Forward audio chunk to various capturing mechanisms."""
@@ -1246,6 +1244,8 @@ def _pipeline_debug_recording_thread_proc(
                 # Chunk of 16-bit mono audio at 16Khz
                 if wav_writer is not None:
                     wav_writer.writeframes(message)
+    except Empty:
+        pass  # occurs when pipeline has unexpected error
     except Exception:  # pylint: disable=broad-exception-caught
         _LOGGER.exception("Unexpected error in debug recording thread")
     finally:

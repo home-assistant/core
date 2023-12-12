@@ -23,11 +23,11 @@ dbus-fast==2.20.0
 fnv-hash-fast==0.5.0
 ha-av==10.1.1
 ha-ffmpeg==3.1.0
-habluetooth==0.8.0
+habluetooth==0.11.1
 hass-nabucasa==0.74.0
 hassil==1.5.1
-home-assistant-bluetooth==1.10.4
-home-assistant-frontend==20231205.0
+home-assistant-bluetooth==1.11.0
+home-assistant-frontend==20231208.2
 home-assistant-intents==2023.12.05
 httpx==0.25.0
 ifaddr==0.2.0
@@ -52,13 +52,13 @@ PyYAML==6.0.1
 requests==2.31.0
 scapy==2.5.0
 SQLAlchemy==2.0.23
-typing-extensions>=4.8.0,<5.0
+typing-extensions>=4.9.0,<5.0
 ulid-transform==0.9.0
 voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 webrtc-noise-gain==1.2.3
-yarl==1.9.2
-zeroconf==0.128.0
+yarl==1.9.4
+zeroconf==0.128.4
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
@@ -108,7 +108,7 @@ regex==2021.8.28
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.0.0
+anyio==4.1.0
 h11==0.14.0
 httpcore==0.18.0
 

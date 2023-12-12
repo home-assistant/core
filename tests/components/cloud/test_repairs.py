@@ -154,6 +154,7 @@ async def test_legacy_subscription_repair_flow(
         "handler": DOMAIN,
         "description": None,
         "description_placeholders": None,
+        "minor_version": 1,
     }
 
     assert not issue_registry.async_get_issue(

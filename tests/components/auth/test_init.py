@@ -4,6 +4,7 @@ from http import HTTPStatus
 import logging
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.auth import InvalidAuthError
@@ -167,28 +168,25 @@ async def test_auth_code_checks_local_only_user(
     assert error["error"] == "access_denied"
 
 
-def test_auth_code_store_expiration(mock_credential) -> None:
+def test_auth_code_store_expiration(
+    mock_credential, freezer: FrozenDateTimeFactory
+) -> None:
     """Test that the auth code store will not return expired tokens."""
     store, retrieve = auth._create_auth_code_store()
     client_id = "bla"
     now = utcnow()
 
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        code = store(client_id, mock_credential)
+    freezer.move_to(now)
+    code = store(client_id, mock_credential)
 
-    with patch(
-        "homeassistant.util.dt.utcnow", return_value=now + timedelta(minutes=10)
-    ):
-        assert retrieve(client_id, code) is None
+    freezer.move_to(now + timedelta(minutes=10))
+    assert retrieve(client_id, code) is None
 
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        code = store(client_id, mock_credential)
+    freezer.move_to(now)
+    code = store(client_id, mock_credential)
 
-    with patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=now + timedelta(minutes=9, seconds=59),
-    ):
-        assert retrieve(client_id, code) == mock_credential
+    freezer.move_to(now + timedelta(minutes=9, seconds=59))
+    assert retrieve(client_id, code) == mock_credential
 
 
 def test_auth_code_store_requires_credentials(mock_credential) -> None:
