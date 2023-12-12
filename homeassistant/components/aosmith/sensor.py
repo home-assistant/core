@@ -1,4 +1,4 @@
-"""The water heater platform for the A. O. Smith integration."""
+"""The sensor platform for the A. O. Smith integration."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
