@@ -179,23 +179,20 @@ class CrisisAlerterSensorCounty(SensorEntity):
             response = self._crisis_alerter.vmas(is_test=True)
             location = self._crisis_alerter.county
             if len(response) > 0:
-                news = response[0]
-                county = news["Area"][0]["Description"]
-                if county == location:
-                    self._state = news["PushMessage"][:255]  # Crashes if not capped
-                    self._web = news["Web"]
-                    self._published = news["Published"]
-                    self._area = (
-                        news["Area"][0]["Description"]
-                        if len(news["Area"]) > 1
-                        else None
-                    )
-                else:
-                    self._state = (
-                        "Inga larm"
-                        if self._crisis_alerter.language == "sv"
-                        else "No alarms"
-                    )
+                for news in response:
+                    county = news["Area"][0]["Description"]
+                    if county == location:
+                        self._state = news["PushMessage"][:255]  # Crashes if not capped
+                        self._web = news["Web"]
+                        self._published = news["Published"]
+                        self._area = county
+                        break
+                    else:
+                        self._state = (
+                            "Inga larm"
+                            if self._crisis_alerter.language == "sv"
+                            else "No alarms"
+                        )
             else:
                 self._state = (
                     "Inga larm"

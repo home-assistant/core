@@ -1,5 +1,6 @@
 """Support for geolocation data from Krisinformation."""
 from datetime import timedelta
+from typing import Any
 
 from krisinformation import crisis_alerter as krisinformation
 
@@ -20,7 +21,7 @@ SOURCE = "krisinformation"
 
 
 class KrisInformationGeolocationEvent(GeolocationEvent):
-    """Represents a demo geolocation event."""
+    """Represents a krisinformation geolocation event."""
 
     _attr_should_poll = False
     _attr_source = SOURCE
@@ -28,16 +29,41 @@ class KrisInformationGeolocationEvent(GeolocationEvent):
 
     def __init__(
         self,
+        id: str,
         name: str,
         latitude: float,
         longitude: float,
         unit_of_measurement: str,
+        web: str,
+        published: str,
+        area: str
+
     ) -> None:
         """Initialize entity with data provided."""
+        self._external_id = id
         self._attr_name = name
         self._latitude = latitude
         self._longitude = longitude
         self._unit_of_measurement = unit_of_measurement
+        self._web = web
+        self._published = published #: str | None = None
+        self._area = area #: str | None = None
+
+        self._update()
+
+
+    def _update(self) -> None:
+        """Schedule regular updates based on configured time interval."""
+       # _LOGGER.info(self._web, self._published, self._area)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes."""
+        return {
+            "Link": self._web,
+            "Published": self._published,
+            "County": self._area,
+        }
 
     @property
     def source(self) -> str:
@@ -66,7 +92,7 @@ async def async_setup_entry(
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Demo geolocations."""
+    """Set up the krisinformation geolocations."""
     manager = KrisInformationGeolocationManager(
         hass, add_entities, krisinformation.CrisisAlerter(config.data.get(CONF_COUNTY))
     )
@@ -83,20 +109,21 @@ class KrisInformationGeolocationManager:
         add_entities: AddEntitiesCallback,
         crisis_alerter: krisinformation.CrisisAlerter,
     ) -> None:
-        """Initialise the demo geolocation event manager."""
+        """Initialise the krisinformation geolocation event manager."""
         self._hass = hass
         self._add_entities = add_entities
         self._events: list[KrisInformationGeolocationEvent] = []
         self._crisis_alerter = crisis_alerter
-        _LOGGER.info("INIT KRISINFO MANAGER")
 
-    def _generate_random_event(
-        self, headline: str, latitude: float, longitude: float
+    def _generate_event(
+        self, id: str, headline: str, latitude: float, longitude: float, web: str, published: str, area: str
     ) -> KrisInformationGeolocationEvent:
-        """Generate a random event in vicinity of this HA instance."""
-        return KrisInformationGeolocationEvent(
-            headline, latitude, longitude, UnitOfLength.KILOMETERS
+        """Generate a krisinformation geolocation event"""
+        event = KrisInformationGeolocationEvent(
+            id, headline, latitude, longitude, UnitOfLength.KILOMETERS, web, published, area
         )
+
+        return event
 
     def init_regular_updates(self) -> None:
         """Schedule regular updates based on configured time interval."""
@@ -109,12 +136,16 @@ class KrisInformationGeolocationManager:
         )
 
     def _update(self) -> None:
-        """Remove events and add new random events."""
+        """Clear events and add new events."""
         new_events = []
-        self._events.clear()
+        for event in self._events:
+            self._events.remove(event)
+            self._hass.add_job(event.async_remove())
         events = self._crisis_alerter.vmas(is_test=True)
         for event in events:
-            new_event = self._generate_random_event(
+           #_LOGGER.info(event)
+            new_event = self._generate_event(
+                event["Identifier"],
                 event["Headline"],
                 event["Area"][0]["GeometryInformation"]["PoleOfInInaccessibility"][
                     "coordinates"
@@ -122,6 +153,9 @@ class KrisInformationGeolocationManager:
                 event["Area"][0]["GeometryInformation"]["PoleOfInInaccessibility"][
                     "coordinates"
                 ][0],
+                event["Web"],
+                event["Published"],
+                event["Area"][0]["Description"]
             )
             new_events.append(new_event)
             self._events.append(new_event)
