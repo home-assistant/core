@@ -25,7 +25,7 @@ DoorBirdPy==2.1.0
 HAP-python==4.9.1
 
 # homeassistant.components.tasmota
-HATasmota==0.7.3
+HATasmota==0.8.0
 
 # homeassistant.components.doods
 # homeassistant.components.generic
@@ -329,7 +329,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==6.1.0
+aioshelly==7.0.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -506,7 +506,7 @@ bthome-ble==3.2.0
 buienradar==1.0.5
 
 # homeassistant.components.caldav
-caldav==1.3.6
+caldav==1.3.8
 
 # homeassistant.components.coinbase
 coinbase==2.1.0
@@ -783,7 +783,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==0.10.0
+habluetooth==0.11.1
 
 # homeassistant.components.cloud
 hass-nabucasa==0.74.0
@@ -808,7 +808,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.37
+holidays==0.38
 
 # homeassistant.components.frontend
 home-assistant-frontend==20231208.2
@@ -842,7 +842,7 @@ ibeacon-ble==1.0.1
 
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==6.1.0
+ical==6.1.1
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -1087,7 +1087,7 @@ open-garage==0.2.0
 open-meteo==0.3.1
 
 # homeassistant.components.openai_conversation
-openai==0.27.2
+openai==1.3.8
 
 # homeassistant.components.openerz
 openerz-api==0.2.0
@@ -1144,7 +1144,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.34.5
+plugwise==0.35.3
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1353,7 +1353,7 @@ pyhaversion==22.8.0
 pyheos==0.7.2
 
 # homeassistant.components.hive
-pyhiveapi==0.5.14
+pyhiveapi==0.5.16
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
@@ -1416,7 +1416,7 @@ pylaunches==1.4.0
 pylibrespot-java==0.1.1
 
 # homeassistant.components.litejet
-pylitejet==0.5.0
+pylitejet==0.6.0
 
 # homeassistant.components.litterrobot
 pylitterbot==2023.4.9
@@ -1602,6 +1602,9 @@ pyspcwebgw==0.7.0
 # homeassistant.components.squeezebox
 pysqueezebox==0.7.1
 
+# homeassistant.components.suez_water
+pysuez==0.2.0
+
 # homeassistant.components.switchbee
 pyswitchbee==1.8.0
 
@@ -1766,7 +1769,7 @@ renault-api==0.2.0
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.8.2
+reolink-aio==0.8.3
 
 # homeassistant.components.rflink
 rflink==0.0.65
@@ -1942,6 +1945,9 @@ tesla-powerwall==0.3.19
 
 # homeassistant.components.tesla_wall_connector
 tesla-wall-connector==1.0.2
+
+# homeassistant.components.tessie
+tessie-api==0.0.9
 
 # homeassistant.components.thermobeacon
 thermobeacon-ble==0.6.0
@@ -2124,7 +2130,7 @@ yt-dlp==2023.11.16
 zamg==0.3.3
 
 # homeassistant.components.zeroconf
-zeroconf==0.128.0
+zeroconf==0.128.4
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

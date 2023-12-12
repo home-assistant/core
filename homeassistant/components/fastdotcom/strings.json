@@ -9,6 +9,13 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
+  "entity": {
+    "sensor": {
+      "download": {
+        "name": "Download"
+      }
+    }
+  },
   "services": {
     "speedtest": {
       "name": "Speed test",
