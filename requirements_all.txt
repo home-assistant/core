@@ -607,7 +607,7 @@ btsmarthub-devicelist==0.2.3
 buienradar==1.0.5
 
 # homeassistant.components.caldav
-caldav==1.3.6
+caldav==1.3.8
 
 # homeassistant.components.circuit
 circuit-webhook==1.0.1
@@ -984,7 +984,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==0.10.0
+habluetooth==0.11.1
 
 # homeassistant.components.cloud
 hass-nabucasa==0.74.0
@@ -1021,7 +1021,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.37
+holidays==0.38
 
 # homeassistant.components.frontend
 home-assistant-frontend==20231208.2
@@ -1393,7 +1393,7 @@ open-garage==0.2.0
 open-meteo==0.3.1
 
 # homeassistant.components.openai_conversation
-openai==0.27.2
+openai==1.3.8
 
 # homeassistant.components.opencv
 # opencv-python-headless==4.6.0.66
@@ -1486,7 +1486,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.34.5
+plugwise==0.35.3
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1788,7 +1788,7 @@ pyhaversion==22.8.0
 pyheos==0.7.2
 
 # homeassistant.components.hive
-pyhiveapi==0.5.14
+pyhiveapi==0.5.16
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
@@ -2354,7 +2354,7 @@ renault-api==0.2.0
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.8.2
+reolink-aio==0.8.3
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1

@@ -2424,7 +2424,7 @@ async def test_name(hass: HomeAssistant) -> None:
         config_entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
-        """Set up test stt platform via config entry."""
+        """Set up test sensor platform via config entry."""
         async_add_entities([entity1, entity2, entity3, entity4])
 
     mock_platform(

@@ -1236,7 +1236,8 @@ omit =
     homeassistant/components/streamlabswater/binary_sensor.py
     homeassistant/components/streamlabswater/coordinator.py
     homeassistant/components/streamlabswater/sensor.py
-    homeassistant/components/suez_water/*
+    homeassistant/components/suez_water/__init__.py
+    homeassistant/components/suez_water/sensor.py
     homeassistant/components/supervisord/sensor.py
     homeassistant/components/supla/*
     homeassistant/components/surepetcare/__init__.py
