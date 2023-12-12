@@ -23,6 +23,7 @@ from bluetooth_adapters import (
 )
 from bluetooth_data_tools import monotonic_time_coarse as MONOTONIC_TIME
 from habluetooth import (
+    BaseHaRemoteScanner,
     BaseHaScanner,
     BluetoothScannerDevice,
     BluetoothScanningMode,
@@ -69,7 +70,6 @@ from .api import (
     async_set_fallback_availability_interval,
     async_track_unavailable,
 )
-from .base_scanner import HomeAssistantRemoteScanner
 from .const import (
     BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
     CONF_ADAPTER,
@@ -116,6 +116,7 @@ __all__ = [
     "BluetoothCallback",
     "BluetoothScannerDevice",
     "HaBluetoothConnector",
+    "BaseHaRemoteScanner",
     "SOURCE_LOCAL",
     "FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS",
     "MONOTONIC_TIME",

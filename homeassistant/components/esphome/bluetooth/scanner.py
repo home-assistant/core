@@ -7,14 +7,11 @@ from bluetooth_data_tools import (
     parse_advertisement_data_tuple,
 )
 
-from homeassistant.components.bluetooth import (
-    MONOTONIC_TIME,
-    HomeAssistantRemoteScanner,
-)
+from homeassistant.components.bluetooth import MONOTONIC_TIME, BaseHaRemoteScanner
 from homeassistant.core import callback
 
 
-class ESPHomeScanner(HomeAssistantRemoteScanner):
+class ESPHomeScanner(BaseHaRemoteScanner):
     """Scanner for esphome."""
 
     __slots__ = ()

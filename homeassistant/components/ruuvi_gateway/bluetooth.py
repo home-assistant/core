@@ -10,7 +10,7 @@ from home_assistant_bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     MONOTONIC_TIME,
-    HomeAssistantRemoteScanner,
+    BaseHaRemoteScanner,
     async_get_advertisement_callback,
     async_register_scanner,
 )
@@ -22,12 +22,11 @@ from .coordinator import RuuviGatewayUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-class RuuviGatewayScanner(HomeAssistantRemoteScanner):
+class RuuviGatewayScanner(BaseHaRemoteScanner):
     """Scanner for Ruuvi Gateway."""
 
     def __init__(
         self,
-        hass: HomeAssistant,
         scanner_id: str,
         name: str,
         new_info_callback: Callable[[BluetoothServiceInfoBleak], None],
@@ -36,7 +35,6 @@ class RuuviGatewayScanner(HomeAssistantRemoteScanner):
     ) -> None:
         """Initialize the scanner, using the given update coordinator as data source."""
         super().__init__(
-            hass,
             scanner_id,
             name,
             new_info_callback,
@@ -87,7 +85,6 @@ def async_connect_scanner(
         source,
     )
     scanner = RuuviGatewayScanner(
-        hass=hass,
         scanner_id=source,
         name=entry.title,
         new_info_callback=async_get_advertisement_callback(hass),
