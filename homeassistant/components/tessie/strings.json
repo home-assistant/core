@@ -31,34 +31,34 @@
           "offline": "Offline"
         }
       },
-      "charge_state-usable_battery_level": {
+      "charge_state_usable_battery_level": {
         "name": "Battery Level"
       },
-      "charge_state-charge_energy_added": {
+      "charge_state_charge_energy_added": {
         "name": "Charge Energy Added"
       },
-      "charge_state-charger_power": {
+      "charge_state_charger_power": {
         "name": "Charger Power"
       },
-      "charge_state-charger_voltage": {
+      "charge_state_charger_voltage": {
         "name": "Charger Voltage"
       },
-      "charge_state-charger_actual_current": {
+      "charge_state_charger_actual_current": {
         "name": "Charger Current"
       },
-      "charge_state-charge_rate": {
+      "charge_state_charge_rate": {
         "name": "Charge Rate"
       },
-      "charge_state-battery_range": {
+      "charge_state_battery_range": {
         "name": "Battery Range"
       },
-      "drive_state-speed": {
+      "drive_state_speed": {
         "name": "Speed"
       },
-      "drive_state-power": {
+      "drive_state_power": {
         "name": "Power"
       },
-      "drive_state-shift_state": {
+      "drive_state_shift_state": {
         "name": "Shift State",
         "state": {
           "p": "Park",
@@ -67,32 +67,101 @@
           "n": "Neutral"
         }
       },
-      "vehicle_state-odometer": {
+      "vehicle_state_odometer": {
         "name": "Odometer"
       },
-      "vehicle_state-tpms_pressure_fl": {
+      "vehicle_state_tpms_pressure_fl": {
         "name": "Tyre Pressure Front Left"
       },
-      "vehicle_state-tpms_pressure_fr": {
+      "vehicle_state_tpms_pressure_fr": {
         "name": "Tyre Pressure Front Right"
       },
-      "vehicle_state-tpms_pressure_rl": {
+      "vehicle_state_tpms_pressure_rl": {
         "name": "Tyre Pressure Rear Left"
       },
-      "vehicle_state-tpms_pressure_rr": {
+      "vehicle_state_tpms_pressure_rr": {
         "name": "Tyre Pressure Rear Right"
       },
-      "climate_state-inside_temp": {
+      "climate_state_inside_temp": {
         "name": "Inside Temperature"
       },
-      "climate_state-outside_temp": {
+      "climate_state_outside_temp": {
         "name": "Outside Temperature"
       },
-      "climate_state-driver_temp_setting": {
+      "climate_state_driver_temp_setting": {
         "name": "Driver Temperature Setting"
       },
-      "climate_state-passenger_temp_setting": {
+      "climate_state_passenger_temp_setting": {
         "name": "Passenger Temperature Setting"
+      }
+    },
+    "binary_sensor": {
+      "charge_state_battery_heater_on": {
+        "name": "Battery heater"
+      },
+      "charge_state_charge_enable_request": {
+        "name": "Charge enable request"
+      },
+      "charge_state_charge_port_door_open": {
+        "name": "Charge port door"
+      },
+      "charge_state_charging_state": {
+        "name": "Charging"
+      },
+      "charge_state_preconditioning_enabled": {
+        "name": "Preconditioning enabled"
+      },
+      "charge_state_scheduled_charging_pending": {
+        "name": "Scheduled charging pending"
+      },
+      "charge_state_trip_charging": {
+        "name": "Trip charging"
+      },
+      "climate_state_auto_seat_climate_left": {
+        "name": "Auto seat climate left"
+      },
+      "climate_state_auto_seat_climate_right": {
+        "name": "Auto seat climate right"
+      },
+      "climate_state_auto_steering_wheel_heater": {
+        "name": "Auto steering wheel heater"
+      },
+      "climate_state_cabin_overheat_protection": {
+        "name": "Cabin overheat protection"
+      },
+      "climate_state_cabin_overheat_protection_actively_cooling": {
+        "name": "Cabin overheat protection actively cooling"
+      },
+      "vehicle_state_dashcam_state": {
+        "name": "Dashcam"
+      },
+      "vehicle_state_is_user_present": {
+        "name": "User present"
+      },
+      "vehicle_state_tpms_soft_warning_fl": {
+        "name": "Tyre preasure warning front left"
+      },
+      "vehicle_state_tpms_soft_warning_fr": {
+        "name": "Tyre preasure warning front right"
+      },
+      "vehicle_state_tpms_soft_warning_rl": {
+        "name": "Tyre preasure warning rear left"
+      },
+      "vehicle_state_tpms_soft_warning_rr": {
+        "name": "Tyre preasure warning rear right"
+      }
+    }
+  },
+  "issues": {
+    "virtual_key": {
+      "title": "Virtual Key setup required",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Virtual Key setup required",
+            "description": "Sending commands now requires a Virtual Key to be added to your Tesla. Open the Tessie App and send any command to setup the Virtual Key."
+          }
+        }
       }
     }
   }
