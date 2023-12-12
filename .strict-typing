@@ -48,6 +48,7 @@ homeassistant.components.aftership.*
 homeassistant.components.air_quality.*
 homeassistant.components.airly.*
 homeassistant.components.airvisual.*
+homeassistant.components.airvisual_pro.*
 homeassistant.components.airzone.*
 homeassistant.components.airzone_cloud.*
 homeassistant.components.aladdin_connect.*
@@ -60,10 +61,13 @@ homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
 homeassistant.components.analytics.*
 homeassistant.components.androidtv_remote.*
+homeassistant.components.android_ip_webcam.*
 homeassistant.components.anova.*
 homeassistant.components.anthemav.*
 homeassistant.components.apcupsd.*
+homeassistant.components.apprise.*
 homeassistant.components.aqualogic.*
+homeassistant.components.aranet.*
 homeassistant.components.aseko_pool_live.*
 homeassistant.components.assist_pipeline.*
 homeassistant.components.asuswrt.*
