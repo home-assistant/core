@@ -198,7 +198,7 @@ async def test_ll_hls_stream(
         r'#EXT-X-PART:DURATION=(?P<part_duration>[0-9]{1,}.[0-9]{3,}),URI="(?P<part_url>.+?)"(,INDEPENDENT=YES)?'
     )
     datetime_re = re.compile(r"#EXT-X-PROGRAM-DATE-TIME:(?P<datetime>.+)")
-    inf_re = re.compile(r"#EXTINF:(?P<segment_duration>[0-9]{1,}.[0-9]{3,}),")
+    inf_re = re.compile(r"#EXTINF:(?P<segment_duration>\d{1,}.\d{3,}),")
     # keep track of which tests were done (indexed by re)
     tested = {regex: False for regex in (part_re, datetime_re, inf_re)}
     # keep track of times and durations along playlist for checking consistency
