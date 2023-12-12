@@ -6,45 +6,60 @@ import logging
 
 from opendata_transport import OpendataTransport
 from opendata_transport.exceptions import OpendataTransportError
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant import config_entries, core
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
+from .const import (
+    ATTR_DELAY,
+    ATTR_DEPARTURE_TIME1,
+    ATTR_DEPARTURE_TIME2,
+    ATTR_DURATION,
+    ATTR_PLATFORM,
+    ATTR_REMAINING_TIME,
+    ATTR_START,
+    ATTR_TARGET,
+    ATTR_TRAIN_NUMBER,
+    ATTR_TRANSFERS,
+    CONF_DESTINATION,
+    CONF_START,
+    DOMAIN,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_DEPARTURE_TIME1 = "next_departure"
-ATTR_DEPARTURE_TIME2 = "next_on_departure"
-ATTR_DURATION = "duration"
-ATTR_PLATFORM = "platform"
-ATTR_REMAINING_TIME = "remaining_time"
-ATTR_START = "start"
-ATTR_TARGET = "destination"
-ATTR_TRAIN_NUMBER = "train_number"
-ATTR_TRANSFERS = "transfers"
-ATTR_DELAY = "delay"
-
-CONF_DESTINATION = "to"
-CONF_START = "from"
-
-DEFAULT_NAME = "Next Departure"
-
 
 SCAN_INTERVAL = timedelta(seconds=90)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_DESTINATION): cv.string,
-        vol.Required(CONF_START): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
+
+async def async_setup_entry(
+    hass: core.HomeAssistant,
+    config_entry: config_entries.ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the sensor from a config entry created in the integrations UI."""
+    config = hass.data[DOMAIN][config_entry.entry_id]
+
+    sensor = await swiss_public_transport_setup(hass, config)
+
+    try:
+        await sensor.async_update()
+    except OpendataTransportError:
+        _LOGGER.error(
+            "Check at http://transport.opendata.ch/examples/stationboard.html "
+            "if your station names are valid"
+        )
+        return
+
+    async_add_entities(
+        [sensor],
+        update_before_add=True,
+    )
 
 
 async def async_setup_platform(
@@ -53,17 +68,12 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Swiss public transport sensor."""
+    """Set up the sensor from platform."""
 
-    name = config.get(CONF_NAME)
-    start = config.get(CONF_START)
-    destination = config.get(CONF_DESTINATION)
-
-    session = async_get_clientsession(hass)
-    opendata = OpendataTransport(start, destination, session)
+    sensor = await swiss_public_transport_setup(hass, config)
 
     try:
-        await opendata.async_get_data()
+        await sensor.async_update()
     except OpendataTransportError:
         _LOGGER.error(
             "Check at http://transport.opendata.ch/examples/stationboard.html "
@@ -71,7 +81,24 @@ async def async_setup_platform(
         )
         return
 
-    async_add_entities([SwissPublicTransportSensor(opendata, start, destination, name)])
+    async_add_entities(
+        [sensor],
+        update_before_add=True,
+    )
+
+
+async def swiss_public_transport_setup(
+    hass: HomeAssistant, config: ConfigType
+) -> SwissPublicTransportSensor:
+    """Set up the Swiss public transport sensor."""
+    name = config.get(CONF_NAME)
+    start = config.get(CONF_START)
+    destination = config.get(CONF_DESTINATION)
+
+    session = async_get_clientsession(hass)
+    opendata = OpendataTransport(start, destination, session)
+
+    return SwissPublicTransportSensor(opendata, start, destination, name)
 
 
 class SwissPublicTransportSensor(SensorEntity):
@@ -86,7 +113,7 @@ class SwissPublicTransportSensor(SensorEntity):
         self._name = name
         self._from = start
         self._to = destination
-        self._remaining_time = ""
+        self._remaining_time = None
 
     @property
     def name(self):
@@ -129,7 +156,7 @@ class SwissPublicTransportSensor(SensorEntity):
         """Get the latest data from opendata.ch and update the states."""
 
         try:
-            if self._remaining_time.total_seconds() < 0:
+            if not self._remaining_time or self._remaining_time.total_seconds() < 0:
                 await self._opendata.async_get_data()
         except OpendataTransportError:
             _LOGGER.error("Unable to retrieve data from transport.opendata.ch")
