@@ -120,9 +120,12 @@ class KrisInformationGeolocationManager:
         """Remove events and add new random events."""
         new_events = []
         self._events.clear()
-        events = await self._hass.async_add_executor_job(
-            self._crisis_alerter.vmas, True
-        )
+
+        def getvmas():
+            return self._crisis_alerter.vmas(is_test=True)
+
+        events = await self._hass.async_add_executor_job(getvmas)
+
         for event in events:
             new_event = KrisInformationGeolocationEvent(
                 event["Headline"],
