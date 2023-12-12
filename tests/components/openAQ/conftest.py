@@ -48,6 +48,15 @@ class OpenAQMock:
         )
         return measurements
 
+    def get_measurement_results(self):
+        """Return measurement results."""
+        measurements_response = MeasurementsResponse.load(
+            load_json_value_fixture(self.fixture_measurements, DOMAIN)
+        )
+        if measurements_response:
+            return measurements_response.results or []
+        return []
+
 
 @pytest.fixture(name="config_entry")
 def mock_config_entry() -> MockConfigEntry:

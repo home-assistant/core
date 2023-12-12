@@ -27,7 +27,7 @@ async def test_add_correct_devices(
         config_entry, "location_good.json", "measurements_good.json"
     )
     entities = hass.states.async_entity_ids("sensor")
-    assert len(entities) == 5
+    assert len(entities) == 8
 
 
 @pytest.mark.asyncio

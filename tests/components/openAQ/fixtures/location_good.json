@@ -58,6 +58,46 @@
             "units": "µg/m³",
             "displayName": "O₃ mass"
           }
+        },
+        {
+          "id": 34818,
+          "name": "o3 µg/m³",
+          "parameter": {
+            "id": 3,
+            "name": "o3",
+            "units": "µg/m³",
+            "displayName": "O₃ mass"
+          }
+        },
+        {
+          "id": 39288,
+          "name": "co µg/m³",
+          "parameter": {
+            "id": 4,
+            "name": "co",
+            "units": "µg/m³",
+            "displayName": "CO mass"
+          }
+        },
+         {
+          "id": 13369,
+          "name": "so2 µg/m³",
+          "parameter": {
+            "id": 6,
+            "name": "so2",
+            "units": "µg/m³",
+            "displayName": "SO₂ mass"
+          }
+        },
+        {
+          "id": 6668573,
+          "name": "no µg/m³",
+          "parameter": {
+            "id": 19843,
+            "name": "no",
+            "units": "µg/m³",
+            "displayName": "NO mass"
+          }
         }
       ],
       "coordinates": { "latitude": 57.70860999951551, "longitude": 11.97 },
