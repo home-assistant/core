@@ -100,10 +100,10 @@ class FrozenOrThawed(type):
         except TypeError:
             cls._make_dataclass(name, bases, True)
 
-        def __new__(cls: type, *args: Any, **kwargs: Any) -> object:
+        def __new__(__cls: type, *args: Any, **kwargs: Any) -> object:
             """Initialize."""
-            if dataclasses.is_dataclass(cls):
-                return object.__new__(cls)
-            return cls._dataclass(*args, **kwargs)  # type: ignore[attr-defined]
+            if dataclasses.is_dataclass(__cls):
+                return object.__new__(__cls)
+            return __cls._dataclass(*args, **kwargs)  # type: ignore[attr-defined]
 
         cls.__new__ = __new__  # type: ignore[assignment, method-assign]
