@@ -36,10 +36,7 @@ def storage_setup_named_tag(
                 "version": 1,
                 "data": {
                     "items": [
-                        {
-                            "id": TEST_TAG_ID,
-                            CONF_NAME: TEST_TAG_NAME,
-                        },
+                        {"id": TEST_TAG_ID, CONF_NAME: TEST_TAG_NAME},
                     ]
                 },
             }
