@@ -8,17 +8,15 @@ from unittest.mock import patch
 
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
+from habluetooth.advertisement_tracker import TRACKER_BUFFERING_WOBBLE_SECONDS
 import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
+    BaseHaRemoteScanner,
     HaBluetoothConnector,
-    HomeAssistantRemoteScanner,
     storage,
-)
-from homeassistant.components.bluetooth.advertisement_tracker import (
-    TRACKER_BUFFERING_WOBBLE_SECONDS,
 )
 from homeassistant.components.bluetooth.const import (
     CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
@@ -37,9 +35,33 @@ from . import (
     _get_manager,
     generate_advertisement_data,
     generate_ble_device,
+    patch_bluetooth_time,
 )
 
 from tests.common import async_fire_time_changed, load_fixture
+
+
+class FakeScanner(BaseHaRemoteScanner):
+    """Fake scanner."""
+
+    def inject_advertisement(
+        self,
+        device: BLEDevice,
+        advertisement_data: AdvertisementData,
+        now: float | None = None,
+    ) -> None:
+        """Inject an advertisement."""
+        self._async_on_advertisement(
+            device.address,
+            advertisement_data.rssi,
+            device.name,
+            advertisement_data.service_uuids,
+            advertisement_data.service_data,
+            advertisement_data.manufacturer_data,
+            advertisement_data.tx_power,
+            {"scanner_specific_data": "test"},
+            now or MONOTONIC_TIME(),
+        )
 
 
 @pytest.mark.parametrize("name_2", [None, "w"])
@@ -89,28 +111,11 @@ async def test_remote_scanner(
         rssi=-100,
     )
 
-    class FakeScanner(HomeAssistantRemoteScanner):
-        def inject_advertisement(
-            self, device: BLEDevice, advertisement_data: AdvertisementData
-        ) -> None:
-            """Inject an advertisement."""
-            self._async_on_advertisement(
-                device.address,
-                advertisement_data.rssi,
-                device.name,
-                advertisement_data.service_uuids,
-                advertisement_data.service_data,
-                advertisement_data.manufacturer_data,
-                advertisement_data.tx_power,
-                {"scanner_specific_data": "test"},
-                MONOTONIC_TIME(),
-            )
-
     new_info_callback = manager.scanner_adv_received
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = FakeScanner(hass, "esp32", "esp32", new_info_callback, connector, True)
+    scanner = FakeScanner("esp32", "esp32", new_info_callback, connector, True)
     unsetup = scanner.async_setup()
     cancel = manager.async_register_scanner(scanner, True)
 
@@ -173,28 +178,11 @@ async def test_remote_scanner_expires_connectable(
         rssi=-100,
     )
 
-    class FakeScanner(HomeAssistantRemoteScanner):
-        def inject_advertisement(
-            self, device: BLEDevice, advertisement_data: AdvertisementData
-        ) -> None:
-            """Inject an advertisement."""
-            self._async_on_advertisement(
-                device.address,
-                advertisement_data.rssi,
-                device.name,
-                advertisement_data.service_uuids,
-                advertisement_data.service_data,
-                advertisement_data.manufacturer_data,
-                advertisement_data.tx_power,
-                {"scanner_specific_data": "test"},
-                MONOTONIC_TIME(),
-            )
-
     new_info_callback = manager.scanner_adv_received
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = FakeScanner(hass, "esp32", "esp32", new_info_callback, connector, True)
+    scanner = FakeScanner("esp32", "esp32", new_info_callback, connector, True)
     unsetup = scanner.async_setup()
     cancel = manager.async_register_scanner(scanner, True)
 
@@ -214,10 +202,7 @@ async def test_remote_scanner_expires_connectable(
     expire_utc = dt_util.utcnow() + timedelta(
         seconds=CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
     )
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=expire_monotonic,
-    ):
+    with patch_bluetooth_time(expire_monotonic):
         async_fire_time_changed(hass, expire_utc)
         await hass.async_block_till_done()
 
@@ -248,28 +233,11 @@ async def test_remote_scanner_expires_non_connectable(
         rssi=-100,
     )
 
-    class FakeScanner(HomeAssistantRemoteScanner):
-        def inject_advertisement(
-            self, device: BLEDevice, advertisement_data: AdvertisementData
-        ) -> None:
-            """Inject an advertisement."""
-            self._async_on_advertisement(
-                device.address,
-                advertisement_data.rssi,
-                device.name,
-                advertisement_data.service_uuids,
-                advertisement_data.service_data,
-                advertisement_data.manufacturer_data,
-                advertisement_data.tx_power,
-                {"scanner_specific_data": "test"},
-                MONOTONIC_TIME(),
-            )
-
     new_info_callback = manager.scanner_adv_received
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = FakeScanner(hass, "esp32", "esp32", new_info_callback, connector, False)
+    scanner = FakeScanner("esp32", "esp32", new_info_callback, connector, False)
     unsetup = scanner.async_setup()
     cancel = manager.async_register_scanner(scanner, True)
 
@@ -297,10 +265,7 @@ async def test_remote_scanner_expires_non_connectable(
     expire_utc = dt_util.utcnow() + timedelta(
         seconds=CONNECTABLE_FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
     )
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=expire_monotonic,
-    ):
+    with patch_bluetooth_time(expire_monotonic):
         async_fire_time_changed(hass, expire_utc)
         await hass.async_block_till_done()
 
@@ -313,10 +278,7 @@ async def test_remote_scanner_expires_non_connectable(
     expire_utc = dt_util.utcnow() + timedelta(
         seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
     )
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=expire_monotonic,
-    ):
+    with patch_bluetooth_time(expire_monotonic):
         async_fire_time_changed(hass, expire_utc)
         await hass.async_block_till_done()
 
@@ -346,28 +308,11 @@ async def test_base_scanner_connecting_behavior(
         rssi=-100,
     )
 
-    class FakeScanner(HomeAssistantRemoteScanner):
-        def inject_advertisement(
-            self, device: BLEDevice, advertisement_data: AdvertisementData
-        ) -> None:
-            """Inject an advertisement."""
-            self._async_on_advertisement(
-                device.address,
-                advertisement_data.rssi,
-                device.name,
-                advertisement_data.service_uuids,
-                advertisement_data.service_data,
-                advertisement_data.manufacturer_data,
-                advertisement_data.tx_power,
-                {"scanner_specific_data": "test"},
-                MONOTONIC_TIME(),
-            )
-
     new_info_callback = manager.scanner_adv_received
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = FakeScanner(hass, "esp32", "esp32", new_info_callback, connector, False)
+    scanner = FakeScanner("esp32", "esp32", new_info_callback, connector, False)
     unsetup = scanner.async_setup()
     cancel = manager.async_register_scanner(scanner, True)
 
@@ -418,8 +363,7 @@ async def test_restore_history_remote_adapter(
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = HomeAssistantRemoteScanner(
-        hass,
+    scanner = BaseHaRemoteScanner(
         "atom-bluetooth-proxy-ceaac4",
         "atom-bluetooth-proxy-ceaac4",
         lambda adv: None,
@@ -434,8 +378,7 @@ async def test_restore_history_remote_adapter(
     cancel()
     unsetup()
 
-    scanner = HomeAssistantRemoteScanner(
-        hass,
+    scanner = BaseHaRemoteScanner(
         "atom-bluetooth-proxy-ceaac4",
         "atom-bluetooth-proxy-ceaac4",
         lambda adv: None,
@@ -470,28 +413,11 @@ async def test_device_with_ten_minute_advertising_interval(
         rssi=-100,
     )
 
-    class FakeScanner(HomeAssistantRemoteScanner):
-        def inject_advertisement(
-            self, device: BLEDevice, advertisement_data: AdvertisementData
-        ) -> None:
-            """Inject an advertisement."""
-            self._async_on_advertisement(
-                device.address,
-                advertisement_data.rssi,
-                device.name,
-                advertisement_data.service_uuids,
-                advertisement_data.service_data,
-                advertisement_data.manufacturer_data,
-                advertisement_data.tx_power,
-                {"scanner_specific_data": "test"},
-                MONOTONIC_TIME(),
-            )
-
     new_info_callback = manager.scanner_adv_received
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = FakeScanner(hass, "esp32", "esp32", new_info_callback, connector, False)
+    scanner = FakeScanner("esp32", "esp32", new_info_callback, connector, False)
     unsetup = scanner.async_setup()
     cancel = manager.async_register_scanner(scanner, True)
 
@@ -514,11 +440,8 @@ async def test_device_with_ten_minute_advertising_interval(
         connectable=False,
     )
 
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=new_time,
-    ):
-        scanner.inject_advertisement(bparasite_device, bparasite_device_adv)
+    with patch_bluetooth_time(new_time):
+        scanner.inject_advertisement(bparasite_device, bparasite_device_adv, new_time)
 
     original_device = scanner.discovered_devices_and_advertisement_data[
         bparasite_device.address
@@ -527,11 +450,10 @@ async def test_device_with_ten_minute_advertising_interval(
 
     for _ in range(1, 20):
         new_time += advertising_interval
-        with patch(
-            "habluetooth.base_scanner.MONOTONIC_TIME",
-            return_value=new_time,
-        ):
-            scanner.inject_advertisement(bparasite_device, bparasite_device_adv)
+        with patch_bluetooth_time(new_time):
+            scanner.inject_advertisement(
+                bparasite_device, bparasite_device_adv, new_time
+            )
 
     # Make sure the BLEDevice object gets updated
     # and not replaced
@@ -545,10 +467,7 @@ async def test_device_with_ten_minute_advertising_interval(
         bluetooth.async_address_present(hass, bparasite_device.address, False) is True
     )
     assert bparasite_device_went_unavailable is False
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=new_time,
-    ):
+    with patch_bluetooth_time(new_time):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=future_time))
         await hass.async_block_till_done()
 
@@ -558,13 +477,7 @@ async def test_device_with_ten_minute_advertising_interval(
         future_time + advertising_interval + TRACKER_BUFFERING_WOBBLE_SECONDS + 1
     )
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=missed_advertisement_future_time,
-    ), patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=missed_advertisement_future_time,
-    ):
+    with patch_bluetooth_time(missed_advertisement_future_time):
         # Fire once for the scanner to expire the device
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -592,30 +505,11 @@ async def test_scanner_stops_responding(
     """Test we mark a scanner are not scanning when it stops responding."""
     manager = _get_manager()
 
-    class FakeScanner(HomeAssistantRemoteScanner):
-        """A fake remote scanner."""
-
-        def inject_advertisement(
-            self, device: BLEDevice, advertisement_data: AdvertisementData
-        ) -> None:
-            """Inject an advertisement."""
-            self._async_on_advertisement(
-                device.address,
-                advertisement_data.rssi,
-                device.name,
-                advertisement_data.service_uuids,
-                advertisement_data.service_data,
-                advertisement_data.manufacturer_data,
-                advertisement_data.tx_power,
-                {"scanner_specific_data": "test"},
-                MONOTONIC_TIME(),
-            )
-
     new_info_callback = manager.scanner_adv_received
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = FakeScanner(hass, "esp32", "esp32", new_info_callback, connector, False)
+    scanner = FakeScanner("esp32", "esp32", new_info_callback, connector, False)
     unsetup = scanner.async_setup()
     cancel = manager.async_register_scanner(scanner, True)
 
@@ -628,10 +522,7 @@ async def test_scanner_stops_responding(
         + SCANNER_WATCHDOG_INTERVAL.total_seconds()
     )
     # We hit the timer with no detections, so we reset the adapter and restart the scanner
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=failure_reached_time,
-    ):
+    with patch_bluetooth_time(failure_reached_time):
         async_fire_time_changed(hass, dt_util.utcnow() + SCANNER_WATCHDOG_INTERVAL)
         await hass.async_block_till_done()
 
@@ -652,11 +543,10 @@ async def test_scanner_stops_responding(
 
     failure_reached_time += 1
 
-    with patch(
-        "habluetooth.base_scanner.MONOTONIC_TIME",
-        return_value=failure_reached_time,
-    ):
-        scanner.inject_advertisement(bparasite_device, bparasite_device_adv)
+    with patch_bluetooth_time(failure_reached_time):
+        scanner.inject_advertisement(
+            bparasite_device, bparasite_device_adv, failure_reached_time
+        )
 
     # As soon as we get a detection, we know the scanner is working again
     assert scanner.scanning is True

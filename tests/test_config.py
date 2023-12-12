@@ -2043,7 +2043,7 @@ async def test_component_config_validation_error(
 
     for domain_with_label in config:
         integration = await async_get_integration(
-            hass, domain_with_label.partition(" ")[0]
+            hass, cv.domain_key(domain_with_label)
         )
         await config_util.async_process_component_and_handle_errors(
             hass,
@@ -2088,7 +2088,7 @@ async def test_component_config_validation_error_with_docs(
 
     for domain_with_label in config:
         integration = await async_get_integration(
-            hass, domain_with_label.partition(" ")[0]
+            hass, cv.domain_key(domain_with_label)
         )
         await config_util.async_process_component_and_handle_errors(
             hass,

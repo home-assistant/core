@@ -99,7 +99,7 @@ async def async_connect_scanner(
         ),
     )
     scanner = ESPHomeScanner(
-        hass, source, entry.title, new_info_callback, connector, connectable
+        source, entry.title, new_info_callback, connector, connectable
     )
     client_data.scanner = scanner
     coros: list[Coroutine[Any, Any, CALLBACK_TYPE]] = []

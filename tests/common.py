@@ -890,6 +890,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         domain="test",
         data=None,
         version=1,
+        minor_version=1,
         entry_id=None,
         source=config_entries.SOURCE_USER,
         title="Mock Title",
@@ -910,6 +911,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
             "pref_disable_polling": pref_disable_polling,
             "options": options,
             "version": version,
+            "minor_version": minor_version,
             "title": title,
             "unique_id": unique_id,
             "disabled_by": disabled_by,
@@ -1427,7 +1429,7 @@ ANY = _HA_ANY()
 def raise_contains_mocks(val: Any) -> None:
     """Raise for mocks."""
     if isinstance(val, Mock):
-        raise TypeError
+        raise TypeError(val)
 
     if isinstance(val, dict):
         for dict_value in val.values():

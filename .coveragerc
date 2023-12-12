@@ -903,6 +903,9 @@ omit =
     homeassistant/components/opple/light.py
     homeassistant/components/oru/*
     homeassistant/components/orvibo/switch.py
+    homeassistant/components/osoenergy/__init__.py
+    homeassistant/components/osoenergy/const.py
+    homeassistant/components/osoenergy/water_heater.py
     homeassistant/components/osramlightify/light.py
     homeassistant/components/otp/sensor.py
     homeassistant/components/overkiz/__init__.py
@@ -1230,7 +1233,8 @@ omit =
     homeassistant/components/stream/hls.py
     homeassistant/components/stream/worker.py
     homeassistant/components/streamlabswater/*
-    homeassistant/components/suez_water/*
+    homeassistant/components/suez_water/__init__.py
+    homeassistant/components/suez_water/sensor.py
     homeassistant/components/supervisord/sensor.py
     homeassistant/components/supla/*
     homeassistant/components/surepetcare/__init__.py

@@ -7,17 +7,18 @@ from unittest.mock import patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import AdvertisementHistory
+from habluetooth.manager import FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
 import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
+    BaseHaRemoteScanner,
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfo,
     BluetoothServiceInfoBleak,
     HaBluetoothConnector,
-    HomeAssistantRemoteScanner,
     async_ble_device_from_address,
     async_get_advertisement_callback,
     async_get_fallback_availability_interval,
@@ -30,9 +31,6 @@ from homeassistant.components.bluetooth import (
 from homeassistant.components.bluetooth.const import (
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
-)
-from homeassistant.components.bluetooth.manager import (
-    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
@@ -48,6 +46,7 @@ from . import (
     inject_advertisement_with_source,
     inject_advertisement_with_time_and_source,
     inject_advertisement_with_time_and_source_connectable,
+    patch_bluetooth_time,
 )
 
 from tests.common import async_fire_time_changed, load_fixture
@@ -704,7 +703,7 @@ async def test_goes_unavailable_connectable_only_and_recovers(
         BluetoothScanningMode.ACTIVE,
     )
 
-    class FakeScanner(HomeAssistantRemoteScanner):
+    class FakeScanner(BaseHaRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -726,7 +725,6 @@ async def test_goes_unavailable_connectable_only_and_recovers(
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
     connectable_scanner = FakeScanner(
-        hass,
         "connectable",
         "connectable",
         new_info_callback,
@@ -750,7 +748,6 @@ async def test_goes_unavailable_connectable_only_and_recovers(
     )
 
     not_connectable_scanner = FakeScanner(
-        hass,
         "not_connectable",
         "not_connectable",
         new_info_callback,
@@ -801,7 +798,6 @@ async def test_goes_unavailable_connectable_only_and_recovers(
     cancel_unavailable()
 
     connectable_scanner_2 = FakeScanner(
-        hass,
         "connectable",
         "connectable",
         new_info_callback,
@@ -877,7 +873,7 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
         BluetoothScanningMode.ACTIVE,
     )
 
-    class FakeScanner(HomeAssistantRemoteScanner):
+    class FakeScanner(BaseHaRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -898,13 +894,13 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
             """Clear all devices."""
             self._discovered_device_advertisement_datas.clear()
             self._discovered_device_timestamps.clear()
+            self._previous_service_info.clear()
 
     new_info_callback = async_get_advertisement_callback(hass)
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
     non_connectable_scanner = FakeScanner(
-        hass,
         "connectable",
         "connectable",
         new_info_callback,
@@ -962,9 +958,8 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
         return_value=[{"flow_id": "mock_flow_id"}],
     ) as mock_async_progress_by_init_data_type, patch.object(
         hass.config_entries.flow, "async_abort"
-    ) as mock_async_abort, patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+    ) as mock_async_abort, patch_bluetooth_time(
+        monotonic_now + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -1105,9 +1100,8 @@ async def test_set_fallback_interval_small(
     )
 
     monotonic_now = start_monotonic_time + 2
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    with patch_bluetooth_time(
+        monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -1170,9 +1164,8 @@ async def test_set_fallback_interval_big(
     # Check that device hasn't expired after a day
 
     monotonic_now = start_monotonic_time + 86400
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    with patch_bluetooth_time(
+        monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -1184,9 +1177,8 @@ async def test_set_fallback_interval_big(
     # Try again after it has expired
 
     monotonic_now = start_monotonic_time + 604800
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    with patch_bluetooth_time(
+        monotonic_now + UNAVAILABLE_TRACK_SECONDS,
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
