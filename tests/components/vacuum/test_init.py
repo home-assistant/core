@@ -89,7 +89,7 @@ async def test_deprecated_base_class(
         config_entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
-        """Set up test stt platform via config entry."""
+        """Set up test vacuum platform via config entry."""
         async_add_entities([entity1])
 
     mock_platform(

@@ -1,8 +1,5 @@
 """Test the Tessie sensor platform."""
 from datetime import timedelta
-from unittest.mock import patch
-
-import pytest
 
 from homeassistant.components.tessie.coordinator import TESSIE_SYNC_INTERVAL
 from homeassistant.components.tessie.sensor import TessieStatus
@@ -23,15 +20,6 @@ from .common import (
 from tests.common import async_fire_time_changed
 
 WAIT = timedelta(seconds=TESSIE_SYNC_INTERVAL)
-
-
-@pytest.fixture
-def mock_get_state():
-    """Mock get_state function."""
-    with patch(
-        "homeassistant.components.tessie.coordinator.get_state",
-    ) as mock_get_state:
-        yield mock_get_state
 
 
 async def test_coordinator_online(hass: HomeAssistant, mock_get_state) -> None:
