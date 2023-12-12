@@ -239,7 +239,7 @@ class HassAuthProvider(AuthProvider):
     @property
     def expose_users_on_local_network(self) -> bool:
         """Return if users are exposed on local network."""
-        return self.config[EXPOSE_USERS_ON_LOCAL_NETWORK]  # type: ignore[no-any-return]
+        return self.config.get(EXPOSE_USERS_ON_LOCAL_NETWORK, True)  # type: ignore[no-any-return]
 
     async def async_initialize(self) -> None:
         """Initialize the auth provider."""
