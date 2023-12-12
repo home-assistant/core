@@ -4,7 +4,12 @@ import time
 
 import pytest
 
-from homeassistant.components.ibeacon.const import ATTR_SOURCE, DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.ibeacon.const import (
+    ATTR_SOURCE,
+    CONF_ALLOW_NAMELESS_UUIDS,
+    DOMAIN,
+    UPDATE_INTERVAL,
+)
 from homeassistant.const import STATE_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
@@ -144,6 +149,60 @@ async def test_ignore_default_name(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == before_entity_count
+
+
+async def test_default_name_allowlisted(hass: HomeAssistant) -> None:
+    """Test we do NOT ignore beacons with default device name but allowlisted UUID."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={CONF_ALLOW_NAMELESS_UUIDS: ["426c7565-4368-6172-6d42-6561636f6e73"]},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    before_entity_count = len(hass.states.async_entity_ids())
+    inject_bluetooth_service_info(
+        hass,
+        replace(
+            BLUECHARM_BEACON_SERVICE_INFO_DBUS,
+            name=BLUECHARM_BEACON_SERVICE_INFO_DBUS.address,
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) > before_entity_count
+
+
+async def test_default_name_allowlisted_restore(hass: HomeAssistant) -> None:
+    """Test that ignored nameless iBeacons are restored when allowlist entry is added."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    before_entity_count = len(hass.states.async_entity_ids())
+    inject_bluetooth_service_info(
+        hass,
+        replace(
+            BLUECHARM_BEACON_SERVICE_INFO_DBUS,
+            name=BLUECHARM_BEACON_SERVICE_INFO_DBUS.address,
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) == before_entity_count
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"new_uuid": "426c7565-4368-6172-6d42-6561636f6e73"},
+    )
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids()) > before_entity_count
 
 
 async def test_rotating_major_minor_and_mac_with_name(hass: HomeAssistant) -> None:
