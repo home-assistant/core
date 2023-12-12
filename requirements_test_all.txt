@@ -779,6 +779,9 @@ ha-iotawattpy==0.1.1
 # homeassistant.components.philips_js
 ha-philipsjs==3.1.1
 
+# homeassistant.components.trello
+ha-py-trello==0.23.1
+
 # homeassistant.components.habitica
 habitipy==0.2.0
 
@@ -1203,9 +1206,6 @@ py-nightscout==1.2.2
 
 # homeassistant.components.synology_dsm
 py-synologydsm-api==2.1.4
-
-# homeassistant.components.trello
-py-trello==0.19.0
 
 # homeassistant.components.seventeentrack
 py17track==2021.12.2

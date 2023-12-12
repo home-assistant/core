@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["trello"],
-  "requirements": ["py-trello==0.19.0"]
+  "requirements": ["ha-py-trello==0.23.1"]
 }
