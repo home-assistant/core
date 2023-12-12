@@ -128,7 +128,6 @@ SENSOR_SETUP = {
             custom_value=True,
             mode=SelectSelectorMode.DROPDOWN,
             translation_key="unit_of_measurement",
-            sort=True,
         )
     ),
 }
