@@ -13,7 +13,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DOMAIN
 from .coordinator import FastdotcomDataUpdateCoordindator
 
 
@@ -32,7 +32,7 @@ class SpeedtestSensor(
 ):
     """Implementation of a Fast.com sensor."""
 
-    _attr_name = None
+    _attr_translation_key = "download"
     _attr_device_class = SensorDeviceClass.DATA_RATE
     _attr_native_unit_of_measurement = UnitOfDataRate.MEGABITS_PER_SECOND
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -48,9 +48,8 @@ class SpeedtestSensor(
         self._attr_unique_id = entry_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry_id)},
-            name=DEFAULT_NAME,
             entry_type=DeviceEntryType.SERVICE,
-            configuration_url="https://www.fast.com/",
+            configuration_url="https://www.fast.com",
         )
 
     @property
