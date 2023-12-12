@@ -9,7 +9,13 @@ from homeassistant.components import stt
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_DEBUG_RECORDING_DIR, DATA_CONFIG, DATA_LAST_WAKE_UP, DOMAIN
+from .const import (
+    CONF_DEBUG_RECORDING_DIR,
+    DATA_CONFIG,
+    DATA_LAST_WAKE_UP,
+    DOMAIN,
+    EVENT_RECORDING,
+)
 from .error import PipelineNotFound
 from .pipeline import (
     AudioSettings,
@@ -40,6 +46,7 @@ __all__ = (
     "PipelineEventType",
     "PipelineNotFound",
     "WakeWordSettings",
+    "EVENT_RECORDING",
 )
 
 CONFIG_SCHEMA = vol.Schema(

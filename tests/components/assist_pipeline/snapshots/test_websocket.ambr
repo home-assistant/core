@@ -487,6 +487,119 @@
 # name: test_audio_pipeline_with_wake_word_timeout.3
   None
 # ---
+# name: test_device_capture
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_device_capture.1
+  dict({
+    'engine': 'test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'language': 'en-US',
+      'sample_rate': 16000,
+    }),
+  })
+# ---
+# name: test_device_capture.2
+  None
+# ---
+# name: test_device_capture_override
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_device_capture_override.1
+  dict({
+    'engine': 'test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'language': 'en-US',
+      'sample_rate': 16000,
+    }),
+  })
+# ---
+# name: test_device_capture_override.2
+  dict({
+    'audio': 'Y2h1bmsx',
+    'channels': 1,
+    'rate': 16000,
+    'type': 'audio',
+    'width': 2,
+  })
+# ---
+# name: test_device_capture_override.3
+  dict({
+    'stt_output': dict({
+      'text': 'test transcript',
+    }),
+  })
+# ---
+# name: test_device_capture_override.4
+  None
+# ---
+# name: test_device_capture_override.5
+  dict({
+    'overflow': False,
+    'type': 'end',
+  })
+# ---
+# name: test_device_capture_queue_full
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_device_capture_queue_full.1
+  dict({
+    'engine': 'test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'language': 'en-US',
+      'sample_rate': 16000,
+    }),
+  })
+# ---
+# name: test_device_capture_queue_full.2
+  dict({
+    'stt_output': dict({
+      'text': 'test transcript',
+    }),
+  })
+# ---
+# name: test_device_capture_queue_full.3
+  None
+# ---
+# name: test_device_capture_queue_full.4
+  dict({
+    'overflow': True,
+    'type': 'end',
+  })
+# ---
 # name: test_intent_failed
   dict({
     'language': 'en',
@@ -536,6 +649,33 @@
     'code': 'timeout',
     'message': 'Timeout running pipeline',
   })
+# ---
+# name: test_pipeline_empty_tts_output
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': None,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_pipeline_empty_tts_output.1
+  dict({
+    'engine': 'test',
+    'language': 'en-US',
+    'tts_input': '',
+    'voice': 'james_earl_jones',
+  })
+# ---
+# name: test_pipeline_empty_tts_output.2
+  dict({
+    'tts_output': dict({
+    }),
+  })
+# ---
+# name: test_pipeline_empty_tts_output.3
+  None
 # ---
 # name: test_stt_provider_missing
   dict({

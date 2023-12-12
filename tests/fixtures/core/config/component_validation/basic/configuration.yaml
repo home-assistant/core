@@ -43,3 +43,21 @@ adr_0007_4:
 adr_0007_5:
   no_such_option: foo
   port: foo
+
+# This is correct and should not generate errors
+custom_validator_ok_1:
+  host: blah.com
+
+# Host is missing
+custom_validator_ok_2:
+
+# This always raises HomeAssistantError
+custom_validator_bad_1:
+
+# This always raises ValueError
+custom_validator_bad_2:
+
+# Invalid domains
+"iot_domain ":
+"":
+5:

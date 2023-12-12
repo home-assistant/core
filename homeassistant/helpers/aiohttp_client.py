@@ -58,19 +58,6 @@ MAXIMUM_CONNECTIONS = 4096
 MAXIMUM_CONNECTIONS_PER_HOST = 100
 
 
-# Overwrite base aiohttp _wait implementation
-# Homeassistant has a custom shutdown wait logic.
-async def _noop_wait(*args: Any, **kwargs: Any) -> None:
-    """Do nothing."""
-    return
-
-
-# TODO: Remove version check with aiohttp 3.9.0  # pylint: disable=fixme
-if sys.version_info >= (3, 12):
-    # pylint: disable-next=protected-access
-    web.BaseSite._wait = _noop_wait  # type: ignore[method-assign]
-
-
 class HassClientResponse(aiohttp.ClientResponse):
     """aiohttp.ClientResponse with a json method that uses json_loads by default."""
 
@@ -311,7 +298,7 @@ def _async_get_connector(
         return connectors[connector_key]
 
     if verify_ssl:
-        ssl_context: bool | SSLContext = ssl_util.get_default_context()
+        ssl_context: SSLContext = ssl_util.get_default_context()
     else:
         ssl_context = ssl_util.get_default_no_verify_context()
 

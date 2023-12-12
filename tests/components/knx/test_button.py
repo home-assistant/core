@@ -130,9 +130,9 @@ async def test_button_invalid(
         assert len(caplog.messages) == 2
         record = caplog.records[0]
         assert record.levelname == "ERROR"
-        assert f"Invalid config for [knx]: {error_msg}" in record.message
+        assert f"Invalid config for 'knx': {error_msg}" in record.message
         record = caplog.records[1]
         assert record.levelname == "ERROR"
-        assert "Setup failed for knx: Invalid config." in record.message
+        assert "Setup failed for 'knx': Invalid config." in record.message
     assert hass.states.get("button.test") is None
     assert hass.data.get(DOMAIN) is None

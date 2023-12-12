@@ -1,6 +1,7 @@
 """Tests for the AsusWrt sensor."""
 from datetime import timedelta
 
+from pyasuswrt.asuswrt import AsusWrtError
 import pytest
 
 from homeassistant.components import device_tracker, sensor
@@ -14,19 +15,32 @@ from homeassistant.components.asuswrt.const import (
 )
 from homeassistant.components.device_tracker import CONF_CONSIDER_HOME
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
+from homeassistant.const import (
+    CONF_PROTOCOL,
+    STATE_HOME,
+    STATE_NOT_HOME,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
-from .common import CONFIG_DATA_TELNET, HOST, MOCK_MACS, ROUTER_MAC_ADDR, new_device
+from .common import (
+    CONFIG_DATA_HTTP,
+    CONFIG_DATA_TELNET,
+    HOST,
+    MOCK_MACS,
+    ROUTER_MAC_ADDR,
+    new_device,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 SENSORS_DEFAULT = [*SENSORS_BYTES, *SENSORS_RATES]
 
 SENSORS_ALL_LEGACY = [*SENSORS_DEFAULT, *SENSORS_LOAD_AVG, *SENSORS_TEMPERATURES]
+SENSORS_ALL_HTTP = [*SENSORS_DEFAULT, *SENSORS_LOAD_AVG, *SENSORS_TEMPERATURES]
 
 
 @pytest.fixture(name="create_device_registry_devices")
@@ -132,8 +146,12 @@ async def _test_sensors(
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "1"
 
     # add 2 new devices, one unnamed that should be ignored but counted
-    mock_devices[MOCK_MACS[2]] = new_device(MOCK_MACS[2], "192.168.1.4", "TestThree")
-    mock_devices[MOCK_MACS[3]] = new_device(MOCK_MACS[3], "192.168.1.5", None)
+    mock_devices[MOCK_MACS[2]] = new_device(
+        config[CONF_PROTOCOL], MOCK_MACS[2], "192.168.1.4", "TestThree"
+    )
+    mock_devices[MOCK_MACS[3]] = new_device(
+        config[CONF_PROTOCOL], MOCK_MACS[3], "192.168.1.5", None
+    )
 
     # change consider home settings to have status not home of removed tracked device
     hass.config_entries.async_update_entry(
@@ -154,7 +172,7 @@ async def _test_sensors(
     "entry_unique_id",
     [None, ROUTER_MAC_ADDR],
 )
-async def test_sensors(
+async def test_sensors_legacy(
     hass: HomeAssistant,
     connect_legacy,
     mock_devices_legacy,
@@ -165,11 +183,24 @@ async def test_sensors(
     await _test_sensors(hass, mock_devices_legacy, CONFIG_DATA_TELNET, entry_unique_id)
 
 
-async def test_loadavg_sensors(hass: HomeAssistant, connect_legacy) -> None:
+@pytest.mark.parametrize(
+    "entry_unique_id",
+    [None, ROUTER_MAC_ADDR],
+)
+async def test_sensors_http(
+    hass: HomeAssistant,
+    connect_http,
+    mock_devices_http,
+    create_device_registry_devices,
+    entry_unique_id,
+) -> None:
+    """Test creating AsusWRT default sensors and tracker with http protocol."""
+    await _test_sensors(hass, mock_devices_http, CONFIG_DATA_HTTP, entry_unique_id)
+
+
+async def _test_loadavg_sensors(hass: HomeAssistant, config) -> None:
     """Test creating an AsusWRT load average sensors."""
-    config_entry, sensor_prefix = _setup_entry(
-        hass, CONFIG_DATA_TELNET, SENSORS_LOAD_AVG
-    )
+    config_entry, sensor_prefix = _setup_entry(hass, config, SENSORS_LOAD_AVG)
     config_entry.add_to_hass(hass)
 
     # initial devices setup
@@ -184,11 +215,38 @@ async def test_loadavg_sensors(hass: HomeAssistant, connect_legacy) -> None:
     assert hass.states.get(f"{sensor_prefix}_sensor_load_avg15").state == "1.3"
 
 
-async def test_temperature_sensors(hass: HomeAssistant, connect_legacy) -> None:
-    """Test creating a AsusWRT temperature sensors."""
+async def test_loadavg_sensors_legacy(hass: HomeAssistant, connect_legacy) -> None:
+    """Test creating an AsusWRT load average sensors."""
+    await _test_loadavg_sensors(hass, CONFIG_DATA_TELNET)
+
+
+async def test_loadavg_sensors_http(hass: HomeAssistant, connect_http) -> None:
+    """Test creating an AsusWRT load average sensors."""
+    await _test_loadavg_sensors(hass, CONFIG_DATA_HTTP)
+
+
+async def test_temperature_sensors_http_fail(
+    hass: HomeAssistant, connect_http_sens_fail
+) -> None:
+    """Test fail creating AsusWRT temperature sensors."""
     config_entry, sensor_prefix = _setup_entry(
-        hass, CONFIG_DATA_TELNET, SENSORS_TEMPERATURES
+        hass, CONFIG_DATA_HTTP, SENSORS_TEMPERATURES
     )
+    config_entry.add_to_hass(hass)
+
+    # initial devices setup
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # assert temperature availability exception is handled correctly
+    assert not hass.states.get(f"{sensor_prefix}_2_4ghz")
+    assert not hass.states.get(f"{sensor_prefix}_5_0ghz")
+    assert not hass.states.get(f"{sensor_prefix}_cpu")
+
+
+async def _test_temperature_sensors(hass: HomeAssistant, config) -> None:
+    """Test creating a AsusWRT temperature sensors."""
+    config_entry, sensor_prefix = _setup_entry(hass, config, SENSORS_TEMPERATURES)
     config_entry.add_to_hass(hass)
 
     # initial devices setup
@@ -203,11 +261,23 @@ async def test_temperature_sensors(hass: HomeAssistant, connect_legacy) -> None:
     assert hass.states.get(f"{sensor_prefix}_cpu").state == "71.2"
 
 
+async def test_temperature_sensors_legacy(hass: HomeAssistant, connect_legacy) -> None:
+    """Test creating a AsusWRT temperature sensors."""
+    await _test_temperature_sensors(hass, CONFIG_DATA_TELNET)
+
+
+async def test_temperature_sensors_http(hass: HomeAssistant, connect_http) -> None:
+    """Test creating a AsusWRT temperature sensors."""
+    await _test_temperature_sensors(hass, CONFIG_DATA_HTTP)
+
+
 @pytest.mark.parametrize(
     "side_effect",
     [OSError, None],
 )
-async def test_connect_fail(hass: HomeAssistant, connect_legacy, side_effect) -> None:
+async def test_connect_fail_legacy(
+    hass: HomeAssistant, connect_legacy, side_effect
+) -> None:
     """Test AsusWRT connect fail."""
 
     # init config entry
@@ -226,13 +296,34 @@ async def test_connect_fail(hass: HomeAssistant, connect_legacy, side_effect) ->
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_sensors_polling_fails(
-    hass: HomeAssistant, connect_legacy_sens_fail
+@pytest.mark.parametrize(
+    "side_effect",
+    [AsusWrtError, None],
+)
+async def test_connect_fail_http(
+    hass: HomeAssistant, connect_http, side_effect
 ) -> None:
-    """Test AsusWRT sensors are unavailable when polling fails."""
-    config_entry, sensor_prefix = _setup_entry(
-        hass, CONFIG_DATA_TELNET, SENSORS_ALL_LEGACY
+    """Test AsusWRT connect fail."""
+
+    # init config entry
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=CONFIG_DATA_HTTP,
     )
+    config_entry.add_to_hass(hass)
+
+    connect_http.return_value.async_connect.side_effect = side_effect
+    connect_http.return_value.is_connected = False
+
+    # initial setup fail
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def _test_sensors_polling_fails(hass: HomeAssistant, config, sensors) -> None:
+    """Test AsusWRT sensors are unavailable when polling fails."""
+    config_entry, sensor_prefix = _setup_entry(hass, config, sensors)
     config_entry.add_to_hass(hass)
 
     # initial devices setup
@@ -241,12 +332,29 @@ async def test_sensors_polling_fails(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
 
-    for sensor_name in SENSORS_ALL_LEGACY:
+    for sensor_name in sensors:
         assert (
             hass.states.get(f"{sensor_prefix}_{slugify(sensor_name)}").state
             == STATE_UNAVAILABLE
         )
     assert hass.states.get(f"{sensor_prefix}_devices_connected").state == "0"
+
+
+async def test_sensors_polling_fails_legacy(
+    hass: HomeAssistant,
+    connect_legacy_sens_fail,
+) -> None:
+    """Test AsusWRT sensors are unavailable when polling fails."""
+    await _test_sensors_polling_fails(hass, CONFIG_DATA_TELNET, SENSORS_ALL_LEGACY)
+
+
+async def test_sensors_polling_fails_http(
+    hass: HomeAssistant,
+    connect_http_sens_fail,
+    connect_http_sens_detect,
+) -> None:
+    """Test AsusWRT sensors are unavailable when polling fails."""
+    await _test_sensors_polling_fails(hass, CONFIG_DATA_HTTP, SENSORS_ALL_HTTP)
 
 
 async def test_options_reload(hass: HomeAssistant, connect_legacy) -> None:

@@ -181,7 +181,12 @@ class TadoConnector:
 
     def update_devices(self):
         """Update the device data from Tado."""
-        devices = self.tado.getDevices()
+        try:
+            devices = self.tado.getDevices()
+        except RuntimeError:
+            _LOGGER.error("Unable to connect to Tado while updating devices")
+            return
+
         for device in devices:
             device_short_serial_no = device["shortSerialNo"]
             _LOGGER.debug("Updating device %s", device_short_serial_no)

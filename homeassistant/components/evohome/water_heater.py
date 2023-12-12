@@ -68,6 +68,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         super().__init__(evo_broker, evo_device)
 
         self._attr_unique_id = evo_device.dhwId
+        self._evo_id = evo_device.dhwId
 
         self._attr_precision = (
             PRECISION_TENTHS if evo_broker.client_v1 else PRECISION_WHOLE
@@ -79,15 +80,15 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
     @property
     def current_operation(self) -> str:
         """Return the current operating mode (Auto, On, or Off)."""
-        if self._evo_device.stateStatus["mode"] == EVO_FOLLOW:
+        if self._evo_device.mode == EVO_FOLLOW:
             return STATE_AUTO
-        return EVO_STATE_TO_HA[self._evo_device.stateStatus["state"]]
+        return EVO_STATE_TO_HA[self._evo_device.state]
 
     @property
     def is_away_mode_on(self):
         """Return True if away mode is on."""
-        is_off = EVO_STATE_TO_HA[self._evo_device.stateStatus["state"]] == STATE_OFF
-        is_permanent = self._evo_device.stateStatus["mode"] == EVO_PERMOVER
+        is_off = EVO_STATE_TO_HA[self._evo_device.state] == STATE_OFF
+        is_permanent = self._evo_device.mode == EVO_PERMOVER
         return is_off and is_permanent
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:

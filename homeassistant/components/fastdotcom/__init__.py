@@ -1,29 +1,20 @@
 """Support for testing internet speed via Fast.com."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
 import logging
-from typing import Any
 
-from fastdotcom import fast_com
 import voluptuous as vol
 
-from homeassistant.const import CONF_SCAN_INTERVAL, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-DOMAIN = "fastdotcom"
-DATA_UPDATED = f"{DOMAIN}_data_updated"
+from .const import CONF_MANUAL, DEFAULT_INTERVAL, DOMAIN, PLATFORMS
+from .coordinator import FastdotcomDataUpdateCoordindator
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_MANUAL = "manual"
-
-DEFAULT_INTERVAL = timedelta(hours=1)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -40,38 +31,44 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Fast.com component."""
-    conf = config[DOMAIN]
-    data = hass.data[DOMAIN] = SpeedtestData(hass)
-
-    if not conf[CONF_MANUAL]:
-        async_track_time_interval(hass, data.update, conf[CONF_SCAN_INTERVAL])
-
-    def update(service_call: ServiceCall | None = None) -> None:
-        """Service call to manually update the data."""
-        data.update()
-
-    hass.services.async_register(DOMAIN, "speedtest", update)
-
+async def async_setup_platform(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Fast.com component. (deprecated)."""
     hass.async_create_task(
-        async_load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config[DOMAIN],
+        )
+    )
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Fast.com from a config entry."""
+    coordinator = FastdotcomDataUpdateCoordindator(hass)
+
+    async def _request_refresh(event: Event) -> None:
+        """Request a refresh."""
+        await coordinator.async_request_refresh()
+
+    if hass.state == CoreState.running:
+        await coordinator.async_config_entry_first_refresh()
+    else:
+        # Don't start the speedtest when HA is starting up
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _request_refresh)
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    await hass.config_entries.async_forward_entry_setups(
+        entry,
+        PLATFORMS,
     )
 
     return True
 
 
-class SpeedtestData:
-    """Get the latest data from fast.com."""
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize the data object."""
-        self.data: dict[str, Any] | None = None
-        self._hass = hass
-
-    def update(self, now: datetime | None = None) -> None:
-        """Get the latest data from fast.com."""
-
-        _LOGGER.debug("Executing fast.com speedtest")
-        self.data = {"download": fast_com()}
-        dispatcher_send(self._hass, DATA_UPDATED)
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload Fast.com config entry."""
+    hass.services.async_remove(DOMAIN, "speedtest")
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok

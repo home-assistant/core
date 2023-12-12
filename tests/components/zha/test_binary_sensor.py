@@ -9,8 +9,6 @@ import zigpy.zcl.clusters.security as security
 
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import restore_state
-from homeassistant.util import dt as dt_util
 
 from .common import (
     async_enable_traffic,
@@ -150,38 +148,6 @@ async def test_binary_sensor(
     # test rejoin
     await async_test_rejoin(hass, zigpy_device, [cluster], reporting)
     assert hass.states.get(entity_id).state == STATE_OFF
-
-
-@pytest.fixture
-def core_rs(hass_storage):
-    """Core.restore_state fixture."""
-
-    def _storage(entity_id, attributes, state):
-        now = dt_util.utcnow().isoformat()
-
-        hass_storage[restore_state.STORAGE_KEY] = {
-            "version": restore_state.STORAGE_VERSION,
-            "key": restore_state.STORAGE_KEY,
-            "data": [
-                {
-                    "state": {
-                        "entity_id": entity_id,
-                        "state": str(state),
-                        "attributes": attributes,
-                        "last_changed": now,
-                        "last_updated": now,
-                        "context": {
-                            "id": "3c2243ff5f30447eb12e7348cfd5b8ff",
-                            "user_id": None,
-                        },
-                    },
-                    "last_seen": now,
-                }
-            ],
-        }
-        return
-
-    return _storage
 
 
 @pytest.mark.parametrize(

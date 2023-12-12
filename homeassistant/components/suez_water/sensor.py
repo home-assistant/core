@@ -13,17 +13,18 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfVolume
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import CONF_COUNTER_ID, DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(hours=12)
-
-CONF_COUNTER_ID = "counter_id"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -41,21 +42,23 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the sensor platform."""
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
-    counter_id = config[CONF_COUNTER_ID]
-    try:
-        client = SuezClient(username, password, counter_id)
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
-        if not client.check_credentials():
-            _LOGGER.warning("Wrong username and/or password")
-            return
 
-    except PySuezError:
-        _LOGGER.warning("Unable to create Suez Client")
-        return
-
-    add_entities([SuezSensor(client)], True)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Suez Water sensor from a config entry."""
+    client = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([SuezSensor(client)], True)
 
 
 class SuezSensor(SensorEntity):
@@ -71,7 +74,7 @@ class SuezSensor(SensorEntity):
         self.client = client
         self._attr_extra_state_attributes = {}
 
-    def _fetch_data(self):
+    def _fetch_data(self) -> None:
         """Fetch latest data from Suez."""
         try:
             self.client.update()

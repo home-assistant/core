@@ -188,7 +188,7 @@ SYSTEM_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[SystemInfo], ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda x: x.temperature / 1000,
+        value_fn=lambda x: None if x.temperature is None else x.temperature / 1000,
     ),
 )
 WAN_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[WanInfo], ...] = (
