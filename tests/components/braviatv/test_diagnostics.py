@@ -24,6 +24,15 @@ BRAVIA_SYSTEM_INFO = {
     "area": "POL",
     "cid": "very_unique_string",
 }
+INPUTS = [
+    {
+        "uri": "extInput:hdmi?port=1",
+        "title": "HDMI 1",
+        "connection": False,
+        "label": "",
+        "icon": "meta:hdmi",
+    }
+]
 
 
 async def test_entry_diagnostics(
@@ -50,7 +59,11 @@ async def test_entry_diagnostics(
         "pybravia.BraviaClient.pair"
     ), patch("pybravia.BraviaClient.set_wol_mode"), patch(
         "pybravia.BraviaClient.get_system_info", return_value=BRAVIA_SYSTEM_INFO
-    ), patch("pybravia.BraviaClient.get_power_status", return_value="active"):
+    ), patch("pybravia.BraviaClient.get_power_status", return_value="active"), patch(
+        "pybravia.BraviaClient.get_external_status", return_value=INPUTS
+    ), patch("pybravia.BraviaClient.get_volume_info", return_value={}), patch(
+        "pybravia.BraviaClient.get_playing_info", return_value={}
+    ):
         assert await async_setup_component(hass, DOMAIN, {})
         result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
