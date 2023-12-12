@@ -106,6 +106,36 @@ STAGE_1_INTEGRATIONS = {
     # Ensure supervisor is available
     "hassio",
 }
+DEFAULT_INTEGRATIONS = {
+    # These integrations are always set up.
+    #
+    # Integrations providing core functionality:
+    "application_credentials",
+    "frontend",
+    "hardware",
+    "logger",
+    "network",
+    "system_health",
+    #
+    # Key-feature:
+    "automation",
+    "person",
+    "scene",
+    "script",
+    "tag",
+    "zone",
+    #
+    # Built-in helpers:
+    "counter",
+    "input_boolean",
+    "input_button",
+    "input_datetime",
+    "input_number",
+    "input_select",
+    "input_text",
+    "schedule",
+    "timer",
+}
 
 
 async def async_setup_hass(
@@ -478,13 +508,17 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
         domain for key in config if (domain := cv.domain_key(key)) != core.DOMAIN
     }
 
-    # Add config entry domains
+    # Add config entry and default domains
     if not hass.config.recovery_mode:
+        domains.update(DEFAULT_INTEGRATIONS)
         domains.update(hass.config_entries.async_domains())
 
-    # Make sure the Hass.io component is loaded
+    # Make sure the Supervisor component is loaded
     if "SUPERVISOR" in os.environ:
         domains.add("hassio")
+    else:
+        # In case not using the Supervisor, load the backup component
+        domains.add("backup")
 
     return domains
 

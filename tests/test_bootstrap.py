@@ -87,12 +87,12 @@ async def test_async_enable_logging(
 
 
 async def test_load_hassio(hass: HomeAssistant) -> None:
-    """Test that we load Hass.io component."""
+    """Test that we load the Supervisor component."""
     with patch.dict(os.environ, {}, clear=True):
-        assert bootstrap._get_domains(hass, {}) == set()
+        assert "hassio" not in bootstrap._get_domains(hass, {})
 
     with patch.dict(os.environ, {"SUPERVISOR": "1"}):
-        assert bootstrap._get_domains(hass, {}) == {"hassio"}
+        assert "hassio" in bootstrap._get_domains(hass, {})
 
 
 @pytest.mark.parametrize("load_registries", [False])
