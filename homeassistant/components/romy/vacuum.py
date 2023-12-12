@@ -11,7 +11,6 @@ from romy import RomyRobot
 
 from homeassistant.components.vacuum import StateVacuumEntity, VacuumEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME, ATTR_SW_VERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -97,9 +96,6 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         self._attr_fan_speed = FAN_SPEEDS[self.romy.fan_speed]
         self._attr_battery_level = self.romy.battery_level
         self._attr_state = self.romy.status
-
-        self._device_info[ATTR_NAME] = self.romy.name
-        self._device_info[ATTR_SW_VERSION] = self.romy.firmware
 
         self.async_write_ha_state()
 
