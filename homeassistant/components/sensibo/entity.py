@@ -26,15 +26,25 @@ def async_handle_api_call(
     async def wrap_api_call(entity: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         """Wrap services for api calls."""
         res: bool = False
+        if TYPE_CHECKING:
+            assert isinstance(entity.name, str)
         try:
             async with asyncio.timeout(TIMEOUT):
                 res = await function(entity, *args, **kwargs)
         except SENSIBO_ERRORS as err:
-            raise HomeAssistantError from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_raised",
+                translation_placeholders={"error": str(err), "name": entity.name},
+            ) from err
 
         LOGGER.debug("Result %s for entity %s with arguments %s", res, entity, kwargs)
         if res is not True:
-            raise HomeAssistantError(f"Could not execute service for {entity.name}")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_result_not_true",
+                translation_placeholders={"name": entity.name},
+            )
         if (
             isinstance(key := kwargs.get("key"), str)
             and (value := kwargs.get("value")) is not None
