@@ -62,10 +62,7 @@ async def async_setup_entry(
     coordinator: RomyVacuumCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     romy: RomyRobot = coordinator.romy
 
-    romy_vacuum_entity = RomyVacuumEntity(coordinator, romy)
-
-    entities = [romy_vacuum_entity]
-    async_add_entities(entities, True)
+    async_add_entities([RomyVacuumEntity(coordinator, romy)], True)
 
 
 class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEntity):
