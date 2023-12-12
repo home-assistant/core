@@ -13,8 +13,8 @@
       "description": "The currency {currency} is no longer in use, please reconfigure the currency configuration."
     },
     "legacy_templates_false": {
-      "title": "The support for legacy templates is being removed",
-      "description": "Nothing will change in your templates.\n\nRemove the `legacy_templates` key from the `homeassistant` configuration in your configuration.yaml file and restart Home Assistant to fix this issue."
+      "title": "`legacy_templates` config key is being removed",
+      "description": "Nothing will change with your templates.\n\nRemove the `legacy_templates` key from the `homeassistant` configuration in your configuration.yaml file and restart Home Assistant to fix this issue."
     },
     "legacy_templates_true": {
       "title": "The support for legacy templates is being removed",
