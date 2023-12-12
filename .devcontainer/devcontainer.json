@@ -6,7 +6,7 @@
   "postStartCommand": "script/bootstrap",
   "containerEnv": { "DEVCONTAINER": "1" },
   "appPort": ["8123:8123"],
-  "runArgs": ["-e", "GIT_EDITOR=code --wait", "--device=/dev/ttyUSBInsteon"],
+  "runArgs": ["-e", "GIT_EDITOR=code --wait"],
   "customizations": {
     "vscode": {
       "extensions": [
@@ -45,10 +45,5 @@
         }
       }
     }
-  },
-  "mounts": [
-    "source=/home/tharris/repos/pyinsteon,target=/workspaces/pyinsteon,type=bind,consistency=cached",
-    "source=/home/tharris/repos/frontend,target=/workspaces/frontend,type=bind,consistency=cached",
-    "source=/home/tharris/repos/insteon-panel,target=/workspaces/insteon-panel,type=bind,consistency=cached"
-  ]
+  }
 }
