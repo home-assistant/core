@@ -17,10 +17,10 @@ import pytest
 
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
+    BaseHaRemoteScanner,
     BluetoothServiceInfoBleak,
     HaBluetoothConnector,
     HomeAssistantBluetoothManager,
-    HomeAssistantRemoteScanner,
     async_get_advertisement_callback,
 )
 from homeassistant.core import HomeAssistant
@@ -36,12 +36,11 @@ def mock_shutdown(manager: HomeAssistantBluetoothManager) -> None:
     manager.shutdown = False
 
 
-class FakeScanner(HomeAssistantRemoteScanner):
+class FakeScanner(BaseHaRemoteScanner):
     """Fake scanner."""
 
     def __init__(
         self,
-        hass: HomeAssistant,
         scanner_id: str,
         name: str,
         new_info_callback: Callable[[BluetoothServiceInfoBleak], None],
@@ -49,9 +48,7 @@ class FakeScanner(HomeAssistantRemoteScanner):
         connectable: bool,
     ) -> None:
         """Initialize the scanner."""
-        super().__init__(
-            hass, scanner_id, name, new_info_callback, connector, connectable
-        )
+        super().__init__(scanner_id, name, new_info_callback, connector, connectable)
         self._details: dict[str, str | HaBluetoothConnector] = {}
 
     def __repr__(self) -> str:
@@ -187,10 +184,10 @@ def _generate_scanners_with_fake_devices(hass):
 
     new_info_callback = async_get_advertisement_callback(hass)
     scanner_hci0 = FakeScanner(
-        hass, "00:00:00:00:00:01", "hci0", new_info_callback, None, True
+        "00:00:00:00:00:01", "hci0", new_info_callback, None, True
     )
     scanner_hci1 = FakeScanner(
-        hass, "00:00:00:00:00:02", "hci1", new_info_callback, None, True
+        "00:00:00:00:00:02", "hci1", new_info_callback, None, True
     )
 
     for device, adv_data in hci0_device_advs.values():
