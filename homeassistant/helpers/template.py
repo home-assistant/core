@@ -1942,7 +1942,7 @@ def median(*args: Any, default: Any = _SENTINEL) -> Any:
 def mode(*args: Any, default: Any = _SENTINEL) -> Any:
     """Filter and function to calculate the mode.
 
-    Calculates mode of an iterable or of two or more arguments.
+    Calculates mode of an iterable of two or more arguments.
 
     The parameters may be passed as an iterable or as separate arguments.
     """
