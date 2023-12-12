@@ -19,16 +19,11 @@ from .coordinator import AOSmithCoordinator
 from .entity import AOSmithEntity
 
 
-@dataclass
-class AOSmithRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(kw_only=True)
+class AOSmithSensorEntityDescription(SensorEntityDescription):
+    """Define sensor entity description class."""
 
     value_fn: Callable[[dict[str, Any]], str | int | None]
-
-
-@dataclass
-class AOSmithSensorEntityDescription(SensorEntityDescription, AOSmithRequiredKeysMixin):
-    """Define sensor entity description class."""
 
 
 ENTITY_DESCRIPTIONS: tuple[AOSmithSensorEntityDescription, ...] = (
