@@ -95,7 +95,7 @@ async def test_get_icons(hass: HomeAssistant) -> None:
 
     # Test getting icons for the entity component
     icons = await icon.async_get_icons(hass, "entity_component")
-    assert icons["switch"]["_"]["icon"] == "mdi:toggle-switch-variant"
+    assert icons["switch"]["_"]["default"] == "mdi:toggle-switch-variant"
 
     # Ensure icons file for platform isn't loaded, as that isn't supported
     icons = await icon.async_get_icons(hass, "entity")

@@ -25,13 +25,13 @@
     },
     "number": {
       "volume": {
-        "icon": "mdi:volume-high"
+        "default": "mdi:volume-high"
       },
       "pwm": {
-        "icon": "mdi:square-wave"
+        "default": "mdi:square-wave"
       },
       "range": {
-        "icon": "mdi:square-wave"
+        "default": "mdi:square-wave"
       }
     },
     "select": {
@@ -55,7 +55,7 @@
     },
     "switch": {
       "air_conditioner": {
-        "icon": "mdi:air-conditioner"
+        "default": "mdi:air-conditioner"
       }
     }
   }

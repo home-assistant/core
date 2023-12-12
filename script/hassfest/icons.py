@@ -36,7 +36,7 @@ def icon_schema(integration_type: str) -> vol.Schema:
             {
                 vol.Required("entity_component"): cv.schema_with_slug_keys(
                     {
-                        vol.Required("icon"): str,
+                        vol.Required("default"): str,
                         vol.Optional("state"): state_validator,
                         vol.Optional("state_attributes"): cv.schema_with_slug_keys(
                             {
@@ -55,11 +55,11 @@ def icon_schema(integration_type: str) -> vol.Schema:
             vol.Required("entity"): cv.schema_with_slug_keys(
                 cv.schema_with_slug_keys(
                     {
-                        vol.Optional("icon"): icon_value_validator,
+                        vol.Optional("default"): icon_value_validator,
                         vol.Optional("state"): state_validator,
                         vol.Optional("state_attributes"): cv.schema_with_slug_keys(
                             {
-                                vol.Optional("icon"): icon_value_validator,
+                                vol.Optional("default"): icon_value_validator,
                                 vol.Optional("state"): state_validator,
                             },
                             slug_validator=translation_key_validator,

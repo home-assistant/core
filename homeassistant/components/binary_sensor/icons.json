@@ -1,175 +1,175 @@
 {
   "entity_component": {
     "_": {
-      "icon": "mdi:radiobox-blank",
+      "default": "mdi:radiobox-blank",
       "state": {
         "on": "mdi:checkbox-marked-circle"
       }
     },
     "battery": {
-      "icon": "mdi:battery",
+      "default": "mdi:battery",
       "state": {
         "on": "mdi:battery-outline"
       }
     },
     "battery_charging": {
-      "icon": "mdi:battery",
+      "default": "mdi:battery",
       "state": {
         "on": "mdi:battery-charging"
       }
     },
     "carbon_monoxide": {
-      "icon": "mdi:smoke-detector",
+      "default": "mdi:smoke-detector",
       "state": {
         "on": "mdi:smoke-detector-alert"
       }
     },
     "cold": {
-      "icon": "mdi:thermometer",
+      "default": "mdi:thermometer",
       "state": {
         "on": "mdi:snowflake"
       }
     },
     "connectivity": {
-      "icon": "mdi:close-network-outline",
+      "default": "mdi:close-network-outline",
       "state": {
         "on": "mdi:check-network-outline"
       }
     },
     "door": {
-      "icon": "mdi:door-closed",
+      "default": "mdi:door-closed",
       "state": {
         "on": "mdi:door-open"
       }
     },
     "garage_door": {
-      "icon": "mdi:garage",
+      "default": "mdi:garage",
       "state": {
         "on": "mdi:garage-open"
       }
     },
     "gas": {
-      "icon": "mdi:check-circle",
+      "default": "mdi:check-circle",
       "state": {
         "on": "mdi:alert-circle"
       }
     },
     "heat": {
-      "icon": "mdi:thermometer",
+      "default": "mdi:thermometer",
       "state": {
         "on": "mdi:fire"
       }
     },
     "light": {
-      "icon": "mdi:brightness-5",
+      "default": "mdi:brightness-5",
       "state": {
         "on": "mdi:brightness-7"
       }
     },
     "lock": {
-      "icon": "mdi:lock",
+      "default": "mdi:lock",
       "state": {
         "on": "mdi:lock-open"
       }
     },
     "moisture": {
-      "icon": "mdi:water-off",
+      "default": "mdi:water-off",
       "state": {
         "on": "mdi:water"
       }
     },
     "motion": {
-      "icon": "mdi:motion-sensor-off",
+      "default": "mdi:motion-sensor-off",
       "state": {
         "on": "mdi:motion-sensor"
       }
     },
     "moving": {
-      "icon": "mdi:arrow-right",
+      "default": "mdi:arrow-right",
       "state": {
         "on": "mdi:octagon"
       }
     },
     "occupancy": {
-      "icon": "mdi:home-outline",
+      "default": "mdi:home-outline",
       "state": {
         "on": "mdi:home"
       }
     },
     "opening": {
-      "icon": "mdi:square",
+      "default": "mdi:square",
       "state": {
         "on": "mdi:square-outline"
       }
     },
     "plug": {
-      "icon": "mdi:power-plug-off",
+      "default": "mdi:power-plug-off",
       "state": {
         "on": "mdi:power-plug"
       }
     },
     "power": {
-      "icon": "mdi:power-plug-off",
+      "default": "mdi:power-plug-off",
       "state": {
         "on": "mdi:power-plug"
       }
     },
     "presence": {
-      "icon": "mdi:home-outline",
+      "default": "mdi:home-outline",
       "state": {
         "on": "mdi:home"
       }
     },
     "problem": {
-      "icon": "mdi:check-circle",
+      "default": "mdi:check-circle",
       "state": {
         "on": "mdi:alert-circle"
       }
     },
     "running": {
-      "icon": "mdi:stop",
+      "default": "mdi:stop",
       "state": {
         "on": "mdi:play"
       }
     },
     "safety": {
-      "icon": "mdi:check-circle",
+      "default": "mdi:check-circle",
       "state": {
         "on": "mdi:alert-circle"
       }
     },
     "smoke": {
-      "icon": "mdi:smoke-detector-variant",
+      "default": "mdi:smoke-detector-variant",
       "state": {
         "on": "mdi:smoke-detector-variant-alert"
       }
     },
     "sound": {
-      "icon": "mdi:music-note-off",
+      "default": "mdi:music-note-off",
       "state": {
         "on": "mdi:music-note"
       }
     },
     "tamper": {
-      "icon": "mdi:check-circle",
+      "default": "mdi:check-circle",
       "state": {
         "on": "mdi:alert-circle"
       }
     },
     "update": {
-      "icon": "mdi:package",
+      "default": "mdi:package",
       "state": {
         "on": "mdi:package-up"
       }
     },
     "vibration": {
-      "icon": "mdi:crop-portrait",
+      "default": "mdi:crop-portrait",
       "state": {
         "on": "mdi:vibrate"
       }
     },
     "window": {
-      "icon": "mdi:window-closed",
+      "default": "mdi:window-closed",
       "state": {
         "on": "mdi:window-open"
       }

@@ -1,17 +1,17 @@
 {
   "entity_component": {
     "_": {
-      "icon": "mdi:toggle-switch-variant"
+      "default": "mdi:toggle-switch-variant"
     },
     "switch": {
-      "icon": "mdi:toggle-switch-variant",
+      "default": "mdi:toggle-switch-variant",
       "state": {
         "on": "mdi:toggle-switch-variant",
         "off": "mdi:toggle-switch-variant-off"
       }
     },
     "outlet": {
-      "icon": "mdi:power-plug",
+      "default": "mdi:power-plug",
       "state": {
         "on": "mdi:power-plug",
         "off": "mdi:power-plug-off"
