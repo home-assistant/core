@@ -34,7 +34,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             client = Client()
             api_token = user_input[CONF_API_TOKEN]
-            self._async_abort_entries_match(user_input)
 
             try:
                 customer_id = await client.validate_api_token(api_token)
