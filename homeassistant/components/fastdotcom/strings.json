@@ -15,11 +15,5 @@
         "name": "Download"
       }
     }
-  },
-  "services": {
-    "speedtest": {
-      "name": "Speed test",
-      "description": "Immediately executes a speed test with Fast.com."
-    }
   }
 }
