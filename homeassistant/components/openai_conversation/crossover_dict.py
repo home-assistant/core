@@ -1,4 +1,3 @@
-# only temporary, this needs to be created partially dynamically by openAI (the field entity_id)
 HASS_OPENAI_ACTIONS = {
     "plug_on": {
         "hass_action": {
