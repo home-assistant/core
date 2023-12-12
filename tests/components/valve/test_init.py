@@ -191,7 +191,9 @@ def mock_config_entry(hass) -> tuple[MockConfigEntry, list[ValveEntity]]:
     return (config_entry, entities)
 
 
-async def test_valve_setup(hass: HomeAssistant, mock_config_entry) -> None:
+async def test_valve_setup(
+    hass: HomeAssistant, mock_config_entry: tuple[MockConfigEntry, list[ValveEntity]]
+) -> None:
     """Test setup and tear down of valve platform and entity."""
     config_entry = mock_config_entry[0]
 
@@ -212,7 +214,9 @@ async def test_valve_setup(hass: HomeAssistant, mock_config_entry) -> None:
     assert entity_state.state == STATE_UNAVAILABLE
 
 
-async def test_services(hass: HomeAssistant, mock_config_entry) -> None:
+async def test_services(
+    hass: HomeAssistant, mock_config_entry: tuple[MockConfigEntry, list[ValveEntity]]
+) -> None:
     """Test the provided services."""
     config_entry = mock_config_entry[0]
     ent1, ent2 = mock_config_entry[1]
