@@ -30,6 +30,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import async_discover_devices, get_stored_credentials, set_stored_credentials
@@ -38,6 +39,8 @@ from .const import CONF_CONNECTION_PARAMS, DOMAIN
 STEP_AUTH_DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
 )
+
+REAUTH_REFLOW_CALL_LATER_SECS = 0.2
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -77,14 +80,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_in_progress")
         credentials = await get_stored_credentials(self.hass)
         try:
-            (
-                self._discovered_device,
-                connect_error,
-            ) = await self._async_try_discover_connect(
+            await self._async_try_discover_connect(
                 host, credentials, raise_on_progress=True
             )
-            if connect_error:
-                raise connect_error
         except AuthenticationException:
             self._last_failed_discovery_credentials = credentials
             return await self.async_step_discovery_auth_confirm()
@@ -103,12 +101,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         credentials = await get_stored_credentials(self.hass)
 
         if credentials != self._last_failed_discovery_credentials:
+            httpx_asyncclient = create_async_httpx_client(self.hass, verify_ssl=False)
             try:
                 device = await Discover.connect_single(
                     host,
                     port=self._discovered_device.port,
                     credentials=credentials,
                     connection_params=self._discovered_device.connection_parameters,
+                    httpx_asyncclient=httpx_asyncclient,
                     try_discovery_on_error=False,
                 )
             except AuthenticationException:
@@ -121,12 +121,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             credentials = Credentials(
                 user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             )
+            httpx_asyncclient = create_async_httpx_client(self.hass, verify_ssl=False)
             try:
                 device = await Discover.connect_single(
                     host,
                     port=self._discovered_device.port,
                     credentials=credentials,
                     connection_params=self._discovered_device.connection_parameters,
+                    httpx_asyncclient=httpx_asyncclient,
                     try_discovery_on_error=False,
                 )
             except AuthenticationException:
@@ -139,7 +141,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
                 async_call_later(
-                    self.hass, 0.5, self._async_reload_requires_auth_entries
+                    self.hass,
+                    REAUTH_REFLOW_CALL_LATER_SECS,
+                    self._async_reload_requires_auth_entries,
                 )
                 return await self.async_step_discovery_confirm()
 
@@ -186,11 +190,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.context[CONF_HOST] = host
             credentials = await get_stored_credentials(self.hass)
             try:
-                device, connect_error = await self._async_try_discover_connect(
+                device = await self._async_try_discover_connect(
                     host, credentials, raise_on_progress=False
                 )
-                if connect_error:
-                    raise connect_error
             except AuthenticationException:
                 return await self.async_step_user_auth_confirm()
             except SmartDeviceException:
@@ -215,11 +217,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             )
             try:
-                device, connect_error = await self._async_try_discover_connect(
+                device = await self._async_try_discover_connect(
                     host, credentials, raise_on_progress=False
                 )
-                if connect_error:
-                    raise connect_error
             except AuthenticationException:
                 errors["base"] = "invalid_auth"
             except SmartDeviceException:
@@ -229,7 +229,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
                 async_call_later(
-                    self.hass, 0.5, self._async_reload_requires_auth_entries
+                    self.hass,
+                    REAUTH_REFLOW_CALL_LATER_SECS,
+                    self._async_reload_requires_auth_entries,
                 )
                 return self._async_create_entry_from_device(device)
 
@@ -248,13 +250,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             mac = user_input[CONF_DEVICE]
             await self.async_set_unique_id(mac, raise_on_progress=False)
             self._discovered_device = self._discovered_devices[mac]
+            host = self._discovered_device.host
+            connection_params = self._discovered_device.connection_parameters
+            self.context[CONF_HOST] = host
+            credentials = await get_stored_credentials(self.hass)
+            # Cannot use the device in discovered_devices here because we need to set the
+            # http.AsyncClient
+            httpx_asyncclient = create_async_httpx_client(self.hass, verify_ssl=False)
             try:
-                await self._discovered_device.update()
+                device = await Discover.connect_single(
+                    host,
+                    credentials=credentials,
+                    connection_params=connection_params,
+                    httpx_asyncclient=httpx_asyncclient,
+                    try_discovery_on_error=False,
+                )
             except AuthenticationException:
                 return await self.async_step_pick_device_auth_confirm()
             except SmartDeviceException:
                 return self.async_abort(reason="cannot_connect")
-            return self._async_create_entry_from_device(self._discovered_device)
+            return self._async_create_entry_from_device(device)
 
         configured_devices = {
             entry.unique_id for entry in self._async_current_entries()
@@ -280,18 +295,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Dialog that informs the user that auth is required."""
         errors = {}
+        host = self.context[CONF_HOST]
         assert self._discovered_device is not None
-        host = self._discovered_device.host
         if user_input:
             credentials = Credentials(
                 user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             )
+            httpx_asyncclient = create_async_httpx_client(self.hass, verify_ssl=False)
             try:
                 device = await Discover.connect_single(
                     host,
                     port=self._discovered_device.port,
                     credentials=credentials,
                     connection_params=self._discovered_device.connection_parameters,
+                    httpx_asyncclient=httpx_asyncclient,
                     try_discovery_on_error=False,
                 )
             except AuthenticationException:
@@ -303,7 +320,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
                 async_call_later(
-                    self.hass, 0.5, self._async_reload_requires_auth_entries
+                    self.hass,
+                    REAUTH_REFLOW_CALL_LATER_SECS,
+                    self._async_reload_requires_auth_entries,
                 )
                 return self._async_create_entry_from_device(device)
 
@@ -347,20 +366,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         host: str,
         credentials: Optional[Credentials],
         raise_on_progress: bool = True,
-    ) -> tuple[SmartDevice, Optional[SmartDeviceException]]:
+    ) -> SmartDevice:
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: host})
-        device: SmartDevice = await Discover.discover_single(
-            host, credentials=credentials
+        httpx_asyncclient = create_async_httpx_client(self.hass, verify_ssl=False)
+        self._discovered_device = await Discover.discover_single(
+            host, credentials=credentials, httpx_asyncclient=httpx_asyncclient
         )
+        await self._discovered_device.update()
         await self.async_set_unique_id(
-            dr.format_mac(device.mac), raise_on_progress=raise_on_progress
+            dr.format_mac(self._discovered_device.mac),
+            raise_on_progress=raise_on_progress,
         )
-        try:
-            await device.update()
-        except SmartDeviceException as ex:
-            return device, ex
-        return device, None
+        return self._discovered_device
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle reauth upon an API authentication error."""
@@ -381,9 +399,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             credentials = Credentials(
                 user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             )
+            httpx_asyncclient = create_async_httpx_client(self.hass, verify_ssl=False)
             try:
                 device: SmartDevice = await Discover.discover_single(
-                    host, credentials=credentials
+                    host, credentials=credentials, httpx_asyncclient=httpx_asyncclient
                 )
                 await device.update()
             except AuthenticationException:
@@ -396,7 +415,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
                 async_call_later(
-                    self.hass, 0.5, self._async_reload_requires_auth_entries
+                    self.hass,
+                    REAUTH_REFLOW_CALL_LATER_SECS,
+                    self._async_reload_requires_auth_entries,
                 )
                 return self.async_abort(reason="reauth_successful")
 

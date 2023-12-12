@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Optional
+from typing import Any, Final, Optional, cast
 
 from kasa import (
     AuthenticationException,
@@ -35,6 +35,7 @@ from homeassistant.helpers import (
     discovery_flow,
 )
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
@@ -53,6 +54,8 @@ DISCOVERY_INTERVAL = timedelta(seconds=30)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
+
+DATA_STORE: Final = "store"
 
 
 @callback
@@ -92,6 +95,7 @@ async def async_discover_devices(hass: HomeAssistant) -> dict[str, SmartDevice]:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the TP-Link component."""
     hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][DATA_STORE] = _get_store(hass)
 
     if discovered_devices := await async_discover_devices(hass):
         async_trigger_discovery(hass, discovered_devices)
@@ -111,44 +115,43 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up TPLink from a config entry."""
     host = entry.data[CONF_HOST]
-    try:
-        credentials = await get_stored_credentials(hass)
-        connection_params = None
 
+    credentials = await get_stored_credentials(hass)
+    connection_params = None
+
+    if connection_params_dict := entry.data.get(CONF_CONNECTION_PARAMS):
         try:
-            if connection_params_dict := entry.data.get(CONF_CONNECTION_PARAMS):
-                connection_params = ConnectionParameters.from_dict(
-                    connection_params_dict
-                )
+            connection_params = ConnectionParameters.from_dict(connection_params_dict)
         except SmartDeviceException:
             _LOGGER.warning(
                 "Invalid connection parameters for %s: %s", host, connection_params_dict
             )
-
+    try:
+        httpx_asyncclient = create_async_httpx_client(hass, verify_ssl=False)
         device: SmartDevice = await Discover.connect_single(
             host,
             timeout=10,
             credentials=credentials,
             connection_params=connection_params,
+            httpx_asyncclient=httpx_asyncclient,
             try_discovery_on_error=True,
         )
-        # Save the connection_params if they are not already saved
-        # so that we can pass them to connect which avoids an update cycle
-        if connection_params_dict and connection_params != device.connection_parameters:
-            hass.config_entries.async_update_entry(
-                entry,
-                data={
-                    **entry.data,
-                    CONF_CONNECTION_PARAMS: device.connection_parameters.to_dict()
-                    if device.connection_parameters
-                    else None,
-                },
-            )
     except AuthenticationException as ex:
         raise ConfigEntryAuthFailed from ex
     except SmartDeviceException as ex:
         raise ConfigEntryNotReady from ex
 
+    # Save the connection_params if they are not already saved
+    if connection_params_dict and connection_params != device.connection_parameters:
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                **entry.data,
+                CONF_CONNECTION_PARAMS: device.connection_parameters.to_dict()
+                if device.connection_parameters
+                else None,
+            },
+        )
     found_mac = dr.format_mac(device.mac)
     if found_mac != entry.unique_id:
         # If the mac address of the device does not match the unique_id
@@ -204,6 +207,8 @@ def legacy_device_id(device: SmartDevice) -> str:
 
 
 def _get_store(hass: HomeAssistant) -> Store[dict[str, dict[str, str]]]:
+    if DOMAIN in hass.data and DATA_STORE in hass.data[DOMAIN]:
+        return cast(Store[dict[str, dict[str, str]]], hass.data[DOMAIN][DATA_STORE])
     return Store[dict[str, dict[str, str]]](hass, STORAGE_VERSION, STORAGE_KEY)
 
 
