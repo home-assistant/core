@@ -9,12 +9,12 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import Integration, async_get_integrations
-from homeassistant.util.json import load_json
+from homeassistant.util.json import load_json_object
 
-from .translation import build_resources, recursive_flatten
+from .translation import build_resources
 
 ICON_LOAD_LOCK = "icon_load_lock"
-ICON_FLATTEN_CACHE = "icon_flatten_cache"
+ICON_CACHE = "icon_cache"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,21 +38,10 @@ def component_icons_path(component: str, integration: Integration) -> str | None
 
 def load_icons_files(icons_files: dict[str, str]) -> dict[str, dict[str, Any]]:
     """Load and parse icons.json files."""
-    loaded = {}
-    for component, icons_file in icons_files.items():
-        loaded_json = load_json(icons_file)
-
-        if not isinstance(loaded_json, dict):
-            _LOGGER.warning(
-                "Icons file is unexpected type %s. Expected dict for %s",
-                type(loaded_json),
-                icons_file,
-            )
-            continue
-
-        loaded[component] = loaded_json
-
-    return loaded
+    return {
+        component: load_json_object(icons_file)
+        for component, icons_file in icons_files.items()
+    }
 
 
 async def _async_get_component_icons(
@@ -83,7 +72,7 @@ async def _async_get_component_icons(
 
 
 class _IconsCache:
-    """Cache for flattened icons."""
+    """Cache for icons."""
 
     __slots__ = ("_hass", "_loaded", "_cache")
 
@@ -97,14 +86,16 @@ class _IconsCache:
         self,
         category: str,
         components: set[str],
-    ) -> list[dict[str, dict[str, Any]]]:
+    ) -> dict[str, dict[str, Any]]:
         """Load resources into the cache."""
         if components_to_load := components - self._loaded:
             await self._async_load(components_to_load)
 
-        return [
-            self._cache.get(component, {}).get(category, {}) for component in components
-        ]
+        return {
+            component: result
+            for component in components
+            if (result := self._cache.get(category, {}).get(component))
+        }
 
     async def _async_load(self, components: set[str]) -> None:
         """Populate the cache for a given set of components."""
@@ -124,7 +115,6 @@ class _IconsCache:
         icons = await _async_get_component_icons(self._hass, components, integrations)
 
         self._build_category_cache(components, icons)
-
         self._loaded.update(components)
 
     @callback
@@ -142,17 +132,8 @@ class _IconsCache:
         for category in categories:
             new_resources = build_resources(icons, components, category)
             for component, resource in new_resources.items():
-                category_cache: dict[str, Any] = self._cache.setdefault(
-                    component, {}
-                ).setdefault(category, {})
-
-                if isinstance(resource, dict):
-                    category_cache |= recursive_flatten(
-                        f"component.{component}.{category}.",
-                        resource,
-                    )
-                else:
-                    category_cache[f"component.{component}.{category}"] = resource
+                category_cache: dict[str, Any] = self._cache.setdefault(category, {})
+                category_cache[component] = resource
 
 
 async def async_get_icons(
@@ -173,16 +154,12 @@ async def async_get_icons(
         components = set(hass.config.components)
 
     async with lock:
-        if ICON_FLATTEN_CACHE in hass.data:
-            cache = hass.data[ICON_FLATTEN_CACHE]
+        if ICON_CACHE in hass.data:
+            cache: _IconsCache = hass.data[ICON_CACHE]
         else:
-            cache = hass.data[ICON_FLATTEN_CACHE] = _IconsCache(hass)
-        cached = await cache.async_fetch(category, components)
+            cache = hass.data[ICON_CACHE] = _IconsCache(hass)
 
-    result: dict[str, Any] = {}
-    for entry in cached:
-        result |= entry
-    return result
+    return await cache.async_fetch(category, components)
 
 
 @lru_cache

@@ -1,6 +1,5 @@
 """Test Home Assistant icon util methods."""
 
-import asyncio
 import pathlib
 from unittest.mock import Mock, patch
 
@@ -8,6 +7,7 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import icon
+from homeassistant.setup import async_setup_component
 
 
 def test_battery_icon() -> None:
@@ -70,7 +70,11 @@ def test_load_icons_files(hass: HomeAssistant) -> None:
     assert icon.load_icons_files({"test": file1, "invalid": file2}) == {
         "test": {
             "entity": {
-                "something": {"state": {"away": "mdi:home-outline", "home": "mdi:home"}}
+                "switch": {
+                    "something": {
+                        "state": {"away": "mdi:home-outline", "home": "mdi:home"}
+                    }
+                }
             },
         },
         "invalid": {},
@@ -83,16 +87,43 @@ async def test_get_icons(hass: HomeAssistant) -> None:
     icons = await icon.async_get_icons(hass, "entity")
     assert icons == {}
 
+    icons = await icon.async_get_icons(hass, "entity_component")
+    assert icons == {}
+
+    # Set up test switch component
+    assert await async_setup_component(hass, "switch", {"switch": {"platform": "test"}})
+
+    # Test getting icons for the entity component
+    icons = await icon.async_get_icons(hass, "entity_component")
+    assert icons["switch"]["_"]["icon"] == "mdi:toggle-switch-variant"
+
+    # Ensure icons file for platform isn't loaded, as that isn't supported
+    icons = await icon.async_get_icons(hass, "entity")
+    assert icons == {}
+
+    # Load up an custom integration
     hass.config.components.add("test_package")
     await hass.async_block_till_done()
 
     icons = await icon.async_get_icons(hass, "entity")
+    assert len(icons) == 1
 
+    assert icons["test_package"]["switch"]["something"]["state"]["home"] == "mdi:home"
     assert (
-        icons["component.test_package.entity.switch.something.state.home"] == "mdi:home"
+        icons["test_package"]["switch"]["something"]["state"]["away"]
+        == "mdi:home-outline"
     )
+
+    # Load another one
+    hass.config.components.add("test_embedded")
+    await hass.async_block_till_done()
+
+    icons = await icon.async_get_icons(hass, "entity")
+    assert len(icons) == 2
+
+    assert icons["test_embedded"]["switch"]["something"]["state"]["home"] == "mdi:home"
     assert (
-        icons["component.test_package.entity.switch.something.state.away"]
+        icons["test_embedded"]["switch"]["something"]["state"]["away"]
         == "mdi:home-outline"
     )
 
@@ -108,9 +139,7 @@ async def test_get_icons_while_loading_components(hass: HomeAssistant) -> None:
         """Mock load icon files."""
         nonlocal load_count
         load_count += 1
-        # Mimic race condition by loading a component during setup
-
-        return {"component1": {"entity": {"test": {"icon": "mdi:home"}}}}
+        return {"component1": {"entity": {"climate": {"test": {"icon": "mdi:home"}}}}}
 
     with patch(
         "homeassistant.helpers.icon.component_icons_path",
@@ -122,19 +151,16 @@ async def test_get_icons_while_loading_components(hass: HomeAssistant) -> None:
         "homeassistant.helpers.icon.async_get_integrations",
         return_value={"component1": integration},
     ):
-        tasks = [icon.async_get_icons(hass, "entity") for _ in range(5)]
-        all_icons = await asyncio.gather(*tasks)
+        all_icons = [await icon.async_get_icons(hass, "entity") for _ in range(5)]
 
-    assert all_icons[0] == {
-        "component.component1.entity.test.icon": "mdi:home",
-    }
+    assert all_icons[0] == {"component1": {"climate": {"test": {"icon": "mdi:home"}}}}
     assert load_count == 1
 
 
 async def test_caching(hass: HomeAssistant) -> None:
     """Test we cache data."""
-    hass.config.components.add("switch")
     hass.config.components.add("binary_sensor")
+    hass.config.components.add("switch")
 
     # Patch with same method so we can count invocations
     with patch(
@@ -149,27 +175,20 @@ async def test_caching(hass: HomeAssistant) -> None:
 
         assert load1 == load2
 
-        for key in load1:
-            assert key.startswith(
-                (
-                    "component.switch.entity_component.",
-                    "component.binary_sensor.entity_component.",
-                )
-            )
+        assert load1["binary_sensor"]
+        assert load1["switch"]
 
-    load_sensor_only = await icon.async_get_icons(
+    load_switch_only = await icon.async_get_icons(
         hass, "entity_component", integrations={"switch"}
     )
-    assert load_sensor_only
-    for key in load_sensor_only:
-        assert key.startswith("component.switch.entity_component.")
+    assert load_switch_only
+    assert list(load_switch_only) == ["switch"]
 
-    load_light_only = await icon.async_get_icons(
+    load_binary_sensor_only = await icon.async_get_icons(
         hass, "entity_component", integrations={"binary_sensor"}
     )
-    assert load_light_only
-    for key in load_light_only:
-        assert key.startswith("component.binary_sensor.entity_component.")
+    assert load_binary_sensor_only
+    assert list(load_binary_sensor_only) == ["binary_sensor"]
 
     # Check if new loaded component, trigger load
     hass.config.components.add("media_player")
