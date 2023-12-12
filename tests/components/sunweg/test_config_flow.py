@@ -3,7 +3,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 import pytest
-from sunweg.api import APIHelper
+from sunweg.api import APIHelper, LoginError, SunWegApiError
 from sunweg.plant import Plant
 
 from homeassistant import config_entries, data_entry_flow
@@ -50,7 +50,43 @@ async def test_incorrect_login(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch.object(APIHelper, "authenticate", return_value=False):
+    with patch.object(
+        APIHelper, "authenticate", side_effect=SunWegApiError("Failed Auth")
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], SUNWEG_USER_INPUT
+        )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_authentication_expired(hass: HomeAssistant) -> None:
+    """Test when the authentication information is expired."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch.object(APIHelper, "authenticate", side_effect=LoginError("Failed Auth")):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], SUNWEG_USER_INPUT
+        )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_server_unavailable(hass: HomeAssistant) -> None:
+    """Test when the SunWEG server don't respond."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch.object(
+        APIHelper, "authenticate", side_effect=SunWegApiError("Internal Server Error")
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], SUNWEG_USER_INPUT
         )
@@ -61,17 +97,27 @@ async def test_incorrect_login(hass: HomeAssistant) -> None:
 
 
 async def test_no_plants_on_account(hass: HomeAssistant) -> None:
-    """Test registering an integration and finishing flow with an entered plant_id."""
+    """Test registering an integration with wrong auth then with no plants available."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    user_input = SUNWEG_USER_INPUT.copy()
+
+    with patch.object(
+        APIHelper, "authenticate", side_effect=SunWegApiError("Failed Auth")
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], SUNWEG_USER_INPUT
+        )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_auth"}
 
     with patch.object(APIHelper, "authenticate", return_value=True), patch.object(
         APIHelper, "listPlants", return_value=[]
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input
+            result["flow_id"], SUNWEG_USER_INPUT
         )
 
     assert result["type"] == "abort"
@@ -79,7 +125,7 @@ async def test_no_plants_on_account(hass: HomeAssistant) -> None:
 
 
 async def test_multiple_plant_ids(hass: HomeAssistant, plant_fixture) -> None:
-    """Test registering an integration and finishing flow with an entered plant_id."""
+    """Test registering an integration and finishing flow with an selected plant_id."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -108,7 +154,7 @@ async def test_multiple_plant_ids(hass: HomeAssistant, plant_fixture) -> None:
 
 
 async def test_one_plant_on_account(hass: HomeAssistant, plant_fixture) -> None:
-    """Test registering an integration and finishing flow with an entered plant_id."""
+    """Test registering an integration and finishing flow with current plant_id."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

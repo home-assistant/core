@@ -5,7 +5,7 @@ import json
 from unittest.mock import MagicMock, patch
 
 import pytest
-from sunweg.api import APIHelper
+from sunweg.api import APIHelper, SunWegApiError
 from sunweg.device import MPPT, Inverter, Phase, String
 from sunweg.plant import Plant
 
@@ -104,6 +104,17 @@ async def test_setup_wrongpass(hass: HomeAssistant) -> None:
     mock_entry = SUNWEG_MOCK_ENTRY
     mock_entry.add_to_hass(hass)
     with patch.object(APIHelper, "authenticate", return_value=False):
+        assert await async_setup_component(hass, DOMAIN, mock_entry.data)
+        await hass.async_block_till_done()
+
+
+async def test_setup_error_500(hass: HomeAssistant) -> None:
+    """Test setup with wrong pass."""
+    mock_entry = SUNWEG_MOCK_ENTRY
+    mock_entry.add_to_hass(hass)
+    with patch.object(
+        APIHelper, "authenticate", side_effect=SunWegApiError("Error 500")
+    ):
         assert await async_setup_component(hass, DOMAIN, mock_entry.data)
         await hass.async_block_till_done()
 
