@@ -7,16 +7,13 @@ import bleak
 from bleak import BleakError
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
+from habluetooth.wrappers import HaBleakClientWrapper, HaBleakScannerWrapper
 import pytest
 
 from homeassistant.components.bluetooth import (
     BaseHaScanner,
     HaBluetoothConnector,
     HomeAssistantRemoteScanner,
-)
-from homeassistant.components.bluetooth.wrappers import (
-    HaBleakClientWrapper,
-    HaBleakScannerWrapper,
 )
 from homeassistant.core import HomeAssistant
 

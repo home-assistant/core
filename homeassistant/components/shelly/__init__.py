@@ -6,6 +6,7 @@ from typing import Any, Final
 
 from aioshelly.block_device import BlockDevice, BlockUpdateType
 from aioshelly.common import ConnectionOptions
+from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -50,7 +51,6 @@ from .utils import (
     get_block_device_sleep_period,
     get_coap_context,
     get_device_entry_gen,
-    get_rpc_device_sleep_period,
     get_rpc_device_wakeup_period,
     get_ws_context,
 )
@@ -128,7 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     get_entry_data(hass)[entry.entry_id] = ShellyEntryData()
 
-    if get_device_entry_gen(entry) == 2:
+    if get_device_entry_gen(entry) in RPC_GENERATIONS:
         return await _async_setup_rpc_entry(hass, entry)
 
     return await _async_setup_block_entry(hass, entry)
@@ -270,9 +270,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
 
         if sleep_period is None:
             data = {**entry.data}
-            data[CONF_SLEEP_PERIOD] = get_rpc_device_sleep_period(
-                device.config
-            ) or get_rpc_device_wakeup_period(device.status)
+            data[CONF_SLEEP_PERIOD] = get_rpc_device_wakeup_period(device.status)
             hass.config_entries.async_update_entry(entry, data=data)
 
         hass.async_create_task(_async_rpc_device_setup())
@@ -320,7 +318,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not entry.data.get(CONF_SLEEP_PERIOD):
         platforms = RPC_PLATFORMS
 
-    if get_device_entry_gen(entry) == 2:
+    if get_device_entry_gen(entry) in RPC_GENERATIONS:
         if unload_ok := await hass.config_entries.async_unload_platforms(
             entry, platforms
         ):

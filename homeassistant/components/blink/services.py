@@ -25,6 +25,11 @@ from .const import (
 )
 from .coordinator import BlinkUpdateCoordinator
 
+SERVICE_UPDATE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+    }
+)
 SERVICE_SAVE_VIDEO_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
@@ -152,7 +157,7 @@ def setup_services(hass: HomeAssistant) -> None:
 
     # Register all the above services
     service_mapping = [
-        (blink_refresh, SERVICE_REFRESH, None),
+        (blink_refresh, SERVICE_REFRESH, SERVICE_UPDATE_SCHEMA),
         (
             async_handle_save_video_service,
             SERVICE_SAVE_VIDEO,
