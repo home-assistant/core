@@ -471,6 +471,7 @@ FLOWS = {
         "stookalert",
         "stookwijzer",
         "subaru",
+        "suez_water",
         "sun",
         "sunweg",
         "surepetcare",
