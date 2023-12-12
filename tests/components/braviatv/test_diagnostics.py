@@ -41,6 +41,7 @@ async def test_entry_diagnostics(
             CONF_USE_PSK: True,
             CONF_PIN: "12345qwerty",
         },
+        unique_id="very_unique_string",
         entry_id="3bd2acb0e4f0476d40865546d0d91921",
     )
 
@@ -49,7 +50,7 @@ async def test_entry_diagnostics(
         "pybravia.BraviaClient.pair"
     ), patch("pybravia.BraviaClient.set_wol_mode"), patch(
         "pybravia.BraviaClient.get_system_info", return_value=BRAVIA_SYSTEM_INFO
-    ):
+    ), patch("pybravia.BraviaClient.get_power_status", return_value="active"):
         assert await async_setup_component(hass, DOMAIN, {})
         result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
