@@ -1918,7 +1918,7 @@ def median(*args: Any, default: Any = _SENTINEL) -> Any:
     The parameters may be passed as an iterable or as separate arguments.
     """
     if len(args) == 0:
-        raise TypeError("average expected at least 1 argument, got 0")
+        raise TypeError("median expected at least 1 argument, got 0")
 
     # If first argument is a list or tuple and more than 1 argument provided but not a named
     # default, then use 2nd argument as default.
@@ -1947,7 +1947,7 @@ def mode(*args: Any, default: Any = _SENTINEL) -> Any:
     The parameters may be passed as an iterable or as separate arguments.
     """
     if len(args) == 0:
-        raise TypeError("average expected at least 1 argument, got 0")
+        raise TypeError("mode expected at least 1 argument, got 0")
 
     # If first argument is a list or tuple and more than 1 argument provided but not a named
     # default, then use 2nd argument as default.
