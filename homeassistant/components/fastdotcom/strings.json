@@ -29,7 +29,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::fastdotcom::issues::service_deprecation::title%]",
-            "description": "Fast.com speedtest service is deprecated and will be removed in Home Assistant 2024.7. Please adjust any automation or script that uses the service. As a replacement the homeassistant.update_entity can be used instead."
+            "description": "Use `homeassistant.update_entity` instead to update the data.\n\nPlease replace this service and adjust your automations and scripts and select **submit** to fix this issue."
           }
         }
       }
