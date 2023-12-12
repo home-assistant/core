@@ -31,7 +31,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_platform(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Fast.com component. (deprecated)."""
     hass.async_create_task(
         hass.config_entries.flow.async_init(
