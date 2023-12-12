@@ -46,15 +46,11 @@ async def async_setup_entry(
     """Set up A. O. Smith sensor platform."""
     data: AOSmithData = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
-
-    for description in ENTITY_DESCRIPTIONS:
-        for junction_id in data.coordinator.data:
-            entities.append(
-                AOSmithSensorEntity(data.coordinator, description, junction_id)
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        AOSmithSensorEntity(data.coordinator, description, junction_id)
+        for description in ENTITY_DESCRIPTIONS
+        for junction_id in data.coordinator.data
+    )
 
 
 class AOSmithSensorEntity(AOSmithEntity, SensorEntity):
