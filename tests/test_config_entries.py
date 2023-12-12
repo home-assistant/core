@@ -9,6 +9,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.components import dhcp
@@ -133,11 +134,15 @@ async def test_call_setup_entry_without_reload_support(hass: HomeAssistant) -> N
     assert not entry.supports_unload
 
 
-async def test_call_async_migrate_entry(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(("major_version", "minor_version"), [(2, 1), (1, 2), (2, 2)])
+async def test_call_async_migrate_entry(
+    hass: HomeAssistant, major_version: int, minor_version: int
+) -> None:
     """Test we call <component>.async_migrate_entry when version mismatch."""
     entry = MockConfigEntry(domain="comp")
     assert not entry.supports_unload
-    entry.version = 2
+    entry.version = major_version
+    entry.minor_version = minor_version
     entry.add_to_hass(hass)
 
     mock_migrate_entry = AsyncMock(return_value=True)
@@ -163,10 +168,14 @@ async def test_call_async_migrate_entry(hass: HomeAssistant) -> None:
     assert entry.supports_unload
 
 
-async def test_call_async_migrate_entry_failure_false(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(("major_version", "minor_version"), [(2, 1), (1, 2), (2, 2)])
+async def test_call_async_migrate_entry_failure_false(
+    hass: HomeAssistant, major_version: int, minor_version: int
+) -> None:
     """Test migration fails if returns false."""
     entry = MockConfigEntry(domain="comp")
-    entry.version = 2
+    entry.version = major_version
+    entry.minor_version = minor_version
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
@@ -191,10 +200,14 @@ async def test_call_async_migrate_entry_failure_false(hass: HomeAssistant) -> No
     assert not entry.supports_unload
 
 
-async def test_call_async_migrate_entry_failure_exception(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(("major_version", "minor_version"), [(2, 1), (1, 2), (2, 2)])
+async def test_call_async_migrate_entry_failure_exception(
+    hass: HomeAssistant, major_version: int, minor_version: int
+) -> None:
     """Test migration fails if exception raised."""
     entry = MockConfigEntry(domain="comp")
-    entry.version = 2
+    entry.version = major_version
+    entry.minor_version = minor_version
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
@@ -219,10 +232,14 @@ async def test_call_async_migrate_entry_failure_exception(hass: HomeAssistant) -
     assert not entry.supports_unload
 
 
-async def test_call_async_migrate_entry_failure_not_bool(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(("major_version", "minor_version"), [(2, 1), (1, 2), (2, 2)])
+async def test_call_async_migrate_entry_failure_not_bool(
+    hass: HomeAssistant, major_version: int, minor_version: int
+) -> None:
     """Test migration fails if boolean not returned."""
     entry = MockConfigEntry(domain="comp")
-    entry.version = 2
+    entry.version = major_version
+    entry.minor_version = minor_version
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
@@ -247,12 +264,14 @@ async def test_call_async_migrate_entry_failure_not_bool(hass: HomeAssistant) ->
     assert not entry.supports_unload
 
 
+@pytest.mark.parametrize(("major_version", "minor_version"), [(2, 1), (2, 2)])
 async def test_call_async_migrate_entry_failure_not_supported(
-    hass: HomeAssistant,
+    hass: HomeAssistant, major_version: int, minor_version: int
 ) -> None:
     """Test migration fails if async_migrate_entry not implemented."""
     entry = MockConfigEntry(domain="comp")
-    entry.version = 2
+    entry.version = major_version
+    entry.minor_version = minor_version
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
@@ -265,6 +284,29 @@ async def test_call_async_migrate_entry_failure_not_supported(
     assert result
     assert len(mock_setup_entry.mock_calls) == 0
     assert entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
+    assert not entry.supports_unload
+
+
+@pytest.mark.parametrize(("major_version", "minor_version"), [(1, 2)])
+async def test_call_async_migrate_entry_not_supported_minor_version(
+    hass: HomeAssistant, major_version: int, minor_version: int
+) -> None:
+    """Test migration without async_migrate_entry and minor version changed."""
+    entry = MockConfigEntry(domain="comp")
+    entry.version = major_version
+    entry.minor_version = minor_version
+    entry.add_to_hass(hass)
+    assert not entry.supports_unload
+
+    mock_setup_entry = AsyncMock(return_value=True)
+
+    mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "comp.config_flow", None)
+
+    result = await async_setup_component(hass, "comp", {})
+    assert result
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert entry.state is config_entries.ConfigEntryState.LOADED
     assert not entry.supports_unload
 
 
@@ -667,14 +709,43 @@ async def test_saving_and_loading(hass: HomeAssistant) -> None:
     for orig, loaded in zip(
         hass.config_entries.async_entries(), manager.async_entries()
     ):
-        assert orig.version == loaded.version
-        assert orig.domain == loaded.domain
-        assert orig.title == loaded.title
-        assert orig.data == loaded.data
-        assert orig.source == loaded.source
-        assert orig.unique_id == loaded.unique_id
-        assert orig.pref_disable_new_entities == loaded.pref_disable_new_entities
-        assert orig.pref_disable_polling == loaded.pref_disable_polling
+        assert orig.as_dict() == loaded.as_dict()
+
+
+async def test_as_dict(snapshot: SnapshotAssertion) -> None:
+    """Test ConfigEntry.as_dict."""
+
+    # Ensure as_dict is not overridden
+    assert MockConfigEntry.as_dict is config_entries.ConfigEntry.as_dict
+
+    excluded_from_dict = {
+        "supports_unload",
+        "supports_remove_device",
+        "state",
+        "_setup_lock",
+        "update_listeners",
+        "reason",
+        "_async_cancel_retry_setup",
+        "_on_unload",
+        "reload_lock",
+        "_reauth_lock",
+        "_tasks",
+        "_background_tasks",
+        "_integration_for_domain",
+        "_tries",
+        "_setup_again_job",
+    }
+
+    entry = MockConfigEntry(entry_id="mock-entry")
+
+    # Make sure the expected keys are present
+    dict_repr = entry.as_dict()
+    for key in config_entries.ConfigEntry.__slots__:
+        assert key in dict_repr or key in excluded_from_dict
+        assert not (key in dict_repr and key in excluded_from_dict)
+
+    # Make sure the dict representation is as expected
+    assert dict_repr == snapshot
 
 
 async def test_forward_entry_sets_up_component(hass: HomeAssistant) -> None:

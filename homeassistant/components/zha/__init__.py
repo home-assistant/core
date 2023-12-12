@@ -182,7 +182,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             ) from exc
         except TransientConnectionError as exc:
             raise ConfigEntryNotReady from exc
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:
             _LOGGER.debug(
                 "Couldn't start coordinator (attempt %s of %s)",
                 attempt + 1,

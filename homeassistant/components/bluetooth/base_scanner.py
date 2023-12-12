@@ -2,13 +2,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
 from typing import Any
 
-from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
 from bluetooth_adapters import DiscoveredDeviceAdvertisementData
-from habluetooth import BaseHaRemoteScanner, BaseHaScanner, HaBluetoothConnector
+from habluetooth import BaseHaRemoteScanner, HaBluetoothConnector
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -20,15 +17,6 @@ from homeassistant.core import (
 )
 
 from . import models
-
-
-@dataclass(slots=True)
-class BluetoothScannerDevice:
-    """Data for a bluetooth device from a given scanner."""
-
-    scanner: BaseHaScanner
-    ble_device: BLEDevice
-    advertisement: AdvertisementData
 
 
 class HomeAssistantRemoteScanner(BaseHaRemoteScanner):

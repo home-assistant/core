@@ -94,6 +94,7 @@ class FlowResult(TypedDict, total=False):
     handler: Required[str]
     last_step: bool | None
     menu_options: list[str] | dict[str, str]
+    minor_version: int
     options: Mapping[str, Any]
     preview: str | None
     progress_action: str
@@ -470,6 +471,7 @@ class FlowHandler:
 
     # Set by developer
     VERSION = 1
+    MINOR_VERSION = 1
 
     @property
     def source(self) -> str | None:
@@ -549,6 +551,7 @@ class FlowHandler:
         """Finish flow."""
         flow_result = FlowResult(
             version=self.VERSION,
+            minor_version=self.MINOR_VERSION,
             type=FlowResultType.CREATE_ENTRY,
             flow_id=self.flow_id,
             handler=self.handler,

@@ -3,7 +3,7 @@
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .common import ERROR_CONNECTION, ERROR_UNKNOWN, setup_platform
+from .common import ERROR_AUTH, ERROR_CONNECTION, ERROR_UNKNOWN, setup_platform
 
 
 async def test_load_unload(hass: HomeAssistant) -> None:
@@ -14,6 +14,13 @@ async def test_load_unload(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_auth_failure(hass: HomeAssistant) -> None:
+    """Test init with an authentication failure."""
+
+    entry = await setup_platform(hass, side_effect=ERROR_AUTH)
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_unknown_failure(hass: HomeAssistant) -> None:

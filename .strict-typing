@@ -48,6 +48,7 @@ homeassistant.components.aftership.*
 homeassistant.components.air_quality.*
 homeassistant.components.airly.*
 homeassistant.components.airvisual.*
+homeassistant.components.airvisual_pro.*
 homeassistant.components.airzone.*
 homeassistant.components.airzone_cloud.*
 homeassistant.components.aladdin_connect.*
@@ -318,6 +319,7 @@ homeassistant.components.steamist.*
 homeassistant.components.stookalert.*
 homeassistant.components.stream.*
 homeassistant.components.streamlabswater.*
+homeassistant.components.suez_water.*
 homeassistant.components.sun.*
 homeassistant.components.surepetcare.*
 homeassistant.components.switch.*
