@@ -7,7 +7,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CoreState, Event, HomeAssistant
+from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall
+from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -52,6 +53,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Request a refresh."""
         await coordinator.async_request_refresh()
 
+    async def _request_refresh_service(call: ServiceCall) -> None:
+        """Request a refresh via the service."""
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "service_deprecation",
+            breaks_in_ha_version="2024.7.0",
+            is_fixable=True,
+            is_persistent=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_deprecation",
+        )
+        await coordinator.async_request_refresh()
+
     if hass.state == CoreState.running:
         await coordinator.async_config_entry_first_refresh()
     else:
@@ -59,6 +74,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _request_refresh)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    hass.services.async_register(DOMAIN, "speedtest", _request_refresh_service)
+
     await hass.config_entries.async_forward_entry_setups(
         entry,
         PLATFORMS,
