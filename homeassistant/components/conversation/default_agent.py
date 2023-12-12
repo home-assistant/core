@@ -346,7 +346,7 @@ class DefaultAgent(AbstractConversationAgent):
                 }
             )
             state.attributes = attributes
-            state.state = str(state.attributes.get(ATTR_TRANSLATED_STATE))
+            state.state = str(state.attributes[ATTR_TRANSLATED_STATE])
 
         # Get first matched or unmatched state.
         # This is available in the response template as "state".

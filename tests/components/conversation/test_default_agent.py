@@ -247,7 +247,10 @@ async def test_state_translations(
 
     with patch(
         "homeassistant.components.conversation.default_agent.template.Template.async_render"
-    ) as render_response:
+    ) as render_response, patch(
+        "homeassistant.helpers.translation.async_get_translations",
+        return_value={"component.light.entity_component._.state.off": "translated_off"},
+    ):
         result = await conversation.async_converse(
             hass, "is the demo light off", None, Context()
         )
@@ -255,7 +258,7 @@ async def test_state_translations(
         state_attributes = (
             render_response.call_args[0][0].get("query").get("matched")[0].attributes
         )
-        assert state_attributes.get(ATTR_TRANSLATED_STATE) == "Off"
+        assert state_attributes.get(ATTR_TRANSLATED_STATE) == "translated_off"
         assert state_attributes.get(ATTR_UNTRANSLATED_STATE) == "off"
 
 
