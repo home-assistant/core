@@ -583,7 +583,7 @@ boto3==1.28.17
 broadlink==0.18.3
 
 # homeassistant.components.brother
-brother==2.3.0
+brother==3.0.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
