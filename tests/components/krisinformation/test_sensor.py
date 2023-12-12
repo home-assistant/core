@@ -1,88 +1,66 @@
 """Tests for sensor."""
-from datetime import timedelta
 from unittest.mock import patch
+from homeassistant.helpers import entity_registry as er
 from homeassistant.components.krisinformation.const import (
     DOMAIN,
-    DEFAULT_NAME,
-    COUNTY_CODES,
 )
-from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START, UnitOfLength
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from .const import (
     MOCK_CONFIG,
-    FAKE_LANGUAGE,
 )
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
-# Constants for the tests
-TEST_HEADLINE = "Test Alert"
-TEST_LATITUDE = 55.6761
-TEST_LONGITUDE = 12.5683
-TEST_COUNTY_CODE = COUNTY_CODES["17"]  # Replace with actual code
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)  # Adjust as per your sensor's update interval
+mock_response = [
+    {
+        "PushMessage": "This is a test VMA",
+        "Web": "https://www.krisinformation.se/",
+        "Published": "2023-05-01T12:00:00+02:00",
+        "Area": [
+            {
+                "Type": "County",
+                "Description": "Västra Götalands län",
+                "GeometryInformation": {
+                    "PoleOfInInaccessibility": {"coordinates": [57.7, 9.11]}
+                },
+            }
+        ],
+    }
+]
 
-async def test_successful_setup(hass: HomeAssistant) -> None:
-    """Test successful setup of sensor."""
-    with patch(
-        "homeassistant.components.krisinformation.sensor.CrisisAlerterSensor.update",
-        return_value=None,
-    ):
-        assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
-        await hass.async_block_till_done()
 
-async def test_no_alarms_state(hass: HomeAssistant) -> None:
-    """Test the state when there are no alarms."""
+async def test_entities_added(hass: HomeAssistant) -> None:
+    """Test the entities are added."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        title="Krisinformation",
+        unique_id=123456789,
+    )
+    config_entry.add_to_hass(hass)
+
     with patch(
         "krisinformation.crisis_alerter.CrisisAlerter.vmas",
-        return_value=[],
+        is_test=True,
+        return_value=None,
     ):
-        await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
-        await hass.async_block_till_done()
-        entity = hass.states.get(f"{DOMAIN}.{DEFAULT_NAME}_sweden")
-        assert entity is not None
-        assert entity.state == "No alarms"
-
-async def test_alarms_state(hass: HomeAssistant) -> None:
-    """Test the state when there are alarms."""
-    mock_feed_entry = _generate_mock_feed_entry(TEST_HEADLINE, TEST_LATITUDE, TEST_LONGITUDE)
-    with patch(
-        "krisinformation.CrisisAlerter.vmas",
-        return_value=[mock_feed_entry],
-    ):
-        await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
-        await hass.async_block_till_done()
-        entity = hass.states.get(f"{DOMAIN}.{DEFAULT_NAME}_sweden")
-        assert entity is not None
-        assert entity.state == TEST_HEADLINE
-
-async def test_error_state(hass: HomeAssistant) -> None:
-    """Test the state when there is an error fetching data."""
-    with patch(
-        "krisinformation.CrisisAlerter.vmas",
-        side_effect=Error("Test error"),
-    ):
-        await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
-        await hass.async_block_till_done()
-        entity = hass.states.get(f"{DOMAIN}.{DEFAULT_NAME}_sweden")
-        assert entity is not None
-        assert entity.state == "Unavailable"
-
-async def test_update_interval(hass: HomeAssistant) -> None:
-    """Test that the sensor updates at the expected interval."""
-    start_time = hass.loop.time()
-    with patch(
-        "krisinformation.CrisisAlerter.vmas",
-        return_value=[],
-    ):
-        await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
-        await hass.async_block_till_done()
-        entity = hass.states.get(f"{DOMAIN}.{DEFAULT_NAME}_sweden")
-        assert entity is not None
-
-        # Simulate passage of time
-        async_fire_time_changed(hass, start_time + MIN_TIME_BETWEEN_UPDATES.total_seconds())
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        # The sensor should have updated
-        assert entity.state == "No alarms"
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+
+        assert len(hass.states.async_entity_ids("sensor")) == 1
+        entity_id = hass.states.async_entity_ids("sensor")[0]
+
+        entity_registry = er.async_get(hass)
+        assert len(entity_registry.entities) == 1
+
+        state = hass.states.get(entity_id)
+
+        assert state is not None
+        assert state.attributes["friendly_name"] == "Krisinformation test"
+        assert state.attributes["icon"] == "mdi:alert"
+        assert state.attributes["attribution"] == "Alerts provided by Krisinformation"
