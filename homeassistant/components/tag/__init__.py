@@ -6,20 +6,21 @@ import uuid
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 from homeassistant.const import CONF_NAME
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-import homeassistant.util.dt as dt_util
 
 from .const import DEVICE_ID, DOMAIN, EVENT_TAG_SCANNED, TAG_ID
 
 _LOGGER = logging.getLogger(__name__)
 
+TAG_CATEGORY = "category"
 LAST_SCANNED = "last_scanned"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
@@ -28,12 +29,14 @@ TAGS = "tags"
 CREATE_FIELDS = {
     vol.Optional(TAG_ID): cv.string,
     vol.Optional(CONF_NAME): vol.All(str, vol.Length(min=1)),
+    vol.Optional(TAG_CATEGORY): cv.string,
     vol.Optional("description"): cv.string,
     vol.Optional(LAST_SCANNED): cv.datetime,
 }
 
 UPDATE_FIELDS = {
     vol.Optional(CONF_NAME): vol.All(str, vol.Length(min=1)),
+    vol.Optional(TAG_CATEGORY): cv.string,
     vol.Optional("description"): cv.string,
     vol.Optional(LAST_SCANNED): cv.datetime,
 }
@@ -122,12 +125,19 @@ async def async_scan_tag(
 
     # Get name from helper, default value None if not present in data
     tag_name = None
+    tag_category = None
     if tag_data := helper.data.get(tag_id):
         tag_name = tag_data.get(CONF_NAME)
+        tag_category = tag_data.get(TAG_CATEGORY)
 
     hass.bus.async_fire(
         EVENT_TAG_SCANNED,
-        {TAG_ID: tag_id, CONF_NAME: tag_name, DEVICE_ID: device_id},
+        {
+            TAG_ID: tag_id,
+            CONF_NAME: tag_name,
+            TAG_CATEGORY: tag_category,
+            DEVICE_ID: device_id,
+        },
         context=context,
     )
 
