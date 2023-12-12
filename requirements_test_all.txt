@@ -1602,6 +1602,9 @@ pyspcwebgw==0.7.0
 # homeassistant.components.squeezebox
 pysqueezebox==0.7.1
 
+# homeassistant.components.suez_water
+pysuez==0.2.0
+
 # homeassistant.components.switchbee
 pyswitchbee==1.8.0
 
