@@ -1913,7 +1913,7 @@ def average(*args: Any, default: Any = _SENTINEL) -> Any:
 def median(*args: Any, default: Any = _SENTINEL) -> Any:
     """Filter and function to calculate the median.
 
-    Calculates median of an iterable or of two or more arguments.
+    Calculates median of an iterable of two or more arguments.
 
     The parameters may be passed as an iterable or as separate arguments.
     """
