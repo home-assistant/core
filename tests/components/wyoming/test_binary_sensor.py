@@ -4,6 +4,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
+from . import reload_satellite
+
 
 async def test_assist_in_progress(
     hass: HomeAssistant,
@@ -26,7 +28,8 @@ async def test_assist_in_progress(
     assert state.state == STATE_ON
     assert satellite_device.is_active
 
-    satellite_device.set_is_active(False)
+    # test restore does *not* happen
+    satellite_device = await reload_satellite(hass, satellite_config_entry.entry_id)
 
     state = hass.states.get(assist_in_progress_id)
     assert state is not None
