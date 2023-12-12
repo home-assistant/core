@@ -51,6 +51,6 @@ async def test_entry_diagnostics(
         "pybravia.BraviaClient.get_system_info", return_value=BRAVIA_SYSTEM_INFO
     ):
         assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
         result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+
     assert result == snapshot
