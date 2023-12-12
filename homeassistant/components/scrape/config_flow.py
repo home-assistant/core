@@ -124,7 +124,7 @@ SENSOR_SETUP = {
     ),
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
         SelectSelectorConfig(
-            options=list(UNITS_OF_MEASUREMENT),
+            options=sorted(UNITS_OF_MEASUREMENT),
             custom_value=True,
             mode=SelectSelectorMode.DROPDOWN,
             translation_key="unit_of_measurement",
