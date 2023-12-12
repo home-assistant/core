@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from krisinformation import crisis_alerter as krisinformation
 
+# Importing necessary modules and classes.
 from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfLength
@@ -11,16 +12,19 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import DiscoveryInfoType
 
+# Import custom costants and logger from the integration.
 from .const import CONF_COUNTY
 from .sensor import _LOGGER
 
+# Minimum time between updates for geolocation events.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
+# Source identifier for Krisinformation geolocation events.
 SOURCE = "krisinformation"
 
 
 class KrisInformationGeolocationEvent(GeolocationEvent):
-    """Represents a demo geolocation event."""
+    """Custom GeolocationEvent class representing a demo Krisinformation geo-location event."""
 
     _attr_should_poll = False
     _attr_source = SOURCE
@@ -66,7 +70,7 @@ async def async_setup_entry(
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Demo geolocations."""
+    """Responsible for setting up the Demo geolocations when a configuration entry is added to Home Assistant."""
     manager = KrisInformationGeolocationManager(
         hass, add_entities, krisinformation.CrisisAlerter(config.data.get(CONF_COUNTY))
     )
@@ -99,7 +103,7 @@ class KrisInformationGeolocationManager:
         )
 
     def init_regular_updates(self) -> None:
-        """Schedule regular updates based on configured time interval."""
+        """Initiate the scheduling of regular updates for geolocation events. Uses track_time_interval to schedule subsequent updates at fixed intervals."""
         self._update()
         track_time_interval(
             self._hass,
@@ -109,7 +113,7 @@ class KrisInformationGeolocationManager:
         )
 
     def _update(self) -> None:
-        """Remove events and add new random events."""
+        """Clear the existing list of geolocation events and fetches new geolocation events from the CrisisAlerter (Krisinformation API)."""
         new_events = []
         self._events.clear()
         events = self._crisis_alerter.vmas(is_test=True)

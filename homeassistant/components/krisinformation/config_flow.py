@@ -1,6 +1,7 @@
 """Config flow for krisinformation integration."""
 from __future__ import annotations
 
+# Importing necessary modules and classes.
 import logging
 from typing import Any
 
@@ -18,10 +19,13 @@ from homeassistant.helpers.selector import (
     TextSelector,
 )
 
+# Importing custom constants and exceptions from the integration.
 from .const import CONF_COUNTY, COUNTY_CODES, DEFAULT_NAME, DOMAIN
 
+# Creating a logger for the module.
 _LOGGER = logging.getLogger(__name__)
 
+# Defining the user data schema for the configuration step.
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
@@ -66,6 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    # Step to handle user input during configuration
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -88,8 +93,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
+    """Custom class to handle error to indicate we cannot connect."""
 
 
 class InvalidCounty(HomeAssistantError):
-    """Error to indicate there is invalid county."""
+    """Custom class to handle error to indicate there is invalid county."""
