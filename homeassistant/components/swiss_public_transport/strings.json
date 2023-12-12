@@ -3,19 +3,37 @@
     "error": {
       "cannot_connect": "Cannot connect to server",
       "bad_config": "Request failed due to bad config: Check at [stationboard](http://transport.opendata.ch/examples/stationboard.html) if your station names are valid",
+      "too_many_via_stations": "Only up to 5 via stations are allowed per connection.",
+      "limit_not_an_integer": "Limit has to be an integer.",
+      "page_not_an_integer": "Page has to be an integer.",
       "unknown": "An unknown error was raised by python-opendata-transport"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "cannot_connect": "Cannot connect to server",
       "bad_config": "Request failed due to bad config: Check at [stationboard](http://transport.opendata.ch/examples/stationboard.html) if your station names are valid",
+      "too_many_via_stations": "Only up to 5 via stations are allowed per connection.",
+      "page_not_an_integer": "Page has to be an integer.",
       "unknown": "An unknown error was raised by python-opendata-transport"
     },
     "step": {
       "user": {
         "data": {
           "from": "Start station",
-          "to": "End station"
+          "to": "End station",
+          "limit": "Limit number of connections",
+          "page": "Page of the connections",
+          "date": "Date of connection",
+          "time": "Time of connection",
+          "offset": "Relative offset of connection",
+          "is_arrival": "Date, time and relative offset for arrival instead of departure",
+          "transportations": "Means of transportation",
+          "direct": "Only consider direct connections",
+          "sleeper": "Only consider sleeper trains",
+          "couchette": "Only consider trains with couchette waggons",
+          "bike": "Only consider connections where bike transport is allowed",
+          "accessibility": "Accessibility options required for connections",
+          "via": "List of up to 5 via stations"
         },
         "description": "Provide start and end station for your connection\n\nCheck here for valid stations: [stationboard](http://transport.opendata.ch/examples/stationboard.html)",
         "title": "Swiss Public Transport"
@@ -34,6 +52,24 @@
     "deprecated_yaml_import_issue_unknown": {
       "title": "The swiss public transport YAML configuration import failed with unknown error raised by python-opendata-transport",
       "description": "Configuring swiss public transport using YAML is being removed but there was an unknown error importing your YAML configuration.\n\nCheck your configuration or have a look at the documentation of the integration."
+    }
+  },
+  "selector": {
+    "transportation": {
+      "options": {
+        "train": "Train",
+        "tram": "Tram",
+        "ship": "Ship",
+        "bus": "Bus",
+        "cableway": "Cableway"
+      }
+    },
+    "accessibility": {
+      "options": {
+        "independent_boarding": "Independant boarding",
+        "assisted_boarding": "Assisted boarding",
+        "advanced_notice": "Advanced notice"
+      }
     }
   }
 }
