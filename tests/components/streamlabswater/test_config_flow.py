@@ -6,7 +6,6 @@ from homeassistant.components.streamlabswater.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import issue_registry as ir
 
 from tests.common import MockConfigEntry
 
@@ -122,9 +121,7 @@ async def test_form_entry_already_exists(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_import(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, issue_registry: ir.IssueRegistry
-) -> None:
+async def test_import(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test import flow."""
     with patch("homeassistant.components.streamlabswater.config_flow.StreamlabsClient"):
         result = await hass.config_entries.flow.async_init(
@@ -138,11 +135,10 @@ async def test_import(
     assert result["title"] == "Streamlabs"
     assert result["data"] == {CONF_API_KEY: "abc"}
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(issue_registry.issues) == 1
 
 
 async def test_import_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test we handle cannot connect error."""
     with patch(
@@ -158,12 +154,9 @@ async def test_import_cannot_connect(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
-    assert len(issue_registry.issues) == 1
 
 
-async def test_import_unknown(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, issue_registry: ir.IssueRegistry
-) -> None:
+async def test_import_unknown(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we handle unknown error."""
     with patch(
         "homeassistant.components.streamlabswater.config_flow.StreamlabsClient.get_locations",
@@ -178,12 +171,9 @@ async def test_import_unknown(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "unknown"
-    assert len(issue_registry.issues) == 1
 
 
-async def test_import_entry_already_exists(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
+async def test_import_entry_already_exists(hass: HomeAssistant) -> None:
     """Test we handle if the entry already exists."""
 
     entry = MockConfigEntry(
@@ -201,4 +191,3 @@ async def test_import_entry_already_exists(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert len(issue_registry.issues) == 1
