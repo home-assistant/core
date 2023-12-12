@@ -25,14 +25,15 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .conftest import MockLock
 
-TEST_LOCK_ENTITY_ID = "lock.test_lock"
-
 
 async def help_test_async_lock_service(
-    hass: HomeAssistant, service: str, code: str | None | UndefinedType = UNDEFINED
+    hass: HomeAssistant,
+    entity_id: str,
+    service: str,
+    code: str | None | UndefinedType = UNDEFINED,
 ) -> None:
     """Help to lock a test lock."""
-    data: dict[str, Any] = {"entity_id": TEST_LOCK_ENTITY_ID}
+    data: dict[str, Any] = {"entity_id": entity_id}
     if code is not UNDEFINED:
         data[ATTR_CODE] = code
 
@@ -95,7 +96,7 @@ async def test_set_mock_lock_options(
     await hass.async_block_till_done()
 
     assert mock_lock_entity._lock_option_default_code == "1234"
-    state = hass.states.get(TEST_LOCK_ENTITY_ID)
+    state = hass.states.get(mock_lock_entity.entity_id)
     assert state is not None
     assert state.attributes["code_format"] == r"^\d{4}$"
     assert state.attributes["supported_features"] == LockEntityFeature.OPEN
@@ -127,16 +128,24 @@ async def test_lock_open_with_code(
     hass: HomeAssistant, mock_lock_entity: MockLock
 ) -> None:
     """Test lock entity with open service."""
-    state = hass.states.get(TEST_LOCK_ENTITY_ID)
+    state = hass.states.get(mock_lock_entity.entity_id)
     assert state.attributes["code_format"] == r"^\d{4}$"
 
     with pytest.raises(ValueError):
-        await help_test_async_lock_service(hass, SERVICE_OPEN)
+        await help_test_async_lock_service(
+            hass, mock_lock_entity.entity_id, SERVICE_OPEN
+        )
     with pytest.raises(ValueError):
-        await help_test_async_lock_service(hass, SERVICE_OPEN, code="")
+        await help_test_async_lock_service(
+            hass, mock_lock_entity.entity_id, SERVICE_OPEN, code=""
+        )
     with pytest.raises(ValueError):
-        await help_test_async_lock_service(hass, SERVICE_OPEN, code="HELLO")
-    await help_test_async_lock_service(hass, SERVICE_OPEN, code="1234")
+        await help_test_async_lock_service(
+            hass, mock_lock_entity.entity_id, SERVICE_OPEN, code="HELLO"
+        )
+    await help_test_async_lock_service(
+        hass, mock_lock_entity.entity_id, SERVICE_OPEN, code="1234"
+    )
     assert mock_lock_entity.calls_open.call_count == 1
     mock_lock_entity.calls_open.assert_called_with(code="1234")
 
@@ -149,20 +158,30 @@ async def test_lock_lock_with_code(
     hass: HomeAssistant, mock_lock_entity: MockLock
 ) -> None:
     """Test lock entity with open service."""
-    state = hass.states.get(TEST_LOCK_ENTITY_ID)
+    state = hass.states.get(mock_lock_entity.entity_id)
     assert state.attributes["code_format"] == r"^\d{4}$"
 
-    await help_test_async_lock_service(hass, SERVICE_UNLOCK, code="1234")
+    await help_test_async_lock_service(
+        hass, mock_lock_entity.entity_id, SERVICE_UNLOCK, code="1234"
+    )
     mock_lock_entity.calls_unlock.assert_called_with(code="1234")
     assert mock_lock_entity.calls_lock.call_count == 0
 
     with pytest.raises(ValueError):
-        await help_test_async_lock_service(hass, SERVICE_LOCK)
+        await help_test_async_lock_service(
+            hass, mock_lock_entity.entity_id, SERVICE_LOCK
+        )
     with pytest.raises(ValueError):
-        await help_test_async_lock_service(hass, SERVICE_LOCK, code="")
+        await help_test_async_lock_service(
+            hass, mock_lock_entity.entity_id, SERVICE_LOCK, code=""
+        )
     with pytest.raises(ValueError):
-        await help_test_async_lock_service(hass, SERVICE_LOCK, code="HELLO")
-    await help_test_async_lock_service(hass, SERVICE_LOCK, code="1234")
+        await help_test_async_lock_service(
+            hass, mock_lock_entity.entity_id, SERVICE_LOCK, code="HELLO"
+        )
+    await help_test_async_lock_service(
+        hass, mock_lock_entity.entity_id, SERVICE_LOCK, code="1234"
+    )
     assert mock_lock_entity.calls_lock.call_count == 1
     mock_lock_entity.calls_lock.assert_called_with(code="1234")
 
@@ -175,20 +194,30 @@ async def test_lock_unlock_with_code(
     hass: HomeAssistant, mock_lock_entity: MockLock
 ) -> None:
     """Test unlock entity with open service."""
-    state = hass.states.get(TEST_LOCK_ENTITY_ID)
+    state = hass.states.get(mock_lock_entity.entity_id)
     assert state.attributes["code_format"] == r"^\d{4}$"
 
-    await help_test_async_lock_service(hass, SERVICE_LOCK, code="1234")
+    await help_test_async_lock_service(
+        hass, mock_lock_entity.entity_id, SERVICE_LOCK, code="1234"
+    )
     mock_lock_entity.calls_lock.assert_called_with(code="1234")
     assert mock_lock_entity.calls_unlock.call_count == 0
 
     with pytest.raises(ValueError):
-        await help_test_async_lock_service(hass, SERVICE_UNLOCK)
+        await help_test_async_lock_service(
+            hass, mock_lock_entity.entity_id, SERVICE_UNLOCK
+        )
     with pytest.raises(ValueError):
-        await help_test_async_lock_service(hass, SERVICE_UNLOCK, code="")
+        await help_test_async_lock_service(
+            hass, mock_lock_entity.entity_id, SERVICE_UNLOCK, code=""
+        )
     with pytest.raises(ValueError):
-        await help_test_async_lock_service(hass, SERVICE_UNLOCK, code="HELLO")
-    await help_test_async_lock_service(hass, SERVICE_UNLOCK, code="1234")
+        await help_test_async_lock_service(
+            hass, mock_lock_entity.entity_id, SERVICE_UNLOCK, code="HELLO"
+        )
+    await help_test_async_lock_service(
+        hass, mock_lock_entity.entity_id, SERVICE_UNLOCK, code="1234"
+    )
     assert mock_lock_entity.calls_unlock.call_count == 1
     mock_lock_entity.calls_unlock.assert_called_with(code="1234")
 
@@ -203,11 +232,17 @@ async def test_lock_with_illegal_code(
     """Test lock entity with default code that does not match the code format."""
 
     with pytest.raises(ValueError):
-        await help_test_async_lock_service(hass, SERVICE_OPEN, code="123456")
+        await help_test_async_lock_service(
+            hass, mock_lock_entity.entity_id, SERVICE_OPEN, code="123456"
+        )
     with pytest.raises(ValueError):
-        await help_test_async_lock_service(hass, SERVICE_LOCK, code="123456")
+        await help_test_async_lock_service(
+            hass, mock_lock_entity.entity_id, SERVICE_LOCK, code="123456"
+        )
     with pytest.raises(ValueError):
-        await help_test_async_lock_service(hass, SERVICE_UNLOCK, code="123456")
+        await help_test_async_lock_service(
+            hass, mock_lock_entity.entity_id, SERVICE_UNLOCK, code="123456"
+        )
 
 
 @pytest.mark.parametrize(
@@ -218,22 +253,28 @@ async def test_lock_with_no_code(
     hass: HomeAssistant, mock_lock_entity: MockLock
 ) -> None:
     """Test lock entity without code."""
-    await help_test_async_lock_service(hass, SERVICE_OPEN)
+    await help_test_async_lock_service(hass, mock_lock_entity.entity_id, SERVICE_OPEN)
     mock_lock_entity.calls_open.assert_called_with()
-    await help_test_async_lock_service(hass, SERVICE_LOCK)
+    await help_test_async_lock_service(hass, mock_lock_entity.entity_id, SERVICE_LOCK)
     mock_lock_entity.calls_lock.assert_called_with()
-    await help_test_async_lock_service(hass, SERVICE_UNLOCK)
+    await help_test_async_lock_service(hass, mock_lock_entity.entity_id, SERVICE_UNLOCK)
     mock_lock_entity.calls_unlock.assert_called_with()
 
     mock_lock_entity.calls_open.reset_mock()
     mock_lock_entity.calls_lock.reset_mock()
     mock_lock_entity.calls_unlock.reset_mock()
 
-    await help_test_async_lock_service(hass, SERVICE_OPEN, code="")
+    await help_test_async_lock_service(
+        hass, mock_lock_entity.entity_id, SERVICE_OPEN, code=""
+    )
     mock_lock_entity.calls_open.assert_called_with()
-    await help_test_async_lock_service(hass, SERVICE_LOCK, code="")
+    await help_test_async_lock_service(
+        hass, mock_lock_entity.entity_id, SERVICE_LOCK, code=""
+    )
     mock_lock_entity.calls_lock.assert_called_with()
-    await help_test_async_lock_service(hass, SERVICE_UNLOCK, code="")
+    await help_test_async_lock_service(
+        hass, mock_lock_entity.entity_id, SERVICE_UNLOCK, code=""
+    )
     mock_lock_entity.calls_unlock.assert_called_with()
 
 
@@ -253,22 +294,34 @@ async def test_lock_with_default_code(
     assert mock_lock_entity.state_attributes == {"code_format": r"^\d{4}$"}
     assert mock_lock_entity._lock_option_default_code == "1234"
 
-    await help_test_async_lock_service(hass, SERVICE_OPEN, code="1234")
+    await help_test_async_lock_service(
+        hass, mock_lock_entity.entity_id, SERVICE_OPEN, code="1234"
+    )
     mock_lock_entity.calls_open.assert_called_with(code="1234")
-    await help_test_async_lock_service(hass, SERVICE_LOCK, code="1234")
+    await help_test_async_lock_service(
+        hass, mock_lock_entity.entity_id, SERVICE_LOCK, code="1234"
+    )
     mock_lock_entity.calls_lock.assert_called_with(code="1234")
-    await help_test_async_lock_service(hass, SERVICE_UNLOCK, code="1234")
+    await help_test_async_lock_service(
+        hass, mock_lock_entity.entity_id, SERVICE_UNLOCK, code="1234"
+    )
     mock_lock_entity.calls_unlock.assert_called_with(code="1234")
 
     mock_lock_entity.calls_open.reset_mock()
     mock_lock_entity.calls_lock.reset_mock()
     mock_lock_entity.calls_unlock.reset_mock()
 
-    await help_test_async_lock_service(hass, SERVICE_OPEN, code="")
+    await help_test_async_lock_service(
+        hass, mock_lock_entity.entity_id, SERVICE_OPEN, code=""
+    )
     mock_lock_entity.calls_open.assert_called_with(code="1234")
-    await help_test_async_lock_service(hass, SERVICE_LOCK, code="")
+    await help_test_async_lock_service(
+        hass, mock_lock_entity.entity_id, SERVICE_LOCK, code=""
+    )
     mock_lock_entity.calls_lock.assert_called_with(code="1234")
-    await help_test_async_lock_service(hass, SERVICE_UNLOCK, code="")
+    await help_test_async_lock_service(
+        hass, mock_lock_entity.entity_id, SERVICE_UNLOCK, code=""
+    )
     mock_lock_entity.calls_unlock.assert_called_with(code="1234")
 
 
@@ -289,8 +342,14 @@ async def test_lock_with_illegal_default_code(
     assert mock_lock_entity._lock_option_default_code == ""
 
     with pytest.raises(ValueError):
-        await help_test_async_lock_service(hass, SERVICE_OPEN)
+        await help_test_async_lock_service(
+            hass, mock_lock_entity.entity_id, SERVICE_OPEN
+        )
     with pytest.raises(ValueError):
-        await help_test_async_lock_service(hass, SERVICE_LOCK)
+        await help_test_async_lock_service(
+            hass, mock_lock_entity.entity_id, SERVICE_LOCK
+        )
     with pytest.raises(ValueError):
-        await help_test_async_lock_service(hass, SERVICE_UNLOCK)
+        await help_test_async_lock_service(
+            hass, mock_lock_entity.entity_id, SERVICE_UNLOCK
+        )
