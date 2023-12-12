@@ -20,13 +20,13 @@ async def async_setup_entry(
     """Set up the demo switch platform."""
     async_add_entities(
         [
-            DemoSwitch("switch1", "Decorative Lights", True, None, True),
+            DemoSwitch("switch1", "Decorative Lights", True, True),
             DemoSwitch(
                 "switch2",
                 "AC",
                 False,
-                "air_conditioner",
                 False,
+                translation_key="air_conditioner",
                 device_class=SwitchDeviceClass.OUTLET,
             ),
         ]
@@ -45,8 +45,8 @@ class DemoSwitch(SwitchEntity):
         unique_id: str,
         device_name: str,
         state: bool,
-        translation_key: str | None,
         assumed: bool,
+        translation_key: str | None = None,
         device_class: SwitchDeviceClass | None = None,
     ) -> None:
         """Initialize the Demo switch."""
