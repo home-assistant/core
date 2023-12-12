@@ -56,17 +56,12 @@ async def test_not_start_until_hass_started(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test unload an entry."""
-    await hass.async_stop()
-    await hass.async_block_till_done()
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="UNIQUE_TEST_ID",
         title=DEFAULT_NAME,
     )
     config_entry.add_to_hass(hass)
-
-    await hass.async_start()
-    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.fastdotcom.coordinator.fast_com", return_value=5.0
