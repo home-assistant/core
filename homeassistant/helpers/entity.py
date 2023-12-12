@@ -881,7 +881,7 @@ class Entity(ABC):
                     capabilities_updated_at.append(time_now)
                     while time_now - capabilities_updated_at[0] > 3600:
                         capabilities_updated_at.popleft()
-                    if len(capabilities_updated_at) >= CAPABILITIES_UPDATE_LIMIT:
+                    if len(capabilities_updated_at) > CAPABILITIES_UPDATE_LIMIT:
                         self.__capabilities_updated_at_reported = True
                         report_issue = self._suggest_report_issue()
                         _LOGGER.warning(
