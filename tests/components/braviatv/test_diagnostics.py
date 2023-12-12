@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.braviatv.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.components.braviatv.const import CONF_USE_PSK, DOMAIN
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -37,9 +37,9 @@ async def test_entry_diagnostics(
         domain=DOMAIN,
         data={
             CONF_HOST: "localhost",
-            "mac": "AA:BB:CC:DD:EE:FF",
-            "use_psk": True,
-            "pin": "12345qwerty",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_USE_PSK: True,
+            CONF_PIN: "12345qwerty",
         },
         entry_id="3bd2acb0e4f0476d40865546d0d91921",
     )
