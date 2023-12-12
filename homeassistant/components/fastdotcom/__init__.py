@@ -60,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "service_deprecation",
             breaks_in_ha_version="2024.7.0",
             is_fixable=True,
-            is_persistent=True,
+            is_persistent=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="service_deprecation",
         )
