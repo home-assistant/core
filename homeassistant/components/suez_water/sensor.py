@@ -74,7 +74,7 @@ class SuezSensor(SensorEntity):
         self.client = client
         self._attr_extra_state_attributes = {}
 
-    def _fetch_data(self):
+    def _fetch_data(self) -> None:
         """Fetch latest data from Suez."""
         try:
             self.client.update()
