@@ -1910,6 +1910,66 @@ def average(*args: Any, default: Any = _SENTINEL) -> Any:
         return default
 
 
+def median(*args: Any, default: Any = _SENTINEL) -> Any:
+    """Filter and function to calculate the median.
+
+    Calculates median of an iterable or of two or more arguments.
+
+    The parameters may be passed as an iterable or as separate arguments.
+    """
+    if len(args) == 0:
+        raise TypeError("average expected at least 1 argument, got 0")
+
+    # If first argument is a list or tuple and more than 1 argument provided but not a named
+    # default, then use 2nd argument as default.
+    if isinstance(args[0], Iterable):
+        median_list = args[0]
+        if len(args) > 1 and default is _SENTINEL:
+            default = args[1]
+    elif len(args) == 1:
+        raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
+    else:
+        median_list = args
+
+    try:
+        return statistics.median(median_list)
+    except (TypeError, statistics.StatisticsError):
+        if default is _SENTINEL:
+            raise_no_default("median", args)
+        return default
+
+
+def mode(*args: Any, default: Any = _SENTINEL) -> Any:
+    """Filter and function to calculate the mode.
+
+    Calculates mode of an iterable or of two or more arguments.
+
+    The parameters may be passed as an iterable or as separate arguments.
+    """
+    if len(args) == 0:
+        raise TypeError("average expected at least 1 argument, got 0")
+
+    # If first argument is a list or tuple and more than 1 argument provided but not a named
+    # default, then use 2nd argument as default.
+    if len(args) == 1 and isinstance(args[0], Iterable):
+        mode_list = args[0]
+    elif isinstance(args[0], list | tuple):
+        mode_list = args[0]
+        if len(args) > 1 and default is _SENTINEL:
+            default = args[1]
+    elif len(args) == 1:
+        raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
+    else:
+        mode_list = args
+
+    try:
+        return statistics.mode(mode_list)
+    except (TypeError, statistics.StatisticsError):
+        if default is _SENTINEL:
+            raise_no_default("mode", args)
+        return default
+
+
 def forgiving_float(value, default=_SENTINEL):
     """Try to convert value to a float."""
     try:
@@ -2392,6 +2452,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["from_json"] = from_json
         self.filters["is_defined"] = fail_when_undefined
         self.filters["average"] = average
+        self.filters["median"] = median
+        self.filters["mode"] = mode
         self.filters["random"] = random_every_time
         self.filters["base64_encode"] = base64_encode
         self.filters["base64_decode"] = base64_decode
@@ -2414,6 +2476,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["bool"] = forgiving_boolean
         self.filters["version"] = version
         self.filters["contains"] = contains
+        self.filters["median"] = median
+        self.filters["mode"] = mode
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -2435,6 +2499,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["strptime"] = strptime
         self.globals["urlencode"] = urlencode
         self.globals["average"] = average
+        self.globals["median"] = median
+        self.globals["mode"] = mode
         self.globals["max"] = min_max_from_filter(self.filters["max"], "max")
         self.globals["min"] = min_max_from_filter(self.filters["min"], "min")
         self.globals["is_number"] = is_number
@@ -2447,6 +2513,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["iif"] = iif
         self.globals["bool"] = forgiving_boolean
         self.globals["version"] = version
+        self.globals["median"] = median
+        self.globals["mode"] = mode
         self.tests["is_number"] = is_number
         self.tests["list"] = _is_list
         self.tests["set"] = _is_set
