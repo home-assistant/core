@@ -47,6 +47,7 @@ homeassistant.components.adguard.*
 homeassistant.components.aftership.*
 homeassistant.components.air_quality.*
 homeassistant.components.airly.*
+homeassistant.components.airnow.*
 homeassistant.components.airvisual.*
 homeassistant.components.airzone.*
 homeassistant.components.airzone_cloud.*
