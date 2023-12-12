@@ -5,15 +5,13 @@ from justnimbus.exceptions import InvalidClientID, JustNimbusError
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.justnimbus.const import CONF_ZIP_CODE, DOMAIN
-from homeassistant.const import CONF_CLIENT_ID
+from homeassistant.components.justnimbus.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from .conftest import FIXTURE_OLD_USER_INPUT, FIXTURE_UNIQUE_ID, FIXTURE_USER_INPUT
 
-FIXTURE_USER_INPUT = {CONF_CLIENT_ID: "test_id", CONF_ZIP_CODE: "test_zip"}
-FIXTURE_UNIQUE_ID = "test_idtest_zip"
+from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -119,7 +117,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         return_value=False,
     ):
         mock_config = MockConfigEntry(
-            domain=DOMAIN, unique_id=FIXTURE_UNIQUE_ID, data=FIXTURE_USER_INPUT
+            domain=DOMAIN, unique_id=FIXTURE_UNIQUE_ID, data=FIXTURE_OLD_USER_INPUT
         )
         mock_config.add_to_hass(hass)
 
@@ -129,7 +127,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
                 "source": config_entries.SOURCE_REAUTH,
                 "entry_id": mock_config.entry_id,
             },
-            data=FIXTURE_USER_INPUT,
+            data=FIXTURE_OLD_USER_INPUT,
         )
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
@@ -147,3 +145,4 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
         assert result2["type"] == data_entry_flow.FlowResultType.ABORT
         assert result2["reason"] == "reauth_successful"
+        assert mock_config.data == FIXTURE_USER_INPUT
