@@ -607,7 +607,7 @@ btsmarthub-devicelist==0.2.3
 buienradar==1.0.5
 
 # homeassistant.components.caldav
-caldav==1.3.6
+caldav==1.3.8
 
 # homeassistant.components.circuit
 circuit-webhook==1.0.1
@@ -984,7 +984,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==0.10.0
+habluetooth==0.11.1
 
 # homeassistant.components.cloud
 hass-nabucasa==0.74.0
@@ -1788,7 +1788,7 @@ pyhaversion==22.8.0
 pyheos==0.7.2
 
 # homeassistant.components.hive
-pyhiveapi==0.5.14
+pyhiveapi==0.5.16
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
