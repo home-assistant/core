@@ -487,7 +487,7 @@ def aiohttp_client(
         if isinstance(__param, Application):
             server_kwargs = server_kwargs or {}
             server = TestServer(__param, loop=loop, **server_kwargs)
-            # Registering the view after starting the server should still work.
+            # Registering a view after starting the server should still work.
             server.app._router.freeze = lambda: None
             client = CoalescingClient(server, loop=loop, **kwargs)
         elif isinstance(__param, BaseTestServer):
