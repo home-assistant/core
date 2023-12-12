@@ -82,15 +82,15 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         LOGGER.debug("Zeroconf discovery_info: %s", discovery_info)
 
-        # extract unique id and stop discovery if robot is already added
-        unique_id = discovery_info.hostname.split(".")[0]
-        LOGGER.debug("Unique_id: %s", unique_id)
-        await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
-
         # get ROMY's name and check if local http interface is locked
         new_discovered_romy = await romy.create_romy(discovery_info.host, "")
         discovery_info.name = new_discovered_romy.name
+
+        # get unique id and stop discovery if robot is already added
+        unique_id = new_discovered_romy.unique_id
+        LOGGER.debug("Unique_id: %s", unique_id)
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
 
         self.context.update(
             {
