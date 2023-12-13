@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import MODEL_2, MODEL_25, MODEL_GAS
+from aioshelly.const import MODEL_2, MODEL_25, MODEL_GAS, RPC_GENERATIONS
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -49,7 +49,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches for device."""
-    if get_device_entry_gen(config_entry) == 2:
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
         return async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
     return async_setup_block_entry(hass, config_entry, async_add_entities)
@@ -118,8 +118,9 @@ def async_setup_rpc_entry(
             continue
 
         if coordinator.model == MODEL_WALL_DISPLAY:
-            if coordinator.device.shelly["relay_operational"]:
-                # Wall Display in relay mode, we need to remove a climate entity
+            if not coordinator.device.shelly.get("relay_in_thermostat", False):
+                # Wall Display relay is not used as the thermostat actuator,
+                # we need to remove a climate entity
                 unique_id = f"{coordinator.mac}-thermostat:{id_}"
                 async_remove_shelly_entity(hass, "climate", unique_id)
             else:

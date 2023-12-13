@@ -18,14 +18,11 @@ from .const import DOMAIN
 from .entity import PhilipsJsEntity
 
 
-@dataclass
+@dataclass(kw_only=True)
 class PhilipsTVBinarySensorEntityDescription(BinarySensorEntityDescription):
     """A entity description for Philips TV binary sensor."""
 
-    def __init__(self, recording_value, *args, **kwargs) -> None:
-        """Set up a binary sensor entity description and add additional attributes."""
-        super().__init__(*args, **kwargs)
-        self.recording_value: str = recording_value
+    recording_value: str
 
 
 DESCRIPTIONS = (
@@ -66,6 +63,8 @@ async def async_setup_entry(
 
 def _check_for_recording_entry(api: PhilipsTV, entry: str, value: str) -> bool:
     """Return True if at least one specified value is available within entry of list."""
+    if api.recordings_list is None:
+        return False
     for rec in api.recordings_list["recordings"]:
         if rec.get(entry) == value:
             return True

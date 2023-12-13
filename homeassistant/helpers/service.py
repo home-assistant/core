@@ -42,7 +42,7 @@ from homeassistant.exceptions import (
     UnknownUser,
 )
 from homeassistant.loader import Integration, async_get_integrations, bind_hass
-from homeassistant.util.yaml import load_yaml
+from homeassistant.util.yaml import load_yaml_dict
 from homeassistant.util.yaml.loader import JSON_TYPE
 
 from . import (
@@ -542,7 +542,9 @@ def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_T
     try:
         return cast(
             JSON_TYPE,
-            _SERVICES_SCHEMA(load_yaml(str(integration.file_path / "services.yaml"))),
+            _SERVICES_SCHEMA(
+                load_yaml_dict(str(integration.file_path / "services.yaml"))
+            ),
         )
     except FileNotFoundError:
         _LOGGER.warning(

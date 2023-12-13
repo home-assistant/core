@@ -650,6 +650,51 @@
     'message': 'Timeout running pipeline',
   })
 # ---
+# name: test_pipeline_empty_tts_output
+  dict({
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': None,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_pipeline_empty_tts_output.1
+  dict({
+    'conversation_id': None,
+    'device_id': None,
+    'engine': 'homeassistant',
+    'intent_input': 'never mind',
+    'language': 'en',
+  })
+# ---
+# name: test_pipeline_empty_tts_output.2
+  dict({
+    'intent_output': dict({
+      'conversation_id': None,
+      'response': dict({
+        'card': dict({
+        }),
+        'data': dict({
+          'failed': list([
+          ]),
+          'success': list([
+          ]),
+          'targets': list([
+          ]),
+        }),
+        'language': 'en',
+        'response_type': 'action_done',
+        'speech': dict({
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_pipeline_empty_tts_output.3
+  None
+# ---
 # name: test_stt_provider_missing
   dict({
     'language': 'en',

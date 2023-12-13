@@ -86,6 +86,8 @@ build.json @home-assistant/supervisor
 /tests/components/anova/ @Lash-L
 /homeassistant/components/anthemav/ @hyralex
 /tests/components/anthemav/ @hyralex
+/homeassistant/components/aosmith/ @bdr99
+/tests/components/aosmith/ @bdr99
 /homeassistant/components/apache_kafka/ @bachya
 /tests/components/apache_kafka/ @bachya
 /homeassistant/components/apcupsd/ @yuxincs
@@ -205,8 +207,8 @@ build.json @home-assistant/supervisor
 /tests/components/cloud/ @home-assistant/cloud
 /homeassistant/components/cloudflare/ @ludeeus @ctalkington
 /tests/components/cloudflare/ @ludeeus @ctalkington
-/homeassistant/components/co2signal/ @jpbede
-/tests/components/co2signal/ @jpbede
+/homeassistant/components/co2signal/ @jpbede @VIKTORVAV99
+/tests/components/co2signal/ @jpbede @VIKTORVAV99
 /homeassistant/components/coinbase/ @tombrien
 /tests/components/coinbase/ @tombrien
 /homeassistant/components/color_extractor/ @GenericStudent
@@ -395,6 +397,8 @@ build.json @home-assistant/supervisor
 /tests/components/fivem/ @Sander0542
 /homeassistant/components/fjaraskupan/ @elupus
 /tests/components/fjaraskupan/ @elupus
+/homeassistant/components/flexit_bacnet/ @lellky @piotrbulinski
+/tests/components/flexit_bacnet/ @lellky @piotrbulinski
 /homeassistant/components/flick_electric/ @ZephireNZ
 /tests/components/flick_electric/ @ZephireNZ
 /homeassistant/components/flipr/ @cnico
@@ -520,6 +524,8 @@ build.json @home-assistant/supervisor
 /tests/components/hive/ @Rendili @KJonline
 /homeassistant/components/hlk_sw16/ @jameshilliard
 /tests/components/hlk_sw16/ @jameshilliard
+/homeassistant/components/holiday/ @jrieger
+/tests/components/holiday/ @jrieger
 /homeassistant/components/home_connect/ @DavidMStraub
 /tests/components/home_connect/ @DavidMStraub
 /homeassistant/components/home_plus_control/ @chemaaa
@@ -663,8 +669,6 @@ build.json @home-assistant/supervisor
 /tests/components/knx/ @Julius2342 @farmio @marvin-w
 /homeassistant/components/kodi/ @OnFreund
 /tests/components/kodi/ @OnFreund
-/homeassistant/components/komfovent/ @ProstoSanja
-/tests/components/komfovent/ @ProstoSanja
 /homeassistant/components/konnected/ @heythisisnate
 /tests/components/konnected/ @heythisisnate
 /homeassistant/components/kostal_plenticore/ @stegm
@@ -928,6 +932,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/oralb/ @bdraco @Lash-L
 /tests/components/oralb/ @bdraco @Lash-L
 /homeassistant/components/oru/ @bvlaicu
+/homeassistant/components/osoenergy/ @osohotwateriot
+/tests/components/osoenergy/ @osohotwateriot
 /homeassistant/components/otbr/ @home-assistant/core
 /tests/components/otbr/ @home-assistant/core
 /homeassistant/components/ourgroceries/ @OnFreund
@@ -1245,8 +1251,11 @@ build.json @home-assistant/supervisor
 /homeassistant/components/subaru/ @G-Two
 /tests/components/subaru/ @G-Two
 /homeassistant/components/suez_water/ @ooii
+/tests/components/suez_water/ @ooii
 /homeassistant/components/sun/ @Swamp-Ig
 /tests/components/sun/ @Swamp-Ig
+/homeassistant/components/sunweg/ @rokam
+/tests/components/sunweg/ @rokam
 /homeassistant/components/supla/ @mwegrzynek
 /homeassistant/components/surepetcare/ @benleb @danielhiversen
 /tests/components/surepetcare/ @benleb @danielhiversen
@@ -1295,6 +1304,8 @@ build.json @home-assistant/supervisor
 /tests/components/template/ @PhracturedBlue @tetienne @home-assistant/core
 /homeassistant/components/tesla_wall_connector/ @einarhauks
 /tests/components/tesla_wall_connector/ @einarhauks
+/homeassistant/components/tessie/ @Bre77
+/tests/components/tessie/ @Bre77
 /homeassistant/components/text/ @home-assistant/core
 /tests/components/text/ @home-assistant/core
 /homeassistant/components/tfiac/ @fredrike @mellado
@@ -1398,8 +1409,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/versasense/ @imstevenxyz
 /homeassistant/components/version/ @ludeeus
 /tests/components/version/ @ludeeus
-/homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey
-/tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey
+/homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja
+/tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja
 /homeassistant/components/vicare/ @CFenner
 /tests/components/vicare/ @CFenner
 /homeassistant/components/vilfo/ @ManneW

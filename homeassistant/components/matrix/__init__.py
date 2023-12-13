@@ -7,7 +7,7 @@ import logging
 import mimetypes
 import os
 import re
-from typing import NewType, TypedDict
+from typing import Final, NewType, Required, TypedDict
 
 import aiofiles.os
 from nio import AsyncClient, Event, MatrixRoom
@@ -49,11 +49,11 @@ _LOGGER = logging.getLogger(__name__)
 
 SESSION_FILE = ".matrix.conf"
 
-CONF_HOMESERVER = "homeserver"
-CONF_ROOMS = "rooms"
-CONF_COMMANDS = "commands"
-CONF_WORD = "word"
-CONF_EXPRESSION = "expression"
+CONF_HOMESERVER: Final = "homeserver"
+CONF_ROOMS: Final = "rooms"
+CONF_COMMANDS: Final = "commands"
+CONF_WORD: Final = "word"
+CONF_EXPRESSION: Final = "expression"
 
 CONF_USERNAME_REGEX = "^@[^:]*:.*"
 CONF_ROOMS_REGEX = "^[!|#][^:]*:.*"
@@ -78,10 +78,10 @@ RoomAnyID = RoomID | RoomAlias
 class ConfigCommand(TypedDict, total=False):
     """Corresponds to a single COMMAND_SCHEMA."""
 
-    name: str  # CONF_NAME
-    rooms: list[RoomID] | None  # CONF_ROOMS
-    word: WordCommand | None  # CONF_WORD
-    expression: ExpressionCommand | None  # CONF_EXPRESSION
+    name: Required[str]  # CONF_NAME
+    rooms: list[RoomID]  # CONF_ROOMS
+    word: WordCommand  # CONF_WORD
+    expression: ExpressionCommand  # CONF_EXPRESSION
 
 
 COMMAND_SCHEMA = vol.All(
@@ -223,15 +223,15 @@ class MatrixBot:
     def _load_commands(self, commands: list[ConfigCommand]) -> None:
         for command in commands:
             # Set the command for all listening_rooms, unless otherwise specified.
-            command.setdefault(CONF_ROOMS, list(self._listening_rooms.values()))  # type: ignore[misc]
+            command.setdefault(CONF_ROOMS, list(self._listening_rooms.values()))
 
             # COMMAND_SCHEMA guarantees that exactly one of CONF_WORD and CONF_expression are set.
             if (word_command := command.get(CONF_WORD)) is not None:
-                for room_id in command[CONF_ROOMS]:  # type: ignore[literal-required]
+                for room_id in command[CONF_ROOMS]:
                     self._word_commands.setdefault(room_id, {})
-                    self._word_commands[room_id][word_command] = command  # type: ignore[index]
+                    self._word_commands[room_id][word_command] = command
             else:
-                for room_id in command[CONF_ROOMS]:  # type: ignore[literal-required]
+                for room_id in command[CONF_ROOMS]:
                     self._expression_commands.setdefault(room_id, [])
                     self._expression_commands[room_id].append(command)
 
@@ -263,7 +263,7 @@ class MatrixBot:
 
         # After single-word commands, check all regex commands in the room.
         for command in self._expression_commands.get(room_id, []):
-            match: re.Match = command[CONF_EXPRESSION].match(message.body)  # type: ignore[literal-required]
+            match = command[CONF_EXPRESSION].match(message.body)
             if not match:
                 continue
             message_data = {

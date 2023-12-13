@@ -46,13 +46,15 @@ async def async_setup_entry(
     async_add_entities([DevialetMediaPlayerEntity(coordinator, entry)])
 
 
-class DevialetMediaPlayerEntity(CoordinatorEntity, MediaPlayerEntity):
+class DevialetMediaPlayerEntity(
+    CoordinatorEntity[DevialetCoordinator], MediaPlayerEntity
+):
     """Devialet media player."""
 
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, coordinator, entry: ConfigEntry) -> None:
+    def __init__(self, coordinator: DevialetCoordinator, entry: ConfigEntry) -> None:
         """Initialize the Devialet device."""
         self.coordinator = coordinator
         super().__init__(coordinator)

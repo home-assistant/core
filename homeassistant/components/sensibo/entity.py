@@ -23,22 +23,24 @@ def async_handle_api_call(
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, Any]]:
     """Decorate api calls."""
 
-    async def wrap_api_call(*args: Any, **kwargs: Any) -> None:
+    async def wrap_api_call(entity: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         """Wrap services for api calls."""
         res: bool = False
         try:
             async with asyncio.timeout(TIMEOUT):
-                res = await function(*args, **kwargs)
+                res = await function(entity, *args, **kwargs)
         except SENSIBO_ERRORS as err:
             raise HomeAssistantError from err
 
-        LOGGER.debug("Result %s for entity %s with arguments %s", res, args[0], kwargs)
-        entity: SensiboDeviceBaseEntity = args[0]
+        LOGGER.debug("Result %s for entity %s with arguments %s", res, entity, kwargs)
         if res is not True:
             raise HomeAssistantError(f"Could not execute service for {entity.name}")
-        if kwargs.get("key") is not None and kwargs.get("value") is not None:
-            setattr(entity.device_data, kwargs["key"], kwargs["value"])
-            LOGGER.debug("Debug check key %s is now %s", kwargs["key"], kwargs["value"])
+        if (
+            isinstance(key := kwargs.get("key"), str)
+            and (value := kwargs.get("value")) is not None
+        ):
+            setattr(entity.device_data, key, value)
+            LOGGER.debug("Debug check key %s is now %s", key, value)
             entity.async_write_ha_state()
             await entity.coordinator.async_request_refresh()
 

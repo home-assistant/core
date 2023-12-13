@@ -155,6 +155,14 @@ DATA_SCHEMA_SETUP = vol.Schema(
 
 DATA_SCHEMA_OPT = vol.Schema(
     {
+        vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS): SelectSelector(
+            SelectSelectorConfig(
+                options=ALLOWED_DAYS,
+                multiple=True,
+                mode=SelectSelectorMode.DROPDOWN,
+                translation_key="days",
+            )
+        ),
         vol.Optional(CONF_EXCLUDES, default=DEFAULT_EXCLUDES): SelectSelector(
             SelectSelectorConfig(
                 options=ALLOWED_DAYS,
@@ -165,14 +173,6 @@ DATA_SCHEMA_OPT = vol.Schema(
         ),
         vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): NumberSelector(
             NumberSelectorConfig(min=-10, max=10, step=1, mode=NumberSelectorMode.BOX)
-        ),
-        vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS): SelectSelector(
-            SelectSelectorConfig(
-                options=ALLOWED_DAYS,
-                multiple=True,
-                mode=SelectSelectorMode.DROPDOWN,
-                translation_key="days",
-            )
         ),
         vol.Optional(CONF_ADD_HOLIDAYS, default=[]): SelectSelector(
             SelectSelectorConfig(
