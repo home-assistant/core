@@ -9,6 +9,7 @@ from homeassistant.components.assist_pipeline import (
 )
 from homeassistant.components.conversation import HOME_ASSISTANT_AGENT
 from homeassistant.components.stt import DOMAIN as STT_DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
@@ -66,13 +67,17 @@ async def async_migrate_cloud_pipeline_stt_engine(
     """Migrate the speech-to-text engine in the cloud assist pipeline."""
     # Migrate existing pipelines with cloud stt to use new cloud stt engine id.
     # Added in 2023.11.0. Can be removed in 2024.11.0.
-    # Make sure the pipeline store is loaded, needed because assist_pipeline
-    # is an after dependency of cloud
-    # pylint: disable=fixme
-    # TODO: We need to make sure that tts is loaded before this migration.
+
+    # We need to make sure that tts is loaded before this migration.
     # Assist pipeline will call default engine of tts when setting up the store.
     # Wait for the tts platform loaded event here.
+    platforms_setup: dict[str, asyncio.Event] = hass.data[DATA_PLATFORMS_SETUP]
+    await platforms_setup[Platform.TTS].wait()
+
+    # Make sure the pipeline store is loaded, needed because assist_pipeline
+    # is an after dependency of cloud
     await async_setup_pipeline_store(hass)
+
     pipelines = async_get_pipelines(hass)
     for pipeline in pipelines:
         if pipeline.stt_engine != DOMAIN:
