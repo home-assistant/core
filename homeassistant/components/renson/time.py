@@ -19,7 +19,7 @@ from .const import DOMAIN
 from .entity import RensonEntity
 
 
-@dataclass(kw_only = True)
+@dataclass(kw_only=True)
 class RensonTimeEntityDescription(TimeEntityDescription):
     """Class describing Renson time entity."""
 
