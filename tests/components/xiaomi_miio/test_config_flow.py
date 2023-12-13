@@ -10,7 +10,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.xiaomi_miio import const
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TOKEN
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from . import TEST_MAC
@@ -685,7 +685,7 @@ async def test_config_flow_step_device_manual_model_succes(hass: HomeAssistant) 
     assert result["type"] == "create_entry"
     assert result["title"] == overwrite_model
     assert result["data"] == {
-        const.CONF_FLOW_TYPE: const.CONF_DEVICE,
+        const.CONF_FLOW_TYPE: CONF_DEVICE,
         const.CONF_CLOUD_USERNAME: None,
         const.CONF_CLOUD_PASSWORD: None,
         const.CONF_CLOUD_COUNTRY: None,
@@ -729,7 +729,7 @@ async def config_flow_device_success(hass, model_to_test):
     assert result["type"] == "create_entry"
     assert result["title"] == model_to_test
     assert result["data"] == {
-        const.CONF_FLOW_TYPE: const.CONF_DEVICE,
+        const.CONF_FLOW_TYPE: CONF_DEVICE,
         const.CONF_CLOUD_USERNAME: None,
         const.CONF_CLOUD_PASSWORD: None,
         const.CONF_CLOUD_COUNTRY: None,
@@ -775,7 +775,7 @@ async def config_flow_generic_roborock(hass):
     assert result["type"] == "create_entry"
     assert result["title"] == dummy_model
     assert result["data"] == {
-        const.CONF_FLOW_TYPE: const.CONF_DEVICE,
+        const.CONF_FLOW_TYPE: CONF_DEVICE,
         const.CONF_CLOUD_USERNAME: None,
         const.CONF_CLOUD_PASSWORD: None,
         const.CONF_CLOUD_COUNTRY: None,
@@ -829,7 +829,7 @@ async def zeroconf_device_success(hass, zeroconf_name_to_test, model_to_test):
     assert result["type"] == "create_entry"
     assert result["title"] == model_to_test
     assert result["data"] == {
-        const.CONF_FLOW_TYPE: const.CONF_DEVICE,
+        const.CONF_FLOW_TYPE: CONF_DEVICE,
         const.CONF_CLOUD_USERNAME: None,
         const.CONF_CLOUD_PASSWORD: None,
         const.CONF_CLOUD_COUNTRY: None,

@@ -4,7 +4,7 @@ from __future__ import annotations
 from abc import ABC
 import asyncio
 from collections.abc import Coroutine, Iterable, Mapping, MutableMapping
-from dataclasses import dataclass
+import dataclasses
 from datetime import timedelta
 from enum import Enum, auto
 import functools as ft
@@ -51,6 +51,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.loader import async_suggest_report_issue, bind_hass
 from homeassistant.util import ensure_unique_string, slugify
+from homeassistant.util.frozen_dataclass_compat import FrozenOrThawed
 
 from . import device_registry as dr, entity_registry as er
 from .device_registry import DeviceInfo, EventDeviceRegistryUpdatedData
@@ -218,8 +219,7 @@ class EntityPlatformState(Enum):
     REMOVED = auto()
 
 
-@dataclass(slots=True)
-class EntityDescription:
+class EntityDescription(metaclass=FrozenOrThawed, frozen_or_thawed=True):
     """A class that describes Home Assistant entities."""
 
     # This is the key identifier for this entity
@@ -1245,7 +1245,7 @@ class Entity(ABC):
         )
 
 
-@dataclass(slots=True)
+@dataclasses.dataclass(slots=True)
 class ToggleEntityDescription(EntityDescription):
     """A class that describes toggle entities."""
 

@@ -1650,6 +1650,7 @@ async def test_factory_reset_node(
     hass: HomeAssistant, client, multisensor_6, multisensor_6_state, integration
 ) -> None:
     """Test when a node is removed because it was reset."""
+    dev_reg = dr.async_get(hass)
     # One config entry scenario
     remove_event = Event(
         type="node removed",
@@ -1670,15 +1671,25 @@ async def test_factory_reset_node(
     assert notifications[msg_id]["message"].startswith("`Multisensor 6`")
     assert "with the home ID" not in notifications[msg_id]["message"]
     async_dismiss(hass, msg_id)
+    await hass.async_block_till_done()
+    assert not dev_reg.async_get_device(identifiers={dev_id})
 
     # Add mock config entry to simulate having multiple entries
     new_entry = MockConfigEntry(domain=DOMAIN)
     new_entry.add_to_hass(hass)
 
     # Re-add the node then remove it again
-    client.driver.controller.nodes[multisensor_6_state["nodeId"]] = Node(
-        client, deepcopy(multisensor_6_state)
+    add_event = Event(
+        type="node added",
+        data={
+            "source": "controller",
+            "event": "node added",
+            "node": deepcopy(multisensor_6_state),
+            "result": {},
+        },
     )
+    client.driver.controller.receive_event(add_event)
+    await hass.async_block_till_done()
     remove_event.data["node"] = deepcopy(multisensor_6_state)
     client.driver.controller.receive_event(remove_event)
     # Test case where config entry title and home ID don't match
@@ -1686,16 +1697,24 @@ async def test_factory_reset_node(
     assert len(notifications) == 1
     assert list(notifications)[0] == msg_id
     assert (
-        "network `Mock Title`, with the home ID `3245146787`."
+        "network `Mock Title`, with the home ID `3245146787`"
         in notifications[msg_id]["message"]
     )
     async_dismiss(hass, msg_id)
 
     # Test case where config entry title and home ID do match
     hass.config_entries.async_update_entry(integration, title="3245146787")
-    client.driver.controller.nodes[multisensor_6_state["nodeId"]] = Node(
-        client, deepcopy(multisensor_6_state)
+    add_event = Event(
+        type="node added",
+        data={
+            "source": "controller",
+            "event": "node added",
+            "node": deepcopy(multisensor_6_state),
+            "result": {},
+        },
     )
+    client.driver.controller.receive_event(add_event)
+    await hass.async_block_till_done()
     remove_event.data["node"] = deepcopy(multisensor_6_state)
     client.driver.controller.receive_event(remove_event)
     notifications = async_get_persistent_notifications(hass)

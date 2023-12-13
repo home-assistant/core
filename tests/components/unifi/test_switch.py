@@ -1628,6 +1628,7 @@ async def test_updating_unique_id(
 
     config_entry = config_entries.ConfigEntry(
         version=1,
+        minor_version=1,
         domain=UNIFI_DOMAIN,
         title="Mock Title",
         data=ENTRY_CONFIG,
