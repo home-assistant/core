@@ -5,12 +5,14 @@ from datetime import timedelta
 import logging
 
 from opendata_transport.exceptions import OpendataTransportError
+import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
@@ -28,12 +30,21 @@ from .const import (
     ATTR_TRANSFERS,
     CONF_DESTINATION,
     CONF_START,
+    DEFAULT_NAME,
     DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=90)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Required(CONF_START): cv.string,
+        vol.Required(CONF_DESTINATION): cv.string,
+    }
+)
 
 
 async def async_setup_entry(
@@ -42,12 +53,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
-    config = hass.data[DOMAIN][config_entry.entry_id]
     opendata = hass.data[DOMAIN][f"{config_entry.entry_id}_opendata_client"]
 
-    name = config.get(CONF_NAME)
-    start = config.get(CONF_START)
-    destination = config.get(CONF_DESTINATION)
+    name = config_entry.data.get(CONF_NAME)
+    start = config_entry.data.get(CONF_START)
+    destination = config_entry.data.get(CONF_DESTINATION)
 
     async_add_entities(
         [SwissPublicTransportSensor(opendata, start, destination, name)],
@@ -58,7 +68,7 @@ async def async_setup_entry(
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the sensor platform."""
@@ -88,7 +98,7 @@ class SwissPublicTransportSensor(SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name if self._name else f"{DOMAIN}_{self._from}_{self._to}"
+        return self._name if self._name else f"{self._from} {self._to}"
 
     @property
     def native_value(self):

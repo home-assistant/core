@@ -34,11 +34,11 @@ class SwissPublicTransportConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Async user step to set up the connection."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            session = async_get_clientsession(self.hass)
+            opendata = OpendataTransport(
+                user_input[CONF_START], user_input[CONF_DESTINATION], session
+            )
             try:
-                session = async_get_clientsession(self.hass)
-                opendata = OpendataTransport(
-                    user_input[CONF_START], user_input[CONF_DESTINATION], session
-                )
                 await opendata.async_get_data()
             except OpendataTransportError:
                 errors["base"] = "client"
@@ -46,7 +46,7 @@ class SwissPublicTransportConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=f"{DOMAIN}_{user_input[CONF_START]}_{user_input[CONF_DESTINATION]}",
+                    title=f"{user_input[CONF_START]} {user_input[CONF_DESTINATION]}",
                     data=user_input,
                 )
 

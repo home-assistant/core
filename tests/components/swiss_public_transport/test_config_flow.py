@@ -21,20 +21,20 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-# async def test_flow_user_init(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
-#     """Test the initialization of the form in the first step of the config flow."""
-#     aioclient_mock.get(
-#         "http://transport.opendata.ch/v1/connections?from=test_start&to=test_destination",
-#         json={"from": "test_start", "to": "test_destination", "connections": []},
-#     )
-#     result = await hass.config_entries.flow.async_init(
-#         config_flow.DOMAIN, context={"source": "user"}
-#     )
+async def test_flow_user_init(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker):
+    """Test the initialization of the form in the first step of the config flow."""
+    aioclient_mock.get(
+        "http://transport.opendata.ch/v1/connections?from=test_start&to=test_destination",
+        json={"from": "test_start", "to": "test_destination", "connections": []},
+    )
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": "user"}
+    )
 
-#     assert result["type"] == "form"
-#     assert result["step_id"] == "user"
-#     assert result["handler"] == "swiss_public_transport"
-#     assert result["data_schema"] == config_flow.DATA_SCHEMA
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["handler"] == "swiss_public_transport"
+    assert result["data_schema"] == config_flow.DATA_SCHEMA
 
 
 async def test_flow_user_init_data_success(
@@ -61,9 +61,7 @@ async def test_flow_user_init_data_success(
     )
 
     assert result["type"] == "create_entry"
-    assert (
-        result["result"].title == "swiss_public_transport_test_start_test_destination"
-    )
+    assert result["result"].title == "test_start test_destination"
 
     assert {
         CONF_START: "test_start",
