@@ -97,7 +97,6 @@ async def async_setup_entry(
         krisinformation.CrisisAlerter(config.data.get(CONF_COUNTY)),
     )
 
-    # await hass.async_add_executor_job()
     async def start_feed_manager(event: Event) -> None:
         """Start feed manager."""
         await manager.init_regular_updates()
@@ -119,7 +118,6 @@ class KrisInformationGeolocationManager:
         self._async_add_entities = async_add_entities
         self._events: list[KrisInformationGeolocationEvent] = []
         self._crisis_alerter = crisis_alerter
-
 
     async def init_regular_updates(self) -> None:
         """Schedule regular updates based on configured time interval."""
@@ -158,7 +156,7 @@ class KrisInformationGeolocationManager:
                 event["Web"],
                 event["Published"],
                 event["Area"][0]["Description"],
-                ""
+                "",
             )
             new_events.append(new_event)
             self._events.append(new_event)
