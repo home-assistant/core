@@ -34,3 +34,22 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+def _generate_mock_event(identifier, headline):
+    return {
+        "Identifier": identifier,
+        "Headline": headline,
+        "Area": [
+            {
+                "Type": "County",
+                "Description": "Västra Götalands län",
+                "GeometryInformation": {
+                    "PoleOfInInaccessibility": {"coordinates": [57.7, 9.11]}
+                },
+            }
+        ],
+        "Web": "krisinformation.se",
+        "Published": "2023-03-29T11:02:11+02:00",
+        "PushMessage": "Test message",
+    }

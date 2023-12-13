@@ -4,6 +4,7 @@ from unittest.mock import patch
 from freezegun import freeze_time
 
 from homeassistant.components import geo_location
+from homeassistant.components.krisinformation import _generate_mock_event
 from homeassistant.components.krisinformation.geo_location import (
     MIN_TIME_BETWEEN_UPDATES,
 )
@@ -14,25 +15,6 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.krisinformation.const import MOCK_CONFIG
-
-
-def _generate_mock_event(identifier, headline):
-    return {
-        "Identifier": identifier,
-        "Headline": headline,
-        "Area": [
-            {
-                "Type": "County",
-                "Description": "Västra Götalands län",
-                "GeometryInformation": {
-                    "PoleOfInInaccessibility": {"coordinates": [57.7, 9.11]}
-                },
-            }
-        ],
-        "Web": "krisinformation.se",
-        "Published": "2023-03-29T11:02:11+02:00",
-        "PushMessage": "Test message",
-    }
 
 
 async def test_entity_lifecycle(
@@ -56,6 +38,7 @@ async def test_entity_lifecycle(
         mock_feed_update.return_value = [
             _generate_mock_event("Test-VMA-1337-1", "Test VMA 1")
         ]
+
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
