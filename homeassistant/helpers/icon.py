@@ -151,8 +151,9 @@ async def async_get_icons(
     if integrations:
         components = set(integrations)
     else:
-        components = set(hass.config.components)
-
+        components = {
+            component for component in hass.config.components if "." not in component
+        }
     async with lock:
         if ICON_CACHE in hass.data:
             cache: _IconsCache = hass.data[ICON_CACHE]

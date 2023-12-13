@@ -97,6 +97,11 @@ async def test_get_icons(hass: HomeAssistant) -> None:
     icons = await icon.async_get_icons(hass, "entity_component")
     assert icons["switch"]["_"]["default"] == "mdi:toggle-switch-variant"
 
+    # Test services icons are available
+    icons = await icon.async_get_icons(hass, "services")
+    assert len(icons) == 1
+    assert icons["switch"]["turn_off"] == "mdi:toggle-switch-variant-off"
+
     # Ensure icons file for platform isn't loaded, as that isn't supported
     icons = await icon.async_get_icons(hass, "entity")
     assert icons == {}
@@ -113,6 +118,10 @@ async def test_get_icons(hass: HomeAssistant) -> None:
         icons["test_package"]["switch"]["something"]["state"]["away"]
         == "mdi:home-outline"
     )
+
+    icons = await icon.async_get_icons(hass, "services")
+    assert len(icons) == 2
+    assert icons["test_package"]["enable_god_mode"] == "mdi:shield"
 
     # Load another one
     hass.config.components.add("test_embedded")
@@ -168,10 +177,10 @@ async def test_caching(hass: HomeAssistant) -> None:
         side_effect=icon.build_resources,
     ) as mock_build:
         load1 = await icon.async_get_icons(hass, "entity_component")
-        assert len(mock_build.mock_calls) == 1
+        assert len(mock_build.mock_calls) == 2
 
         load2 = await icon.async_get_icons(hass, "entity_component")
-        assert len(mock_build.mock_calls) == 1
+        assert len(mock_build.mock_calls) == 2
 
         assert load1 == load2
 

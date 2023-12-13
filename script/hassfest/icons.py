@@ -31,8 +31,14 @@ def icon_schema(integration_type: str) -> vol.Schema:
         slug_validator=translation_key_validator,
     )
 
+    base_schema = vol.Schema(
+        {
+            vol.Optional("services"): state_validator,
+        }
+    )
+
     if integration_type == "entity":
-        return vol.Schema(
+        return base_schema.extend(
             {
                 vol.Required("entity_component"): cv.schema_with_slug_keys(
                     {
@@ -50,7 +56,7 @@ def icon_schema(integration_type: str) -> vol.Schema:
                 ),
             }
         )
-    return vol.Schema(
+    return base_schema.extend(
         {
             vol.Required("entity"): cv.schema_with_slug_keys(
                 cv.schema_with_slug_keys(

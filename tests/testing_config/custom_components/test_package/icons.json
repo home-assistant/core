@@ -8,5 +8,8 @@
         }
       }
     }
+  },
+  "services": {
+    "enable_god_mode": "mdi:shield"
   }
 }

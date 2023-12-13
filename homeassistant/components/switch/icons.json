@@ -17,5 +17,10 @@
         "off": "mdi:power-plug-off"
       }
     }
+  },
+  "services": {
+    "toggle": "mdi:toggle-switch-variant",
+    "turn_off": "mdi:toggle-switch-variant-off",
+    "turn_on": "mdi:toggle-switch-variant"
   }
 }
