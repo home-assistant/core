@@ -1,10 +1,12 @@
 """The tests for the krisinformation geo_location."""
-from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun import freeze_time
 
 from homeassistant.components import geo_location
+from homeassistant.components.krisinformation.geo_location import (
+    MIN_TIME_BETWEEN_UPDATES,
+)
 from homeassistant.const import EVENT_HOMEASSISTANT_START, UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -13,12 +15,11 @@ import homeassistant.util.dt as dt_util
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.krisinformation.const import MOCK_CONFIG
 
-DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
 
-mock_response = [
-    {
-        "Identifier": "Test-VMA-1337",
-        "Headline": "Test VMA",
+def _generate_mock_event(identifier, headline):
+    return {
+        "Identifier": identifier,
+        "Headline": headline,
         "Area": [
             {
                 "Type": "County",
@@ -32,26 +33,6 @@ mock_response = [
         "Published": "2023-03-29T11:02:11+02:00",
         "PushMessage": "Test message",
     }
-]
-
-mock_response_2 = [
-    {
-        "Identifier": "Test-VMA-1337-2",
-        "Headline": "Test VMA",
-        "Area": [
-            {
-                "Type": "County",
-                "Description": "Värmlands län",
-                "GeometryInformation": {
-                    "PoleOfInInaccessibility": {"coordinates": [57.7, 9.11]}
-                },
-            }
-        ],
-        "Web": "krisinformation.se",
-        "Published": "2023-03-29T11:02:11+02:00",
-        "PushMessage": "Test message",
-    }
-]
 
 
 async def test_entity_lifecycle(
@@ -72,7 +53,9 @@ async def test_entity_lifecycle(
     with freeze_time(utcnow), patch(
         "krisinformation.crisis_alerter.CrisisAlerter.vmas", is_test=True
     ) as mock_feed_update:
-        mock_feed_update.return_value = mock_response
+        mock_feed_update.return_value = [
+            _generate_mock_event("Test-VMA-1337-1", "Test VMA 1")
+        ]
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -98,7 +81,7 @@ async def test_entity_lifecycle(
         assert state is not None
 
         assert state.attributes == {
-            "friendly_name": "Test VMA",
+            "friendly_name": "Test VMA 1",
             "icon": "mdi:public",
             "latitude": 9.11,
             "longitude": 57.7,
@@ -110,8 +93,11 @@ async def test_entity_lifecycle(
         }
 
         # Simulate an update - two existing, one new entry, one outdated entry
-        mock_feed_update.return_value = [mock_response[0], mock_response_2[0]]
-        async_fire_time_changed(hass, utcnow + DEFAULT_UPDATE_INTERVAL)
+        mock_feed_update.return_value = [
+            _generate_mock_event("Test-VMA-1337-1", "Test VMA 1"),
+            _generate_mock_event("Test-VMA-1337-2", "Test VMA 2"),
+        ]
+        async_fire_time_changed(hass, utcnow + MIN_TIME_BETWEEN_UPDATES)
         await hass.async_block_till_done()
 
         state = [
