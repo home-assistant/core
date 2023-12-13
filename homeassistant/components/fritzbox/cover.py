@@ -26,10 +26,10 @@ async def async_setup_entry(
     @callback
     def _add_entities(devices: set[str] | None = None) -> None:
         """Add devices."""
-        if not devices and not coordinator.new_devices:
-            return
-        if not devices:
+        if devices is None:
             devices = coordinator.new_devices
+        if not devices:
+            return
         async_add_entities(
             FritzboxCover(coordinator, ain)
             for ain in devices
