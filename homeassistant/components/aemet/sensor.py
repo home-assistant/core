@@ -106,7 +106,7 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
     AemetSensorEntityDescription(
         key=f"forecast-daily-{ATTR_API_FORECAST_CONDITION}",
         keys=[AOD_TOWN, AOD_FORECAST_DAILY, AOD_FORECAST_CURRENT, AOD_CONDITION],
-        name="Daily Forecast Condition",
+        name="Daily forecast condition",
         value_fn=CONDITIONS_MAP.get,
     ),
     AemetSensorEntityDescription(
