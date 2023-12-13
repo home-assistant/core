@@ -25,7 +25,7 @@ from .const import (
 )
 
 
-def parse_datetime(dt_str: str | None) -> str | None:
+def _parse_datetime(dt_str: str | None) -> str | None:
     if dt_str is None:
         return None
     parsed = dt_util.parse_datetime(dt_str)
@@ -161,7 +161,7 @@ class StarlineAccount:
         return {
             "operator": device.balance.get("operator"),
             "state": device.balance.get("state"),
-            "updated": parse_datetime(device.balance.get("ts")),
+            "updated": _parse_datetime(device.balance.get("ts")),
         }
 
     @staticmethod
