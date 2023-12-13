@@ -1326,7 +1326,9 @@ async def test_update_suggested_area(
 
 
 async def test_cleanup_device_registry(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test cleanup works."""
     config_entry = MockConfigEntry(domain="hue")
@@ -1349,13 +1351,12 @@ async def test_cleanup_device_registry(
     # Remove the config entry without triggering the normal cleanup
     hass.config_entries._entries.pop(ghost_config_entry.entry_id)
 
-    ent_reg = er.async_get(hass)
-    ent_reg.async_get_or_create("light", "hue", "e1", device_id=d1.id)
-    ent_reg.async_get_or_create("light", "hue", "e2", device_id=d1.id)
-    ent_reg.async_get_or_create("light", "hue", "e3", device_id=d3.id)
+    entity_registry.async_get_or_create("light", "hue", "e1", device_id=d1.id)
+    entity_registry.async_get_or_create("light", "hue", "e2", device_id=d1.id)
+    entity_registry.async_get_or_create("light", "hue", "e3", device_id=d3.id)
 
     # Manual cleanup should detect the orphaned config entry
-    dr.async_cleanup(hass, device_registry, ent_reg)
+    dr.async_cleanup(hass, device_registry, entity_registry)
 
     assert device_registry.async_get_device(identifiers={("hue", "d1")}) is not None
     assert device_registry.async_get_device(identifiers={("hue", "d2")}) is not None
@@ -1364,7 +1365,9 @@ async def test_cleanup_device_registry(
 
 
 async def test_cleanup_device_registry_removes_expired_orphaned_devices(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test cleanup removes expired orphaned devices."""
     config_entry = MockConfigEntry(domain="hue")
@@ -1384,8 +1387,7 @@ async def test_cleanup_device_registry_removes_expired_orphaned_devices(
     assert len(device_registry.devices) == 0
     assert len(device_registry.deleted_devices) == 3
 
-    ent_reg = er.async_get(hass)
-    dr.async_cleanup(hass, device_registry, ent_reg)
+    dr.async_cleanup(hass, device_registry, entity_registry)
 
     assert len(device_registry.devices) == 0
     assert len(device_registry.deleted_devices) == 3
@@ -1393,7 +1395,7 @@ async def test_cleanup_device_registry_removes_expired_orphaned_devices(
     future_time = time.time() + dr.ORPHANED_DEVICE_KEEP_SECONDS + 1
 
     with patch("time.time", return_value=future_time):
-        dr.async_cleanup(hass, device_registry, ent_reg)
+        dr.async_cleanup(hass, device_registry, entity_registry)
 
     assert len(device_registry.devices) == 0
     assert len(device_registry.deleted_devices) == 0

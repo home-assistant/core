@@ -541,20 +541,20 @@ async def test_binary_device_classes(hass: HomeAssistant, hk_driver) -> None:
         assert acc.char_detected.display_name == char
 
 
-async def test_sensor_restore(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_sensor_restore(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
+) -> None:
     """Test setting up an entity from state in the event registry."""
     hass.state = CoreState.not_running
 
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "sensor",
         "generic",
         "1234",
         suggested_object_id="temperature",
         original_device_class="temperature",
     )
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "sensor",
         "generic",
         "12345",

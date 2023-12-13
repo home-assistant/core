@@ -2125,6 +2125,10 @@ def to_json(
 
     option = (
         ORJSON_PASSTHROUGH_OPTIONS
+        # OPT_NON_STR_KEYS is added as a workaround to
+        # ensure subclasses of str are allowed as dict keys
+        # See: https://github.com/ijl/orjson/issues/445
+        | orjson.OPT_NON_STR_KEYS
         | (orjson.OPT_INDENT_2 if pretty_print else 0)
         | (orjson.OPT_SORT_KEYS if sort_keys else 0)
     )
@@ -2567,7 +2571,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["expand"] = hassfunction(expand)
         self.filters["expand"] = self.globals["expand"]
         self.globals["closest"] = hassfunction(closest)
-        self.filters["closest"] = hassfunction(closest_filter)  # type: ignore[arg-type]
+        self.filters["closest"] = hassfunction(closest_filter)
         self.globals["distance"] = hassfunction(distance)
         self.globals["is_hidden_entity"] = hassfunction(is_hidden_entity)
         self.tests["is_hidden_entity"] = hassfunction(
@@ -2608,7 +2612,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         return super().is_safe_attribute(obj, attr, value)
 
     @overload
-    def compile(  # type: ignore[misc]
+    def compile(  # type: ignore[overload-overlap]
         self,
         source: str | jinja2.nodes.Template,
         name: str | None = None,

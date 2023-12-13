@@ -100,7 +100,11 @@ async def test_missing_data(hass: HomeAssistant, gpslogger_client, webhook_id) -
 
 
 async def test_enter_and_exit(
-    hass: HomeAssistant, gpslogger_client, webhook_id
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    gpslogger_client,
+    webhook_id,
 ) -> None:
     """Test when there is a known zone."""
     url = f"/api/webhook/{webhook_id}"
@@ -131,11 +135,8 @@ async def test_enter_and_exit(
     state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
     assert state_name == STATE_NOT_HOME
 
-    dev_reg = dr.async_get(hass)
-    assert len(dev_reg.devices) == 1
-
-    ent_reg = er.async_get(hass)
-    assert len(ent_reg.entities) == 1
+    assert len(device_registry.devices) == 1
+    assert len(entity_registry.entities) == 1
 
 
 async def test_enter_with_attrs(

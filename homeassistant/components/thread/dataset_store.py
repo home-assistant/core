@@ -38,7 +38,7 @@ class DatasetEntry:
     tlv: str
 
     created: datetime = dataclasses.field(default_factory=dt_util.utcnow)
-    id: str = dataclasses.field(default_factory=ulid_util.ulid)
+    id: str = dataclasses.field(default_factory=ulid_util.ulid_now)
 
     @property
     def channel(self) -> int | None:

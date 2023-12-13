@@ -12,6 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
+from .api import get_attr_value
+
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
@@ -59,11 +61,11 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                 continue
             event_list.append(
                 CalendarEvent(
-                    summary=self.get_attr_value(vevent, "summary") or "",
+                    summary=get_attr_value(vevent, "summary") or "",
                     start=self.to_local(vevent.dtstart.value),
                     end=self.to_local(self.get_end_date(vevent)),
-                    location=self.get_attr_value(vevent, "location"),
-                    description=self.get_attr_value(vevent, "description"),
+                    location=get_attr_value(vevent, "location"),
+                    description=get_attr_value(vevent, "description"),
                 )
             )
 
@@ -150,15 +152,15 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
 
         # Populate the entity attributes with the event values
         (summary, offset) = extract_offset(
-            self.get_attr_value(vevent, "summary") or "", OFFSET
+            get_attr_value(vevent, "summary") or "", OFFSET
         )
         self.offset = offset
         return CalendarEvent(
             summary=summary,
             start=self.to_local(vevent.dtstart.value),
             end=self.to_local(self.get_end_date(vevent)),
-            location=self.get_attr_value(vevent, "location"),
-            description=self.get_attr_value(vevent, "description"),
+            location=get_attr_value(vevent, "location"),
+            description=get_attr_value(vevent, "description"),
         )
 
     @staticmethod
@@ -207,13 +209,6 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         if isinstance(obj, datetime):
             return dt_util.as_local(obj)
         return obj
-
-    @staticmethod
-    def get_attr_value(obj, attribute):
-        """Return the value of the attribute if defined."""
-        if hasattr(obj, attribute):
-            return getattr(obj, attribute).value
-        return None
 
     @staticmethod
     def get_end_date(obj):

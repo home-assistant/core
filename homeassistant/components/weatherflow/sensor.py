@@ -71,7 +71,8 @@ class WeatherFlowSensorEntityDescription(
 
     def get_native_value(self, device: WeatherFlowDevice) -> datetime | StateType:
         """Return the parsed sensor value."""
-        raw_sensor_data = getattr(device, self.key)
+        if (raw_sensor_data := getattr(device, self.key)) is None:
+            return None
         return self.raw_data_conv_fn(raw_sensor_data)
 
 
@@ -371,14 +372,17 @@ class WeatherFlowSensorEntity(SensorEntity):
             return self.device.last_report
         return None
 
-    @property
-    def native_value(self) -> datetime | StateType:
-        """Return the state of the sensor."""
-        return self.entity_description.get_native_value(self.device)
+    def _async_update_state(self) -> None:
+        """Update entity state."""
+        value = self.entity_description.get_native_value(self.device)
+        self._attr_available = value is not None
+        self._attr_native_value = value
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to events."""
+        self._async_update_state()
         for event in self.entity_description.event_subscriptions:
             self.async_on_remove(
-                self.device.on(event, lambda _: self.async_write_ha_state())
+                self.device.on(event, lambda _: self._async_update_state())
             )

@@ -251,7 +251,9 @@ def async_track_state_change(
         return async_track_state_change_event(hass, entity_ids, state_change_listener)
 
     return hass.bus.async_listen(
-        EVENT_STATE_CHANGED, state_change_dispatcher, event_filter=state_change_filter  # type: ignore[arg-type]
+        EVENT_STATE_CHANGED,
+        state_change_dispatcher,  # type: ignore[arg-type]
+        event_filter=state_change_filter,  # type: ignore[arg-type]
     )
 
 
@@ -761,7 +763,8 @@ class _TrackStateChangeFiltered:
     @callback
     def _setup_all_listener(self) -> None:
         self._listeners[_ALL_LISTENER] = self.hass.bus.async_listen(
-            EVENT_STATE_CHANGED, self._action  # type: ignore[arg-type]
+            EVENT_STATE_CHANGED,
+            self._action,  # type: ignore[arg-type]
         )
 
 
@@ -1335,7 +1338,8 @@ def async_track_same_state(
 
     if entity_ids == MATCH_ALL:
         async_remove_state_for_cancel = hass.bus.async_listen(
-            EVENT_STATE_CHANGED, state_for_cancel_listener  # type: ignore[arg-type]
+            EVENT_STATE_CHANGED,
+            state_for_cancel_listener,  # type: ignore[arg-type]
         )
     else:
         async_remove_state_for_cancel = async_track_state_change_event(

@@ -42,7 +42,7 @@ from homeassistant.exceptions import (
     UnknownUser,
 )
 from homeassistant.loader import Integration, async_get_integrations, bind_hass
-from homeassistant.util.yaml import load_yaml
+from homeassistant.util.yaml import load_yaml_dict
 from homeassistant.util.yaml.loader import JSON_TYPE
 
 from . import (
@@ -542,16 +542,20 @@ def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_T
     try:
         return cast(
             JSON_TYPE,
-            _SERVICES_SCHEMA(load_yaml(str(integration.file_path / "services.yaml"))),
+            _SERVICES_SCHEMA(
+                load_yaml_dict(str(integration.file_path / "services.yaml"))
+            ),
         )
     except FileNotFoundError:
         _LOGGER.warning(
             "Unable to find services.yaml for the %s integration", integration.domain
         )
         return {}
-    except (HomeAssistantError, vol.Invalid):
+    except (HomeAssistantError, vol.Invalid) as ex:
         _LOGGER.warning(
-            "Unable to parse services.yaml for the %s integration", integration.domain
+            "Unable to parse services.yaml for the %s integration: %s",
+            integration.domain,
+            ex,
         )
         return {}
 
@@ -885,7 +889,7 @@ async def entity_service_call(
 
     # Use asyncio.gather here to ensure the returned results
     # are in the same order as the entities list
-    results: list[ServiceResponse] = await asyncio.gather(
+    results: list[ServiceResponse | BaseException] = await asyncio.gather(
         *[
             entity.async_request_call(
                 _handle_entity_call(hass, entity, func, data, call.context)
@@ -897,8 +901,8 @@ async def entity_service_call(
 
     response_data: EntityServiceResponse = {}
     for entity, result in zip(entities, results):
-        if isinstance(result, Exception):
-            raise result
+        if isinstance(result, BaseException):
+            raise result from None
         response_data[entity.entity_id] = result
 
     tasks: list[asyncio.Task[None]] = []

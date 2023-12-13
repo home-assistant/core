@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from aiounifi.models.message import MessageKey
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
@@ -429,6 +430,7 @@ async def test_bandwidth_sensors(
 async def test_uptime_sensors(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
     mock_unifi_websocket,
     entity_registry_enabled_by_default: None,
     initial_uptime,
@@ -450,13 +452,13 @@ async def test_uptime_sensors(
     }
 
     now = datetime(2021, 1, 1, 1, 1, 0, tzinfo=dt_util.UTC)
-    with patch("homeassistant.util.dt.now", return_value=now):
-        config_entry = await setup_unifi_integration(
-            hass,
-            aioclient_mock,
-            options=options,
-            clients_response=[uptime_client],
-        )
+    freezer.move_to(now)
+    config_entry = await setup_unifi_integration(
+        hass,
+        aioclient_mock,
+        options=options,
+        clients_response=[uptime_client],
+    )
 
     assert len(hass.states.async_all()) == 2
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1

@@ -6,7 +6,13 @@ import datetime
 from typing import Any
 
 from aiohttp import ClientConnectionError
-from aiosomecomfort import SomeComfortError, UnauthorizedError, UnexpectedResponse
+from aiosomecomfort import (
+    AuthError,
+    ConnectionError as AscConnectionError,
+    SomeComfortError,
+    UnauthorizedError,
+    UnexpectedResponse,
+)
 from aiosomecomfort.device import Device as SomeComfortDevice
 
 from homeassistant.components.climate import (
@@ -492,31 +498,38 @@ class HoneywellUSThermostat(ClimateEntity):
 
     async def async_update(self) -> None:
         """Get the latest state from the service."""
-        try:
-            await self._device.refresh()
-            self._attr_available = True
-            self._retry = 0
 
-        except UnauthorizedError:
+        async def _login() -> None:
             try:
                 await self._data.client.login()
                 await self._device.refresh()
-                self._attr_available = True
-                self._retry = 0
 
             except (
-                SomeComfortError,
+                AuthError,
                 ClientConnectionError,
                 asyncio.TimeoutError,
             ):
                 self._retry += 1
-                if self._retry > RETRY:
-                    self._attr_available = False
+                self._attr_available = self._retry <= RETRY
+                return
 
-        except (ClientConnectionError, asyncio.TimeoutError):
+            self._attr_available = True
+            self._retry = 0
+
+        try:
+            await self._device.refresh()
+
+        except UnauthorizedError:
+            await _login()
+            return
+
+        except (AscConnectionError, ClientConnectionError, asyncio.TimeoutError):
             self._retry += 1
-            if self._retry > RETRY:
-                self._attr_available = False
+            self._attr_available = self._retry <= RETRY
+            return
 
         except UnexpectedResponse:
-            pass
+            return
+
+        self._attr_available = True
+        self._retry = 0

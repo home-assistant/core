@@ -52,25 +52,24 @@
     "ad4838d7d35c4d6ea796ee12ae5aedf8": {
       "active_preset": "asleep",
       "available": true,
-      "available_schedules": ["Weekschema", "Badkamer", "Test"],
+      "available_schedules": ["Weekschema", "Badkamer", "Test", "off"],
+      "control_state": "cooling",
       "dev_class": "thermostat",
       "location": "f2bf9048bef64cc5b6d5110154e33c81",
-      "mode": "heat_cool",
+      "mode": "cool",
       "model": "ThermoTouch",
       "name": "Anna",
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "select_schedule": "Weekschema",
       "selected_schedule": "None",
       "sensors": {
-        "setpoint_high": 23.5,
-        "setpoint_low": 4.0,
+        "setpoint": 23.5,
         "temperature": 25.8
       },
       "thermostat": {
         "lower_bound": 1.0,
         "resolution": 0.01,
-        "setpoint_high": 23.5,
-        "setpoint_low": 4.0,
+        "setpoint": 23.5,
         "upper_bound": 35.0
       },
       "vendor": "Plugwise"
@@ -103,7 +102,8 @@
     "e2f4322d57924fa090fbbc48b3a140dc": {
       "active_preset": "home",
       "available": true,
-      "available_schedules": ["Weekschema", "Badkamer", "Test"],
+      "available_schedules": ["Weekschema", "Badkamer", "Test", "off"],
+      "control_state": "off",
       "dev_class": "zone_thermostat",
       "firmware": "2016-10-10T02:00:00+02:00",
       "hardware": "255",
@@ -115,9 +115,8 @@
       "select_schedule": "Badkamer",
       "sensors": {
         "battery": 56,
-        "setpoint_high": 23.5,
-        "setpoint_low": 20.0,
-        "temperature": 239
+        "setpoint": 23.5,
+        "temperature": 23.9
       },
       "temperature_offset": {
         "lower_bound": -2.0,
@@ -128,8 +127,7 @@
       "thermostat": {
         "lower_bound": 0.0,
         "resolution": 0.01,
-        "setpoint_high": 25.0,
-        "setpoint_low": 19.0,
+        "setpoint": 25.0,
         "upper_bound": 99.9
       },
       "vendor": "Plugwise",
@@ -152,6 +150,7 @@
     "cooling_present": true,
     "gateway_id": "da224107914542988a88561b4452b0f6",
     "heater_id": "056ee145a816487eaa69243c3280f8bf",
+    "item_count": 145,
     "notifications": {},
     "smile_name": "Adam"
   }

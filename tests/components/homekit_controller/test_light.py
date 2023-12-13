@@ -343,9 +343,10 @@ async def test_light_unloaded_removed(hass: HomeAssistant, utcnow) -> None:
     assert hass.states.get(helper.entity_id).state == STATE_UNAVAILABLE
 
 
-async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
+async def test_migrate_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+) -> None:
     """Test a we can migrate a light unique id."""
-    entity_registry = er.async_get(hass)
     aid = get_next_aid()
     light_entry = entity_registry.async_get_or_create(
         "light",
@@ -360,9 +361,10 @@ async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
     )
 
 
-async def test_only_migrate_once(hass: HomeAssistant, utcnow) -> None:
+async def test_only_migrate_once(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+) -> None:
     """Test a we handle migration happening after an upgrade and than a downgrade and then an upgrade."""
-    entity_registry = er.async_get(hass)
     aid = get_next_aid()
     old_light_entry = entity_registry.async_get_or_create(
         "light",

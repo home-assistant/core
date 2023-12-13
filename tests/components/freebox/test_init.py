@@ -1,4 +1,4 @@
-"""Tests for the Freebox config flow."""
+"""Tests for the Freebox init."""
 from unittest.mock import ANY, Mock, patch
 
 from pytest_unordered import unordered
