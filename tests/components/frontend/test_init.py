@@ -694,8 +694,7 @@ async def test_get_icons_for_integrations(
     with patch(
         "homeassistant.components.frontend.async_get_icons",
         side_effect=lambda hass, category, integrations: {
-            integration: {}
-            for integration in integrations
+            integration: {} for integration in integrations
         },
     ):
         await ws_client.send_json(
@@ -721,8 +720,7 @@ async def test_get_icons_for_single_integration(
     with patch(
         "homeassistant.components.frontend.async_get_icons",
         side_effect=lambda hass, category, integrations: {
-            integration: {}
-            for integration in integrations
+            integration: {} for integration in integrations
         },
     ):
         await ws_client.send_json(
@@ -738,4 +736,4 @@ async def test_get_icons_for_single_integration(
     assert msg["id"] == 5
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
-    assert msg["result"] == {"resources": {"http":{}}}
+    assert msg["result"] == {"resources": {"http": {}}}

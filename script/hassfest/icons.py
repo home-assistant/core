@@ -31,7 +31,7 @@ def icon_schema(integration_type: str) -> vol.Schema:
         slug_validator=translation_key_validator,
     )
 
-    def icon_schema_slug(marker: type[vol.Marker])-> dict[vol.Marker, Any]:
+    def icon_schema_slug(marker: type[vol.Marker]) -> dict[vol.Marker, Any]:
         return {
             marker("default"): icon_value_validator,
             vol.Optional("state"): state_validator,
