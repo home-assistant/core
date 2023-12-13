@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from functools import partial
 
 from easyenergy import Electricity, Gas, VatOption
 
@@ -59,8 +60,9 @@ def __serialize_prices(prices: list[dict[str, float | datetime]]) -> ServiceResp
 
 
 async def __get_prices(
-    coordinator: EasyEnergyDataUpdateCoordinator,
     call: ServiceCall,
+    *,
+    coordinator: EasyEnergyDataUpdateCoordinator,
     price_type: PriceType,
 ) -> ServiceResponse:
     """Get prices from easyEnergy."""
@@ -97,36 +99,28 @@ async def async_setup_services(
 ) -> None:
     """Set up services for easyEnergy integration."""
 
-    async def get_gas_prices(call: ServiceCall) -> ServiceResponse:
-        """Search gas prices."""
-        return await __get_prices(coordinator, call, PriceType.GAS)
-
-    async def get_energy_usage_prices(call: ServiceCall) -> ServiceResponse:
-        """Search energy usage prices."""
-        return await __get_prices(coordinator, call, PriceType.ENERGY_USAGE)
-
-    async def get_energy_return_prices(call: ServiceCall) -> ServiceResponse:
-        """Search energy return prices."""
-        return await __get_prices(coordinator, call, PriceType.ENERGY_RETURN)
-
     hass.services.async_register(
         DOMAIN,
         GAS_SERVICE_NAME,
-        get_gas_prices,
+        partial(__get_prices, coordinator=coordinator, price_type=PriceType.GAS),
         schema=SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
         ENERGY_USAGE_SERVICE_NAME,
-        get_energy_usage_prices,
+        partial(
+            __get_prices, coordinator=coordinator, price_type=PriceType.ENERGY_USAGE
+        ),
         schema=SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
         ENERGY_RETURN_SERVICE_NAME,
-        get_energy_return_prices,
+        partial(
+            __get_prices, coordinator=coordinator, price_type=PriceType.ENERGY_RETURN
+        ),
         schema=SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
