@@ -165,7 +165,7 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
         entity_registry_enabled_default=False,
         key=f"forecast-hourly-{ATTR_API_FORECAST_TEMP}",
         keys=[AOD_TOWN, AOD_FORECAST_HOURLY, AOD_FORECAST_CURRENT, AOD_TEMP],
-        name="Hourly Forecast Temperature",
+        name="Hourly forecast temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
