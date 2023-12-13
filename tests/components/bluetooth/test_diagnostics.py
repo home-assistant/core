@@ -454,11 +454,10 @@ async def test_diagnostics_remote_adapter(
 
         assert await hass.config_entries.async_setup(entry1.entry_id)
         await hass.async_block_till_done()
-        new_info_callback = manager.scanner_adv_received
         connector = (
             HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
         )
-        scanner = FakeScanner("esp32", "esp32", new_info_callback, connector, False)
+        scanner = FakeScanner("esp32", "esp32", connector, False)
         unsetup = scanner.async_setup()
         cancel = manager.async_register_scanner(scanner, True)
 

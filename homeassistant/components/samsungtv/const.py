@@ -11,7 +11,6 @@ DEFAULT_MANUFACTURER = "Samsung"
 VALUE_CONF_NAME = "HomeAssistant"
 VALUE_CONF_ID = "ha.component.samsung"
 
-CONF_DESCRIPTION = "description"
 CONF_MANUFACTURER = "manufacturer"
 CONF_SSDP_RENDERING_CONTROL_LOCATION = "ssdp_rendering_control_location"
 CONF_SSDP_MAIN_TV_AGENT_LOCATION = "ssdp_main_tv_agent_location"

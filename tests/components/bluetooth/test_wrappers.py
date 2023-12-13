@@ -1,7 +1,6 @@
 """Tests for the Bluetooth integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from contextlib import contextmanager
 from unittest.mock import patch
 
@@ -18,10 +17,8 @@ import pytest
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
     BaseHaRemoteScanner,
-    BluetoothServiceInfoBleak,
     HaBluetoothConnector,
     HomeAssistantBluetoothManager,
-    async_get_advertisement_callback,
 )
 from homeassistant.core import HomeAssistant
 
@@ -43,12 +40,11 @@ class FakeScanner(BaseHaRemoteScanner):
         self,
         scanner_id: str,
         name: str,
-        new_info_callback: Callable[[BluetoothServiceInfoBleak], None],
         connector: None,
         connectable: bool,
     ) -> None:
         """Initialize the scanner."""
-        super().__init__(scanner_id, name, new_info_callback, connector, connectable)
+        super().__init__(scanner_id, name, connector, connectable)
         self._details: dict[str, str | HaBluetoothConnector] = {}
 
     def __repr__(self) -> str:
@@ -182,13 +178,8 @@ def _generate_scanners_with_fake_devices(hass):
         )
         hci1_device_advs[device.address] = (device, adv_data)
 
-    new_info_callback = async_get_advertisement_callback(hass)
-    scanner_hci0 = FakeScanner(
-        "00:00:00:00:00:01", "hci0", new_info_callback, None, True
-    )
-    scanner_hci1 = FakeScanner(
-        "00:00:00:00:00:02", "hci1", new_info_callback, None, True
-    )
+    scanner_hci0 = FakeScanner("00:00:00:00:00:01", "hci0", None, True)
+    scanner_hci1 = FakeScanner("00:00:00:00:00:02", "hci1", None, True)
 
     for device, adv_data in hci0_device_advs.values():
         scanner_hci0.inject_advertisement(device, adv_data)
