@@ -51,6 +51,12 @@ async def test_entities_added(hass: HomeAssistant) -> None:
         state = hass.states.get(entity_id)
 
         assert state is not None
-        assert state.attributes["friendly_name"] == "Krisinformation test"
-        assert state.attributes["icon"] == "mdi:alert"
-        assert state.attributes["attribution"] == "Alerts provided by Krisinformation"
+        assert state.state == "Test message"
+        assert state.attributes == {
+            "friendly_name": "Krisinformation test",
+            "icon": "mdi:alert",
+            "attribution": "Alerts provided by Krisinformation",
+            "link": "krisinformation.se",
+            "published": "2023-03-29T11:02:11+02:00",
+            "county": "Värmlands län",
+        }
