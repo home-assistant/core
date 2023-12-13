@@ -10,23 +10,6 @@ from .const import MOCK_CONFIG
 
 from tests.common import MockConfigEntry
 
-mock_response = [
-    {
-        "PushMessage": "This is a test VMA",
-        "Web": "https://www.krisinformation.se/",
-        "Published": "2023-05-01T12:00:00+02:00",
-        "Area": [
-            {
-                "Type": "County",
-                "Description": "Västra Götalands län",
-                "GeometryInformation": {
-                    "PoleOfInInaccessibility": {"coordinates": [57.7, 9.11]}
-                },
-            }
-        ],
-    }
-]
-
 
 async def test_entities_added(hass: HomeAssistant) -> None:
     """Test the entities are added."""
@@ -41,7 +24,6 @@ async def test_entities_added(hass: HomeAssistant) -> None:
     with patch(
         "krisinformation.crisis_alerter.CrisisAlerter.vmas",
         is_test=True,
-        return_value=None,
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
