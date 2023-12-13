@@ -17,7 +17,7 @@
           "location": "[%key:common::config_flow::data::location%]"
         },
         "data_description": {
-          "location": "Equal or part off name, description or camera id"
+          "location": "Equal or part of name, description or camera id"
         }
       }
     }
