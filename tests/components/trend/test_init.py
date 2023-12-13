@@ -1,30 +1,19 @@
 """Test the Trend integration."""
-from homeassistant.components.trend.const import DOMAIN
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
 
-async def test_setup_and_remove_config_entry(hass: HomeAssistant) -> None:
+async def test_setup_and_remove_config_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test setting up and removing a config entry."""
     registry = er.async_get(hass)
     trend_entity_id = "binary_sensor.my_trend"
 
-    # Setup the config entry
-    config_entry = MockConfigEntry(
-        data={},
-        domain=DOMAIN,
-        options={
-            "name": "My trend",
-            "entity_id": "sensor.cpu_temp",
-            "invert": False,
-            "max_samples": 2.0,
-            "min_gradient": 0.0,
-            "sample_duration": 0.0,
-        },
-        title="My trend",
-    )
+    # Set up the config entry
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

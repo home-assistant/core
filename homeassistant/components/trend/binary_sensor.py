@@ -166,6 +166,7 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
         )
 
         # this is only available if imported from YAML
+        # keep this for backwards compatibility
         if CONF_DEVICE_CLASS in config_entry.options:
             self._attr_device_class = config_entry.options[CONF_DEVICE_CLASS]
 

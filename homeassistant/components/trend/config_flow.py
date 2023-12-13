@@ -46,6 +46,7 @@ async def get_options_schema(
         }
     )
 
+    # just return a subset of the schema, to make the setup easier
     if not full_options:
         return base_schema
 
@@ -72,7 +73,7 @@ async def get_options_schema(
             ): selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     min=0,
-                    step=0.1,
+                    step="any",
                     mode=selector.NumberSelectorMode.BOX,
                 ),
             ),

@@ -2,22 +2,22 @@
 from datetime import timedelta
 import logging
 from typing import Any
-from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant import config as hass_config, setup
+from homeassistant import setup
 from homeassistant.components.trend.const import DOMAIN
-from homeassistant.const import SERVICE_RELOAD, STATE_OFF, STATE_ON, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant, State
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from tests.common import assert_setup_component, get_fixture_path, mock_restore_cache
+from tests.common import MockConfigEntry, assert_setup_component, mock_restore_cache
 
 
-async def _setup_component(hass: HomeAssistant, params: dict[str, Any]) -> None:
-    """Set up the trend component."""
+async def _setup_legacy_component(hass: HomeAssistant, params: dict[str, Any]) -> None:
+    """Set up the trend component the legacy way."""
     assert await async_setup_component(
         hass,
         "binary_sensor",
@@ -33,6 +33,23 @@ async def _setup_component(hass: HomeAssistant, params: dict[str, Any]) -> None:
     await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("config_entry")
+async def _setup_component(
+    hass: HomeAssistant, config_entry: MockConfigEntry, params: dict[str, Any]
+) -> None:
+    """Set up the trend component."""
+    config_entry.title = "test_trend_sensor"
+    config_entry.options = {
+        **config_entry.options,
+        **params,
+        "name": "test_trend_sensor",
+        "entity_id": "sensor.test_state",
+    }
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
 @pytest.mark.parametrize(
     ("states", "inverted", "expected_state"),
     [
@@ -45,6 +62,7 @@ async def _setup_component(hass: HomeAssistant, params: dict[str, Any]) -> None:
 )
 async def test_basic_trend(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     states: list[str],
     inverted: bool,
     expected_state: str,
@@ -52,8 +70,8 @@ async def test_basic_trend(
     """Test trend with a basic setup."""
     await _setup_component(
         hass,
+        config_entry,
         {
-            "entity_id": "sensor.test_state",
             "invert": inverted,
         },
     )
@@ -89,6 +107,7 @@ async def test_basic_trend(
 )
 async def test_using_trendline(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     state_series: list[list[str]],
     inverted: bool,
@@ -97,8 +116,8 @@ async def test_using_trendline(
     """Test uptrend using multiple samples and trendline calculation."""
     await _setup_component(
         hass,
+        config_entry,
         {
-            "entity_id": "sensor.test_state",
             "sample_duration": 10000,
             "min_gradient": 1,
             "max_samples": 25,
@@ -127,12 +146,14 @@ async def test_using_trendline(
 )
 async def test_attribute_trend(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     attr_values: list[str],
     expected_state: str,
 ):
     """Test attribute uptrend."""
     await _setup_component(
         hass,
+        config_entry,
         {
             "entity_id": "sensor.test_state",
             "attribute": "attr",
@@ -147,12 +168,12 @@ async def test_attribute_trend(
     assert sensor_state.state == expected_state
 
 
-async def test_max_samples(hass: HomeAssistant):
+async def test_max_samples(hass: HomeAssistant, config_entry: MockConfigEntry):
     """Test that sample count is limited correctly."""
     await _setup_component(
         hass,
+        config_entry,
         {
-            "entity_id": "sensor.test_state",
             "max_samples": 3,
             "min_gradient": -1,
         },
@@ -167,33 +188,31 @@ async def test_max_samples(hass: HomeAssistant):
     assert state.attributes["sample_count"] == 3
 
 
-async def test_non_numeric(hass: HomeAssistant):
+async def test_non_numeric(hass: HomeAssistant, config_entry: MockConfigEntry):
     """Test for non-numeric sensor."""
-    await _setup_component(hass, {"entity_id": "sensor.test_state"})
+    await _setup_component(hass, config_entry, {"entity_id": "sensor.test_state"})
 
-    hass.states.async_set("sensor.test_state", "Non")
-    await hass.async_block_till_done()
-    hass.states.async_set("sensor.test_state", "Numeric")
-    await hass.async_block_till_done()
+    for val in ["Non", "Numeric"]:
+        hass.states.async_set("sensor.test_state", val)
+        await hass.async_block_till_done()
 
     assert (state := hass.states.get("binary_sensor.test_trend_sensor"))
     assert state.state == STATE_UNKNOWN
 
 
-async def test_missing_attribute(hass: HomeAssistant):
+async def test_missing_attribute(hass: HomeAssistant, config_entry: MockConfigEntry):
     """Test for missing attribute."""
     await _setup_component(
         hass,
+        config_entry,
         {
-            "entity_id": "sensor.test_state",
             "attribute": "missing",
         },
     )
 
-    hass.states.async_set("sensor.test_state", "State", {"attr": "2"})
-    await hass.async_block_till_done()
-    hass.states.async_set("sensor.test_state", "State", {"attr": "1"})
-    await hass.async_block_till_done()
+    for val in [1, 2]:
+        hass.states.async_set("sensor.test_state", "State", {"attr": val})
+        await hass.async_block_till_done()
 
     assert (state := hass.states.get("binary_sensor.test_trend_sensor"))
     assert state.state == STATE_UNKNOWN
@@ -250,6 +269,7 @@ async def test_no_sensors_does_not_create(hass: HomeAssistant):
 )
 async def test_restore_state(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     saved_state: str,
     restored_state: str,
@@ -259,8 +279,8 @@ async def test_restore_state(
 
     await _setup_component(
         hass,
+        config_entry,
         {
-            "entity_id": "sensor.test_state",
             "sample_duration": 10000,
             "min_gradient": 1,
             "max_samples": 25,
@@ -296,7 +316,7 @@ async def test_invalid_min_sample(
 ) -> None:
     """Test if error is logged when min_sample is larger than max_samples."""
     with caplog.at_level(logging.ERROR):
-        await _setup_component(
+        await _setup_legacy_component(
             hass,
             {
                 "entity_id": "sensor.test_state",
@@ -311,3 +331,23 @@ async def test_invalid_min_sample(
         "Invalid config for 'binary_sensor' from integration 'trend': min_samples must "
         "be smaller than or equal to max_samples" in record.message
     )
+
+
+async def test_import_issue_creation(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+):
+    """Test if import issue is raised."""
+    await _setup_legacy_component(
+        hass,
+        {
+            "entity_id": "sensor.test_state",
+            "max_samples": 25,
+            "min_samples": 20,
+        },
+    )
+
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+    assert issue

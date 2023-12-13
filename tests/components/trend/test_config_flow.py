@@ -51,15 +51,8 @@ async def test_form(hass: HomeAssistant) -> None:
     }
 
 
-async def test_options(hass: HomeAssistant) -> None:
+async def test_options(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test options flow."""
-
-    config_entry = MockConfigEntry(
-        data={},
-        domain=DOMAIN,
-        options={"name": "CPU Temperature rising", "entity_id": "sensor.cpu_temp"},
-        title="CPU Temperature rising",
-    )
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -80,6 +73,7 @@ async def test_step_import(hass: HomeAssistant) -> None:
                 "entity_id": "sensor.test_state",
                 "max_samples": 25,
                 "min_samples": 20,
+                "device_class": "battery",
             },
         )
         await hass.async_block_till_done()
@@ -91,4 +85,5 @@ async def test_step_import(hass: HomeAssistant) -> None:
         "max_samples": 25,
         "min_samples": 20,
         "name": "test_trend_sensor",
+        "device_class": "battery",
     }
