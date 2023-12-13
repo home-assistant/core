@@ -13,8 +13,8 @@
     'location_information': dict({
       'global_id_local': 1130600,
       'id_station': 1200545,
-      'latitude': 1.0,
-      'longitude': 2.0,
+      'latitude': 0.0,
+      'longitude': 0.0,
       'name': 'HomeTown',
       'station': 'HomeTown Station',
     }),
