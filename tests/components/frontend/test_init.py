@@ -23,7 +23,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockUser, async_capture_events, async_fire_time_changed
-from tests.typing import WebSocketGenerator
+from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 MOCK_THEMES = {
     "happy": {"primary-color": "red", "app-header-background-color": "blue"},
@@ -666,7 +666,7 @@ async def test_static_path_cache(hass: HomeAssistant, mock_http_client) -> None:
     assert resp.status == 404
 
 
-async def test_get_icons(hass: HomeAssistant, ws_client) -> None:
+async def test_get_icons(hass: HomeAssistant, ws_client: MockHAClientWebSocket) -> None:
     """Test get_icons command."""
     with patch(
         "homeassistant.components.frontend.async_get_icons",
@@ -687,7 +687,9 @@ async def test_get_icons(hass: HomeAssistant, ws_client) -> None:
     assert msg["result"] == {"resources": {}}
 
 
-async def test_get_icons_for_integrations(hass: HomeAssistant, ws_client) -> None:
+async def test_get_icons_for_integrations(
+    hass: HomeAssistant, ws_client: MockHAClientWebSocket
+) -> None:
     """Test get_icons for integrations command."""
     with patch(
         "homeassistant.components.frontend.async_get_icons",
@@ -711,7 +713,9 @@ async def test_get_icons_for_integrations(hass: HomeAssistant, ws_client) -> Non
     assert set(msg["result"]["resources"]["integration"]) == {"frontend", "http"}
 
 
-async def test_get_icons_for_single_integration(hass: HomeAssistant, ws_client) -> None:
+async def test_get_icons_for_single_integration(
+    hass: HomeAssistant, ws_client: MockHAClientWebSocket
+) -> None:
     """Test get_icons for integration command."""
     with patch(
         "homeassistant.components.frontend.async_get_icons",
