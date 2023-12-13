@@ -166,8 +166,6 @@ ARP_DATA = [
     },
 ]
 
-INFO_DATA = [{"current-firmware": "test_firmware", "model": "test_model"}]
-
 
 async def setup_mikrotik_entry(hass: HomeAssistant, **kwargs: Any) -> None:
     """Set up Mikrotik integration successfully."""
@@ -176,12 +174,8 @@ async def setup_mikrotik_entry(hass: HomeAssistant, **kwargs: Any) -> None:
     dhcp_data: list[dict[str, Any]] = kwargs.get("dhcp_data", DHCP_DATA)
     wireless_data: list[dict[str, Any]] = kwargs.get("wireless_data", WIRELESS_DATA)
     wifiwave2_data: list[dict[str, Any]] = kwargs.get("wifiwave2_data", WIFIWAVE2_DATA)
-    entry_id: str = kwargs.get("entry_id", None)
-    info_data: list(dict[str, str]) = kwargs.get("info_data", INFO_DATA)
 
     def mock_command(self, cmd: str, params: dict[str, Any] | None = None) -> Any:
-        if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.INFO]:
-            return info_data
         if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IS_WIRELESS]:
             return support_wireless
         if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IS_WIFIWAVE2]:
@@ -204,7 +198,7 @@ async def setup_mikrotik_entry(hass: HomeAssistant, **kwargs: Any) -> None:
         options.update({"arp_ping": True})
 
     config_entry = MockConfigEntry(
-        domain=mikrotik.DOMAIN, data=MOCK_DATA, options=options, entry_id=entry_id
+        domain=mikrotik.DOMAIN, data=MOCK_DATA, options=options
     )
     config_entry.add_to_hass(hass)
 
