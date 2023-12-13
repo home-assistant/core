@@ -18,6 +18,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import AppleTVEntity
 from .const import DOMAIN
 
+from pyatv.const import (
+    InputAction,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
@@ -29,6 +33,7 @@ COMMAND_TO_ATTRIBUTE = {
     "volume_up": ("audio", "volume_up"),
     "volume_down": ("audio", "volume_down"),
     "home_hold": ("remote_control", "home"),
+    "select_hold": ("remote_control", "select"),
 }
 
 
@@ -81,5 +86,8 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
                     raise ValueError("Command not found. Exiting sequence")
 
                 _LOGGER.info("Sending command %s", single_command)
-                await attr_value()
+                if "_hold" in single_command:
+                    await attr_value(action=InputAction.Hold)
+                else:
+                    await attr_value()
                 await asyncio.sleep(delay)
