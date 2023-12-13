@@ -10,6 +10,7 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_STANDBY,
 )
+from homeassistant.core import HomeAssistant
 
 
 class ExtendedMediaPlayer(mp.MediaPlayerEntity):
@@ -148,28 +149,67 @@ class SimpleMediaPlayer(mp.MediaPlayerEntity):
         self._state = STATE_STANDBY
 
 
+class AttrMediaPlayer(SimpleMediaPlayer):
+    """Media player setting properties via _attr_*."""
+
+    _attr_volume_step = 0.2
+
+
+descr = mp.MediaPlayerEntityDescription(key="test", volume_step=0.3)
+
+
+class DescrMediaPlayer(SimpleMediaPlayer):
+    """Media player setting properties via entity description."""
+
+    entity_description = descr
+
+
 @pytest.fixture(params=[ExtendedMediaPlayer, SimpleMediaPlayer])
 def player(hass, request):
     """Return a media player."""
     return request.param(hass)
 
 
-async def test_volume_up(player) -> None:
+@pytest.mark.parametrize(
+    ("player_class", "volume_step"),
+    [
+        (ExtendedMediaPlayer, 0.1),
+        (SimpleMediaPlayer, 0.1),
+        (AttrMediaPlayer, 0.2),
+        (DescrMediaPlayer, 0.3),
+    ],
+)
+async def test_volume_up(
+    hass: HomeAssistant, player_class: type[mp.MediaPlayerEntity], volume_step: float
+) -> None:
     """Test the volume_up and set volume methods."""
+    player = player_class(hass)
     assert player.volume_level == 0
     await player.async_set_volume_level(0.5)
     assert player.volume_level == 0.5
     await player.async_volume_up()
-    assert player.volume_level == 0.6
+    assert player.volume_level == 0.5 + volume_step
 
 
-async def test_volume_down(player) -> None:
+@pytest.mark.parametrize(
+    ("player_class", "volume_step"),
+    [
+        (ExtendedMediaPlayer, 0.1),
+        (SimpleMediaPlayer, 0.1),
+        (AttrMediaPlayer, 0.2),
+        (DescrMediaPlayer, 0.3),
+    ],
+)
+async def test_volume_down(
+    hass: HomeAssistant, player_class: type[mp.MediaPlayerEntity], volume_step: float
+) -> None:
     """Test the volume_down and set volume methods."""
+    player = player_class(hass)
     assert player.volume_level == 0
     await player.async_set_volume_level(0.5)
     assert player.volume_level == 0.5
     await player.async_volume_down()
-    assert player.volume_level == 0.4
+    assert player.volume_level == 0.5 - volume_step
 
 
 async def test_media_play_pause(player) -> None:
