@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+
 # Importing necessary modules and classes.
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform

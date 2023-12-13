@@ -1,5 +1,5 @@
 """Test the krisinformation config flow."""
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from voluptuous import MultipleInvalid
@@ -12,7 +12,7 @@ from homeassistant.data_entry_flow import FlowResultType
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_config_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -20,14 +20,15 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            "county": COUNTY_CODES["17"],
-            "name": "Krisinformation - Test",
-        },
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.krisinformation.config_flow.PlaceholderHub.authenticate",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"county": COUNTY_CODES["17"], "name": "Krisinformation - Test"},
+        )
+        await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Krisinformation - Test"
@@ -45,10 +46,14 @@ async def test_config_invalid_county(hass: HomeAssistant) -> None:
     )
 
     try:
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"county": "invalid_county"},
-        )
+        with patch(
+            "homeassistant.components.krisinformation.config_flow.PlaceholderHub.authenticate",
+            side_effect=MultipleInvalid,
+        ):
+            await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                {"county": "invalid_county"},
+            )
     except MultipleInvalid as err:
         assert (
             str(err)

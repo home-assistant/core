@@ -1,7 +1,6 @@
 """Config flow for krisinformation integration."""
 from __future__ import annotations
 
-
 # Importing necessary modules and classes.
 from typing import Any
 
