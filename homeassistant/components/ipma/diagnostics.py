@@ -20,12 +20,10 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "location_information": {
-            "latitude": round(entry.data[CONF_LATITUDE], 3),
-            "longitude": round(entry.data[CONF_LONGITUDE], 3),
+            "latitude": round(float(entry.data[CONF_LATITUDE]), 3),
+            "longitude": round(float(entry.data[CONF_LONGITUDE]), 3),
             "global_id_local": location.global_id_local,
             "id_station": location.id_station,
-            "latitude_station": location.latitude_station,
-            "longitude_station": location.longitude_station,
             "name": location.name,
             "station": location.station,
         },
