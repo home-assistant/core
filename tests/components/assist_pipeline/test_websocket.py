@@ -2467,10 +2467,10 @@ async def test_pipeline_empty_tts_output(
     await client.send_json_auto_id(
         {
             "type": "assist_pipeline/run",
-            "start_stage": "tts",
+            "start_stage": "intent",
             "end_stage": "tts",
             "input": {
-                "text": "",
+                "text": "never mind",
             },
         }
     )
@@ -2486,16 +2486,15 @@ async def test_pipeline_empty_tts_output(
     assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
 
-    # text-to-speech
+    # intent
     msg = await client.receive_json()
-    assert msg["event"]["type"] == "tts-start"
+    assert msg["event"]["type"] == "intent-start"
     assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
 
     msg = await client.receive_json()
-    assert msg["event"]["type"] == "tts-end"
+    assert msg["event"]["type"] == "intent-end"
     assert msg["event"]["data"] == snapshot
-    assert not msg["event"]["data"]["tts_output"]
     events.append(msg["event"])
 
     # run end

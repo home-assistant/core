@@ -1669,6 +1669,7 @@ def test_entity_description_as_dataclass(snapshot: SnapshotAssertion):
     with pytest.raises(dataclasses.FrozenInstanceError):
         delattr(obj, "name")
 
+    assert dataclasses.is_dataclass(obj)
     assert obj == snapshot
     assert obj == entity.EntityDescription("blah", device_class="test")
     assert repr(obj) == snapshot
@@ -1706,3 +1707,57 @@ def test_extending_entity_description(snapshot: SnapshotAssertion):
     assert obj.name == "mutate"
     delattr(obj, "key")
     assert not hasattr(obj, "key")
+
+    # Try multiple levels of FrozenOrThawed
+    class ExtendedEntityDescription(entity.EntityDescription, frozen_or_thawed=True):
+        extension: str = None
+
+    @dataclasses.dataclass(frozen=True)
+    class MyExtendedEntityDescription(ExtendedEntityDescription):
+        extra: str = None
+
+    obj = MyExtendedEntityDescription("blah", extension="ext", extra="foo", name="name")
+    assert obj == snapshot
+    assert obj == MyExtendedEntityDescription(
+        "blah", extension="ext", extra="foo", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    # Try multiple direct parents
+    @dataclasses.dataclass(frozen=True)
+    class MyMixin:
+        mixin: str = None
+
+    @dataclasses.dataclass(frozen=True, kw_only=True)
+    class ComplexEntityDescription1(MyMixin, entity.EntityDescription):
+        extra: str = None
+
+    obj = ComplexEntityDescription1(key="blah", extra="foo", mixin="mixin", name="name")
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription1(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(frozen=True, kw_only=True)
+    class ComplexEntityDescription2(entity.EntityDescription, MyMixin):
+        extra: str = None
+
+    obj = ComplexEntityDescription2(key="blah", extra="foo", mixin="mixin", name="name")
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription2(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    # Try inheriting with custom init
+    @dataclasses.dataclass
+    class CustomInitEntityDescription(entity.EntityDescription):
+        def __init__(self, extra, *args, **kwargs) -> None:
+            super().__init__(*args, **kwargs)
+            self.extra: str = extra
+
+    obj = CustomInitEntityDescription(key="blah", extra="foo", name="name")
+    assert obj == snapshot
+    assert obj == CustomInitEntityDescription(key="blah", extra="foo", name="name")
+    assert repr(obj) == snapshot
