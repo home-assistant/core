@@ -201,7 +201,7 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
         entity_registry_enabled_default=False,
         key=f"forecast-hourly-{ATTR_API_FORECAST_WIND_MAX_SPEED}",
         keys=[AOD_TOWN, AOD_FORECAST_HOURLY, AOD_FORECAST_CURRENT, AOD_WIND_SPEED_MAX],
-        name="Hourly Forecast Wind max speed",
+        name="Hourly forecast wind max speed",
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
     ),
