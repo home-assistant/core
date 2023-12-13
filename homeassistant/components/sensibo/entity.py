@@ -33,6 +33,7 @@ def async_handle_api_call(
                 res = await function(entity, *args, **kwargs)
         except SENSIBO_ERRORS as err:
             raise HomeAssistantError(
+                str(err),
                 translation_domain=DOMAIN,
                 translation_key="service_raised",
                 translation_placeholders={"error": str(err), "name": entity.name},
@@ -41,6 +42,7 @@ def async_handle_api_call(
         LOGGER.debug("Result %s for entity %s with arguments %s", res, entity, kwargs)
         if res is not True:
             raise HomeAssistantError(
+                f"Could not execute service for {entity.name}",
                 translation_domain=DOMAIN,
                 translation_key="service_result_not_true",
                 translation_placeholders={"name": entity.name},
