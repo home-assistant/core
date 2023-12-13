@@ -1784,7 +1784,7 @@ rokuecp==0.18.1
 roombapy==1.6.8
 
 # homeassistant.components.roon
-roonapi==0.1.5
+roonapi==0.1.6
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
