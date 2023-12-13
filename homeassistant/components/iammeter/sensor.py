@@ -39,7 +39,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEVICE_3080, DEVICE_3080T, DOMAIN
+from .const import DEVICE_3080, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ PLATFORM_TIMEOUT = 8
 
 
 def _migrate_to_new_unique_id(
-    hass: HomeAssistant, model=DEVICE_3080, serial_number: str = ""
+    hass: HomeAssistant, model: str, serial_number: str
 ) -> None:
     """Migrate old unique ids to new unique ids."""
     ent_reg = er.async_get(hass)
@@ -147,7 +147,7 @@ async def async_setup_platform(
             IammeterSensor(coordinator, description)
             for description in SENSOR_TYPES_3080
         )
-    elif model == DEVICE_3080T:
+    else:  # DEVICE_3080T:
         async_add_entities(
             IammeterSensor(coordinator, description)
             for description in SENSOR_TYPES_3080T
