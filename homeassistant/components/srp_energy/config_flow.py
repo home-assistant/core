@@ -41,23 +41,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     @callback
-    def _show_form(self, errors: dict[str, Any] | None = None) -> FlowResult:
+    def _show_form(self, errors: dict[str, Any]) -> FlowResult:
         """Show the form to the user."""
         LOGGER.debug("Show Form")
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    vol.Required(
+                        CONF_NAME, default=self.hass.config.location_name
+                    ): str,
                     vol.Required(CONF_ID): str,
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
-                    vol.Optional(
-                        CONF_NAME, default=self.hass.config.location_name
-                    ): str,
                     vol.Optional(CONF_IS_TOU, default=False): bool,
                 }
             ),
-            errors=errors or {},
+            errors=errors,
         )
 
     async def async_step_user(
@@ -65,10 +65,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
         LOGGER.debug("Config entry")
+        errors: dict[str, str] = {}
         if not user_input:
-            return self._show_form()
-
-        errors = {}
+            return self._show_form(errors)
 
         try:
             await validate_input(self.hass, user_input)
@@ -83,7 +82,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
-        await self.async_set_unique_id(user_input.get(CONF_ID))
+        await self.async_set_unique_id(user_input[CONF_ID])
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)

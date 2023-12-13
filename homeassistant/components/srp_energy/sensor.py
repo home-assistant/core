@@ -15,14 +15,13 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SRPEnergyDataUpdateCoordinator
-from .const import DOMAIN
+from .const import DEVICE_CONFIG_URL, DEVICE_MANUFACTURER, DEVICE_MODEL, DOMAIN
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the SRP Energy Usage sensor."""
-    # API object stored here by __init__.py
     coordinator: SRPEnergyDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities([SrpEntity(coordinator, entry)])
@@ -46,12 +45,13 @@ class SrpEntity(CoordinatorEntity[SRPEnergyDataUpdateCoordinator], SensorEntity)
         """Initialize the SrpEntity class."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{config_entry.entry_id}_total_usage"
-
-        # Configure device
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, config_entry.entry_id)},
-            name="SRP Energy",
+            name=f"SRP Energy {config_entry.title}",
             entry_type=DeviceEntryType.SERVICE,
+            manufacturer=DEVICE_MANUFACTURER,
+            model=DEVICE_MODEL,
+            configuration_url=DEVICE_CONFIG_URL,
         )
 
     @property
