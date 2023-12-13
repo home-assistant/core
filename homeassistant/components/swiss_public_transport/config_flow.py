@@ -1,5 +1,6 @@
 """Config flow for transport.opendata.ch."""
-from typing import Any, Optional
+import logging
+from typing import Any
 
 from opendata_transport import OpendataTransport
 from opendata_transport.exceptions import OpendataTransportError
@@ -7,11 +8,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import CONF_DESTINATION, CONF_START, DOMAIN
 
@@ -22,6 +21,8 @@ DATA_SCHEMA = vol.Schema(
     }
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class SwissPublicTransportConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Swiss public transport config flow."""
@@ -29,7 +30,7 @@ class SwissPublicTransportConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_user(
-        self, user_input: Optional[dict[str, Any]] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Async user step to set up the connection."""
         errors: dict[str, str] = {}
@@ -59,31 +60,22 @@ class SwissPublicTransportConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(import_input[CONF_NAME])
         self._abort_if_unique_id_configured()
 
+        session = async_get_clientsession(self.hass)
+        opendata = OpendataTransport(
+            import_input[CONF_START], import_input[CONF_DESTINATION], session
+        )
         try:
-            session = async_get_clientsession(self.hass)
-            opendata = OpendataTransport(
-                import_input[CONF_START], import_input[CONF_DESTINATION], session
-            )
             await opendata.async_get_data()
         except OpendataTransportError:
             return self.async_abort(reason="client")
         except Exception:  # pylint: disable=broad-except
+            _LOGGER.error(
+                "Unknown error raised by python-opendata-transport for '%s %s', check at http://transport.opendata.ch/examples/stationboard.html if your station names and your parameters are valid",
+                import_input[CONF_START],
+                import_input[CONF_DESTINATION],
+            )
             return self.async_abort(reason="unknown")
 
-        async_create_issue(
-            self.hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2024.7.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": DOMAIN,
-            },
-        )
         return self.async_create_entry(
             title=import_input[CONF_NAME],
             data=import_input,

@@ -42,9 +42,9 @@ SCAN_INTERVAL = timedelta(seconds=90)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_START): cv.string,
         vol.Required(CONF_DESTINATION): cv.string,
+        vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -55,11 +55,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
-    opendata = hass.data[DOMAIN][f"{config_entry.entry_id}_opendata_client"]
+    opendata = hass.data[DOMAIN][config_entry.entry_id]
 
-    name = config_entry.data.get(CONF_NAME)
-    start = config_entry.data.get(CONF_START)
-    destination = config_entry.data.get(CONF_DESTINATION)
+    start = config_entry.data[CONF_START]
+    destination = config_entry.data[CONF_DESTINATION]
+    name = config_entry.data.get(CONF_NAME, f"{start} {destination}")
 
     async_add_entities(
         [SwissPublicTransportSensor(opendata, start, destination, name)],
@@ -127,7 +127,7 @@ class SwissPublicTransportSensor(SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name if self._name else f"{self._from} {self._to}"
+        return self._name
 
     @property
     def native_value(self):

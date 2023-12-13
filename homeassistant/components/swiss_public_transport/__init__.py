@@ -49,7 +49,7 @@ async def async_setup_entry(
             f"Setup failed for entry '{start} {destination}' with invalid data"
         ) from e
 
-    hass.data[DOMAIN][f"{entry.entry_id}_opendata_client"] = opendata
+    hass.data[DOMAIN][entry.entry_id] = opendata
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
