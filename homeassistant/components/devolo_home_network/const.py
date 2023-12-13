@@ -14,6 +14,7 @@ PRODUCT = "product"
 SERIAL_NUMBER = "serial_number"
 TITLE = "title"
 
+FIRMWARE_UPDATE_INTERVAL = timedelta(hours=5)
 LONG_UPDATE_INTERVAL = timedelta(minutes=5)
 SHORT_UPDATE_INTERVAL = timedelta(seconds=15)
 

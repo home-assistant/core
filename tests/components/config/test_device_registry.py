@@ -63,6 +63,7 @@ async def test_list_devices(
             "model": "model",
             "name_by_user": None,
             "name": None,
+            "serial_number": None,
             "sw_version": None,
             "via_device_id": None,
         },
@@ -79,6 +80,7 @@ async def test_list_devices(
             "model": "model",
             "name_by_user": None,
             "name": None,
+            "serial_number": None,
             "sw_version": None,
             "via_device_id": dev1,
         },
@@ -108,6 +110,7 @@ async def test_list_devices(
             "model": "model",
             "name_by_user": None,
             "name": None,
+            "serial_number": None,
             "sw_version": None,
             "via_device_id": None,
         }
@@ -239,7 +242,7 @@ async def test_remove_config_entry_from_device(
     response = await ws_client.receive_json()
 
     assert not response["success"]
-    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["code"] == "home_assistant_error"
 
     # Make async_remove_config_entry_device return True
     can_remove = True
@@ -362,7 +365,7 @@ async def test_remove_config_entry_from_device_fails(
     response = await ws_client.receive_json()
 
     assert not response["success"]
-    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["code"] == "home_assistant_error"
     assert response["error"]["message"] == "Unknown config entry"
 
     # Try removing a config entry which does not support removal from the device
@@ -377,7 +380,7 @@ async def test_remove_config_entry_from_device_fails(
     response = await ws_client.receive_json()
 
     assert not response["success"]
-    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["code"] == "home_assistant_error"
     assert (
         response["error"]["message"] == "Config entry does not support device removal"
     )
@@ -394,7 +397,7 @@ async def test_remove_config_entry_from_device_fails(
     response = await ws_client.receive_json()
 
     assert not response["success"]
-    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["code"] == "home_assistant_error"
     assert response["error"]["message"] == "Unknown device"
 
     # Try removing a config entry from a device which it's not connected to
@@ -425,7 +428,7 @@ async def test_remove_config_entry_from_device_fails(
     response = await ws_client.receive_json()
 
     assert not response["success"]
-    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["code"] == "home_assistant_error"
     assert response["error"]["message"] == "Config entry not in device"
 
     # Try removing a config entry which can't be loaded from a device - allowed
@@ -440,5 +443,5 @@ async def test_remove_config_entry_from_device_fails(
     response = await ws_client.receive_json()
 
     assert not response["success"]
-    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["code"] == "home_assistant_error"
     assert response["error"]["message"] == "Integration not found"

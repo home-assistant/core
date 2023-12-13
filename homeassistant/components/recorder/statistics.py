@@ -526,7 +526,7 @@ def _compile_statistics(
         ):
             continue
         compiled: PlatformCompiledStatistics = platform_compile_statistics(
-            instance.hass, start, end
+            instance.hass, session, start, end
         )
         _LOGGER.debug(
             "Statistics for %s during %s-%s: %s",
@@ -1088,10 +1088,7 @@ def _generate_statistics_during_period_stmt(
         end_time_ts = end_time.timestamp()
         stmt += lambda q: q.filter(table.start_ts < end_time_ts)
     if metadata_ids:
-        stmt += lambda q: q.filter(
-            # https://github.com/python/mypy/issues/2608
-            table.metadata_id.in_(metadata_ids)  # type:ignore[arg-type]
-        )
+        stmt += lambda q: q.filter(table.metadata_id.in_(metadata_ids))
     stmt += lambda q: q.order_by(table.metadata_id, table.start_ts)
     return stmt
 
@@ -1871,7 +1868,7 @@ def get_latest_short_term_statistics_by_ids(
     return list(
         cast(
             Sequence[Row],
-            execute_stmt_lambda_element(session, stmt, orm_rows=False),
+            execute_stmt_lambda_element(session, stmt),
         )
     )
 
@@ -1887,69 +1884,69 @@ def _latest_short_term_statistics_by_ids_stmt(
     )
 
 
-def get_latest_short_term_statistics(
+def get_latest_short_term_statistics_with_session(
     hass: HomeAssistant,
+    session: Session,
     statistic_ids: set[str],
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
     metadata: dict[str, tuple[int, StatisticMetaData]] | None = None,
 ) -> dict[str, list[StatisticsRow]]:
-    """Return the latest short term statistics for a list of statistic_ids."""
-    with session_scope(hass=hass, read_only=True) as session:
-        # Fetch metadata for the given statistic_ids
-        if not metadata:
-            metadata = get_instance(hass).statistics_meta_manager.get_many(
-                session, statistic_ids=statistic_ids
-            )
-        if not metadata:
-            return {}
-        metadata_ids = set(
-            _extract_metadata_and_discard_impossible_columns(metadata, types)
+    """Return the latest short term statistics for a list of statistic_ids with a session."""
+    # Fetch metadata for the given statistic_ids
+    if not metadata:
+        metadata = get_instance(hass).statistics_meta_manager.get_many(
+            session, statistic_ids=statistic_ids
         )
-        run_cache = get_short_term_statistics_run_cache(hass)
-        # Try to find the latest short term statistics ids for the metadata_ids
-        # from the run cache first if we have it. If the run cache references
-        # a non-existent id because of a purge, we will detect it missing in the
-        # next step and run a query to re-populate the cache.
-        stats: list[Row] = []
-        if metadata_id_to_id := run_cache.get_latest_ids(metadata_ids):
-            stats = get_latest_short_term_statistics_by_ids(
-                session, metadata_id_to_id.values()
-            )
-        # If we are missing some metadata_ids in the run cache, we need run a query
-        # to populate the cache for each metadata_id, and then run another query
-        # to get the latest short term statistics for the missing metadata_ids.
-        if (missing_metadata_ids := metadata_ids - set(metadata_id_to_id)) and (
-            found_latest_ids := {
-                latest_id
-                for metadata_id in missing_metadata_ids
-                if (
-                    latest_id := cache_latest_short_term_statistic_id_for_metadata_id(
-                        run_cache, session, metadata_id
-                    )
+    if not metadata:
+        return {}
+    metadata_ids = set(
+        _extract_metadata_and_discard_impossible_columns(metadata, types)
+    )
+    run_cache = get_short_term_statistics_run_cache(hass)
+    # Try to find the latest short term statistics ids for the metadata_ids
+    # from the run cache first if we have it. If the run cache references
+    # a non-existent id because of a purge, we will detect it missing in the
+    # next step and run a query to re-populate the cache.
+    stats: list[Row] = []
+    if metadata_id_to_id := run_cache.get_latest_ids(metadata_ids):
+        stats = get_latest_short_term_statistics_by_ids(
+            session, metadata_id_to_id.values()
+        )
+    # If we are missing some metadata_ids in the run cache, we need run a query
+    # to populate the cache for each metadata_id, and then run another query
+    # to get the latest short term statistics for the missing metadata_ids.
+    if (missing_metadata_ids := metadata_ids - set(metadata_id_to_id)) and (
+        found_latest_ids := {
+            latest_id
+            for metadata_id in missing_metadata_ids
+            if (
+                latest_id := cache_latest_short_term_statistic_id_for_metadata_id(
+                    run_cache,
+                    session,
+                    metadata_id,
                 )
-                is not None
-            }
-        ):
-            stats.extend(
-                get_latest_short_term_statistics_by_ids(session, found_latest_ids)
             )
+            is not None
+        }
+    ):
+        stats.extend(get_latest_short_term_statistics_by_ids(session, found_latest_ids))
 
-        if not stats:
-            return {}
+    if not stats:
+        return {}
 
-        # Return statistics combined with metadata
-        return _sorted_statistics_to_dict(
-            hass,
-            session,
-            stats,
-            statistic_ids,
-            metadata,
-            False,
-            StatisticsShortTerm,
-            None,
-            None,
-            types,
-        )
+    # Return statistics combined with metadata
+    return _sorted_statistics_to_dict(
+        hass,
+        session,
+        stats,
+        statistic_ids,
+        metadata,
+        False,
+        StatisticsShortTerm,
+        None,
+        None,
+        types,
+    )
 
 
 def _generate_statistics_at_time_stmt(
@@ -2326,7 +2323,9 @@ def get_short_term_statistics_run_cache(
 
 
 def cache_latest_short_term_statistic_id_for_metadata_id(
-    run_cache: ShortTermStatisticsRunCache, session: Session, metadata_id: int
+    run_cache: ShortTermStatisticsRunCache,
+    session: Session,
+    metadata_id: int,
 ) -> int | None:
     """Cache the latest short term statistic for a given metadata_id.
 
@@ -2337,9 +2336,7 @@ def cache_latest_short_term_statistic_id_for_metadata_id(
     if latest := cast(
         Sequence[Row],
         execute_stmt_lambda_element(
-            session,
-            _find_latest_short_term_statistic_for_metadata_id_stmt(metadata_id),
-            orm_rows=False,
+            session, _find_latest_short_term_statistic_for_metadata_id_stmt(metadata_id)
         ),
     ):
         id_: int = latest[0].id

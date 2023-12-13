@@ -1,4 +1,4 @@
-"""Support for Supla cover - curtains, rollershutters, entry gate etc."""
+"""Support for SUPLA covers - curtains, rollershutters, entry gate etc."""
 from __future__ import annotations
 
 import logging
@@ -26,7 +26,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Supla covers."""
+    """Set up the SUPLA covers."""
     if discovery_info is None:
         return
 
@@ -59,7 +59,7 @@ async def async_setup_platform(
 
 
 class SuplaCoverEntity(SuplaEntity, CoverEntity):
-    """Representation of a Supla Cover."""
+    """Representation of a SUPLA Cover."""
 
     @property
     def current_cover_position(self) -> int | None:
@@ -93,7 +93,7 @@ class SuplaCoverEntity(SuplaEntity, CoverEntity):
 
 
 class SuplaDoorEntity(SuplaEntity, CoverEntity):
-    """Representation of a Supla door."""
+    """Representation of a SUPLA door."""
 
     _attr_device_class = CoverDeviceClass.GARAGE
 

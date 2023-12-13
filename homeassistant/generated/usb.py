@@ -96,6 +96,12 @@ USB = [
         "vid": "1CF1",
     },
     {
+        "description": "*conbee*",
+        "domain": "zha",
+        "pid": "6015",
+        "vid": "0403",
+    },
+    {
         "description": "*zigbee*",
         "domain": "zha",
         "pid": "8A2A",

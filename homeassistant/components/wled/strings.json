@@ -6,6 +6,9 @@
         "description": "Set up your WLED to integrate with Home Assistant.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your WLED device."
         }
       },
       "zeroconf_confirm": {
@@ -26,7 +29,7 @@
     "step": {
       "init": {
         "data": {
-          "keep_master_light": "Keep master light, even with 1 LED segment."
+          "keep_master_light": "Keep main light, even with 1 LED segment."
         }
       }
     }

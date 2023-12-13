@@ -1,13 +1,15 @@
 """Switch platform for Enphase Envoy solar energy monitor."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 import logging
 from typing import Any
 
 from pyenphase import Envoy, EnvoyDryContactStatus, EnvoyEnpower
+from pyenphase.const import SupportedFeatures
 from pyenphase.models.dry_contacts import DryContactStatus
+from pyenphase.models.tariff import EnvoyStorageSettings
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -54,6 +56,22 @@ class EnvoyDryContactSwitchEntityDescription(
     """Describes an Envoy Enpower dry contact switch entity."""
 
 
+@dataclass
+class EnvoyStorageSettingsRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[EnvoyStorageSettings], bool]
+    turn_on_fn: Callable[[Envoy], Awaitable[dict[str, Any]]]
+    turn_off_fn: Callable[[Envoy], Awaitable[dict[str, Any]]]
+
+
+@dataclass
+class EnvoyStorageSettingsSwitchEntityDescription(
+    SwitchEntityDescription, EnvoyStorageSettingsRequiredKeysMixin
+):
+    """Describes an Envoy storage settings switch entity."""
+
+
 ENPOWER_GRID_SWITCH = EnvoyEnpowerSwitchEntityDescription(
     key="mains_admin_state",
     translation_key="grid_enabled",
@@ -67,6 +85,14 @@ RELAY_STATE_SWITCH = EnvoyDryContactSwitchEntityDescription(
     value_fn=lambda dry_contact: dry_contact.status == DryContactStatus.CLOSED,
     turn_on_fn=lambda envoy, id: envoy.close_dry_contact(id),
     turn_off_fn=lambda envoy, id: envoy.open_dry_contact(id),
+)
+
+CHARGE_FROM_GRID_SWITCH = EnvoyStorageSettingsSwitchEntityDescription(
+    key="charge_from_grid",
+    translation_key="charge_from_grid",
+    value_fn=lambda storage_settings: storage_settings.charge_from_grid,
+    turn_on_fn=lambda envoy: envoy.enable_charge_from_grid(),
+    turn_off_fn=lambda envoy: envoy.disable_charge_from_grid(),
 )
 
 
@@ -93,6 +119,18 @@ async def async_setup_entry(
         entities.extend(
             EnvoyDryContactSwitchEntity(coordinator, RELAY_STATE_SWITCH, relay)
             for relay in envoy_data.dry_contact_status
+        )
+
+    if (
+        envoy_data.enpower
+        and envoy_data.tariff
+        and envoy_data.tariff.storage_settings
+        and (coordinator.envoy.supported_features & SupportedFeatures.ENCHARGE)
+    ):
+        entities.append(
+            EnvoyStorageSettingsSwitchEntity(
+                coordinator, CHARGE_FROM_GRID_SWITCH, envoy_data.enpower
+            )
         )
 
     async_add_entities(entities)
@@ -188,3 +226,47 @@ class EnvoyDryContactSwitchEntity(EnvoyBaseEntity, SwitchEntity):
         """Turn off (open) the dry contact."""
         if await self.entity_description.turn_off_fn(self.envoy, self.relay_id):
             self.async_write_ha_state()
+
+
+class EnvoyStorageSettingsSwitchEntity(EnvoyBaseEntity, SwitchEntity):
+    """Representation of an Enphase storage settings switch entity."""
+
+    entity_description: EnvoyStorageSettingsSwitchEntityDescription
+
+    def __init__(
+        self,
+        coordinator: EnphaseUpdateCoordinator,
+        description: EnvoyStorageSettingsSwitchEntityDescription,
+        enpower: EnvoyEnpower,
+    ) -> None:
+        """Initialize the Enphase storage settings switch entity."""
+        super().__init__(coordinator, description)
+        self.envoy = coordinator.envoy
+        self.enpower = enpower
+        self._serial_number = enpower.serial_number
+        self._attr_unique_id = f"{self._serial_number}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._serial_number)},
+            manufacturer="Enphase",
+            model="Enpower",
+            name=f"Enpower {self._serial_number}",
+            sw_version=str(enpower.firmware_version),
+            via_device=(DOMAIN, self.envoy_serial_num),
+        )
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the storage settings switch."""
+        assert self.data.tariff is not None
+        assert self.data.tariff.storage_settings is not None
+        return self.entity_description.value_fn(self.data.tariff.storage_settings)
+
+    async def async_turn_on(self):
+        """Turn on the storage settings switch."""
+        await self.entity_description.turn_on_fn(self.envoy)
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_off(self):
+        """Turn off the storage switch."""
+        await self.entity_description.turn_off_fn(self.envoy)
+        await self.coordinator.async_request_refresh()

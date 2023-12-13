@@ -124,12 +124,16 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             if not errors:
                 self._config = user_input
-                return self.async_show_menu(
-                    step_id="origin_menu",
-                    menu_options=["origin_coordinates", "origin_entity"],
-                )
+                return await self.async_step_origin_menu()
         return self.async_show_form(
             step_id="user", data_schema=get_user_step_schema(user_input), errors=errors
+        )
+
+    async def async_step_origin_menu(self, _: None = None) -> FlowResult:
+        """Show the origin menu."""
+        return self.async_show_menu(
+            step_id="origin_menu",
+            menu_options=["origin_coordinates", "origin_entity"],
         )
 
     async def async_step_origin_coordinates(
@@ -141,10 +145,7 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._config[CONF_ORIGIN_LONGITUDE] = user_input[CONF_ORIGIN][
                 CONF_LONGITUDE
             ]
-            return self.async_show_menu(
-                step_id="destination_menu",
-                menu_options=["destination_coordinates", "destination_entity"],
-            )
+            return await self.async_step_destination_menu()
         schema = vol.Schema(
             {
                 vol.Required(
@@ -158,16 +159,20 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="origin_coordinates", data_schema=schema)
 
+    async def async_step_destination_menu(self, _: None = None) -> FlowResult:
+        """Show the destination menu."""
+        return self.async_show_menu(
+            step_id="destination_menu",
+            menu_options=["destination_coordinates", "destination_entity"],
+        )
+
     async def async_step_origin_entity(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Configure origin by using an entity."""
         if user_input is not None:
             self._config[CONF_ORIGIN_ENTITY_ID] = user_input[CONF_ORIGIN_ENTITY_ID]
-            return self.async_show_menu(
-                step_id="destination_menu",
-                menu_options=["destination_coordinates", "destination_entity"],
-            )
+            return await self.async_step_destination_menu()
         schema = vol.Schema({vol.Required(CONF_ORIGIN_ENTITY_ID): EntitySelector()})
         return self.async_show_form(step_id="origin_entity", data_schema=schema)
 
@@ -237,10 +242,7 @@ class HERETravelTimeOptionsFlow(config_entries.OptionsFlow):
         """Manage the HERE Travel Time options."""
         if user_input is not None:
             self._config = user_input
-            return self.async_show_menu(
-                step_id="time_menu",
-                menu_options=["departure_time", "arrival_time", "no_time"],
-            )
+            return await self.async_step_time_menu()
 
         schema = vol.Schema(
             {
@@ -254,6 +256,13 @@ class HERETravelTimeOptionsFlow(config_entries.OptionsFlow):
         )
 
         return self.async_show_form(step_id="init", data_schema=schema)
+
+    async def async_step_time_menu(self, _: None = None) -> FlowResult:
+        """Show the time menu."""
+        return self.async_show_menu(
+            step_id="time_menu",
+            menu_options=["departure_time", "arrival_time", "no_time"],
+        )
 
     async def async_step_no_time(
         self, user_input: dict[str, Any] | None = None

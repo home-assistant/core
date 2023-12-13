@@ -8,7 +8,6 @@ from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
-import inspect
 import logging
 from typing import (
     Any,
@@ -56,6 +55,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     TimestampDataUpdateCoordinator,
 )
+from homeassistant.loader import async_get_issue_tracker, async_suggest_report_issue
 from homeassistant.util.dt import utcnow
 from homeassistant.util.json import JsonValueType
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -135,7 +135,9 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 ROUNDING_PRECISION = 2
 
-SERVICE_GET_FORECAST: Final = "get_forecast"
+LEGACY_SERVICE_GET_FORECAST: Final = "get_forecast"
+"""Deprecated: please use SERVICE_GET_FORECASTS."""
+SERVICE_GET_FORECASTS: Final = "get_forecasts"
 
 _ObservationUpdateCoordinatorT = TypeVar(
     "_ObservationUpdateCoordinatorT", bound="DataUpdateCoordinator[Any]"
@@ -210,10 +212,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component = hass.data[DOMAIN] = EntityComponent[WeatherEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
-    component.async_register_entity_service(
-        SERVICE_GET_FORECAST,
+    component.async_register_legacy_entity_service(
+        LEGACY_SERVICE_GET_FORECAST,
         {vol.Required("type"): vol.In(("daily", "hourly", "twice_daily"))},
         async_get_forecast_service,
+        required_features=[
+            WeatherEntityFeature.FORECAST_DAILY,
+            WeatherEntityFeature.FORECAST_HOURLY,
+            WeatherEntityFeature.FORECAST_TWICE_DAILY,
+        ],
+        supports_response=SupportsResponse.ONLY,
+    )
+    component.async_register_entity_service(
+        SERVICE_GET_FORECASTS,
+        {vol.Required("type"): vol.In(("daily", "hourly", "twice_daily"))},
+        async_get_forecasts_service,
         required_features=[
             WeatherEntityFeature.FORECAST_DAILY,
             WeatherEntityFeature.FORECAST_HOURLY,
@@ -296,7 +309,8 @@ class WeatherEntity(Entity, PostInit):
         Literal["daily", "hourly", "twice_daily"],
         list[Callable[[list[JsonValueType] | None], None]],
     ]
-    __weather_legacy_forecast: bool = False
+    __weather_reported_legacy_forecast = False
+    __weather_legacy_forecast = False
 
     _weather_option_temperature_unit: str | None = None
     _weather_option_pressure_unit: str | None = None
@@ -311,15 +325,12 @@ class WeatherEntity(Entity, PostInit):
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
         super().__init_subclass__(**kwargs)
-        if any(
-            method in cls.__dict__ for method in ("_attr_forecast", "forecast")
-        ) and not any(
-            method in cls.__dict__
-            for method in (
-                "async_forecast_daily",
-                "async_forecast_hourly",
-                "async_forecast_twice_daily",
-            )
+        if (
+            "forecast" in cls.__dict__
+            and cls.async_forecast_daily is WeatherEntity.async_forecast_daily
+            and cls.async_forecast_hourly is WeatherEntity.async_forecast_hourly
+            and cls.async_forecast_twice_daily
+            is WeatherEntity.async_forecast_twice_daily
         ):
             cls.__weather_legacy_forecast = True
 
@@ -332,38 +343,55 @@ class WeatherEntity(Entity, PostInit):
     ) -> None:
         """Start adding an entity to a platform."""
         super().add_to_platform_start(hass, platform, parallel_updates)
-        _reported_forecast = False
-        if self.__weather_legacy_forecast and not _reported_forecast:
-            module = inspect.getmodule(self)
-            if module and module.__file__ and "custom_components" in module.__file__:
-                # Do not report on core integrations as they are already fixed or PR is open.
-                report_issue = "report it to the custom integration author."
-                _LOGGER.warning(
-                    (
-                        "%s::%s is using a forecast attribute on an instance of "
-                        "WeatherEntity, this is deprecated and will be unsupported "
-                        "from Home Assistant 2024.3. Please %s"
-                    ),
-                    self.__module__,
-                    self.entity_id,
-                    report_issue,
-                )
-                ir.async_create_issue(
-                    self.hass,
-                    DOMAIN,
-                    f"deprecated_weather_forecast_{self.platform.platform_name}",
-                    breaks_in_ha_version="2024.3.0",
-                    is_fixable=False,
-                    is_persistent=False,
-                    issue_domain=self.platform.platform_name,
-                    severity=ir.IssueSeverity.WARNING,
-                    translation_key="deprecated_weather_forecast",
-                    translation_placeholders={
-                        "platform": self.platform.platform_name,
-                        "report_issue": report_issue,
-                    },
-                )
-                _reported_forecast = True
+        if self.__weather_legacy_forecast:
+            self._report_legacy_forecast(hass)
+
+    def _report_legacy_forecast(self, hass: HomeAssistant) -> None:
+        """Log warning and create an issue if the entity imlpements legacy forecast."""
+        if "custom_components" not in type(self).__module__:
+            # Do not report core integrations as they are already fixed or PR is open.
+            return
+
+        report_issue = async_suggest_report_issue(
+            hass,
+            integration_domain=self.platform.platform_name,
+            module=type(self).__module__,
+        )
+        _LOGGER.warning(
+            (
+                "%s::%s implements the `forecast` property or sets "
+                "`self._attr_forecast` in a subclass of WeatherEntity, this is "
+                "deprecated and will be unsupported from Home Assistant 2024.3."
+                " Please %s"
+            ),
+            self.platform.platform_name,
+            self.__class__.__name__,
+            report_issue,
+        )
+
+        translation_placeholders = {"platform": self.platform.platform_name}
+        translation_key = "deprecated_weather_forecast_no_url"
+        issue_tracker = async_get_issue_tracker(
+            hass,
+            integration_domain=self.platform.platform_name,
+            module=type(self).__module__,
+        )
+        if issue_tracker:
+            translation_placeholders["issue_tracker"] = issue_tracker
+            translation_key = "deprecated_weather_forecast_url"
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_weather_forecast_{self.platform.platform_name}",
+            breaks_in_ha_version="2024.3.0",
+            is_fixable=False,
+            is_persistent=False,
+            issue_domain=self.platform.platform_name,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders,
+        )
+        self.__weather_reported_legacy_forecast = True
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the weather entity is added to hass."""
@@ -554,6 +582,15 @@ class WeatherEntity(Entity, PostInit):
 
         Should not be overridden by integrations. Kept for backwards compatibility.
         """
+        if (
+            self._attr_forecast is not None
+            and type(self).async_forecast_daily is WeatherEntity.async_forecast_daily
+            and type(self).async_forecast_hourly is WeatherEntity.async_forecast_hourly
+            and type(self).async_forecast_twice_daily
+            is WeatherEntity.async_forecast_twice_daily
+            and not self.__weather_reported_legacy_forecast
+        ):
+            self._report_legacy_forecast(self.hass)
         return self._attr_forecast
 
     async def async_forecast_daily(self) -> list[Forecast] | None:
@@ -1061,6 +1098,32 @@ def raise_unsupported_forecast(entity_id: str, forecast_type: str) -> None:
 
 
 async def async_get_forecast_service(
+    weather: WeatherEntity, service_call: ServiceCall
+) -> ServiceResponse:
+    """Get weather forecast.
+
+    Deprecated: please use async_get_forecasts_service.
+    """
+    _LOGGER.warning(
+        "Detected use of service 'weather.get_forecast'. "
+        "This is deprecated and will stop working in Home Assistant 2024.6. "
+        "Use 'weather.get_forecasts' instead which supports multiple entities",
+    )
+    ir.async_create_issue(
+        weather.hass,
+        DOMAIN,
+        "deprecated_service_weather_get_forecast",
+        breaks_in_ha_version="2024.6.0",
+        is_fixable=True,
+        is_persistent=False,
+        issue_domain=weather.platform.platform_name,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_service_weather_get_forecast",
+    )
+    return await async_get_forecasts_service(weather, service_call)
+
+
+async def async_get_forecasts_service(
     weather: WeatherEntity, service_call: ServiceCall
 ) -> ServiceResponse:
     """Get weather forecast."""

@@ -42,9 +42,6 @@ class LazyEventPartialState:
         "event_type",
         "entity_id",
         "state",
-        "context_id_bin",
-        "context_user_id_bin",
-        "context_parent_id_bin",
         "data",
     ]
 
@@ -60,9 +57,6 @@ class LazyEventPartialState:
         self.event_type: str | None = self.row.event_type
         self.entity_id: str | None = self.row.entity_id
         self.state = self.row.state
-        self.context_id_bin: bytes | None = self.row.context_id_bin
-        self.context_user_id_bin: bytes | None = self.row.context_user_id_bin
-        self.context_parent_id_bin: bytes | None = self.row.context_parent_id_bin
         # We need to explicitly check for the row is EventAsRow as the unhappy path
         # to fetch row.data for Row is very expensive
         if type(row) is EventAsRow:  # noqa: E721
@@ -83,17 +77,17 @@ class LazyEventPartialState:
     @property
     def context_id(self) -> str | None:
         """Return the context id."""
-        return bytes_to_ulid_or_none(self.context_id_bin)
+        return bytes_to_ulid_or_none(self.row.context_id_bin)
 
     @property
     def context_user_id(self) -> str | None:
         """Return the context user id."""
-        return bytes_to_uuid_hex_or_none(self.context_user_id_bin)
+        return bytes_to_uuid_hex_or_none(self.row.context_user_id_bin)
 
     @property
     def context_parent_id(self) -> str | None:
         """Return the context parent id."""
-        return bytes_to_ulid_or_none(self.context_parent_id_bin)
+        return bytes_to_ulid_or_none(self.row.context_parent_id_bin)
 
 
 @dataclass(slots=True, frozen=True)

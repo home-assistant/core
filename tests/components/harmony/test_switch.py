@@ -1,7 +1,10 @@
 """Test the Logitech Harmony Hub activity switches."""
 from datetime import timedelta
 
+from homeassistant.components import automation, script
+from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.harmony.const import DOMAIN
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -17,6 +20,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+import homeassistant.helpers.issue_registry as ir
+from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
 
 from .const import ENTITY_PLAY_MUSIC, ENTITY_REMOTE, ENTITY_WATCH_TV, HUB_NAME
@@ -133,3 +138,62 @@ async def _toggle_switch_and_wait(hass, service_name, entity):
         blocking=True,
     )
     await hass.async_block_till_done()
+
+
+async def test_create_issue(
+    harmony_client,
+    mock_hc,
+    hass: HomeAssistant,
+    mock_write_config,
+    entity_registry_enabled_by_default: None,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test we create an issue when an automation or script is using a deprecated entity."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "test",
+                "trigger": {"platform": "state", "entity_id": ENTITY_WATCH_TV},
+                "action": {"service": "switch.turn_on", "entity_id": ENTITY_WATCH_TV},
+            }
+        },
+    )
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                "test": {
+                    "sequence": [
+                        {
+                            "service": "switch.turn_on",
+                            "data": {"entity_id": ENTITY_WATCH_TV},
+                        },
+                    ],
+                }
+            }
+        },
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "192.0.2.0", CONF_NAME: HUB_NAME}
+    )
+
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert automations_with_entity(hass, ENTITY_WATCH_TV)[0] == "automation.test"
+    assert scripts_with_entity(hass, ENTITY_WATCH_TV)[0] == "script.test"
+
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_switches")
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_switches_switch.guest_room_watch_tv_automation.test"
+    )
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_switches_switch.guest_room_watch_tv_script.test"
+    )
+
+    assert len(issue_registry.issues) == 3

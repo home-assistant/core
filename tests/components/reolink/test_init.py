@@ -11,11 +11,15 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .conftest import TEST_NVR_NAME
+from .conftest import TEST_CAM_MODEL, TEST_HOST_MODEL, TEST_NVR_NAME
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -102,6 +106,7 @@ async def test_entry_reloading(
     reolink_connect: MagicMock,
 ) -> None:
     """Test the entry is reloaded correctly when settings change."""
+    reolink_connect.is_nvr = False
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -113,6 +118,58 @@ async def test_entry_reloading(
 
     assert reolink_connect.logout.call_count == 1
     assert config_entry.title == "New Name"
+
+
+@pytest.mark.parametrize(
+    ("attr", "value", "expected_models"),
+    [
+        (
+            None,
+            None,
+            [TEST_HOST_MODEL, TEST_CAM_MODEL],
+        ),
+        ("channels", [], [TEST_HOST_MODEL]),
+        (
+            "camera_model",
+            Mock(return_value="RLC-567"),
+            [TEST_HOST_MODEL, "RLC-567"],
+        ),
+    ],
+)
+async def test_cleanup_disconnected_cams(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    attr: str | None,
+    value: Any,
+    expected_models: list[str],
+) -> None:
+    """Test device and entity registry are cleaned up when camera is disconnected from NVR."""
+    reolink_connect.channels = [0]
+    # setup CH 0 and NVR switch entities/device
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    device_models = [device.model for device in device_entries]
+    assert sorted(device_models) == sorted([TEST_HOST_MODEL, TEST_CAM_MODEL])
+
+    # reload integration after 'disconnecting' a camera.
+    if attr is not None:
+        setattr(reolink_connect, attr, value)
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_reload(config_entry.entry_id)
+
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    device_models = [device.model for device in device_entries]
+    assert sorted(device_models) == sorted(expected_models)
 
 
 async def test_no_repair_issue(

@@ -9,13 +9,14 @@ import voluptuous as vol
 
 from homeassistant import core, exceptions
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_PIN
+from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
+import homeassistant.helpers.config_validation as cv
 
-from .const import _LOGGER, DOMAIN
+from .const import _LOGGER, DEFAULT_PORT, DOMAIN
 
 DEFAULT_HOST = "192.168.1.252"
-DEFAULT_PIN = "111111"
+DEFAULT_PIN = 111111
 
 
 def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
@@ -23,13 +24,14 @@ def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
     user_input = user_input or {}
     return vol.Schema(
         {
-            vol.Optional(CONF_HOST, default=DEFAULT_HOST): str,
-            vol.Optional(CONF_PIN, default=DEFAULT_PIN): str,
+            vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
+            vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.positive_int,
         }
     )
 
 
-STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PIN): str})
+STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PIN): cv.positive_int})
 
 
 async def validate_input(
@@ -37,7 +39,7 @@ async def validate_input(
 ) -> dict[str, str]:
     """Validate the user input allows us to connect."""
 
-    api = ComeliteSerialBridgeApi(data[CONF_HOST], data[CONF_PIN])
+    api = ComeliteSerialBridgeApi(data[CONF_HOST], data[CONF_PORT], data[CONF_PIN])
 
     try:
         await api.login()
@@ -58,6 +60,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     _reauth_entry: ConfigEntry | None
     _reauth_host: str
+    _reauth_port: int
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -94,6 +97,8 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
             self.context["entry_id"]
         )
         self._reauth_host = entry_data[CONF_HOST]
+        self._reauth_port = entry_data.get(CONF_PORT, DEFAULT_PORT)
+
         self.context["title_placeholders"] = {"host": self._reauth_host}
         return await self.async_step_reauth_confirm()
 
@@ -107,7 +112,12 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await validate_input(
-                    self.hass, {CONF_HOST: self._reauth_host} | user_input
+                    self.hass,
+                    {
+                        CONF_HOST: self._reauth_host,
+                        CONF_PORT: self._reauth_port,
+                    }
+                    | user_input,
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -121,6 +131,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._reauth_entry,
                     data={
                         CONF_HOST: self._reauth_host,
+                        CONF_PORT: self._reauth_port,
                         CONF_PIN: user_input[CONF_PIN],
                     },
                 )

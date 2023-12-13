@@ -5,7 +5,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from withings_api.common import AuthScope
+from aiowithings import AuthScope
 
 from homeassistant.components.webhook import async_generate_id
 from homeassistant.config_entries import ConfigEntry
@@ -36,10 +36,10 @@ class WithingsFlowHandler(
         return {
             "scope": ",".join(
                 [
-                    AuthScope.USER_INFO.value,
-                    AuthScope.USER_METRICS.value,
-                    AuthScope.USER_ACTIVITY.value,
-                    AuthScope.USER_SLEEP_EVENTS.value,
+                    AuthScope.USER_INFO,
+                    AuthScope.USER_METRICS,
+                    AuthScope.USER_ACTIVITY,
+                    AuthScope.USER_SLEEP_EVENTS,
                 ]
             )
         }
@@ -76,6 +76,7 @@ class WithingsFlowHandler(
             self.hass.config_entries.async_update_entry(
                 self.reauth_entry, data={**self.reauth_entry.data, **data}
             )
+            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
         return self.async_abort(reason="wrong_account")

@@ -205,6 +205,7 @@ class ConfigEntry:
     __slots__ = (
         "entry_id",
         "version",
+        "minor_version",
         "domain",
         "title",
         "data",
@@ -223,6 +224,7 @@ class ConfigEntry:
         "_async_cancel_retry_setup",
         "_on_unload",
         "reload_lock",
+        "_reauth_lock",
         "_tasks",
         "_background_tasks",
         "_integration_for_domain",
@@ -232,7 +234,9 @@ class ConfigEntry:
 
     def __init__(
         self,
+        *,
         version: int,
+        minor_version: int,
         domain: str,
         title: str,
         data: Mapping[str, Any],
@@ -251,6 +255,7 @@ class ConfigEntry:
 
         # Version of the configuration.
         self.version = version
+        self.minor_version = minor_version
 
         # Domain the configuration belongs to
         self.domain = domain
@@ -321,6 +326,8 @@ class ConfigEntry:
 
         # Reload lock to prevent conflicting reloads
         self.reload_lock = asyncio.Lock()
+        # Reauth lock to prevent concurrent reauth flows
+        self._reauth_lock = asyncio.Lock()
 
         self._tasks: set[asyncio.Future[Any]] = set()
         self._background_tasks: set[asyncio.Future[Any]] = set()
@@ -403,8 +410,8 @@ class ConfigEntry:
                     "%s.async_setup_entry did not return boolean", integration.domain
                 )
                 result = False
-        except ConfigEntryError as ex:
-            error_reason = str(ex) or "Unknown fatal config entry error"
+        except ConfigEntryError as exc:
+            error_reason = str(exc) or "Unknown fatal config entry error"
             _LOGGER.exception(
                 "Error setting up entry %s for %s: %s",
                 self.title,
@@ -413,8 +420,8 @@ class ConfigEntry:
             )
             await self._async_process_on_unload(hass)
             result = False
-        except ConfigEntryAuthFailed as ex:
-            message = str(ex)
+        except ConfigEntryAuthFailed as exc:
+            message = str(exc)
             auth_base_message = "could not authenticate"
             error_reason = message or auth_base_message
             auth_message = (
@@ -429,35 +436,24 @@ class ConfigEntry:
             await self._async_process_on_unload(hass)
             self.async_start_reauth(hass)
             result = False
-        except ConfigEntryNotReady as ex:
-            self._async_set_state(hass, ConfigEntryState.SETUP_RETRY, str(ex) or None)
+        except ConfigEntryNotReady as exc:
+            self._async_set_state(hass, ConfigEntryState.SETUP_RETRY, str(exc) or None)
             wait_time = 2 ** min(self._tries, 4) * 5 + (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
             )
             self._tries += 1
-            message = str(ex)
+            message = str(exc)
             ready_message = f"ready yet: {message}" if message else "ready yet"
-            if self._tries == 1:
-                _LOGGER.warning(
-                    (
-                        "Config entry '%s' for %s integration not %s; Retrying in"
-                        " background"
-                    ),
-                    self.title,
-                    self.domain,
-                    ready_message,
-                )
-            else:
-                _LOGGER.debug(
-                    (
-                        "Config entry '%s' for %s integration not %s; Retrying in %d"
-                        " seconds"
-                    ),
-                    self.title,
-                    self.domain,
-                    ready_message,
-                    wait_time,
-                )
+            _LOGGER.debug(
+                (
+                    "Config entry '%s' for %s integration not %s; Retrying in %d"
+                    " seconds"
+                ),
+                self.title,
+                self.domain,
+                ready_message,
+                wait_time,
+            )
 
             if hass.state == CoreState.running:
                 self._async_cancel_retry_setup = async_call_later(
@@ -573,13 +569,13 @@ class ConfigEntry:
             await self._async_process_on_unload(hass)
 
             return result
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as exc:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error unloading entry %s for %s", self.title, integration.domain
             )
             if integration.domain == self.domain:
                 self._async_set_state(
-                    hass, ConfigEntryState.FAILED_UNLOAD, str(ex) or "Unknown error"
+                    hass, ConfigEntryState.FAILED_UNLOAD, str(exc) or "Unknown error"
                 )
             return False
 
@@ -639,7 +635,8 @@ class ConfigEntry:
         while isinstance(handler, functools.partial):
             handler = handler.func  # type: ignore[unreachable]
 
-        if self.version == handler.VERSION:
+        same_major_version = self.version == handler.VERSION
+        if same_major_version and self.minor_version == handler.MINOR_VERSION:
             return True
 
         if not (integration := self._integration_for_domain):
@@ -647,6 +644,8 @@ class ConfigEntry:
         component = integration.get_component()
         supports_migrate = hasattr(component, "async_migrate_entry")
         if not supports_migrate:
+            if same_major_version:
+                return True
             _LOGGER.error(
                 "Migration handler not found for entry %s for %s",
                 self.title,
@@ -684,6 +683,7 @@ class ConfigEntry:
         return {
             "entry_id": self.entry_id,
             "version": self.version,
+            "minor_version": self.minor_version,
             "domain": self.domain,
             "title": self.title,
             "data": dict(self.data),
@@ -738,12 +738,28 @@ class ConfigEntry:
         data: dict[str, Any] | None = None,
     ) -> None:
         """Start a reauth flow."""
+        # We will check this again in the task when we hold the lock,
+        # but we also check it now to try to avoid creating the task.
         if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
             # Reauth flow already in progress for this entry
             return
-
         hass.async_create_task(
-            hass.config_entries.flow.async_init(
+            self._async_init_reauth(hass, context, data),
+            f"config entry reauth {self.title} {self.domain} {self.entry_id}",
+        )
+
+    async def _async_init_reauth(
+        self,
+        hass: HomeAssistant,
+        context: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> None:
+        """Start a reauth flow."""
+        async with self._reauth_lock:
+            if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
+                # Reauth flow already in progress for this entry
+                return
+            await hass.config_entries.flow.async_init(
                 self.domain,
                 context={
                     "source": SOURCE_REAUTH,
@@ -753,9 +769,7 @@ class ConfigEntry:
                 }
                 | (context or {}),
                 data=self.data | (data or {}),
-            ),
-            f"config entry reauth {self.title} {self.domain} {self.entry_id}",
-        )
+            )
 
     @callback
     def async_get_active_flows(
@@ -765,7 +779,9 @@ class ConfigEntry:
         return (
             flow
             for flow in hass.config_entries.flow.async_progress_by_handler(
-                self.domain, match_context={"entry_id": self.entry_id}
+                self.domain,
+                match_context={"entry_id": self.entry_id},
+                include_uninitialized=True,
             )
             if flow["context"].get("source") in sources
         )
@@ -966,6 +982,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         entry = ConfigEntry(
             version=result["version"],
+            minor_version=result["minor_version"],
             domain=result["handler"],
             title=result["title"],
             data=result["data"],
@@ -1188,6 +1205,7 @@ class ConfigEntries:
 
             config_entry = ConfigEntry(
                 version=entry["version"],
+                minor_version=entry.get("minor_version", 1),
                 domain=domain,
                 entry_id=entry_id,
                 data=entry["data"],

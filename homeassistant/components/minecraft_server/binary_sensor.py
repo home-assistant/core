@@ -45,7 +45,7 @@ async def async_setup_entry(
     # Add binary sensor entities.
     async_add_entities(
         [
-            MinecraftServerBinarySensorEntity(coordinator, description)
+            MinecraftServerBinarySensorEntity(coordinator, description, config_entry)
             for description in BINARY_SENSOR_DESCRIPTIONS
         ]
     )
@@ -60,11 +60,12 @@ class MinecraftServerBinarySensorEntity(MinecraftServerEntity, BinarySensorEntit
         self,
         coordinator: MinecraftServerCoordinator,
         description: MinecraftServerBinarySensorEntityDescription,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize binary sensor base entity."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, config_entry)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.unique_id}-{description.key}"
+        self._attr_unique_id = f"{config_entry.entry_id}-{description.key}"
         self._attr_is_on = False
 
     @property

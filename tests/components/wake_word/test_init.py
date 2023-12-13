@@ -1,6 +1,9 @@
 """Test wake_word component setup."""
+import asyncio
 from collections.abc import AsyncIterable, Generator
+from functools import partial
 from pathlib import Path
+from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
@@ -37,8 +40,7 @@ class MockProviderEntity(wake_word.WakeWordDetectionEntity):
     url_path = "wake_word.test"
     _attr_name = "test"
 
-    @property
-    def supported_wake_words(self) -> list[wake_word.WakeWord]:
+    async def get_supported_wake_words(self) -> list[wake_word.WakeWord]:
         """Return a list of supported wake words."""
         return [
             wake_word.WakeWord(id="test_ww", name="Test Wake Word"),
@@ -50,7 +52,7 @@ class MockProviderEntity(wake_word.WakeWordDetectionEntity):
     ) -> wake_word.DetectionResult | None:
         """Try to detect wake word(s) in an audio stream with timestamps."""
         if wake_word_id is None:
-            wake_word_id = self.supported_wake_words[0].id
+            wake_word_id = (await self.get_supported_wake_words())[0].id
 
         async for _chunk, timestamp in stream:
             if timestamp >= 2000:
@@ -294,7 +296,7 @@ async def test_list_wake_words_unknown_entity(
     setup: MockProviderEntity,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test that the list_wake_words websocket command works."""
+    """Test that the list_wake_words websocket command handles unknown entity."""
     client = await hass_ws_client(hass)
     await client.send_json(
         {
@@ -308,3 +310,28 @@ async def test_list_wake_words_unknown_entity(
 
     assert not msg["success"]
     assert msg["error"] == {"code": "not_found", "message": "Entity not found"}
+
+
+async def test_list_wake_words_timeout(
+    hass: HomeAssistant,
+    setup: MockProviderEntity,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that the list_wake_words websocket command handles unknown entity."""
+    client = await hass_ws_client(hass)
+
+    with patch.object(
+        setup, "get_supported_wake_words", partial(asyncio.sleep, 1)
+    ), patch("homeassistant.components.wake_word.TIMEOUT_FETCH_WAKE_WORDS", 0):
+        await client.send_json(
+            {
+                "id": 5,
+                "type": "wake_word/info",
+                "entity_id": setup.entity_id,
+            }
+        )
+
+        msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"] == {"code": "timeout", "message": "Timeout fetching wake words"}
