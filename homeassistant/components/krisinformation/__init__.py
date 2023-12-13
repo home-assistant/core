@@ -37,14 +37,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def _generate_mock_event(identifier, headline):
+def generate_mock_event(identifier, headline):
+    """Create mock event for testing."""
     return {
         "Identifier": identifier,
         "Headline": headline,
         "Area": [
             {
                 "Type": "County",
-                "Description": "Västra Götalands län",
+                "Description": "Värmlands län",
                 "GeometryInformation": {
                     "PoleOfInInaccessibility": {"coordinates": [57.7, 9.11]}
                 },

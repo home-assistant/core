@@ -1,14 +1,19 @@
 """Tests for sensor."""
 from unittest.mock import patch
 
+from freezegun import freeze_time
+
+from homeassistant.components.krisinformation import generate_mock_event
 from homeassistant.components.krisinformation.const import DOMAIN
+from homeassistant.components.krisinformation.sensor import MIN_TIME_BETWEEN_UPDATES
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+import homeassistant.util.dt as dt_util
 
 from .const import MOCK_CONFIG
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_entities_added(hass: HomeAssistant) -> None:
@@ -21,10 +26,13 @@ async def test_entities_added(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
+    utcnow = dt_util.utcnow()
+    with freeze_time(utcnow), patch(
         "krisinformation.crisis_alerter.CrisisAlerter.vmas",
         is_test=True,
-    ):
+    ) as mock_vma:
+        mock_vma.return_value = [generate_mock_event("Test-VMA-1337-1", "Test VMA 1")]
+
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -36,6 +44,9 @@ async def test_entities_added(hass: HomeAssistant) -> None:
 
         entity_registry = er.async_get(hass)
         assert len(entity_registry.entities) == 1
+
+        async_fire_time_changed(hass, utcnow + MIN_TIME_BETWEEN_UPDATES)
+        await hass.async_block_till_done()
 
         state = hass.states.get(entity_id)
 
