@@ -369,6 +369,7 @@ class PipelineStage(StrEnum):
     STT = "stt"
     INTENT = "intent"
     TTS = "tts"
+    END = "end"
 
 
 PIPELINE_STAGE_ORDER = [
@@ -1024,35 +1025,32 @@ class PipelineRun:
             )
         )
 
-        if tts_input := tts_input.strip():
-            try:
-                # Synthesize audio and get URL
-                tts_media_id = tts_generate_media_source_id(
-                    self.hass,
-                    tts_input,
-                    engine=self.tts_engine,
-                    language=self.pipeline.tts_language,
-                    options=self.tts_options,
-                )
-                tts_media = await media_source.async_resolve_media(
-                    self.hass,
-                    tts_media_id,
-                    None,
-                )
-            except Exception as src_error:
-                _LOGGER.exception("Unexpected error during text-to-speech")
-                raise TextToSpeechError(
-                    code="tts-failed",
-                    message="Unexpected error during text-to-speech",
-                ) from src_error
+        try:
+            # Synthesize audio and get URL
+            tts_media_id = tts_generate_media_source_id(
+                self.hass,
+                tts_input,
+                engine=self.tts_engine,
+                language=self.pipeline.tts_language,
+                options=self.tts_options,
+            )
+            tts_media = await media_source.async_resolve_media(
+                self.hass,
+                tts_media_id,
+                None,
+            )
+        except Exception as src_error:
+            _LOGGER.exception("Unexpected error during text-to-speech")
+            raise TextToSpeechError(
+                code="tts-failed",
+                message="Unexpected error during text-to-speech",
+            ) from src_error
 
-            _LOGGER.debug("TTS result %s", tts_media)
-            tts_output = {
-                "media_id": tts_media_id,
-                **asdict(tts_media),
-            }
-        else:
-            tts_output = {}
+        _LOGGER.debug("TTS result %s", tts_media)
+        tts_output = {
+            "media_id": tts_media_id,
+            **asdict(tts_media),
+        }
 
         self.process_event(
             PipelineEvent(PipelineEventType.TTS_END, {"tts_output": tts_output})
@@ -1345,7 +1343,11 @@ class PipelineInput:
                         self.conversation_id,
                         self.device_id,
                     )
-                    current_stage = PipelineStage.TTS
+                    if tts_input.strip():
+                        current_stage = PipelineStage.TTS
+                    else:
+                        # Skip TTS
+                        current_stage = PipelineStage.END
 
                 if self.run.end_stage != PipelineStage.INTENT:
                     # text-to-speech
