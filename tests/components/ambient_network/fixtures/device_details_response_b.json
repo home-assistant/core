@@ -1,0 +1,29 @@
+{
+  "_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "macAddress": "BB:BB:BB:BB:BB:BB",
+  "lastData": {
+    "stationtype": "AMBWeatherPro_V5.0.6",
+    "dateutc": 1699474330000,
+    "tempf": 84.1,
+    "humidity": 62,
+    "windspeedmph": 7.81,
+    "windgustmph": 12.13,
+    "maxdailygust": 23.14,
+    "winddir": 13,
+    "uv": 0,
+    "solarradiation": 36.12,
+    "hourlyrainin": 0,
+    "dailyrainin": 0,
+    "weeklyrainin": 0,
+    "monthlyrainin": 0,
+    "totalrainin": 25.12,
+    "baromrelin": 29.5754,
+    "baromabsin": 28.234,
+    "batt_co2": 1,
+    "type": "weather-data",
+    "created_at": 1699474320914,
+    "dateutc5": 1699474300000,
+    "lastRain": 1698659200000,
+    "tz": "America/Chicago"
+  }
+}
