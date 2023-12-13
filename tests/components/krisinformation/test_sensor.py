@@ -1,16 +1,13 @@
 """Tests for sensor."""
 from unittest.mock import patch
-from homeassistant.helpers import entity_registry as er
-from homeassistant.components.krisinformation.const import (
-    DOMAIN,
-)
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START,
-)
+
+from homeassistant.components.krisinformation.const import DOMAIN
+from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
-from .const import (
-    MOCK_CONFIG,
-)
+from homeassistant.helpers import entity_registry as er
+
+from .const import MOCK_CONFIG
+
 from tests.common import MockConfigEntry
 
 mock_response = [
