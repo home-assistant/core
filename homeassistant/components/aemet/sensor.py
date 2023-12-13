@@ -180,7 +180,7 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
         entity_registry_enabled_default=False,
         key=f"forecast-hourly-{ATTR_API_FORECAST_TIME}",
         keys=[AOD_TOWN, AOD_FORECAST_HOURLY, AOD_FORECAST_CURRENT, AOD_TIMESTAMP],
-        name="Hourly Forecast Time",
+        name="Hourly forecast time",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=dt_util.parse_datetime,
     ),
