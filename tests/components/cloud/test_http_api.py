@@ -6,7 +6,6 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import aiohttp
-from aiohttp.test_utils import TestClient
 from hass_nabucasa import thingtalk, voice
 from hass_nabucasa.auth import Unauthenticated, UnknownError
 from hass_nabucasa.const import STATE_CONNECTED
@@ -88,6 +87,7 @@ PIPELINE_DATA_OTHER = {
 }
 
 SUBSCRIPTION_INFO_URL = "https://api-test.hass.io/payments/subscription_info"
+
 
 @pytest.fixture(name="setup_cloud")
 async def setup_cloud_fixture(hass: HomeAssistant, cloud: MagicMock) -> None:
