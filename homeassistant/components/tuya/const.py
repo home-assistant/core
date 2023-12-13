@@ -38,7 +38,6 @@ CONF_ACCESS_ID = "access_id"
 CONF_ACCESS_SECRET = "access_secret"
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
-CONF_COUNTRY_CODE = "country_code"
 CONF_APP_TYPE = "tuya_app_type"
 
 TUYA_DISCOVERY_NEW = "tuya_discovery_new"

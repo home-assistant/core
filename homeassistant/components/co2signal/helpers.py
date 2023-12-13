@@ -5,10 +5,8 @@ from typing import Any
 from aioelectricitymaps import ElectricityMaps
 from aioelectricitymaps.models import CarbonIntensityResponse
 
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_COUNTRY_CODE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-
-from .const import CONF_COUNTRY_CODE
 
 
 async def fetch_latest_carbon_intensity(
