@@ -6,16 +6,13 @@ from typing import Any
 from aioshelly.ble import parse_ble_scan_result_event
 from aioshelly.ble.const import BLE_SCAN_RESULT_EVENT, BLE_SCAN_RESULT_VERSION
 
-from homeassistant.components.bluetooth import (
-    MONOTONIC_TIME,
-    HomeAssistantRemoteScanner,
-)
+from homeassistant.components.bluetooth import MONOTONIC_TIME, BaseHaRemoteScanner
 from homeassistant.core import callback
 
 from ..const import LOGGER
 
 
-class ShellyBLEScanner(HomeAssistantRemoteScanner):
+class ShellyBLEScanner(BaseHaRemoteScanner):
     """Scanner for shelly."""
 
     @callback
