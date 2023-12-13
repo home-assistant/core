@@ -1,8 +1,6 @@
 """The A. O. Smith integration."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from py_aosmith import AOSmithAPIClient
 
 from homeassistant.config_entries import ConfigEntry
@@ -11,17 +9,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
-from .coordinator import AOSmithCoordinator
+from .coordinator import AOSmithEnergyCoordinator, AOSmithStatusCoordinator
+from .models import AOSmithData, build_device_details
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.WATER_HEATER]
-
-
-@dataclass
-class AOSmithData:
-    """Data for the A. O. Smith integration."""
-
-    coordinator: AOSmithCoordinator
-    client: AOSmithAPIClient
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -31,13 +22,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     session = aiohttp_client.async_get_clientsession(hass)
     client = AOSmithAPIClient(email, password, session)
-    coordinator = AOSmithCoordinator(hass, client)
 
-    # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_config_entry_first_refresh()
+    status_coordinator = AOSmithStatusCoordinator(hass, client)
+    await status_coordinator.async_config_entry_first_refresh()
+
+    device_details_list = [
+        build_device_details(device) for device in status_coordinator.data.values()
+    ]
+
+    energy_coordinator = AOSmithEnergyCoordinator(
+        hass, client, [device.junction_id for device in device_details_list]
+    )
+    await energy_coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = AOSmithData(
-        coordinator=coordinator, client=client
+        device_details_list=device_details_list,
+        client=client,
+        status_coordinator=status_coordinator,
+        energy_coordinator=energy_coordinator,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

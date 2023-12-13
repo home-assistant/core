@@ -8,26 +8,29 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AOSmithData
 from .const import DOMAIN, HOT_WATER_STATUS_MAP
-from .coordinator import AOSmithCoordinator
-from .entity import AOSmithEntity
+from .coordinator import AOSmithEnergyCoordinator, AOSmithStatusCoordinator
+from .entity import AOSmithEnergyEntity, AOSmithStatusEntity
+from .models import AOSmithDeviceDetails
 
 
 @dataclass(frozen=True, kw_only=True)
-class AOSmithSensorEntityDescription(SensorEntityDescription):
-    """Define sensor entity description class."""
+class AOSmithStatusSensorEntityDescription(SensorEntityDescription):
+    """Entity description class for sensors using data from the status coordinator."""
 
     value_fn: Callable[[dict[str, Any]], str | int | None]
 
 
-ENTITY_DESCRIPTIONS: tuple[AOSmithSensorEntityDescription, ...] = (
-    AOSmithSensorEntityDescription(
+STATUS_ENTITY_DESCRIPTIONS: tuple[AOSmithStatusSensorEntityDescription, ...] = (
+    AOSmithStatusSensorEntityDescription(
         key="hot_water_availability",
         translation_key="hot_water_availability",
         icon="mdi:water-thermometer",
@@ -47,29 +50,58 @@ async def async_setup_entry(
     data: AOSmithData = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        AOSmithSensorEntity(data.coordinator, description, junction_id)
-        for description in ENTITY_DESCRIPTIONS
-        for junction_id in data.coordinator.data
+        AOSmithStatusSensorEntity(data.status_coordinator, description, device_details)
+        for description in STATUS_ENTITY_DESCRIPTIONS
+        for device_details in data.device_details_list
+    )
+
+    async_add_entities(
+        AOSmithEnergySensorEntity(data.energy_coordinator, device_details)
+        for device_details in data.device_details_list
     )
 
 
-class AOSmithSensorEntity(AOSmithEntity, SensorEntity):
-    """The sensor entity for the A. O. Smith integration."""
+class AOSmithStatusSensorEntity(AOSmithStatusEntity, SensorEntity):
+    """Class for sensor entities that use data from the status coordinator."""
 
-    entity_description: AOSmithSensorEntityDescription
+    entity_description: AOSmithStatusSensorEntityDescription
 
     def __init__(
         self,
-        coordinator: AOSmithCoordinator,
-        description: AOSmithSensorEntityDescription,
-        junction_id: str,
+        coordinator: AOSmithStatusCoordinator,
+        description: AOSmithStatusSensorEntityDescription,
+        device_details: AOSmithDeviceDetails,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator, junction_id)
+        super().__init__(coordinator, device_details)
         self.entity_description = description
-        self._attr_unique_id = f"{description.key}_{junction_id}"
+        self._attr_unique_id = f"{description.key}_{device_details.junction_id}"
 
     @property
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.device)
+
+
+class AOSmithEnergySensorEntity(AOSmithEnergyEntity, SensorEntity):
+    """Class for the energy sensor entity."""
+
+    _attr_translation_key = "energy_usage"
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    _attr_suggested_display_precision = 1
+
+    def __init__(
+        self,
+        coordinator: AOSmithEnergyCoordinator,
+        device_details: AOSmithDeviceDetails,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator, device_details)
+        self._attr_unique_id = f"energy_usage_{device_details.junction_id}"
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state of the sensor."""
+        return self.energy_usage
