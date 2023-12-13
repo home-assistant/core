@@ -30,7 +30,7 @@ SERVICE_SCHEMA: Final = vol.Schema(
     {
         vol.Optional(ATTR_START): str,
         vol.Optional(ATTR_END): str,
-        vol.Optional(ATTR_INCL_VAT, default=True): bool,
+        vol.Required(ATTR_INCL_VAT, default=True): bool,
     }
 )
 
