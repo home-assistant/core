@@ -97,7 +97,7 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
             self.async_write_ha_state()
             return
         raise HomeAssistantError(
-            "Could not change alarm check system ready for arming",
+            "Could not change alarm, check system ready for arming",
             translation_domain=DOMAIN,
             translation_key="could_not_change_alarm",
         )

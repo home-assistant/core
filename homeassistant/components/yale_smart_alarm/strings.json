@@ -62,7 +62,7 @@
       "message": "Could not set alarm for {name}: {error}"
     },
     "could_not_change_alarm": {
-      "message": "Could not change alarm check system ready for arming"
+      "message": "Could not change alarm, check system ready for arming"
     },
     "set_lock": {
       "message": "Could not set lock for {name}: {error}"
