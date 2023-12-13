@@ -117,4 +117,5 @@ class FrozenOrThawed(type):
                 return object.__new__(cls)
             return cls._dataclass(*_args, **kwargs)
 
+        cls.__init__ = cls._dataclass.__init__  # type: ignore[misc]
         cls.__new__ = __new__  # type: ignore[method-assign]
