@@ -218,7 +218,7 @@ aioelectricitymaps==0.1.5
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==19.3.0
+aioesphomeapi==21.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -233,7 +233,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.0.9
+aiohomekit==3.1.0
 
 # homeassistant.components.http
 aiohttp-fast-url-dispatcher==0.3.0
@@ -491,7 +491,7 @@ boschshcpy==0.2.75
 broadlink==0.18.3
 
 # homeassistant.components.brother
-brother==2.3.0
+brother==3.0.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -506,7 +506,7 @@ bthome-ble==3.2.0
 buienradar==1.0.5
 
 # homeassistant.components.caldav
-caldav==1.3.6
+caldav==1.3.8
 
 # homeassistant.components.coinbase
 coinbase==2.1.0
@@ -539,7 +539,7 @@ datadog==0.15.0
 datapoint==0.9.8;python_version<'3.12'
 
 # homeassistant.components.bluetooth
-dbus-fast==2.20.0
+dbus-fast==2.21.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.0
@@ -783,7 +783,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==0.10.0
+habluetooth==0.11.1
 
 # homeassistant.components.cloud
 hass-nabucasa==0.74.0
@@ -1087,7 +1087,7 @@ open-garage==0.2.0
 open-meteo==0.3.1
 
 # homeassistant.components.openai_conversation
-openai==0.27.2
+openai==1.3.8
 
 # homeassistant.components.openerz
 openerz-api==0.2.0
@@ -1353,7 +1353,7 @@ pyhaversion==22.8.0
 pyheos==0.7.2
 
 # homeassistant.components.hive
-pyhiveapi==0.5.14
+pyhiveapi==0.5.16
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
@@ -1588,7 +1588,7 @@ pysmartthings==0.7.8
 pysml==0.0.12
 
 # homeassistant.components.snmp
-pysnmplib==5.0.21
+pysnmp-lextudio==5.0.31
 
 # homeassistant.components.snooz
 pysnooz==0.8.6
@@ -1601,6 +1601,9 @@ pyspcwebgw==0.7.0
 
 # homeassistant.components.squeezebox
 pysqueezebox==0.7.1
+
+# homeassistant.components.suez_water
+pysuez==0.2.0
 
 # homeassistant.components.switchbee
 pyswitchbee==1.8.0
@@ -1667,7 +1670,7 @@ python-smarttub==0.0.36
 python-songpal==0.16
 
 # homeassistant.components.tado
-python-tado==0.15.0
+python-tado==0.17.0
 
 # homeassistant.components.telegram_bot
 python-telegram-bot==13.1
@@ -1766,7 +1769,7 @@ renault-api==0.2.0
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.8.2
+reolink-aio==0.8.3
 
 # homeassistant.components.rflink
 rflink==0.0.65

@@ -7,9 +7,9 @@ import pytest
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
+    BaseHaRemoteScanner,
     BaseHaScanner,
     HaBluetoothConnector,
-    HomeAssistantRemoteScanner,
     async_scanner_by_source,
     async_scanner_devices_by_address,
 )
@@ -46,7 +46,7 @@ async def test_async_scanner_devices_by_address_connectable(
     """Test getting scanner devices by address with connectable devices."""
     manager = _get_manager()
 
-    class FakeInjectableScanner(HomeAssistantRemoteScanner):
+    class FakeInjectableScanner(BaseHaRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -68,7 +68,7 @@ async def test_async_scanner_devices_by_address_connectable(
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
     scanner = FakeInjectableScanner(
-        hass, "esp32", "esp32", new_info_callback, connector, False
+        "esp32", "esp32", new_info_callback, connector, False
     )
     unsetup = scanner.async_setup()
     cancel = manager.async_register_scanner(scanner, True)
