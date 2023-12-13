@@ -225,7 +225,7 @@ class Battery(Sensor):
         return cls(unique_id, zha_device, cluster_handlers, **kwargs)
 
     @staticmethod
-    def formatter(value: int) -> int | None:
+    def formatter(value: int) -> int | float | None:
         """Return the state of the entity."""
         # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
         if not isinstance(value, numbers.Number) or value == -1:
@@ -426,7 +426,7 @@ class Illuminance(Sensor):
     _attr_native_unit_of_measurement = LIGHT_LUX
     _attr_suggested_display_precision: int = 0
 
-    def formatter(self, value: int) -> int:
+    def formatter(self, value: int) -> int | float:
         """Convert illumination data."""
         return pow(10, ((value - 1) / 10000))
 
