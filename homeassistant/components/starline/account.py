@@ -142,8 +142,7 @@ class StarlineAccount:
     def gps_attrs(device: StarlineDevice) -> dict[str, Any]:
         """Attributes for device tracker."""
         return {
-            "updated": dt_util.utc_from_timestamp(device.position["ts"])
-            .isoformat(),
+            "updated": dt_util.utc_from_timestamp(device.position["ts"]).isoformat(),
             "online": device.online,
         }
 
@@ -156,7 +155,9 @@ class StarlineAccount:
             "state": device.balance.get("state"),
             "updated": dt_util.parse_datetime(ts)
             .replace(tzinfo=dt_util.UTC)
-            .isoformat() if ts else None,
+            .isoformat()
+            if ts
+            else None,
         }
 
     @staticmethod
