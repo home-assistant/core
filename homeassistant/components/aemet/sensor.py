@@ -157,7 +157,7 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
     AemetSensorEntityDescription(
         key=f"forecast-daily-{ATTR_API_FORECAST_TEMP_LOW}",
         keys=[AOD_TOWN, AOD_FORECAST_DAILY, AOD_FORECAST_CURRENT, AOD_TEMP_MIN],
-        name="Daily Forecast Temperature Low",
+        name="Daily forecast temperature low",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
