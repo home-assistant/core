@@ -588,10 +588,6 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
         return_type=["dict[str, Any]", None],
     ),
     TypeHintMatch(
-        function_name="device_state_attributes",
-        return_type=["Mapping[str, Any]", None],
-    ),
-    TypeHintMatch(
         function_name="extra_state_attributes",
         return_type=["Mapping[str, Any]", None],
     ),
