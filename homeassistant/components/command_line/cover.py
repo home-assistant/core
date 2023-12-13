@@ -5,16 +5,21 @@ import asyncio
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, cast
 
-from homeassistant.components.cover import CoverEntity
+from homeassistant.components.cover import CoverDeviceClass, CoverEntity
 from homeassistant.const import (
     CONF_COMMAND_CLOSE,
     CONF_COMMAND_OPEN,
     CONF_COMMAND_STATE,
     CONF_COMMAND_STOP,
+    CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -28,6 +33,13 @@ from .const import CONF_COMMAND_TIMEOUT, LOGGER
 from .utils import call_shell_with_timeout, check_output_or_log
 
 SCAN_INTERVAL = timedelta(seconds=15)
+
+_VALID_STATES = [
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
+]
 
 
 async def async_setup_platform(
@@ -43,13 +55,14 @@ async def async_setup_platform(
     entities: dict[str, Any] = {slugify(discovery_info[CONF_NAME]): discovery_info}
 
     for device_name, device_config in entities.items():
+        device_class: CoverDeviceClass | None = device_config.get(CONF_DEVICE_CLASS)
         value_template: Template | None = device_config.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
             value_template.hass = hass
-
         trigger_entity_config = {
             CONF_UNIQUE_ID: device_config.get(CONF_UNIQUE_ID),
             CONF_NAME: Template(device_config.get(CONF_NAME, device_name), hass),
+            CONF_DEVICE_CLASS: device_class,
         }
 
         covers.append(
@@ -87,11 +100,14 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
         """Initialize the cover."""
         super().__init__(self.hass, config)
         self._state: int | None = None
+        self._openclose = False
         self._command_open = command_open
         self._command_close = command_close
         self._command_stop = command_stop
         self._command_state = command_state
         self._value_template = value_template
+        self._is_opening = False
+        self._is_closing = False
         self._timeout = timeout
         self._scan_interval = scan_interval
         self._process_updates: asyncio.Lock | None = None
@@ -127,17 +143,30 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        if self.current_cover_position is not None:
-            return self.current_cover_position == 0
+        if self._state is not None:
+            return self._state == 0
         return None
+
+    @property
+    def is_opening(self) -> bool | None:
+        """Return if the cover is currently opening."""
+        return self._is_opening
+
+    @property
+    def is_closing(self) -> bool | None:
+        """Return if the cover is currently closing."""
+        return self._is_closing
 
     @property
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
+        This is skipped if the state is provided in open/ close format.
         None is unknown, 0 is closed, 100 is fully open.
         """
-        return self._state
+        if self._openclose is False:
+            return self._state
+        return None
 
     def _query_state(self) -> str | None:
         """Query for the state."""
@@ -172,7 +201,45 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
                 )
             self._state = None
             if payload:
-                self._state = int(payload)
+                LOGGER.info(
+                    "Received payload: %s from %s",
+                    payload,
+                    self.entity_id,
+                )
+                if payload in _VALID_STATES:
+                    self._openclose = True
+                    if payload in STATE_OPEN:
+                        self._state = 100
+                    else:
+                        self._state = 0
+                    self._is_opening = payload == STATE_OPENING
+                    self._is_closing = payload == STATE_CLOSING
+                else:
+                    try:
+                        float(payload)
+                    except ValueError:
+                        LOGGER.error(
+                            "The state of %s must be one of [%s, %s, %s, %s] or a number between 0 and 100. The received state was: %s",
+                            self.entity_id,
+                            STATE_CLOSED,
+                            STATE_CLOSING,
+                            STATE_OPEN,
+                            STATE_OPENING,
+                            payload,
+                        )
+                        return
+                    if int(payload) < 0 or int(payload) > 100:
+                        LOGGER.error(
+                            "The state of %s must be one of [%s, %s, %s, %s] or a number between 0 and 100. The received state was: %s",
+                            self.entity_id,
+                            STATE_CLOSED,
+                            STATE_CLOSING,
+                            STATE_OPEN,
+                            STATE_OPENING,
+                            payload,
+                        )
+                    else:
+                        self._state = int(payload)
             self._process_manual_data(payload)
             self.async_write_ha_state()
 
