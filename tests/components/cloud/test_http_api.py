@@ -242,7 +242,7 @@ async def test_login_view_random_exception(
     setup_cloud: None,
     cloud_client: TestClient,
 ) -> None:
-    """Try logging in with invalid JSON."""
+    """Try logging in with random exception."""
     cloud.login.side_effect = ValueError("Boom")
 
     req = await cloud_client.post(
