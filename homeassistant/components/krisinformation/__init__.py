@@ -1,6 +1,8 @@
 """The init-file for the Krisinformation integration."""
 from __future__ import annotations
 
+import logging
+
 # Importing necessary modules and classes.
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -8,10 +10,11 @@ from homeassistant.core import HomeAssistant
 
 # Importing custom constants and logger from the integration.
 from .const import DOMAIN
-from .geo_location import _LOGGER
 
 # List of the platforms that the integration supports.
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.GEO_LOCATION]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -32,3 +35,23 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+def generate_mock_event(identifier, headline):
+    """Create mock event for testing."""
+    return {
+        "Identifier": identifier,
+        "Headline": headline,
+        "Area": [
+            {
+                "Type": "County",
+                "Description": "Värmlands län",
+                "GeometryInformation": {
+                    "PoleOfInInaccessibility": {"coordinates": [57.7, 9.11]}
+                },
+            }
+        ],
+        "Web": "krisinformation.se",
+        "Published": "2023-03-29T11:02:11+02:00",
+        "PushMessage": "Test message",
+    }
