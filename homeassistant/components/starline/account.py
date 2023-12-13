@@ -143,7 +143,6 @@ class StarlineAccount:
         """Attributes for device tracker."""
         return {
             "updated": dt_util.utc_from_timestamp(device.position["ts"])
-            .replace(tzinfo=None)
             .isoformat(),
             "online": device.online,
         }
@@ -151,10 +150,13 @@ class StarlineAccount:
     @staticmethod
     def balance_attrs(device: StarlineDevice) -> dict[str, Any]:
         """Attributes for balance sensor."""
+        ts = device.balance.get("ts")
         return {
             "operator": device.balance.get("operator"),
             "state": device.balance.get("state"),
-            "updated": device.balance.get("ts"),
+            "updated": dt_util.parse_datetime(ts)
+            .replace(tzinfo=dt_util.UTC)
+            .isoformat() if ts else None,
         }
 
     @staticmethod
