@@ -194,7 +194,7 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
         entity_registry_enabled_default=False,
         key=f"forecast-hourly-{ATTR_API_FORECAST_WIND_BEARING}",
         keys=[AOD_TOWN, AOD_FORECAST_HOURLY, AOD_FORECAST_CURRENT, AOD_WIND_DIRECTION],
-        name="Hourly Forecast Wind bearing",
+        name="Hourly forecast wind bearing",
         native_unit_of_measurement=DEGREE,
     ),
     AemetSensorEntityDescription(
