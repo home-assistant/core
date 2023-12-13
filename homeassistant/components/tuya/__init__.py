@@ -15,6 +15,7 @@ from tuya_iot import (
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -27,8 +28,6 @@ from .const import (
     CONF_AUTH_TYPE,
     CONF_COUNTRY_CODE,
     CONF_ENDPOINT,
-    CONF_PASSWORD,
-    CONF_USERNAME,
     DOMAIN,
     LOGGER,
     PLATFORMS,
