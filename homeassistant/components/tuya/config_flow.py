@@ -7,7 +7,7 @@ from tuya_iot import AuthType, TuyaOpenAPI
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_COUNTRY_CODE
+from homeassistant.const import CONF_COUNTRY_CODE, CONF_PASSWORD, CONF_USERNAME
 
 from .const import (
     CONF_ACCESS_ID,
@@ -15,8 +15,6 @@ from .const import (
     CONF_APP_TYPE,
     CONF_AUTH_TYPE,
     CONF_ENDPOINT,
-    CONF_PASSWORD,
-    CONF_USERNAME,
     DOMAIN,
     LOGGER,
     SMARTLIFE_APP,
