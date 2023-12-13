@@ -6,6 +6,7 @@ from opendata_transport.exceptions import OpendataTransportError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_NAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -55,9 +56,7 @@ class SwissPublicTransportConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_input: dict[str, Any]) -> FlowResult:
         """Async import step to set up the connection."""
-        await self.async_set_unique_id(
-            f"{DOMAIN}_{import_input[CONF_START]}_{import_input[CONF_DESTINATION]}"
-        )
+        await self.async_set_unique_id(import_input[CONF_NAME])
         try:
             self._abort_if_unique_id_configured()
         except AbortFlow as err:
@@ -112,6 +111,6 @@ class SwissPublicTransportConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
         return self.async_create_entry(
-            title=f"{DOMAIN}_{import_input[CONF_START]}_{import_input[CONF_DESTINATION]}",
+            title=import_input[CONF_NAME],
             data=import_input,
         )

@@ -10,6 +10,7 @@ from homeassistant.components.swiss_public_transport.const import (
     CONF_DESTINATION,
     CONF_START,
 )
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
@@ -129,6 +130,7 @@ async def test_flow_user_init_data_unknown_error(
 MOCK_DATA = {
     CONF_START: "test_start",
     CONF_DESTINATION: "test_destination",
+    CONF_NAME: "test_name",
 }
 
 
@@ -155,10 +157,7 @@ async def test_import(
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert (
-        result["result"].unique_id
-        == "swiss_public_transport_test_start_test_destination"
-    )
+    assert result["result"].unique_id == "test_name"
     assert result["data"] == MOCK_DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -224,7 +223,7 @@ async def test_import_already_configured(
 
     entry = MockConfigEntry(
         domain=config_flow.DOMAIN,
-        unique_id="swiss_public_transport_test_start_test_destination",
+        unique_id="test_name",
         data=MOCK_DATA,
     )
     entry.add_to_hass(hass)

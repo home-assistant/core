@@ -9,6 +9,7 @@ from opendata_transport.exceptions import OpendataTransportError
 from homeassistant import config_entries, core
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -44,11 +45,12 @@ async def async_setup_entry(
     config = hass.data[DOMAIN][config_entry.entry_id]
     opendata = hass.data[DOMAIN][f"{config_entry.entry_id}_opendata_client"]
 
+    name = config.get(CONF_NAME)
     start = config.get(CONF_START)
     destination = config.get(CONF_DESTINATION)
 
     async_add_entities(
-        [SwissPublicTransportSensor(opendata, start, destination)],
+        [SwissPublicTransportSensor(opendata, start, destination, name)],
         update_before_add=True,
     )
 
@@ -75,9 +77,10 @@ class SwissPublicTransportSensor(SensorEntity):
     _attr_attribution = "Data provided by transport.opendata.ch"
     _attr_icon = "mdi:bus"
 
-    def __init__(self, opendata, start, destination):
+    def __init__(self, opendata, start, destination, name):
         """Initialize the sensor."""
         self._opendata = opendata
+        self._name = name
         self._from = start
         self._to = destination
         self._remaining_time = None
@@ -85,7 +88,7 @@ class SwissPublicTransportSensor(SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{DOMAIN}_{self._from}_{self._to}"
+        return self._name if self._name else f"{DOMAIN}_{self._from}_{self._to}"
 
     @property
     def native_value(self):
