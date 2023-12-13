@@ -8,20 +8,19 @@ import logging
 from typing import Any
 
 from aioesphomeapi import APIClient, BluetoothProxyFeature
+from bleak_esphome.backend.cache import ESPHomeBluetoothCache
+from bleak_esphome.backend.client import ESPHomeClient, ESPHomeClientData
+from bleak_esphome.backend.device import ESPHomeBluetoothDevice
+from bleak_esphome.backend.scanner import ESPHomeScanner
 
 from homeassistant.components.bluetooth import (
     HaBluetoothConnector,
-    async_get_advertisement_callback,
     async_register_scanner,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 
 from ..entry_data import RuntimeEntryData
-from .cache import ESPHomeBluetoothCache
-from .client import ESPHomeClient, ESPHomeClientData
-from .device import ESPHomeBluetoothDevice
-from .scanner import ESPHomeScanner
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +62,6 @@ async def async_connect_scanner(
     """Connect scanner."""
     assert entry.unique_id is not None
     source = str(entry.unique_id)
-    new_info_callback = async_get_advertisement_callback(hass)
     device_info = entry_data.device_info
     assert device_info is not None
     feature_flags = device_info.bluetooth_proxy_feature_flags_compat(
@@ -98,9 +96,7 @@ async def async_connect_scanner(
             partial(_async_can_connect, entry_data, bluetooth_device, source)
         ),
     )
-    scanner = ESPHomeScanner(
-        source, entry.title, new_info_callback, connector, connectable
-    )
+    scanner = ESPHomeScanner(source, entry.title, connector, connectable)
     client_data.scanner = scanner
     coros: list[Coroutine[Any, Any, CALLBACK_TYPE]] = []
     # These calls all return a callback that can be used to unsubscribe

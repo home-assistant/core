@@ -218,7 +218,7 @@ aioelectricitymaps==0.1.5
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==20.1.0
+aioesphomeapi==21.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -452,6 +452,9 @@ bellows==0.37.1
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.14.6
+
+# homeassistant.components.esphome
+bleak-esphome==0.1.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.3.0
