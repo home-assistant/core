@@ -42,8 +42,8 @@
       }
     },
     "switch": {
-      "satellite_enabled": {
-        "name": "Satellite enabled"
+      "mute": {
+        "name": "Mute"
       }
     }
   }

@@ -5,7 +5,7 @@ from homeassistant.components.assist_pipeline.select import OPTION_PREFERRED
 from homeassistant.components.wyoming import DOMAIN
 from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -34,11 +34,11 @@ async def test_device_registry_info(
     assert assist_in_progress_state is not None
     assert assist_in_progress_state.state == STATE_OFF
 
-    satellite_enabled_id = satellite_device.get_satellite_enabled_entity_id(hass)
-    assert satellite_enabled_id
-    satellite_enabled_state = hass.states.get(satellite_enabled_id)
-    assert satellite_enabled_state is not None
-    assert satellite_enabled_state.state == STATE_ON
+    muted_id = satellite_device.get_muted_entity_id(hass)
+    assert muted_id
+    muted_state = hass.states.get(muted_id)
+    assert muted_state is not None
+    assert muted_state.state == STATE_OFF
 
     pipeline_entity_id = satellite_device.get_pipeline_entity_id(hass)
     assert pipeline_entity_id
@@ -59,9 +59,9 @@ async def test_remove_device_registry_entry(
     assert assist_in_progress_id
     assert hass.states.get(assist_in_progress_id) is not None
 
-    satellite_enabled_id = satellite_device.get_satellite_enabled_entity_id(hass)
-    assert satellite_enabled_id
-    assert hass.states.get(satellite_enabled_id) is not None
+    muted_id = satellite_device.get_muted_entity_id(hass)
+    assert muted_id
+    assert hass.states.get(muted_id) is not None
 
     pipeline_entity_id = satellite_device.get_pipeline_entity_id(hass)
     assert pipeline_entity_id
@@ -74,5 +74,5 @@ async def test_remove_device_registry_entry(
 
     # Everything should be gone
     assert hass.states.get(assist_in_progress_id) is None
-    assert hass.states.get(satellite_enabled_id) is None
+    assert hass.states.get(muted_id) is None
     assert hass.states.get(pipeline_entity_id) is None
