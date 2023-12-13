@@ -87,7 +87,7 @@ async def __get_prices(
     return __serialize_prices(data)
 
 
-def register_services(
+async def async_register_services(
     hass: HomeAssistant, coordinator: EnergyZeroDataUpdateCoordinator
 ):
     """Set up EnergyZero services."""

@@ -8,7 +8,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 from .coordinator import EnergyZeroDataUpdateCoordinator
-from .services import register_services
+from .services import async_register_services
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    register_services(hass, coordinator)
+    await async_register_services(hass, coordinator)
 
     return True
 
