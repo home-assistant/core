@@ -68,7 +68,7 @@ def test_load_icons_files(hass: HomeAssistant) -> None:
     """Test the load icons files function."""
     file1 = hass.config.path("custom_components", "test", "icons.json")
     file2 = hass.config.path("custom_components", "test", "invalid.json")
-    assert icon.load_icons_files({"test": file1, "invalid": file2}) == {
+    assert icon._load_icons_files({"test": file1, "invalid": file2}) == {
         "test": {
             "entity": {
                 "switch": {
@@ -160,10 +160,10 @@ async def test_get_icons_while_loading_components(hass: HomeAssistant) -> None:
         return {"component1": {"entity": {"climate": {"test": {"icon": "mdi:home"}}}}}
 
     with patch(
-        "homeassistant.helpers.icon.component_icons_path",
+        "homeassistant.helpers.icon._component_icons_path",
         return_value="choochoo.json",
     ), patch(
-        "homeassistant.helpers.icon.load_icons_files",
+        "homeassistant.helpers.icon._load_icons_files",
         mock_load_icons_files,
     ), patch(
         "homeassistant.helpers.icon.async_get_integrations",
@@ -172,7 +172,10 @@ async def test_get_icons_while_loading_components(hass: HomeAssistant) -> None:
         times = 5
         all_icons = [await icon.async_get_icons(hass, "entity") for _ in range(times)]
 
-    assert all_icons == [{"component1": {"climate": {"test": {"icon": "mdi:home"}}}} for _ in range(times)]
+    assert all_icons == [
+        {"component1": {"climate": {"test": {"icon": "mdi:home"}}}}
+        for _ in range(times)
+    ]
     assert load_count == 1
 
 
@@ -212,8 +215,8 @@ async def test_caching(hass: HomeAssistant) -> None:
     # Check if new loaded component, trigger load
     hass.config.components.add("media_player")
     with patch(
-        "homeassistant.helpers.icon.load_icons_files",
-        side_effect=icon.load_icons_files,
+        "homeassistant.helpers.icon._load_icons_files",
+        side_effect=icon._load_icons_files,
     ) as mock_load:
         load_sensor_only = await icon.async_get_icons(
             hass, "entity_component", integrations={"switch"}

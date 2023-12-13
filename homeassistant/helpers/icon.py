@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def component_icons_path(component: str, integration: Integration) -> str | None:
+def _component_icons_path(component: str, integration: Integration) -> str | None:
     """Return the icons json file location for a component.
 
     Ex: components/hue/icons.json
@@ -36,7 +36,7 @@ def component_icons_path(component: str, integration: Integration) -> str | None
     return str(integration.file_path / "icons.json")
 
 
-def load_icons_files(icons_files: dict[str, str]) -> dict[str, dict[str, Any]]:
+def _load_icons_files(icons_files: dict[str, str]) -> dict[str, dict[str, Any]]:
     """Load and parse icons.json files."""
     return {
         component: load_json_object(icons_file)
@@ -56,14 +56,14 @@ async def _async_get_component_icons(
     files_to_load = {}
     for loaded in components:
         domain = loaded.rpartition(".")[-1]
-        if (path := component_icons_path(loaded, integrations[domain])) is None:
+        if (path := _component_icons_path(loaded, integrations[domain])) is None:
             icons[loaded] = {}
         else:
             files_to_load[loaded] = path
 
     # Load files
     if files_to_load and (
-        load_icons_job := hass.async_add_executor_job(load_icons_files, files_to_load)
+        load_icons_job := hass.async_add_executor_job(_load_icons_files, files_to_load)
     ):
         icons |= await load_icons_job
 
