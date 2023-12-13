@@ -1,6 +1,7 @@
 """Support for geolocation data from Krisinformation."""
 from datetime import timedelta
 from typing import Any
+from accuweather import _LOGGER
 
 from krisinformation import crisis_alerter as krisinformation
 
@@ -36,6 +37,7 @@ class KrisInformationGeolocationEvent(GeolocationEvent):
         web: str,
         published: str,
         area: str,
+        state: str,
     ) -> None:
         """Initialize entity with data provided."""
         self._external_id = external_id
@@ -44,8 +46,9 @@ class KrisInformationGeolocationEvent(GeolocationEvent):
         self._longitude = longitude
         self._unit_of_measurement = unit_of_measurement
         self._web = web
-        self._published = published  #: str | None = None
-        self._area = area  #: str | None = None
+        self._published = published
+        self._area = area
+        self._state = state
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -75,6 +78,11 @@ class KrisInformationGeolocationEvent(GeolocationEvent):
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return self._unit_of_measurement
+
+    @property
+    def state(self):
+        """Return the state of the geolocation event."""
+        return self._state
 
 
 async def async_setup_entry(
@@ -113,27 +121,6 @@ class KrisInformationGeolocationManager:
         self._events: list[KrisInformationGeolocationEvent] = []
         self._crisis_alerter = crisis_alerter
 
-    def _generate_event(
-        self,
-        external_id: str,
-        headline: str,
-        latitude: float,
-        longitude: float,
-        web: str,
-        published: str,
-        area: str,
-    ) -> KrisInformationGeolocationEvent:
-        """Generate a krisinformation geolocation event."""
-        return KrisInformationGeolocationEvent(
-            external_id,
-            headline,
-            latitude,
-            longitude,
-            UnitOfLength.KILOMETERS,
-            web,
-            published,
-            area,
-        )
 
     async def init_regular_updates(self) -> None:
         """Schedule regular updates based on configured time interval."""
@@ -172,6 +159,7 @@ class KrisInformationGeolocationManager:
                 event["Web"],
                 event["Published"],
                 event["Area"][0]["Description"],
+                ""
             )
             new_events.append(new_event)
             self._events.append(new_event)
