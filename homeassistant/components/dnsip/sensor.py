@@ -52,6 +52,7 @@ class WanIpSensor(SensorEntity):
 
     _attr_icon = "mdi:web"
     _attr_has_entity_name = True
+    _retries = 2
 
     def __init__(
         self,
@@ -90,5 +91,8 @@ class WanIpSensor(SensorEntity):
         if response:
             self._attr_native_value = response[0].host
             self._attr_available = True
+            self._retries = 2
+        elif self._retries > 0:
+            self._retries -= 1
         else:
             self._attr_available = False
