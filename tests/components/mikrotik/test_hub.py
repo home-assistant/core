@@ -6,28 +6,37 @@ from unittest.mock import MagicMock
 
 from librouteros import Api
 from librouteros.exceptions import TrapError
+import pytest
 
 from homeassistant.components import mikrotik
 from homeassistant.components.mikrotik.const import ATTR_FIRMWARE, ATTR_MODEL
 from homeassistant.components.mikrotik.hub import MikrotikData
-from homeassistant.core import HomeAssistant
 
 from . import MOCK_DATA
 
 from tests.common import MockConfigEntry
 
 
-async def test_info_routerboard(hass: HomeAssistant) -> None:
-    """Test device firmware/model for routerboard routers."""
+@pytest.fixture
+def api():
+    """Mock Mikrotik Api."""
+    return MagicMock(Api)
+
+
+@pytest.fixture
+def mikrotik_data(hass, api):
+    """Create MikrotikData."""
     entry_id = "mikrotik_entry_id"
     options: dict[str, Any] = {}
     config_entry = MockConfigEntry(
         domain=mikrotik.DOMAIN, data=MOCK_DATA, options=options, entry_id=entry_id
     )
+    return MikrotikData(hass, config_entry, api)
 
-    api = MagicMock(Api)
+
+async def test_info_routerboard(mikrotik_data: MikrotikData, api: Api) -> None:
+    """Test device firmware/model for routerboard routers."""
     api.return_value = [{ATTR_FIRMWARE: "test_firmware", ATTR_MODEL: "test_model"}]
-    mikrotik_data = MikrotikData(hass, config_entry, api)
 
     model = mikrotik_data.get_info(ATTR_MODEL)
     assert model == "test_model"
@@ -40,19 +49,11 @@ async def test_info_routerboard(hass: HomeAssistant) -> None:
     assert api.call_count == 2
 
 
-async def test_info_chr(hass: HomeAssistant) -> None:
+async def test_info_chr(mikrotik_data: MikrotikData, api: Api) -> None:
     """Test device firmware/model for CHR routers."""
-    entry_id = "mikrotik_entry_id"
-    options: dict[str, Any] = {}
-    config_entry = MockConfigEntry(
-        domain=mikrotik.DOMAIN, data=MOCK_DATA, options=options, entry_id=entry_id
-    )
-
-    api = MagicMock(Api)
     api.side_effect = TrapError(
         "no such command or directory (routerboard), no such command prefix"
     )
-    mikrotik_data = MikrotikData(hass, config_entry, api)
 
     model = mikrotik_data.get_info(ATTR_MODEL)
     assert model == ""
