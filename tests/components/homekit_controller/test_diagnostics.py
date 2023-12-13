@@ -1,6 +1,8 @@
 """Test homekit_controller diagnostics."""
 from unittest.mock import ANY
 
+import pytest
+
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -14,8 +16,9 @@ from tests.components.diagnostics import (
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.usefixtures("utcnow")
 async def test_config_entry(
-    utcnow, hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test generating diagnostics for a config entry."""
     accessories = await setup_accessories_from_file(hass, "koogeek_ls1.json")
@@ -289,8 +292,8 @@ async def test_config_entry(
     }
 
 
+@pytest.mark.usefixtures("utcnow")
 async def test_device(
-    utcnow,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     device_registry: dr.DeviceRegistry,
