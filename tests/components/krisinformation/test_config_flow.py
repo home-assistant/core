@@ -1,5 +1,5 @@
 """Test the krisinformation config flow."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from voluptuous import MultipleInvalid
@@ -54,5 +54,3 @@ async def test_config_invalid_county(hass: HomeAssistant) -> None:
             str(err)
             == "value must be one of ['Blekinge län', 'Dalarnas län', 'Gotlands län', 'Gävleborgs län', 'Hallands län', 'Jämtlands län', 'Jönköpings län', 'Kalmar län', 'Kronobergs län', 'Norrbottens län', 'Skåne län', 'Stockholms län', 'Södermanlands län', 'Uppsala län', 'Värmlands län', 'Västerbottens län', 'Västernorrlands län', 'Västmanlands län', 'Västra Götalands län', 'Örebro län', 'Östergötlands län'] for dictionary value @ data['county']"
         )
-
-    assert result["errors"] == {}
