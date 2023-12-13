@@ -123,7 +123,7 @@ class ZeroconfServiceInfo(BaseServiceInfo):
     hostname: str
     type: str
     name: str
-    properties: dict[str, Any]
+    properties: dict[str, str | None]
 
     @property
     def host(self) -> str:
@@ -338,12 +338,13 @@ def _match_against_data(
     return True
 
 
-def _match_against_props(matcher: dict[str, str], props: dict[str, str]) -> bool:
+def _match_against_props(matcher: dict[str, str], props: dict[str, str | None]) -> bool:
     """Check a matcher to ensure all values in props."""
     return not any(
         key
         for key in matcher
-        if key not in props or not _memorized_fnmatch(props[key].lower(), matcher[key])
+        if key not in props
+        or not _memorized_fnmatch((props[key] or "").lower(), matcher[key])
     )
 
 
@@ -467,7 +468,7 @@ class ZeroconfDiscovery:
             _LOGGER.debug("Failed to get addresses for device %s", name)
             return
         _LOGGER.debug("Discovered new device %s %s", name, info)
-        props: dict[str, str] = info.properties
+        props: dict[str, str | None] = info.properties
         domain = None
 
         # If we can handle it as a HomeKit discovery, we do that here.
