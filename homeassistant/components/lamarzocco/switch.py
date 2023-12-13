@@ -62,7 +62,6 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         icon="mdi:water-boiler",
         control_fn=lambda client, state: client.set_steam_boiler_enable(state),
         is_on_fn=lambda client: client.current_status["steam_boiler_enable"],
-        entity_category=EntityCategory.CONFIG,
     ),
 )
 
