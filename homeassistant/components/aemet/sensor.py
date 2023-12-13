@@ -172,7 +172,7 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
     AemetSensorEntityDescription(
         key=f"forecast-daily-{ATTR_API_FORECAST_TIME}",
         keys=[AOD_TOWN, AOD_FORECAST_DAILY, AOD_FORECAST_CURRENT, AOD_TIMESTAMP],
-        name="Daily Forecast Time",
+        name="Daily forecast time",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=dt_util.parse_datetime,
     ),
