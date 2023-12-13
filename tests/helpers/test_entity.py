@@ -664,10 +664,9 @@ async def test_set_context_expired(hass: HomeAssistant) -> None:
     """Test setting context."""
     context = Context()
 
-    with patch.object(
-        entity.Entity, "context_recent_time", new_callable=PropertyMock
-    ) as recent:
-        recent.return_value = timedelta(seconds=-5)
+    with patch(
+        "homeassistant.helpers.entity.CONTEXT_RECENT_TIME", timedelta(seconds=-5)
+    ):
         ent = entity.Entity()
         ent.hass = hass
         ent.entity_id = "hello.world"
