@@ -15,5 +15,3 @@ ATTR_DELAY = "delay"
 
 CONF_DESTINATION = "to"
 CONF_START = "from"
-
-DEFAULT_NAME = "Next Departure"

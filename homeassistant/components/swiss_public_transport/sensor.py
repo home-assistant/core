@@ -4,14 +4,12 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from opendata_transport import OpendataTransport
 from opendata_transport.exceptions import OpendataTransportError
 
 from homeassistant import config_entries, core
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_NAME
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
@@ -44,20 +42,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
     config = hass.data[DOMAIN][config_entry.entry_id]
+    opendata = hass.data[DOMAIN][f"{config_entry.entry_id}_opendata_client"]
 
-    sensor = await swiss_public_transport_setup(hass, config)
-
-    try:
-        await sensor.async_update()
-    except OpendataTransportError:
-        _LOGGER.error(
-            "Check at http://transport.opendata.ch/examples/stationboard.html "
-            "if your station names are valid"
-        )
-        return
+    start = config.get(CONF_START)
+    destination = config.get(CONF_DESTINATION)
 
     async_add_entities(
-        [sensor],
+        [SwissPublicTransportSensor(opendata, start, destination)],
         update_before_add=True,
     )
 
@@ -65,40 +56,17 @@ async def async_setup_entry(
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
+    add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the sensor from platform."""
-
-    sensor = await swiss_public_transport_setup(hass, config)
-
-    try:
-        await sensor.async_update()
-    except OpendataTransportError:
-        _LOGGER.error(
-            "Check at http://transport.opendata.ch/examples/stationboard.html "
-            "if your station names are valid"
+    """Set up the sensor platform."""
+    await hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
         )
-        return
-
-    async_add_entities(
-        [sensor],
-        update_before_add=True,
     )
-
-
-async def swiss_public_transport_setup(
-    hass: HomeAssistant, config: ConfigType
-) -> SwissPublicTransportSensor:
-    """Set up the Swiss public transport sensor."""
-    name = config.get(CONF_NAME)
-    start = config.get(CONF_START)
-    destination = config.get(CONF_DESTINATION)
-
-    session = async_get_clientsession(hass)
-    opendata = OpendataTransport(start, destination, session)
-
-    return SwissPublicTransportSensor(opendata, start, destination, name)
 
 
 class SwissPublicTransportSensor(SensorEntity):
@@ -107,10 +75,9 @@ class SwissPublicTransportSensor(SensorEntity):
     _attr_attribution = "Data provided by transport.opendata.ch"
     _attr_icon = "mdi:bus"
 
-    def __init__(self, opendata, start, destination, name):
+    def __init__(self, opendata, start, destination):
         """Initialize the sensor."""
         self._opendata = opendata
-        self._name = name
         self._from = start
         self._to = destination
         self._remaining_time = None
@@ -118,7 +85,7 @@ class SwissPublicTransportSensor(SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return f"{DOMAIN}_{self._from}_{self._to}"
 
     @property
     def native_value(self):
