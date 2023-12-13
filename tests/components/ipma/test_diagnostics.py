@@ -1,4 +1,4 @@
-"""Test Prosegur diagnostics."""
+"""Test IPMA diagnostics."""
 
 from syrupy.assertion import SnapshotAssertion
 
