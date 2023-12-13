@@ -108,6 +108,8 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
         if self.entity_description.key not in self.device_data.active_features:
             hvac_mode = self.device_data.hvac_mode if self.device_data.hvac_mode else ""
             raise HomeAssistantError(
+                f"Current mode {self.device_data.hvac_mode} doesn't support setting"
+                f" {self.entity_description.name}",
                 translation_domain=DOMAIN,
                 translation_key="select_option_not_available",
                 translation_placeholders={
