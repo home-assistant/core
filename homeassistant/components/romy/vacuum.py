@@ -42,7 +42,6 @@ FAN_SPEEDS: list[str] = [
 # Commonly supported features
 SUPPORT_ROMY_ROBOT = (
     VacuumEntityFeature.BATTERY
-    | VacuumEntityFeature.PAUSE
     | VacuumEntityFeature.RETURN_HOME
     | VacuumEntityFeature.STATE
     | VacuumEntityFeature.START
@@ -111,11 +110,6 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         """Return vacuum back to base."""
         LOGGER.debug("async_return_to_base")
         await self.romy.async_return_to_base()
-
-    async def async_pause(self, **kwargs: Any) -> None:
-        """Pause the cleaning cycle (api call stop means stop robot where is is and not sending back to docking station)."""
-        LOGGER.debug("async_pause")
-        await self.romy.async_stop()
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
