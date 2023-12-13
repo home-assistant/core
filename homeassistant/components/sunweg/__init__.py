@@ -3,14 +3,13 @@ import datetime
 import json
 import logging
 
-from sunweg.api import APIHelper, SunWegApiError
+from sunweg.api import APIHelper
 from sunweg.plant import Plant
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import Throttle
 
@@ -28,16 +27,14 @@ async def async_setup_entry(
 ) -> bool:
     """Load the saved entities."""
     api = APIHelper(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
-    try:
-        if not await hass.async_add_executor_job(api.authenticate):
-            raise ConfigEntryAuthFailed("Username or Password may be incorrect!")
-        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = SunWEGData(
-            api, entry.data[CONF_PLANT_ID]
-        )
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-        return True
-    except SunWegApiError as ex:
-        raise ConfigEntryNotReady("Timed out while connecting to SunWEG API.") from ex
+    if not await hass.async_add_executor_job(api.authenticate):
+        _LOGGER.error("Username or Password may be incorrect!")
+        return False
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = SunWEGData(
+        api, entry.data[CONF_PLANT_ID]
+    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

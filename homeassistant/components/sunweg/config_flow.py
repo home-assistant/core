@@ -1,7 +1,5 @@
 """Config flow for Sun WEG integration."""
-from collections.abc import Mapping
 import logging
-from typing import Any
 
 from sunweg.api import APIHelper, SunWegApiError
 import voluptuous as vol
@@ -84,7 +82,3 @@ class SunWEGConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         self.data.update(user_input)
         return self.async_create_entry(title=self.data[CONF_NAME], data=self.data)
-
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
-        """Handle reauthorization request from SunWEG."""
-        return self._async_show_user_form()
