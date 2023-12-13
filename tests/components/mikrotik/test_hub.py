@@ -39,13 +39,11 @@ async def test_info_routerboard(mikrotik_data: MikrotikData, api: Api) -> None:
     api.return_value = [{ATTR_FIRMWARE: "test_firmware", ATTR_MODEL: "test_model"}]
 
     model = mikrotik_data.get_info(ATTR_MODEL)
-    assert model == "test_model"
-
     firmware = mikrotik_data.get_info(ATTR_FIRMWARE)
+
+    assert model == "test_model"
     assert firmware == "test_firmware"
-
     assert mikrotik_data.is_routerboard is True
-
     assert api.call_count == 2
 
 
@@ -56,11 +54,9 @@ async def test_info_chr(mikrotik_data: MikrotikData, api: Api) -> None:
     )
 
     model = mikrotik_data.get_info(ATTR_MODEL)
-    assert model == ""
-
     firmware = mikrotik_data.get_info(ATTR_FIRMWARE)
+
+    assert model == ""
     assert firmware == ""
-
     assert mikrotik_data.is_routerboard is False
-
     api.assert_called_once()
