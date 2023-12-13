@@ -158,11 +158,10 @@ class StarlineAccount:
     @staticmethod
     def balance_attrs(device: StarlineDevice) -> dict[str, Any]:
         """Attributes for balance sensor."""
-        ts = device.balance.get("ts")
         return {
             "operator": device.balance.get("operator"),
             "state": device.balance.get("state"),
-            "updated": parse_datetime(ts),
+            "updated": parse_datetime(device.balance.get("ts")),
         }
 
     @staticmethod
