@@ -24,7 +24,6 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.components.xiaomi_miio.const import (
     CONF_FLOW_TYPE,
-    CONF_MAC,
     DOMAIN as XIAOMI_DOMAIN,
     MODELS_VACUUM,
 )
@@ -32,6 +31,7 @@ from homeassistant.components.xiaomi_miio.vacuum import (
     ATTR_ERROR,
     ATTR_TIMERS,
     CONF_DEVICE,
+    CONF_MAC,
     SERVICE_CLEAN_SEGMENT,
     SERVICE_CLEAN_ZONE,
     SERVICE_GOTO,

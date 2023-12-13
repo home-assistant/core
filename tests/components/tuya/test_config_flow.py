@@ -15,13 +15,12 @@ from homeassistant.components.tuya.const import (
     CONF_AUTH_TYPE,
     CONF_COUNTRY_CODE,
     CONF_ENDPOINT,
-    CONF_PASSWORD,
-    CONF_USERNAME,
     DOMAIN,
     SMARTLIFE_APP,
     TUYA_COUNTRIES,
     TUYA_SMART_APP,
 )
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 MOCK_SMART_HOME_PROJECT_TYPE = 0
