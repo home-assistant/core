@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components import number
 from homeassistant.components.rainbird import DOMAIN
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -14,15 +14,16 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import (
     ACK_ECHO,
+    CONFIG_ENTRY_DATA_OLD_FORMAT,
+    MAC_ADDRESS,
     RAIN_DELAY,
     RAIN_DELAY_OFF,
-    SERIAL_NUMBER,
     mock_response,
     mock_response_error,
 )
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 
 @pytest.fixture
@@ -66,46 +67,23 @@ async def test_number_values(
 
     entity_entry = entity_registry.async_get("number.rain_bird_controller_rain_delay")
     assert entity_entry
-    assert entity_entry.unique_id == "1263613994342-rain-delay"
-
-
-@pytest.mark.parametrize(
-    ("config_entry_unique_id", "entity_unique_id"),
-    [
-        (SERIAL_NUMBER, "1263613994342-rain-delay"),
-        # Some existing config entries may have a "0" serial number but preserve
-        # their unique id
-        (0, "0-rain-delay"),
-    ],
-)
-async def test_unique_id(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    entity_unique_id: str,
-) -> None:
-    """Test number platform."""
-
-    raindelay = hass.states.get("number.rain_bird_controller_rain_delay")
-    assert raindelay is not None
-    assert (
-        raindelay.attributes.get("friendly_name") == "Rain Bird Controller Rain delay"
-    )
-
-    entity_entry = entity_registry.async_get("number.rain_bird_controller_rain_delay")
-    assert entity_entry
-    assert entity_entry.unique_id == entity_unique_id
+    assert entity_entry.unique_id == "4c:a1:61:00:11:22-rain-delay"
 
 
 async def test_set_value(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     responses: list[str],
-    config_entry: ConfigEntry,
 ) -> None:
     """Test setting the rain delay number."""
 
+    raindelay = hass.states.get("number.rain_bird_controller_rain_delay")
+    assert raindelay is not None
+
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, SERIAL_NUMBER)})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, MAC_ADDRESS.lower())}
+    )
     assert device
     assert device.name == "Rain Bird Controller"
     assert device.model == "ESP-TM2"
@@ -138,7 +116,6 @@ async def test_set_value_error(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     responses: list[str],
-    config_entry: ConfigEntry,
     status: HTTPStatus,
     expected_msg: str,
 ) -> None:
@@ -162,16 +139,24 @@ async def test_set_value_error(
 
 
 @pytest.mark.parametrize(
-    ("config_entry_unique_id"),
+    ("config_entry_data", "config_entry_unique_id", "setup_config_entry"),
     [
-        (None),
+        (CONFIG_ENTRY_DATA_OLD_FORMAT, None, None),
     ],
 )
 async def test_no_unique_id(
     hass: HomeAssistant,
+    responses: list[AiohttpClientMockResponse],
     entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test number platform with no unique id."""
+
+    # Failure to migrate config entry to a unique id
+    responses.insert(0, mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE))
+
+    await config_entry.async_setup(hass)
+    assert config_entry.state == ConfigEntryState.LOADED
 
     raindelay = hass.states.get("number.rain_bird_controller_rain_delay")
     assert raindelay is not None

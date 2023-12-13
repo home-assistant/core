@@ -17,7 +17,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import mock_response, mock_response_error
+from .conftest import CONFIG_ENTRY_DATA_OLD_FORMAT, mock_response, mock_response_error
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMockResponse
@@ -210,7 +210,7 @@ async def test_event_state(
 
     entity = entity_registry.async_get(TEST_ENTITY)
     assert entity
-    assert entity.unique_id == 1263613994342
+    assert entity.unique_id == "4c:a1:61:00:11:22"
 
 
 @pytest.mark.parametrize(
@@ -232,7 +232,8 @@ async def test_calendar_not_supported_by_device(
 
 
 @pytest.mark.parametrize(
-    "mock_insert_schedule_response", [([None])]  # Disable success responses
+    "mock_insert_schedule_response",
+    [([None])],  # Disable success responses
 )
 async def test_no_schedule(
     hass: HomeAssistant,
@@ -280,17 +281,25 @@ async def test_program_schedule_disabled(
 
 
 @pytest.mark.parametrize(
-    ("config_entry_unique_id"),
+    ("config_entry_data", "config_entry_unique_id", "setup_config_entry"),
     [
-        (None),
+        (CONFIG_ENTRY_DATA_OLD_FORMAT, None, None),
     ],
 )
 async def test_no_unique_id(
     hass: HomeAssistant,
     get_events: GetEventsFn,
+    responses: list[AiohttpClientMockResponse],
     entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test calendar entity with no unique id."""
+
+    # Failure to migrate config entry to a unique id
+    responses.insert(0, mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE))
+
+    await config_entry.async_setup(hass)
+    assert config_entry.state == ConfigEntryState.LOADED
 
     state = hass.states.get(TEST_ENTITY)
     assert state is not None

@@ -45,6 +45,7 @@ class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
         )
         self.access_denied = False
         self.not_supported = False
+        self._has_already_worked = False
 
     async def _async_update_data(self) -> T:
         """Fetch the latest data from the source."""
@@ -52,11 +53,16 @@ class RenaultDataUpdateCoordinator(DataUpdateCoordinator[T]):
             raise NotImplementedError("Update method not implemented")
         try:
             async with _PARALLEL_SEMAPHORE:
-                return await self.update_method()
+                data = await self.update_method()
+            self._has_already_worked = True
+            return data
+
         except AccessDeniedException as err:
-            # Disable because the account is not allowed to access this Renault endpoint.
-            self.update_interval = None
-            self.access_denied = True
+            # This can mean both a temporary error or a permanent error. If it has
+            # worked before, make it temporary, if not disable the update interval.
+            if not self._has_already_worked:
+                self.update_interval = None
+                self.access_denied = True
             raise UpdateFailed(f"This endpoint is denied: {err}") from err
 
         except NotSupportedException as err:

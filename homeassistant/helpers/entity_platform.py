@@ -304,7 +304,7 @@ class EntityPlatform:
         current_platform.set(self)
         logger = self.logger
         hass = self.hass
-        full_name = f"{self.domain}.{self.platform_name}"
+        full_name = f"{self.platform_name}.{self.domain}"
         object_id_language = (
             hass.config.language
             if hass.config.language in languages.NATIVE_ENTITY_IDS
@@ -813,7 +813,7 @@ class EntityPlatform:
     def async_register_entity_service(
         self,
         name: str,
-        schema: dict[str, Any] | vol.Schema,
+        schema: dict[str | vol.Marker, Any] | vol.Schema,
         func: str | Callable[..., Any],
         required_features: Iterable[int] | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,

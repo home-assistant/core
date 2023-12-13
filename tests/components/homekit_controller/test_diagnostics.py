@@ -290,14 +290,16 @@ async def test_config_entry(
 
 
 async def test_device(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, utcnow
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
+    utcnow,
 ) -> None:
     """Test generating diagnostics for a device entry."""
     accessories = await setup_accessories_from_file(hass, "koogeek_ls1.json")
     config_entry, _ = await setup_test_accessories(hass, accessories)
 
     connection = hass.data[KNOWN_DEVICES]["00:00:00:00:00:00"]
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(connection.devices[1])
 
     diag = await get_diagnostics_for_device(hass, hass_client, config_entry, device)

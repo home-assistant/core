@@ -823,15 +823,8 @@ class DeviceRegistry:
             for device in data["deleted_devices"]:
                 deleted_devices[device["id"]] = DeletedDeviceEntry(
                     config_entries=set(device["config_entries"]),
-                    # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
-                    connections={
-                        tuple(conn)  # type: ignore[misc]
-                        for conn in device["connections"]
-                    },
-                    identifiers={
-                        tuple(iden)  # type: ignore[misc]
-                        for iden in device["identifiers"]
-                    },
+                    connections={tuple(conn) for conn in device["connections"]},
+                    identifiers={tuple(iden) for iden in device["identifiers"]},
                     id=device["id"],
                     orphaned_timestamp=device["orphaned_timestamp"],
                 )

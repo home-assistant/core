@@ -545,7 +545,7 @@ class SpeechManager:
         self.providers[engine] = provider
 
         self.hass.config.components.add(
-            PLATFORM_FORMAT.format(domain=engine, platform=DOMAIN)
+            PLATFORM_FORMAT.format(domain=DOMAIN, platform=engine)
         )
 
     @callback

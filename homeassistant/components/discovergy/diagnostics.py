@@ -4,8 +4,6 @@ from __future__ import annotations
 from dataclasses import asdict
 from typing import Any
 
-from pydiscovergy.models import Meter
-
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -30,9 +28,8 @@ async def async_get_config_entry_diagnostics(
     flattened_meter: list[dict] = []
     last_readings: dict[str, dict] = {}
     data: DiscovergyData = hass.data[DOMAIN][entry.entry_id]
-    meters: list[Meter] = data.meters  # always returns a list
 
-    for meter in meters:
+    for meter in data.meters:
         # make a dict of meter data and redact some data
         flattened_meter.append(async_redact_data(asdict(meter), TO_REDACT_METER))
 

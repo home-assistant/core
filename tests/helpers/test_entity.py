@@ -9,6 +9,7 @@ from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -590,7 +591,6 @@ async def test_async_remove_runs_callbacks(hass: HomeAssistant) -> None:
 
     platform = MockEntityPlatform(hass, domain="test")
     ent = entity.Entity()
-    ent.hass = hass
     ent.entity_id = "test.test"
     await platform.async_add_entities([ent])
     ent.async_on_remove(lambda: result.append(1))
@@ -604,7 +604,6 @@ async def test_async_remove_ignores_in_flight_polling(hass: HomeAssistant) -> No
 
     platform = MockEntityPlatform(hass, domain="test")
     ent = entity.Entity()
-    ent.hass = hass
     ent.entity_id = "test.test"
     ent.async_on_remove(lambda: result.append(1))
     await platform.async_add_entities([ent])
@@ -841,13 +840,6 @@ async def test_setup_source(hass: HomeAssistant) -> None:
 
 async def test_removing_entity_unavailable(hass: HomeAssistant) -> None:
     """Test removing an entity that is still registered creates an unavailable state."""
-    er.RegistryEntry(
-        entity_id="hello.world",
-        unique_id="test-unique-id",
-        platform="test-platform",
-        disabled_by=None,
-    )
-
     platform = MockEntityPlatform(hass, domain="hello")
     ent = entity.Entity()
     ent.entity_id = "hello.world"
@@ -975,7 +967,7 @@ async def test_entity_description_fallback() -> None:
     ent_with_description = entity.Entity()
     ent_with_description.entity_description = entity.EntityDescription(key="test")
 
-    for field in dataclasses.fields(entity.EntityDescription):
+    for field in dataclasses.fields(entity.EntityDescription._dataclass):
         if field.name == "key":
             continue
 
@@ -1666,3 +1658,106 @@ async def test_change_entity_id(
     assert len(result) == 2
     assert len(ent.added_calls) == 3
     assert len(ent.remove_calls) == 2
+
+
+def test_entity_description_as_dataclass(snapshot: SnapshotAssertion):
+    """Test EntityDescription behaves like a dataclass."""
+
+    obj = entity.EntityDescription("blah", device_class="test")
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        obj.name = "mutate"
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        delattr(obj, "name")
+
+    assert dataclasses.is_dataclass(obj)
+    assert obj == snapshot
+    assert obj == entity.EntityDescription("blah", device_class="test")
+    assert repr(obj) == snapshot
+
+
+def test_extending_entity_description(snapshot: SnapshotAssertion):
+    """Test extending entity descriptions."""
+
+    @dataclasses.dataclass(frozen=True)
+    class FrozenEntityDescription(entity.EntityDescription):
+        extra: str = None
+
+    obj = FrozenEntityDescription("blah", extra="foo", name="name")
+    assert obj == snapshot
+    assert obj == FrozenEntityDescription("blah", extra="foo", name="name")
+    assert repr(obj) == snapshot
+
+    # Try mutating
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        obj.name = "mutate"
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        delattr(obj, "name")
+
+    @dataclasses.dataclass
+    class ThawedEntityDescription(entity.EntityDescription):
+        extra: str = None
+
+    obj = ThawedEntityDescription("blah", extra="foo", name="name")
+    assert obj == snapshot
+    assert obj == ThawedEntityDescription("blah", extra="foo", name="name")
+    assert repr(obj) == snapshot
+
+    # Try mutating
+    obj.name = "mutate"
+    assert obj.name == "mutate"
+    delattr(obj, "key")
+    assert not hasattr(obj, "key")
+
+    # Try multiple levels of FrozenOrThawed
+    class ExtendedEntityDescription(entity.EntityDescription, frozen_or_thawed=True):
+        extension: str = None
+
+    @dataclasses.dataclass(frozen=True)
+    class MyExtendedEntityDescription(ExtendedEntityDescription):
+        extra: str = None
+
+    obj = MyExtendedEntityDescription("blah", extension="ext", extra="foo", name="name")
+    assert obj == snapshot
+    assert obj == MyExtendedEntityDescription(
+        "blah", extension="ext", extra="foo", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    # Try multiple direct parents
+    @dataclasses.dataclass(frozen=True)
+    class MyMixin:
+        mixin: str = None
+
+    @dataclasses.dataclass(frozen=True, kw_only=True)
+    class ComplexEntityDescription1(MyMixin, entity.EntityDescription):
+        extra: str = None
+
+    obj = ComplexEntityDescription1(key="blah", extra="foo", mixin="mixin", name="name")
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription1(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(frozen=True, kw_only=True)
+    class ComplexEntityDescription2(entity.EntityDescription, MyMixin):
+        extra: str = None
+
+    obj = ComplexEntityDescription2(key="blah", extra="foo", mixin="mixin", name="name")
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription2(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    # Try inheriting with custom init
+    @dataclasses.dataclass
+    class CustomInitEntityDescription(entity.EntityDescription):
+        def __init__(self, extra, *args, **kwargs) -> None:
+            super().__init__(*args, **kwargs)
+            self.extra: str = extra
+
+    obj = CustomInitEntityDescription(key="blah", extra="foo", name="name")
+    assert obj == snapshot
+    assert obj == CustomInitEntityDescription(key="blah", extra="foo", name="name")
+    assert repr(obj) == snapshot

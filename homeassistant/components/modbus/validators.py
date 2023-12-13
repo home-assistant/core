@@ -26,13 +26,16 @@ from homeassistant.const import (
 from .const import (
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
+    CONF_FAN_MODE_REGISTER,
+    CONF_FAN_MODE_VALUES,
+    CONF_HVAC_MODE_REGISTER,
     CONF_INPUT_TYPE,
     CONF_SLAVE_COUNT,
     CONF_SWAP,
     CONF_SWAP_BYTE,
-    CONF_SWAP_NONE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
+    CONF_TARGET_TEMP,
     CONF_VIRTUAL_COUNT,
     CONF_WRITE_TYPE,
     DEFAULT_HUB,
@@ -52,6 +55,12 @@ ENTRY = namedtuple(
         "validate_parm",
     ],
 )
+
+
+ILLEGAL = "I"
+OPTIONAL = "O"
+DEMANDED = "D"
+
 PARM_IS_LEGAL = namedtuple(
     "PARM_IS_LEGAL",
     [
@@ -62,28 +71,40 @@ PARM_IS_LEGAL = namedtuple(
         "swap_word",
     ],
 )
-# PARM_IS_LEGAL defines if the keywords:
-#    count:
-#    structure:
-#    swap: byte
-#    swap: word
-#    swap: word_byte (identical to swap: word)
-# are legal to use.
-# These keywords are only legal with some datatype: ...
-# As expressed in DEFAULT_STRUCT_FORMAT
-
 DEFAULT_STRUCT_FORMAT = {
-    DataType.INT16: ENTRY("h", 1, PARM_IS_LEGAL(False, False, True, True, False)),
-    DataType.UINT16: ENTRY("H", 1, PARM_IS_LEGAL(False, False, True, True, False)),
-    DataType.FLOAT16: ENTRY("e", 1, PARM_IS_LEGAL(False, False, True, True, False)),
-    DataType.INT32: ENTRY("i", 2, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.UINT32: ENTRY("I", 2, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.FLOAT32: ENTRY("f", 2, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.INT64: ENTRY("q", 4, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.UINT64: ENTRY("Q", 4, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.FLOAT64: ENTRY("d", 4, PARM_IS_LEGAL(False, False, True, True, True)),
-    DataType.STRING: ENTRY("s", -1, PARM_IS_LEGAL(True, False, False, True, False)),
-    DataType.CUSTOM: ENTRY("?", 0, PARM_IS_LEGAL(True, True, False, False, False)),
+    DataType.INT16: ENTRY(
+        "h", 1, PARM_IS_LEGAL(ILLEGAL, ILLEGAL, OPTIONAL, OPTIONAL, ILLEGAL)
+    ),
+    DataType.UINT16: ENTRY(
+        "H", 1, PARM_IS_LEGAL(ILLEGAL, ILLEGAL, OPTIONAL, OPTIONAL, ILLEGAL)
+    ),
+    DataType.FLOAT16: ENTRY(
+        "e", 1, PARM_IS_LEGAL(ILLEGAL, ILLEGAL, OPTIONAL, OPTIONAL, ILLEGAL)
+    ),
+    DataType.INT32: ENTRY(
+        "i", 2, PARM_IS_LEGAL(ILLEGAL, ILLEGAL, OPTIONAL, OPTIONAL, OPTIONAL)
+    ),
+    DataType.UINT32: ENTRY(
+        "I", 2, PARM_IS_LEGAL(ILLEGAL, ILLEGAL, OPTIONAL, OPTIONAL, OPTIONAL)
+    ),
+    DataType.FLOAT32: ENTRY(
+        "f", 2, PARM_IS_LEGAL(ILLEGAL, ILLEGAL, OPTIONAL, OPTIONAL, OPTIONAL)
+    ),
+    DataType.INT64: ENTRY(
+        "q", 4, PARM_IS_LEGAL(ILLEGAL, ILLEGAL, OPTIONAL, OPTIONAL, OPTIONAL)
+    ),
+    DataType.UINT64: ENTRY(
+        "Q", 4, PARM_IS_LEGAL(ILLEGAL, ILLEGAL, OPTIONAL, OPTIONAL, OPTIONAL)
+    ),
+    DataType.FLOAT64: ENTRY(
+        "d", 4, PARM_IS_LEGAL(ILLEGAL, ILLEGAL, OPTIONAL, OPTIONAL, OPTIONAL)
+    ),
+    DataType.STRING: ENTRY(
+        "s", 0, PARM_IS_LEGAL(DEMANDED, ILLEGAL, ILLEGAL, OPTIONAL, ILLEGAL)
+    ),
+    DataType.CUSTOM: ENTRY(
+        "?", 0, PARM_IS_LEGAL(DEMANDED, DEMANDED, ILLEGAL, ILLEGAL, ILLEGAL)
+    ),
 }
 
 
@@ -96,33 +117,33 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
         data_type = config[CONF_DATA_TYPE] = DataType.INT16
     count = config.get(CONF_COUNT, None)
     structure = config.get(CONF_STRUCTURE, None)
-    slave_count = config.get(CONF_SLAVE_COUNT, config.get(CONF_VIRTUAL_COUNT, 0))
-    swap_type = config.get(CONF_SWAP, CONF_SWAP_NONE)
+    slave_count = config.get(CONF_SLAVE_COUNT, config.get(CONF_VIRTUAL_COUNT))
     validator = DEFAULT_STRUCT_FORMAT[data_type].validate_parm
+    swap_type = config.get(CONF_SWAP)
+    swap_dict = {
+        CONF_SWAP_BYTE: validator.swap_byte,
+        CONF_SWAP_WORD: validator.swap_word,
+        CONF_SWAP_WORD_BYTE: validator.swap_word,
+    }
+    swap_type_validator = swap_dict[swap_type] if swap_type else OPTIONAL
     for entry in (
         (count, validator.count, CONF_COUNT),
         (structure, validator.structure, CONF_STRUCTURE),
+        (
+            slave_count,
+            validator.slave_count,
+            f"{CONF_VIRTUAL_COUNT} / {CONF_SLAVE_COUNT}:",
+        ),
+        (swap_type, swap_type_validator, f"{CONF_SWAP}:{swap_type}"),
     ):
-        if bool(entry[0]) != entry[1]:
-            error = "cannot be combined" if not entry[1] else "missing, demanded"
-            error = (
-                f"{name}: `{entry[2]}:` {error} with `{CONF_DATA_TYPE}: {data_type}`"
-            )
+        if entry[0] is None:
+            if entry[1] == DEMANDED:
+                error = f"{name}: `{entry[2]}` missing, demanded with `{CONF_DATA_TYPE}: {data_type}`"
+                raise vol.Invalid(error)
+        elif entry[1] == ILLEGAL:
+            error = f"{name}: `{entry[2]}` illegal with `{CONF_DATA_TYPE}: {data_type}`"
             raise vol.Invalid(error)
 
-    if slave_count and not validator.slave_count:
-        error = f"{name}: `{CONF_VIRTUAL_COUNT} / {CONF_SLAVE_COUNT}:` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
-        raise vol.Invalid(error)
-    if swap_type != CONF_SWAP_NONE:
-        swap_type_validator = {
-            CONF_SWAP_NONE: False,
-            CONF_SWAP_BYTE: validator.swap_byte,
-            CONF_SWAP_WORD: validator.swap_word,
-            CONF_SWAP_WORD_BYTE: validator.swap_word,
-        }[swap_type]
-        if not swap_type_validator:
-            error = f"{name}: `{CONF_SWAP}:{swap_type}` cannot be combined with `{CONF_DATA_TYPE}: {data_type}`"
-            raise vol.Invalid(error)
     if config[CONF_DATA_TYPE] == DataType.CUSTOM:
         try:
             size = struct.calcsize(structure)
@@ -243,12 +264,31 @@ def duplicate_entity_validator(config: dict) -> dict:
                     addr += "_" + str(entry[CONF_COMMAND_OFF])
                 inx = entry.get(CONF_SLAVE, None) or entry.get(CONF_DEVICE_ADDRESS, 0)
                 addr += "_" + str(inx)
-                if addr in addresses:
-                    err = (
-                        f"Modbus {component}/{name} address {addr} is duplicate, second"
-                        " entry not loaded!"
-                    )
-                    _LOGGER.warning(err)
+                entry_addrs: set[str] = set()
+                entry_addrs.add(addr)
+
+                if CONF_TARGET_TEMP in entry:
+                    a = str(entry[CONF_TARGET_TEMP])
+                    a += "_" + str(inx)
+                    entry_addrs.add(a)
+                if CONF_HVAC_MODE_REGISTER in entry:
+                    a = str(entry[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS])
+                    a += "_" + str(inx)
+                    entry_addrs.add(a)
+                if CONF_FAN_MODE_REGISTER in entry:
+                    a = str(entry[CONF_FAN_MODE_REGISTER][CONF_ADDRESS])
+                    a += "_" + str(inx)
+                    entry_addrs.add(a)
+
+                dup_addrs = entry_addrs.intersection(addresses)
+
+                if len(dup_addrs) > 0:
+                    for addr in dup_addrs:
+                        err = (
+                            f"Modbus {component}/{name} address {addr} is duplicate, second"
+                            " entry not loaded!"
+                        )
+                        _LOGGER.warning(err)
                     errors.append(index)
                 elif name in names:
                     err = (
@@ -259,7 +299,7 @@ def duplicate_entity_validator(config: dict) -> dict:
                     errors.append(index)
                 else:
                     names.add(name)
-                    addresses.add(addr)
+                    addresses.update(entry_addrs)
 
             for i in reversed(errors):
                 del config[hub_index][conf_key][i]
@@ -278,11 +318,11 @@ def duplicate_modbus_validator(config: list) -> list:
         else:
             host = f"{hub[CONF_HOST]}_{hub[CONF_PORT]}"
         if host in hosts:
-            err = f"Modbus {name}  contains duplicate host/port {host}, not loaded!"
+            err = f"Modbus {name} contains duplicate host/port {host}, not loaded!"
             _LOGGER.warning(err)
             errors.append(index)
         elif name in names:
-            err = f"Modbus {name}  is duplicate, second entry not loaded!"
+            err = f"Modbus {name} is duplicate, second entry not loaded!"
             _LOGGER.warning(err)
             errors.append(index)
         else:
@@ -291,4 +331,21 @@ def duplicate_modbus_validator(config: list) -> list:
 
     for i in reversed(errors):
         del config[i]
+    return config
+
+
+def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
+    """Control modbus climate fan mode values for duplicates."""
+    fan_modes: set[int] = set()
+    errors = []
+    for key, value in config[CONF_FAN_MODE_VALUES].items():
+        if value in fan_modes:
+            wrn = f"Modbus fan mode {key} has a duplicate value {value}, not loaded, values must be unique!"
+            _LOGGER.warning(wrn)
+            errors.append(key)
+        else:
+            fan_modes.add(value)
+
+    for key in reversed(errors):
+        del config[CONF_FAN_MODE_VALUES][key]
     return config

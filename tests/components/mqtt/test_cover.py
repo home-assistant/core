@@ -3347,6 +3347,11 @@ async def test_set_state_via_stopped_state_no_position_topic(
     state = hass.states.get("cover.test")
     assert state.state == STATE_CLOSED
 
+    async_fire_mqtt_message(hass, "state-topic", "STOPPED")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSED
+
 
 @pytest.mark.parametrize(
     "hass_config",

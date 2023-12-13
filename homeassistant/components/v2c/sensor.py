@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -42,6 +41,7 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="charge_power",
         translation_key="charge_power",
+        icon="mdi:ev-station",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
@@ -50,6 +50,7 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="charge_energy",
         translation_key="charge_energy",
+        icon="mdi:ev-station",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
@@ -58,6 +59,7 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="charge_time",
         translation_key="charge_time",
+        icon="mdi:timer",
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.DURATION,
@@ -66,6 +68,7 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="house_power",
         translation_key="house_power",
+        icon="mdi:home-lightning-bolt",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
@@ -74,6 +77,7 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="fv_power",
         translation_key="fv_power",
+        icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
@@ -90,18 +94,16 @@ async def async_setup_entry(
     """Set up V2C sensor platform."""
     coordinator: V2CUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list[Entity] = [
+    async_add_entities(
         V2CSensorBaseEntity(coordinator, description, config_entry.entry_id)
         for description in TRYDAN_SENSORS
-    ]
-    async_add_entities(entities)
+    )
 
 
 class V2CSensorBaseEntity(V2CBaseEntity, SensorEntity):
     """Defines a base v2c sensor entity."""
 
     entity_description: V2CSensorEntityDescription
-    _attr_icon = "mdi:ev-station"
 
     def __init__(
         self,

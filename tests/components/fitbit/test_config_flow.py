@@ -17,8 +17,10 @@ from homeassistant.helpers import config_entry_oauth2_flow, issue_registry as ir
 
 from .conftest import (
     CLIENT_ID,
+    DISPLAY_NAME,
     FAKE_AUTH_IMPL,
     PROFILE_API_URL,
+    PROFILE_DATA,
     PROFILE_USER_ID,
     SERVER_ACCESS_TOKEN,
 )
@@ -76,7 +78,7 @@ async def test_full_flow(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     config_entry = entries[0]
-    assert config_entry.title == "My name"
+    assert config_entry.title == DISPLAY_NAME
     assert config_entry.unique_id == PROFILE_USER_ID
 
     data = dict(config_entry.data)
@@ -286,7 +288,7 @@ async def test_import_fitbit_config(
 
     # Verify valid profile can be fetched from the API
     config_entry = entries[0]
-    assert config_entry.title == "My name"
+    assert config_entry.title == DISPLAY_NAME
     assert config_entry.unique_id == PROFILE_USER_ID
 
     data = dict(config_entry.data)
@@ -598,3 +600,60 @@ async def test_reauth_wrong_user_id(
     assert result.get("reason") == "wrong_account"
 
     assert len(mock_setup.mock_calls) == 0
+
+
+@pytest.mark.parametrize(
+    ("profile_data", "expected_title"),
+    [
+        (PROFILE_DATA, DISPLAY_NAME),
+        ({"displayName": DISPLAY_NAME}, DISPLAY_NAME),
+    ],
+    ids=("full_profile_data", "display_name_only"),
+)
+async def test_partial_profile_data(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+    profile: None,
+    setup_credentials: None,
+    expected_title: str,
+) -> None:
+    """Check full flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT_URL,
+        },
+    )
+    assert result["type"] == FlowResultType.EXTERNAL_STEP
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        f"&redirect_uri={REDIRECT_URL}"
+        f"&state={state}"
+        "&scope=activity+heartrate+nutrition+profile+settings+sleep+weight&prompt=consent"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json=SERVER_ACCESS_TOKEN,
+    )
+
+    with patch(
+        "homeassistant.components.fitbit.async_setup_entry", return_value=True
+    ) as mock_setup:
+        await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert len(mock_setup.mock_calls) == 1
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    config_entry = entries[0]
+    assert config_entry.title == expected_title
