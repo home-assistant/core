@@ -155,13 +155,10 @@ class AttrMediaPlayer(SimpleMediaPlayer):
     _attr_volume_step = 0.2
 
 
-descr = mp.MediaPlayerEntityDescription(key="test", volume_step=0.3)
-
-
 class DescrMediaPlayer(SimpleMediaPlayer):
     """Media player setting properties via entity description."""
 
-    entity_description = descr
+    entity_description = mp.MediaPlayerEntityDescription(key="test", volume_step=0.3)
 
 
 @pytest.fixture(params=[ExtendedMediaPlayer, SimpleMediaPlayer])
