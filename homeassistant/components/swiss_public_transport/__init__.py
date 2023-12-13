@@ -1,7 +1,5 @@
 """The swiss_public_transport component."""
 import logging
-from types import MappingProxyType
-from typing import Any
 
 from opendata_transport import OpendataTransport
 from opendata_transport.exceptions import OpendataTransportError
@@ -31,23 +29,10 @@ async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Set up platform from a ConfigEntry."""
-    hass.data.setdefault(DOMAIN, {})
-
     config = entry.data
-
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = config
-    hass.data[DOMAIN][
-        f"{entry.entry_id}_opendata_client"
-    ] = await swiss_public_transport_opendata_client(hass, config)
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    return True
-
-
-async def swiss_public_transport_opendata_client(
-    hass: core.HomeAssistant, config: MappingProxyType[str, Any]
-) -> OpendataTransport:
-    """Set up the Swiss public transport client."""
     start = config.get(CONF_START)
     destination = config.get(CONF_DESTINATION)
 
@@ -61,8 +46,12 @@ async def swiss_public_transport_opendata_client(
             "Check at http://transport.opendata.ch/examples/stationboard.html "
             "if your station names are valid"
         )
-        return
-    return opendata
+        return False
+
+    hass.data[DOMAIN][f"{entry.entry_id}_opendata_client"] = opendata
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
 
 
 async def async_unload_entry(
