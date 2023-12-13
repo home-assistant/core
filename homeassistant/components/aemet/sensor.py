@@ -113,7 +113,7 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
         entity_registry_enabled_default=False,
         key=f"forecast-hourly-{ATTR_API_FORECAST_CONDITION}",
         keys=[AOD_TOWN, AOD_FORECAST_HOURLY, AOD_FORECAST_CURRENT, AOD_CONDITION],
-        name="Hourly Forecast Condition",
+        name="Hourly forecast condition",
         value_fn=CONDITIONS_MAP.get,
     ),
     AemetSensorEntityDescription(
