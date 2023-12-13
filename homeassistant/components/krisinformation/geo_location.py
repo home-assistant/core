@@ -47,20 +47,13 @@ class KrisInformationGeolocationEvent(GeolocationEvent):
         self._published = published  #: str | None = None
         self._area = area  #: str | None = None
 
-        self._update()
-
-    def _update(self) -> None:
-        """Schedule regular updates based on configured time interval."""
-
-    # _LOGGER.info(self._web, self._published, self._area)
-
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
-            "Link": self._web,
-            "Published": self._published,
-            "County": self._area,
+            "link": self._web,
+            "published": self._published,
+            "county": self._area,
         }
 
     @property
@@ -166,7 +159,7 @@ class KrisInformationGeolocationManager:
         events = await self._hass.async_add_executor_job(getvmas)
 
         for event in events:
-            new_event = self._generate_event(
+            new_event = KrisInformationGeolocationEvent(
                 event["Identifier"],
                 event["Headline"],
                 event["Area"][0]["GeometryInformation"]["PoleOfInInaccessibility"][
@@ -175,6 +168,7 @@ class KrisInformationGeolocationManager:
                 event["Area"][0]["GeometryInformation"]["PoleOfInInaccessibility"][
                     "coordinates"
                 ][0],
+                UnitOfLength.KILOMETERS,
                 event["Web"],
                 event["Published"],
                 event["Area"][0]["Description"],

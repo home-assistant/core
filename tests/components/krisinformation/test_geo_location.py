@@ -1,6 +1,5 @@
 """The tests for the krisinformation geo_location."""
 from datetime import timedelta
-import logging
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -14,11 +13,11 @@ import homeassistant.util.dt as dt_util
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.krisinformation.const import MOCK_CONFIG
 
-_LOGGER = logging.getLogger(__name__)
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
 
 mock_response = [
     {
+        "Identifier": "Test-VMA-1337",
         "Headline": "Test VMA",
         "Area": [
             {
@@ -29,6 +28,28 @@ mock_response = [
                 },
             }
         ],
+        "Web": "krisinformation.se",
+        "Published": "2023-03-29T11:02:11+02:00",
+        "PushMessage": "Test message",
+    }
+]
+
+mock_response_2 = [
+    {
+        "Identifier": "Test-VMA-1337-2",
+        "Headline": "Test VMA",
+        "Area": [
+            {
+                "Type": "County",
+                "Description": "Värmlands län",
+                "GeometryInformation": {
+                    "PoleOfInInaccessibility": {"coordinates": [57.7, 9.11]}
+                },
+            }
+        ],
+        "Web": "krisinformation.se",
+        "Published": "2023-03-29T11:02:11+02:00",
+        "PushMessage": "Test message",
     }
 ]
 
@@ -75,6 +96,7 @@ async def test_entity_lifecycle(
         ][0]
 
         assert state is not None
+
         assert state.attributes == {
             "friendly_name": "Test VMA",
             "icon": "mdi:public",
@@ -82,12 +104,20 @@ async def test_entity_lifecycle(
             "longitude": 57.7,
             "source": "krisinformation",
             "unit_of_measurement": UnitOfLength.KILOMETERS,
+            "county": "Västra Götalands län",
+            "link": "krisinformation.se",
+            "published": "2023-03-29T11:02:11+02:00",
         }
 
         # Simulate an update - two existing, one new entry, one outdated entry
-        mock_feed_update.return_value = [mock_response[0], mock_response[0]]
+        mock_feed_update.return_value = [mock_response[0], mock_response_2[0]]
         async_fire_time_changed(hass, utcnow + DEFAULT_UPDATE_INTERVAL)
         await hass.async_block_till_done()
+
+        state = [
+            hass.states.get(entity_id)
+            for entity_id in hass.states.async_entity_ids(geo_location.DOMAIN)
+        ][0]
 
         assert (
             len(hass.states.async_entity_ids("geo_location"))

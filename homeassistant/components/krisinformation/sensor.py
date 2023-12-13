@@ -66,9 +66,9 @@ class CrisisAlerterSensor(SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
-            "Link": self._web,
-            "Published": self._published,
-            "County": self._area,
+            "link": self._web,
+            "published": self._published,
+            "county": self._area,
         }
 
     def added_to_hass(self) -> None:
@@ -145,9 +145,9 @@ class CrisisAlerterSensorCounty(SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
-            "Link": self._web,
-            "Published": self._published,
-            "County": self._area,
+            "link": self._web,
+            "published": self._published,
+            "county": self._area,
         }
 
     def added_to_hass(self) -> None:
@@ -187,12 +187,12 @@ class CrisisAlerterSensorCounty(SensorEntity):
                         self._published = news["Published"]
                         self._area = county
                         break
-                    else:
-                        self._state = (
-                            "Inga larm"
-                            if self._crisis_alerter.language == "sv"
-                            else "No alarms"
-                        )
+                    self._state = (
+                        "Inga larm"
+                        if self._crisis_alerter.language == "sv"
+                        else "No alarms"
+                    )
+
             else:
                 self._state = (
                     "Inga larm"
