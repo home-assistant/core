@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from functools import partial
 
 from energyzero import Electricity, Gas, VatOption
 
@@ -58,8 +59,9 @@ def __serialize_prices(prices: Electricity | Gas) -> ServiceResponse:
 
 
 async def __get_prices(
-    coordinator: EnergyZeroDataUpdateCoordinator,
     call: ServiceCall,
+    *,
+    coordinator: EnergyZeroDataUpdateCoordinator,
     price_type: PriceType,
 ) -> ServiceResponse:
     start = __get_date(call.data.get(ATTR_START))
@@ -90,25 +92,17 @@ def register_services(
 ):
     """Set up EnergyZero services."""
 
-    async def get_gas_prices(call: ServiceCall) -> ServiceResponse:
-        """Search gas prices."""
-        return await __get_prices(coordinator, call, PriceType.GAS)
-
-    async def get_energy_prices(call: ServiceCall) -> ServiceResponse:
-        """Search energy prices."""
-        return await __get_prices(coordinator, call, PriceType.ENERGY)
-
     hass.services.async_register(
         DOMAIN,
         GAS_SERVICE_NAME,
-        get_gas_prices,
+        partial(__get_prices, coordinator=coordinator, price_type=PriceType.GAS),
         schema=SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
         ENERGY_SERVICE_NAME,
-        get_energy_prices,
+        partial(__get_prices, coordinator=coordinator, price_type=PriceType.ENERGY),
         schema=SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
