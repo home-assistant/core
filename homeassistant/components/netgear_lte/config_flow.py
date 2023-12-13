@@ -84,12 +84,12 @@ class NetgearLTEFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         try:
             await modem.login()
+            info = await modem.information()
         except Error as ex:
             raise InputValidationError("cannot_connect") from ex
         except Exception as ex:
             LOGGER.exception("Unexpected exception")
             raise InputValidationError("unknown") from ex
-        info = await modem.information()
         await modem.logout()
         return info
 

@@ -194,7 +194,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     modem = eternalegypt.Modem(hostname=host, websession=hass.data[DOMAIN].websession)
     modem_data = ModemData(hass, host, modem)
 
-    await _login(hass, modem_data, password)
+    await _login(hass, entry, modem_data, password)
 
     await async_setup_services(hass)
 
@@ -210,8 +210,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    data: LTEData = hass.data[DOMAIN]
-    await data.get_modem_data(entry.data).modem.logout()
     loaded_entries = [
         entry
         for entry in hass.config_entries.async_entries(DOMAIN)
@@ -223,7 +221,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def _login(hass, modem_data, password):
+async def _login(
+    hass: HomeAssistant, entry: ConfigEntry, modem_data: ModemData, password: str
+) -> None:
     """Log in and complete setup."""
     try:
         await modem_data.modem.login(password=password)
@@ -258,7 +258,7 @@ async def _login(hass, modem_data, password):
         if DOMAIN in hass.data:
             del hass.data[DOMAIN].modem_data[modem_data.host]
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
+    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup))
 
 
 def _legacy_task(hass: HomeAssistant, entry: ConfigEntry) -> None:

@@ -1,6 +1,8 @@
 """Test Netgear LTE config flow."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import data_entry_flow
 from homeassistant.components.netgear_lte.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
@@ -37,13 +39,14 @@ async def test_flow_user_form(hass: HomeAssistant, connection: None) -> None:
     assert result["context"]["unique_id"] == "FFFFFFFFFFFFF"
 
 
+@pytest.mark.parametrize("source", (SOURCE_USER, SOURCE_IMPORT))
 async def test_flow_already_configured(
-    hass: HomeAssistant, setup_integration: None
+    hass: HomeAssistant, setup_integration: None, source: str
 ) -> None:
     """Test config flow aborts when already configured."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={CONF_SOURCE: SOURCE_USER},
+        context={CONF_SOURCE: source},
         data=CONF_DATA,
     )
 

@@ -24,7 +24,7 @@
     },
     "import_failure": {
       "title": "The Netgear LTE integration failed to import",
-      "description": "The Netgear LTE notify service was previously set up via YAML configuration.\n\nAn error occurred when trying to communicate with the device. Please remove it from your YAML configuration and set it up."
+      "description": "The Netgear LTE notify service was previously set up via YAML configuration.\n\nAn error occurred when trying to communicate with the device while attempting to import the configuration to the UI.\n\nPlease remove the Netgear LTE notify section from your YAML configuration and set it up in the UI instead."
     }
   },
   "services": {
