@@ -4,10 +4,10 @@
       "user": {
         "data": {
           "name": "Name",
-          "from": "Start",
-          "to": "Destination"
+          "from": "From",
+          "to": "To"
         },
-        "description": "Provide start and end point for your connection\n\nCheck here for valid stations:\nhttp://transport.opendata.ch/examples/stationboard.html",
+        "description": "Provide start and end station for your connection\n\nCheck here for valid stations:\nhttp://transport.opendata.ch/examples/stationboard.html",
         "title": "Setup connection"
       }
     }
