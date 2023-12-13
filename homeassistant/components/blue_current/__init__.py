@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     except BlueCurrentException as err:
         raise ConfigEntryNotReady from err
 
-    hass.loop.create_task(connector.start_loop())
+    hass.async_create_task(connector.start_loop())
     await client.get_charge_points()
 
     await client.wait_for_response()
@@ -161,7 +161,7 @@ class Connector:
         try:
             await self.connect(self.config.data[CONF_API_TOKEN])
             LOGGER.info("Reconnected to the Blue Current websocket")
-            self.hass.loop.create_task(self.start_loop())
+            self.hass.async_create_task(self.start_loop())
             await self.client.get_charge_points()
         except RequestLimitReached:
             self.available = False
