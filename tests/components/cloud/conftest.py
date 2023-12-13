@@ -21,11 +21,18 @@ from . import mock_cloud, mock_cloud_prefs
 
 @pytest.fixture(name="cloud")
 async def cloud_fixture() -> AsyncGenerator[MagicMock, None]:
-    """Mock the cloud object."""
+    """Mock the cloud object.
+
+    See the real hass_nabucasa.Cloud class for how to configure the mock.
+    """
     with patch(
         "homeassistant.components.cloud.Cloud", autospec=True
     ) as mock_cloud_class:
         mock_cloud = mock_cloud_class.return_value
+
+        # Attributes set in the constructor without parameters.
+        # We spec the mocks with the real classes
+        # and set constructor attributes or mock properties as needed.
         mock_cloud.google_report_state = MagicMock(spec=GoogleReportState)
         mock_cloud.cloudhooks = MagicMock(spec=Cloudhooks)
         mock_cloud.remote = MagicMock(
@@ -39,48 +46,46 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock, None]:
         mock_cloud.iot = MagicMock(
             spec=CloudIoT, last_disconnect_reason=None, state=STATE_CONNECTED
         )
-
         mock_cloud.voice = MagicMock(spec=Voice)
-
-        async def mock_login(email: str, password: str) -> None:
-            """Mock login."""
-            on_start_callback = mock_cloud.register_on_start.call_args[0][0]
-            await on_start_callback()
-
-        mock_cloud.login.side_effect = mock_login
+        mock_cloud.started = None
 
         def set_up_mock_cloud(
             cloud_client: CloudClient, mode: str, **kwargs: Any
         ) -> DEFAULT:
-            """Set up mock cloud."""
-            mock_cloud.client = cloud_client
-            mock_cloud.websession = cloud_client.websession
+            """Set up mock cloud with a mock constructor."""
 
+            # Attributes set in the constructor with parameters.
+            cloud_client.cloud = mock_cloud
+            mock_cloud.client = cloud_client
+            default_values = DEFAULT_VALUES[mode]
             servers = {
                 f"{name}_server": server
                 for name, server in DEFAULT_SERVERS[mode].items()
             }
-            default_values = DEFAULT_VALUES[mode]
-            mock_cloud.configure_mock(**default_values, **servers)
-            mock_cloud.configure_mock(**kwargs)
-
+            mock_cloud.configure_mock(**default_values, **servers, **kwargs)
             mock_cloud.mode = mode
-            mock_cloud.id_token = jwt.encode(
-                {
-                    "email": "hello@home-assistant.io",
-                    "custom:sub-exp": "2018-01-03",
-                    "cognito:username": "abcdefghjkl",
-                },
-                "test",
-            )
-            mock_cloud.access_token = "test_access_token"
-            mock_cloud.refresh_token = "test_refresh_token"
-            mock_cloud.started = None
-            mock_cloud.client.cloud = mock_cloud
+
+            # Properties that we mock as attributes from the constructor.
+            mock_cloud.websession = cloud_client.websession
 
             return DEFAULT
 
         mock_cloud_class.side_effect = set_up_mock_cloud
+
+        # Attributes that we mock with default values.
+
+        mock_cloud.id_token = jwt.encode(
+            {
+                "email": "hello@home-assistant.io",
+                "custom:sub-exp": "2018-01-03",
+                "cognito:username": "abcdefghjkl",
+            },
+            "test",
+        )
+        mock_cloud.access_token = "test_access_token"
+        mock_cloud.refresh_token = "test_refresh_token"
+
+        # Properties that we keep as properties.
 
         def mock_is_logged_in() -> bool:
             """Mock is logged in."""
@@ -96,7 +101,20 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock, None]:
         claims = PropertyMock(side_effect=mock_claims)
         type(mock_cloud).claims = claims
 
+        # Properties that we mock as attributes.
         mock_cloud.subscription_expired = False
+
+        # Methods that we mock with a custom side effect.
+
+        async def mock_login(email: str, password: str) -> None:
+            """Mock login.
+
+            When called, it should call the on_start callback.
+            """
+            on_start_callback = mock_cloud.register_on_start.call_args[0][0]
+            await on_start_callback()
+
+        mock_cloud.login.side_effect = mock_login
 
         yield mock_cloud
 
