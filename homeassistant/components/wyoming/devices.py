@@ -105,11 +105,11 @@ class SatelliteDevice:
             "binary_sensor", DOMAIN, f"{self.satellite_id}-assist_in_progress"
         )
 
-    def get_satellite_is_muted_entity_id(self, hass: HomeAssistant) -> str | None:
+    def get_muted_entity_id(self, hass: HomeAssistant) -> str | None:
         """Return entity id for satellite muted switch."""
         ent_reg = er.async_get(hass)
         return ent_reg.async_get_entity_id(
-            "switch", DOMAIN, f"{self.satellite_id}-satellite_muted"
+            "switch", DOMAIN, f"{self.satellite_id}-mute"
         )
 
     def get_pipeline_entity_id(self, hass: HomeAssistant) -> str | None:
