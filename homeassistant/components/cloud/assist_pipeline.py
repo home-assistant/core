@@ -66,7 +66,7 @@ async def async_migrate_cloud_pipeline_stt_engine(
 ) -> None:
     """Migrate the speech-to-text engine in the cloud assist pipeline."""
     # Migrate existing pipelines with cloud stt to use new cloud stt engine id.
-    # Added in 2023.11.0. Can be removed in 2024.11.0.
+    # Added in 2024.01.0. Can be removed in 2025.01.0.
 
     # We need to make sure that tts is loaded before this migration.
     # Assist pipeline will call default engine of tts when setting up the store.
