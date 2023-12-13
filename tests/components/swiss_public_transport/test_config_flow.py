@@ -13,7 +13,6 @@ from homeassistant.components.swiss_public_transport.const import (
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import issue_registry as ir
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -135,7 +134,6 @@ MOCK_DATA = {
 async def test_import(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    issue_registry: ir.IssueRegistry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test import flow."""
@@ -162,8 +160,6 @@ async def test_import(
 
 async def test_import_client_error(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    issue_registry: ir.IssueRegistry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test import flow."""
@@ -189,8 +185,6 @@ async def test_import_client_error(
 
 async def test_import_unknown_error(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    issue_registry: ir.IssueRegistry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test import flow."""
@@ -214,9 +208,7 @@ async def test_import_unknown_error(
     assert result["reason"] == "unknown"
 
 
-async def test_import_already_configured(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
+async def test_import_already_configured(hass: HomeAssistant) -> None:
     """Test we abort import when entry is already configured."""
 
     entry = MockConfigEntry(
