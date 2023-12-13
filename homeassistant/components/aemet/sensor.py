@@ -187,7 +187,7 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
     AemetSensorEntityDescription(
         key=f"forecast-daily-{ATTR_API_FORECAST_WIND_BEARING}",
         keys=[AOD_TOWN, AOD_FORECAST_DAILY, AOD_FORECAST_CURRENT, AOD_WIND_DIRECTION],
-        name="Daily Forecast Wind bearing",
+        name="Daily forecast wind bearing",
         native_unit_of_measurement=DEGREE,
     ),
     AemetSensorEntityDescription(
