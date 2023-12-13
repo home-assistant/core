@@ -43,9 +43,7 @@ async def client_data_fixture(
         ),
         api_version=APIVersion(1, 9),
         title=ESP_NAME,
-        scanner=ESPHomeScanner(
-            ESP_MAC_ADDRESS, ESP_NAME, lambda info: None, connector, True
-        ),
+        scanner=ESPHomeScanner(ESP_MAC_ADDRESS, ESP_NAME, connector, True),
     )
 
 
