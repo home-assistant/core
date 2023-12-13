@@ -1749,3 +1749,15 @@ def test_extending_entity_description(snapshot: SnapshotAssertion):
         key="blah", extra="foo", mixin="mixin", name="name"
     )
     assert repr(obj) == snapshot
+
+    # Try inheriting with custom init
+    @dataclasses.dataclass
+    class CustomInitEntityDescription(entity.EntityDescription):
+        def __init__(self, extra, *args, **kwargs) -> None:
+            super().__init__(*args, **kwargs)
+            self.extra: str = extra
+
+    obj = CustomInitEntityDescription(key="blah", extra="foo", name="name")
+    assert obj == snapshot
+    assert obj == CustomInitEntityDescription(key="blah", extra="foo", name="name")
+    assert repr(obj) == snapshot
