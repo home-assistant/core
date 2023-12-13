@@ -1,7 +1,6 @@
 """Support for geolocation data from Krisinformation."""
 from datetime import timedelta
 from typing import Any
-from accuweather import _LOGGER
 
 from krisinformation import crisis_alerter as krisinformation
 
