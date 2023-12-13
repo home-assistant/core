@@ -15,28 +15,6 @@ import homeassistant.helpers.entity_registry as er
 from .const import DATA_PLATFORMS_SETUP, DOMAIN, STT_ENTITY_UNIQUE_ID
 
 
-async def async_migrate_cloud_pipeline_stt_engine(
-    hass: HomeAssistant, stt_engine_id: str
-) -> None:
-    """Migrate the speech-to-text engine in the cloud assist pipeline."""
-    # Migrate existing pipelines with cloud stt to use new cloud stt engine id.
-    # Added in 2023.11.0. Can be removed in 2024.11.0.
-    # Make sure the pipeline store is loaded, needed because assist_pipeline
-    # is an after dependency of cloud
-    # pylint: disable=fixme
-    # TODO: We need to make sure that tts is loaded before this migration.
-    # Assist pipeline will call default engine of tts when setting up the store.
-    # Wait for the tts platform loaded event here.
-    await async_setup_pipeline_store(hass)
-    pipelines = async_get_pipelines(hass)
-    for pipeline in pipelines:
-        if pipeline.stt_engine != DOMAIN:
-            continue
-        updates = pipeline.to_json() | {"stt_engine": stt_engine_id}
-        updates.pop("id")
-        await async_update_pipeline(hass, pipeline, updates)
-
-
 async def async_create_cloud_pipeline(hass: HomeAssistant) -> str | None:
     """Create a cloud assist pipeline."""
     # Set up stt and tts platforms before creating the pipeline.
@@ -80,3 +58,25 @@ async def async_create_cloud_pipeline(hass: HomeAssistant) -> str | None:
         return None
 
     return cloud_pipeline.id
+
+
+async def async_migrate_cloud_pipeline_stt_engine(
+    hass: HomeAssistant, stt_engine_id: str
+) -> None:
+    """Migrate the speech-to-text engine in the cloud assist pipeline."""
+    # Migrate existing pipelines with cloud stt to use new cloud stt engine id.
+    # Added in 2023.11.0. Can be removed in 2024.11.0.
+    # Make sure the pipeline store is loaded, needed because assist_pipeline
+    # is an after dependency of cloud
+    # pylint: disable=fixme
+    # TODO: We need to make sure that tts is loaded before this migration.
+    # Assist pipeline will call default engine of tts when setting up the store.
+    # Wait for the tts platform loaded event here.
+    await async_setup_pipeline_store(hass)
+    pipelines = async_get_pipelines(hass)
+    for pipeline in pipelines:
+        if pipeline.stt_engine != DOMAIN:
+            continue
+        updates = pipeline.to_json() | {"stt_engine": stt_engine_id}
+        updates.pop("id")
+        await async_update_pipeline(hass, pipeline, updates)
