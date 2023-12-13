@@ -13,7 +13,7 @@ from homeassistant.helpers import aiohttp_client
 from .const import DOMAIN
 from .coordinator import AOSmithCoordinator
 
-PLATFORMS: list[Platform] = [Platform.WATER_HEATER]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.WATER_HEATER]
 
 
 @dataclass
