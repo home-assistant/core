@@ -144,7 +144,7 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
             AOD_FORECAST_CURRENT,
             AOD_PRECIPITATION_PROBABILITY,
         ],
-        name="Hourly Forecast Precipitation probability",
+        name="Hourly forecast precipitation probability",
         native_unit_of_measurement=PERCENTAGE,
     ),
     AemetSensorEntityDescription(
