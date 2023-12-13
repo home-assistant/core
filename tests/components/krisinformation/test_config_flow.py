@@ -2,12 +2,12 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from voluptuous import MultipleInvalid
 
 from homeassistant import config_entries
 from homeassistant.components.krisinformation.const import COUNTY_CODES, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from voluptuous import MultipleInvalid
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
