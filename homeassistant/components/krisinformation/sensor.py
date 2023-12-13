@@ -105,7 +105,7 @@ class CrisisAlerterSensorCounty(SensorEntity):
         try:
 
             def getvmas():
-                return self._crisis_alerter.vmas(is_test=True)
+                return self._crisis_alerter.vmas()
 
             response = await self.hass.async_add_executor_job(getvmas)
             location = self._crisis_alerter.county

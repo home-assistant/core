@@ -141,7 +141,7 @@ class KrisInformationGeolocationManager:
             self._hass.add_job(existing_event.async_remove())
 
         def getvmas():
-            return self._crisis_alerter.vmas(is_test=True)
+            return self._crisis_alerter.vmas()
 
         events = await self._hass.async_add_executor_job(getvmas)
 
