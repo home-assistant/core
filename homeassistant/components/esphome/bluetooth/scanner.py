@@ -1,20 +1,17 @@
 """Bluetooth scanner for esphome."""
 from __future__ import annotations
 
-from aioesphomeapi import BluetoothLEAdvertisement, BluetoothLERawAdvertisement
+from aioesphomeapi import BluetoothLEAdvertisement, BluetoothLERawAdvertisementsResponse
 from bluetooth_data_tools import (
     int_to_bluetooth_address,
     parse_advertisement_data_tuple,
 )
 
-from homeassistant.components.bluetooth import (
-    MONOTONIC_TIME,
-    HomeAssistantRemoteScanner,
-)
+from homeassistant.components.bluetooth import MONOTONIC_TIME, BaseHaRemoteScanner
 from homeassistant.core import callback
 
 
-class ESPHomeScanner(HomeAssistantRemoteScanner):
+class ESPHomeScanner(BaseHaRemoteScanner):
     """Scanner for esphome."""
 
     __slots__ = ()
@@ -37,11 +34,11 @@ class ESPHomeScanner(HomeAssistantRemoteScanner):
 
     @callback
     def async_on_raw_advertisements(
-        self, advertisements: list[BluetoothLERawAdvertisement]
+        self, raw: BluetoothLERawAdvertisementsResponse
     ) -> None:
         """Call the registered callback."""
         now = MONOTONIC_TIME()
-        for adv in advertisements:
+        for adv in raw.advertisements:
             self._async_on_advertisement(
                 int_to_bluetooth_address(adv.address),
                 adv.rssi,

@@ -8,8 +8,8 @@ from habluetooth import HaScanner
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
+    BaseHaRemoteScanner,
     HaBluetoothConnector,
-    HomeAssistantRemoteScanner,
 )
 from homeassistant.core import HomeAssistant
 
@@ -423,7 +423,7 @@ async def test_diagnostics_remote_adapter(
         local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
     )
 
-    class FakeScanner(HomeAssistantRemoteScanner):
+    class FakeScanner(BaseHaRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -454,13 +454,10 @@ async def test_diagnostics_remote_adapter(
 
         assert await hass.config_entries.async_setup(entry1.entry_id)
         await hass.async_block_till_done()
-        new_info_callback = manager.scanner_adv_received
         connector = (
             HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
         )
-        scanner = FakeScanner(
-            hass, "esp32", "esp32", new_info_callback, connector, False
-        )
+        scanner = FakeScanner("esp32", "esp32", connector, False)
         unsetup = scanner.async_setup()
         cancel = manager.async_register_scanner(scanner, True)
 
@@ -631,7 +628,6 @@ async def test_diagnostics_remote_adapter(
                         "scanning": True,
                         "source": "esp32",
                         "start_time": ANY,
-                        "storage": None,
                         "time_since_last_device_detection": {"44:44:33:11:23:45": ANY},
                         "type": "FakeScanner",
                     },
