@@ -6,14 +6,12 @@
     "switch": {
       "default": "mdi:toggle-switch-variant",
       "state": {
-        "on": "mdi:toggle-switch-variant",
         "off": "mdi:toggle-switch-variant-off"
       }
     },
     "outlet": {
       "default": "mdi:power-plug",
       "state": {
-        "on": "mdi:power-plug",
         "off": "mdi:power-plug-off"
       }
     }

@@ -85,7 +85,6 @@ def validate_icon_file(config: Config, integration: Integration) -> None:  # noq
     if not icons_file.is_file():
         return
 
-    schema = icon_schema(integration.integration_type)
     name = str(icons_file.relative_to(integration.path))
 
     try:
@@ -93,6 +92,8 @@ def validate_icon_file(config: Config, integration: Integration) -> None:  # noq
     except ValueError as err:
         integration.add_error("icons", f"Invalid JSON in {name}: {err}")
         return
+
+    schema = icon_schema(integration.integration_type)
 
     try:
         schema(icons)

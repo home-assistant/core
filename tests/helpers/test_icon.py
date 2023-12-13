@@ -169,9 +169,10 @@ async def test_get_icons_while_loading_components(hass: HomeAssistant) -> None:
         "homeassistant.helpers.icon.async_get_integrations",
         return_value={"component1": integration},
     ):
-        all_icons = [await icon.async_get_icons(hass, "entity") for _ in range(5)]
+        times = 5
+        all_icons = [await icon.async_get_icons(hass, "entity") for _ in range(times)]
 
-    assert all_icons[0] == {"component1": {"climate": {"test": {"icon": "mdi:home"}}}}
+    assert all_icons == [{"component1": {"climate": {"test": {"icon": "mdi:home"}}}} for _ in range(times)]
     assert load_count == 1
 
 
