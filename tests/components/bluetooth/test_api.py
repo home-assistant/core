@@ -40,6 +40,14 @@ async def test_monotonic_time() -> None:
     assert MONOTONIC_TIME() == pytest.approx(time.monotonic(), abs=0.1)
 
 
+async def test_async_get_advertisement_callback(
+    hass: HomeAssistant, enable_bluetooth: None
+) -> None:
+    """Test getting advertisement callback."""
+    callback = bluetooth.async_get_advertisement_callback(hass)
+    assert callback is not None
+
+
 async def test_async_scanner_devices_by_address_connectable(
     hass: HomeAssistant, enable_bluetooth: None
 ) -> None:
@@ -63,13 +71,10 @@ async def test_async_scanner_devices_by_address_connectable(
                 MONOTONIC_TIME(),
             )
 
-    new_info_callback = manager.scanner_adv_received
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = FakeInjectableScanner(
-        "esp32", "esp32", new_info_callback, connector, False
-    )
+    scanner = FakeInjectableScanner("esp32", "esp32", connector, False)
     unsetup = scanner.async_setup()
     cancel = manager.async_register_scanner(scanner, True)
     switchbot_device = generate_ble_device(
