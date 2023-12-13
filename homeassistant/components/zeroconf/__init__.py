@@ -128,12 +128,12 @@ class ZeroconfServiceInfo(BaseServiceInfo):
     @property
     def host(self) -> str:
         """Return the host."""
-        return _stringify_ip_address(self.ip_address)
+        return str(self.ip_address)
 
     @property
     def addresses(self) -> list[str]:
         """Return the addresses."""
-        return [_stringify_ip_address(ip_address) for ip_address in self.ip_addresses]
+        return [str(ip_address) for ip_address in self.ip_addresses]
 
 
 @bind_hass
@@ -562,10 +562,6 @@ def async_get_homekit_discovery(
             return discovery
 
     return None
-
-
-# matches to the cache in zeroconf itself
-_stringify_ip_address = lru_cache(maxsize=256)(str)
 
 
 def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
