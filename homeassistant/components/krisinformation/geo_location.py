@@ -138,7 +138,6 @@ class KrisInformationGeolocationManager:
         """Clear the existing list of geolocation events and fetches new geolocation events from the CrisisAlerter (Krisinformation API)."""
         new_events = []
         for existing_event in self._events:
-            self._events.remove(existing_event)
             self._hass.add_job(existing_event.async_remove())
 
         def getvmas():
@@ -163,5 +162,5 @@ class KrisInformationGeolocationManager:
                 "",
             )
             new_events.append(new_event)
-            self._events.append(new_event)
+        self._events = new_events
         self._async_add_entities(new_events)
