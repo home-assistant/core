@@ -1,4 +1,4 @@
-"""Constants for the krisinformation integration."""
+"""Custom constants for the krisinformation integration."""
 DOMAIN = "krisinformation"
 FEED = "feed"
 
@@ -7,6 +7,7 @@ COUNTY_NAME = "Krisinformation County"
 CONF_COUNTY = "county"
 LANGUAGES = ["sv", "en"]
 
+"""County codes that represents the counties in Sweden."""
 COUNTY_CODES = {
     "01": "Stockholms län",
     "03": "Uppsala län",

@@ -4,6 +4,7 @@ from typing import Any
 
 from krisinformation import crisis_alerter as krisinformation
 
+# Importing necessary modules and classes.
 from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_START, UnitOfLength
@@ -12,15 +13,18 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import DiscoveryInfoType
 
+# Import custom costants and logger from the integration.
 from .const import CONF_COUNTY
 
+# Minimum time between updates for geolocation events.
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
+# Source identifier for Krisinformation geolocation events.
 SOURCE = "krisinformation"
 
 
 class KrisInformationGeolocationEvent(GeolocationEvent):
-    """Represents a krisinformation geolocation event."""
+    """Custom GeolocationEvent class representing a demo Krisinformation geo-location event."""
 
     _attr_should_poll = False
     _attr_source = SOURCE
@@ -83,14 +87,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the krisinformation geolocations."""
+    """Responsible for setting up the Demo geolocations when a configuration entry is added to Home Assistant."""
     manager = KrisInformationGeolocationManager(
         hass,
         async_add_entities,
         krisinformation.CrisisAlerter(config.data.get(CONF_COUNTY)),
     )
 
-    # await hass.async_add_executor_job()
     async def start_feed_manager(event: Event) -> None:
         """Start feed manager."""
         await manager.init_regular_updates()
@@ -136,7 +139,7 @@ class KrisInformationGeolocationManager:
         )
 
     async def init_regular_updates(self) -> None:
-        """Schedule regular updates based on configured time interval."""
+        """Initiate the scheduling of regular updates for geolocation events. Uses track_time_interval to schedule subsequent updates at fixed intervals."""
         await self._update()
 
         async_track_time_interval(
@@ -147,7 +150,7 @@ class KrisInformationGeolocationManager:
         )
 
     async def _update(self, _=None) -> None:
-        """Remove events and add new random events."""
+        """Clear the existing list of geolocation events and fetches new geolocation events from the CrisisAlerter (Krisinformation API)."""
         new_events = []
         for existing_event in self._events:
             self._events.remove(existing_event)
