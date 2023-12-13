@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "You can choose which country you want to see information about.",
+        "data": {
+          "county": "County"
+        }
+      }
+    },
+    "error": {
+      "invalid_county": "Invalid county",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

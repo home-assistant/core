@@ -1,0 +1,6 @@
+projectKey=krisinformation_integration_refactored
+serverUrl=http://localhost:8084
+serverVersion=8.7.1.42226
+dashboardUrl=http://localhost:8084/dashboard?id=krisinformation_integration_refactored
+ceTaskId=AYxDdh9G9WS6vx6NYEy1
+ceTaskUrl=http://localhost:8084/api/ce/task?id=AYxDdh9G9WS6vx6NYEy1
