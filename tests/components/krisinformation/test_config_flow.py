@@ -1,5 +1,5 @@
 """Test the krisinformation config flow."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from voluptuous import MultipleInvalid
