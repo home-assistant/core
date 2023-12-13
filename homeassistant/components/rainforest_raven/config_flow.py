@@ -6,7 +6,6 @@ from typing import Any
 from xml.etree.ElementTree import ParseError
 
 from aioraven.serial import RAVEnSerialDevice
-import async_timeout
 from serial.serialutil import SerialException
 import serial.tools.list_ports
 from serial.tools.list_ports_common import ListPortInfo
@@ -42,7 +41,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _validate_device(self, dev_path: str) -> None:
         self._abort_if_unique_id_configured(updates={CONF_DEVICE: dev_path})
         async with (
-            async_timeout.timeout(5),
+            asyncio.timeout(5),
             RAVEnSerialDevice(dev_path) as raven_device,
         ):
             await raven_device.synchronize()
