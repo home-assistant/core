@@ -116,11 +116,13 @@ async def test_get_icons(hass: HomeAssistant) -> None:
     icons = await icon.async_get_icons(hass, "entity")
     assert len(icons) == 1
 
-    assert icons["test_package"]["switch"]["something"]["state"]["home"] == "mdi:home"
-    assert (
-        icons["test_package"]["switch"]["something"]["state"]["away"]
-        == "mdi:home-outline"
-    )
+    assert icons == {
+        "test_package": {
+            "switch": {
+                "something": {"state": {"away": "mdi:home-outline", "home": "mdi:home"}}
+            }
+        }
+    }
 
     icons = await icon.async_get_icons(hass, "services")
     assert len(icons) == 2
@@ -133,11 +135,11 @@ async def test_get_icons(hass: HomeAssistant) -> None:
     icons = await icon.async_get_icons(hass, "entity")
     assert len(icons) == 2
 
-    assert icons["test_embedded"]["switch"]["something"]["state"]["home"] == "mdi:home"
-    assert (
-        icons["test_embedded"]["switch"]["something"]["state"]["away"]
-        == "mdi:home-outline"
-    )
+    assert icons["test_package"] == {
+        "switch": {
+            "something": {"state": {"away": "mdi:home-outline", "home": "mdi:home"}}
+        }
+    }
 
     # Test getting non-existing integration
     with pytest.raises(
