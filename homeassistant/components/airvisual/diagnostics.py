@@ -7,6 +7,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_COUNTRY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_STATE,
@@ -24,6 +25,7 @@ TO_REDACT = {
     CONF_API_KEY,
     CONF_CITY,
     CONF_COORDINATES,
+    CONF_COUNTRY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_STATE,
