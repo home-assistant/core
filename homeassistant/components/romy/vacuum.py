@@ -59,9 +59,7 @@ async def async_setup_entry(
     """Set up ROMY vacuum cleaner."""
 
     coordinator: RomyVacuumCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    romy: RomyRobot = coordinator.romy
-
-    async_add_entities([RomyVacuumEntity(coordinator, romy)], True)
+    async_add_entities([RomyVacuumEntity(coordinator, coordinator.romy)], True)
 
 
 class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEntity):
