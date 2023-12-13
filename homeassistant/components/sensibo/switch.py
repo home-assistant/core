@@ -183,6 +183,8 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         """Make service call to api for setting Climate React."""
         if self.device_data.smart_type is None:
             raise HomeAssistantError(
+                "Use Sensibo Enable Climate React Service once to enable switch or the"
+                " Sensibo app",
                 translation_domain=DOMAIN,
                 translation_key="climate_react_not_available",
             )
