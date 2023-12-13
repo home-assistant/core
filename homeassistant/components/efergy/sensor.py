@@ -1,6 +1,7 @@
 """Support for Efergy sensors."""
 from __future__ import annotations
 
+import dataclasses
 from re import sub
 from typing import cast
 
@@ -121,7 +122,10 @@ async def async_setup_entry(
                 )
             )
         else:
-            description.entity_registry_enabled_default = len(api.sids) > 1
+            description = dataclasses.replace(
+                description,
+                entity_registry_enabled_default=len(api.sids) > 1,
+            )
             for sid in api.sids:
                 sensors.append(
                     EfergySensor(
