@@ -4,6 +4,7 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 import aiohttp
+import pytest
 
 import homeassistant.components.rest_command as rc
 from homeassistant.const import (
@@ -11,6 +12,7 @@ from homeassistant.const import (
     CONTENT_TYPE_TEXT_PLAIN,
     SERVICE_RELOAD,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import setup_component
 
 from tests.common import assert_setup_component, get_test_home_assistant
@@ -112,8 +114,11 @@ class TestRestCommandComponent:
 
         aioclient_mock.get(self.url, exc=asyncio.TimeoutError())
 
-        self.hass.services.call(rc.DOMAIN, "get_test", {})
-        self.hass.block_till_done()
+        with pytest.raises(
+            HomeAssistantError,
+            match=r"^Timeout when calling resource: https://example.com/$",
+        ):
+            self.hass.services.call(rc.DOMAIN, "get_test", {}, blocking=True)
 
         assert len(aioclient_mock.mock_calls) == 1
 
@@ -124,8 +129,11 @@ class TestRestCommandComponent:
 
         aioclient_mock.get(self.url, exc=aiohttp.ClientError())
 
-        self.hass.services.call(rc.DOMAIN, "get_test", {})
-        self.hass.block_till_done()
+        with pytest.raises(
+            HomeAssistantError,
+            match=r"^Client error occurred when calling resource: https://example.com/$",
+        ):
+            self.hass.services.call(rc.DOMAIN, "get_test", {}, blocking=True)
 
         assert len(aioclient_mock.mock_calls) == 1
 
@@ -136,8 +144,11 @@ class TestRestCommandComponent:
 
         aioclient_mock.get(self.url, status=HTTPStatus.BAD_REQUEST)
 
-        self.hass.services.call(rc.DOMAIN, "get_test", {})
-        self.hass.block_till_done()
+        with pytest.raises(
+            HomeAssistantError,
+            match=r"^Non-OK response \(code 400\) received from resource.$",
+        ):
+            self.hass.services.call(rc.DOMAIN, "get_test", {}, blocking=True)
 
         assert len(aioclient_mock.mock_calls) == 1
 

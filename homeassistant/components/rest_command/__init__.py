@@ -19,6 +19,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_integration_yaml_config
@@ -158,9 +159,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                             response.status,
                             payload,
                         )
+                        raise HomeAssistantError(
+                            f"Non-OK response (code {response.status}) received from resource.",
+                            translation_domain=DOMAIN,
+                            translation_key="non_ok_status_code",
+                            translation_placeholders={"status_code": response.status},
+                        )
 
-            except asyncio.TimeoutError:
+            except asyncio.TimeoutError as err:
                 _LOGGER.warning("Timeout call %s", request_url)
+                raise HomeAssistantError(
+                    f"Timeout when calling resource: {request_url}",
+                    translation_domain=DOMAIN,
+                    translation_key="timeout",
+                ) from err
 
             except aiohttp.ClientError as err:
                 _LOGGER.error(
@@ -168,6 +180,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     request_url,
                     err,
                 )
+                raise HomeAssistantError(
+                    f"Client error occurred when calling resource: {request_url}",
+                    translation_domain=DOMAIN,
+                    translation_key="client_error",
+                ) from err
 
         # register services
         hass.services.async_register(DOMAIN, name, async_service_handler)
