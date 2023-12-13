@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.romy.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_UUID
 from homeassistant.core import HomeAssistant
 
 
@@ -247,5 +247,19 @@ async def test_zero_conf_unlocked_interface_robot(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
 
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "zeroconf_confirm"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "1.2.3.4"},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    assert result["data"]
+    assert result["data"][CONF_HOST] == "1.2.3.4"
+    assert result["data"][CONF_UUID] == "aicu-aicgsbksisfapcjqmqjq"
+
+    assert result["result"]
+    assert result["result"].unique_id == "aicu-aicgsbksisfapcjqmqjq"

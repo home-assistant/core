@@ -15,6 +15,10 @@
           "name": "[%key:common::config_flow::data::name%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to set up {name} at {host}?",
+        "title": "Discovered romy"
       }
     }
   },
