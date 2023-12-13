@@ -6,7 +6,6 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import aiohttp
-from aiohttp.test_utils import TestClient
 from hass_nabucasa import thingtalk, voice
 from hass_nabucasa.auth import Unauthenticated, UnknownError
 from hass_nabucasa.const import STATE_CONNECTED
@@ -98,19 +97,12 @@ async def setup_cloud_fixture(hass: HomeAssistant, cloud: MagicMock) -> None:
     await on_start_callback()
 
 
-@pytest.fixture(name="cloud_client")
-async def cloud_client_fixture(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
-) -> TestClient:
-    """Fixture that can fetch from the cloud client."""
-    return await hass_client()
-
-
 async def test_google_actions_sync(
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test syncing Google Actions."""
+    cloud_client = await hass_client()
     with patch(
         "hass_nabucasa.cloud_api.async_google_actions_request_sync",
         return_value=Mock(status=200),
@@ -122,9 +114,10 @@ async def test_google_actions_sync(
 
 async def test_google_actions_sync_fails(
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test syncing Google Actions gone bad."""
+    cloud_client = await hass_client()
     with patch(
         "hass_nabucasa.cloud_api.async_google_actions_request_sync",
         return_value=Mock(status=HTTPStatus.INTERNAL_SERVER_ERROR),
@@ -240,9 +233,10 @@ async def test_login_view_create_pipeline_fail(
 async def test_login_view_random_exception(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Try logging in with random exception."""
+    cloud_client = await hass_client()
     cloud.login.side_effect = ValueError("Boom")
 
     req = await cloud_client.post(
@@ -257,9 +251,10 @@ async def test_login_view_random_exception(
 async def test_login_view_invalid_json(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Try logging in with invalid JSON."""
+    cloud_client = await hass_client()
     mock_login = cloud.login
 
     req = await cloud_client.post("/api/cloud/login", data="Not JSON")
@@ -271,9 +266,10 @@ async def test_login_view_invalid_json(
 async def test_login_view_invalid_schema(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Try logging in with invalid schema."""
+    cloud_client = await hass_client()
     mock_login = cloud.login
 
     req = await cloud_client.post("/api/cloud/login", json={"invalid": "schema"})
@@ -285,9 +281,10 @@ async def test_login_view_invalid_schema(
 async def test_login_view_request_timeout(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test request timeout while trying to log in."""
+    cloud_client = await hass_client()
     cloud.login.side_effect = asyncio.TimeoutError
 
     req = await cloud_client.post(
@@ -300,9 +297,10 @@ async def test_login_view_request_timeout(
 async def test_login_view_invalid_credentials(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test logging in with invalid credentials."""
+    cloud_client = await hass_client()
     cloud.login.side_effect = Unauthenticated
 
     req = await cloud_client.post(
@@ -315,9 +313,10 @@ async def test_login_view_invalid_credentials(
 async def test_login_view_unknown_error(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test unknown error while logging in."""
+    cloud_client = await hass_client()
     cloud.login.side_effect = UnknownError
 
     req = await cloud_client.post(
@@ -330,9 +329,10 @@ async def test_login_view_unknown_error(
 async def test_logout_view(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test logging out."""
+    cloud_client = await hass_client()
     req = await cloud_client.post("/api/cloud/logout")
 
     assert req.status == HTTPStatus.OK
@@ -344,9 +344,10 @@ async def test_logout_view(
 async def test_logout_view_request_timeout(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test timeout while logging out."""
+    cloud_client = await hass_client()
     cloud.logout.side_effect = asyncio.TimeoutError
 
     req = await cloud_client.post("/api/cloud/logout")
@@ -357,9 +358,10 @@ async def test_logout_view_request_timeout(
 async def test_logout_view_unknown_error(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test unknown error while logging out."""
+    cloud_client = await hass_client()
     cloud.logout.side_effect = UnknownError
 
     req = await cloud_client.post("/api/cloud/logout")
@@ -370,9 +372,10 @@ async def test_logout_view_unknown_error(
 async def test_register_view_no_location(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test register without location."""
+    cloud_client = await hass_client()
     mock_cognito = cloud.auth
     with patch(
         "homeassistant.components.cloud.http_api.async_detect_location_info",
@@ -395,9 +398,10 @@ async def test_register_view_no_location(
 async def test_register_view_with_location(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test register with location."""
+    cloud_client = await hass_client()
     mock_cognito = cloud.auth
     with patch(
         "homeassistant.components.cloud.http_api.async_detect_location_info",
@@ -438,9 +442,10 @@ async def test_register_view_with_location(
 async def test_register_view_bad_data(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test register bad data."""
+    cloud_client = await hass_client()
     mock_cognito = cloud.auth
 
     req = await cloud_client.post(
@@ -454,9 +459,10 @@ async def test_register_view_bad_data(
 async def test_register_view_request_timeout(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test timeout while registering."""
+    cloud_client = await hass_client()
     cloud.auth.async_register.side_effect = asyncio.TimeoutError
 
     req = await cloud_client.post(
@@ -469,9 +475,10 @@ async def test_register_view_request_timeout(
 async def test_register_view_unknown_error(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test unknown error while registering."""
+    cloud_client = await hass_client()
     cloud.auth.async_register.side_effect = UnknownError
 
     req = await cloud_client.post(
@@ -484,9 +491,10 @@ async def test_register_view_unknown_error(
 async def test_forgot_password_view(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test forgot password."""
+    cloud_client = await hass_client()
     mock_cognito = cloud.auth
 
     req = await cloud_client.post(
@@ -500,9 +508,10 @@ async def test_forgot_password_view(
 async def test_forgot_password_view_bad_data(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test forgot password bad data."""
+    cloud_client = await hass_client()
     mock_cognito = cloud.auth
 
     req = await cloud_client.post(
@@ -516,9 +525,10 @@ async def test_forgot_password_view_bad_data(
 async def test_forgot_password_view_request_timeout(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test timeout while forgot password."""
+    cloud_client = await hass_client()
     cloud.auth.async_forgot_password.side_effect = asyncio.TimeoutError
 
     req = await cloud_client.post(
@@ -531,9 +541,10 @@ async def test_forgot_password_view_request_timeout(
 async def test_forgot_password_view_unknown_error(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test unknown error while forgot password."""
+    cloud_client = await hass_client()
     cloud.auth.async_forgot_password.side_effect = UnknownError
 
     req = await cloud_client.post(
@@ -546,9 +557,10 @@ async def test_forgot_password_view_unknown_error(
 async def test_forgot_password_view_aiohttp_error(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test unknown error while forgot password."""
+    cloud_client = await hass_client()
     cloud.auth.async_forgot_password.side_effect = aiohttp.ClientResponseError(
         Mock(), Mock()
     )
@@ -563,9 +575,10 @@ async def test_forgot_password_view_aiohttp_error(
 async def test_resend_confirm_view(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test resend confirm."""
+    cloud_client = await hass_client()
     mock_cognito = cloud.auth
 
     req = await cloud_client.post(
@@ -579,9 +592,10 @@ async def test_resend_confirm_view(
 async def test_resend_confirm_view_bad_data(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test resend confirm bad data."""
+    cloud_client = await hass_client()
     mock_cognito = cloud.auth
 
     req = await cloud_client.post(
@@ -595,9 +609,10 @@ async def test_resend_confirm_view_bad_data(
 async def test_resend_confirm_view_request_timeout(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test timeout while resend confirm."""
+    cloud_client = await hass_client()
     cloud.auth.async_resend_email_confirm.side_effect = asyncio.TimeoutError
 
     req = await cloud_client.post(
@@ -610,9 +625,10 @@ async def test_resend_confirm_view_request_timeout(
 async def test_resend_confirm_view_unknown_error(
     cloud: MagicMock,
     setup_cloud: None,
-    cloud_client: TestClient,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test unknown error while resend confirm."""
+    cloud_client = await hass_client()
     cloud.auth.async_resend_email_confirm.side_effect = UnknownError
 
     req = await cloud_client.post(
