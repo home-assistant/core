@@ -3,7 +3,6 @@ get_gas_prices:
     incl_vat:
       required: true
       default: true
-      example: true
       selector:
         boolean:
     start:
@@ -21,7 +20,6 @@ get_energy_prices:
     incl_vat:
       required: true
       default: true
-      example: true
       selector:
         boolean:
     start:
