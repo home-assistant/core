@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_CITY, CONF_COUNTRY, DOMAIN
+from .const import CONF_CITY, DOMAIN
 
 CONF_COORDINATES = "coordinates"
 CONF_TITLE = "title"
@@ -24,7 +24,6 @@ TO_REDACT = {
     CONF_API_KEY,
     CONF_CITY,
     CONF_COORDINATES,
-    CONF_COUNTRY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_STATE,
