@@ -25,6 +25,15 @@ from .const import (
 )
 
 
+def parse_datetime(dt_str: str | None) -> str | None:
+    if dt_str is None:
+        return None
+    parsed = dt_util.parse_datetime(dt_str)
+    if parsed is None:
+        return None
+    return parsed.replace(tzinfo=dt_util.UTC).isoformat()
+
+
 class StarlineAccount:
     """StarLine Account class."""
 
@@ -153,11 +162,7 @@ class StarlineAccount:
         return {
             "operator": device.balance.get("operator"),
             "state": device.balance.get("state"),
-            "updated": dt_util.parse_datetime(ts)
-            .replace(tzinfo=dt_util.UTC)
-            .isoformat()
-            if ts
-            else None,
+            "updated": parse_datetime(ts),
         }
 
     @staticmethod
