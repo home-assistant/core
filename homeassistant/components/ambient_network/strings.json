@@ -1,0 +1,106 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Region Selection",
+        "description": "Choose the region you want to survey in order to locate Ambient personal weather stations.",
+        "data": {
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]"
+        }
+      },
+      "station": {
+        "title": "Station Selection",
+        "description": "Select a singular station for monitoring a specific physical location. Alternatively, opt for multiple stations to create a virtual station. The virtual station will calculate the average of weather data from the chosen stations, excluding those that are offline and any outlier data.",
+        "data": {
+          "station": "Station"
+        }
+      },
+      "mnemonic": {
+        "title": "Mnemonic Selection",
+        "description": "Create a distinctive mnemonic for your physical or virtual station, which will be incorporated into all sensor names.",
+        "data": {
+          "mnemonic": "Mnemonic"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_mnemonic_defined": "You need to define a non-empty mnemonic.",
+      "no_stations_found": "Did not find any stations in the selected region.",
+      "no_stations_selected": "You did not select any stations."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "pm25": {
+        "name": "PM2.5"
+      },
+      "pm25_24h_average": {
+        "name": "PM2.5 (24 hour average)"
+      },
+      "pm25_aqi": {
+        "name": "PM2.5 AQI"
+      },
+      "pm25_aqi_24h_average": {
+        "name": "PM2.5 AQI (24 hour average)"
+      },
+      "absolute_pressure": {
+        "name": "Absolute pressure"
+      },
+      "relative_pressure": {
+        "name": "Relative pressure"
+      },
+      "daily_rain": {
+        "name": "Daily rain"
+      },
+      "dew_point": {
+        "name": "Dew point"
+      },
+      "feels_like": {
+        "name": "Feels like"
+      },
+      "last_rain": {
+        "name": "Last rain"
+      },
+      "lightning_strikes_per_day": {
+        "name": "Lightning strikes per day"
+      },
+      "lightning_strikes_per_hour": {
+        "name": "Lightning strikes per hour"
+      },
+      "lightning_distance": {
+        "name": "Lightning distance"
+      },
+      "max_gust": {
+        "name": "Max gust"
+      },
+      "monthly_rain": {
+        "name": "Monthly rain"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
+      "weekly_rain": {
+        "name": "Weekly rain"
+      },
+      "wind_direction": {
+        "name": "Wind direction"
+      },
+      "wind_gust_direction": {
+        "name": "Wind gust direction"
+      },
+      "wind_gust": {
+        "name": "Wind gust"
+      },
+      "yearly_rain": {
+        "name": "Yearly rain"
+      }
+    }
+  }
+}
