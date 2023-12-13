@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import icon
+from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
 
 
@@ -105,6 +106,8 @@ async def test_get_icons(hass: HomeAssistant) -> None:
     # Ensure icons file for platform isn't loaded, as that isn't supported
     icons = await icon.async_get_icons(hass, "entity")
     assert icons == {}
+    icons = await icon.async_get_icons(hass, "entity", ["test.switch"])
+    assert icons == {}
 
     # Load up an custom integration
     hass.config.components.add("test_package")
@@ -135,6 +138,12 @@ async def test_get_icons(hass: HomeAssistant) -> None:
         icons["test_embedded"]["switch"]["something"]["state"]["away"]
         == "mdi:home-outline"
     )
+
+    # Test getting non-existing integration
+    with pytest.raises(
+        IntegrationNotFound, match="Integration 'non_existing' not found"
+    ):
+        await icon.async_get_icons(hass, "entity", ["non_existing"])
 
 
 async def test_get_icons_while_loading_components(hass: HomeAssistant) -> None:

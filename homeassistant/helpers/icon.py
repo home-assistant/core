@@ -61,11 +61,10 @@ async def _async_get_component_icons(
         else:
             files_to_load[loaded] = path
 
-    if not files_to_load:
-        return icons
-
     # Load files
-    if load_icons_job := hass.async_add_executor_job(load_icons_files, files_to_load):
+    if files_to_load and (
+        load_icons_job := hass.async_add_executor_job(load_icons_files, files_to_load)
+    ):
         icons |= await load_icons_job
 
     return icons
