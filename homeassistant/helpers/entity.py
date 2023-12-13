@@ -241,6 +241,22 @@ class EntityDescription(metaclass=FrozenOrThawed, frozen_or_thawed=True):
     unit_of_measurement: str | None = None
 
 
+@dataclasses.dataclass(frozen=True, slots=True)
+class CalculatedState:
+    """Container with state and attributes.
+
+    Returned by Entity._async_calculate_state.
+    """
+
+    state: str
+    # The union of all attributes, after overriding with entity registry settings
+    attributes: dict[str, Any]
+    # Capability attributes returned by the capability_attributes property
+    capability_attributes: Mapping[str, Any] | None
+    # Attributes which may be overridden by the entity registry
+    shadowed_attributes: Mapping[str, Any]
+
+
 class Entity(ABC):
     """An abstract class for Home Assistant entities."""
 
@@ -781,7 +797,11 @@ class Entity(ABC):
         return f"{device_name} {name}" if device_name else name
 
     @callback
-    def _async_calculate_state(
+    def _async_calculate_state(self) -> CalculatedState:
+        """Calculate state string and attribute mapping."""
+        return CalculatedState(*self.__async_calculate_state())
+
+    def __async_calculate_state(
         self,
     ) -> tuple[str, dict[str, Any], Mapping[str, Any] | None, Mapping[str, Any]]:
         """Calculate state string and attribute mapping.
@@ -791,6 +811,9 @@ class Entity(ABC):
         attr - the attribute dictionary
         capability_attr - a mapping with capability attributes
         shadowed_attr - a mapping with attributes which may be overridden
+
+        This method is called when writing the state to avoid the overhead of creating
+        a dataclass object.
         """
         entry = self.registry_entry
 
@@ -862,7 +885,7 @@ class Entity(ABC):
             return
 
         start = timer()
-        state, attr, capabilities, shadowed_attr = self._async_calculate_state()
+        state, attr, capabilities, shadowed_attr = self.__async_calculate_state()
         end = timer()
 
         if entry:
