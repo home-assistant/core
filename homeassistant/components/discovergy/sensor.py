@@ -183,6 +183,7 @@ async def async_setup_entry(
             for description in sensors
             for value_key in {description.key, *description.alternative_keys}
             if description.value_fn(coordinator.data, value_key, description.scale)
+            is not None
         )
 
     async_add_entities(entities)

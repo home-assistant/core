@@ -285,7 +285,7 @@ class ZHADevice(LogMixin):
         if not self.is_coordinator:
             return False
 
-        return self.ieee == self.gateway.coordinator_ieee
+        return self.ieee == self.gateway.state.node_info.ieee
 
     @property
     def is_end_device(self) -> bool | None:

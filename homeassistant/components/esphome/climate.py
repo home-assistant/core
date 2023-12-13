@@ -173,8 +173,6 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             features |= ClimateEntityFeature.TARGET_TEMPERATURE
         if self._static_info.supports_target_humidity:
             features |= ClimateEntityFeature.TARGET_HUMIDITY
-        if self._static_info.supports_aux_heat:
-            features |= ClimateEntityFeature.AUX_HEAT
         if self.preset_modes:
             features |= ClimateEntityFeature.PRESET_MODE
         if self.fan_modes:
@@ -272,12 +270,6 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         """Return the humidity we try to reach."""
         return round(self._state.target_humidity)
 
-    @property
-    @esphome_state_property
-    def is_aux_heat(self) -> bool:
-        """Return the auxiliary heater state."""
-        return self._state.aux_heat
-
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature (and operation mode if set)."""
         data: dict[str, Any] = {"key": self._key}
@@ -326,11 +318,3 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         await self._client.climate_command(
             key=self._key, swing_mode=_SWING_MODES.from_hass(swing_mode)
         )
-
-    async def async_turn_aux_heat_on(self) -> None:
-        """Turn auxiliary heater on."""
-        await self._client.climate_command(key=self._key, aux_heat=True)
-
-    async def async_turn_aux_heat_off(self) -> None:
-        """Turn auxiliary heater off."""
-        await self._client.climate_command(key=self._key, aux_heat=False)

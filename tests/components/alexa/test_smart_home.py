@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.alexa import smart_home, state_report
 import homeassistant.components.camera as camera
-from homeassistant.components.cover import CoverDeviceClass
+from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.config import async_process_ha_core_config
@@ -1884,8 +1884,199 @@ async def test_group(hass: HomeAssistant) -> None:
     )
 
 
-async def test_cover_position_range(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("position", "position_attr_in_service_call", "supported_features", "service_call"),
+    [
+        (
+            30,
+            30,
+            CoverEntityFeature.SET_POSITION
+            | CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE,
+            "cover.set_cover_position",
+        ),
+        (
+            0,
+            None,
+            CoverEntityFeature.SET_POSITION
+            | CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE,
+            "cover.close_cover",
+        ),
+        (
+            99,
+            99,
+            CoverEntityFeature.SET_POSITION
+            | CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE,
+            "cover.set_cover_position",
+        ),
+        (
+            100,
+            None,
+            CoverEntityFeature.SET_POSITION
+            | CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE,
+            "cover.open_cover",
+        ),
+        (
+            0,
+            0,
+            CoverEntityFeature.SET_POSITION,
+            "cover.set_cover_position",
+        ),
+        (
+            60,
+            60,
+            CoverEntityFeature.SET_POSITION,
+            "cover.set_cover_position",
+        ),
+        (
+            100,
+            100,
+            CoverEntityFeature.SET_POSITION,
+            "cover.set_cover_position",
+        ),
+        (
+            0,
+            0,
+            CoverEntityFeature.SET_POSITION | CoverEntityFeature.OPEN,
+            "cover.set_cover_position",
+        ),
+        (
+            100,
+            100,
+            CoverEntityFeature.SET_POSITION | CoverEntityFeature.CLOSE,
+            "cover.set_cover_position",
+        ),
+    ],
+    ids=[
+        "position_30_open_close",
+        "position_0_open_close",
+        "position_99_open_close",
+        "position_100_open_close",
+        "position_0_no_open_close",
+        "position_60_no_open_close",
+        "position_100_no_open_close",
+        "position_0_no_close",
+        "position_100_no_open",
+    ],
+)
+async def test_cover_position(
+    hass: HomeAssistant,
+    position: int,
+    position_attr_in_service_call: int | None,
+    supported_features: CoverEntityFeature,
+    service_call: str,
+) -> None:
     """Test cover discovery and position using rangeController."""
+    device = (
+        "cover.test_range",
+        "open",
+        {
+            "friendly_name": "Test cover range",
+            "device_class": "blind",
+            "supported_features": supported_features,
+            "position": position,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "cover#test_range"
+    assert appliance["displayCategories"][0] == "INTERIOR_BLIND"
+    assert appliance["friendlyName"] == "Test cover range"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.PowerController",
+        "Alexa.RangeController",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+
+    range_capability = get_capability(capabilities, "Alexa.RangeController")
+    assert range_capability is not None
+    assert range_capability["instance"] == "cover.position"
+
+    properties = range_capability["properties"]
+    assert properties["nonControllable"] is False
+    assert {"name": "rangeValue"} in properties["supported"]
+
+    capability_resources = range_capability["capabilityResources"]
+    assert capability_resources is not None
+    assert {
+        "@type": "text",
+        "value": {"text": "Position", "locale": "en-US"},
+    } in capability_resources["friendlyNames"]
+
+    assert {
+        "@type": "asset",
+        "value": {"assetId": "Alexa.Setting.Opening"},
+    } in capability_resources["friendlyNames"]
+
+    configuration = range_capability["configuration"]
+    assert configuration is not None
+    assert configuration["unitOfMeasure"] == "Alexa.Unit.Percent"
+
+    supported_range = configuration["supportedRange"]
+    assert supported_range["minimumValue"] == 0
+    assert supported_range["maximumValue"] == 100
+    assert supported_range["precision"] == 1
+
+    # Assert for Position Semantics
+    position_semantics = range_capability["semantics"]
+    assert position_semantics is not None
+
+    position_action_mappings = position_semantics["actionMappings"]
+    assert position_action_mappings is not None
+    assert {
+        "@type": "ActionsToDirective",
+        "actions": ["Alexa.Actions.Lower", "Alexa.Actions.Close"],
+        "directive": {"name": "SetRangeValue", "payload": {"rangeValue": 0}},
+    } in position_action_mappings
+    assert {
+        "@type": "ActionsToDirective",
+        "actions": ["Alexa.Actions.Raise", "Alexa.Actions.Open"],
+        "directive": {"name": "SetRangeValue", "payload": {"rangeValue": 100}},
+    } in position_action_mappings
+
+    position_state_mappings = position_semantics["stateMappings"]
+    assert position_state_mappings is not None
+    assert {
+        "@type": "StatesToValue",
+        "states": ["Alexa.States.Closed"],
+        "value": 0,
+    } in position_state_mappings
+    assert {
+        "@type": "StatesToRange",
+        "states": ["Alexa.States.Open"],
+        "range": {"minimumValue": 1, "maximumValue": 100},
+    } in position_state_mappings
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "cover#test_range",
+        service_call,
+        hass,
+        payload={"rangeValue": position},
+        instance="cover.position",
+    )
+    assert call.data.get("position") == position_attr_in_service_call
+    properties = msg["context"]["properties"][0]
+    assert properties["name"] == "rangeValue"
+    assert properties["namespace"] == "Alexa.RangeController"
+    assert properties["value"] == position
+
+
+async def test_cover_position_range(
+    hass: HomeAssistant,
+) -> None:
+    """Test cover discovery and position range using rangeController.
+
+    Also tests an invalid cover position being handled correctly.
+    """
+
     device = (
         "cover.test_range",
         "open",
@@ -1968,59 +2159,6 @@ async def test_cover_position_range(hass: HomeAssistant) -> None:
         "states": ["Alexa.States.Open"],
         "range": {"minimumValue": 1, "maximumValue": 100},
     } in position_state_mappings
-
-    call, _ = await assert_request_calls_service(
-        "Alexa.RangeController",
-        "SetRangeValue",
-        "cover#test_range",
-        "cover.set_cover_position",
-        hass,
-        payload={"rangeValue": 50},
-        instance="cover.position",
-    )
-    assert call.data["position"] == 50
-
-    call, msg = await assert_request_calls_service(
-        "Alexa.RangeController",
-        "SetRangeValue",
-        "cover#test_range",
-        "cover.close_cover",
-        hass,
-        payload={"rangeValue": 0},
-        instance="cover.position",
-    )
-    properties = msg["context"]["properties"][0]
-    assert properties["name"] == "rangeValue"
-    assert properties["namespace"] == "Alexa.RangeController"
-    assert properties["value"] == 0
-
-    call, msg = await assert_request_calls_service(
-        "Alexa.RangeController",
-        "SetRangeValue",
-        "cover#test_range",
-        "cover.open_cover",
-        hass,
-        payload={"rangeValue": 100},
-        instance="cover.position",
-    )
-    properties = msg["context"]["properties"][0]
-    assert properties["name"] == "rangeValue"
-    assert properties["namespace"] == "Alexa.RangeController"
-    assert properties["value"] == 100
-
-    call, msg = await assert_request_calls_service(
-        "Alexa.RangeController",
-        "AdjustRangeValue",
-        "cover#test_range",
-        "cover.open_cover",
-        hass,
-        payload={"rangeValueDelta": 99, "rangeValueDeltaDefault": False},
-        instance="cover.position",
-    )
-    properties = msg["context"]["properties"][0]
-    assert properties["name"] == "rangeValue"
-    assert properties["namespace"] == "Alexa.RangeController"
-    assert properties["value"] == 100
 
     call, msg = await assert_request_calls_service(
         "Alexa.RangeController",
@@ -3435,8 +3573,159 @@ async def test_presence_sensor(hass: HomeAssistant) -> None:
     assert {"name": "humanPresenceDetectionState"} in properties["supported"]
 
 
-async def test_cover_tilt_position_range(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    (
+        "tilt_position",
+        "tilt_position_attr_in_service_call",
+        "supported_features",
+        "service_call",
+    ),
+    [
+        (
+            30,
+            30,
+            CoverEntityFeature.SET_TILT_POSITION
+            | CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.STOP_TILT,
+            "cover.set_cover_tilt_position",
+        ),
+        (
+            0,
+            None,
+            CoverEntityFeature.SET_TILT_POSITION
+            | CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.STOP_TILT,
+            "cover.close_cover_tilt",
+        ),
+        (
+            99,
+            99,
+            CoverEntityFeature.SET_TILT_POSITION
+            | CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.STOP_TILT,
+            "cover.set_cover_tilt_position",
+        ),
+        (
+            100,
+            None,
+            CoverEntityFeature.SET_TILT_POSITION
+            | CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.STOP_TILT,
+            "cover.open_cover_tilt",
+        ),
+        (
+            0,
+            0,
+            CoverEntityFeature.SET_TILT_POSITION,
+            "cover.set_cover_tilt_position",
+        ),
+        (
+            60,
+            60,
+            CoverEntityFeature.SET_TILT_POSITION,
+            "cover.set_cover_tilt_position",
+        ),
+        (
+            100,
+            100,
+            CoverEntityFeature.SET_TILT_POSITION,
+            "cover.set_cover_tilt_position",
+        ),
+        (
+            0,
+            0,
+            CoverEntityFeature.SET_TILT_POSITION | CoverEntityFeature.OPEN_TILT,
+            "cover.set_cover_tilt_position",
+        ),
+        (
+            100,
+            100,
+            CoverEntityFeature.SET_TILT_POSITION | CoverEntityFeature.CLOSE_TILT,
+            "cover.set_cover_tilt_position",
+        ),
+    ],
+    ids=[
+        "tilt_position_30_open_close",
+        "tilt_position_0_open_close",
+        "tilt_position_99_open_close",
+        "tilt_position_100_open_close",
+        "tilt_position_0_no_open_close",
+        "tilt_position_60_no_open_close",
+        "tilt_position_100_no_open_close",
+        "tilt_position_0_no_close",
+        "tilt_position_100_no_open",
+    ],
+)
+async def test_cover_tilt_position(
+    hass: HomeAssistant,
+    tilt_position: int,
+    tilt_position_attr_in_service_call: int | None,
+    supported_features: CoverEntityFeature,
+    service_call: str,
+) -> None:
     """Test cover discovery and tilt position using rangeController."""
+    device = (
+        "cover.test_tilt_range",
+        "open",
+        {
+            "friendly_name": "Test cover tilt range",
+            "device_class": "blind",
+            "supported_features": supported_features,
+            "tilt_position": tilt_position,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "cover#test_tilt_range"
+    assert appliance["displayCategories"][0] == "INTERIOR_BLIND"
+    assert appliance["friendlyName"] == "Test cover tilt range"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.PowerController",
+        "Alexa.RangeController",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+
+    range_capability = get_capability(capabilities, "Alexa.RangeController")
+    assert range_capability is not None
+    assert range_capability["instance"] == "cover.tilt"
+
+    semantics = range_capability["semantics"]
+    assert semantics is not None
+
+    action_mappings = semantics["actionMappings"]
+    assert action_mappings is not None
+
+    state_mappings = semantics["stateMappings"]
+    assert state_mappings is not None
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "cover#test_tilt_range",
+        service_call,
+        hass,
+        payload={"rangeValue": tilt_position},
+        instance="cover.tilt",
+    )
+    assert call.data.get("tilt_position") == tilt_position_attr_in_service_call
+    properties = msg["context"]["properties"][0]
+    assert properties["name"] == "rangeValue"
+    assert properties["namespace"] == "Alexa.RangeController"
+    assert properties["value"] == tilt_position
+
+
+async def test_cover_tilt_position_range(hass: HomeAssistant) -> None:
+    """Test cover discovery and tilt position range using rangeController.
+
+    Also tests and invalid tilt position being handled correctly.
+    """
     device = (
         "cover.test_tilt_range",
         "open",
@@ -3484,48 +3773,6 @@ async def test_cover_tilt_position_range(hass: HomeAssistant) -> None:
         instance="cover.tilt",
     )
     assert call.data["tilt_position"] == 50
-
-    call, msg = await assert_request_calls_service(
-        "Alexa.RangeController",
-        "SetRangeValue",
-        "cover#test_tilt_range",
-        "cover.close_cover_tilt",
-        hass,
-        payload={"rangeValue": 0},
-        instance="cover.tilt",
-    )
-    properties = msg["context"]["properties"][0]
-    assert properties["name"] == "rangeValue"
-    assert properties["namespace"] == "Alexa.RangeController"
-    assert properties["value"] == 0
-
-    call, msg = await assert_request_calls_service(
-        "Alexa.RangeController",
-        "SetRangeValue",
-        "cover#test_tilt_range",
-        "cover.open_cover_tilt",
-        hass,
-        payload={"rangeValue": 100},
-        instance="cover.tilt",
-    )
-    properties = msg["context"]["properties"][0]
-    assert properties["name"] == "rangeValue"
-    assert properties["namespace"] == "Alexa.RangeController"
-    assert properties["value"] == 100
-
-    call, msg = await assert_request_calls_service(
-        "Alexa.RangeController",
-        "AdjustRangeValue",
-        "cover#test_tilt_range",
-        "cover.open_cover_tilt",
-        hass,
-        payload={"rangeValueDelta": 99, "rangeValueDeltaDefault": False},
-        instance="cover.tilt",
-    )
-    properties = msg["context"]["properties"][0]
-    assert properties["name"] == "rangeValue"
-    assert properties["namespace"] == "Alexa.RangeController"
-    assert properties["value"] == 100
 
     call, msg = await assert_request_calls_service(
         "Alexa.RangeController",
