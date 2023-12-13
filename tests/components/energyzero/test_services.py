@@ -3,8 +3,8 @@
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.energyzero.const import (
-    DOMAIN,
+from homeassistant.components.energyzero.const import DOMAIN
+from homeassistant.components.energyzero.services import (
     ENERGY_SERVICE_NAME,
     GAS_SERVICE_NAME,
 )

@@ -56,11 +56,11 @@
         },
         "start": {
           "name": "Start",
-          "description": "From which moment to get the prices. Defaults to today if omitted."
+          "description": "Specifies the date and time from which to retrieve prices. Defaults to today if omitted."
         },
         "end": {
           "name": "End",
-          "description": "Until which moment to get the prices. Defaults to today if omitted."
+          "description": "Specifies the date and time until which to retrieve prices. Defaults to today if omitted."
         }
       }
     },

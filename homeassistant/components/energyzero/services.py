@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from enum import Enum
 from functools import partial
+from typing import Final
 
 from energyzero import Electricity, Gas, VatOption
+import voluptuous as vol
 
 from homeassistant.core import (
     HomeAssistant,
@@ -15,17 +18,29 @@ from homeassistant.core import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    ATTR_END,
-    ATTR_INCL_VAT,
-    ATTR_START,
-    DOMAIN,
-    ENERGY_SERVICE_NAME,
-    GAS_SERVICE_NAME,
-    SERVICE_SCHEMA,
-    PriceType,
-)
+from .const import DOMAIN
 from .coordinator import EnergyZeroDataUpdateCoordinator
+
+ATTR_START: Final = "start"
+ATTR_END: Final = "end"
+ATTR_INCL_VAT: Final = "incl_vat"
+
+GAS_SERVICE_NAME: Final = "get_gas_prices"
+ENERGY_SERVICE_NAME: Final = "get_energy_prices"
+SERVICE_SCHEMA: Final = vol.Schema(
+    {
+        vol.Required(ATTR_INCL_VAT): bool,
+        vol.Optional(ATTR_START): str,
+        vol.Optional(ATTR_END): str,
+    }
+)
+
+
+class PriceType(Enum):
+    """Type of price."""
+
+    ENERGY = "energy"
+    GAS = "gas"
 
 
 def __get_date(date_input: str | None) -> date | datetime:
@@ -67,7 +82,10 @@ async def __get_prices(
     start = __get_date(call.data.get(ATTR_START))
     end = __get_date(call.data.get(ATTR_END))
 
-    vat = VatOption.INCLUDE if call.data.get(ATTR_INCL_VAT) else VatOption.EXCLUDE
+    vat = VatOption.INCLUDE
+
+    if call.data.get(ATTR_INCL_VAT) is False:
+        vat = VatOption.EXCLUDE
 
     data: Electricity | Gas
 
