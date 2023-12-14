@@ -18,7 +18,7 @@
     "aioesphomeapi==21.0.0",
     "bluetooth-data-tools==1.18.0",
     "esphome-dashboard-api==1.2.3",
-    "bleak-esphome==0.2.0"
+    "bleak-esphome==0.3.0"
   ],
   "zeroconf": ["_esphomelib._tcp.local."]
 }
