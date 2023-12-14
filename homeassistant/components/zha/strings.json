@@ -724,6 +724,9 @@
       },
       "quick_start_time": {
         "name": "Quick start time"
+      },
+      "local_temperature_calibration": {
+        "name": "Local temperature offset"
       }
     },
     "select": {

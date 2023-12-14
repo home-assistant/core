@@ -20,6 +20,7 @@ from .core.const import (
     CLUSTER_HANDLER_COLOR,
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_LEVEL,
+    CLUSTER_HANDLER_THERMOSTAT,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -37,6 +38,7 @@ STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.NUMBER)
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
     ZHA_ENTITIES.config_diagnostic_match, Platform.NUMBER
 )
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.NUMBER)
 
 
 UNITS = {
@@ -943,6 +945,28 @@ class AqaraThermostatAwayTemp(ZHANumberConfigurationEntity):
     _attr_multiplier: float = 0.01
     _attribute_name = "away_preset_temperature"
     _attr_translation_key: str = "away_preset_temperature"
+
+    _attr_mode: NumberMode = NumberMode.SLIDER
+    _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
+    _attr_icon: str = ICONS[0]
+
+
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    stop_on_match_group=CLUSTER_HANDLER_THERMOSTAT,
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class ThermostatLocalTempCalibration(ZHANumberConfigurationEntity):
+    """Local temperature calibration."""
+
+    _unique_id_suffix = "local_temperature_calibration"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value: float = -2.5
+    _attr_native_max_value: float = 2.5
+    _attr_native_step: float = 0.1
+    _attr_multiplier: float = 0.1
+    _attribute_name = "local_temperature_calibration"
+    _attr_translation_key: str = "local_temperature_calibration"
 
     _attr_mode: NumberMode = NumberMode.SLIDER
     _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
