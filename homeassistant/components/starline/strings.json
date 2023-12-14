@@ -90,6 +90,9 @@
       },
       "mileage": {
         "name": "Mileage"
+      },
+      "gps_count": {
+        "name": "GPS Satellites"
       }
     },
     "switch": {

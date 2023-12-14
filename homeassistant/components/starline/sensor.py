@@ -68,6 +68,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DISTANCE,
         icon="mdi:counter",
     ),
+    SensorEntityDescription(
+        key="gps_count",
+        translation_key="gps_count",
+        icon="mdi:satellite-variant",
+        native_unit_of_measurement="",
+    ),
 )
 
 
@@ -130,6 +136,8 @@ class StarlineSensor(StarlineEntity, SensorEntity):
             return self._device.errors.get("val")
         if self._key == "mileage" and self._device.mileage:
             return self._device.mileage.get("val")
+        if self._key == "gps_count" and self._device.position:
+            return self._device.position["sat_qty"]
         return None
 
     @property
