@@ -30,7 +30,7 @@ class StarlineButtonEntityDescription(
 BUTTON_TYPES: tuple[StarlineButtonEntityDescription, ...] = (
     StarlineButtonEntityDescription(
         key="poke",
-        name_="Horn",
+        translation_key="horn",
         icon="mdi:bullhorn-outline",
     ),
 )
