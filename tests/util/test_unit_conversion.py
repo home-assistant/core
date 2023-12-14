@@ -213,6 +213,8 @@ _CONVERTED_VALUE: dict[
         (10, UnitOfEnergy.GIGA_JOULE, 10 / 3.6, UnitOfEnergy.MEGA_WATT_HOUR),
         (10, UnitOfEnergy.MEGA_JOULE, 10 / 3.6, UnitOfEnergy.KILO_WATT_HOUR),
         (10, UnitOfEnergy.MEGA_JOULE, 0.010 / 3.6, UnitOfEnergy.MEGA_WATT_HOUR),
+        (10, UnitOfEnergy.GIGA_CALORIE, 0.00396832 * 10, UnitOfEnergy.KILO_WATT_HOUR),
+        (10, UnitOfEnergy.GIGA_CALORIE, 0.00396832 * 0.01, UnitOfEnergy.MEGA_WATT_HOUR),
     ],
     InformationConverter: [
         (8e3, UnitOfInformation.BITS, 8, UnitOfInformation.KILOBITS),

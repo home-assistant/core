@@ -745,6 +745,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
         (UnitOfEnergy.KILO_WATT_HOUR, 1),
         (UnitOfEnergy.MEGA_WATT_HOUR, 0.001),
         (UnitOfEnergy.GIGA_JOULE, 0.001 * 3.6),
+        (UnitOfEnergy.GIGA_CALORIE, 0.00396832),
     ],
 )
 async def test_cost_sensor_handle_energy_units(
@@ -812,6 +813,7 @@ async def test_cost_sensor_handle_energy_units(
         (f"EUR/{UnitOfEnergy.KILO_WATT_HOUR}", 1),
         (f"EUR/{UnitOfEnergy.MEGA_WATT_HOUR}", 1000),
         (f"EUR/{UnitOfEnergy.GIGA_JOULE}", 1000 / 3.6),
+        (f"EUR/{UnitOfEnergy.GIGA_CALORIE}", 0.00396832 * 1)
     ],
 )
 async def test_cost_sensor_handle_price_units(

@@ -163,7 +163,7 @@ class SensorDeviceClass(StrEnum):
 
     Use this device class for sensors measuring energy consumption, for example
     electric energy consumption.
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`, `GCal`
     """
 
     ENERGY_STORAGE = "energy_storage"

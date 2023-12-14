@@ -202,6 +202,7 @@ class EnergyConverter(BaseUnitConverter):
         UnitOfEnergy.MEGA_WATT_HOUR: 1 / 1000,
         UnitOfEnergy.MEGA_JOULE: 3.6,
         UnitOfEnergy.GIGA_JOULE: 3.6 / 1000,
+        UnitOfEnergy.GIGA_CALORIE: 1 / 252.164387,
     }
     VALID_UNITS = {
         UnitOfEnergy.WATT_HOUR,

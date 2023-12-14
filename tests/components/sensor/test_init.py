@@ -689,6 +689,15 @@ async def test_custom_unit(
             "1000",
             SensorDeviceClass.ENERGY,
         ),
+        (
+            UnitOfEnergy.GIGA_CALORIE,
+            UnitOfEnergy.MEGA_WATT_HOUR,
+            UnitOfEnergy.MEGA_WATT_HOUR,
+            1000,
+            "1000",
+            "3968.32",
+            SensorDeviceClass.ENERGY,
+        ),
         # Power factor
         (
             None,
