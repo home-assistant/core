@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 import logging
 from types import MappingProxyType
-from typing import Any, Required, TypedDict
+from typing import Any, Generic, Required, TypedDict, TypeVar
 
 import voluptuous as vol
 
@@ -448,12 +448,13 @@ class FlowManager(abc.ABC):
             self._preview.add(flow.handler)
             await flow.async_setup_preview(self.hass)
 
+_FlowResultT = TypeVar("_FlowResultT", bound="FlowResult")
 
-class FlowHandler:
+class FlowHandler(Generic[_FlowResultT]):
     """Handle a data entry flow."""
 
     # Set by flow manager
-    cur_step: FlowResult | None = None
+    cur_step: _FlowResultT | None = None
 
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
@@ -525,7 +526,7 @@ class FlowHandler:
         description_placeholders: Mapping[str, str | None] | None = None,
         last_step: bool | None = None,
         preview: str | None = None,
-    ) -> FlowResult:
+    ) -> _FlowResultT:
         """Return the definition of a form to gather user input."""
         return FlowResult(
             type=FlowResultType.FORM,
@@ -547,7 +548,7 @@ class FlowHandler:
         data: Mapping[str, Any],
         description: str | None = None,
         description_placeholders: Mapping[str, str] | None = None,
-    ) -> FlowResult:
+    ) -> _FlowResultT:
         """Finish flow."""
         flow_result = FlowResult(
             version=self.VERSION,
