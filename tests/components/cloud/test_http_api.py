@@ -150,7 +150,7 @@ async def test_login_view_existing_pipeline(
     cloud_client = await hass_client()
 
     with patch(
-        "homeassistant.components.cloud.http_api.assist_pipeline.async_create_default_pipeline",
+        "homeassistant.components.cloud.assist_pipeline.async_create_default_pipeline",
     ) as create_pipeline_mock:
         req = await cloud_client.post(
             "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
@@ -183,7 +183,7 @@ async def test_login_view_create_pipeline(
     cloud_client = await hass_client()
 
     with patch(
-        "homeassistant.components.cloud.http_api.assist_pipeline.async_create_default_pipeline",
+        "homeassistant.components.cloud.assist_pipeline.async_create_default_pipeline",
         return_value=AsyncMock(id="12345"),
     ) as create_pipeline_mock:
         req = await cloud_client.post(
@@ -222,7 +222,7 @@ async def test_login_view_create_pipeline_fail(
     cloud_client = await hass_client()
 
     with patch(
-        "homeassistant.components.cloud.http_api.assist_pipeline.async_create_default_pipeline",
+        "homeassistant.components.cloud.assist_pipeline.async_create_default_pipeline",
         return_value=None,
     ) as create_pipeline_mock:
         req = await cloud_client.post(
