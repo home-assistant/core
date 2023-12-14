@@ -7,10 +7,10 @@
   },
   "exceptions": {
     "timeout": {
-      "message": "Timeout while waiting for response from the server."
+      "message": "Timeout while waiting for response from the server"
     },
     "client_error": {
-      "message": "An error occurred while requesting the resource."
+      "message": "An error occurred while requesting the resource"
     },
     "non_ok_status_code": {
       "message": "The server answered with a {status_code} status code"
