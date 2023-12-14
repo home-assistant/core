@@ -137,7 +137,7 @@ def test_unique_id(coordinator: AprilaireCoordinator) -> None:
 
     coordinator.data["mac_address"] = "1:2:3:4:5:6"
 
-    assert entity.unique_id == "1_2_3_4_5_6_test_entity"
+    assert entity.unique_id == "1:2:3:4:5:6_test_entity"
 
 
 def test_device_info(coordinator: AprilaireCoordinator) -> None:

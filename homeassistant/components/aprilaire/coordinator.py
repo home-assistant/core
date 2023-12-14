@@ -43,6 +43,9 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
             RETRY_CONNECTION_INTERVAL,
         )
 
+        if hasattr(self.client, "data") and self.client.data:
+            self.data = self.client.data
+
     @callback
     def async_add_listener(
         self, update_callback: CALLBACK_TYPE, context: Any = None
