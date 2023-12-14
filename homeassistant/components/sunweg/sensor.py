@@ -19,8 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import SunWEGData
-from .const import CONF_PLANT_ID, DEFAULT_PLANT_ID, DOMAIN
-from .device_type import DeviceType
+from .const import CONF_PLANT_ID, DEFAULT_PLANT_ID, DOMAIN, DeviceType
 from .sensor_types.inverter import INVERTER_SENSOR_TYPES
 from .sensor_types.phase import PHASE_SENSOR_TYPES
 from .sensor_types.sensor_entity_description import SunWEGSensorEntityDescription

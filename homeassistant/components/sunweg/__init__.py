@@ -13,8 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import Throttle
 
-from .const import CONF_PLANT_ID, DOMAIN, PLATFORMS
-from .device_type import DeviceType
+from .const import CONF_PLANT_ID, DOMAIN, PLATFORMS, DeviceType
 from .sensor_types.sensor_entity_description import SunWEGSensorEntityDescription
 
 SCAN_INTERVAL = datetime.timedelta(minutes=5)

@@ -6,8 +6,7 @@ from unittest.mock import MagicMock, patch
 from sunweg.api import APIHelper, SunWegApiError
 
 from homeassistant.components.sunweg import SunWEGData
-from homeassistant.components.sunweg.const import DOMAIN
-from homeassistant.components.sunweg.device_type import DeviceType
+from homeassistant.components.sunweg.const import DOMAIN, DeviceType
 from homeassistant.components.sunweg.sensor_types.sensor_entity_description import (
     SunWEGSensorEntityDescription,
 )
