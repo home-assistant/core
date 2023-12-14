@@ -497,7 +497,7 @@ broadlink==0.18.3
 brother==3.0.0
 
 # homeassistant.components.brottsplatskartan
-brottsplatskartan==0.0.1
+brottsplatskartan==1.0.5
 
 # homeassistant.components.brunt
 brunt==1.2.0
