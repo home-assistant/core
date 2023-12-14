@@ -54,6 +54,9 @@
       },
       "doors": {
         "name": "Doors"
+      },
+      "handsfree": {
+        "name": "Handsfree"
       }
     },
     "device_tracker": {

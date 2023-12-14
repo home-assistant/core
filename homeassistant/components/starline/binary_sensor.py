@@ -7,6 +7,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -39,6 +40,12 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
         key="door",
         translation_key="doors",
         device_class=BinarySensorDeviceClass.LOCK,
+    ),
+    BinarySensorEntityDescription(
+        key="hfree",
+        translation_key="handsfree",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:hand-back-right",
     ),
 )
 
