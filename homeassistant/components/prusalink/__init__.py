@@ -6,7 +6,7 @@ import asyncio
 from datetime import timedelta
 import logging
 from time import monotonic
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 from pyprusalink import JobInfo, LegacyPrinterStatus, PrinterStatus, PrusaLink
 from pyprusalink.types import InvalidAuth, PrusaLinkError
@@ -120,10 +120,13 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):
                 DOMAIN,
                 "firmware_5_1_required",
                 is_fixable=False,
-                learn_more_url="https://help.prusa3d.com/article/firmware-updating-mini-mini_124784",
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="firmware_5_1_required",
-                translation_placeholders={"entry_title": self.config_entry.title},
+                translation_placeholders={
+                    "entry_title": self.config_entry.title,
+                    "prusa_mini_firmware_update": "https://help.prusa3d.com/article/firmware-updating-mini-mini_124784",
+                    "prusa_mk4_xl_firmware_update": "https://help.prusa3d.com/article/how-to-update-firmware-mk4-xl_453086",
+                },
             )
 
             raise UpdateFailed("Invalid authentication") from None
