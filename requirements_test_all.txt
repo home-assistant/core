@@ -1280,6 +1280,9 @@ pyairnow==1.2.1
 # homeassistant.components.airvisual_pro
 pyairvisual==2023.08.1
 
+# homeassistant.components.aprilaire
+pyaprilaire==0.7.0
+
 # homeassistant.components.asuswrt
 pyasuswrt==0.1.21
 
