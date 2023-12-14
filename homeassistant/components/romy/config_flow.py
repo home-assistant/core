@@ -129,7 +129,6 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "name": self.discovery_info[CONF_NAME],
                     "host": self.discovery_info[CONF_HOST],
                 },
-                errors={},
             )
 
         return self.async_create_entry(
