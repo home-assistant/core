@@ -14,8 +14,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """Initialize the ROMY platform via config entry."""
 
     new_romy = await romy.create_romy(
-        config_entry.data[CONF_HOST],
-        config_entry.data.get(CONF_PASSWORD, "")
+        config_entry.data[CONF_HOST], config_entry.data.get(CONF_PASSWORD, "")
     )
 
     coordinator = RomyVacuumCoordinator(hass, new_romy)
