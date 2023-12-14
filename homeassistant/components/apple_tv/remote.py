@@ -4,6 +4,8 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
+from pyatv.const import InputAction
+
 from homeassistant.components.remote import (
     ATTR_DELAY_SECS,
     ATTR_NUM_REPEATS,
@@ -17,10 +19,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AppleTVEntity
 from .const import DOMAIN
-
-from pyatv.const import (
-    InputAction,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
