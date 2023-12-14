@@ -62,6 +62,7 @@ REMOTE_DEVICE_TYPES = collections.defaultdict(list, REMOTE_DEVICE_TYPES)
 SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     # this works for now but if we hit conflicts we can break it out to
     # a different dict that is keyed by manufacturer
+    zcl.clusters.general.BinaryOutput.cluster_id: Platform.SELECT,
     zcl.clusters.general.AnalogOutput.cluster_id: Platform.NUMBER,
     zcl.clusters.general.MultistateInput.cluster_id: Platform.SENSOR,
     zcl.clusters.general.OnOff.cluster_id: Platform.SWITCH,

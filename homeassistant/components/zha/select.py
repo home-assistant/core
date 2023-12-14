@@ -20,6 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import (
+    CLUSTER_HANDLER_BINARY_OUTPUT,
     CLUSTER_HANDLER_HUE_OCCUPANCY,
     CLUSTER_HANDLER_IAS_WD,
     CLUSTER_HANDLER_INOVELLI,
@@ -590,3 +591,60 @@ class AqaraThermostatPreset(ZCLEnumSelectEntity):
     _attribute_name = "preset"
     _enum = AqaraThermostatPresetMode
     _attr_translation_key: str = "preset"
+
+
+class MultitermElectricValveStates(types.enum8):
+    """Electric Valve switch states."""
+
+    Off = 0x00
+    On = 0x01
+
+
+class MultitermHeatingCoolingStates(types.enum8):
+    """Heating / Cooling switch states."""
+
+    Heating = 0x00
+    Cooling = 0x01
+
+
+class MultitermSleepModeStates(types.enum8):
+    """Sleep Mode switch states."""
+
+    Inactive = 0x00
+    Active = 0x01
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_BINARY_OUTPUT,
+    models={"ZC0101"},
+)
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="manufacturer",
+    manufacturers={
+        "MultiTerm",
+    },
+)
+class MultitermBOSelectEntity(ZCLEnumSelectEntity):
+    """Multiterm Binary Output as Select Entity."""
+
+    _select_attr = "present_value"
+
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        cluster_handlers: list[ClusterHandler],
+        **kwargs: Any,
+    ) -> None:
+        """Init this select entity."""
+        self._cluster_handler: ClusterHandler = cluster_handlers[0]
+        self._attr_name = self._cluster_handler.description
+
+        if self._attr_name == "Electric Valve":
+            self._enum = MultitermElectricValveStates
+        elif self._attr_name == "Heating/Cooling":
+            self._enum = MultitermHeatingCoolingStates
+        elif self._attr_name == "Sleep Mode":
+            self._enum = MultitermSleepModeStates
+
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
