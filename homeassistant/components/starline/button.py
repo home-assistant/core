@@ -1,8 +1,6 @@
 """Support for StarLine button."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -13,22 +11,8 @@ from .const import DOMAIN
 from .entity import StarlineEntity
 
 
-@dataclass
-class StarlineRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    name_: str
-
-
-@dataclass
-class StarlineButtonEntityDescription(
-    ButtonEntityDescription, StarlineRequiredKeysMixin
-):
-    """Describes Starline button entity."""
-
-
-BUTTON_TYPES: tuple[StarlineButtonEntityDescription, ...] = (
-    StarlineButtonEntityDescription(
+BUTTON_TYPES: tuple[ButtonEntityDescription, ...] = (
+    ButtonEntityDescription(
         key="poke",
         translation_key="horn",
         icon="mdi:bullhorn-outline",
@@ -52,13 +36,13 @@ async def async_setup_entry(
 class StarlineButton(StarlineEntity, ButtonEntity):
     """Representation of a StarLine button."""
 
-    entity_description: StarlineButtonEntityDescription
+    entity_description: ButtonEntityDescription
 
     def __init__(
         self,
         account: StarlineAccount,
         device: StarlineDevice,
-        description: StarlineButtonEntityDescription,
+        description: ButtonEntityDescription,
     ) -> None:
         """Initialize the button."""
         super().__init__(account, device, description.key)
