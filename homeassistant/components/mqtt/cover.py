@@ -243,8 +243,8 @@ class MqttCover(MqttEntity, CoverEntity):
     _entity_id_format: str = cover.ENTITY_ID_FORMAT
     _optimistic: bool
     _tilt_optimistic: bool
-    _position_closed_percentage: int
     _tilt_closed_percentage: int
+    _tilt_open_percentage: int
     _pos_range: tuple[int, int]
     _tilt_range: tuple[int, int]
 
@@ -257,12 +257,6 @@ class MqttCover(MqttEntity, CoverEntity):
         """Set up cover from config."""
         self._pos_range = (config[CONF_POSITION_CLOSED] + 1, config[CONF_POSITION_OPEN])
         self._tilt_range = (config[CONF_TILT_MIN] + 1, config[CONF_TILT_MAX])
-        self._position_closed_percentage = ranged_value_to_percentage(
-            self._pos_range, config[CONF_POSITION_CLOSED]
-        )
-        self._position_open_percentage = ranged_value_to_percentage(
-            self._pos_range, config[CONF_POSITION_OPEN]
-        )
         self._tilt_closed_percentage = ranged_value_to_percentage(
             self._tilt_range, config[CONF_TILT_CLOSED_POSITION]
         )
@@ -475,9 +469,7 @@ class MqttCover(MqttEntity, CoverEntity):
             self._attr_current_cover_position = min(100, max(0, percentage_payload))
             if self._config.get(CONF_STATE_TOPIC) is None:
                 self._update_state(
-                    STATE_CLOSED
-                    if percentage_payload <= self._position_closed_percentage
-                    else STATE_OPEN
+                    STATE_CLOSED if self.current_cover_position == 0 else STATE_OPEN
                 )
 
         if self._config.get(CONF_GET_POSITION_TOPIC):
@@ -528,7 +520,7 @@ class MqttCover(MqttEntity, CoverEntity):
             # Optimistically assume that cover has changed state.
             self._update_state(STATE_OPEN)
             if self._config.get(CONF_GET_POSITION_TOPIC):
-                self._attr_current_cover_position = self._position_open_percentage
+                self._attr_current_cover_position = 100
             self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -547,7 +539,7 @@ class MqttCover(MqttEntity, CoverEntity):
             # Optimistically assume that cover has changed state.
             self._update_state(STATE_CLOSED)
             if self._config.get(CONF_GET_POSITION_TOPIC):
-                self._attr_current_cover_position = self._position_closed_percentage
+                self._attr_current_cover_position = 0
             self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
