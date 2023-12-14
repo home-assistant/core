@@ -31,7 +31,7 @@ async def async_setup_entry(
     name = entry.title
 
     bpk = BrottsplatsKartan(
-        app=app, areas=[area], latitude=latitude, longitude=longitude
+        app=app, areas=[area] if area else None, latitude=latitude, longitude=longitude
     )
 
     async_add_entities([BrottsplatskartanSensor(bpk, name, entry.entry_id, area)], True)
