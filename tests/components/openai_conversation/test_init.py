@@ -11,13 +11,17 @@ from openai import (
 )
 from openai.types.chat.chat_completion import ChatCompletion, Choice
 from openai.types.chat.chat_completion_message import ChatCompletionMessage
+from openai.types.chat.chat_completion_message_tool_call import (
+    ChatCompletionMessageToolCall,
+    Function,
+)
 from openai.types.completion_usage import CompletionUsage
 from openai.types.image import Image
 from openai.types.images_response import ImagesResponse
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import conversation
+from homeassistant.components import conversation, openai_conversation
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry as ar, device_registry as dr, intent
@@ -138,6 +142,283 @@ async def test_default_prompt(
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert mock_create.mock_calls[0][2]["messages"] == snapshot
+
+
+async def test_function_call(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test function call from the assistant."""
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+
+    mock_tool = AsyncMock(return_value="Test response")
+    spec = {
+        "type": "function",
+        "function": {
+            "name": "test_tool",
+            "description": "Test function",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "param1": {
+                        "type": "string",
+                        "description": "Test parameters",
+                    },
+                },
+                "required": [],
+            },
+        },
+    }
+    await openai_conversation.async_register_tool(
+        hass,
+        agent_id=mock_config_entry.entry_id,
+        specification=spec,
+        async_callback=mock_tool,
+    )
+
+    def completion_result(*args, messages, **kwargs):
+        for message in messages:
+            role = message["role"] if isinstance(message, dict) else message.role
+            if role == "tool":
+                return ChatCompletion(
+                    id="chatcmpl-1234567890ZYXWVUTSRQPONMLKJIH",
+                    choices=[
+                        Choice(
+                            finish_reason="stop",
+                            index=0,
+                            message=ChatCompletionMessage(
+                                content="I have successfully called the function",
+                                role="assistant",
+                                function_call=None,
+                                tool_calls=None,
+                            ),
+                        )
+                    ],
+                    created=1700000000,
+                    model="gpt-4-1106-preview",
+                    object="chat.completion",
+                    system_fingerprint=None,
+                    usage=CompletionUsage(
+                        completion_tokens=9, prompt_tokens=8, total_tokens=17
+                    ),
+                )
+
+        return ChatCompletion(
+            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+            choices=[
+                Choice(
+                    finish_reason="tool_calls",
+                    index=0,
+                    message=ChatCompletionMessage(
+                        content=None,
+                        role="assistant",
+                        function_call=None,
+                        tool_calls=[
+                            ChatCompletionMessageToolCall(
+                                id="call_AbCdEfGhIjKlMnOpQrStUvWx",
+                                function=Function(
+                                    arguments='{"param1":"test_value"}',
+                                    name="test_tool",
+                                ),
+                                type="function",
+                            )
+                        ],
+                    ),
+                )
+            ],
+            created=1700000000,
+            model="gpt-4-1106-preview",
+            object="chat.completion",
+            system_fingerprint=None,
+            usage=CompletionUsage(
+                completion_tokens=9, prompt_tokens=8, total_tokens=17
+            ),
+        )
+
+    context = Context()
+
+    with patch(
+        "openai.resources.chat.completions.AsyncCompletions.create",
+        new_callable=AsyncMock,
+        side_effect=completion_result,
+    ) as mock_create:
+        result = await conversation.async_converse(
+            hass,
+            "Please call the test function",
+            None,
+            context,
+            agent_id=mock_config_entry.entry_id,
+        )
+
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert mock_create.mock_calls[1][2]["messages"][3] == {
+        "role": "tool",
+        "tool_call_id": "call_AbCdEfGhIjKlMnOpQrStUvWx",
+        "name": "test_tool",
+        "content": '"Test response"',
+    }
+    mock_tool.assert_awaited_once_with(hass, context, param1="test_value")
+
+
+async def test_function_exception(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test function call with exception."""
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+
+    mock_tool = AsyncMock(side_effect=RuntimeError("Test tool exception"))
+    spec = {
+        "type": "function",
+        "function": {
+            "name": "test_tool",
+            "description": "Test function",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "param1": {
+                        "type": "string",
+                        "description": "Test parameters",
+                    },
+                },
+                "required": [],
+            },
+        },
+    }
+
+    await openai_conversation.async_register_tool(
+        hass,
+        agent_id=mock_config_entry.entry_id,
+        specification=spec,
+        async_callback=mock_tool,
+    )
+
+    with pytest.raises(RuntimeError, match="Function test_tool already registered"):
+        await openai_conversation.async_register_tool(
+            hass,
+            agent_id=mock_config_entry.entry_id,
+            specification=spec,
+            async_callback=mock_tool,
+        )
+
+    await openai_conversation.async_unregister_tool(
+        hass,
+        agent_id=mock_config_entry.entry_id,
+        function_name="test_tool",
+    )
+
+    await openai_conversation.async_register_tool(
+        hass,
+        agent_id=mock_config_entry.entry_id,
+        specification=spec,
+        async_callback=mock_tool,
+    )
+
+    with pytest.raises(
+        RuntimeError, match="Agent ID must correspond to openai_conversation agent"
+    ):
+        await openai_conversation.async_register_tool(
+            hass,
+            agent_id=conversation.const.HOME_ASSISTANT_AGENT,
+            specification=spec,
+            async_callback=mock_tool,
+        )
+
+    with pytest.raises(
+        RuntimeError, match="Agent ID must correspond to openai_conversation agent"
+    ):
+        await openai_conversation.async_unregister_tool(
+            hass,
+            agent_id=conversation.const.HOME_ASSISTANT_AGENT,
+            function_name="test_tool",
+        )
+
+    def completion_result(*args, messages, **kwargs):
+        for message in messages:
+            role = message["role"] if isinstance(message, dict) else message.role
+            if role == "tool":
+                return ChatCompletion(
+                    id="chatcmpl-1234567890ZYXWVUTSRQPONMLKJIH",
+                    choices=[
+                        Choice(
+                            finish_reason="stop",
+                            index=0,
+                            message=ChatCompletionMessage(
+                                content="There was an error calling the function",
+                                role="assistant",
+                                function_call=None,
+                                tool_calls=None,
+                            ),
+                        )
+                    ],
+                    created=1700000000,
+                    model="gpt-4-1106-preview",
+                    object="chat.completion",
+                    system_fingerprint=None,
+                    usage=CompletionUsage(
+                        completion_tokens=9, prompt_tokens=8, total_tokens=17
+                    ),
+                )
+
+        return ChatCompletion(
+            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+            choices=[
+                Choice(
+                    finish_reason="tool_calls",
+                    index=0,
+                    message=ChatCompletionMessage(
+                        content=None,
+                        role="assistant",
+                        function_call=None,
+                        tool_calls=[
+                            ChatCompletionMessageToolCall(
+                                id="call_AbCdEfGhIjKlMnOpQrStUvWx",
+                                function=Function(
+                                    arguments='{"param1":"test_value"}',
+                                    name="test_tool",
+                                ),
+                                type="function",
+                            )
+                        ],
+                    ),
+                )
+            ],
+            created=1700000000,
+            model="gpt-4-1106-preview",
+            object="chat.completion",
+            system_fingerprint=None,
+            usage=CompletionUsage(
+                completion_tokens=9, prompt_tokens=8, total_tokens=17
+            ),
+        )
+
+    context = Context()
+
+    with patch(
+        "openai.resources.chat.completions.AsyncCompletions.create",
+        new_callable=AsyncMock,
+        side_effect=completion_result,
+    ) as mock_create:
+        result = await conversation.async_converse(
+            hass,
+            "Please call the test function",
+            None,
+            context,
+            agent_id=mock_config_entry.entry_id,
+        )
+
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert mock_create.mock_calls[1][2]["messages"][3] == {
+        "role": "tool",
+        "tool_call_id": "call_AbCdEfGhIjKlMnOpQrStUvWx",
+        "name": "test_tool",
+        "content": '{"error": "RuntimeError", "error_text": "Test tool exception"}',
+    }
+    mock_tool.assert_awaited_once_with(hass, context, param1="test_value")
 
 
 async def test_error_handling(

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from typing import Literal
 
@@ -16,6 +17,7 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import (
     ConfigEntryNotReady,
@@ -146,11 +148,53 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
         self.hass = hass
         self.entry = entry
         self.history: dict[str, list[dict]] = {}
+        self.tools: list[tuple[dict, callable]] = []
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
         """Return a list of supported languages."""
         return MATCH_ALL
+
+    def register_tool(self, specification: dict, async_callback: callable) -> None:
+        """Register a function that the assistant may execute."""
+        if specification["function"]["name"] in [
+            tool[0]["function"]["name"] for tool in self.tools
+        ]:
+            raise RuntimeError(
+                f"Function {specification['function']['name']} already registered"
+            )
+
+        self.tools.append((specification, async_callback))
+
+    def unregister_tool(self, function_name: str) -> None:
+        """Remove the function from the list of available tools for the assistant."""
+        self.tools = [
+            tool for tool in self.tools if tool[0]["function"]["name"] != function_name
+        ]
+
+    async def async_call_tool(
+        self, context: Context, tool_name: str, tool_args: str
+    ) -> str:
+        """Wrap the function call to parse the arguments and handle exceptions."""
+        available_tools = {tool["function"]["name"]: func for tool, func in self.tools}
+
+        _LOGGER.debug("Function call: %s(%s)", tool_name, tool_args)
+
+        try:
+            function_to_call = available_tools[tool_name]
+            parsed_args = json.loads(tool_args)
+            response = await function_to_call(self.hass, context, **parsed_args)
+            response_str = json.dumps(response)
+
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            response = {"error": type(e).__name__}
+            if str(e):
+                response["error_text"] = str(e)
+            response_str = json.dumps(response)
+
+        _LOGGER.debug("Function response: %s", response_str)
+
+        return response_str
 
     async def async_process(
         self, user_input: conversation.ConversationInput
@@ -168,7 +212,9 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
         else:
             conversation_id = ulid.ulid_now()
             try:
-                prompt = self._async_generate_prompt(raw_prompt)
+                prompt = self._async_generate_prompt(
+                    raw_prompt, user_input.device_id, user_input.context.user_id
+                )
             except TemplateError as err:
                 _LOGGER.error("Error rendering prompt: %s", err)
                 intent_response = intent.IntentResponse(language=user_input.language)
@@ -187,41 +233,88 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
 
         client = self.hass.data[DOMAIN][self.entry.entry_id]
 
-        try:
-            result = await client.chat.completions.create(
-                model=model,
-                messages=messages,
-                max_tokens=max_tokens,
-                top_p=top_p,
-                temperature=temperature,
-                user=conversation_id,
-            )
-        except openai.OpenAIError as err:
-            intent_response = intent.IntentResponse(language=user_input.language)
-            intent_response.async_set_error(
-                intent.IntentResponseErrorCode.UNKNOWN,
-                f"Sorry, I had a problem talking to OpenAI: {err}",
-            )
-            return conversation.ConversationResult(
-                response=intent_response, conversation_id=conversation_id
-            )
+        tool_calls = True
+        while tool_calls:
+            try:
+                result = await client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    tools=[x[0] for x in self.tools],
+                    max_tokens=max_tokens,
+                    top_p=top_p,
+                    temperature=temperature,
+                    user=conversation_id,
+                )
+            except openai.OpenAIError as err:
+                intent_response = intent.IntentResponse(language=user_input.language)
+                intent_response.async_set_error(
+                    intent.IntentResponseErrorCode.UNKNOWN,
+                    f"Sorry, I had a problem talking to OpenAI: {err}",
+                )
+                return conversation.ConversationResult(
+                    response=intent_response, conversation_id=conversation_id
+                )
 
-        _LOGGER.debug("Response %s", result)
-        response = result.choices[0].message.model_dump(include={"role", "content"})
-        messages.append(response)
+            _LOGGER.debug("Response %s", result)
+            response = result.choices[0].message
+            messages.append(response)
+            tool_calls = response.tool_calls
+
+            if tool_calls:
+                for tool_call in tool_calls:  # type: ignore[attr-defined]
+                    function_response = await self.async_call_tool(
+                        user_input.context,
+                        tool_call.function.name,
+                        tool_call.function.arguments,
+                    )
+                    messages.append(
+                        {
+                            "role": "tool",
+                            "tool_call_id": tool_call.id,
+                            "name": tool_call.function.name,
+                            "content": function_response,
+                        }
+                    )
+
         self.history[conversation_id] = messages
 
         intent_response = intent.IntentResponse(language=user_input.language)
-        intent_response.async_set_speech(response["content"])
+        intent_response.async_set_speech(response.content)
         return conversation.ConversationResult(
             response=intent_response, conversation_id=conversation_id
         )
 
-    def _async_generate_prompt(self, raw_prompt: str) -> str:
+    def _async_generate_prompt(
+        self, raw_prompt: str, device_id: str | None, user_id: str | None
+    ) -> str:
         """Generate a prompt for the user."""
         return template.Template(raw_prompt, self.hass).async_render(
             {
                 "ha_name": self.hass.config.location_name,
+                "device_id": device_id,
+                "user_id": user_id,
             },
             parse_result=False,
         )
+
+
+@callback
+async def async_register_tool(
+    hass: HomeAssistant, agent_id: str, specification: dict, async_callback: callable
+) -> None:
+    """Register a function that the assistant may execute."""
+    agent = await conversation._get_agent_manager(hass).async_get_agent(agent_id)
+    if not isinstance(agent, OpenAIAgent):
+        raise RuntimeError("Agent ID must correspond to openai_conversation agent")
+    agent.register_tool(specification, async_callback)
+
+
+@callback
+async def async_unregister_tool(
+    hass: HomeAssistant, agent_id: str, function_name: str
+) -> None:
+    """Remove the function from the list of available tools for the assistant."""
+    agent = await conversation._get_agent_manager(hass).async_get_agent(agent_id)
+    if not isinstance(agent, OpenAIAgent):
+        raise RuntimeError("Agent ID must correspond to openai_conversation agent")
+    agent.unregister_tool(function_name)
