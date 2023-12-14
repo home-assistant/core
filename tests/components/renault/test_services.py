@@ -237,7 +237,7 @@ async def test_service_set_charge_schedule_multi(
     mock_call_data: list[ChargeSchedule] = mock_action.mock_calls[0][1][0]
     assert mock_action.mock_calls[0][1] == (mock_call_data,)
 
-    # Monday updated with a values
+    # Monday updated with new values
     assert mock_call_data[1].monday.startTime == "T12:00Z"
     assert mock_call_data[1].monday.duration == 30
     # Wednesday has original values cleared
