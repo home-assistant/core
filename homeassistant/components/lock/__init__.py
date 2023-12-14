@@ -24,6 +24,7 @@ from homeassistant.const import (
     STATE_UNLOCKING,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -152,8 +153,17 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if not code:
             code = self._lock_option_default_code
         if self.code_format_cmp and not self.code_format_cmp.match(code):
-            raise ValueError(
-                f"Code '{code}' for locking {self.entity_id} doesn't match pattern {self.code_format}"
+            if TYPE_CHECKING:
+                assert self.code_format
+            raise ServiceValidationError(
+                f"Code '{code}' for locking {self.entity_id} doesn't match pattern {self.code_format}",
+                translation_domain=DOMAIN,
+                translation_key="add_default_code",
+                translation_placeholders={
+                    "code": code,
+                    "entity_id": self.entity_id,
+                    "code_format": self.code_format,
+                },
             )
         if code:
             data[ATTR_CODE] = code
