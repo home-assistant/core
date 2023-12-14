@@ -232,7 +232,10 @@ class CloudLoginView(HomeAssistantView):
         new_cloud_pipeline_id: str | None = None
         if (cloud_assist_pipeline(hass)) is None:
             if cloud_pipeline := await assist_pipeline.async_create_default_pipeline(
-                hass, DOMAIN, DOMAIN
+                hass,
+                stt_engine_id=DOMAIN,
+                tts_engine_id=DOMAIN,
+                pipeline_name="Home Assistant Cloud",
             ):
                 new_cloud_pipeline_id = cloud_pipeline.id
         return self.json({"success": True, "cloud_pipeline": new_cloud_pipeline_id})
