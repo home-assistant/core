@@ -11,6 +11,7 @@ from homeassistant.components.remote import (
     ATTR_HOLD_SECS,
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
+    DEFAULT_HOLD_SECS,
     RemoteEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -65,7 +66,7 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
         """Send a command to one device."""
         num_repeats = kwargs[ATTR_NUM_REPEATS]
         delay = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
-        hold_secs = kwargs.get(ATTR_HOLD_SECS, DEFAULT_DELAY_SECS)
+        hold_secs = kwargs.get(ATTR_HOLD_SECS, DEFAULT_HOLD_SECS)
 
         if not self.is_on:
             _LOGGER.error("Unable to send commands, not connected to %s", self.name)
