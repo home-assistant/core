@@ -934,6 +934,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
     ) -> data_entry_flow.FlowResult:
         """Finish a config flow and add an entry."""
         flow = cast(ConfigFlow, flow)
+        result = cast(ConfigEntryFlowResult, result)
 
         # Mark the step as done.
         # We do this to avoid a circular dependency where async_finish_flow sets up a
@@ -1516,7 +1517,14 @@ def _async_abort_entries_match(
             raise data_entry_flow.AbortFlow("already_configured")
 
 
-class ConfigFlow(data_entry_flow.FlowHandler):
+class ConfigEntryFlowResult(FlowResult):
+    """Types result dict for config entry."""
+
+    version: int
+    minor_version: int
+
+
+class ConfigFlow(data_entry_flow.FlowHandler[ConfigEntryFlowResult]):
     """Base class for config flows with some helpers."""
 
     def __init_subclass__(cls, *, domain: str | None = None, **kwargs: Any) -> None:
@@ -1837,7 +1845,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         description: str | None = None,
         description_placeholders: Mapping[str, str] | None = None,
         options: Mapping[str, Any] | None = None,
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigEntryFlowResult:
         """Finish config flow and create a config entry."""
         result = super().async_create_entry(
             title=title,
@@ -1848,7 +1856,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
         result["options"] = options or {}
 
-        return result
+        return cast(ConfigEntryFlowResult, result)
 
 
 class OptionsFlowManager(data_entry_flow.FlowManager):

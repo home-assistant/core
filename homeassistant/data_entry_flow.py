@@ -94,7 +94,6 @@ class FlowResult(TypedDict, total=False):
     handler: Required[str]
     last_step: bool | None
     menu_options: list[str] | dict[str, str]
-    minor_version: int
     options: Mapping[str, Any]
     preview: str | None
     progress_action: str
@@ -105,7 +104,6 @@ class FlowResult(TypedDict, total=False):
     title: str
     type: FlowResultType
     url: str
-    version: int
 
 
 @callback
@@ -528,7 +526,7 @@ class FlowHandler(Generic[_FlowResultT]):
         description_placeholders: Mapping[str, str | None] | None = None,
         last_step: bool | None = None,
         preview: str | None = None,
-    ) -> _FlowResultT:
+    ) -> FlowResult:
         """Return the definition of a form to gather user input."""
         return FlowResult(
             type=FlowResultType.FORM,
@@ -550,11 +548,9 @@ class FlowHandler(Generic[_FlowResultT]):
         data: Mapping[str, Any],
         description: str | None = None,
         description_placeholders: Mapping[str, str] | None = None,
-    ) -> _FlowResultT:
+    ) -> FlowResult:
         """Finish flow."""
         flow_result = FlowResult(
-            version=self.VERSION,
-            minor_version=self.MINOR_VERSION,
             type=FlowResultType.CREATE_ENTRY,
             flow_id=self.flow_id,
             handler=self.handler,
