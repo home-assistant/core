@@ -62,6 +62,37 @@ def test_get_distance() -> None:
     assert meters / 1000 - DISTANCE_KM < 0.01
 
 
+def test_is_inside_polygon_1() -> None:
+    """Test if a coordinate is inside a polygon."""
+    # Coordinates of a polygon.
+    polygon = [
+        (48.864716, 2.349014),
+        (48.874716, 2.349014),
+        (48.874716, 2.359014),
+        (48.864716, 2.359014),
+    ]
+
+    # Coordinates inside the polygon.
+    assert location_util.is_inside(polygon, 48.869716, 2.354014)
+
+    # Coordinates outside the polygon.
+    assert not location_util.is_inside(polygon, 48.859716, 2.354014)
+
+
+# test is_inside_polygon_2, where lat and lon are None
+def test_is_inside_polygon_2() -> None:
+    """Test if a coordinate is inside a polygon when lat and lon are None."""
+    # Coordinates of a polygon.
+    polygon = [
+        (48.864716, 2.349014),
+        (48.874716, 2.349014),
+        (48.874716, 2.359014),
+        (48.864716, 2.359014),
+    ]
+
+    assert not location_util.is_inside(polygon, None, None)
+
+
 def test_get_kilometers() -> None:
     """Test getting the distance between given coordinates in km."""
     kilometers = location_util.vincenty(COORDINATES_PARIS, COORDINATES_NEW_YORK)

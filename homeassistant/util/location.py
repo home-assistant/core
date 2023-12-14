@@ -57,6 +57,23 @@ async def async_detect_location_info(
     return LocationInfo(**data)
 
 
+def is_inside(
+    vertices: list[tuple[float, float]], lat: float | None, lon: float | None
+) -> bool:
+    """Check if a point (lat, lon) is inside a polygon defined by its vertices."""
+
+    if lat is None or lon is None:
+        return False
+
+    edges = [(vertices[i - 1], vertices[i]) for i in range(len(vertices))]
+    cnt = 0
+    for edge in edges:
+        (x1, y1), (x2, y2) = edge
+        if (lon < y1) != (lon < y2) and lat < x1 + ((lon - y1) / (y2 - y1)) * (x2 - x1):
+            cnt += 1
+    return cnt % 2 == 1
+
+
 def distance(
     lat1: float | None, lon1: float | None, lat2: float, lon2: float
 ) -> float | None:

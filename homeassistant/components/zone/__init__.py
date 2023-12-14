@@ -6,7 +6,6 @@ import logging
 from operator import attrgetter
 from typing import Any, Self, cast
 
-from shapely.geometry import Point, Polygon
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -39,7 +38,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.loader import bind_hass
-from homeassistant.util.location import distance
+from homeassistant.util.location import distance, is_inside
 
 from .const import (
     ATTR_PASSIVE,
@@ -143,9 +142,7 @@ def async_active_zone(
             continue
 
         if ATTR_POINTS in zone.attributes:
-            polygon = Polygon(zone.attributes[ATTR_POINTS])
-            point = Point(latitude, longitude)
-            if polygon.contains(point):
+            if is_inside(zone.attributes[ATTR_POINTS], latitude, longitude):
                 closest = zone
                 continue
 
@@ -208,9 +205,7 @@ def in_zone(zone: State, latitude: float, longitude: float, radius: float = 0) -
         return False
 
     if ATTR_POINTS in zone.attributes:
-        polygon = Polygon(zone.attributes[ATTR_POINTS])
-        point = Point(latitude, longitude)
-        return polygon.contains(point)  # type: ignore[no-any-return]
+        return is_inside(zone.attributes[ATTR_POINTS], latitude, longitude)
 
     zone_dist = distance(
         latitude,

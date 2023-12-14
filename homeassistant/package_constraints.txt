@@ -51,7 +51,6 @@ pyudev==0.23.2
 PyYAML==6.0.1
 requests==2.31.0
 scapy==2.5.0
-shapely==2.0.1
 SQLAlchemy==2.0.23
 typing-extensions>=4.9.0,<5.0
 ulid-transform==0.9.0

@@ -1832,9 +1832,6 @@ sentry-sdk==1.37.1
 # homeassistant.components.sfr_box
 sfrbox-api==0.0.8
 
-# homeassistant.components.zone
-shapely==2.0.1
-
 # homeassistant.components.sharkiq
 sharkiq==1.0.2
 
