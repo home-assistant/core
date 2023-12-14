@@ -1051,7 +1051,7 @@ huawei-lte-api==1.7.3
 hyperion-py==0.7.5
 
 # homeassistant.components.iammeter
-iammeter==0.1.7
+iammeter==0.2.1
 
 # homeassistant.components.iaqualink
 iaqualink==0.5.0
@@ -2348,7 +2348,7 @@ raspyrfm-client==1.2.8
 regenmaschine==2023.06.0
 
 # homeassistant.components.renault
-renault-api==0.2.0
+renault-api==0.2.1
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.1
@@ -2832,7 +2832,7 @@ zamg==0.3.3
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.128.4
+zeroconf==0.129.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
