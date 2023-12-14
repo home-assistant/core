@@ -69,12 +69,13 @@ async def test_setup_no_zones_still_adds_home_zone(hass: HomeAssistant) -> None:
     assert not state.attributes.get("passive", False)
 
 
-async def test_setup(hass: HomeAssistant) -> None:
+async def test_setup_radius(hass: HomeAssistant) -> None:
     """Test a successful setup."""
     info = {
         "name": "Test Zone",
         "latitude": 32.880837,
         "longitude": -117.237561,
+        "zone_type": "circle",
         "radius": 250,
         "passive": True,
     }
@@ -87,6 +88,34 @@ async def test_setup(hass: HomeAssistant) -> None:
     assert info["longitude"] == state.attributes["longitude"]
     assert info["radius"] == state.attributes["radius"]
     assert info["passive"] == state.attributes["passive"]
+    assert info["zone_type"] == state.attributes["zone_type"]
+
+
+async def test_setup_points(hass: HomeAssistant) -> None:
+    """Test a successful setup."""
+    info = {
+        "name": "Test Zone",
+        "latitude": 32.880837,
+        "longitude": -117.237561,
+        "zone_type": "polygon",
+        "points": [
+            [-117.239562, 32.881520],
+            [-117.238976, 32.881031],
+            [-117.239218, 32.880140],
+            [-117.239727, 32.880395],
+        ],
+        "passive": True,
+    }
+    assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": info})
+
+    assert len(hass.states.async_entity_ids("zone")) == 2
+    state = hass.states.get("zone.test_zone")
+    assert info["name"] == state.name
+    assert info["latitude"] == state.attributes["latitude"]
+    assert info["longitude"] == state.attributes["longitude"]
+    assert info["passive"] == state.attributes["passive"]
+    assert info["zone_type"] == state.attributes["zone_type"]
+    assert info["points"] == state.attributes["points"]
 
 
 async def test_setup_zone_skips_home_zone(hass: HomeAssistant) -> None:
@@ -205,7 +234,37 @@ async def test_active_zone_prefers_smaller_zone_if_same_distance_2(
     assert active.entity_id == "zone.smallest_zone"
 
 
-async def test_in_zone_works_for_passive_zones(hass: HomeAssistant) -> None:
+async def test_active_zone_prefers_smaller_zone_if_same_distance_3(
+    hass: HomeAssistant,
+) -> None:
+    """Test zone size preferences."""
+    latitude = 32.880600
+    longitude = -117.237561
+    assert await setup.async_setup_component(
+        hass,
+        zone.DOMAIN,
+        {
+            "zone": [
+                {
+                    "name": "Smallest Zone",
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "points": [
+                        [32.882630, -117.240536],
+                        [32.882747, -117.236276],
+                        [32.879077, -117.235812],
+                        [32.880573, -117.241177],
+                    ],
+                }
+            ]
+        },
+    )
+
+    active = zone.async_active_zone(hass, latitude, longitude)
+    assert active.entity_id == "zone.smallest_zone"
+
+
+async def test_in_zone_works_for_passive_zones_circle(hass: HomeAssistant) -> None:
     """Test working in passive zones."""
     latitude = 32.880600
     longitude = -117.237561
@@ -226,6 +285,64 @@ async def test_in_zone_works_for_passive_zones(hass: HomeAssistant) -> None:
     )
 
     assert zone.in_zone(hass.states.get("zone.passive_zone"), latitude, longitude)
+
+
+async def test_in_zone_works_for_passive_zones_polygon(hass: HomeAssistant) -> None:
+    """Test working in passive zones."""
+    latitude = 32.880600
+    longitude = -117.237561
+    assert await setup.async_setup_component(
+        hass,
+        zone.DOMAIN,
+        {
+            "zone": [
+                {
+                    "name": "Passive Zone",
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "zone_type": "polygon",
+                    "points": [
+                        [32.882630, -117.240536],
+                        [32.882747, -117.236276],
+                        [32.879077, -117.235812],
+                        [32.880573, -117.241177],
+                    ],
+                    "passive": True,
+                }
+            ]
+        },
+    )
+
+    assert zone.in_zone(hass.states.get("zone.passive_zone"), latitude, longitude)
+
+
+async def test_in_zone_works_for_passive_zones_polygon_2(hass: HomeAssistant) -> None:
+    """Test working in passive zones."""
+    latitude = 31.880600
+    longitude = -117.237561
+    assert await setup.async_setup_component(
+        hass,
+        zone.DOMAIN,
+        {
+            "zone": [
+                {
+                    "name": "Passive Zone",
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "zone_type": "polygon",
+                    "points": [
+                        [32.882630, -117.240536],
+                        [32.882747, -117.236276],
+                        [32.879077, -117.235812],
+                        [32.880573, -117.241177],
+                    ],
+                    "passive": True,
+                }
+            ]
+        },
+    )
+
+    assert not zone.in_zone(hass.states.get("zone.passive_zone"), latitude, longitude)
 
 
 async def test_core_config_update(hass: HomeAssistant) -> None:
@@ -443,7 +560,7 @@ async def test_update(
     assert state.attributes["passive"] is True
 
 
-async def test_ws_create(
+async def test_ws_create_circle(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
 ) -> None:
     """Test create WS."""
@@ -479,7 +596,47 @@ async def test_ws_create(
     assert state.attributes["passive"] is True
 
 
-async def test_import_config_entry(hass: HomeAssistant) -> None:
+async def test_ws_create_zone(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+) -> None:
+    """Test create WS."""
+    assert await storage_setup(items=[])
+
+    input_id = "new_input"
+    input_entity_id = f"{DOMAIN}.{input_id}"
+    ent_reg = er.async_get(hass)
+
+    state = hass.states.get(input_entity_id)
+    assert state is None
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": f"{DOMAIN}/create",
+            "name": "New Input",
+            "latitude": 3,
+            "longitude": 4,
+            "passive": True,
+            "zone_type": "polygon",
+            "points": [[1, 2], [3, 4], [5, 6], [7, 8]],
+        }
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    state = hass.states.get(input_entity_id)
+    assert state.state == "0"
+    assert state.attributes["latitude"] == 3
+    assert state.attributes["longitude"] == 4
+    assert state.attributes["zone_type"] == "polygon"
+    assert state.attributes["points"] == [[1, 2], [3, 4], [5, 6], [7, 8]]
+    assert state.attributes["passive"] is True
+
+
+async def test_import_config_entry_circle(hass: HomeAssistant) -> None:
     """Test we import config entry and then delete it."""
     entry = MockConfigEntry(
         domain="zone",
@@ -502,6 +659,35 @@ async def test_import_config_entry(hass: HomeAssistant) -> None:
     assert state.attributes[zone.ATTR_LATITUDE] == 1
     assert state.attributes[zone.ATTR_LONGITUDE] == 2
     assert state.attributes[zone.ATTR_RADIUS] == 3
+    assert state.attributes[zone.ATTR_PASSIVE] is False
+    assert state.attributes[ATTR_ICON] == "mdi:from-config-entry"
+
+
+async def test_import_config_entry_polygon(hass: HomeAssistant) -> None:
+    """Test we import config entry and then delete it."""
+    entry = MockConfigEntry(
+        domain="zone",
+        data={
+            "name": "from config entry",
+            "latitude": 1,
+            "longitude": 2,
+            "zone_type": "polygon",
+            "points": [[1, 2], [3, 4], [5, 6], [7, 8]],
+            "passive": False,
+            "icon": "mdi:from-config-entry",
+        },
+    )
+    entry.add_to_hass(hass)
+    assert await setup.async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.async_entries()) == 0
+
+    state = hass.states.get("zone.from_config_entry")
+    assert state is not None
+    assert state.attributes[zone.ATTR_LATITUDE] == 1
+    assert state.attributes[zone.ATTR_LONGITUDE] == 2
+    assert state.attributes[zone.ATTR_TYPE] == "polygon"
+    assert state.attributes[zone.ATTR_POINTS] == [[1, 2], [3, 4], [5, 6], [7, 8]]
     assert state.attributes[zone.ATTR_PASSIVE] is False
     assert state.attributes[ATTR_ICON] == "mdi:from-config-entry"
 

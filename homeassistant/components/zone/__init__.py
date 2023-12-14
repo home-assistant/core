@@ -6,6 +6,7 @@ import logging
 from operator import attrgetter
 from typing import Any, Self, cast
 
+from shapely.geometry import Point, Polygon
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -40,7 +41,16 @@ from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.loader import bind_hass
 from homeassistant.util.location import distance
 
-from .const import ATTR_PASSIVE, ATTR_RADIUS, CONF_PASSIVE, DOMAIN, HOME_ZONE
+from .const import (
+    ATTR_PASSIVE,
+    ATTR_POINTS,
+    ATTR_RADIUS,
+    ATTR_TYPE,
+    CONF_PASSIVE,
+    DEFAULT_TYPE,
+    DOMAIN,
+    HOME_ZONE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,11 +63,17 @@ ENTITY_ID_HOME = ENTITY_ID_FORMAT.format(HOME_ZONE)
 ICON_HOME = "mdi:home"
 ICON_IMPORT = "mdi:import"
 
+ALLOWED_TYPES = [DEFAULT_TYPE, "polygon"]
+
 CREATE_FIELDS = {
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_LATITUDE): cv.latitude,
     vol.Required(CONF_LONGITUDE): cv.longitude,
+    vol.Optional(ATTR_TYPE, default=DEFAULT_TYPE): vol.In(ALLOWED_TYPES),
     vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.Coerce(float),
+    vol.Optional(ATTR_POINTS): vol.All(
+        cv.ensure_list, [vol.All(cv.ensure_list, [vol.Coerce(float)])]
+    ),
     vol.Optional(CONF_PASSIVE, default=DEFAULT_PASSIVE): cv.boolean,
     vol.Optional(CONF_ICON): cv.icon,
 }
@@ -67,7 +83,11 @@ UPDATE_FIELDS = {
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_LATITUDE): cv.latitude,
     vol.Optional(CONF_LONGITUDE): cv.longitude,
+    vol.Optional(ATTR_TYPE, default=DEFAULT_TYPE): vol.In(ALLOWED_TYPES),
     vol.Optional(CONF_RADIUS): vol.Coerce(float),
+    vol.Optional(ATTR_POINTS): vol.All(
+        cv.ensure_list, [vol.All(cv.ensure_list, [vol.Coerce(float)])]
+    ),
     vol.Optional(CONF_PASSIVE): cv.boolean,
     vol.Optional(CONF_ICON): cv.icon,
 }
@@ -122,6 +142,13 @@ def async_active_zone(
         ):
             continue
 
+        if ATTR_POINTS in zone.attributes:
+            polygon = Polygon(zone.attributes[ATTR_POINTS])
+            point = Point(latitude, longitude)
+            if polygon.contains(point):
+                closest = zone
+                continue
+
         zone_dist = distance(
             latitude,
             longitude,
@@ -133,7 +160,7 @@ def async_active_zone(
             continue
 
         within_zone = zone_dist - radius < zone.attributes[ATTR_RADIUS]
-        closer_zone = closest is None or zone_dist < min_dist  # type: ignore[unreachable]
+        closer_zone = closest is None or zone_dist < min_dist  # type: ignore[operator]
         smaller_zone = (
             zone_dist == min_dist
             and zone.attributes[ATTR_RADIUS]
@@ -179,6 +206,11 @@ def in_zone(zone: State, latitude: float, longitude: float, radius: float = 0) -
     """
     if zone.state == STATE_UNAVAILABLE:
         return False
+
+    if ATTR_POINTS in zone.attributes:
+        polygon = Polygon(zone.attributes[ATTR_POINTS])
+        point = Point(latitude, longitude)
+        return polygon.contains(point)  # type: ignore[no-any-return]
 
     zone_dist = distance(
         latitude,
@@ -420,6 +452,13 @@ class Zone(collection.CollectionEntity):
             ATTR_PERSONS: sorted(self._persons_in_zone),
             ATTR_EDITABLE: self.editable,
         }
+
+        if ATTR_POINTS in self._config:
+            self._attr_extra_state_attributes[ATTR_POINTS] = self._config[ATTR_POINTS]
+        if ATTR_TYPE in self._config:
+            self._attr_extra_state_attributes[ATTR_TYPE] = self._config[ATTR_TYPE]
+        else:
+            self._attr_extra_state_attributes[ATTR_TYPE] = DEFAULT_TYPE
 
     @callback
     def _state_is_in_zone(self, state: State | None) -> bool:
