@@ -2,6 +2,7 @@
 
 import json
 import logging
+from typing import Any
 
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.core import HomeAssistant, callback
@@ -50,7 +51,7 @@ TOOLS = [
 
 
 @callback
-def call_function(hass: HomeAssistant, function_name: str, function_args: str) -> dict:
+def call_function(hass: HomeAssistant, function_name: str, function_args: str) -> str:
     """Wrap the function call to parse the arguments and handle exceptions."""
 
     available_functions = {"entity_registry_inquiry": entity_registry_inquiry}
@@ -59,13 +60,13 @@ def call_function(hass: HomeAssistant, function_name: str, function_args: str) -
 
     try:
         function_to_call = available_functions[function_name]
-        function_args = json.loads(function_args)
+        function_args : dict = json.loads(function_args)
         response = function_to_call(hass, **function_args)
         response = json.dumps(response)
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         response = {"error": type(e).__name__}
-        if len(str(e)):
+        if str(e):
             response["error_text"] = str(e)
         response = json.dumps(response)
 
@@ -107,7 +108,7 @@ def entity_registry_inquiry(
         ):
             continue
 
-        entry = {
+        entry : dict["str", Any] = {
             "name": entity_state.name,
             "entity_id": entity_state.entity_id,
             "state": entity_state.state_with_unit,

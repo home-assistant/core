@@ -187,7 +187,7 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
 
         client = self.hass.data[DOMAIN][self.entry.entry_id]
 
-        tool_calls = True
+        tool_calls = [True]
         while tool_calls:
             try:
                 result = await client.chat.completions.create(
