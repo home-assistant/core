@@ -37,9 +37,8 @@ class PrusaLinkJobPreviewEntity(PrusaLinkEntity, Camera):
         """Get if camera is available."""
         return (
             super().available
-            and self.coordinator.data.get("file") is not None
-            and self.coordinator.data.get("file").get("refs").get("thumbnail")
-            is not None
+            and (file := self.coordinator.data.get("file"))
+            and file.get("refs").get("thumbnail")
         )
 
     async def async_camera_image(

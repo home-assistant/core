@@ -88,7 +88,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
 
 
-class PrusaLinkUpdateCoordinator(DataUpdateCoordinator, Generic[T], ABC):
+class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):
     """Update coordinator for the printer."""
 
     config_entry: ConfigEntry
