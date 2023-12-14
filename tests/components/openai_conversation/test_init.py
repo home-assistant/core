@@ -1,4 +1,5 @@
 """Tests for the OpenAI integration."""
+import datetime as dt
 from unittest.mock import AsyncMock, patch
 
 from httpx import Response
@@ -30,6 +31,7 @@ from homeassistant.helpers import (
     intent,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -240,6 +242,7 @@ async def test_function_call(
             State(
                 entity_id="light.bed_light",
                 state="off",
+                last_changed=dt_util.now() - dt.timedelta(hours=2),
                 attributes={
                     "friendly_name": "Bed Light",
                     "min_color_temp_kelvin": 2000,
@@ -249,11 +252,13 @@ async def test_function_call(
             State(
                 entity_id="light.office_rgbw_lights",
                 state="on",
+                last_changed=dt_util.now() - dt.timedelta(hours=1),
                 attributes={"friendly_name": "Office RGBW Lights", "brightness": 180},
             ),
             State(
                 entity_id="light.living_room_rgbww_lights",
                 state="on",
+                last_changed=dt_util.now() - dt.timedelta(minutes=30),
                 attributes={"friendly_name": "Living Room RGBWW Lights"},
             ),
         ],
@@ -272,8 +277,8 @@ async def test_function_call(
         "tool_call_id": "call_AbCdEfGhIjKlMnOpQrStUvWx",
         "name": "entity_registry_inquiry",
         "content": '{"entities": [{"name": "Bed Light", "entity_id": "light.bed_light", '
-        '"state": "off", "area": "Bedroom", "aliases": ["Bettlicht"], "attributes": '
-        '{"min_color_temp_kelvin": 2000, "max_color_temp_kelvin": 6535}}]}',
+        '"state": "off", "last_changed": "2 hours ago", "area": "Bedroom", "aliases": '
+        '["Bettlicht"], "attributes": {"min_color_temp_kelvin": 2000, "max_color_temp_kelvin": 6535}}]}',
     }
 
 

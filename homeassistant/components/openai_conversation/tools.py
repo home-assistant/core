@@ -6,6 +6,7 @@ import logging
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, intent, template
+from homeassistant.util import dt as dt_util
 
 from .const import EXPORTED_ATTRIBUTES
 
@@ -110,6 +111,7 @@ def entity_registry_inquiry(
             "name": entity_state.name,
             "entity_id": entity_state.entity_id,
             "state": entity_state.state_with_unit,
+            "last_changed": dt_util.get_age(entity_state.last_changed) + " ago",
         }
 
         if registry_entry := entity_registry.async_get(entity_state.entity_id):
