@@ -19,7 +19,6 @@ from aioairzone.const import (
     AZD_MASTER,
     AZD_MODE,
     AZD_MODES,
-    AZD_NAME,
     AZD_ON,
     AZD_SPEED,
     AZD_SPEEDS,
@@ -32,6 +31,7 @@ from aioairzone.const import (
 )
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
@@ -114,6 +114,7 @@ async def async_setup_entry(
 class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
     """Define an Airzone sensor."""
 
+    _attr_name = None
     _speeds: dict[int, str] = {}
     _speeds_reverse: dict[str, int] = {}
 
@@ -127,7 +128,6 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         """Initialize Airzone climate entity."""
         super().__init__(coordinator, entry, system_zone_id, zone_data)
 
-        self._attr_name = f"{zone_data[AZD_NAME]}"
         self._attr_unique_id = f"{self._attr_unique_id}_{system_zone_id}"
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         self._attr_target_temperature_step = API_TEMPERATURE_STEP
@@ -209,7 +209,9 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         await self._async_update_hvac_params(params)
 
         if slave_raise:
-            raise HomeAssistantError(f"Mode can't be changed on slave zone {self.name}")
+            raise HomeAssistantError(
+                f"Mode can't be changed on slave zone {self.entity_id}"
+            )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -220,6 +222,9 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
             params[API_COOL_SET_POINT] = kwargs[ATTR_TARGET_TEMP_HIGH]
             params[API_HEAT_SET_POINT] = kwargs[ATTR_TARGET_TEMP_LOW]
         await self._async_update_hvac_params(params)
+
+        if ATTR_HVAC_MODE in kwargs:
+            await self.async_set_hvac_mode(kwargs[ATTR_HVAC_MODE])
 
     @callback
     def _handle_coordinator_update(self) -> None:

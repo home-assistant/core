@@ -146,17 +146,13 @@ class VenstarSensor(VenstarEntity, SensorEntity):
         super().__init__(coordinator, config)
         self.entity_description = entity_description
         self.sensor_name = sensor_name
+        self._attr_name = entity_description.name_fn(sensor_name)
         self._config = config
 
     @property
     def unique_id(self):
         """Return the unique id."""
         return f"{self._config.entry_id}_{self.sensor_name.replace(' ', '_')}_{self.entity_description.key}"
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self.entity_description.name_fn(self.sensor_name)
 
     @property
     def native_value(self) -> int:

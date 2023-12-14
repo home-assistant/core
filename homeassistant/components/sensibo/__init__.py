@@ -3,9 +3,12 @@ from __future__ import annotations
 
 from pysensibo.exceptions import AuthenticationError
 
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN, LOGGER, PLATFORMS
 from .coordinator import SensiboDataUpdateCoordinator
@@ -51,5 +54,19 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             unique_id=new_unique_id,
         )
+
+    return True
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: ConfigEntry, device: DeviceEntry
+) -> bool:
+    """Remove Sensibo config entry from a device."""
+    entity_registry = er.async_get(hass)
+    for identifier in device.identifiers:
+        if identifier[0] == DOMAIN and entity_registry.async_get_entity_id(
+            CLIMATE_DOMAIN, DOMAIN, identifier[1]
+        ):
+            return False
 
     return True

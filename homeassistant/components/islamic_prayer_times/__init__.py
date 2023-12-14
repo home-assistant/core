@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     coordinator = IslamicPrayerDataUpdateCoordinator(hass)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, coordinator)
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
     config_entry.async_on_unload(
         config_entry.add_update_listener(async_options_updated)
     )
@@ -46,15 +46,19 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     if unload_ok := await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     ):
-        coordinator: IslamicPrayerDataUpdateCoordinator = hass.data.pop(DOMAIN)
+        coordinator: IslamicPrayerDataUpdateCoordinator = hass.data[DOMAIN].pop(
+            config_entry.entry_id
+        )
         if coordinator.event_unsub:
             coordinator.event_unsub()
+        if not hass.data[DOMAIN]:
+            del hass.data[DOMAIN]
     return unload_ok
 
 
 async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Triggered by config entry options updates."""
-    coordinator: IslamicPrayerDataUpdateCoordinator = hass.data[DOMAIN]
+    coordinator: IslamicPrayerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     if coordinator.event_unsub:
         coordinator.event_unsub()
     await coordinator.async_request_refresh()

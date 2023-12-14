@@ -94,6 +94,7 @@ class FlowResult(TypedDict, total=False):
     handler: Required[str]
     last_step: bool | None
     menu_options: list[str] | dict[str, str]
+    minor_version: int
     options: Mapping[str, Any]
     preview: str | None
     progress_action: str
@@ -382,14 +383,9 @@ class FlowManager(abc.ABC):
         self, flow: FlowHandler, step_id: str, user_input: dict | BaseServiceInfo | None
     ) -> FlowResult:
         """Handle a step of a flow."""
+        self._raise_if_step_does_not_exist(flow, step_id)
+
         method = f"async_step_{step_id}"
-
-        if not hasattr(flow, method):
-            self._async_remove_flow_progress(flow.flow_id)
-            raise UnknownStep(
-                f"Handler {flow.__class__.__name__} doesn't support step {step_id}"
-            )
-
         try:
             result: FlowResult = await getattr(flow, method)(user_input)
         except AbortFlow as err:
@@ -419,6 +415,7 @@ class FlowManager(abc.ABC):
             FlowResultType.SHOW_PROGRESS_DONE,
             FlowResultType.MENU,
         ):
+            self._raise_if_step_does_not_exist(flow, result["step_id"])
             flow.cur_step = result
             return result
 
@@ -434,6 +431,16 @@ class FlowManager(abc.ABC):
         self._async_remove_flow_progress(flow.flow_id)
 
         return result
+
+    def _raise_if_step_does_not_exist(self, flow: FlowHandler, step_id: str) -> None:
+        """Raise if the step does not exist."""
+        method = f"async_step_{step_id}"
+
+        if not hasattr(flow, method):
+            self._async_remove_flow_progress(flow.flow_id)
+            raise UnknownStep(
+                f"Handler {self.__class__.__name__} doesn't support step {step_id}"
+            )
 
     async def _async_setup_preview(self, flow: FlowHandler) -> None:
         """Set up preview for a flow handler."""
@@ -464,6 +471,7 @@ class FlowHandler:
 
     # Set by developer
     VERSION = 1
+    MINOR_VERSION = 1
 
     @property
     def source(self) -> str | None:
@@ -543,6 +551,7 @@ class FlowHandler:
         """Finish flow."""
         flow_result = FlowResult(
             version=self.VERSION,
+            minor_version=self.MINOR_VERSION,
             type=FlowResultType.CREATE_ENTRY,
             flow_id=self.flow_id,
             handler=self.handler,

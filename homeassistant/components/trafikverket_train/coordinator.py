@@ -8,7 +8,6 @@ import logging
 from pytrafikverket import TrafikverketTrain
 from pytrafikverket.exceptions import (
     InvalidAuthentication,
-    MultipleTrainAnnouncementFound,
     NoTrainAnnouncementFound,
     UnknownError,
 )
@@ -112,7 +111,6 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
             raise ConfigEntryAuthFailed from error
         except (
             NoTrainAnnouncementFound,
-            MultipleTrainAnnouncementFound,
             UnknownError,
         ) as error:
             raise UpdateFailed(

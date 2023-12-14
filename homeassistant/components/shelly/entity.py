@@ -618,6 +618,13 @@ class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity):
                 super()._update_callback()
                 return
 
+    async def async_update(self) -> None:
+        """Update the entity."""
+        LOGGER.info(
+            "Entity %s comes from a sleeping device, update is not possible",
+            self.entity_id,
+        )
+
 
 class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
     """Helper class to represent a sleeping rpc attribute."""
@@ -654,3 +661,10 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
             )
         elif entry is not None:
             self._attr_name = cast(str, entry.original_name)
+
+    async def async_update(self) -> None:
+        """Update the entity."""
+        LOGGER.info(
+            "Entity %s comes from a sleeping device, update is not possible",
+            self.entity_id,
+        )

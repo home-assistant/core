@@ -142,12 +142,12 @@ async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
 
 
 async def test_unique_id(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test unique id."""
     await setup_integration(hass, aioclient_mock)
-
-    entity_registry = er.async_get(hass)
 
     main = entity_registry.async_get(MAIN_ENTITY_ID)
     assert main.original_device_class == MediaPlayerDeviceClass.RECEIVER
