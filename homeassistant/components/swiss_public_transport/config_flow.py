@@ -38,6 +38,13 @@ class SwissPublicTransportConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Async user step to set up the connection."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            self._async_abort_entries_match(
+                {
+                    CONF_START: user_input[CONF_START],
+                    CONF_DESTINATION: user_input[CONF_DESTINATION],
+                }
+            )
+
             session = async_get_clientsession(self.hass)
             opendata = OpendataTransport(
                 user_input[CONF_START], user_input[CONF_DESTINATION], session

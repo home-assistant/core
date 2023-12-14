@@ -34,7 +34,6 @@ from .const import (
     CONF_START,
     DEFAULT_NAME,
     DOMAIN,
-    DOMAIN_HUMAN_READABLE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -95,7 +94,7 @@ async def async_setup_platform(
             translation_key="deprecated_yaml",
             translation_placeholders={
                 "domain": DOMAIN,
-                "integration_title": DOMAIN_HUMAN_READABLE,
+                "integration_title": "Swiss public transport",
             },
         )
     else:

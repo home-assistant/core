@@ -21,6 +21,11 @@ from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
+MOCK_DATA_STEP = {
+    CONF_START: "test_start",
+    CONF_DESTINATION: "test_destination",
+}
+
 
 async def test_flow_user_init_data_success(hass: HomeAssistant) -> None:
     """Test success response."""
@@ -43,19 +48,13 @@ async def test_flow_user_init_data_success(hass: HomeAssistant) -> None:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={
-                CONF_START: "test_start",
-                CONF_DESTINATION: "test_destination",
-            },
+            user_input=MOCK_DATA_STEP,
         )
 
         assert result["type"] == "create_entry"
         assert result["result"].title == "test_start test_destination"
 
-        assert result["data"] == {
-            CONF_START: "test_start",
-            CONF_DESTINATION: "test_destination",
-        }
+        assert result["data"] == MOCK_DATA_STEP
 
 
 @pytest.mark.parametrize(
@@ -80,10 +79,7 @@ async def test_flow_user_init_data_cannot_connect_error(
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={
-                CONF_START: "test_start",
-                CONF_DESTINATION: "test_destination",
-            },
+            user_input=MOCK_DATA_STEP,
         )
 
         assert result["type"] == "form"
@@ -112,10 +108,7 @@ async def test_flow_user_init_data_unknown_error_and_recover(
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={
-                CONF_START: "test_start",
-                CONF_DESTINATION: "test_destination",
-            },
+            user_input=MOCK_DATA_STEP,
         )
 
         assert result["type"] == "form"
@@ -129,22 +122,38 @@ async def test_flow_user_init_data_unknown_error_and_recover(
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={
-                CONF_START: "test_start",
-                CONF_DESTINATION: "test_destination",
-            },
+            user_input=MOCK_DATA_STEP,
         )
 
         assert result["type"] == "create_entry"
         assert result["result"].title == "test_start test_destination"
 
-        assert result["data"] == {
-            CONF_START: "test_start",
-            CONF_DESTINATION: "test_destination",
-        }
+        assert result["data"] == MOCK_DATA_STEP
 
 
-MOCK_DATA = {
+async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> None:
+    """Test we abort user data set when entry is already configured."""
+
+    entry = MockConfigEntry(
+        domain=config_flow.DOMAIN,
+        data=MOCK_DATA_STEP,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": "user"}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_DATA_STEP,
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+MOCK_DATA_IMPORT = {
     CONF_START: "test_start",
     CONF_DESTINATION: "test_destination",
     CONF_NAME: "test_name",
@@ -164,12 +173,12 @@ async def test_import(
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data=MOCK_DATA,
+            data=MOCK_DATA_IMPORT,
         )
         await hass.async_block_till_done()
 
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["data"] == MOCK_DATA
+        assert result["data"] == MOCK_DATA_IMPORT
         assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -193,7 +202,7 @@ async def test_import_cannot_connect_error(
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data=MOCK_DATA,
+            data=MOCK_DATA_IMPORT,
         )
         await hass.async_block_till_done()
 
@@ -206,14 +215,14 @@ async def test_import_already_configured(hass: HomeAssistant) -> None:
 
     entry = MockConfigEntry(
         domain=config_flow.DOMAIN,
-        data=MOCK_DATA,
+        data=MOCK_DATA_IMPORT,
     )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
-        data=MOCK_DATA,
+        data=MOCK_DATA_IMPORT,
     )
 
     assert result["type"] == FlowResultType.ABORT
