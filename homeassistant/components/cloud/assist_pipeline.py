@@ -31,15 +31,14 @@ async def async_create_cloud_pipeline(hass: HomeAssistant) -> str | None:
                 return pipeline.id
         return None
 
-    new_cloud_pipeline_id: str | None = None
-
-    if (cloud_assist_pipeline(hass)) is None and (
+    if (cloud_assist_pipeline(hass)) is not None or (
         cloud_pipeline := await async_create_default_pipeline(
             hass,
             stt_engine_id=DOMAIN,
             tts_engine_id=DOMAIN,
             pipeline_name="Home Assistant Cloud",
         )
-    ):
-        new_cloud_pipeline_id = cloud_pipeline.id
-    return new_cloud_pipeline_id
+    ) is None:
+        return None
+
+    return cloud_pipeline.id
