@@ -1,6 +1,7 @@
 """Deprecation helpers for Home Assistant."""
 from __future__ import annotations
 
+from collections import namedtuple
 from collections.abc import Callable
 from contextlib import suppress
 import functools
@@ -17,6 +18,9 @@ from .frame import MissingIntegrationFrame, get_integration_frame
 _ObjectT = TypeVar("_ObjectT", bound=object)
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
+
+# Keep track of already reported deprecations to prevent flooding
+_REPORTED_DEPRECATIONS: set[str] = set()
 
 
 def deprecated_substitute(
@@ -153,7 +157,30 @@ def _print_deprecation_warning(
     verb: str,
     breaks_in_ha_version: str | None,
 ) -> None:
-    logger = logging.getLogger(obj.__module__)
+    _print_deprecation_warning_module(
+        obj.__name__,
+        obj.__module__,
+        replacement,
+        description,
+        verb,
+        breaks_in_ha_version,
+    )
+
+
+def _print_deprecation_warning_module(
+    obj_name: str,
+    module_name: str,
+    replacement: str,
+    description: str,
+    verb: str,
+    breaks_in_ha_version: str | None,
+) -> None:
+    report_name = f"{module_name}.{obj_name}"
+    if report_name in _REPORTED_DEPRECATIONS:
+        return
+
+    _REPORTED_DEPRECATIONS.add(report_name)
+    logger = logging.getLogger(module_name)
     if breaks_in_ha_version:
         breaks_in = f" which will be removed in HA Core {breaks_in_ha_version}"
     else:
@@ -163,7 +190,7 @@ def _print_deprecation_warning(
     except MissingIntegrationFrame:
         logger.warning(
             "%s is a deprecated %s%s. Use %s instead",
-            obj.__name__,
+            obj_name,
             description,
             breaks_in,
             replacement,
@@ -183,7 +210,7 @@ def _print_deprecation_warning(
                     "%s was %s from %s, this is a deprecated %s%s. Use %s instead,"
                     " please %s"
                 ),
-                obj.__name__,
+                obj_name,
                 verb,
                 integration_frame.integration,
                 description,
@@ -194,10 +221,56 @@ def _print_deprecation_warning(
         else:
             logger.warning(
                 "%s was %s from %s, this is a deprecated %s%s. Use %s instead",
-                obj.__name__,
+                obj_name,
                 verb,
                 integration_frame.integration,
                 description,
                 breaks_in,
                 replacement,
             )
+
+
+DeprecatedConstant = namedtuple(
+    "DeprecatedConstant", ("value", "replacement", "breaks_in_ha_version")
+)
+DeprecatedConstantEnum = namedtuple(
+    "DeprecatedConstantEnum", ("enum", "breaks_in_ha_version")
+)
+
+
+def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> Any:
+    """Check if the not found name is a deprecated constant.
+
+    If it is, print a deprecation warning and return the value of the constant.
+    Otherwise raise AttributeError.
+    """
+    module_name = module_globals.get("__name__")
+    logger = logging.getLogger(module_name)
+    if (deprecated_const := module_globals.get(f"_DEPRECATED_{name}")) is None:
+        raise AttributeError(f"module {module_name!r} has no attribute {name!r}")
+    if isinstance(deprecated_const, DeprecatedConstant):
+        value = deprecated_const.value
+        replacement = deprecated_const.replacement
+        breaks_in_ha_version = deprecated_const.breaks_in_ha_version
+    elif isinstance(deprecated_const, DeprecatedConstantEnum):
+        value = deprecated_const.enum.value
+        replacement = (
+            f"{deprecated_const.enum.__class__.__name__}.{deprecated_const.enum.name}"
+        )
+        breaks_in_ha_version = deprecated_const.breaks_in_ha_version
+    else:
+        logger.debug(
+            "Invalid value for deprecated constant %s, should be DeprecatedConstant or DeprecatedConstantEnum",
+            name,
+        )
+        raise AttributeError(f"module {module_name!r} has no attribute {name!r}")  # noqa: TRY004
+
+    _print_deprecation_warning_module(
+        name,
+        module_name or __name__,
+        replacement,
+        "constant",
+        "used",
+        breaks_in_ha_version,
+    )
+    return value
