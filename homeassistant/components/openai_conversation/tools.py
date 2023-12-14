@@ -60,19 +60,19 @@ def call_function(hass: HomeAssistant, function_name: str, function_args: str) -
 
     try:
         function_to_call = available_functions[function_name]
-        function_args : dict = json.loads(function_args)
-        response = function_to_call(hass, **function_args)
-        response = json.dumps(response)
+        parsed_args = json.loads(function_args)
+        response = function_to_call(hass, **parsed_args)
+        response_str = json.dumps(response)
 
     except Exception as e:  # pylint: disable=broad-exception-caught
         response = {"error": type(e).__name__}
         if str(e):
             response["error_text"] = str(e)
-        response = json.dumps(response)
+        response_str = json.dumps(response)
 
-    _LOGGER.debug("Function response: %s", response)
+    _LOGGER.debug("Function response: %s", response_str)
 
-    return response
+    return response_str
 
 
 @callback
@@ -108,7 +108,7 @@ def entity_registry_inquiry(
         ):
             continue
 
-        entry : dict["str", Any] = {
+        entry: dict["str", Any] = {
             "name": entity_state.name,
             "entity_id": entity_state.entity_id,
             "state": entity_state.state_with_unit,

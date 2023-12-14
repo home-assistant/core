@@ -187,7 +187,7 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
 
         client = self.hass.data[DOMAIN][self.entry.entry_id]
 
-        tool_calls = [True]
+        tool_calls = True
         while tool_calls:
             try:
                 result = await client.chat.completions.create(
@@ -215,7 +215,7 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
             tool_calls = response.tool_calls
 
             if tool_calls:
-                for tool_call in tool_calls:
+                for tool_call in tool_calls:  # mypy: disable-error-code="attr-defined"
                     function_response = tools.call_function(
                         self.hass, tool_call.function.name, tool_call.function.arguments
                     )
