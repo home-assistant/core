@@ -8,6 +8,10 @@ import logging
 from typing import Any
 
 from aioesphomeapi import APIClient, BluetoothProxyFeature
+from bleak_esphome.backend.cache import ESPHomeBluetoothCache
+from bleak_esphome.backend.client import ESPHomeClient, ESPHomeClientData
+from bleak_esphome.backend.device import ESPHomeBluetoothDevice
+from bleak_esphome.backend.scanner import ESPHomeScanner
 
 from homeassistant.components.bluetooth import (
     HaBluetoothConnector,
@@ -17,10 +21,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 
 from ..entry_data import RuntimeEntryData
-from .cache import ESPHomeBluetoothCache
-from .client import ESPHomeClient, ESPHomeClientData
-from .device import ESPHomeBluetoothDevice
-from .scanner import ESPHomeScanner
 
 _LOGGER = logging.getLogger(__name__)
 

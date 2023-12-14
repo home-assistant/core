@@ -4,7 +4,7 @@
 -r requirements.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.4.6
+AEMET-OpenData==0.4.7
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.58
@@ -534,6 +534,9 @@ bimmer-connected[china]==0.14.6
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
 
+# homeassistant.components.esphome
+bleak-esphome==0.2.0
+
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.3.0
 
@@ -567,7 +570,7 @@ bluetooth-auto-recovery==1.2.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.17.0
+bluetooth-data-tools==1.18.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -2348,7 +2351,7 @@ raspyrfm-client==1.2.8
 regenmaschine==2023.06.0
 
 # homeassistant.components.renault
-renault-api==0.2.0
+renault-api==0.2.1
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.1
@@ -2553,7 +2556,7 @@ subarulink==0.7.9
 sunwatcher==0.2.1
 
 # homeassistant.components.sunweg
-sunweg==2.0.0
+sunweg==2.0.1
 
 # homeassistant.components.surepetcare
 surepy==0.8.0
