@@ -5,11 +5,10 @@ from dataclasses import asdict
 from datetime import timedelta
 import logging
 from typing import Any
-from xml.etree.ElementTree import ParseError
 
 from aioraven.data import DeviceInfo
+from aioraven.device import RAVEnConnectionError
 from aioraven.serial import RAVEnSerialDevice
-from serial.serialutil import SerialException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_MAC
@@ -121,13 +120,11 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
         try:
             device = await self._get_device()
             return await _get_all_data(device, self.entry.data[CONF_MAC])
-        except ParseError as err:
-            raise UpdateFailed(f"ParseError: {err}") from err
-        except SerialException as err:
+        except RAVEnConnectionError as err:
             if self._raven_device:
                 await self._raven_device.close()
                 self._raven_device = None
-            raise UpdateFailed(f"SerialException: {err}") from err
+            raise UpdateFailed(f"RAVEnConnectionError: {err}") from err
 
     async def _get_device(self) -> RAVEnSerialDevice:
         if self._raven_device is not None:

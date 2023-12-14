@@ -1,8 +1,6 @@
 """Tests for the Rainforest RAVEn data coordinator."""
-from xml.etree.ElementTree import ParseError
-
+from aioraven.device import RAVEnConnectionError
 import pytest
-from serial.serialutil import SerialException
 
 from homeassistant.components.rainforest_raven.coordinator import RAVEnDataCoordinator
 from homeassistant.core import HomeAssistant
@@ -65,7 +63,7 @@ async def test_coordinator_device_error_setup(hass: HomeAssistant, mock_device):
     entry = create_mock_entry()
     coordinator = RAVEnDataCoordinator(hass, entry)
 
-    mock_device.get_network_info.side_effect = SerialException
+    mock_device.get_network_info.side_effect = RAVEnConnectionError
     with pytest.raises(ConfigEntryNotReady):
         await coordinator.async_config_entry_first_refresh()
 
@@ -78,16 +76,16 @@ async def test_coordinator_device_error_update(hass: HomeAssistant, mock_device)
     await coordinator.async_config_entry_first_refresh()
     assert coordinator.last_update_success is True
 
-    mock_device.get_network_info.side_effect = SerialException
+    mock_device.get_network_info.side_effect = RAVEnConnectionError
     await coordinator.async_refresh()
     assert coordinator.last_update_success is False
 
 
-async def test_coordinator_parse_error(hass: HomeAssistant, mock_device):
-    """Test handling of an error parsing raw device data."""
+async def test_coordinator_comm_error(hass: HomeAssistant, mock_device):
+    """Test handling of an error parsing or reading raw device data."""
     entry = create_mock_entry()
     coordinator = RAVEnDataCoordinator(hass, entry)
 
-    mock_device.synchronize.side_effect = ParseError
+    mock_device.synchronize.side_effect = RAVEnConnectionError
     with pytest.raises(ConfigEntryNotReady):
         await coordinator.async_config_entry_first_refresh()

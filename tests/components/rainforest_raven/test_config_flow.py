@@ -1,10 +1,9 @@
 """Test Rainforest RAVEn config flow."""
 import asyncio
 from unittest.mock import patch
-from xml.etree.ElementTree import ParseError
 
+from aioraven.device import RAVEnConnectionError
 import pytest
-from serial.serialutil import SerialException
 import serial.tools.list_ports
 
 from homeassistant import data_entry_flow
@@ -33,16 +32,16 @@ def mock_device():
 @pytest.fixture
 def mock_device_no_open(mock_device):
     """Mock a device which fails to open."""
-    mock_device.__aenter__.side_effect = SerialException
-    mock_device.open.side_effect = SerialException
+    mock_device.__aenter__.side_effect = RAVEnConnectionError
+    mock_device.open.side_effect = RAVEnConnectionError
     return mock_device
 
 
 @pytest.fixture
-def mock_device_parse_error(mock_device):
-    """Mock a device which fails to parse raw data."""
-    mock_device.get_meter_list.side_effect = ParseError
-    mock_device.get_meter_info.side_effect = ParseError
+def mock_device_comm_error(mock_device):
+    """Mock a device which fails to read or parse raw data."""
+    mock_device.get_meter_list.side_effect = RAVEnConnectionError
+    mock_device.get_meter_info.side_effect = RAVEnConnectionError
     return mock_device
 
 
@@ -111,10 +110,10 @@ async def test_flow_usb_timeout_connect(
     assert result.get("reason") == "timeout_connect"
 
 
-async def test_flow_usb_parse_error(
-    hass: HomeAssistant, mock_comports, mock_device_parse_error
+async def test_flow_usb_comm_error(
+    hass: HomeAssistant, mock_comports, mock_device_comm_error
 ):
-    """Test usb flow connection failure to parse."""
+    """Test usb flow connection failure to communicate."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USB}, data=DISCOVERY_INFO
     )
@@ -194,7 +193,7 @@ async def test_flow_user_in_progress(hass: HomeAssistant, mock_comports):
 async def test_flow_user_cannot_connect(
     hass: HomeAssistant, mock_comports, mock_device_no_open
 ):
-    """Test user flow connection failure to parse."""
+    """Test user flow connection failure to communicate."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_USER},
@@ -210,7 +209,7 @@ async def test_flow_user_cannot_connect(
 async def test_flow_user_timeout_connect(
     hass: HomeAssistant, mock_comports, mock_device_timeout
 ):
-    """Test user flow connection failure to parse."""
+    """Test user flow connection failure to communicate."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_USER},
@@ -223,10 +222,10 @@ async def test_flow_user_timeout_connect(
     assert result.get("errors") == {CONF_DEVICE: "timeout_connect"}
 
 
-async def test_flow_user_parse_error(
-    hass: HomeAssistant, mock_comports, mock_device_parse_error
+async def test_flow_user_comm_error(
+    hass: HomeAssistant, mock_comports, mock_device_comm_error
 ):
-    """Test user flow connection failure to parse."""
+    """Test user flow connection failure to communicate."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_USER},

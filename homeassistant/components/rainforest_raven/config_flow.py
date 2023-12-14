@@ -3,11 +3,10 @@ from __future__ import annotations
 
 import asyncio
 from typing import Any
-from xml.etree.ElementTree import ParseError
 
 from aioraven.data import MeterType
+from aioraven.device import RAVEnConnectionError
 from aioraven.serial import RAVEnSerialDevice
-from serial.serialutil import SerialException
 import serial.tools.list_ports
 from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
@@ -107,7 +106,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self._validate_device(dev_path)
         except asyncio.TimeoutError:
             return self.async_abort(reason="timeout_connect")
-        except (ParseError, SerialException):
+        except RAVEnConnectionError:
             return self.async_abort(reason="cannot_connect")
         return await self.async_step_meters()
 
@@ -148,7 +147,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self._validate_device(dev_path)
             except asyncio.TimeoutError:
                 errors[CONF_DEVICE] = "timeout_connect"
-            except (ParseError, SerialException):
+            except RAVEnConnectionError:
                 errors[CONF_DEVICE] = "cannot_connect"
             else:
                 return await self.async_step_meters()
