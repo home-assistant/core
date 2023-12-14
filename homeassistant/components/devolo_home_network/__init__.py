@@ -68,7 +68,10 @@ async def async_setup_entry(  # noqa: C901
         )
     except DeviceNotFound as err:
         raise ConfigEntryNotReady(
-            f"Unable to connect to {entry.data[CONF_IP_ADDRESS]}"
+            f"Unable to connect to {entry.data[CONF_IP_ADDRESS]}",
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
+            translation_placeholders={"ip_address": entry.data[CONF_IP_ADDRESS]},
         ) from err
 
     hass.data[DOMAIN][entry.entry_id] = {"device": device}
