@@ -1,7 +1,4 @@
-"""Conftest for SunWEG tests.
-
-From http://doc.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
-"""
+"""Conftest for SunWEG tests."""
 
 from datetime import datetime
 
