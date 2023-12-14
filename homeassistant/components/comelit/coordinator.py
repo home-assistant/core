@@ -21,7 +21,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import _LOGGER, DOMAIN
 
 
-class ComelitBaseCoordinator(DataUpdateCoordinator):
+class ComelitBaseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Base coordinator for Comelit Devices."""
 
     config_entry: ConfigEntry
