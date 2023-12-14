@@ -1,7 +1,7 @@
 {
   "domain": "linknlink",
   "name": "LinknLink",
-  "codeowners": ["@danielhiversen", "@xuanxuan000"],
+  "codeowners": ["@xuanxuan000"],
   "config_flow": true,
   "dhcp": [
     {

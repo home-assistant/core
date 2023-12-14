@@ -706,8 +706,8 @@ build.json @home-assistant/supervisor
 /tests/components/light/ @home-assistant/core
 /homeassistant/components/linear_garage_door/ @IceBotYT
 /tests/components/linear_garage_door/ @IceBotYT
-/homeassistant/components/linknlink/ @danielhiversen @xuanxuan000
-/tests/components/linknlink/ @danielhiversen @xuanxuan000
+/homeassistant/components/linknlink/ @xuanxuan000
+/tests/components/linknlink/ @xuanxuan000
 /homeassistant/components/linux_battery/ @fabaff
 /homeassistant/components/litejet/ @joncar
 /tests/components/litejet/ @joncar
