@@ -233,5 +233,10 @@
         "heat": "Heat"
       }
     }
+  },
+  "exceptions": {
+    "not_valid_mode": {
+      "message": "{mode_type} mode {mode} is not valid. {mode_type} valid modes are: {modes}."
+    }
   }
 }

@@ -10,16 +10,36 @@ import voluptuous as vol
 
 from homeassistant.components import climate
 from homeassistant.components.climate import (
+    DOMAIN,
     SET_TEMPERATURE_SCHEMA,
     ClimateEntity,
     HVACMode,
 )
+from homeassistant.components.climate.const import (
+    ATTR_FAN_MODE,
+    ATTR_PRESET_MODE,
+    ATTR_SWING_MODE,
+    SERVICE_SET_FAN_MODE,
+    SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_SWING_MODE,
+    ClimateEntityFeature,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from tests.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockModule,
+    MockPlatform,
     async_mock_service,
     import_and_test_deprecated_constant,
     import_and_test_deprecated_constant_enum,
+    mock_integration,
+    mock_platform,
 )
 
 
@@ -57,8 +77,21 @@ async def test_set_temp_schema(
     assert calls[-1].data == data
 
 
-class MockClimateEntity(ClimateEntity):
+class MockClimateEntity(MockEntity, ClimateEntity):
     """Mock Climate device to use in tests."""
+
+    _attr_supported_features = (
+        ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.SWING_MODE
+    )
+    _attr_preset_mode = "home"
+    _attr_preset_modes = ["home", "away"]
+    _attr_fan_mode = "auto"
+    _attr_fan_modes = ["auto", "off"]
+    _attr_swing_mode = "auto"
+    _attr_swing_modes = ["auto", "off"]
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -81,6 +114,18 @@ class MockClimateEntity(ClimateEntity):
 
     def turn_off(self) -> None:
         """Turn off."""
+
+    def set_preset_mode(self, preset_mode: str) -> None:
+        """Set preset mode."""
+        self._attr_preset_mode = preset_mode
+
+    def set_fan_mode(self, fan_mode: str) -> None:
+        """Set fan mode."""
+        self._attr_fan_mode = fan_mode
+
+    def set_swing_mode(self, swing_mode: str) -> None:
+        """Set swing mode."""
+        self._attr_swing_mode = swing_mode
 
 
 async def test_sync_turn_on(hass: HomeAssistant) -> None:
@@ -158,3 +203,124 @@ def test_deprecated_current_constants(
         enum,
         "2025.1",
     )
+
+
+async def test_preset_mode_validation(
+    hass: HomeAssistant, config_flow_fixture: None
+) -> None:
+    """Test mode validation for fan, swing and preset."""
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
+        return True
+
+    async def async_setup_entry_climate_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Set up test climate platform via config entry."""
+        async_add_entities([MockClimateEntity(name="test", entity_id="climate.test")])
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=async_setup_entry_init,
+        ),
+        built_in=False,
+    )
+    mock_platform(
+        hass,
+        "test.climate",
+        MockPlatform(async_setup_entry=async_setup_entry_climate_platform),
+    )
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.test")
+    assert state.attributes.get(ATTR_PRESET_MODE) == "home"
+    assert state.attributes.get(ATTR_FAN_MODE) == "auto"
+    assert state.attributes.get(ATTR_SWING_MODE) == "auto"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            "entity_id": "climate.test",
+            "preset_mode": "away",
+        },
+        blocking=True,
+    )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_SWING_MODE,
+        {
+            "entity_id": "climate.test",
+            "swing_mode": "off",
+        },
+        blocking=True,
+    )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {
+            "entity_id": "climate.test",
+            "fan_mode": "off",
+        },
+        blocking=True,
+    )
+    state = hass.states.get("climate.test")
+    assert state.attributes.get(ATTR_PRESET_MODE) == "away"
+    assert state.attributes.get(ATTR_FAN_MODE) == "off"
+    assert state.attributes.get(ATTR_SWING_MODE) == "off"
+
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {
+                "entity_id": "climate.test",
+                "preset_mode": "invalid",
+            },
+            blocking=True,
+        )
+    assert (
+        str(exc.value)
+        == "The preset_mode invalid is not a valid preset_mode: home, away"
+    )
+    assert exc.value.translation_key == "not_valid_mode"
+
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SWING_MODE,
+            {
+                "entity_id": "climate.test",
+                "swing_mode": "invalid",
+            },
+            blocking=True,
+        )
+    assert (
+        str(exc.value) == "The swing_mode invalid is not a valid swing_mode: auto, off"
+    )
+    assert exc.value.translation_key == "not_valid_mode"
+
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_FAN_MODE,
+            {
+                "entity_id": "climate.test",
+                "fan_mode": "invalid",
+            },
+            blocking=True,
+        )
+    assert str(exc.value) == "The fan_mode invalid is not a valid fan_mode: auto, off"
+    assert exc.value.translation_key == "not_valid_mode"
