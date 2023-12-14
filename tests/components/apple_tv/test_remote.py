@@ -25,4 +25,10 @@ async def test_send_command(command: str, method: str) -> None:
         [command], **{ATTR_NUM_REPEATS: 1, ATTR_DELAY_SECS: 0}
     )
     assert len(remote.atv.method_calls) == 1
-    assert str(remote.atv.method_calls[0]) == f"call.{method}()"
+    if "_hold" in command:
+        assert (
+            str(remote.atv.method_calls[0])
+            == f"call.{method}(action=<InputAction.Hold: 2>)"
+        )
+    else:
+        assert str(remote.atv.method_calls[0]) == f"call.{method}()"
