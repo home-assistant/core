@@ -1,7 +1,5 @@
 """Config flow for Sun WEG integration."""
-import logging
-
-from sunweg.api import APIHelper, SunWegApiError
+from sunweg.api import APIHelper
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -10,8 +8,6 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_PLANT_ID, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class SunWEGConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -43,17 +39,11 @@ class SunWEGConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input:
             return self._async_show_user_form()
 
-        if self.api:
-            # Set username and password
-            self.api.username = user_input[CONF_USERNAME]
-            self.api.password = user_input[CONF_PASSWORD]
-        else:
-            # Initialise the library with the username & password
-            self.api = APIHelper(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
-        try:
-            await self.hass.async_add_executor_job(self.api.authenticate)
-        except SunWegApiError:
-            _LOGGER.error("Authentication error")
+        # Initialise the library with the username & password
+        self.api = APIHelper(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+        login_response = await self.hass.async_add_executor_job(self.api.authenticate)
+
+        if not login_response:
             return self._async_show_user_form({"base": "invalid_auth"})
 
         # Store authentication info
