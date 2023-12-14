@@ -535,7 +535,7 @@ bimmer-connected[china]==0.14.6
 bizkaibus==0.1.1
 
 # homeassistant.components.esphome
-bleak-esphome==0.2.0
+bleak-esphome==0.3.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.3.0
@@ -2255,7 +2255,7 @@ pytradfri[async]==9.0.1
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.3.9.1
+pytrafikverket==0.3.9.2
 
 # homeassistant.components.v2c
 pytrydan==0.4.0
