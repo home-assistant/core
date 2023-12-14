@@ -834,6 +834,7 @@ class ConfigEntryFlowResult(FlowResult):
     version: int
     minor_version: int
 
+
 class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigEntryFlowResult]):
     """Manage all the config entry flows that are in progress."""
 
@@ -940,7 +941,6 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigEntryFlowResult
     ) -> ConfigEntryFlowResult:
         """Finish a config flow and add an entry."""
         flow = cast(ConfigFlow, flow)
-        result = cast(ConfigEntryFlowResult, result)
 
         # Mark the step as done.
         # We do this to avoid a circular dependency where async_finish_flow sets up a
