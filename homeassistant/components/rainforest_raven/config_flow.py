@@ -5,6 +5,7 @@ import asyncio
 from typing import Any
 from xml.etree.ElementTree import ParseError
 
+from aioraven.data import MeterType
 from aioraven.serial import RAVEnSerialDevice
 from serial.serialutil import SerialException
 import serial.tools.list_ports
@@ -36,7 +37,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Set up flow instance."""
         self._dev_path: str | None = None
-        self._meter_macs: dict[bytes, str] = {}
+        self._meter_macs: set[bytes] = set()
 
     async def _validate_device(self, dev_path: str) -> None:
         self._abort_if_unique_id_configured(updates={CONF_DEVICE: dev_path})
@@ -46,13 +47,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             await raven_device.synchronize()
             meters = await raven_device.get_meter_list()
-            for meter in meters.meter_mac_ids:
-                meter_info = await raven_device.get_meter_info(meter=meter)
-                self._meter_macs[meter] = (
-                    "unknown"
-                    if meter_info.meter_type is None
-                    else str(meter_info.meter_type)
-                )
+            if meters:
+                for meter in meters.meter_mac_ids or ():
+                    meter_info = await raven_device.get_meter_info(meter=meter)
+                    if meter_info and (
+                        meter_info.meter_type is None
+                        or meter_info.meter_type == MeterType.ELECTRIC
+                    ):
+                        self._meter_macs.add(meter)
         self._dev_path = dev_path
 
     async def async_step_meters(
@@ -71,7 +73,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if len(mac) != 8:
                     errors[CONF_MAC] = "invalid_mac"
                     break
-                if self._meter_macs.get(mac) not in ("unknown", "electric"):
+                if mac not in self._meter_macs:
                     errors[CONF_MAC] = "no_meters_found"
                     break
                 if mac not in meter_macs:
