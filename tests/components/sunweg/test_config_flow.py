@@ -1,10 +1,7 @@
 """Tests for the Sun WEG server config flow."""
-from datetime import datetime
 from unittest.mock import patch
 
-import pytest
 from sunweg.api import APIHelper
-from sunweg.plant import Plant
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.sunweg.const import CONF_PLANT_ID, DOMAIN
@@ -14,24 +11,6 @@ from homeassistant.core import HomeAssistant
 from .common import SUNWEG_USER_INPUT
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def plant_fixture() -> Plant:
-    """Define Plant fixture."""
-    return Plant(
-        123456,
-        "Plant #123",
-        29.5,
-        0.5,
-        0,
-        12.786912,
-        24.0,
-        "kWh",
-        332.2,
-        0.012296,
-        datetime(2023, 2, 16, 14, 22, 37),
-    )
 
 
 async def test_show_authenticate_form(hass: HomeAssistant) -> None:
