@@ -36,7 +36,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Set up flow instance."""
         self._dev_path: str | None = None
-        self._meter_macs: set[bytes] = set()
+        self._meter_macs: set[str] = set()
 
     async def _validate_device(self, dev_path: str) -> None:
         self._abort_if_unique_id_configured(updates={CONF_DEVICE: dev_path})
@@ -53,7 +53,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         meter_info.meter_type is None
                         or meter_info.meter_type == MeterType.ELECTRIC
                     ):
-                        self._meter_macs.add(meter)
+                        self._meter_macs.add(meter.hex())
         self._dev_path = dev_path
 
     async def async_step_meters(
@@ -65,11 +65,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             meter_macs = []
             for raw_mac in user_input.get(CONF_MAC, "").split(","):
                 try:
-                    mac = bytes.fromhex(raw_mac)
+                    mac = bytes.fromhex(raw_mac).hex()
                 except ValueError:
                     errors[CONF_MAC] = "invalid_mac"
                     break
-                if len(mac) != 8:
+                if len(mac) != 16:
                     errors[CONF_MAC] = "invalid_mac"
                     break
                 if mac not in self._meter_macs:
@@ -82,15 +82,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=user_input.get(CONF_NAME, DEFAULT_NAME),
                     data={
                         CONF_DEVICE: self._dev_path,
-                        CONF_MAC: [m.hex() for m in meter_macs],
+                        CONF_MAC: meter_macs,
                     },
                 )
 
-        discovered_macs = [m.hex() for m in self._meter_macs]
         schema = vol.Schema(
             {
                 vol.Required(
-                    CONF_MAC, description={"suggested_value": ",".join(discovered_macs)}
+                    CONF_MAC,
+                    description={"suggested_value": ",".join(self._meter_macs)},
                 ): str
             }
         )
