@@ -53,15 +53,15 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not new_romy.is_initialized:
                 errors[CONF_HOST] = "cannot_connect"
+            else:
+                # check if already setuped
+                await self.async_set_unique_id(new_romy.unique_id)
+                self._abort_if_unique_id_configured()
 
-            # check if already setuped
-            await self.async_set_unique_id(new_romy.unique_id)
-            self._abort_if_unique_id_configured()
+                self.romy_info[CONF_NAME] = new_romy.name
 
-            self.romy_info[CONF_NAME] = new_romy.name
-
-            if not new_romy.is_unlocked:
-                return await self.async_step_unlock_http_interface()
+                if not new_romy.is_unlocked:
+                    return await self.async_step_unlock_http_interface()
 
             if not errors:
                 return await self._async_step_finish_config()
