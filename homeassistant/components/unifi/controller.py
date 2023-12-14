@@ -260,8 +260,8 @@ class UniFiController:
         for entry in async_entries_for_config_entry(
             entity_registry, self.config_entry.entry_id
         ):
-            if entry.domain == Platform.DEVICE_TRACKER:
-                macs.append(entry.unique_id.split("-", 1)[0])
+            if entry.domain == Platform.DEVICE_TRACKER and "-" in entry.unique_id:
+                macs.append(entry.unique_id.split("-", 1)[1])
 
         for mac in self.option_supported_clients + self.option_block_clients + macs:
             if mac not in self.api.clients and mac in self.api.clients_all:
