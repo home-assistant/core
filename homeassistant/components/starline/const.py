@@ -7,12 +7,12 @@ _LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "starline"
 PLATFORMS = [
-    Platform.DEVICE_TRACKER,
     Platform.BINARY_SENSOR,
-    Platform.SENSOR,
-    Platform.LOCK,
-    Platform.SWITCH,
     Platform.BUTTON,
+    Platform.DEVICE_TRACKER,
+    Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 CONF_APP_ID = "app_id"
