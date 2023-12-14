@@ -157,7 +157,7 @@ def _print_deprecation_warning(
     verb: str,
     breaks_in_ha_version: str | None,
 ) -> None:
-    _print_deprecation_warning_module(
+    _print_deprecation_warning_internal(
         obj.__name__,
         obj.__module__,
         replacement,
@@ -167,7 +167,7 @@ def _print_deprecation_warning(
     )
 
 
-def _print_deprecation_warning_module(
+def _print_deprecation_warning_internal(
     obj_name: str,
     module_name: str,
     replacement: str,
@@ -265,7 +265,7 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
         )
         raise AttributeError(f"module {module_name!r} has no attribute {name!r}")  # noqa: TRY004
 
-    _print_deprecation_warning_module(
+    _print_deprecation_warning_internal(
         name,
         module_name or __name__,
         replacement,
