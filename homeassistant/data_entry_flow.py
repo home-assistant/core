@@ -156,7 +156,7 @@ class FlowManager(abc.ABC):
     @abc.abstractmethod
     async def async_finish_flow(
         self, flow: FlowHandler, result: FlowResult
-    ) -> FlowResult:
+    ) -> _FlowResultT:
         """Finish a data entry flow."""
 
     async def async_post_init(self, flow: FlowHandler, result: FlowResult) -> None:
@@ -548,7 +548,7 @@ class FlowHandler(Generic[_FlowResultT]):
         data: Mapping[str, Any],
         description: str | None = None,
         description_placeholders: Mapping[str, str] | None = None,
-    ) -> FlowResult:
+    ) -> _FlowResultT:
         """Finish flow."""
         flow_result = FlowResult(
             type=FlowResultType.CREATE_ENTRY,
