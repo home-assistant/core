@@ -37,8 +37,6 @@ from .core.const import (
     DOMAIN,
     PLATFORMS,
     SIGNAL_ADD_ENTITIES,
-    STARTUP_FAILURE_DELAY_S,
-    STARTUP_RETRIES,
     RadioType,
 )
 from .core.device import get_device_automation_triggers
@@ -161,49 +159,40 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     _LOGGER.debug("Trigger cache: %s", zha_data.device_trigger_cache)
 
-    # Retry setup a few times before giving up to deal with missing serial ports in VMs
-    for attempt in range(STARTUP_RETRIES):
-        try:
-            zha_gateway = await ZHAGateway.async_from_config(
-                hass=hass,
-                config=zha_data.yaml_config,
-                config_entry=config_entry,
-            )
-            break
-        except NetworkSettingsInconsistent as exc:
-            await warn_on_inconsistent_network_settings(
-                hass,
-                config_entry=config_entry,
-                old_state=exc.old_state,
-                new_state=exc.new_state,
-            )
-            raise ConfigEntryError(
-                "Network settings do not match most recent backup"
-            ) from exc
-        except TransientConnectionError as exc:
-            raise ConfigEntryNotReady from exc
-        except Exception as exc:  # pylint: disable=broad-except
-            _LOGGER.debug(
-                "Couldn't start coordinator (attempt %s of %s)",
-                attempt + 1,
-                STARTUP_RETRIES,
-                exc_info=exc,
-            )
+    try:
+        zha_gateway = await ZHAGateway.async_from_config(
+            hass=hass,
+            config=zha_data.yaml_config,
+            config_entry=config_entry,
+        )
+    except NetworkSettingsInconsistent as exc:
+        await warn_on_inconsistent_network_settings(
+            hass,
+            config_entry=config_entry,
+            old_state=exc.old_state,
+            new_state=exc.new_state,
+        )
+        raise ConfigEntryError(
+            "Network settings do not match most recent backup"
+        ) from exc
+    except TransientConnectionError as exc:
+        raise ConfigEntryNotReady from exc
+    except Exception as exc:
+        _LOGGER.debug("Failed to set up ZHA", exc_info=exc)
+        device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
 
-            if attempt < STARTUP_RETRIES - 1:
-                await asyncio.sleep(STARTUP_FAILURE_DELAY_S)
-                continue
+        if (
+            not device_path.startswith("socket://")
+            and RadioType[config_entry.data[CONF_RADIO_TYPE]] == RadioType.ezsp
+        ):
+            try:
+                # Ignore all exceptions during probing, they shouldn't halt setup
+                if await warn_on_wrong_silabs_firmware(hass, device_path):
+                    raise ConfigEntryError("Incorrect firmware installed") from exc
+            except AlreadyRunningEZSP as ezsp_exc:
+                raise ConfigEntryNotReady from ezsp_exc
 
-            if RadioType[config_entry.data[CONF_RADIO_TYPE]] == RadioType.ezsp:
-                try:
-                    # Ignore all exceptions during probing, they shouldn't halt setup
-                    await warn_on_wrong_silabs_firmware(
-                        hass, config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
-                    )
-                except AlreadyRunningEZSP as ezsp_exc:
-                    raise ConfigEntryNotReady from ezsp_exc
-
-            raise
+        raise ConfigEntryNotReady from exc
 
     repairs.async_delete_blocking_issues(hass)
 

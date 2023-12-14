@@ -10,6 +10,7 @@ from py_aosmith import (
 )
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, FAST_INTERVAL, REGULAR_INTERVAL
@@ -29,7 +30,9 @@ class AOSmithCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         """Fetch latest data from API."""
         try:
             devices = await self.client.get_devices()
-        except (AOSmithInvalidCredentialsException, AOSmithUnknownException) as err:
+        except AOSmithInvalidCredentialsException as err:
+            raise ConfigEntryAuthFailed from err
+        except AOSmithUnknownException as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
         mode_pending = any(
