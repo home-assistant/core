@@ -101,9 +101,7 @@ class DigitalOcean:
         """Update the appointed DNS record with the desired value."""
 
         try:
-            domain = digitalocean.Domain(
-                token=self._access_token, name=domain_name
-            )
+            domain = digitalocean.Domain(token=self._access_token, name=domain_name)
             records = domain.get_records()
         except digitalocean.baseapi.NotFoundError as exc:  # pragma: no cover
             raise DomainRecordsNotFound(
