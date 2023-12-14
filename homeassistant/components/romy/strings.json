@@ -3,7 +3,7 @@
     "flow_title": "{name}",
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "Local Http Interface is locked! Please provide password (see QR Code under the dustbin)."
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
@@ -11,9 +11,16 @@
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "name": "[%key:common::config_flow::data::name%]",
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "unlock_http_interface": {
+        "title": "Local Http Interface is locked",
+        "data": {
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Please provide password (8 characters, see QR Code under the dustbin)."
         }
       },
       "zeroconf_confirm": {
