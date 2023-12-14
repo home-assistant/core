@@ -1,6 +1,8 @@
 """Config flow for AEMET OpenData."""
 from __future__ import annotations
 
+from typing import Any
+
 from aemet_opendata.exceptions import AuthError
 from aemet_opendata.interface import AEMET, ConnectionOptions
 import voluptuous as vol
@@ -8,6 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
@@ -29,7 +32,9 @@ OPTIONS_FLOW = {
 class AemetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for AEMET OpenData."""
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
