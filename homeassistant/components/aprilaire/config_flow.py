@@ -5,12 +5,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from pyaprilaire.const import Attribute
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN
 from .coordinator import AprilaireCoordinator
@@ -40,10 +42,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        self._async_abort_entries_match(
-            {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
-        )
-
         coordinator = AprilaireCoordinator(
             self.hass, user_input[CONF_HOST], user_input[CONF_PORT]
         )
@@ -57,7 +55,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         coordinator.stop_listen()
 
-        if ready:
+        mac_address = coordinator.data.get(Attribute.MAC_ADDRESS)
+
+        if ready and mac_address is not None:
+            await self.async_set_unique_id(format_mac(mac_address))
+
+            self._abort_if_unique_id_configured()
+
             return self.async_create_entry(title="Aprilaire", data=user_input)
 
         return self.async_show_form(

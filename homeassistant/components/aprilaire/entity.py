@@ -6,6 +6,7 @@ import logging
 
 from pyaprilaire.const import Attribute
 
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import BaseCoordinatorEntity
 
 from .coordinator import AprilaireCoordinator
@@ -54,7 +55,7 @@ class BaseAprilaireEntity(BaseCoordinatorEntity[AprilaireCoordinator]):
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         return (
-            self.coordinator.data[Attribute.MAC_ADDRESS].replace(":", "_")
+            format_mac(self.coordinator.data[Attribute.MAC_ADDRESS])
             + "_"
             + self.translation_key
         )
