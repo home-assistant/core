@@ -82,6 +82,9 @@
     },
     "password_protected": {
       "message": "Device {title} requires re-authenticatication to set or change the password"
+    },
+    "password_wrong": {
+      "message": "The used password is wrong"
     }
   }
 }

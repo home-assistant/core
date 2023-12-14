@@ -103,7 +103,9 @@ async def async_setup_entry(  # noqa: C901
         except DeviceUnavailable as err:
             raise UpdateFailed(err) from err
         except DevicePasswordProtected as err:
-            raise ConfigEntryAuthFailed(err) from err
+            raise ConfigEntryAuthFailed(
+                err, translation_domain=DOMAIN, translation_key="password_wrong"
+            ) from err
 
     async def async_update_led_status() -> bool:
         """Fetch data from API endpoint."""
