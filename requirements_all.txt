@@ -529,7 +529,7 @@ beautifulsoup4==4.12.2
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.37.1
+bellows==0.37.3
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.14.6
@@ -570,7 +570,7 @@ bluetooth-auto-recovery==1.2.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.17.0
+bluetooth-data-tools==1.18.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -1054,7 +1054,7 @@ huawei-lte-api==1.7.3
 hyperion-py==0.7.5
 
 # homeassistant.components.iammeter
-iammeter==0.1.7
+iammeter==0.2.1
 
 # homeassistant.components.iaqualink
 iaqualink==0.5.0
@@ -2351,7 +2351,7 @@ raspyrfm-client==1.2.8
 regenmaschine==2023.06.0
 
 # homeassistant.components.renault
-renault-api==0.2.0
+renault-api==0.2.1
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.1
@@ -2835,7 +2835,7 @@ zamg==0.3.3
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.128.4
+zeroconf==0.129.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
@@ -2850,10 +2850,10 @@ zhong-hong-hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-deconz==0.22.0
+zigpy-deconz==0.22.2
 
 # homeassistant.components.zha
-zigpy-xbee==0.20.0
+zigpy-xbee==0.20.1
 
 # homeassistant.components.zha
 zigpy-zigate==0.12.0
@@ -2862,7 +2862,7 @@ zigpy-zigate==0.12.0
 zigpy-znp==0.12.0
 
 # homeassistant.components.zha
-zigpy==0.60.0
+zigpy==0.60.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2

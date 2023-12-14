@@ -5,7 +5,6 @@ DOMAIN = "picnic"
 
 CONF_API = "api"
 CONF_COORDINATOR = "coordinator"
-CONF_COUNTRY_CODE = "country_code"
 
 SERVICE_ADD_PRODUCT_TO_CART = "add_product"
 

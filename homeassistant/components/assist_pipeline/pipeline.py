@@ -115,6 +115,7 @@ async def _async_resolve_default_pipeline_settings(
     hass: HomeAssistant,
     stt_engine_id: str | None,
     tts_engine_id: str | None,
+    pipeline_name: str,
 ) -> dict[str, str | None]:
     """Resolve settings for a default pipeline.
 
@@ -123,7 +124,6 @@ async def _async_resolve_default_pipeline_settings(
     """
     conversation_language = "en"
     pipeline_language = "en"
-    pipeline_name = "Home Assistant"
     stt_engine = None
     stt_language = None
     tts_engine = None
@@ -195,9 +195,6 @@ async def _async_resolve_default_pipeline_settings(
             )
             tts_engine_id = None
 
-    if stt_engine_id == "cloud" and tts_engine_id == "cloud":
-        pipeline_name = "Home Assistant Cloud"
-
     return {
         "conversation_engine": conversation.HOME_ASSISTANT_AGENT,
         "conversation_language": conversation_language,
@@ -221,12 +218,17 @@ async def _async_create_default_pipeline(
     The default pipeline will use the homeassistant conversation agent and the
     default stt / tts engines.
     """
-    pipeline_settings = await _async_resolve_default_pipeline_settings(hass, None, None)
+    pipeline_settings = await _async_resolve_default_pipeline_settings(
+        hass, stt_engine_id=None, tts_engine_id=None, pipeline_name="Home Assistant"
+    )
     return await pipeline_store.async_create_item(pipeline_settings)
 
 
 async def async_create_default_pipeline(
-    hass: HomeAssistant, stt_engine_id: str, tts_engine_id: str
+    hass: HomeAssistant,
+    stt_engine_id: str,
+    tts_engine_id: str,
+    pipeline_name: str,
 ) -> Pipeline | None:
     """Create a pipeline with default settings.
 
@@ -236,7 +238,7 @@ async def async_create_default_pipeline(
     pipeline_data: PipelineData = hass.data[DOMAIN]
     pipeline_store = pipeline_data.pipeline_store
     pipeline_settings = await _async_resolve_default_pipeline_settings(
-        hass, stt_engine_id, tts_engine_id
+        hass, stt_engine_id, tts_engine_id, pipeline_name=pipeline_name
     )
     if (
         pipeline_settings["stt_engine"] != stt_engine_id
