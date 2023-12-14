@@ -101,7 +101,9 @@
       },
       "additional_channel": {
         "name": "Additional channel"
-      },
+      }
+    },
+    "button": {
       "horn": {
         "name": "Horn"
       }

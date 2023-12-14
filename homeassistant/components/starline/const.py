@@ -12,6 +12,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.LOCK,
     Platform.SWITCH,
+    Platform.BUTTON,
 ]
 
 CONF_APP_ID = "app_id"
