@@ -205,7 +205,7 @@ async def test_basic_cc_sensor(
     """Test a Basic CC sensor gets discovered correctly."""
     state = hass.states.get("sensor.multisensor_6_basic")
     assert state is not None
-    assert state.state == 255.0
+    assert state.state == "255.0"
 
 
 async def test_disabled_notification_sensor(
