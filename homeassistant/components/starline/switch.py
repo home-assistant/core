@@ -8,6 +8,7 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 
 from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
@@ -47,6 +48,13 @@ SWITCH_TYPES: tuple[StarlineSwitchEntityDescription, ...] = (
         translation_key="additional_channel",
         icon_on="mdi:access-point-network",
         icon_off="mdi:access-point-network-off",
+    ),
+    # Deprecated and should be removed in 2024.8
+    StarlineSwitchEntityDescription(
+        key="poke",
+        translation_key="horn",
+        icon_on="mdi:bullhorn-outline",
+        icon_off="mdi:bullhorn-outline",
     ),
 )
 
@@ -107,12 +115,26 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
     @property
     def is_on(self):
         """Return True if entity is on."""
+        if self._key == "poke":
+            return False
         return self._device.car_state.get(self._key)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
+        if self._key == "poke":
+            create_issue(
+                self.hass,
+                DOMAIN,
+                "deprecated_horn_switch",
+                breaks_in_ha_version="2024.8.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_horn_switch",
+            )
         self._account.api.set_car_state(self._device.device_id, self._key, True)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
+        if self._key == "poke":
+            return
         self._account.api.set_car_state(self._device.device_id, self._key, False)
