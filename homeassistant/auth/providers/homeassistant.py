@@ -14,6 +14,7 @@ from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.storage import Store
 
 from ..models import Credentials, UserMeta
@@ -92,6 +93,16 @@ class Data:
             if (folded := username.casefold()) in seen:
                 self.is_legacy = True
 
+                ir.async_create_issue(
+                    self.hass,
+                    "auth",
+                    "duplicate_username",
+                    breaks_in_ha_version="2024.6.0",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="homeassistant_auth_duplicate_username",
+                    translation_placeholders={"username": username},
+                )
                 logging.getLogger(__name__).warning(
                     (
                         "Home Assistant auth provider is running in legacy mode "
@@ -109,6 +120,16 @@ class Data:
             if username != username.strip():
                 self.is_legacy = True
 
+                ir.async_create_issue(
+                    self.hass,
+                    "auth",
+                    "username_begins_or_ends_with_space",
+                    breaks_in_ha_version="2024.6.0",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="homeassistant_auth_username_begins_or_ends_with_space",
+                    translation_placeholders={"username": username},
+                )
                 logging.getLogger(__name__).warning(
                     (
                         "Home Assistant auth provider is running in legacy mode "
