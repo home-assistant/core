@@ -453,6 +453,9 @@ bellows==0.37.3
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.14.6
 
+# homeassistant.components.esphome
+bleak-esphome==0.2.0
+
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.3.0
 

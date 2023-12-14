@@ -534,6 +534,9 @@ bimmer-connected[china]==0.14.6
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
 
+# homeassistant.components.esphome
+bleak-esphome==0.2.0
+
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.3.0
 
