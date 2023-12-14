@@ -73,7 +73,7 @@ async def async_setup_entry(
                 target_temperature=None,
                 unit_of_measurement=UnitOfTemperature.CELSIUS,
                 preset="home",
-                preset_modes=["home", "eco"],
+                preset_modes=["home", "eco", "away"],
                 current_temperature=23,
                 fan_mode="Auto Low",
                 target_humidity=None,

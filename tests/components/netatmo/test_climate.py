@@ -33,6 +33,7 @@ from homeassistant.components.netatmo.const import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
 
 from .common import selected_platforms, simulate_webhook
@@ -879,15 +880,14 @@ async def test_service_preset_mode_invalid(
 
         await hass.async_block_till_done()
 
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.cocina", ATTR_PRESET_MODE: "invalid"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    assert "Preset mode 'invalid' not available" in caplog.text
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: "climate.cocina", ATTR_PRESET_MODE: "invalid"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
 
 async def test_valves_service_turn_off(
