@@ -541,15 +541,6 @@ class Entity(ABC):
         return None
 
     @property
-    def device_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return entity specific state attributes.
-
-        This method is deprecated, platform classes should implement
-        extra_state_attributes instead.
-        """
-        return None
-
-    @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes.
 
