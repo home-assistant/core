@@ -14,6 +14,7 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -23,20 +24,31 @@ from homeassistant.util.dt import as_timestamp, now, parse_datetime, utc_from_ti
 from .const import (
     CONF_MANUAL_RUN_MINS,
     DEFAULT_MANUAL_RUN_MINS,
+    DEFAULT_NAME,
     DOMAIN as DOMAIN_RACHIO,
+    KEY_BATTERY_STATUS,
+    KEY_CURRENT_STATUS,
     KEY_CUSTOM_CROP,
     KEY_CUSTOM_SHADE,
     KEY_CUSTOM_SLOPE,
+    KEY_DETECT_FLOW,
     KEY_DEVICE_ID,
     KEY_DURATION,
+    KEY_DURATION_MINUTES,
+    KEY_DURATION_SECONDS,
     KEY_ENABLED,
+    KEY_FLOW_DETECTED,
     KEY_ID,
     KEY_IMAGE_URL,
     KEY_NAME,
     KEY_ON,
     KEY_RAIN_DELAY,
     KEY_RAIN_DELAY_END,
+    KEY_REASON,
+    KEY_REPORTED_STATE,
     KEY_SCHEDULE_ID,
+    KEY_START_TIME,
+    KEY_STATE,
     KEY_SUBTYPE,
     KEY_SUMMARY,
     KEY_TYPE,
@@ -46,6 +58,7 @@ from .const import (
     SCHEDULE_TYPE_FLEX,
     SERVICE_SET_ZONE_MOISTURE,
     SERVICE_START_MULTIPLE_ZONES,
+    SERVICE_START_SINGLE,
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
     SIGNAL_RACHIO_RAIN_DELAY_UPDATE,
     SIGNAL_RACHIO_SCHEDULE_UPDATE,
@@ -74,17 +87,23 @@ from .webhooks import (
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DURATION = "duration"
+ATTR_FLOW_DETECTED = "Flow Detected"
 ATTR_PERCENT = "percent"
 ATTR_SCHEDULE_SUMMARY = "Summary"
 ATTR_SCHEDULE_ENABLED = "Enabled"
 ATTR_SCHEDULE_DURATION = "Duration"
 ATTR_SCHEDULE_TYPE = "Type"
 ATTR_SORT_ORDER = "sortOrder"
+ATTR_STARTED_WATERING = "Started Watering"
+ATTR_WATERING_DURATION = "Watering Duration seconds"
+ATTR_WATERING_REASON = "Watering Reason"
 ATTR_ZONE_NUMBER = "Zone number"
 ATTR_ZONE_SHADE = "Shade"
 ATTR_ZONE_SLOPE = "Slope"
 ATTR_ZONE_SUMMARY = "Summary"
 ATTR_ZONE_TYPE = "Type"
+
+SCAN_INTERVAL = timedelta(minutes=1)
 
 START_MULTIPLE_ZONES_SCHEMA = vol.Schema(
     {
@@ -140,6 +159,19 @@ async def async_setup_entry(
             _LOGGER.debug("Starting zone(s) %s", entity_id)
         else:
             raise HomeAssistantError("No matching zones found in given entity_ids")
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_START_SINGLE,
+        {
+            vol.Required(ATTR_DURATION): cv.positive_int,
+        },
+        "turn_on",
+    )
+
+    # If only hose timers on account, none of these services apply
+    if len(zone_entities) == 0:
+        return
 
     hass.services.async_register(
         DOMAIN_RACHIO,
@@ -246,7 +278,7 @@ class RachioRainDelay(RachioSwitch):
     _attr_has_entity_name = True
     _attr_translation_key = "rain_delay"
 
-    def __init__(self, controller):
+    def __init__(self, controller) -> None:
         """Set up a Rachio rain delay switch."""
         self._cancel_update = None
         super().__init__(controller)
@@ -268,7 +300,7 @@ class RachioRainDelay(RachioSwitch):
             _LOGGER.debug("Rain delay expires at %s", endtime)
             self._attr_is_on = True
             assert endtime is not None
-            self._cancel_update = async_track_point_in_utc_time(
+            self._cancel_update = async_track_point_in_utc_time(  # type: ignore[assignment]
                 self.hass, self._delay_expiration, endtime
             )
         elif args[0][0][KEY_SUBTYPE] == SUBTYPE_RAIN_DELAY_OFF:
@@ -306,7 +338,7 @@ class RachioRainDelay(RachioSwitch):
                 self._controller.init_data[KEY_RAIN_DELAY] / 1000
             )
             _LOGGER.debug("Re-setting rain delay timer for %s", delay_end)
-            self._cancel_update = async_track_point_in_utc_time(
+            self._cancel_update = async_track_point_in_utc_time(  # type: ignore[assignment]
                 self.hass, self._delay_expiration, delay_end
             )
 
@@ -324,7 +356,7 @@ class RachioZone(RachioSwitch):
 
     _attr_icon = "mdi:water"
 
-    def __init__(self, person, controller, data, current_schedule):
+    def __init__(self, person, controller, data, current_schedule) -> None:
         """Initialize a new Rachio Zone."""
         self.id = data[KEY_ID]
         self._attr_name = data[KEY_NAME]
@@ -379,11 +411,14 @@ class RachioZone(RachioSwitch):
         self.turn_off()
 
         # Start this zone
-        manual_run_time = timedelta(
-            minutes=self._person.config_entry.options.get(
-                CONF_MANUAL_RUN_MINS, DEFAULT_MANUAL_RUN_MINS
+        if KEY_DURATION_MINUTES in kwargs:
+            manual_run_time = timedelta(minutes=kwargs[KEY_DURATION_MINUTES])
+        else:
+            manual_run_time = timedelta(
+                minutes=self._person.config_entry.options.get(
+                    CONF_MANUAL_RUN_MINS, DEFAULT_MANUAL_RUN_MINS
+                )
             )
-        )
         # The API limit is 3 hours, and requires an int be passed
         self._controller.rachio.zone.start(self.zone_id, manual_run_time.seconds)
         _LOGGER.debug(
@@ -435,7 +470,7 @@ class RachioZone(RachioSwitch):
 class RachioSchedule(RachioSwitch):
     """Representation of one fixed schedule on the Rachio Iro."""
 
-    def __init__(self, person, controller, data, current_schedule):
+    def __init__(self, person, controller, data, current_schedule) -> None:
         """Initialize a new Rachio Schedule."""
         self._schedule_id = data[KEY_ID]
         self._duration = data[KEY_DURATION]
@@ -509,3 +544,96 @@ class RachioSchedule(RachioSwitch):
                 self.hass, SIGNAL_RACHIO_SCHEDULE_UPDATE, self._async_handle_update
             )
         )
+
+
+class RachioValve(SwitchEntity):
+    """Representation of one smart hose timer valve."""
+
+    _attr_icon = "mdi:water"
+
+    def __init__(self, person, base, data) -> None:
+        """Initialize a new smart hose valve."""
+        self._person = person
+        self._base = base
+        self.id = data[KEY_ID]
+        self._attr_name = data[KEY_NAME]
+        self._attr_unique_id = f"{self.id}-valve"
+        self._static_attrs = data[KEY_STATE][KEY_REPORTED_STATE]
+        self._detect_flow = data[KEY_DETECT_FLOW]
+        self._attr_is_on = self._static_attrs.get(KEY_CURRENT_STATUS) is not None
+        self._battery_status = self._static_attrs[KEY_BATTERY_STATUS]
+        self._running_attrs = self._static_attrs.get(KEY_CURRENT_STATUS, {})
+        self._attr_should_poll = True
+        self._just_toggled = False
+        self.skip_throttle = False
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                (
+                    DOMAIN_RACHIO,
+                    self._base.serial_number,
+                )
+            },
+            connections={(CONNECTION_NETWORK_MAC, self._base.mac_address)},
+            manufacturer=DEFAULT_NAME,
+            model="Smart Hose Timer",
+            name="Smart Hose Timer Base Station",
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the optional state attributes."""
+        _runtime = int(self._running_attrs.get(KEY_DURATION_SECONDS, 0))
+        props = {
+            "Flow Detection Enabled": self._detect_flow,
+            "Battery Status": self._battery_status,
+        }
+        if self._attr_is_on:
+            if _runtime > 0:
+                props[ATTR_DURATION] = f"{round(_runtime / 60)} minutes"
+            props[ATTR_WATERING_REASON] = self._running_attrs.get(KEY_REASON)
+            props[ATTR_FLOW_DETECTED] = self._running_attrs.get(KEY_FLOW_DETECTED)
+            props[ATTR_STARTED_WATERING] = self._running_attrs.get(KEY_START_TIME)
+
+        return props
+
+    def turn_on(self, **kwargs: Any) -> None:
+        """Turn on this valve."""
+        if KEY_DURATION_MINUTES in kwargs:
+            manual_run_time = timedelta(minutes=kwargs[KEY_DURATION_MINUTES])
+        else:
+            manual_run_time = timedelta(
+                minutes=self._person.config_entry.options.get(
+                    CONF_MANUAL_RUN_MINS, DEFAULT_MANUAL_RUN_MINS
+                )
+            )
+
+        self._base.start_watering(self.id, manual_run_time.seconds)
+        self._just_toggled = True
+        self._attr_is_on = True
+        _LOGGER.debug("Starting valve %s for %s", self.name, str(manual_run_time))
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn off this valve."""
+        self._base.stop_watering(self.id)
+        self._just_toggled = True
+        self._attr_is_on = False
+        _LOGGER.debug("Stopping watering on valve %s", self.name)
+
+    def update(self) -> None:
+        """Update valve."""
+        # Each valve will make a request every minute, which will return either updated
+        # or cached data, with a rate limit applied to the base station API calls
+        if self._just_toggled:  # Skip this update, the data won't be up to date yet
+            self._just_toggled = False
+            self.skip_throttle = True  # Bypass rate limiter next update
+            return
+        updated_data = self._base.update_valves(self.skip_throttle)
+        self.skip_throttle = False
+        for data in updated_data:
+            if data["id"] == self.id:
+                self._static_attrs = data[KEY_STATE][KEY_REPORTED_STATE]
+                self._running_attrs = self._static_attrs.get(KEY_CURRENT_STATUS, {})
+                self._attr_is_on = (
+                    self._static_attrs.get(KEY_CURRENT_STATUS) is not None
+                )

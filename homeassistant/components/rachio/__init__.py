@@ -83,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from error
 
     # Check for Rachio controller devices
-    if not person.controllers:
+    if not person.controllers and not person.base_stations:
         _LOGGER.error("No Rachio devices found in account %s", person.username)
         return False
     _LOGGER.info(
@@ -91,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "%d Rachio device(s) found; The url %s must be accessible from the internet"
             " in order to receive updates"
         ),
-        len(person.controllers),
+        len(person.controllers + person.base_stations),
         webhook_url,
     )
 

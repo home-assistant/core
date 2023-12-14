@@ -63,6 +63,16 @@
         }
       }
     },
+    "start_single_entity": {
+      "name": "Start single entity",
+      "description": "Start a single zone or multiple hose timers.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Number of minutes to run. The maximum duration for sprinkler zones is 3 hours, or 24 hours for hose timers."
+        }
+      }
+    },
     "pause_watering": {
       "name": "Pause watering",
       "description": "Pause any currently running zones or schedules.",

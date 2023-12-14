@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from http import HTTPStatus
 import logging
 from typing import Any
@@ -14,9 +15,11 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
+from homeassistant.util import dt as dt_util
 
 from .const import (
     DOMAIN,
+    KEY_BASE_STATIONS,
     KEY_DEVICES,
     KEY_ENABLED,
     KEY_EXTERNAL_ID,
@@ -29,6 +32,7 @@ from .const import (
     KEY_SERIAL_NUMBER,
     KEY_STATUS,
     KEY_USERNAME,
+    KEY_VALVES,
     KEY_ZONES,
     LISTEN_EVENT_TYPES,
     MODEL_GENERATION_1,
@@ -43,6 +47,8 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_DEVICES = "devices"
 ATTR_DURATION = "duration"
 PERMISSION_ERROR = "7"
+
+MIN_UPDATE_INTERVAL = timedelta(minutes=3)
 
 PAUSE_SERVICE_SCHEMA = vol.Schema(
     {
@@ -67,6 +73,7 @@ class RachioPerson:
         self.username = None
         self._id: str | None = None
         self._controllers: list[RachioIro] = []
+        self._base_stations: list[RachioBaseStation] = []
 
     async def async_setup(self, hass: HomeAssistant) -> None:
         """Create rachio devices and services."""
@@ -78,29 +85,33 @@ class RachioPerson:
                 can_pause = True
                 break
 
-        all_devices = [rachio_iro.name for rachio_iro in self._controllers]
+        all_controllers = [rachio_iro.name for rachio_iro in self._controllers]
 
         def pause_water(service: ServiceCall) -> None:
             """Service to pause watering on all or specific controllers."""
             duration = service.data[ATTR_DURATION]
-            devices = service.data.get(ATTR_DEVICES, all_devices)
+            devices = service.data.get(ATTR_DEVICES, all_controllers)
             for iro in self._controllers:
                 if iro.name in devices:
                     iro.pause_watering(duration)
 
         def resume_water(service: ServiceCall) -> None:
             """Service to resume watering on all or specific controllers."""
-            devices = service.data.get(ATTR_DEVICES, all_devices)
+            devices = service.data.get(ATTR_DEVICES, all_controllers)
             for iro in self._controllers:
                 if iro.name in devices:
                     iro.resume_watering()
 
         def stop_water(service: ServiceCall) -> None:
             """Service to stop watering on all or specific controllers."""
-            devices = service.data.get(ATTR_DEVICES, all_devices)
+            devices = service.data.get(ATTR_DEVICES, all_controllers)
             for iro in self._controllers:
                 if iro.name in devices:
                     iro.stop_watering()
+
+        # If only hose timers on account, none of these services apply
+        if len(all_controllers) == 0:
+            return
 
         hass.services.async_register(
             DOMAIN,
@@ -145,6 +156,9 @@ class RachioPerson:
             raise ConfigEntryNotReady(f"API Error: {data}")
         self.username = data[1][KEY_USERNAME]
         devices: list[dict[str, Any]] = data[1][KEY_DEVICES]
+        base_station_data = rachio.valve.list_base_stations(self._id)
+        base_stations: list[dict[str, Any]] = base_station_data[1][KEY_BASE_STATIONS]
+
         for controller in devices:
             webhooks = rachio.notification.get_device_webhook(controller[KEY_ID])[1]
             # The API does not provide a way to tell if a controller is shared
@@ -174,6 +188,9 @@ class RachioPerson:
             rachio_iro.setup()
             self._controllers.append(rachio_iro)
 
+        for base in base_stations:
+            self._base_stations.append(RachioBaseStation(rachio, base))
+
         _LOGGER.info('Using Rachio API as user "%s"', self.username)
 
     @property
@@ -185,6 +202,11 @@ class RachioPerson:
     def controllers(self) -> list[RachioIro]:
         """Get a list of controllers managed by this account."""
         return self._controllers
+
+    @property
+    def base_stations(self) -> list[RachioBaseStation]:
+        """List of smart hose timer base stations."""
+        return self._base_stations
 
     def start_multiple_zones(self, zones) -> None:
         """Start multiple zones."""
@@ -319,6 +341,44 @@ class RachioIro:
         """Resume paused watering on this controller."""
         self.rachio.device.resume_zone_run(self.controller_id)
         _LOGGER.debug("Resuming watering on %s", self)
+
+
+class RachioBaseStation:
+    """Represent a smart hose timer base station."""
+
+    def __init__(self, rachio: Rachio, data: dict[str, Any]) -> None:
+        """Initiialze a hose time base station."""
+        self.rachio = rachio
+        self._id = data[KEY_ID]
+        self.serial_number = data[KEY_SERIAL_NUMBER]
+        self.mac_address = data[KEY_MAC_ADDRESS]
+        self._next_update = dt_util.utcnow()
+        self.cached_valve_data: list[dict[str, Any]]
+
+    def list_valves(self) -> list:
+        """List valves connected to this base station."""
+        valve_data = self.rachio.valve.list_valves(self._id)
+        self.cached_valve_data = valve_data[1][KEY_VALVES]
+        return self.cached_valve_data
+
+    # Limit the number of API calls, return cached data to valves
+    # if not time to update
+    def update_valves(self, skip_throttle=False) -> list:
+        """Update all the valves on this base station."""
+        if skip_throttle:
+            return self.list_valves()
+        if self._next_update > dt_util.utcnow():
+            return self.cached_valve_data
+        self._next_update = dt_util.utcnow() + MIN_UPDATE_INTERVAL
+        return self.list_valves()
+
+    def start_watering(self, valve_id: str, duration: int):
+        """Start watering on this valve."""
+        self.rachio.valve.start_watering(valve_id, duration)
+
+    def stop_watering(self, valve_id: str):
+        """Stop watering on this valve."""
+        self.rachio.valve.stop_watering(valve_id)
 
 
 def is_invalid_auth_code(http_status_code: int) -> bool:
