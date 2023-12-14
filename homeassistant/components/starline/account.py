@@ -173,6 +173,9 @@ class StarlineAccount:
         return {
             "autostart": device.car_state.get("r_start"),
             "ignition": device.car_state.get("run"),
+            "handsfree": device.car_state.get("hfree"),
+            "neutral": device.car_state.get("neutral"),
+            "moving_ban": device.car_state.get("arm_moving_pb"),
         }
 
     @staticmethod
