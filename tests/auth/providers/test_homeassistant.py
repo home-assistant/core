@@ -12,6 +12,7 @@ from homeassistant.auth.providers import (
     homeassistant as hass_auth,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
 
 @pytest.fixture
@@ -258,6 +259,35 @@ async def test_legacy_saving_loading(legacy_data, hass: HomeAssistant) -> None:
 
     with pytest.raises(hass_auth.InvalidAuth):
         legacy_data.validate_login("test-user ", "test-pass")
+
+
+async def test_legacy_case_insensitive_raised_issue(
+    legacy_data, hass: HomeAssistant
+) -> None:
+    """Test legacy mode raises repair issue for case insensitive collisions."""
+    legacy_data.add_auth("test-user", "test-pass")
+    legacy_data.add_auth("Test-user", "second-pass")
+    await legacy_data.async_save()
+    legacy_data = hass_auth.Data(hass)
+    await legacy_data.async_load()
+
+    assert legacy_data.is_legacy is True
+    registry = ir.async_get(hass)
+    assert registry.async_get_issue(domain="auth", issue_id="duplicate_username")
+
+
+async def test_legacy_space_raised_issue(legacy_data, hass: HomeAssistant) -> None:
+    """Test legacy mode raises repair issues for usernames beginning with space."""
+    legacy_data.add_auth(" test-user", "test-pass")
+    await legacy_data.async_save()
+    legacy_data = hass_auth.Data(hass)
+    await legacy_data.async_load()
+
+    assert legacy_data.is_legacy is True
+    registry = ir.async_get(hass)
+    assert registry.async_get_issue(
+        domain="auth", issue_id="username_begins_or_ends_with_space"
+    )
 
 
 async def test_legacy_get_or_create_credentials(
