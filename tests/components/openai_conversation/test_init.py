@@ -10,6 +10,10 @@ from openai import (
 )
 from openai.types.chat.chat_completion import ChatCompletion, Choice
 from openai.types.chat.chat_completion_message import ChatCompletionMessage
+from openai.types.chat.chat_completion_message_tool_call import (
+    ChatCompletionMessageToolCall,
+    Function,
+)
 from openai.types.completion_usage import CompletionUsage
 from openai.types.image import Image
 from openai.types.images_response import ImagesResponse
@@ -17,9 +21,14 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import area_registry as ar, device_registry as dr, intent
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    intent,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -137,6 +146,320 @@ async def test_default_prompt(
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert mock_create.mock_calls[0][2]["messages"] == snapshot
+
+
+async def test_function_call(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that function calls works."""
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+
+    area_registry.async_create("Bedroom")
+    entity_registry.async_get_or_create(
+        domain="light",
+        platform="bed",
+        unique_id="light",
+    )
+    entity_registry.async_update_entity(
+        entity_id="light.bed_light",
+        aliases=["Bettlicht"],
+        area_id=area_registry.async_get_area_by_name("Bedroom").id,
+    )
+
+    def completion_result(*args, messages, **kwargs):
+        for message in messages:
+            role = message["role"] if isinstance(message, dict) else message.role
+            if role == "tool":
+                return ChatCompletion(
+                    id="chatcmpl-1234567890ZYXWVUTSRQPONMLKJIH",
+                    choices=[
+                        Choice(
+                            finish_reason="stop",
+                            index=0,
+                            message=ChatCompletionMessage(
+                                content='The "Bed Light" in the Bedroom is currently turned off. All other lights are on.',
+                                role="assistant",
+                                function_call=None,
+                                tool_calls=None,
+                            ),
+                        )
+                    ],
+                    created=1700000000,
+                    model="gpt-4-1106-preview",
+                    object="chat.completion",
+                    system_fingerprint=None,
+                    usage=CompletionUsage(
+                        completion_tokens=9, prompt_tokens=8, total_tokens=17
+                    ),
+                )
+
+        return ChatCompletion(
+            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+            choices=[
+                Choice(
+                    finish_reason="tool_calls",
+                    index=0,
+                    message=ChatCompletionMessage(
+                        content=None,
+                        role="assistant",
+                        function_call=None,
+                        tool_calls=[
+                            ChatCompletionMessageToolCall(
+                                id="call_AbCdEfGhIjKlMnOpQrStUvWx",
+                                function=Function(
+                                    arguments='{"domain":"light","state":"off"}',
+                                    name="entity_registry_inquiry",
+                                ),
+                                type="function",
+                            )
+                        ],
+                    ),
+                )
+            ],
+            created=1700000000,
+            model="gpt-4-1106-preview",
+            object="chat.completion",
+            system_fingerprint=None,
+            usage=CompletionUsage(
+                completion_tokens=9, prompt_tokens=8, total_tokens=17
+            ),
+        )
+
+    with patch(
+        "openai.resources.chat.completions.AsyncCompletions.create",
+        new_callable=AsyncMock,
+        side_effect=completion_result,
+    ) as mock_create, patch(
+        "homeassistant.helpers.intent.async_match_states",
+        return_value=[
+            State(
+                entity_id="light.bed_light",
+                state="off",
+                attributes={
+                    "friendly_name": "Bed Light",
+                    "min_color_temp_kelvin": 2000,
+                    "max_color_temp_kelvin": 6535,
+                },
+            ),
+            State(
+                entity_id="light.office_rgbw_lights",
+                state="on",
+                attributes={"friendly_name": "Office RGBW Lights", "brightness": 180},
+            ),
+            State(
+                entity_id="light.living_room_rgbww_lights",
+                state="on",
+                attributes={"friendly_name": "Living Room RGBWW Lights"},
+            ),
+        ],
+    ):
+        result = await conversation.async_converse(
+            hass,
+            "Which lights are off?",
+            None,
+            Context(),
+            agent_id=mock_config_entry.entry_id,
+        )
+
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert mock_create.mock_calls[1][2]["messages"][3] == {
+        "role": "tool",
+        "tool_call_id": "call_AbCdEfGhIjKlMnOpQrStUvWx",
+        "name": "entity_registry_inquiry",
+        "content": '{"entities": [{"name": "Bed Light", "entity_id": "light.bed_light", '
+        '"state": "off", "area": "Bedroom", "aliases": ["Bettlicht"], "attributes": '
+        '{"min_color_temp_kelvin": 2000, "max_color_temp_kelvin": 6535}}]}',
+    }
+
+
+async def test_function_call_hallucinated_arguments(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test function call with unrecognized arguments."""
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+
+    def completion_result(*args, messages, **kwargs):
+        for message in messages:
+            role = message["role"] if isinstance(message, dict) else message.role
+            if role == "tool":
+                return ChatCompletion(
+                    id="chatcmpl-1234567890ZYXWVUTSRQPONMLKJIH",
+                    choices=[
+                        Choice(
+                            finish_reason="stop",
+                            index=0,
+                            message=ChatCompletionMessage(
+                                content="Sorry for the error, I was not able to fetch device states",
+                                role="assistant",
+                                function_call=None,
+                                tool_calls=None,
+                            ),
+                        )
+                    ],
+                    created=1700000000,
+                    model="gpt-4-1106-preview",
+                    object="chat.completion",
+                    system_fingerprint=None,
+                    usage=CompletionUsage(
+                        completion_tokens=9, prompt_tokens=8, total_tokens=17
+                    ),
+                )
+
+        return ChatCompletion(
+            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+            choices=[
+                Choice(
+                    finish_reason="tool_calls",
+                    index=0,
+                    message=ChatCompletionMessage(
+                        content=None,
+                        role="assistant",
+                        function_call=None,
+                        tool_calls=[
+                            ChatCompletionMessageToolCall(
+                                id="call_AbCdEfGhIjKlMnOpQrStUvWx",
+                                function=Function(
+                                    arguments='{"domain":"light","last_changed":"today"}',
+                                    name="entity_registry_inquiry",
+                                ),
+                                type="function",
+                            )
+                        ],
+                    ),
+                )
+            ],
+            created=1700000000,
+            model="gpt-4-1106-preview",
+            object="chat.completion",
+            system_fingerprint=None,
+            usage=CompletionUsage(
+                completion_tokens=9, prompt_tokens=8, total_tokens=17
+            ),
+        )
+
+    with patch(
+        "openai.resources.chat.completions.AsyncCompletions.create",
+        new_callable=AsyncMock,
+        side_effect=completion_result,
+    ) as mock_create:
+        result = await conversation.async_converse(
+            hass,
+            "Which lights are off?",
+            None,
+            Context(),
+            agent_id=mock_config_entry.entry_id,
+        )
+
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert mock_create.mock_calls[1][2]["messages"][3] == {
+        "role": "tool",
+        "tool_call_id": "call_AbCdEfGhIjKlMnOpQrStUvWx",
+        "name": "entity_registry_inquiry",
+        "content": '{"error": "TypeError", "error_text": "entity_registry_inquiry() '
+        "got an unexpected keyword argument 'last_changed'\"}",
+    }
+
+
+async def test_function_call_no_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test that function calls works."""
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+
+    def completion_result(*args, messages, **kwargs):
+        for message in messages:
+            role = message["role"] if isinstance(message, dict) else message.role
+            if role == "tool":
+                return ChatCompletion(
+                    id="chatcmpl-1234567890ZYXWVUTSRQPONMLKJIH",
+                    choices=[
+                        Choice(
+                            finish_reason="stop",
+                            index=0,
+                            message=ChatCompletionMessage(
+                                content="Sorry for the error, I was not able to find ceiling lights.",
+                                role="assistant",
+                                function_call=None,
+                                tool_calls=None,
+                            ),
+                        )
+                    ],
+                    created=1700000000,
+                    model="gpt-4-1106-preview",
+                    object="chat.completion",
+                    system_fingerprint=None,
+                    usage=CompletionUsage(
+                        completion_tokens=9, prompt_tokens=8, total_tokens=17
+                    ),
+                )
+
+        return ChatCompletion(
+            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+            choices=[
+                Choice(
+                    finish_reason="tool_calls",
+                    index=0,
+                    message=ChatCompletionMessage(
+                        content=None,
+                        role="assistant",
+                        function_call=None,
+                        tool_calls=[
+                            ChatCompletionMessageToolCall(
+                                id="call_AbCdEfGhIjKlMnOpQrStUvWx",
+                                function=Function(
+                                    arguments='{"domain":"light","state":"off","device_class":"ceiling"}',
+                                    name="entity_registry_inquiry",
+                                ),
+                                type="function",
+                            )
+                        ],
+                    ),
+                )
+            ],
+            created=1700000000,
+            model="gpt-4-1106-preview",
+            object="chat.completion",
+            system_fingerprint=None,
+            usage=CompletionUsage(
+                completion_tokens=9, prompt_tokens=8, total_tokens=17
+            ),
+        )
+
+    with patch(
+        "openai.resources.chat.completions.AsyncCompletions.create",
+        new_callable=AsyncMock,
+        side_effect=completion_result,
+    ) as mock_create, patch(
+        "homeassistant.helpers.intent.async_match_states", return_value=[]
+    ):
+        result = await conversation.async_converse(
+            hass,
+            "Which ceiling lights are off?",
+            None,
+            Context(),
+            agent_id=mock_config_entry.entry_id,
+        )
+
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert mock_create.mock_calls[1][2]["messages"][3] == {
+        "role": "tool",
+        "tool_call_id": "call_AbCdEfGhIjKlMnOpQrStUvWx",
+        "name": "entity_registry_inquiry",
+        "content": '{"error": "Entities matching the criteria are not found or not exposed. '
+        "Please note that not all entities have device_class set up, so you may want to repeat "
+        'the function call without device_class parameter if the expected entities were not found."}',
+    }
 
 
 async def test_error_handling(

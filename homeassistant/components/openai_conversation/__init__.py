@@ -31,6 +31,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import ulid
 
+from . import tools
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
@@ -186,32 +187,51 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
 
         client = self.hass.data[DOMAIN][self.entry.entry_id]
 
-        try:
-            result = await client.chat.completions.create(
-                model=model,
-                messages=messages,
-                max_tokens=max_tokens,
-                top_p=top_p,
-                temperature=temperature,
-                user=conversation_id,
-            )
-        except openai.OpenAIError as err:
-            intent_response = intent.IntentResponse(language=user_input.language)
-            intent_response.async_set_error(
-                intent.IntentResponseErrorCode.UNKNOWN,
-                f"Sorry, I had a problem talking to OpenAI: {err}",
-            )
-            return conversation.ConversationResult(
-                response=intent_response, conversation_id=conversation_id
-            )
+        tool_calls = True
+        while tool_calls:
+            try:
+                result = await client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    tools=tools.TOOLS,
+                    max_tokens=max_tokens,
+                    top_p=top_p,
+                    temperature=temperature,
+                    user=conversation_id,
+                )
+            except openai.OpenAIError as err:
+                intent_response = intent.IntentResponse(language=user_input.language)
+                intent_response.async_set_error(
+                    intent.IntentResponseErrorCode.UNKNOWN,
+                    f"Sorry, I had a problem talking to OpenAI: {err}",
+                )
+                return conversation.ConversationResult(
+                    response=intent_response, conversation_id=conversation_id
+                )
 
-        _LOGGER.debug("Response %s", result)
-        response = result.choices[0].message.model_dump(include={"role", "content"})
-        messages.append(response)
+            _LOGGER.debug("Response %s", result)
+            response = result.choices[0].message
+            messages.append(response)
+            tool_calls = response.tool_calls
+
+            if tool_calls:
+                for tool_call in tool_calls:
+                    function_response = tools.call_function(
+                        self.hass, tool_call.function.name, tool_call.function.arguments
+                    )
+                    messages.append(
+                        {
+                            "role": "tool",
+                            "tool_call_id": tool_call.id,
+                            "name": tool_call.function.name,
+                            "content": function_response,
+                        }
+                    )
+
         self.history[conversation_id] = messages
 
         intent_response = intent.IntentResponse(language=user_input.language)
-        intent_response.async_set_speech(response["content"])
+        intent_response.async_set_speech(response.content)
         return conversation.ConversationResult(
             response=intent_response, conversation_id=conversation_id
         )

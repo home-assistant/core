@@ -5,20 +5,13 @@
       'content': '''
         This smart home is controlled by Home Assistant.
         
-        An overview of the areas and the devices in this smart home:
-        
-        Test Area:
-        - Test Device (Test Model)
-        
-        Test Area 2:
-        - Test Device 2
-        - Test Device 3 (Test Model 3A)
-        - Test Device 4
-        - 1 (3)
+        There are following areas in this smart home:0Empty Area, 1Empty Area, 2Empty Area, Test Area, Test Area 2.
         
         Answer the user's questions about the world truthfully.
         
         If the user wants to control a device, reject the request and suggest using the Home Assistant app.
+        
+        The response may be used in Text-to-Speech synthesizers, so prefer shorter responses that are optimized to be spoken.
       ''',
       'role': 'system',
     }),
@@ -26,9 +19,6 @@
       'content': 'hello',
       'role': 'user',
     }),
-    dict({
-      'content': 'Hello, how can I help you?',
-      'role': 'assistant',
-    }),
+    ChatCompletionMessage(content='Hello, how can I help you?', role='assistant', function_call=None, tool_calls=None),
   ])
 # ---
