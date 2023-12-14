@@ -34,6 +34,7 @@ from .const import (
     CONF_START,
     DEFAULT_NAME,
     DOMAIN,
+    DOMAIN_HUMAN_READABLE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,8 +43,8 @@ SCAN_INTERVAL = timedelta(seconds=90)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_START): cv.string,
         vol.Required(CONF_DESTINATION): cv.string,
+        vol.Required(CONF_START): cv.string,
         vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
@@ -94,7 +95,7 @@ async def async_setup_platform(
             translation_key="deprecated_yaml",
             translation_placeholders={
                 "domain": DOMAIN,
-                "integration_title": DOMAIN,
+                "integration_title": DOMAIN_HUMAN_READABLE,
             },
         )
     else:

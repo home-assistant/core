@@ -1,6 +1,7 @@
 """Constants for the swiss_public_transport integration."""
 
 DOMAIN = "swiss_public_transport"
+DOMAIN_HUMAN_READABLE = "Swiss public transport"
 
 ATTR_DEPARTURE_TIME1 = "next_departure"
 ATTR_DEPARTURE_TIME2 = "next_on_departure"

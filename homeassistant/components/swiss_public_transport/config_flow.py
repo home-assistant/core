@@ -3,7 +3,10 @@ import logging
 from typing import Any
 
 from opendata_transport import OpendataTransport
-from opendata_transport.exceptions import OpendataTransportError
+from opendata_transport.exceptions import (
+    OpendataTransportConnectionError,
+    OpendataTransportError,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -41,8 +44,10 @@ class SwissPublicTransportConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             try:
                 await opendata.async_get_data()
+            except OpendataTransportConnectionError:
+                errors["base"] = "cannot_connect"
             except OpendataTransportError:
-                errors["base"] = "client"
+                errors["base"] = "bad_config"
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
             else:
@@ -57,8 +62,12 @@ class SwissPublicTransportConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_input: dict[str, Any]) -> FlowResult:
         """Async import step to set up the connection."""
-        await self.async_set_unique_id(import_input[CONF_NAME])
-        self._abort_if_unique_id_configured()
+        self._async_abort_entries_match(
+            {
+                CONF_START: import_input[CONF_START],
+                CONF_DESTINATION: import_input[CONF_DESTINATION],
+            }
+        )
 
         session = async_get_clientsession(self.hass)
         opendata = OpendataTransport(
@@ -66,8 +75,10 @@ class SwissPublicTransportConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         try:
             await opendata.async_get_data()
+        except OpendataTransportConnectionError:
+            return self.async_abort(reason="cannot_connect")
         except OpendataTransportError:
-            return self.async_abort(reason="client")
+            return self.async_abort(reason="bad_config")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.error(
                 "Unknown error raised by python-opendata-transport for '%s %s', check at http://transport.opendata.ch/examples/stationboard.html if your station names and your parameters are valid",
