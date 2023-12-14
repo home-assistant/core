@@ -19,6 +19,12 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_VACATION,
     SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -222,3 +228,22 @@ class AlarmControlPanelEntity(Entity):
             ATTR_CHANGED_BY: self.changed_by,
             ATTR_CODE_ARM_REQUIRED: self.code_arm_required,
         }
+
+    @classmethod
+    async def async_get_action_completed_state(cls, action: str | None) -> str | None:
+        """Return expected state when action is complete."""
+        if action == "trigger":
+            to_state = STATE_ALARM_TRIGGERED
+        elif action == "disarm":
+            to_state = STATE_ALARM_DISARMED
+        elif action == "arm_home":
+            to_state = STATE_ALARM_ARMED_HOME
+        elif action == "arm_away":
+            to_state = STATE_ALARM_ARMED_AWAY
+        elif action == "arm_night":
+            to_state = STATE_ALARM_ARMED_NIGHT
+        elif action == "arm_vacation":
+            to_state = STATE_ALARM_ARMED_VACATION
+        else:
+            to_state = None
+        return to_state

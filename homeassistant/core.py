@@ -334,6 +334,13 @@ class HomeAssistant:
         # Timeout handler for Core/Helper namespace
         self.timeout: TimeoutManager = TimeoutManager()
         self._stop_future: concurrent.futures.Future[None] | None = None
+        # rasc
+        # should record:
+        # 1. Failure timeout
+        # 2. polling interval
+        #    - Based on history: (command, duration) -> polling interval
+        #    - Based on interpolation: value_change/(current_time-last_polled_time) -> changing curve
+        self.rasc_global_state: dict[tuple[str, str, int], Any] = {}
 
     @property
     def is_running(self) -> bool:

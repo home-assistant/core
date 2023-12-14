@@ -248,3 +248,12 @@ class HumidifierEntity(ToggleEntity):
     def supported_features(self) -> HumidifierEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
+
+    @classmethod
+    async def async_get_action_completed_state(cls, action: str | None) -> str | None:
+        """Return expected state when action is complete."""
+        if action == SERVICE_SET_HUMIDITY:
+            to_state = "target_humidity_changed"
+        else:
+            to_state = None
+        return to_state

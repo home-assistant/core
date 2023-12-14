@@ -1,6 +1,8 @@
 """Device automation helpers for toggle entity."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.homeassistant.triggers import state as state_trigger
@@ -173,6 +175,31 @@ async def async_attach_trigger(
     return await state_trigger.async_attach_trigger(
         hass, state_config, action, trigger_info, platform_type="device"
     )
+
+
+async def async_get_action_completed_state(action: str | None) -> str | None:
+    """Return expected state when action is complete."""
+    if action == CONF_TURN_ON:
+        to_state = CONF_TURNED_ON
+    else:
+        to_state = CONF_TURNED_OFF
+    return to_state
+
+
+async def async_attach_trigger_from_prev_action(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
+    """Listen for state changes based on previous action configuration."""
+    to_state = await async_get_action_completed_state(config[CONF_TYPE])
+    trigger_config = {
+        CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        CONF_TYPE: to_state,
+    }
+
+    return await async_attach_trigger(hass, trigger_config, action, trigger_info)
 
 
 async def _async_get_automations(

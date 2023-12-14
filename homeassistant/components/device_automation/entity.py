@@ -32,7 +32,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 async def async_attach_trigger(
     hass: HomeAssistant,
-    config: ConfigType,
+    config: ConfigType,  # trigger config
     action: TriggerActionType,
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:

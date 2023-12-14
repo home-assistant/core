@@ -231,3 +231,7 @@ class SelectEntity(Entity):
         options = self.options
         new_index = idx % len(options)
         await self.async_select_option(options[new_index])
+
+    async def async_get_action_completed_state(self, action: str | None) -> str | None:
+        """Return expected state when action is complete."""
+        return None

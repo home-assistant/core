@@ -1194,3 +1194,8 @@ class EntityCategory(StrEnum):
     # Diagnostic: An entity exposing some configuration parameter,
     # or diagnostics of a device.
     DIAGNOSTIC = "diagnostic"
+
+
+RASC_START = "start"
+RASC_COMPLETE = "complete"
+RASC_RESPONSE = "rasc_response"

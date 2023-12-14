@@ -282,3 +282,12 @@ class LockEntity(Entity):
             return
 
         self._lock_option_default_code = ""
+
+    @classmethod
+    async def async_get_action_completed_state(cls, action: str | None) -> str | None:
+        """Return expected state when action is complete."""
+        if action == "lock":
+            to_state = STATE_LOCKED
+        else:
+            to_state = STATE_UNLOCKED
+        return to_state

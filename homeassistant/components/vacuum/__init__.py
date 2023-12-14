@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     ATTR_BATTERY_LEVEL,
     ATTR_COMMAND,
+    CONF_SERVICE,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -41,6 +42,8 @@ from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+
+ACTION_TYPES = {"clean", "dock"}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -469,6 +472,22 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(partial(self.start_pause, **kwargs))
+
+    @classmethod
+    async def async_get_action_completed_state(
+        cls, action: dict[str, Any]
+    ) -> dict[str, Any] | None:
+        """Return expected state when action is complete."""
+
+        target: dict[str, Any] = (
+            await ToggleEntity.async_get_action_completed_state(action) or {}
+        )
+
+        if action[CONF_SERVICE] in ["clean", SERVICE_START, SERVICE_CLEAN_SPOT]:
+            target["state"] = "cleaning"
+        else:
+            target["state"] = "docked"
+        return target
 
 
 @dataclass

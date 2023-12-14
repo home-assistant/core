@@ -263,3 +263,7 @@ class HueLight(HueBaseEntity, LightEntity):
             id=self.resource.id,
             short=flash == FLASH_SHORT,
         )
+
+    # for testing rasc dynamic polling, should be removed
+    async def async_update(self) -> None:
+        """For testing rasc dynamic polling, should be removed."""

@@ -441,3 +441,22 @@ class CoverEntity(Entity):
         if self._cover_is_last_toggle_direction_open:
             return fns["close"]
         return fns["open"]
+
+    @classmethod
+    async def async_get_action_completed_state(cls, action: str | None) -> str | None:
+        """Return expected state when action is complete."""
+        if action == "open":
+            to_state = "opened"
+        elif action == "close":
+            to_state = "closed"
+        elif action == "open_tilt":
+            to_state = "tilt_position"
+        elif action == "close_tilt":
+            to_state = "tilt_position"
+        elif action == "set_position":
+            to_state = "position"
+        elif action == "set_tilt_position":
+            to_state = "tilt_position"
+        else:
+            to_state = None
+        return to_state

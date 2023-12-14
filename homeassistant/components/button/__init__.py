@@ -137,3 +137,12 @@ class ButtonEntity(RestoreEntity):
     async def async_press(self) -> None:
         """Press the button."""
         await self.hass.async_add_executor_job(self.press)
+
+    @classmethod
+    async def async_get_action_completed_state(cls, action: str | None) -> str | None:
+        """Return expected state when action is complete."""
+        if action == SERVICE_PRESS:
+            to_state = "pressed"
+        else:
+            to_state = None
+        return to_state

@@ -15,6 +15,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
+from homeassistant.helpers.rasc import rasc_push_event
 
 from ..bridge import HueBridge
 from ..const import CONF_IGNORE_AVAILABILITY, DOMAIN
@@ -142,6 +143,7 @@ class HueBaseEntity(Entity):
         """Call on update event."""
         # used in subclasses
 
+    @rasc_push_event
     @callback
     def _handle_event(self, event_type: EventType, resource: HueResource) -> None:
         """Handle status event for this resource (or it's parent)."""
