@@ -21,19 +21,20 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import _LOGGER, DOMAIN
 
 
-class ComelitSerialBridge(DataUpdateCoordinator):
-    """Queries Comelit Serial Bridge."""
+class ComelitBaseCoordinator(DataUpdateCoordinator):
+    """Base coordinator for Comelit Devices."""
 
     config_entry: ConfigEntry
+    api: ComeliteSerialBridgeApi | ComelitVedoApi
 
-    def __init__(self, hass: HomeAssistant, host: str, port: int, pin: int) -> None:
+    def __init__(
+        self, hass: HomeAssistant, device: str, hw_version: str, host: str
+    ) -> None:
         """Initialize the scanner."""
 
+        self._device = device
+        self._hw_version = hw_version
         self._host = host
-        self._port = port
-        self._pin = pin
-
-        self.api = ComeliteSerialBridgeApi(host, port, pin)
 
         super().__init__(
             hass=hass,
@@ -45,92 +46,26 @@ class ComelitSerialBridge(DataUpdateCoordinator):
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             identifiers={(DOMAIN, self.config_entry.entry_id)},
-            model=BRIDGE,
-            name=f"{BRIDGE} ({self.api.host})",
-            **self.basic_device_info,
+            model=device,
+            name=f"{device} ({self._host})",
+            manufacturer="Comelit",
+            hw_version=self._hw_version,
         )
-
-    @property
-    def basic_device_info(self) -> dict:
-        """Set basic device info."""
-
-        return {
-            "manufacturer": "Comelit",
-            "hw_version": "20003101",
-        }
-
-    def platform_device_info(self, device: ComelitSerialBridgeObject) -> dr.DeviceInfo:
-        """Set platform device info."""
-
-        return dr.DeviceInfo(
-            identifiers={
-                (DOMAIN, f"{self.config_entry.entry_id}-{device.type}-{device.index}")
-            },
-            via_device=(DOMAIN, self.config_entry.entry_id),
-            name=device.name,
-            model=f"{BRIDGE} {device.type}",
-            **self.basic_device_info,
-        )
-
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Update device data."""
-        _LOGGER.debug("Polling Comelit Serial Bridge host: %s", self._host)
-
-        try:
-            await self.api.login()
-            return await self.api.get_all_devices()
-        except exceptions.CannotConnect as err:
-            _LOGGER.warning("Connection error for %s", self._host)
-            await self.api.close()
-            raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
-        except exceptions.CannotAuthenticate:
-            raise ConfigEntryAuthFailed
-
-
-class ComelitVedoSystem(DataUpdateCoordinator):
-    """Queries Comelit VEDO system."""
-
-    config_entry: ConfigEntry
-
-    def __init__(self, hass: HomeAssistant, host: str, port: int, pin: int) -> None:
-        """Initialize the scanner."""
-
-        self._host = host
-        self._port = port
-        self._pin = pin
-
-        self.api = ComelitVedoApi(host, port, pin)
-
-        super().__init__(
-            hass=hass,
-            logger=_LOGGER,
-            name=f"{DOMAIN}-{host}-coordinator",
-            update_interval=timedelta(seconds=5),
-        )
-        device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create(
-            config_entry_id=self.config_entry.entry_id,
-            identifiers={(DOMAIN, self.config_entry.entry_id)},
-            model=VEDO,
-            name=f"{VEDO} ({self.api.host})",
-            **self.basic_device_info,
-        )
-
-    @property
-    def basic_device_info(self) -> dict:
-        """Set basic device info."""
-
-        return {
-            "manufacturer": "Comelit",
-            "hw_version": "VEDO IP",
-        }
 
     def platform_device_info(
-        self, object_class: ComelitVedoAreaObject | ComelitVedoZoneObject
+        self,
+        object_class: ComelitVedoAreaObject
+        | ComelitVedoZoneObject
+        | ComelitSerialBridgeObject,
     ) -> dr.DeviceInfo:
         """Set platform device info."""
 
-        object_type = "area" if type(object_class) == ComelitVedoAreaObject else "zone"
+        if type(object_class) == ComelitSerialBridgeObject:
+            object_type = object_class.type
+        elif type(object_class) == ComelitVedoAreaObject:
+            object_type = "area"
+        else:
+            object_type = "zone"
 
         return dr.DeviceInfo(
             identifiers={
@@ -141,15 +76,22 @@ class ComelitVedoSystem(DataUpdateCoordinator):
             },
             via_device=(DOMAIN, self.config_entry.entry_id),
             name=object_class.name,
-            model=f"{VEDO} {object_type}",
-            **self.basic_device_info,
+            model=f"{self._device} {object_type}",
+            manufacturer="Comelit",
+            hw_version=self._hw_version,
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update device data."""
-        _LOGGER.debug("Polling Comelit VEDO system host: %s", self._host)
+        _LOGGER.debug("Polling Comelit %s host: %s", self._device, self._host)
         try:
             await self.api.login()
+            if type(self.api) == ComelitVedoApi:
+                return await self.api.get_all_areas_and_zones()
+
+            if type(self.api) == ComeliteSerialBridgeApi:
+                return await self.api.get_all_devices()
+
         except exceptions.CannotConnect as err:
             _LOGGER.warning("Connection error for %s", self._host)
             await self.api.close()
@@ -157,4 +99,22 @@ class ComelitVedoSystem(DataUpdateCoordinator):
         except exceptions.CannotAuthenticate:
             raise ConfigEntryAuthFailed
 
-        return await self.api.get_all_areas_and_zones()
+        return {}
+
+
+class ComelitSerialBridge(ComelitBaseCoordinator):
+    """Queries Comelit Serial Bridge."""
+
+    def __init__(self, hass: HomeAssistant, host: str, port: int, pin: int) -> None:
+        """Initialize the scanner."""
+        self.api = ComeliteSerialBridgeApi(host, port, pin)
+        super().__init__(hass, BRIDGE, "20003101", host)
+
+
+class ComelitVedoSystem(ComelitBaseCoordinator):
+    """Queries Comelit VEDO system."""
+
+    def __init__(self, hass: HomeAssistant, host: str, port: int, pin: int) -> None:
+        """Initialize the scanner."""
+        self.api = ComelitVedoApi(host, port, pin)
+        super().__init__(hass, VEDO, "VEDO IP", host)
