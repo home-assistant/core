@@ -126,7 +126,7 @@ def _async_flow_handler_to_flow_result(
     return results
 
 
-class FlowManager(abc.ABC):
+class FlowManager(abc.ABC, Generic[_FlowResultT]):
     """Manage all the flows that are in progress."""
 
     def __init__(
@@ -155,11 +155,11 @@ class FlowManager(abc.ABC):
 
     @abc.abstractmethod
     async def async_finish_flow(
-        self, flow: FlowHandler, result: FlowResult
+        self, flow: FlowHandler, result: _FlowResultT
     ) -> _FlowResultT:
         """Finish a data entry flow."""
 
-    async def async_post_init(self, flow: FlowHandler, result: FlowResult) -> None:
+    async def async_post_init(self, flow: FlowHandler, result: _FlowResultT) -> None:
         """Entry has finished executing its first step asynchronously."""
 
     @callback
@@ -247,7 +247,7 @@ class FlowManager(abc.ABC):
 
     async def async_init(
         self, handler: str, *, context: dict[str, Any] | None = None, data: Any = None
-    ) -> FlowResult:
+    ) -> _FlowResultT:
         """Start a data entry flow."""
         if context is None:
             context = {}
@@ -270,7 +270,7 @@ class FlowManager(abc.ABC):
 
     async def async_configure(
         self, flow_id: str, user_input: dict | None = None
-    ) -> FlowResult:
+    ) -> _FlowResultT:
         """Continue a data entry flow."""
         if (flow := self._progress.get(flow_id)) is None:
             raise UnknownFlow
@@ -379,13 +379,13 @@ class FlowManager(abc.ABC):
 
     async def _async_handle_step(
         self, flow: FlowHandler, step_id: str, user_input: dict | BaseServiceInfo | None
-    ) -> FlowResult:
+    ) -> _FlowResultT:
         """Handle a step of a flow."""
         self._raise_if_step_does_not_exist(flow, step_id)
 
         method = f"async_step_{step_id}"
         try:
-            result: FlowResult = await getattr(flow, method)(user_input)
+            result: _FlowResultT = await getattr(flow, method)(user_input)
         except AbortFlow as err:
             result = _create_abort_data(
                 flow.flow_id, flow.handler, err.reason, err.description_placeholders
