@@ -1,6 +1,7 @@
 """Data update coordination for Rainforest RAVEn devices."""
 from __future__ import annotations
 
+import asyncio
 from dataclasses import asdict
 from datetime import timedelta
 import logging
@@ -119,7 +120,8 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict[str, Any]:
         try:
             device = await self._get_device()
-            return await _get_all_data(device, self.entry.data[CONF_MAC])
+            async with asyncio.timeout(5):
+                return await _get_all_data(device, self.entry.data[CONF_MAC])
         except RAVEnConnectionError as err:
             if self._raven_device:
                 await self._raven_device.close()
@@ -132,14 +134,15 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
 
         device = RAVEnSerialDevice(self.entry.data[CONF_DEVICE])
 
-        await device.open()
+        async with asyncio.timeout(5):
+            await device.open()
 
-        try:
-            await device.synchronize()
-            self._device_info = await device.get_device_info()
-        except Exception:
-            await device.close()
-            raise
+            try:
+                await device.synchronize()
+                self._device_info = await device.get_device_info()
+            except Exception:
+                await device.close()
+                raise
 
         self._raven_device = device
         return device
