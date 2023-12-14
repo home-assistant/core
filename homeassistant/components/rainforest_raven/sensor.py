@@ -20,7 +20,6 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -119,7 +118,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class RAVEnSensor(CoordinatorEntity, SensorEntity):
+class RAVEnSensor(CoordinatorEntity[RAVEnDataCoordinator], SensorEntity):
     """Rainforest RAVEn Sensor."""
 
     _attr_has_entity_name = True
@@ -133,6 +132,7 @@ class RAVEnSensor(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = entity_description
+        self._attr_device_info = coordinator.device_info
 
     @property
     def _data(self) -> Any:
@@ -163,18 +163,6 @@ class RAVEnSensor(CoordinatorEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return native value of the sensor."""
         return str(self._data.get(self.entity_description.key))
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.device_mac_address)},
-            manufacturer=self.coordinator.device_manufacturer,
-            model=self.coordinator.device_model,
-            name=self.coordinator.device_name,
-            sw_version=self.coordinator.device_fw_version,
-            hw_version=self.coordinator.device_hw_version,
-        )
 
 
 class RAVEnMeterSensor(RAVEnSensor):

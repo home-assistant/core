@@ -29,6 +29,7 @@ async def test_coordinator_device_info(hass: HomeAssistant, mock_device):
 
     assert coordinator.device_fw_version is None
     assert coordinator.device_hw_version is None
+    assert coordinator.device_info is None
     assert coordinator.device_mac_address is None
     assert coordinator.device_manufacturer is None
     assert coordinator.device_model is None
@@ -38,6 +39,7 @@ async def test_coordinator_device_info(hass: HomeAssistant, mock_device):
 
     assert coordinator.device_fw_version == "2.0.0 (7400)"
     assert coordinator.device_hw_version == "2.7.3"
+    assert coordinator.device_info
     assert coordinator.device_mac_address
     assert coordinator.device_manufacturer == "Rainforest Automation, Inc."
     assert coordinator.device_model == "Z105-2-EMU2-LEDD_JM"

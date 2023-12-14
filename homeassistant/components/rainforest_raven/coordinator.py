@@ -7,13 +7,14 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from aioraven.data import DeviceInfo
+from aioraven.data import DeviceInfo as RAVEnDeviceInfo
 from aioraven.device import RAVEnConnectionError
 from aioraven.serial import RAVEnSerialDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_MAC
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -64,7 +65,7 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
     """Communication coordinator for a Rainforest RAVEn device."""
 
     _raven_device: RAVEnSerialDevice | None = None
-    _device_info: DeviceInfo | None = None
+    _device_info: RAVEnDeviceInfo | None = None
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the data object."""
@@ -116,6 +117,20 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
     def device_name(self) -> str:
         """Return the product name of the device."""
         return "RAVEn Device"
+
+    @property
+    def device_info(self) -> DeviceInfo | None:
+        """Return device info."""
+        if self._device_info and self.device_mac_address:
+            return DeviceInfo(
+                identifiers={(DOMAIN, self.device_mac_address)},
+                manufacturer=self.device_manufacturer,
+                model=self.device_model,
+                name=self.device_name,
+                sw_version=self.device_fw_version,
+                hw_version=self.device_hw_version,
+            )
+        return None
 
     async def _async_update_data(self) -> dict[str, Any]:
         try:
