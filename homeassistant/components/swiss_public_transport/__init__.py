@@ -25,10 +25,9 @@ async def async_setup_entry(
 ) -> bool:
     """Set up platform from a ConfigEntry."""
     config = entry.data
-    hass.data.setdefault(DOMAIN, {})
 
-    start = config.get(CONF_START)
-    destination = config.get(CONF_DESTINATION)
+    start = config[CONF_START]
+    destination = config[CONF_DESTINATION]
 
     session = async_get_clientsession(hass)
     opendata = OpendataTransport(start, destination, session)
@@ -49,7 +48,7 @@ async def async_setup_entry(
             f"Setup failed for entry '{start} {destination}' with invalid data"
         ) from e
 
-    hass.data[DOMAIN][entry.entry_id] = opendata
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = opendata
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
