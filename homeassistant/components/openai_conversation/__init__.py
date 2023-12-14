@@ -215,7 +215,7 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
             tool_calls = response.tool_calls
 
             if tool_calls:
-                for tool_call in tool_calls:  # mypy: disable-error-code="attr-defined"
+                for tool_call in tool_calls:  # type: ignore[attr-defined]
                     function_response = tools.call_function(
                         self.hass, tool_call.function.name, tool_call.function.arguments
                     )
