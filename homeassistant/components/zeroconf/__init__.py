@@ -123,7 +123,7 @@ class ZeroconfServiceInfo(BaseServiceInfo):
     hostname: str
     type: str
     name: str
-    properties: dict[str, str | None]
+    properties: dict[str, Any]
 
     @property
     def host(self) -> str:
