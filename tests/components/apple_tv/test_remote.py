@@ -14,8 +14,9 @@ from homeassistant.components.remote import ATTR_DELAY_SECS, ATTR_NUM_REPEATS
         ("wakeup", "power.turn_on"),
         ("volume_up", "audio.volume_up"),
         ("home_hold", "remote_control.home"),
+        ("select_hold", "remote_control.select"),
     ],
-    ids=["up", "wakeup", "volume_up", "home_hold"],
+    ids=["up", "wakeup", "volume_up", "home_hold", "select_hold"],
 )
 async def test_send_command(command: str, method: str) -> None:
     """Test "send_command" method."""

@@ -31,6 +31,7 @@ COMMAND_TO_ATTRIBUTE = {
     "volume_up": ("audio", "volume_up"),
     "volume_down": ("audio", "volume_down"),
     "home_hold": ("remote_control", "home"),
+    "select_hold": ("remote_control", "select"),
 }
 
 
