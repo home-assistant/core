@@ -6,9 +6,11 @@ from datetime import timedelta
 import logging
 from typing import Any, Final, Optional, cast
 
+import httpx
 from kasa import (
     AuthenticationException,
     ConnectionParameters,
+    ConnectionType,
     Credentials,
     Discover,
     SmartDevice,
@@ -40,7 +42,9 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_CONNECTION_PARAMS,
+    CONF_CONNECTION_TYPE,
+    CONNECT_TIMEOUT,
+    DISCOVERY_TIMEOUT,
     DOMAIN,
     PLATFORMS,
     STORAGE_KEY,
@@ -73,16 +77,27 @@ def async_trigger_discovery(
                 CONF_NAME: device.alias,
                 CONF_HOST: device.host,
                 CONF_MAC: formatted_mac,
+                CONF_CONNECTION_TYPE: device.connection_parameters.connection_type.to_dict(),
             },
         )
 
 
 async def async_discover_devices(hass: HomeAssistant) -> dict[str, SmartDevice]:
     """Discover TPLink devices on configured network interfaces."""
+
+    def _http_client_generator() -> httpx.AsyncClient:
+        return create_async_httpx_client(hass, verify_ssl=False)
+
     credentials = await get_stored_credentials(hass)
     broadcast_addresses = await network.async_get_ipv4_broadcast_addresses(hass)
     tasks = [
-        Discover.discover(target=str(address), credentials=credentials)
+        Discover.discover(
+            target=str(address),
+            discovery_timeout=DISCOVERY_TIMEOUT,
+            timeout=CONNECT_TIMEOUT,
+            credentials=credentials,
+            http_client_generator=_http_client_generator,
+        )
         for address in broadcast_addresses
     ]
     discovered_devices: dict[str, SmartDevice] = {}
@@ -117,40 +132,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
 
     credentials = await get_stored_credentials(hass)
-    connection_params = None
+    connection_type = None
 
-    if connection_params_dict := entry.data.get(CONF_CONNECTION_PARAMS):
+    if connection_type_dict := entry.data.get(CONF_CONNECTION_TYPE):
         try:
-            connection_params = ConnectionParameters.from_dict(connection_params_dict)
+            connection_type = ConnectionType.from_dict(connection_type_dict)
         except SmartDeviceException:
             _LOGGER.warning(
-                "Invalid connection parameters for %s: %s", host, connection_params_dict
+                "Invalid connection parameters for %s: %s", host, connection_type_dict
             )
+
+    httpx_asyncclient = create_async_httpx_client(hass, verify_ssl=False)
+    cparams = ConnectionParameters(
+        host, timeout=CONNECT_TIMEOUT, http_client=httpx_asyncclient
+    )
+    if connection_type:
+        cparams.connection_type = connection_type
+    if credentials:
+        cparams.credentials = credentials
     try:
-        httpx_asyncclient = create_async_httpx_client(hass, verify_ssl=False)
-        device: SmartDevice = await Discover.connect_single(
-            host,
-            timeout=10,
-            credentials=credentials,
-            connection_params=connection_params,
-            httpx_asyncclient=httpx_asyncclient,
-            try_discovery_on_error=True,
-        )
+        device: SmartDevice = await SmartDevice.connect(cparams=cparams)
     except AuthenticationException as ex:
         raise ConfigEntryAuthFailed from ex
     except SmartDeviceException as ex:
         raise ConfigEntryNotReady from ex
 
-    # Save the connection_params if they are not already saved
-    if connection_params_dict and connection_params != device.connection_parameters:
+    # Save the connection_type if not already saved
+    ctype = device.connection_parameters.connection_type
+    if connection_type_dict and connection_type != ctype:
         hass.config_entries.async_update_entry(
             entry,
-            data={
-                **entry.data,
-                CONF_CONNECTION_PARAMS: device.connection_parameters.to_dict()
-                if device.connection_parameters
-                else None,
-            },
+            data={**entry.data, CONF_CONNECTION_TYPE: ctype.to_dict()},
         )
     found_mac = dr.format_mac(device.mac)
     if found_mac != entry.unique_id:

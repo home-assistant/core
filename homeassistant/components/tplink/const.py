@@ -24,12 +24,15 @@ STORAGE_DATA_SCHEMA = vol.Schema(
     }
 )
 
+DISCOVERY_TIMEOUT = 3
+CONNECT_TIMEOUT = 5
+
 ATTR_CURRENT_A: Final = "current_a"
 ATTR_CURRENT_POWER_W: Final = "current_power_w"
 ATTR_TODAY_ENERGY_KWH: Final = "today_energy_kwh"
 ATTR_TOTAL_ENERGY_KWH: Final = "total_energy_kwh"
 
-CONF_CONNECTION_PARAMS: Final = "connection_params"
+CONF_CONNECTION_TYPE: Final = "connection_params"
 CONF_DIMMER: Final = "dimmer"
 CONF_LIGHT: Final = "light"
 CONF_STRIP: Final = "strip"
