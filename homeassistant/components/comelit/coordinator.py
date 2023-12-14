@@ -25,7 +25,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator):
     """Base coordinator for Comelit Devices."""
 
     config_entry: ConfigEntry
-    api: ComeliteSerialBridgeApi | ComelitVedoApi
+    api: Any
 
     def __init__(
         self, hass: HomeAssistant, device: str, hw_version: str, host: str
