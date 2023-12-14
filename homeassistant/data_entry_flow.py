@@ -448,7 +448,9 @@ class FlowManager(abc.ABC):
             self._preview.add(flow.handler)
             await flow.async_setup_preview(self.hass)
 
+
 _FlowResultT = TypeVar("_FlowResultT", bound="FlowResult")
+
 
 class FlowHandler(Generic[_FlowResultT]):
     """Handle a data entry flow."""
