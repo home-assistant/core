@@ -632,10 +632,6 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
         return_type=["int", None],
     ),
     TypeHintMatch(
-        function_name="context_recent_time",
-        return_type="timedelta",
-    ),
-    TypeHintMatch(
         function_name="entity_registry_enabled_default",
         return_type="bool",
     ),
