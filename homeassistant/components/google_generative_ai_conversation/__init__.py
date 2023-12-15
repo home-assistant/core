@@ -19,11 +19,13 @@ from homeassistant.util import ulid
 
 from .const import (
     CONF_CHAT_MODEL,
+    CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
     DEFAULT_CHAT_MODEL,
+    DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
@@ -87,6 +89,9 @@ class GoogleGenerativeAIAgent(conversation.AbstractConversationAgent):
                 ),
                 "top_p": self.entry.options.get(CONF_TOP_P, DEFAULT_TOP_P),
                 "top_k": self.entry.options.get(CONF_TOP_K, DEFAULT_TOP_K),
+                "max_output_tokens": self.entry.options.get(
+                    CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS
+                ),
             },
         )
         _LOGGER.debug("Model: %s", model)

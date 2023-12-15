@@ -21,7 +21,8 @@
           "model": "[%key:common::generic::model%]",
           "temperature": "Temperature",
           "top_p": "Top P",
-          "top_k": "Top K"
+          "top_k": "Top K",
+          "max_tokens": "Maximum tokens to return in response"
         }
       }
     }

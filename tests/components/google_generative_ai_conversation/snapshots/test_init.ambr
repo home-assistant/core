@@ -7,6 +7,7 @@
       ),
       dict({
         'generation_config': dict({
+          'max_output_tokens': 150,
           'temperature': 0.9,
           'top_k': 1,
           'top_p': 1.0,

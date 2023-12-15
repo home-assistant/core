@@ -8,9 +8,11 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_CHAT_MODEL,
+    CONF_MAX_TOKENS,
     CONF_TOP_K,
     CONF_TOP_P,
     DEFAULT_CHAT_MODEL,
+    DEFAULT_MAX_TOKENS,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
     DOMAIN,
@@ -78,6 +80,7 @@ async def test_options(
     assert options["data"][CONF_CHAT_MODEL] == DEFAULT_CHAT_MODEL
     assert options["data"][CONF_TOP_P] == DEFAULT_TOP_P
     assert options["data"][CONF_TOP_K] == DEFAULT_TOP_K
+    assert options["data"][CONF_MAX_TOKENS] == DEFAULT_MAX_TOKENS
 
 
 @pytest.mark.parametrize(

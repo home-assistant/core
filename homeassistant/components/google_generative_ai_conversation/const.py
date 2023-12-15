@@ -31,3 +31,5 @@ CONF_TOP_P = "top_p"
 DEFAULT_TOP_P = 1.0
 CONF_TOP_K = "top_k"
 DEFAULT_TOP_K = 1
+CONF_MAX_TOKENS = "max_tokens"
+DEFAULT_MAX_TOKENS = 150

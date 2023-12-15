@@ -23,11 +23,13 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_CHAT_MODEL,
+    CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
     DEFAULT_CHAT_MODEL,
+    DEFAULT_MAX_TOKENS,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
@@ -50,6 +52,7 @@ DEFAULT_OPTIONS = types.MappingProxyType(
         CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
         CONF_TOP_P: DEFAULT_TOP_P,
         CONF_TOP_K: DEFAULT_TOP_K,
+        CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
     }
 )
 
@@ -161,5 +164,10 @@ def google_generative_ai_config_option_schema(
             CONF_TOP_K,
             description={"suggested_value": options[CONF_TOP_K]},
             default=DEFAULT_TOP_K,
+        ): int,
+        vol.Optional(
+            CONF_MAX_TOKENS,
+            description={"suggested_value": options[CONF_MAX_TOKENS]},
+            default=DEFAULT_MAX_TOKENS,
         ): int,
     }
