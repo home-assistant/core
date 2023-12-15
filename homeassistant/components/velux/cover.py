@@ -40,11 +40,11 @@ class VeluxCover(VeluxEntity, CoverEntity):
     """Representation of a Velux cover."""
 
     _is_blind = False
+    node: OpeningDevice
 
     def __init__(self, node: OpeningDevice) -> None:
         """Initialize VeluxCover."""
         super().__init__(node)
-        self.node: OpeningDevice = node
         self._attr_device_class = CoverDeviceClass.WINDOW
         if isinstance(node, Awning):
             self._attr_device_class = CoverDeviceClass.AWNING
