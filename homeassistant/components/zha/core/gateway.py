@@ -293,6 +293,9 @@ class ZHAGateway:
                     if dev.is_mains_powered
                 )
             )
+            _LOGGER.debug(
+                "completed fetching current state for mains powered devices - sending signal to establish polling"
+            )
             async_dispatcher_send(self.hass, SIGNAL_ZHA_ENTITIES_INITIALIZED)
 
         # background the fetching of state for mains powered devices
@@ -669,6 +672,7 @@ class ZHAGateway:
         )
         await zha_device.async_initialize(from_cache=False)
         async_dispatcher_send(self.hass, SIGNAL_ADD_ENTITIES)
+        _LOGGER.debug("added new device - sending signal to establish polling")
         async_dispatcher_send(self.hass, SIGNAL_ZHA_ENTITIES_INITIALIZED)
 
     async def _async_device_rejoined(self, zha_device: ZHADevice) -> None:
