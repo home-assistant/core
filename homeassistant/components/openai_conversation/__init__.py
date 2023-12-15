@@ -216,7 +216,7 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
 
             if tool_calls:
                 for tool_call in tool_calls:  # type: ignore[attr-defined]
-                    function_response = tools.call_function(
+                    function_response = await tools.async_call_function(
                         self.hass, tool_call.function.name, tool_call.function.arguments
                     )
                     messages.append(
