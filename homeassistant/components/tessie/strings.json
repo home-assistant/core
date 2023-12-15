@@ -31,35 +31,35 @@
           "offline": "Offline"
         }
       },
-      "charge_state-usable_battery_level": {
-        "name": "Battery Level"
+      "charge_state_usable_battery_level": {
+        "name": "Battery level"
       },
-      "charge_state-charge_energy_added": {
-        "name": "Charge Energy Added"
+      "charge_state_charge_energy_added": {
+        "name": "Charge energy added"
       },
-      "charge_state-charger_power": {
-        "name": "Charger Power"
+      "charge_state_charger_power": {
+        "name": "Charger power"
       },
-      "charge_state-charger_voltage": {
-        "name": "Charger Voltage"
+      "charge_state_charger_voltage": {
+        "name": "Charger voltage"
       },
-      "charge_state-charger_actual_current": {
-        "name": "Charger Current"
+      "charge_state_charger_actual_current": {
+        "name": "Charger current"
       },
-      "charge_state-charge_rate": {
-        "name": "Charge Rate"
+      "charge_state_charge_rate": {
+        "name": "Charge rate"
       },
-      "charge_state-battery_range": {
-        "name": "Battery Range"
+      "charge_state_battery_range": {
+        "name": "Battery range"
       },
-      "drive_state-speed": {
+      "drive_state_speed": {
         "name": "Speed"
       },
-      "drive_state-power": {
+      "drive_state_power": {
         "name": "Power"
       },
-      "drive_state-shift_state": {
-        "name": "Shift State",
+      "drive_state_shift_state": {
+        "name": "Shift state",
         "state": {
           "p": "Park",
           "d": "Drive",
@@ -67,32 +67,32 @@
           "n": "Neutral"
         }
       },
-      "vehicle_state-odometer": {
+      "vehicle_state_odometer": {
         "name": "Odometer"
       },
-      "vehicle_state-tpms_pressure_fl": {
-        "name": "Tyre Pressure Front Left"
+      "vehicle_state_tpms_pressure_fl": {
+        "name": "Tyre pressure front left"
       },
-      "vehicle_state-tpms_pressure_fr": {
-        "name": "Tyre Pressure Front Right"
+      "vehicle_state_tpms_pressure_fr": {
+        "name": "Tyre pressure front right"
       },
-      "vehicle_state-tpms_pressure_rl": {
-        "name": "Tyre Pressure Rear Left"
+      "vehicle_state_tpms_pressure_rl": {
+        "name": "Tyre pressure rear left"
       },
-      "vehicle_state-tpms_pressure_rr": {
-        "name": "Tyre Pressure Rear Right"
+      "vehicle_state_tpms_pressure_rr": {
+        "name": "Tyre pressure rear right"
       },
-      "climate_state-inside_temp": {
-        "name": "Inside Temperature"
+      "climate_state_inside_temp": {
+        "name": "Inside temperature"
       },
-      "climate_state-outside_temp": {
-        "name": "Outside Temperature"
+      "climate_state_outside_temp": {
+        "name": "Outside temperature"
       },
-      "climate_state-driver_temp_setting": {
-        "name": "Driver Temperature Setting"
+      "climate_state_driver_temp_setting": {
+        "name": "Driver temperature setting"
       },
-      "climate_state-passenger_temp_setting": {
-        "name": "Passenger Temperature Setting"
+      "climate_state_passenger_temp_setting": {
+        "name": "Passenger temperature setting"
       }
     }
   }
