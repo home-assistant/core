@@ -28,10 +28,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import (
     CONF_CODE_ARM_REQUIRED,
     CONF_CODE_DISARM_REQUIRED,
+    CONF_COMMUNICATION_DELAY,
     CONF_HA_STATES_TO_RISCO,
     CONF_RISCO_STATES_TO_HA,
     DEFAULT_OPTIONS,
     DOMAIN,
+    MAX_COMMUNICATION_DELAY,
     RISCO_STATES,
     TYPE_LOCAL,
 )
@@ -78,16 +80,31 @@ async def validate_cloud_input(hass: core.HomeAssistant, data) -> dict[str, str]
 
 async def validate_local_input(
     hass: core.HomeAssistant, data: Mapping[str, str]
-) -> dict[str, str]:
+) -> dict[str, Any]:
     """Validate the user input allows us to connect to a local panel.
 
     Data has the keys from LOCAL_SCHEMA with values provided by the user.
     """
-    risco = RiscoLocal(data[CONF_HOST], data[CONF_PORT], data[CONF_PIN])
-    await risco.connect()
+    comm_delay = 0
+    while True:
+        risco = RiscoLocal(
+            data[CONF_HOST],
+            data[CONF_PORT],
+            data[CONF_PIN],
+            communication_delay=comm_delay,
+        )
+        try:
+            await risco.connect()
+        except CannotConnectError as e:
+            if comm_delay >= MAX_COMMUNICATION_DELAY:
+                raise e
+            comm_delay += 1
+        else:
+            break
+
     site_id = risco.id
     await risco.disconnect()
-    return {"title": site_id}
+    return {"title": site_id, "comm_delay": comm_delay}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -170,7 +187,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=info["title"], data={**user_input, **{CONF_TYPE: TYPE_LOCAL}}
+                    title=info["title"],
+                    data={
+                        **user_input,
+                        **{CONF_TYPE: TYPE_LOCAL},
+                        **{CONF_COMMUNICATION_DELAY: info["comm_delay"]},
+                    },
                 )
 
         return self.async_show_form(

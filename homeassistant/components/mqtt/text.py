@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import functools
 import logging
 import re
 from typing import Any
@@ -22,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
 from . import subscription
 from .config import MQTT_RW_SCHEMA
@@ -38,7 +37,7 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
-    async_setup_entry_helper,
+    async_setup_entity_entry_helper,
     write_state_on_attr_change,
 )
 from .models import (
@@ -72,9 +71,9 @@ MQTT_TEXT_ATTRIBUTES_BLOCKED = frozenset(
 def valid_text_size_configuration(config: ConfigType) -> ConfigType:
     """Validate that the text length configuration is valid, throws if it isn't."""
     if config[CONF_MIN] >= config[CONF_MAX]:
-        raise ValueError("text length min must be >= max")
+        raise vol.Invalid("text length min must be >= max")
     if config[CONF_MAX] > MAX_LENGTH_STATE_STATE:
-        raise ValueError(f"max text length must be <= {MAX_LENGTH_STATE_STATE}")
+        raise vol.Invalid(f"max text length must be <= {MAX_LENGTH_STATE_STATE}")
 
     return config
 
@@ -108,21 +107,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT text through YAML and through MQTT discovery."""
-    setup = functools.partial(
-        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
+    await async_setup_entity_entry_helper(
+        hass,
+        config_entry,
+        MqttTextEntity,
+        text.DOMAIN,
+        async_add_entities,
+        DISCOVERY_SCHEMA,
+        PLATFORM_SCHEMA_MODERN,
     )
-    await async_setup_entry_helper(hass, text.DOMAIN, setup, DISCOVERY_SCHEMA)
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    async_add_entities: AddEntitiesCallback,
-    config: ConfigType,
-    config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the MQTT text."""
-    async_add_entities([MqttTextEntity(hass, config, config_entry, discovery_data)])
 
 
 class MqttTextEntity(MqttEntity, TextEntity):

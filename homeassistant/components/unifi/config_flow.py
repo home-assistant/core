@@ -8,6 +8,7 @@ Configuration of options through options flow.
 from __future__ import annotations
 
 from collections.abc import Mapping
+import operator
 import socket
 from types import MappingProxyType
 from typing import Any
@@ -34,6 +35,7 @@ from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
+    CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
@@ -257,7 +259,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
         self.options[CONF_BLOCK_CLIENT] = self.controller.option_block_clients
 
         if self.show_advanced_options:
-            return await self.async_step_device_tracker()
+            return await self.async_step_configure_entity_sources()
 
         return await self.async_step_simple_options()
 
@@ -294,6 +296,39 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                 }
             ),
             last_step=True,
+        )
+
+    async def async_step_configure_entity_sources(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Select sources for entities."""
+        if user_input is not None:
+            self.options.update(user_input)
+            return await self.async_step_device_tracker()
+
+        clients = {
+            client.mac: f"{client.name or client.hostname} ({client.mac})"
+            for client in self.controller.api.clients.values()
+        }
+        clients |= {
+            mac: f"Unknown ({mac})"
+            for mac in self.options.get(CONF_CLIENT_SOURCE, [])
+            if mac not in clients
+        }
+
+        return self.async_show_form(
+            step_id="configure_entity_sources",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_CLIENT_SOURCE,
+                        default=self.options.get(CONF_CLIENT_SOURCE, []),
+                    ): cv.multi_select(
+                        dict(sorted(clients.items(), key=operator.itemgetter(1)))
+                    ),
+                }
+            ),
+            last_step=False,
         )
 
     async def async_step_device_tracker(

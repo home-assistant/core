@@ -20,6 +20,8 @@ KEY_SENSORS = "sensors"
 MODE_AP = "ap"
 MODE_ROUTER = "router"
 
+PROTOCOL_HTTP = "http"
+PROTOCOL_HTTPS = "https"
 PROTOCOL_SSH = "ssh"
 PROTOCOL_TELNET = "telnet"
 

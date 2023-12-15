@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from aiovodafone import VodafoneStationApi, exceptions as aiovodafone_exceptions
+from aiovodafone import VodafoneStationSercommApi, exceptions as aiovodafone_exceptions
 import voluptuous as vol
 
 from homeassistant import core
@@ -35,7 +35,9 @@ async def validate_input(
 ) -> dict[str, str]:
     """Validate the user input allows us to connect."""
 
-    api = VodafoneStationApi(data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD])
+    api = VodafoneStationSercommApi(
+        data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD]
+    )
 
     try:
         await api.login()

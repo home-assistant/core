@@ -10,7 +10,6 @@
       "invalid_station": "Could not find a station with the specified name",
       "more_stations": "Found multiple stations with the specified name",
       "no_trains": "No train found",
-      "multiple_trains": "Multiple trains found",
       "incorrect_api_key": "Invalid API key for selected account"
     },
     "step": {

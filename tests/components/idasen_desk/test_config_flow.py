@@ -1,8 +1,8 @@
 """Test the IKEA Idasen Desk config flow."""
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
-from bleak import BleakError
-from idasen_ha import AuthFailedError
+from bleak.exc import BleakError
+from idasen_ha.errors import AuthFailedError
 import pytest
 
 from homeassistant import config_entries
@@ -260,7 +260,9 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch("homeassistant.components.idasen_desk.config_flow.Desk.connect"), patch(
+    with patch(
+        "homeassistant.components.idasen_desk.config_flow.Desk.connect"
+    ) as desk_connect, patch(
         "homeassistant.components.idasen_desk.config_flow.Desk.disconnect"
     ), patch(
         "homeassistant.components.idasen_desk.async_setup_entry",
@@ -281,3 +283,4 @@ async def test_bluetooth_step_success(hass: HomeAssistant) -> None:
     }
     assert result2["result"].unique_id == IDASEN_DISCOVERY_INFO.address
     assert len(mock_setup_entry.mock_calls) == 1
+    desk_connect.assert_called_with(ANY, auto_reconnect=False)

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final
 
 from aioshelly.block_device import Block
+from aioshelly.const import MODEL_I3, RPC_GENERATIONS
 
 from homeassistant.components.event import (
     DOMAIN as EVENT_DOMAIN,
@@ -79,7 +80,7 @@ async def async_setup_entry(
 
     coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator | None = None
 
-    if get_device_entry_gen(config_entry) == 2:
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
         coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
         if TYPE_CHECKING:
             assert coordinator
@@ -135,7 +136,7 @@ class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
         self.channel = channel = int(block.channel or 0) + 1
         self._attr_unique_id = f"{super().unique_id}-{channel}"
 
-        if coordinator.model == "SHIX3-1":
+        if coordinator.model == MODEL_I3:
             self._attr_event_types = list(SHIX3_1_INPUTS_EVENTS_TYPES)
         else:
             self._attr_event_types = list(BASIC_INPUTS_EVENTS_TYPES)

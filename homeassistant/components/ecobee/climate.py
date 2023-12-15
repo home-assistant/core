@@ -99,6 +99,7 @@ ECOBEE_HVAC_ACTION_TO_HASS = {
     "economizer": HVACAction.FAN,
     "compHotWater": None,
     "auxHotWater": None,
+    "compWaterHeater": None,
 }
 
 PRESET_TO_ECOBEE_HOLD = {

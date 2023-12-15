@@ -3,14 +3,15 @@ import asyncio
 from ipaddress import ip_address
 from unittest.mock import patch
 
-from systembridgeconnector.const import MODEL_SYSTEM, TYPE_DATA_UPDATE
+from systembridgeconnector.const import TYPE_DATA_UPDATE
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
     ConnectionErrorException,
 )
-from systembridgeconnector.models.response import Response
-from systembridgeconnector.models.system import LastUpdated, System
+from systembridgemodels.const import MODEL_SYSTEM
+from systembridgemodels.response import Response
+from systembridgemodels.system import LastUpdated, System
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
@@ -151,7 +152,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         "systembridgeconnector.websocket_client.WebSocketClient.get_data",
         return_value=FIXTURE_DATA_RESPONSE,
     ), patch(
-        "systembridgeconnector.websocket_client.WebSocketClient.listen"
+        "systembridgeconnector.websocket_client.WebSocketClient.listen",
     ), patch(
         "homeassistant.components.system_bridge.async_setup_entry",
         return_value=True,
@@ -449,7 +450,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
         "systembridgeconnector.websocket_client.WebSocketClient.get_data",
         return_value=FIXTURE_DATA_RESPONSE,
     ), patch(
-        "systembridgeconnector.websocket_client.WebSocketClient.listen"
+        "systembridgeconnector.websocket_client.WebSocketClient.listen",
     ), patch(
         "homeassistant.components.system_bridge.async_setup_entry",
         return_value=True,
@@ -483,7 +484,7 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
         "systembridgeconnector.websocket_client.WebSocketClient.get_data",
         return_value=FIXTURE_DATA_RESPONSE,
     ), patch(
-        "systembridgeconnector.websocket_client.WebSocketClient.listen"
+        "systembridgeconnector.websocket_client.WebSocketClient.listen",
     ), patch(
         "homeassistant.components.system_bridge.async_setup_entry",
         return_value=True,
