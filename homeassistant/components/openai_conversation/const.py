@@ -16,7 +16,7 @@ The response may be used in Text-to-Speech synthesizers, so prefer shorter respo
 CONF_CHAT_MODEL = "chat_model"
 DEFAULT_CHAT_MODEL = "gpt-3.5-turbo"
 CONF_MAX_TOKENS = "max_tokens"
-DEFAULT_MAX_TOKENS = 250
+DEFAULT_MAX_TOKENS = 256
 CONF_TOP_P = "top_p"
 DEFAULT_TOP_P = 1
 CONF_TEMPERATURE = "temperature"
