@@ -30,7 +30,7 @@ def create_switch_with_spray_level(accessory):
 
 
 async def test_migrate_unique_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test a we can migrate a number unique id."""
     aid = get_next_aid()
@@ -48,7 +48,7 @@ async def test_migrate_unique_id(
     )
 
 
-async def test_read_number(hass: HomeAssistant, utcnow) -> None:
+async def test_read_number(hass: HomeAssistant) -> None:
     """Test a switch service that has a sensor characteristic is correctly handled."""
     helper = await setup_test_component(hass, create_switch_with_spray_level)
 
@@ -74,7 +74,7 @@ async def test_read_number(hass: HomeAssistant, utcnow) -> None:
     assert state.state == "5"
 
 
-async def test_write_number(hass: HomeAssistant, utcnow) -> None:
+async def test_write_number(hass: HomeAssistant) -> None:
     """Test a switch service that has a sensor characteristic is correctly handled."""
     helper = await setup_test_component(hass, create_switch_with_spray_level)
 

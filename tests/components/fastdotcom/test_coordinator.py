@@ -28,7 +28,7 @@ async def test_fastdotcom_data_update_coordinator(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.fast_com_download")
+    state = hass.states.get("sensor.mock_title_download")
     assert state is not None
     assert state.state == "5.0"
 
@@ -39,7 +39,7 @@ async def test_fastdotcom_data_update_coordinator(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.fast_com_download")
+    state = hass.states.get("sensor.mock_title_download")
     assert state.state == "10.0"
 
     with patch(
@@ -50,5 +50,5 @@ async def test_fastdotcom_data_update_coordinator(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.fast_com_download")
+    state = hass.states.get("sensor.mock_title_download")
     assert state.state is STATE_UNAVAILABLE

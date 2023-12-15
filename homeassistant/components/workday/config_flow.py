@@ -11,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     OptionsFlowWithConfigEntry,
 )
-from homeassistant.const import CONF_LANGUAGE, CONF_NAME
+from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -33,7 +33,6 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ALLOWED_DAYS,
     CONF_ADD_HOLIDAYS,
-    CONF_COUNTRY,
     CONF_EXCLUDES,
     CONF_OFFSET,
     CONF_PROVINCE,

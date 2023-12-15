@@ -14,3 +14,9 @@ REGULAR_INTERVAL = timedelta(seconds=30)
 
 # Update interval to be used while a mode or setpoint change is in progress.
 FAST_INTERVAL = timedelta(seconds=1)
+
+HOT_WATER_STATUS_MAP = {
+    "LOW": "low",
+    "MEDIUM": "medium",
+    "HIGH": "high",
+}

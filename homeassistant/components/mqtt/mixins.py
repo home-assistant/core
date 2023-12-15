@@ -139,7 +139,6 @@ CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
 MQTT_ATTRIBUTES_BLOCKED = {
     "assumed_state",
     "available",
-    "context_recent_time",
     "device_class",
     "device_info",
     "entity_category",
