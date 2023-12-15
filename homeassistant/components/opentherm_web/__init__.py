@@ -6,6 +6,7 @@ from typing import NamedTuple
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, HOST, LOGGER, SCAN_INTERVAL, SECRET
@@ -23,7 +24,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OpenTherm Web from a config entry."""
 
     coordinator = OpenThermWebCoordinator(hass, entry)
-    auth_valid = await hass.async_add_executor_job(coordinator.web_api.authenticate)
+    try:
+        auth_valid = await hass.async_add_executor_job(coordinator.web_api.authenticate)
+    except Exception as ex:
+        raise ConfigEntryNotReady("Authentication failed") from ex
 
     if not auth_valid:
         LOGGER.error("Invalid authentication")
