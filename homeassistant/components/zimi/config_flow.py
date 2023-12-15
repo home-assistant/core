@@ -9,7 +9,7 @@ import voluptuous as vol
 from zcc import ControlPointDiscoveryService, ControlPointError
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
@@ -19,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_NAME, default="My Zimi"): str,
         vol.Optional(CONF_HOST, default=""): str,
         vol.Optional(CONF_PORT, default=5003): int,
         vol.Optional(TIMEOUT, default=3): int,
@@ -107,6 +108,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Return info that you want to store in the config entry.
         return {
             "title": "ZIMI Controller",
+            "name": data[CONF_NAME],
             "host": data[CONF_HOST],
             "port": data[CONF_PORT],
             "timeout": data[TIMEOUT],
