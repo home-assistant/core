@@ -70,7 +70,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def create_devices(
     hass: HomeAssistant, config_entry: ConfigEntry, coordinator: MyUplinkDataCoordinator
-):
+) -> None:
     """Update all devices."""
     mu_devices = coordinator.data[MU_DATAGROUP_DEVICES]
 
