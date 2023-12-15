@@ -115,10 +115,10 @@ async def async_setup_entry(
     coordinators = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-            TessieBinarySensorEntity(coordinator, description)
-            for coordinator in coordinators
-            for description in DESCRIPTIONS
-            if description.key in coordinator.data
+        TessieBinarySensorEntity(coordinator, description)
+        for coordinator in coordinators
+        for description in DESCRIPTIONS
+        if description.key in coordinator.data
     )
 
 
