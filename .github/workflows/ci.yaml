@@ -797,13 +797,13 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Upload pytest output
         if: success() || failure() && (steps.pytest-full.conclusion == 'failure' || steps.pytest-partial.conclusion == 'failure')
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4
         with:
           name: pytest-${{ github.run_number }}
           path: pytest-*.txt
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
@@ -921,13 +921,13 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${mariadb}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4
         with:
           name: pytest-${{ github.run_number }}
           path: pytest-*.txt
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.python-version }}-mariadb
           path: coverage.xml
@@ -1046,13 +1046,13 @@ jobs:
               2>&1 | tee pytest-${{ matrix.python-version }}-${postgresql}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4
         with:
           name: pytest-${{ github.run_number }}
           path: pytest-*.txt
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v3.1.0
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ matrix.python-version }}-postgresql
           path: coverage.xml
