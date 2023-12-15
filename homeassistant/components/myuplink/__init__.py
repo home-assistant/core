@@ -5,20 +5,15 @@ from myuplink.api import MyUplinkAPI
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
     device_registry as dr,
 )
 
-from . import api
-from .const import (
-    DOMAIN,
-    MU_DATAGROUP_DEVICES,
-    MU_DEVICE_FIRMWARE_CURRENT,
-    MU_DEVICE_PRODUCTNAME,
-)
+from .api import AsyncConfigEntryAuth
+from .const import DOMAIN
 from .coordinator import MyUplinkDataCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -26,34 +21,24 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up myUplink from a config entry."""
-
-    hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
 
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, config_entry
         )
     )
-
     session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, implementation)
-
-    auth = api.AsyncConfigEntryAuth(
-        aiohttp_client.async_get_clientsession(hass), session
-    )
+    auth = AsyncConfigEntryAuth(aiohttp_client.async_get_clientsession(hass), session)
 
     # Setup MyUplinkAPI and coordinator for data fetch
-    mu_api = MyUplinkAPI(auth)
-    mu_coordinator = MyUplinkDataCoordinator(hass, mu_api)
-
-    await mu_coordinator.async_config_entry_first_refresh()
-
-    hass.data[DOMAIN][config_entry.entry_id] = {
-        "api": mu_api,
-        "coordinator": mu_coordinator,
-    }
+    api = MyUplinkAPI(auth)
+    coordinator = MyUplinkDataCoordinator(hass, api)
+    await coordinator.async_config_entry_first_refresh()
+    hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
     # Update device registry
-    await create_devices(hass, config_entry, mu_coordinator)
+    create_devices(hass, config_entry, coordinator)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -68,22 +53,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def create_devices(
+@callback
+def create_devices(
     hass: HomeAssistant, config_entry: ConfigEntry, coordinator: MyUplinkDataCoordinator
 ) -> None:
     """Update all devices."""
-    mu_devices = coordinator.data[MU_DATAGROUP_DEVICES]
-
     device_registry = dr.async_get(hass)
 
-    for device_id in mu_devices:
-        device_data = mu_devices[device_id]
-
+    for device_id, device in coordinator.data.devices.items():
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
             identifiers={(DOMAIN, device_id)},
-            name=device_data[MU_DEVICE_PRODUCTNAME],
-            manufacturer=device_data[MU_DEVICE_PRODUCTNAME].split(" ")[0],
-            model=device_data[MU_DEVICE_PRODUCTNAME],
-            sw_version=device_data[MU_DEVICE_FIRMWARE_CURRENT],
+            name=device.productName,
+            manufacturer=device.productName.split(" ")[0],
+            model=device.productName,
+            sw_version=device.firmwareCurrent,
         )
