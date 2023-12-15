@@ -163,13 +163,15 @@ class VenstarSensor(VenstarEntity, SensorEntity):
                 raise ValueError
             return value
         except (TypeError, ValueError):
-                self.coordinator.logger.debug(
-                    "unable to set value for %s", self.entity_description.value_fn(self.sensor_name)
-                )
+            self.coordinator.logger.debug(
+                "unable to set value for %s",
+                self.entity_description.value_fn(self.coordinator, self.sensor_name),
+            )
             return None
 
     @property
     def available(self) -> bool:
+        """Return true if the sensor is available."""
         return self.native_value is not None
 
     @property
