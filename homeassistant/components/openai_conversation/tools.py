@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er, intent, template
 from homeassistant.util import dt as dt_util
 
@@ -51,7 +51,7 @@ TOOLS = [
 
 
 async def async_call_function(
-    hass: HomeAssistant, function_name: str, function_args: str
+    hass: HomeAssistant, context: Context, function_name: str, function_args: str
 ) -> str:
     """Wrap the function call to parse the arguments and handle exceptions."""
 
@@ -64,7 +64,7 @@ async def async_call_function(
     try:
         function_to_call = available_functions[function_name]
         parsed_args = json.loads(function_args)
-        response = await function_to_call(hass, **parsed_args)
+        response = await function_to_call(hass, context, **parsed_args)
         response_str = json.dumps(response)
 
     except Exception as e:  # pylint: disable=broad-exception-caught
@@ -80,6 +80,7 @@ async def async_call_function(
 
 async def entity_registry_inquiry(
     hass: HomeAssistant,
+    context: Context,
     name: str | None = None,
     area: str | None = None,
     domain: str | None = None,
