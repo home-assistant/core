@@ -36,7 +36,7 @@ def handle_update_domain_record(call: ServiceCall, hass: HomeAssistant) -> None:
         )
         if updated is None:  # pragma: no cover
             # HA's builtin Throttled decorator
-            # returns None when the call is throttle
+            # returns None when the call is throttled
             raise UpdateThrottled(
                 "Ignoring service call: You must wait at least"
                 f"{MIN_TIME_BETWEEN_DOMAIN_UPDATES} between service calls"
