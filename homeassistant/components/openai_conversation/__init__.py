@@ -168,7 +168,9 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
         else:
             conversation_id = ulid.ulid_now()
             try:
-                prompt = self._async_generate_prompt(raw_prompt, user_input.device_id)
+                prompt = self._async_generate_prompt(
+                    raw_prompt, user_input.device_id, user_input.context.user_id
+                )
             except TemplateError as err:
                 _LOGGER.error("Error rendering prompt: %s", err)
                 intent_response = intent.IntentResponse(language=user_input.language)
@@ -239,12 +241,15 @@ class OpenAIAgent(conversation.AbstractConversationAgent):
             response=intent_response, conversation_id=conversation_id
         )
 
-    def _async_generate_prompt(self, raw_prompt: str, device_id: str | None) -> str:
+    def _async_generate_prompt(
+        self, raw_prompt: str, device_id: str | None, user_id: str | None
+    ) -> str:
         """Generate a prompt for the user."""
         return template.Template(raw_prompt, self.hass).async_render(
             {
                 "ha_name": self.hass.config.location_name,
                 "device_id": device_id,
+                "user_id": user_id,
             },
             parse_result=False,
         )
