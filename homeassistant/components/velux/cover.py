@@ -1,7 +1,7 @@
 """Support for Velux covers."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from pyvlx import OpeningDevice, Position
 from pyvlx.opening_device import Awning, Blind, GarageDoor, Gate, RollerShutter, Window
@@ -44,6 +44,7 @@ class VeluxCover(VeluxEntity, CoverEntity):
     def __init__(self, node: OpeningDevice) -> None:
         """Initialize VeluxCover."""
         super().__init__(node)
+        self.node: OpeningDevice = node
         self._attr_device_class = CoverDeviceClass.WINDOW
         if isinstance(node, Awning):
             self._attr_device_class = CoverDeviceClass.AWNING
@@ -86,7 +87,7 @@ class VeluxCover(VeluxEntity, CoverEntity):
     def current_cover_tilt_position(self) -> int | None:
         """Return the current position of the cover."""
         if self._is_blind:
-            return 100 - self.node.orientation.position_percent
+            return 100 - cast(Blind, self.node).orientation.position_percent
         return None
 
     @property
@@ -116,20 +117,20 @@ class VeluxCover(VeluxEntity, CoverEntity):
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close cover tilt."""
-        await self.node.close_orientation(wait_for_completion=False)
+        await cast(Blind, self.node).close_orientation(wait_for_completion=False)
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open cover tilt."""
-        await self.node.open_orientation(wait_for_completion=False)
+        await cast(Blind, self.node).open_orientation(wait_for_completion=False)
 
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop cover tilt."""
-        await self.node.stop_orientation(wait_for_completion=False)
+        await cast(Blind, self.node).stop_orientation(wait_for_completion=False)
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move cover tilt to a specific position."""
         position_percent = 100 - kwargs[ATTR_TILT_POSITION]
         orientation = Position(position_percent=position_percent)
-        await self.node.set_orientation(
+        await cast(Blind, self.node).set_orientation(
             orientation=orientation, wait_for_completion=False
         )
