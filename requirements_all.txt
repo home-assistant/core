@@ -1305,11 +1305,11 @@ mutagen==1.47.0
 # homeassistant.components.mutesync
 mutesync==0.0.1
 
-# homeassistant.components.myuplink
-myuplink==0.0.6
-
 # homeassistant.components.permobil
 mypermobil==0.1.6
+
+# homeassistant.components.myuplink
+myuplink==0.0.9
 
 # homeassistant.components.nad
 nad-receiver==0.3.0
