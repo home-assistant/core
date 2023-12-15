@@ -934,6 +934,13 @@ SPEED_INCHES_PER_HOUR: Final = "in/h"
 """Deprecated: please use UnitOfVolumetricFlux.INCHES_PER_HOUR"""
 
 
+# Wind_speed units
+class UnitOfWindSpeed(StrEnum):
+    """Wind speed units."""
+
+    BEAUFORT = "Bft"
+
+
 # Signal_strength units
 SIGNAL_STRENGTH_DECIBELS: Final = "dB"
 SIGNAL_STRENGTH_DECIBELS_MILLIWATT: Final = "dBm"

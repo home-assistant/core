@@ -22,6 +22,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfVolume,
     UnitOfVolumetricFlux,
+    UnitOfWindSpeed,
 )
 from homeassistant.exceptions import HomeAssistantError
 
@@ -330,6 +331,7 @@ class SpeedConverter(BaseUnitConverter):
         UnitOfSpeed.KNOTS: _HRS_TO_SECS / _NAUTICAL_MILE_TO_M,
         UnitOfSpeed.METERS_PER_SECOND: 1,
         UnitOfSpeed.MILES_PER_HOUR: _HRS_TO_SECS / _MILE_TO_M,
+        UnitOfWindSpeed.BEAUFORT: 1,
     }
     VALID_UNITS = {
         UnitOfVolumetricFlux.INCHES_PER_DAY,
@@ -341,7 +343,63 @@ class SpeedConverter(BaseUnitConverter):
         UnitOfSpeed.KNOTS,
         UnitOfSpeed.METERS_PER_SECOND,
         UnitOfSpeed.MILES_PER_HOUR,
+        UnitOfWindSpeed.BEAUFORT,
     }
+
+    @classmethod
+    @lru_cache(maxsize=8)
+    def converter_factory(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> Callable[[float], float]:
+        """Return a function to convert a speed from one unit to another."""
+        if from_unit == to_unit:
+            # Return a function that does nothing. This is not
+            # in _converter_factory because we do not want to wrap
+            # it with the None check in converter_factory_allow_none.
+            return lambda value: value
+
+        return cls._converter_factory(from_unit, to_unit)
+
+    @classmethod
+    @lru_cache(maxsize=8)
+    def converter_factory_allow_none(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> Callable[[float | None], float | None]:
+        """Return a function to convert a speed from one unit to another which allows None."""
+        if from_unit == to_unit:
+            # Return a function that does nothing. This is not
+            # in _converter_factory because we do not want to wrap
+            # it with the None check in this case.
+            return lambda value: value
+        convert = cls._converter_factory(from_unit, to_unit)
+        return lambda value: None if value is None else convert(value)
+
+    @classmethod
+    def _converter_factory(
+        cls, from_unit: str | None, to_unit: str | None
+    ) -> Callable[[float], float]:
+        """Convert a speed from one unit to another, eg. 14m/s will return 7Bft."""
+        # We cannot use the implementation from BaseUnitConverter here because the
+        # Beaufort scale is not a constant value to divide or multiply with.
+        if from_unit == UnitOfWindSpeed.BEAUFORT:
+            to_ratio = cls._UNIT_CONVERSION[to_unit]
+            return lambda val: cls._beaufort_to_ms(val) * to_ratio
+        if to_unit == UnitOfWindSpeed.BEAUFORT:
+            from_ratio = cls._UNIT_CONVERSION[from_unit]
+            return lambda val: cls._ms_to_beaufort(val / from_ratio)
+
+        from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
+        return lambda val: (val / from_ratio) * to_ratio
+
+    @classmethod
+    def _ms_to_beaufort(cls, ms: float) -> float:
+        """Convert a speed in m/s to Beaufort."""
+        return float(round(((ms / 0.836) ** 2) ** (1 / 3)))
+
+    @classmethod
+    def _beaufort_to_ms(cls, beaufort: float) -> float:
+        """Convert a speed in Beaufort to m/s."""
+        return float(0.836 * beaufort ** (3 / 2))
 
 
 class TemperatureConverter(BaseUnitConverter):
