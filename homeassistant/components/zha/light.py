@@ -840,15 +840,20 @@ class Light(BaseLight, ZhaEntity):
     @callback
     def async_start_polling(self) -> None:
         """Start polling this light at a randomized interval."""
+        if self._cancel_refresh_handle is not None:
+            return
         refresh_interval = random.randint(*(x * 60 for x in self._REFRESH_INTERVAL))
         self._cancel_refresh_handle = async_track_time_interval(
             self.hass, self._refresh, timedelta(seconds=refresh_interval)
         )
+        self.debug("started polling with refresh interval of %s", refresh_interval)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
         assert self._cancel_refresh_handle
         self._cancel_refresh_handle()
+        self._cancel_refresh_handle = None
+        self.debug("stopped polling during device removal")
         await super().async_will_remove_from_hass()
 
     @callback
@@ -991,8 +996,12 @@ class Light(BaseLight, ZhaEntity):
         if self.is_transitioning:
             self.debug("skipping _refresh while transitioning")
             return
-        await self.async_get_state()
-        self.async_write_ha_state()
+        if self._zha_device.available:
+            self.debug("polling for updated state")
+            await self.async_get_state()
+            self.async_write_ha_state()
+        else:
+            self.debug("skipping polling for updated state, device is unavailable")
 
     async def _maybe_force_refresh(self, signal):
         """Force update the state if the signal contains the entity id for this entity."""
@@ -1000,8 +1009,14 @@ class Light(BaseLight, ZhaEntity):
             if self.is_transitioning:
                 self.debug("skipping _maybe_force_refresh while transitioning")
                 return
-            await self.async_get_state()
-            self.async_write_ha_state()
+            if self._zha_device.available:
+                self.debug("forcing polling for updated state")
+                await self.async_get_state()
+                self.async_write_ha_state()
+            else:
+                self.debug(
+                    "skipping forcing polling for updated state, device is unavailable"
+                )
 
     @callback
     def _assume_group_state(self, signal, update_params) -> None:
