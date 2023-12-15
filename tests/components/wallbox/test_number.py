@@ -43,7 +43,7 @@ async def test_wallbox_number_class(
             status_code=200,
         )
         state = hass.states.get(MOCK_NUMBER_ENTITY_ID)
-        assert state.attributes["min"] == 0
+        assert state.attributes["min"] == 6
         assert state.attributes["max"] == 25
 
         await hass.services.async_call(

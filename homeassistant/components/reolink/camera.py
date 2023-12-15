@@ -1,11 +1,11 @@
 """Component providing support for Reolink IP cameras."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
-from reolink_aio.api import DUAL_LENS_MODELS, Host
+from reolink_aio.api import DUAL_LENS_MODELS
+from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.camera import (
     Camera,
@@ -14,11 +14,12 @@ from homeassistant.components.camera import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkChannelCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,11 +27,11 @@ _LOGGER = logging.getLogger(__name__)
 @dataclass(kw_only=True)
 class ReolinkCameraEntityDescription(
     CameraEntityDescription,
+    ReolinkChannelEntityDescription,
 ):
     """A class that describes camera entities for a camera channel."""
 
     stream: str
-    supported: Callable[[Host, int], bool] = lambda api, ch: True
 
 
 CAMERA_ENTITIES = (
@@ -133,10 +134,6 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
                 f"{entity_description.translation_key}_lens_{self._channel}"
             )
 
-        self._attr_unique_id = (
-            f"{self._host.unique_id}_{channel}_{entity_description.key}"
-        )
-
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
         return await self._host.api.get_stream_source(
@@ -147,6 +144,9 @@ class ReolinkCamera(ReolinkChannelCoordinatorEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        return await self._host.api.get_snapshot(
-            self._channel, self.entity_description.stream
-        )
+        try:
+            return await self._host.api.get_snapshot(
+                self._channel, self.entity_description.stream
+            )
+        except ReolinkError as err:
+            raise HomeAssistantError(err) from err

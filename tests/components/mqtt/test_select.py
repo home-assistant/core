@@ -707,7 +707,7 @@ async def test_publishing_with_custom_encoding(
 ) -> None:
     """Test publishing MQTT payload with different encoding."""
     domain = select.DOMAIN
-    config = DEFAULT_CONFIG
+    config = copy.deepcopy(DEFAULT_CONFIG)
     config[mqtt.DOMAIN][domain]["options"] = ["milk", "beer"]
 
     await help_test_publishing_with_custom_encoding(

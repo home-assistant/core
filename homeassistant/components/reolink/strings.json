@@ -10,6 +10,13 @@
           "use_https": "Enable HTTPS",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Reolink device. For example: '192.168.1.25'.",
+          "port": "The port to connect to the Reolink device. For HTTP normally: '80', for HTTPS normally '443'.",
+          "use_https": "Use a HTTPS (SSL) connection to the Reolink device.",
+          "username": "Username to login to the Reolink device itself. Not the Reolink cloud account.",
+          "password": "Password to login to the Reolink device itself. Not the Reolink cloud account."
         }
       },
       "reauth_confirm": {
@@ -35,6 +42,9 @@
       "init": {
         "data": {
           "protocol": "Protocol"
+        },
+        "data_description": {
+          "protocol": "Streaming protocol to use for the camera entities. RTSP supports 4K streams (h265 encoding) while RTMP and FLV do not. FLV is the least demanding on the camera."
         }
       }
     }
@@ -61,6 +71,18 @@
       "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running a old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The latest firmware can be downloaded from the [Reolink download center]({download_link})."
     }
   },
+  "services": {
+    "ptz_move": {
+      "name": "PTZ move",
+      "description": "Move the camera with a specific speed.",
+      "fields": {
+        "speed": {
+          "name": "Speed",
+          "description": "PTZ move speed."
+        }
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "face": {
@@ -74,6 +96,9 @@
       },
       "pet": {
         "name": "Pet"
+      },
+      "animal": {
+        "name": "Animal"
       },
       "visitor": {
         "name": "Visitor"
@@ -93,6 +118,9 @@
       "pet_lens_0": {
         "name": "Pet lens 0"
       },
+      "animal_lens_0": {
+        "name": "Animal lens 0"
+      },
       "visitor_lens_0": {
         "name": "Visitor lens 0"
       },
@@ -110,6 +138,9 @@
       },
       "pet_lens_1": {
         "name": "Pet lens 1"
+      },
+      "animal_lens_1": {
+        "name": "Animal lens 1"
       },
       "visitor_lens_1": {
         "name": "Visitor lens 1"
@@ -245,6 +276,9 @@
       "ai_pet_sensititvity": {
         "name": "AI pet sensitivity"
       },
+      "ai_animal_sensititvity": {
+        "name": "AI animal sensitivity"
+      },
       "ai_face_delay": {
         "name": "AI face delay"
       },
@@ -256,6 +290,9 @@
       },
       "ai_pet_delay": {
         "name": "AI pet delay"
+      },
+      "ai_animal_delay": {
+        "name": "AI animal delay"
       },
       "auto_quick_reply_time": {
         "name": "Auto quick reply time"

@@ -13,6 +13,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_DEVICE,
     CONF_MODEL,
     DEGREE,
     REVOLUTIONS_PER_MINUTE,
@@ -25,7 +26,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
     DOMAIN,
     FEATURE_FLAGS_AIRFRESH,

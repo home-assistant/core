@@ -5,8 +5,8 @@ from enum import StrEnum
 from typing import Final
 
 APPLICATION_NAME: Final = "HomeAssistant"
-MAJOR_VERSION: Final = 2023
-MINOR_VERSION: Final = 12
+MAJOR_VERSION: Final = 2024
+MINOR_VERSION: Final = 1
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -129,6 +129,7 @@ CONF_CONTINUE_ON_ERROR: Final = "continue_on_error"
 CONF_CONTINUE_ON_TIMEOUT: Final = "continue_on_timeout"
 CONF_COUNT: Final = "count"
 CONF_COUNTRY: Final = "country"
+CONF_COUNTRY_CODE: Final = "country_code"
 CONF_COVERS: Final = "covers"
 CONF_CURRENCY: Final = "currency"
 CONF_CUSTOMIZE: Final = "customize"

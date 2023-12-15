@@ -8,7 +8,7 @@
   "quality_scale": "internal",
   "requirements": [
     "aiohttp_cors==0.7.0",
-    "aiohttp-fast-url-dispatcher==0.1.0",
+    "aiohttp-fast-url-dispatcher==0.3.0",
     "aiohttp-zlib-ng==0.1.1"
   ]
 }

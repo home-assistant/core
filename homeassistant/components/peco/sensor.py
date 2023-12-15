@@ -91,7 +91,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     county: str = config_entry.data[CONF_COUNTY]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]["outage_count"]
 
     async_add_entities(
         PecoSensor(sensor, county, coordinator) for sensor in SENSOR_LIST

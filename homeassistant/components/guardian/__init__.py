@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
-from typing import cast
+from typing import Any, cast
 
 from aioguardian import Client
 from aioguardian.errors import GuardianError
@@ -170,7 +170,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
-    def call_with_data(func: Callable) -> Callable:
+    def call_with_data(
+        func: Callable[[ServiceCall, GuardianData], Coroutine[Any, Any, None]]
+    ) -> Callable[[ServiceCall], Coroutine[Any, Any, None]]:
         """Hydrate a service call with the appropriate GuardianData object."""
 
         async def wrapper(call: ServiceCall) -> None:

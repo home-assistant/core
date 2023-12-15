@@ -116,6 +116,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Neon": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Nightvision": {
         "always_discover": True,
         "domain": "lifx",
@@ -125,6 +129,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX Plus": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX String": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -356,6 +364,11 @@ ZEROCONF = {
             "domain": "forked_daapd",
         },
     ],
+    "_devialet-http._tcp.local.": [
+        {
+            "domain": "devialet",
+        },
+    ],
     "_dkapi._tcp.local.": [
         {
             "domain": "daikin",
@@ -503,6 +516,12 @@ ZEROCONF = {
         },
     ],
     "_kizbox._tcp.local.": [
+        {
+            "domain": "overkiz",
+            "name": "gateway*",
+        },
+    ],
+    "_kizboxdev._tcp.local.": [
         {
             "domain": "overkiz",
             "name": "gateway*",
@@ -694,6 +713,11 @@ ZEROCONF = {
     "_wled._tcp.local.": [
         {
             "domain": "wled",
+        },
+    ],
+    "_wyoming._tcp.local.": [
+        {
+            "domain": "wyoming",
         },
     ],
     "_xbmc-jsonrpc-h._tcp.local.": [

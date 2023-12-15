@@ -1,4 +1,5 @@
 """The tests for the person component."""
+from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
 
@@ -29,7 +30,7 @@ from homeassistant.setup import async_setup_component
 from .conftest import DEVICE_TRACKER, DEVICE_TRACKER_2
 
 from tests.common import MockUser, mock_component, mock_restore_cache
-from tests.typing import WebSocketGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 async def test_minimal_setup(hass: HomeAssistant) -> None:
@@ -847,3 +848,30 @@ async def test_entities_in_person(hass: HomeAssistant) -> None:
         "device_tracker.paulus_iphone",
         "device_tracker.paulus_ipad",
     ]
+
+
+async def test_list_persons(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test listing persons from a not local ip address."""
+
+    user_id = hass_admin_user.id
+    admin = {"id": "1234", "name": "Admin", "user_id": user_id, "picture": "/bla"}
+    config = {
+        DOMAIN: [
+            admin,
+            {"id": "5678", "name": "Only a person"},
+        ]
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    await async_setup_component(hass, "api", {})
+    client = await hass_client_no_auth()
+
+    resp = await client.get("/api/person/list")
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    result = await resp.json()
+    assert result == {"code": "not_local", "message": "Not local"}

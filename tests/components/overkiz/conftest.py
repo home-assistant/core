@@ -12,8 +12,8 @@ from tests.components.overkiz import load_setup_fixture
 from tests.components.overkiz.test_config_flow import (
     TEST_EMAIL,
     TEST_GATEWAY_ID,
-    TEST_HUB,
     TEST_PASSWORD,
+    TEST_SERVER,
 )
 
 MOCK_SETUP_RESPONSE = Mock(devices=[], gateways=[])
@@ -26,7 +26,7 @@ def mock_config_entry() -> MockConfigEntry:
         title="Somfy TaHoma Switch",
         domain=DOMAIN,
         unique_id=TEST_GATEWAY_ID,
-        data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_HUB},
+        data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_SERVER},
     )
 
 

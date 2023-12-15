@@ -277,3 +277,25 @@ TEST_CONFIG_ADD_REMOVE_DATE_RANGE = {
     "remove_holidays": ["2022-12-04", "2022-12-24,2022-12-26"],
     "language": "de",
 }
+TEST_LANGUAGE_CHANGE = {
+    "name": DEFAULT_NAME,
+    "country": "DE",
+    "province": "BW",
+    "excludes": DEFAULT_EXCLUDES,
+    "days_offset": DEFAULT_OFFSET,
+    "workdays": DEFAULT_WORKDAYS,
+    "add_holidays": ["2022-12-01", "2022-12-05,2022-12-15"],
+    "remove_holidays": ["2022-12-04", "2022-12-24,2022-12-26"],
+    "language": "en",
+}
+TEST_LANGUAGE_NO_CHANGE = {
+    "name": DEFAULT_NAME,
+    "country": "DE",
+    "province": "BW",
+    "excludes": DEFAULT_EXCLUDES,
+    "days_offset": DEFAULT_OFFSET,
+    "workdays": DEFAULT_WORKDAYS,
+    "add_holidays": ["2022-12-01", "2022-12-05,2022-12-15"],
+    "remove_holidays": ["2022-12-04", "2022-12-24,2022-12-26"],
+    "language": "de",
+}
