@@ -1116,7 +1116,7 @@ async def test_v2_sensors(
     await hass.async_block_till_done()
 
 
-async def test_unavailable(hass: HomeAssistant) -> None:
+async def test_unavailable(hass: HomeAssistant, socket_enabled) -> None:
     """Test normal device goes to unavailable after 60 minutes."""
     start_monotonic = time.monotonic()
 
@@ -1169,7 +1169,7 @@ async def test_unavailable(hass: HomeAssistant) -> None:
     assert CONF_SLEEPY_DEVICE not in entry.data
 
 
-async def test_sleepy_device(hass: HomeAssistant) -> None:
+async def test_sleepy_device(hass: HomeAssistant, socket_enabled) -> None:
     """Test sleepy device does not go to unavailable after 60 minutes."""
     start_monotonic = time.monotonic()
 
@@ -1222,7 +1222,7 @@ async def test_sleepy_device(hass: HomeAssistant) -> None:
     assert entry.data[CONF_SLEEPY_DEVICE] is True
 
 
-async def test_sleepy_device_restore_state(hass: HomeAssistant) -> None:
+async def test_sleepy_device_restore_state(hass: HomeAssistant, socket_enabled) -> None:
     """Test sleepy device does not go to unavailable after 60 minutes and restores state."""
     start_monotonic = time.monotonic()
 
