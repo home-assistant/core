@@ -80,6 +80,8 @@ class Switch(ZhaEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return if the switch is on based on the statemachine."""
+        if self._on_off_cluster_handler.on_off is None:
+            return False
         return self._on_off_cluster_handler.on_off
 
     async def async_turn_on(self, **kwargs: Any) -> None:
