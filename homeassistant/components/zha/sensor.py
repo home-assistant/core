@@ -6,15 +6,14 @@ import enum
 import functools
 import numbers
 import random
-import sys
 from typing import TYPE_CHECKING, Any, Self
 
 from zigpy import types
 
 from homeassistant.components.climate import HVACAction
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -119,8 +118,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class Sensor(ZhaEntity, SensorEntity):
+class Sensor(ZhaEntity, RestoreSensor):
     """Base ZHA sensor."""
 
     _attribute_name: int | str | None = None
@@ -199,11 +197,11 @@ class PollableSensor(Sensor):
         self,
         unique_id: str,
         zha_device: ZHADevice,
-        channels: list[ZigbeeChannel],
+        cluster_handlers: list[ClusterHandler],
         **kwargs: Any,
     ) -> None:
         """Init this sensor."""
-        super().__init__(unique_id, zha_device, channels, **kwargs)
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
         self._cancel_refresh_handle: CALLBACK_TYPE | None = None
 
     async def async_added_to_hass(self) -> None:
@@ -221,21 +219,33 @@ class PollableSensor(Sensor):
     @callback
     def async_start_polling(self) -> None:
         """Start polling this entity at a randomized interval."""
+        # the signal gets sent after initializing all entities post restart and
+        # after adding new devices to the network so check to make sure we need
+        # to start the polling loop
+        if self._cancel_refresh_handle is not None:
+            return
         refresh_interval = random.randint(30, 60)
         self._cancel_refresh_handle = async_track_time_interval(
             self.hass, self._refresh, timedelta(seconds=refresh_interval)
         )
+        self.debug("started polling with refresh interval of %s", refresh_interval)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
         assert self._cancel_refresh_handle
         self._cancel_refresh_handle()
+        self._cancel_refresh_handle = None
+        self.debug("stopped polling during device removal")
         await super().async_will_remove_from_hass()
 
     async def _refresh(self, time):
         """Call async_update at a constrained random interval."""
-        await self.async_update()
-        self.async_write_ha_state()
+        if self._zha_device.available:
+            self.debug("polling for updated state")
+            await self.async_update()
+            self.async_write_ha_state()
+        else:
+            self.debug("skipping polling for updated state, device is unavailable")
 
 
 @MULTI_MATCH(
@@ -243,7 +253,6 @@ class PollableSensor(Sensor):
     manufacturers="Digi",
     stop_on_match_group=CLUSTER_HANDLER_ANALOG_INPUT,
 )
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class AnalogInput(Sensor):
     """Sensor that displays analog input values."""
 
@@ -252,7 +261,6 @@ class AnalogInput(Sensor):
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_POWER_CONFIGURATION)
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Battery(Sensor):
     """Battery sensor of power configuration cluster."""
 
@@ -310,10 +318,10 @@ class Battery(Sensor):
     stop_on_match_group=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT,
     models={"VZM31-SN", "SP 234", "outletv4"},
 )
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class ElectricalMeasurement(PollableSensor):
     """Active power measurement."""
 
+    _use_custom_polling: bool = False
     _attribute_name = "active_power"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
@@ -355,22 +363,14 @@ class ElectricalMeasurement(PollableSensor):
     cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT,
     stop_on_match_group=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT,
 )
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class PolledElectricalMeasurement(ElectricalMeasurement):
     """Polled active power measurement."""
 
-    _attr_should_poll = True  # BaseZhaEntity defaults to False
-
-    async def async_update(self) -> None:
-        """Retrieve latest state."""
-        if not self.available:
-            return
-        await super().async_update()
+    _use_custom_polling: bool = True
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class ElectricalMeasurementApparentPower(ElectricalMeasurement):
+class ElectricalMeasurementApparentPower(PolledElectricalMeasurement):
     """Apparent power measurement."""
 
     _attribute_name = "apparent_power"
@@ -382,8 +382,7 @@ class ElectricalMeasurementApparentPower(ElectricalMeasurement):
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class ElectricalMeasurementRMSCurrent(ElectricalMeasurement):
+class ElectricalMeasurementRMSCurrent(PolledElectricalMeasurement):
     """RMS current measurement."""
 
     _attribute_name = "rms_current"
@@ -395,8 +394,7 @@ class ElectricalMeasurementRMSCurrent(ElectricalMeasurement):
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class ElectricalMeasurementRMSVoltage(ElectricalMeasurement):
+class ElectricalMeasurementRMSVoltage(PolledElectricalMeasurement):
     """RMS Voltage measurement."""
 
     _attribute_name = "rms_voltage"
@@ -408,8 +406,7 @@ class ElectricalMeasurementRMSVoltage(ElectricalMeasurement):
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class ElectricalMeasurementFrequency(ElectricalMeasurement):
+class ElectricalMeasurementFrequency(PolledElectricalMeasurement):
     """Frequency measurement."""
 
     _attribute_name = "ac_frequency"
@@ -422,8 +419,7 @@ class ElectricalMeasurementFrequency(ElectricalMeasurement):
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class ElectricalMeasurementPowerFactor(ElectricalMeasurement):
+class ElectricalMeasurementPowerFactor(PolledElectricalMeasurement):
     """Frequency measurement."""
 
     _attribute_name = "power_factor"
@@ -441,7 +437,6 @@ class ElectricalMeasurementPowerFactor(ElectricalMeasurement):
     cluster_handler_names=CLUSTER_HANDLER_HUMIDITY,
     stop_on_match_group=CLUSTER_HANDLER_HUMIDITY,
 )
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Humidity(Sensor):
     """Humidity sensor."""
 
@@ -453,7 +448,6 @@ class Humidity(Sensor):
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_SOIL_MOISTURE)
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class SoilMoisture(Sensor):
     """Soil Moisture sensor."""
 
@@ -466,7 +460,6 @@ class SoilMoisture(Sensor):
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_LEAF_WETNESS)
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class LeafWetness(Sensor):
     """Leaf Wetness sensor."""
 
@@ -479,7 +472,6 @@ class LeafWetness(Sensor):
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ILLUMINANCE)
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Illuminance(Sensor):
     """Illuminance Sensor."""
 
@@ -497,10 +489,10 @@ class Illuminance(Sensor):
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
     stop_on_match_group=CLUSTER_HANDLER_SMARTENERGY_METERING,
 )
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class SmartEnergyMetering(Sensor):
+class SmartEnergyMetering(PollableSensor):
     """Metering sensor."""
 
+    _use_custom_polling: bool = False
     _attribute_name = "instantaneous_demand"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
@@ -551,7 +543,6 @@ class SmartEnergyMetering(Sensor):
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
     stop_on_match_group=CLUSTER_HANDLER_SMARTENERGY_METERING,
 )
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class SmartEnergySummation(SmartEnergyMetering):
     """Smart Energy Metering summation sensor."""
 
@@ -594,25 +585,20 @@ class SmartEnergySummation(SmartEnergyMetering):
     models={"TS011F", "ZLinky_TIC"},
     stop_on_match_group=CLUSTER_HANDLER_SMARTENERGY_METERING,
 )
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class PolledSmartEnergySummation(PollableSensor, SmartEnergySummation):
+class PolledSmartEnergySummation(SmartEnergySummation):
     """Polled Smart Energy Metering summation sensor."""
 
-    async def async_update(self) -> None:
-        """Retrieve latest state."""
-        if not self.available:
-            return
-        await self._cluster_handler.async_force_update()
+    _use_custom_polling: bool = True
 
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
     models={"ZLinky_TIC"},
 )
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Tier1SmartEnergySummation(PolledSmartEnergySummation):
     """Tier 1 Smart Energy Metering summation sensor."""
 
+    _use_custom_polling = False  # Poll indirectly by PolledSmartEnergySummation
     _attribute_name = "current_tier1_summ_delivered"
     _unique_id_suffix = "tier1_summation_delivered"
     _attr_translation_key: str = "tier1_summation_delivered"
@@ -622,10 +608,10 @@ class Tier1SmartEnergySummation(PolledSmartEnergySummation):
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
     models={"ZLinky_TIC"},
 )
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Tier2SmartEnergySummation(PolledSmartEnergySummation):
     """Tier 2 Smart Energy Metering summation sensor."""
 
+    _use_custom_polling = False  # Poll indirectly by PolledSmartEnergySummation
     _attribute_name = "current_tier2_summ_delivered"
     _unique_id_suffix = "tier2_summation_delivered"
     _attr_translation_key: str = "tier2_summation_delivered"
@@ -635,10 +621,10 @@ class Tier2SmartEnergySummation(PolledSmartEnergySummation):
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
     models={"ZLinky_TIC"},
 )
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Tier3SmartEnergySummation(PolledSmartEnergySummation):
     """Tier 3 Smart Energy Metering summation sensor."""
 
+    _use_custom_polling = False  # Poll indirectly by PolledSmartEnergySummation
     _attribute_name = "current_tier3_summ_delivered"
     _unique_id_suffix = "tier3_summation_delivered"
     _attr_translation_key: str = "tier3_summation_delivered"
@@ -652,6 +638,7 @@ class Tier3SmartEnergySummation(PolledSmartEnergySummation):
 class Tier4SmartEnergySummation(PolledSmartEnergySummation):
     """Tier 4 Smart Energy Metering summation sensor."""
 
+    _use_custom_polling = False  # Poll indirectly by PolledSmartEnergySummation
     _attribute_name = "current_tier4_summ_delivered"
     _unique_id_suffix = "tier4_summation_delivered"
     _attr_translation_key: str = "tier4_summation_delivered"
@@ -665,6 +652,7 @@ class Tier4SmartEnergySummation(PolledSmartEnergySummation):
 class Tier5SmartEnergySummation(PolledSmartEnergySummation):
     """Tier 5 Smart Energy Metering summation sensor."""
 
+    _use_custom_polling = False  # Poll indirectly by PolledSmartEnergySummation
     _attribute_name = "current_tier5_summ_delivered"
     _unique_id_suffix = "tier5_summation_delivered"
     _attr_translation_key: str = "tier5_summation_delivered"
@@ -678,13 +666,13 @@ class Tier5SmartEnergySummation(PolledSmartEnergySummation):
 class Tier6SmartEnergySummation(PolledSmartEnergySummation):
     """Tier 6 Smart Energy Metering summation sensor."""
 
+    _use_custom_polling = False  # Poll indirectly by PolledSmartEnergySummation
     _attribute_name = "current_tier6_summ_delivered"
     _unique_id_suffix = "tier6_summation_delivered"
     _attr_translation_key: str = "tier6_summation_delivered"
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_PRESSURE)
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Pressure(Sensor):
     """Pressure sensor."""
 
@@ -696,7 +684,6 @@ class Pressure(Sensor):
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_TEMPERATURE)
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Temperature(Sensor):
     """Temperature Sensor."""
 
@@ -708,7 +695,6 @@ class Temperature(Sensor):
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_DEVICE_TEMPERATURE)
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DeviceTemperature(Sensor):
     """Device Temperature Sensor."""
 
@@ -722,7 +708,6 @@ class DeviceTemperature(Sensor):
 
 
 @MULTI_MATCH(cluster_handler_names="carbon_dioxide_concentration")
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class CarbonDioxideConcentration(Sensor):
     """Carbon Dioxide Concentration sensor."""
 
@@ -735,7 +720,6 @@ class CarbonDioxideConcentration(Sensor):
 
 
 @MULTI_MATCH(cluster_handler_names="carbon_monoxide_concentration")
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class CarbonMonoxideConcentration(Sensor):
     """Carbon Monoxide Concentration sensor."""
 
@@ -749,7 +733,6 @@ class CarbonMonoxideConcentration(Sensor):
 
 @MULTI_MATCH(generic_ids="cluster_handler_0x042e", stop_on_match_group="voc_level")
 @MULTI_MATCH(cluster_handler_names="voc_level", stop_on_match_group="voc_level")
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class VOCLevel(Sensor):
     """VOC Level sensor."""
 
@@ -766,7 +749,6 @@ class VOCLevel(Sensor):
     models="lumi.airmonitor.acn01",
     stop_on_match_group="voc_level",
 )
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class PPBVOCLevel(Sensor):
     """VOC Level sensor."""
 
@@ -781,7 +763,6 @@ class PPBVOCLevel(Sensor):
 
 
 @MULTI_MATCH(cluster_handler_names="pm25")
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class PM25(Sensor):
     """Particulate Matter 2.5 microns or less sensor."""
 
@@ -794,7 +775,6 @@ class PM25(Sensor):
 
 
 @MULTI_MATCH(cluster_handler_names="formaldehyde_concentration")
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class FormaldehydeConcentration(Sensor):
     """Formaldehyde Concentration sensor."""
 
@@ -810,7 +790,6 @@ class FormaldehydeConcentration(Sensor):
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     stop_on_match_group=CLUSTER_HANDLER_THERMOSTAT,
 )
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class ThermostatHVACAction(Sensor):
     """Thermostat HVAC action sensor."""
 
@@ -900,7 +879,6 @@ class ThermostatHVACAction(Sensor):
     manufacturers="Sinope Technologies",
     stop_on_match_group=CLUSTER_HANDLER_THERMOSTAT,
 )
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class SinopeHVACAction(ThermostatHVACAction):
     """Sinope Thermostat HVAC action sensor."""
 
@@ -930,7 +908,6 @@ class SinopeHVACAction(ThermostatHVACAction):
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_BASIC)
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class RSSISensor(Sensor):
     """RSSI sensor for a device."""
 
@@ -968,7 +945,6 @@ class RSSISensor(Sensor):
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_BASIC)
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class LQISensor(RSSISensor):
     """LQI sensor for a device."""
 
@@ -985,7 +961,6 @@ class LQISensor(RSSISensor):
         "_TZE200_htnnfasr",
     },
 )
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class TimeLeft(Sensor):
     """Sensor that displays time left value."""
 
@@ -998,7 +973,6 @@ class TimeLeft(Sensor):
 
 
 @MULTI_MATCH(cluster_handler_names="ikea_airpurifier")
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class IkeaDeviceRunTime(Sensor):
     """Sensor that displays device run time (in minutes)."""
 
@@ -1012,7 +986,6 @@ class IkeaDeviceRunTime(Sensor):
 
 
 @MULTI_MATCH(cluster_handler_names="ikea_airpurifier")
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class IkeaFilterRunTime(Sensor):
     """Sensor that displays run time of the current filter (in minutes)."""
 
@@ -1033,7 +1006,6 @@ class AqaraFeedingSource(types.enum8):
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class AqaraPetFeederLastFeedingSource(Sensor):
     """Sensor that displays the last feeding source of pet feeder."""
 
@@ -1048,7 +1020,6 @@ class AqaraPetFeederLastFeedingSource(Sensor):
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class AqaraPetFeederLastFeedingSize(Sensor):
     """Sensor that displays the last feeding size of the pet feeder."""
 
@@ -1059,7 +1030,6 @@ class AqaraPetFeederLastFeedingSize(Sensor):
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class AqaraPetFeederPortionsDispensed(Sensor):
     """Sensor that displays the number of portions dispensed by the pet feeder."""
 
@@ -1071,7 +1041,6 @@ class AqaraPetFeederPortionsDispensed(Sensor):
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class AqaraPetFeederWeightDispensed(Sensor):
     """Sensor that displays the weight dispensed by the pet feeder."""
 
@@ -1084,7 +1053,6 @@ class AqaraPetFeederWeightDispensed(Sensor):
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"lumi.sensor_smoke.acn03"})
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class AqaraSmokeDensityDbm(Sensor):
     """Sensor that displays the smoke density of an Aqara smoke sensor in dB/m."""
 
