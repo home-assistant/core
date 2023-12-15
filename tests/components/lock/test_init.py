@@ -1,6 +1,7 @@
 """The tests for the lock component."""
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import pytest
@@ -353,14 +354,19 @@ async def test_lock_with_illegal_default_code(
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_LOCK
         )
-    with pytest.raises(ServiceValidationError) as exc:
+    with pytest.raises(
+        ServiceValidationError,
+        match=re.escape(
+            rf"The code for lock.test_lock doesn't match pattern ^\d{{{4}}}$"
+        ),
+    ) as exc:
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_UNLOCK
         )
 
     assert (
         str(exc.value)
-        == rf"Code '' for locking lock.test_lock doesn't match pattern ^\d{{{4}}}$"
+        == rf"The code for lock.test_lock doesn't match pattern ^\d{{{4}}}$"
     )
     assert exc.value.translation_key == "add_default_code"
 
