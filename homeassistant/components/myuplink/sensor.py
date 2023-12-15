@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -27,11 +27,6 @@ class MyUplinkDeviceSensorEntityDescription(SensorEntityDescription):
     """Describes MyUplink device sensor entity."""
 
     value_fn: Callable[[CoordinatorData, str], StateType]
-
-
-@dataclass(kw_only=True)
-class MyUplinkDevicePointSensorEntityDescription(SensorEntityDescription):
-    """Describes MyUplink device point sensor entity."""
 
 
 DEVICE_SENSORS: tuple[MyUplinkDeviceSensorEntityDescription, ...] = (
@@ -58,10 +53,14 @@ DEVICE_SENSORS: tuple[MyUplinkDeviceSensorEntityDescription, ...] = (
     ),
 )
 
-DEVICE_POINT_DESCRIPTION = MyUplinkDevicePointSensorEntityDescription(
-    key="data_point",
-    state_class=SensorStateClass.MEASUREMENT,
-)
+DEVICE_POINT_DESCRIPTIONS = {
+    "°C": SensorEntityDescription(
+        key="data_point",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+}
 
 
 async def async_setup_entry(
@@ -93,7 +92,9 @@ async def async_setup_entry(
                     coordinator=coordinator,
                     device_id=device_id,
                     device_point=device_point,
-                    entity_description=DEVICE_POINT_DESCRIPTION,
+                    entity_description=DEVICE_POINT_DESCRIPTIONS.get(
+                        device_point.parameter_unit
+                    ),
                     unique_id_suffix=point_id,
                 )
             )
@@ -102,7 +103,7 @@ async def async_setup_entry(
 
 
 class MyUplinkDeviceSensor(MyUplinkEntity, SensorEntity):
-    """Representation of a sensor."""
+    """Representation of a myUplink device sensor."""
 
     entity_description: MyUplinkDeviceSensorEntityDescription
 
@@ -124,21 +125,18 @@ class MyUplinkDeviceSensor(MyUplinkEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Sensor state value."""
-        value = self.entity_description.value_fn(self.coordinator.data, self.device_id)
-        return value
+        return self.entity_description.value_fn(self.coordinator.data, self.device_id)
 
 
 class MyUplinkDevicePointSensor(MyUplinkEntity, SensorEntity):
-    """Representation of a sensor."""
-
-    entity_description: MyUplinkDevicePointSensorEntityDescription
+    """Representation of a myUplink device point sensor."""
 
     def __init__(
         self,
         coordinator: MyUplinkDataCoordinator,
         device_id: str,
         device_point: DevicePoint,
-        entity_description: MyUplinkDevicePointSensorEntityDescription,
+        entity_description: SensorEntityDescription | None,
         unique_id_suffix: str,
     ) -> None:
         """Initialize the sensor."""
@@ -147,17 +145,14 @@ class MyUplinkDevicePointSensor(MyUplinkEntity, SensorEntity):
             device_id=device_id,
             unique_id_suffix=unique_id_suffix,
         )
-        self.entity_description = entity_description
 
         # Internal properties
         self.point_id = device_point.parameter_id
 
-        # Set unit of measurement and device class for device points
-        self._attr_native_unit_of_measurement = device_point.parameter_unit
-
-        if device_point.parameter_unit == "°C":
-            self._attr_device_class = SensorDeviceClass.TEMPERATURE
-            self._attr_state_class = SensorStateClass.MEASUREMENT
+        if entity_description is not None:
+            self.entity_description = entity_description
+        else:
+            self._attr_native_unit_of_measurement = device_point.parameter_unit
 
     @property
     def native_value(self) -> StateType:
