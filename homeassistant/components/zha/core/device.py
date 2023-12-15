@@ -78,6 +78,7 @@ from .const import (
     POWER_MAINS_POWERED,
     SIGNAL_AVAILABLE,
     SIGNAL_UPDATE_DEVICE,
+    SIGNAL_ZHA_ENTITIES_INITIALIZED,
     UNKNOWN,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
@@ -158,6 +159,7 @@ class ZHADevice(LogMixin):
         self._identify_ch: ClusterHandler | None = None
         self._basic_ch: ClusterHandler | None = None
         self.status: DeviceStatus = DeviceStatus.CREATED
+        self._availability_checks_established: bool = False
 
         self._endpoints: dict[int, Endpoint] = {}
         for ep_id, endpoint in zigpy_device.endpoints.items():
@@ -165,12 +167,11 @@ class ZHADevice(LogMixin):
                 self._endpoints[ep_id] = Endpoint.new(endpoint, self)
 
         if not self.is_coordinator:
-            keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
             self.unsubs.append(
-                async_track_time_interval(
-                    self.hass,
-                    self._check_available,
-                    timedelta(seconds=keep_alive_interval),
+                async_dispatcher_connect(
+                    hass,
+                    SIGNAL_ZHA_ENTITIES_INITIALIZED,
+                    self.start_availability_checks,
                 )
             )
 
@@ -428,6 +429,25 @@ class ZHADevice(LogMixin):
         device_registry.async_update_device(
             self.device_id, sw_version=f"0x{sw_version:08x}"
         )
+
+    @callback
+    def start_availability_checks(self) -> None:
+        """Start availability checks."""
+        if not self._availability_checks_established:
+            keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
+            self.debug(
+                "starting availability checks - interval: %s", keep_alive_interval
+            )
+            self.unsubs.append(
+                async_track_time_interval(
+                    self.hass,
+                    self._check_available,
+                    timedelta(seconds=keep_alive_interval),
+                )
+            )
+            self._availability_checks_established = True
+        else:
+            self.debug("availability checks already established")
 
     async def _check_available(self, *_: Any) -> None:
         # don't flip the availability state of the coordinator
