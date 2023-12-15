@@ -2,7 +2,7 @@
 import logging
 import pprint
 
-from zcc import (  # type: ignore[import]
+from zcc import (
     ControlPoint,
     ControlPointDescription,
     ControlPointDiscoveryService,
@@ -54,7 +54,7 @@ class ZimiController:
     async def connect(self) -> bool:
         """Initialize Connection with the Zimi Controller."""
         try:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Connecting to %s:%d with verbosity=%s, timeout=%d and watchdog=%d",
                 self.host,
                 self.port,
@@ -73,8 +73,8 @@ class ZimiController:
                 timeout=self.timeout,
             )
             await self.controller.connect()
-            _LOGGER.info("Connected")
-            _LOGGER.info("\n%s", self.controller.describe())
+            _LOGGER.debug("Connected")
+            _LOGGER.debug("\n%s", self.controller.describe())
 
             if self.watchdog > 0:
                 self.controller.start_watchdog(self.watchdog)
@@ -84,7 +84,6 @@ class ZimiController:
             raise ConfigEntryNotReady(error) from error
 
         if self.controller:
-            # self.hass.config_entries.async_setup_platforms(self.config, PLATFORMS)
             self.hass.data[CONTROLLER] = self
             await self.hass.config_entries.async_forward_entry_setups(
                 self.config, PLATFORMS

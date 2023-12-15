@@ -10,9 +10,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 
-# Import the device class from the component that you want to support
+# Import the device class from the component that you want to support.
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.percentage import (
+from homeassistant.util.percentage import (  # type: ignore[attr-defined]
     int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -37,7 +37,6 @@ async def async_setup_entry(
 
     entities = []
 
-    # for key, device in controller.api.devices.items():
     for device in controller.controller.fans:
         entities.append(ZimiFan(device, debug=debug))
 
@@ -48,7 +47,7 @@ class ZimiFan(FanEntity):
     """Representation of a Zimi fan."""
 
     def __init__(self, fan, debug=False) -> None:
-        """Initialize an ZimiFan."""
+        """Initialize an Zimi Fan."""
 
         if debug:
             _LOGGER.setLevel(logging.DEBUG)

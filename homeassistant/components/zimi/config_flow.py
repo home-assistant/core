@@ -5,8 +5,8 @@ import logging
 import socket
 from typing import Any
 
-import voluptuous as vol  # type: ignore[import]
-from zcc import ControlPointDiscoveryService, ControlPointError  # type: ignore[import]
+import voluptuous as vol
+from zcc import ControlPointDiscoveryService, ControlPointError
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
