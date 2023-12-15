@@ -1,5 +1,5 @@
 """Tests for the Google Generative AI Conversation integration."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from google.api_core.exceptions import ClientError
 from syrupy.assertion import SnapshotAssertion
@@ -91,20 +91,24 @@ async def test_default_prompt(
         model=3,
         suggested_area="Test Area 2",
     )
-    with patch("google.generativeai.chat_async") as mock_chat:
+    with patch("google.generativeai.GenerativeModel") as mock_model:
+        mock_model.return_value.start_chat.return_value = AsyncMock()
         result = await conversation.async_converse(
             hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
         )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert mock_chat.mock_calls[0][2] == snapshot
+    assert [tuple(mock_call) for mock_call in mock_model.mock_calls] == snapshot
 
 
 async def test_error_handling(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
 ) -> None:
     """Test that the default prompt works."""
-    with patch("google.generativeai.chat_async", side_effect=ClientError("")):
+    with patch("google.generativeai.GenerativeModel") as mock_model:
+        mock_chat = AsyncMock()
+        mock_model.return_value.start_chat.return_value = mock_chat
+        mock_chat.send_message_async.side_effect = ClientError("")
         result = await conversation.async_converse(
             hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
         )
@@ -125,7 +129,7 @@ async def test_template_error(
     )
     with patch(
         "google.generativeai.get_model",
-    ), patch("google.generativeai.chat_async"):
+    ), patch("google.generativeai.GenerativeModel"):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         result = await conversation.async_converse(

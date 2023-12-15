@@ -8,7 +8,7 @@ from types import MappingProxyType
 from typing import Any
 
 from google.api_core.exceptions import ClientError
-import google.generativeai as palm
+import google.generativeai as genai
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -59,8 +59,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    palm.configure(api_key=data[CONF_API_KEY])
-    await hass.async_add_executor_job(partial(palm.list_models))
+    genai.configure(api_key=data[CONF_API_KEY])
+    await hass.async_add_executor_job(partial(genai.list_models))
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

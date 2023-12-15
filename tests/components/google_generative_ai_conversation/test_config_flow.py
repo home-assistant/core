@@ -37,7 +37,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.google_generative_ai_conversation.config_flow.palm.list_models",
+        "homeassistant.components.google_generative_ai_conversation.config_flow.genai.list_models",
     ), patch(
         "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
         return_value=True,
@@ -104,7 +104,7 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
     )
 
     with patch(
-        "homeassistant.components.google_generative_ai_conversation.config_flow.palm.list_models",
+        "homeassistant.components.google_generative_ai_conversation.config_flow.genai.list_models",
         side_effect=side_effect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
