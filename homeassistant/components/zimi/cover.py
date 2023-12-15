@@ -17,7 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 
-# Import the device class from the component that you want to support
+# Import the device class from the component that you want to support.
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONTROLLER, DOMAIN
@@ -39,7 +39,6 @@ async def async_setup_entry(
 
     entities = []
 
-    # for key, device in controller.api.devices.items():
     for device in controller.controller.doors:
         entities.append(ZimiCover(device, debug=debug))
 
@@ -50,7 +49,7 @@ class ZimiCover(CoverEntity):
     """Representation of a Zimi cover."""
 
     def __init__(self, cover, debug=False) -> None:
-        """Initialize an Zimicover."""
+        """Initialize an Zimi cover."""
 
         if debug:
             _LOGGER.setLevel(logging.DEBUG)

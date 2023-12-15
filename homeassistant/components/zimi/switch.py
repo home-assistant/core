@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 
-# Import the device class from the component that you want to support
+# Import the device class from the component that you want to support.
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONTROLLER, DOMAIN
@@ -30,8 +30,6 @@ async def async_setup_entry(
     controller: ZimiController = hass.data[CONTROLLER]
 
     entities = []
-
-    # for key, device in controller.api.devices.items():
     for device in controller.controller.outlets:
         entities.append(ZimiSwitch(device, debug=debug))
 

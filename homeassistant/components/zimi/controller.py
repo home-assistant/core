@@ -2,7 +2,7 @@
 import logging
 import pprint
 
-from zcc import (  # type: ignore[import]
+from zcc import (
     ControlPoint,
     ControlPointDescription,
     ControlPointDiscoveryService,
@@ -84,7 +84,6 @@ class ZimiController:
             raise ConfigEntryNotReady(error) from error
 
         if self.controller:
-            # self.hass.config_entries.async_setup_platforms(self.config, PLATFORMS)
             self.hass.data[CONTROLLER] = self
             await self.hass.config_entries.async_forward_entry_setups(
                 self.config, PLATFORMS
