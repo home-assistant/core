@@ -24,8 +24,12 @@ async def test_binary_sensors(hass: HomeAssistant) -> None:
 
     state = hass.states.get("binary_sensor.test_charging").state
     is_on = state == STATE_ON
-    assert is_on == TEST_VEHICLE_STATE_ONLINE["charge_state"]["charging_state"] == "Charging"
+    assert (
+        is_on
+        == TEST_VEHICLE_STATE_ONLINE["charge_state"]["charging_state"]
+        == "Charging"
+    )
 
     state = hass.states.get("binary_sensor.test_auto_seat_climate_left").state
     is_on = state == STATE_ON
-    assert is_on == (TEST_VEHICLE_STATE_ONLINE["climate_state"]["auto_seat_climate_left"])
+    assert is_on == TEST_VEHICLE_STATE_ONLINE["climate_state"]["auto_seat_climate_left"]
