@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class QBittorrentDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Coordinator for updating QBittorrent data."""
+    """Coordinator for updating qBittorrent data."""
 
     config_entry: ConfigEntry
 
@@ -45,7 +45,7 @@ class QBittorrentDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     def update(self) -> SessionStats:
-        """Get the latest data from Transmission instance."""
+        """Get the latest data from qBittorrent instance."""
         try:
             data = self.client.sync_main_data()
             self.total_torrents = self.client.torrents(filter='all')
@@ -60,5 +60,5 @@ class QBittorrentDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return data
 
     async def _async_update_data(self) -> dict[str, Any]:
-        """Update QBittorrent data"""
+        """Update qBittorrent data"""
         return await self.hass.async_add_executor_job(self.update)

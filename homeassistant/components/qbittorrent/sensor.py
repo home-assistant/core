@@ -108,7 +108,7 @@ class QBittorrentSensor(
 
 
 class QBittorrentSpeedSensor(QBittorrentSensor):
-    """Representation of a QBittorrent speed sensor."""
+    """Representation of a qBittorrent speed sensor."""
 
     _attr_device_class = SensorDeviceClass.DATA_RATE
     _attr_native_unit_of_measurement = UnitOfDataRate.BYTES_PER_SECOND
@@ -127,7 +127,7 @@ class QBittorrentSpeedSensor(QBittorrentSensor):
     
     
 class QBittorrentStatusSensor(QBittorrentSensor):
-    """Representation of a QBittorrent status sensor."""
+    """Representation of a qBittorrent status sensor."""
 
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options = [STATE_IDLE, STATE_UP_DOWN, STATE_SEEDING, STATE_DOWNLOADING]
