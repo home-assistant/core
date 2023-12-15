@@ -151,18 +151,5 @@
         "name": "Tyre preasure warning rear right"
       }
     }
-  },
-  "issues": {
-    "virtual_key": {
-      "title": "Virtual Key setup required",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "Virtual Key setup required",
-            "description": "Sending commands now requires a Virtual Key to be added to your Tesla. Open the Tessie App and send any command to setup the Virtual Key."
-          }
-        }
-      }
-    }
   }
 }
