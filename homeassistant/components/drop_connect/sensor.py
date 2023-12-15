@@ -74,7 +74,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         icon="mdi:shower-head",
         native_unit_of_measurement="gpm",
         suggested_display_precision=1,
-        value_fn=lambda device: device.current_flow_rate,
+        value_fn=lambda device: device.drop_api.current_flow_rate(),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DROPSensorEntityDescription(
@@ -83,7 +83,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         icon="mdi:shower-head",
         native_unit_of_measurement="gpm",
         suggested_display_precision=1,
-        value_fn=lambda device: device.peak_flow_rate,
+        value_fn=lambda device: device.drop_api.peak_flow_rate(),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DROPSensorEntityDescription(
@@ -92,7 +92,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         device_class=SensorDeviceClass.WATER,
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=1,
-        value_fn=lambda device: device.water_used_today,
+        value_fn=lambda device: device.drop_api.water_used_today(),
         state_class=SensorStateClass.TOTAL,
     ),
     DROPSensorEntityDescription(
@@ -101,7 +101,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         device_class=SensorDeviceClass.WATER,
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=0,
-        value_fn=lambda device: device.average_water_used,
+        value_fn=lambda device: device.drop_api.average_water_used(),
         state_class=SensorStateClass.TOTAL,
     ),
     DROPSensorEntityDescription(
@@ -110,7 +110,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         device_class=SensorDeviceClass.WATER,
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=0,
-        value_fn=lambda device: device.capacity_remaining,
+        value_fn=lambda device: device.drop_api.capacity_remaining(),
         state_class=SensorStateClass.TOTAL,
     ),
     DROPSensorEntityDescription(
@@ -119,7 +119,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.PSI,
         suggested_display_precision=1,
-        value_fn=lambda device: device.current_system_pressure,
+        value_fn=lambda device: device.drop_api.current_system_pressure(),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DROPSensorEntityDescription(
@@ -128,7 +128,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.PSI,
         suggested_display_precision=0,
-        value_fn=lambda device: device.high_system_pressure,
+        value_fn=lambda device: device.drop_api.high_system_pressure(),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DROPSensorEntityDescription(
@@ -137,7 +137,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.PSI,
         suggested_display_precision=0,
-        value_fn=lambda device: device.low_system_pressure,
+        value_fn=lambda device: device.drop_api.low_system_pressure(),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DROPSensorEntityDescription(
@@ -145,7 +145,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=0,
-        value_fn=lambda device: device.battery,
+        value_fn=lambda device: device.drop_api.battery(),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DROPSensorEntityDescription(
@@ -153,7 +153,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         suggested_display_precision=1,
-        value_fn=lambda device: device.temperature,
+        value_fn=lambda device: device.drop_api.temperature(),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     DROPSensorEntityDescription(
@@ -163,7 +163,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        value_fn=lambda device: device.inlet_tds,
+        value_fn=lambda device: device.drop_api.inlet_tds(),
     ),
     DROPSensorEntityDescription(
         key=OUTLET_TDS,
@@ -172,7 +172,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        value_fn=lambda device: device.outlet_tds,
+        value_fn=lambda device: device.drop_api.outlet_tds(),
     ),
     DROPSensorEntityDescription(
         key=CARTRIDGE_1_LIFE,
@@ -181,7 +181,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        value_fn=lambda device: device.cart1,
+        value_fn=lambda device: device.drop_api.cart1(),
     ),
     DROPSensorEntityDescription(
         key=CARTRIDGE_2_LIFE,
@@ -190,7 +190,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        value_fn=lambda device: device.cart2,
+        value_fn=lambda device: device.drop_api.cart2(),
     ),
     DROPSensorEntityDescription(
         key=CARTRIDGE_3_LIFE,
@@ -199,7 +199,7 @@ SENSORS: list[DROPSensorEntityDescription] = [
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        value_fn=lambda device: device.cart3,
+        value_fn=lambda device: device.drop_api.cart3(),
     ),
 ]
 

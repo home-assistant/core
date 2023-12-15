@@ -4,10 +4,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from dropmqttapi.discovery import DropDiscovery
+
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
-from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from .const import (
     CONF_COMMAND_TOPIC,
@@ -34,15 +35,8 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _discovered_device_info: dict[str, Any] = {}
     _topic = DISCOVERY_TOPIC
-    __command_topic: str | None = None
-    __data_topic: str | None = None
-    __device_desc: str | None = None
-    __device_id: str | None = None
-    __device_type: str | None = None
-    __hub_id: str | None = None
-    __name: str = ""
+    _drop_discovery: DropDiscovery | None = None
 
     async def async_step_mqtt(self, discovery_info: MqttServiceInfo) -> FlowResult:
         """Handle a flow initialized by MQTT discovery."""
@@ -54,69 +48,22 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             return self.async_abort(reason="invalid_discovery_info")
 
-        payload_data = {}
-        try:
-            json_dict = (
-                json_loads(discovery_info.payload)
-                if isinstance(discovery_info.payload, str)
-                else None
-            )
-            if isinstance(json_dict, dict):
-                for k, v in json_dict.items():
-                    if isinstance(k, str) and isinstance(v, str):
-                        payload_data[k] = v
-        except JSON_DECODE_EXCEPTIONS:
-            _LOGGER.error(
-                "Invalid MQTT discovery payload on %s: %s",
-                discovery_info.topic,
-                discovery_info.payload,
-            )
-            return self.async_abort(reason="invalid_discovery_info")
-
-        # Extract the DROP hub ID and DROP device ID from the MQTT topic.
-        topic_elements = discovery_info.topic.split("/")
+        self._drop_discovery = DropDiscovery(DOMAIN)
         if not (
-            topic_elements[2].startswith("DROP-") and topic_elements[3].isnumeric()
+            await self._drop_discovery.parse_discovery(
+                discovery_info.topic, discovery_info.payload
+            )
         ):
             return self.async_abort(reason="invalid_discovery_info")
-        self.__hub_id = topic_elements[2]
-        self.__device_id = topic_elements[3]
-
         existing_entry = await self.async_set_unique_id(
-            f"{self.__hub_id}_{self.__device_id}"
+            f"{self._drop_discovery.hub_id}_{self._drop_discovery.device_id}"
         )
         if existing_entry is not None:
             # Note: returning "invalid_discovery_info" here instead of "already_configured"
             # allows discovery of additional device types.
             return self.async_abort(reason="invalid_discovery_info")
 
-        # Discovery data must include the DROP device type and name.
-        if (
-            KEY_DEVICE_TYPE in payload_data
-            and KEY_DEVICE_DESCRIPTION in payload_data
-            and KEY_DEVICE_NAME in payload_data
-        ):
-            self.__device_type = payload_data[KEY_DEVICE_TYPE]
-            self.__device_desc = payload_data[KEY_DEVICE_DESCRIPTION]
-            self.__name = payload_data[KEY_DEVICE_NAME]
-        else:
-            _LOGGER.error(
-                "Incomplete MQTT discovery payload on %s: %s",
-                discovery_info.topic,
-                discovery_info.payload,
-            )
-            return self.async_abort(reason="invalid_discovery_info")
-
-        _LOGGER.debug(
-            "MQTT discovery on %s: %s", discovery_info.topic, discovery_info.payload
-        )
-
-        # Define the data and command MQTT topics that will be used when this device is initialized.
-        self.__data_topic = f"{DOMAIN}/{self.__hub_id}/data/{self.__device_id}/#"
-        self.__command_topic = f"{DOMAIN}/{self.__hub_id}/cmd/{self.__device_id}"
-
-        # Expose the device name to the 'Discovered' card
-        self.context.update({"title_placeholders": {"name": self.__name}})
+        self.context.update({"title_placeholders": {"name": self._drop_discovery.name}})
 
         return await self.async_step_confirm()
 
@@ -124,24 +71,27 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm the setup."""
+        assert self._drop_discovery is not None
         if user_input is not None:
             device_data = {
-                CONF_COMMAND_TOPIC: self.__command_topic,
-                CONF_DATA_TOPIC: self.__data_topic,
-                CONF_DEVICE_DESC: self.__device_desc,
-                CONF_DEVICE_ID: self.__device_id,
-                CONF_DEVICE_NAME: self.__name,
-                CONF_DEVICE_TYPE: self.__device_type,
-                CONF_HUB_ID: self.__hub_id,
-                CONF_DEVICE_OWNER_ID: f"{self.__hub_id}_255",  # Hub has static device ID
+                CONF_COMMAND_TOPIC: self._drop_discovery.command_topic,
+                CONF_DATA_TOPIC: self._drop_discovery.data_topic,
+                CONF_DEVICE_DESC: self._drop_discovery.device_desc,
+                CONF_DEVICE_ID: self._drop_discovery.device_id,
+                CONF_DEVICE_NAME: self._drop_discovery.name,
+                CONF_DEVICE_TYPE: self._drop_discovery.device_type,
+                CONF_HUB_ID: self._drop_discovery.hub_id,
+                CONF_DEVICE_OWNER_ID: self._drop_discovery.owner_id,
             }
-            return self.async_create_entry(title=self.__name, data=device_data)
+            return self.async_create_entry(
+                title=self._drop_discovery.name, data=device_data
+            )
 
         return self.async_show_form(
             step_id="confirm",
             description_placeholders={
-                "device_name": self.__name,
-                "device_type": self.__device_desc,
+                "device_name": self._drop_discovery.name,
+                "device_type": self._drop_discovery.device_desc,
             },
         )
 

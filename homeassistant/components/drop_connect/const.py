@@ -23,5 +23,3 @@ DEV_SOFTENER = "soft"
 DISCOVERY_TOPIC = "drop_connect/discovery/#"
 
 DOMAIN = "drop_connect"
-
-KEY_STATUS = "stat"
