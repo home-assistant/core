@@ -28,6 +28,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
+    CONF_PROTOCOL,
     EVENT_HOMEASSISTANT_STOP,
     EntityCategory,
     UnitOfEnergy,
@@ -46,7 +47,6 @@ from homeassistant.util import Throttle
 
 from .const import (
     CONF_DSMR_VERSION,
-    CONF_PROTOCOL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
     CONF_TIME_BETWEEN_UPDATE,
@@ -78,6 +78,13 @@ class DSMRSensorEntityDescription(SensorEntityDescription):
 
 
 SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
+    DSMRSensorEntityDescription(
+        key="timestamp",
+        obis_reference=obis_references.P1_MESSAGE_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
     DSMRSensorEntityDescription(
         key="current_electricity_usage",
         translation_key="current_electricity_usage",

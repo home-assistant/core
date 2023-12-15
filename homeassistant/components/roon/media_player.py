@@ -373,14 +373,14 @@ class RoonDevice(MediaPlayerEntity):
     def volume_up(self) -> None:
         """Send new volume_level to device."""
         if self._volume_incremental:
-            self._server.roonapi.change_volume_raw(self.output_id, 1, "relative_step")
+            self._server.roonapi.change_volume_raw(self.output_id, 1, "relative")
         else:
             self._server.roonapi.change_volume_percent(self.output_id, 3)
 
     def volume_down(self) -> None:
         """Send new volume_level to device."""
         if self._volume_incremental:
-            self._server.roonapi.change_volume_raw(self.output_id, -1, "relative_step")
+            self._server.roonapi.change_volume_raw(self.output_id, -1, "relative")
         else:
             self._server.roonapi.change_volume_percent(self.output_id, -3)
 
