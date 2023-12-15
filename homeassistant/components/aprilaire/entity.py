@@ -54,11 +54,7 @@ class BaseAprilaireEntity(BaseCoordinatorEntity[AprilaireCoordinator]):
     @property
     def unique_id(self) -> str | None:
         """Return a unique ID."""
-        return (
-            format_mac(self.coordinator.data[Attribute.MAC_ADDRESS])
-            + "_"
-            + self.translation_key
-        )
+        return f"{format_mac(self.coordinator.data[Attribute.MAC_ADDRESS])}_{self.translation_key}"
 
     async def async_update(self) -> None:
         """Implement abstract base method."""
