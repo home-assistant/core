@@ -57,10 +57,6 @@ class QBittorrentDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except LoginRequired as exc:
             raise ConfigEntryError("Invalid authentication") from exc
 
-        # self.check_completed_torrent()
-        # self.check_started_torrent()
-        # self.check_removed_torrent()
-
         return data
 
     async def _async_update_data(self) -> dict[str, Any]:
