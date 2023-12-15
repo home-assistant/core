@@ -19,13 +19,14 @@ class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize."""
+        self.use_ssl = entry.data.get(CONF_SSL, False)
         self.fully = FullyKiosk(
             async_get_clientsession(hass),
             entry.data[CONF_HOST],
             DEFAULT_PORT,
             entry.data[CONF_PASSWORD],
-            use_ssl=entry.data[CONF_SSL],
-            verify_ssl=entry.data[CONF_VERIFY_SSL],
+            use_ssl=self.use_ssl,
+            verify_ssl=entry.data.get(CONF_VERIFY_SSL, False),
         )
         super().__init__(
             hass,
@@ -33,7 +34,6 @@ class FullyKioskDataUpdateCoordinator(DataUpdateCoordinator):
             name=entry.data[CONF_HOST],
             update_interval=UPDATE_INTERVAL,
         )
-        self.use_ssl = entry.data[CONF_SSL]
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""

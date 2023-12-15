@@ -129,6 +129,7 @@ def vincenty(
     uSq = cosSqAlpha * (AXIS_A**2 - AXIS_B**2) / (AXIS_B**2)
     A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)))
     B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)))
+    # fmt: off
     deltaSigma = (
         B
         * sinSigma
@@ -141,11 +142,12 @@ def vincenty(
                 - B
                 / 6
                 * cos2SigmaM
-                * (-3 + 4 * sinSigma**2)
-                * (-3 + 4 * cos2SigmaM**2)
+                * (-3 + 4 * sinSigma ** 2)
+                * (-3 + 4 * cos2SigmaM ** 2)
             )
         )
     )
+    # fmt: on
     s = AXIS_B * A * (sigma - deltaSigma)
 
     s /= 1000  # Conversion of meters to kilometers

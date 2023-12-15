@@ -1,20 +1,18 @@
 """Helper functions for the CO2 Signal integration."""
-from types import MappingProxyType
+from collections.abc import Mapping
 from typing import Any
 
 from aioelectricitymaps import ElectricityMaps
 from aioelectricitymaps.models import CarbonIntensityResponse
 
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_COUNTRY_CODE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-
-from .const import CONF_COUNTRY_CODE
 
 
 async def fetch_latest_carbon_intensity(
     hass: HomeAssistant,
     em: ElectricityMaps,
-    config: dict[str, Any] | MappingProxyType[str, Any],
+    config: Mapping[str, Any],
 ) -> CarbonIntensityResponse:
     """Fetch the latest carbon intensity based on country code or location coordinates."""
     if CONF_COUNTRY_CODE in config:

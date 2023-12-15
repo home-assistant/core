@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from streamlabswater.streamlabswater import StreamlabsClient
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -39,19 +41,19 @@ def setup_platform(
 class StreamlabsLocationData:
     """Track and query location data."""
 
-    def __init__(self, location_id, client):
+    def __init__(self, location_id: str, client: StreamlabsClient) -> None:
         """Initialize the location data."""
         self._location_id = location_id
         self._client = client
         self._is_away = None
 
     @Throttle(MIN_TIME_BETWEEN_LOCATION_UPDATES)
-    def update(self):
+    def update(self) -> None:
         """Query and store location data."""
         location = self._client.get_location(self._location_id)
         self._is_away = location["homeAway"] == "away"
 
-    def is_away(self):
+    def is_away(self) -> bool | None:
         """Return whether away more is enabled."""
         return self._is_away
 
@@ -59,19 +61,21 @@ class StreamlabsLocationData:
 class StreamlabsAwayMode(BinarySensorEntity):
     """Monitor the away mode state."""
 
-    def __init__(self, location_name, streamlabs_location_data):
+    def __init__(
+        self, location_name: str, streamlabs_location_data: StreamlabsLocationData
+    ) -> None:
         """Initialize the away mode device."""
         self._location_name = location_name
         self._streamlabs_location_data = streamlabs_location_data
         self._is_away = None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name for away mode."""
         return f"{self._location_name} {NAME_AWAY_MODE}"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return if away mode is on."""
         return self._streamlabs_location_data.is_away()
 

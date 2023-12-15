@@ -316,7 +316,9 @@ class HeatMeterSensor(
         """Set up the sensor with the initial values."""
         super().__init__(coordinator)
         self.key = description.key
-        self._attr_unique_id = f"{coordinator.config_entry.data['device_number']}_{description.key}"  # type: ignore[union-attr]
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.data['device_number']}_{description.key}"  # type: ignore[union-attr]
+        )
         self._attr_name = f"Heat Meter {description.name}"
         self.entity_description = description
         self._attr_device_info = device

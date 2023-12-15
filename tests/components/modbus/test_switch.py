@@ -2,7 +2,6 @@
 from datetime import timedelta
 from unittest import mock
 
-from freezegun.api import FrozenDateTimeFactory
 from pymodbus.exceptions import ModbusException
 import pytest
 
@@ -13,7 +12,6 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_INPUT,
     CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
-    CONF_LAZY_ERROR,
     CONF_STATE_OFF,
     CONF_STATE_ON,
     CONF_VERIFY,
@@ -39,7 +37,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
+from .conftest import TEST_ENTITY_NAME, ReadResult
 
 from tests.common import async_fire_time_changed
 
@@ -64,7 +62,6 @@ ENTITY_ID2 = f"{ENTITY_ID}_2"
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_WRITE_TYPE: CALL_TYPE_COIL,
-                    CONF_LAZY_ERROR: 10,
                 }
             ]
         },
@@ -225,46 +222,6 @@ async def test_config_switch(hass: HomeAssistant, mock_modbus) -> None:
 async def test_all_switch(hass: HomeAssistant, mock_do_cycle, expected) -> None:
     """Run test for given config."""
     assert hass.states.get(ENTITY_ID).state == expected
-
-
-@pytest.mark.parametrize(
-    "do_config",
-    [
-        {
-            CONF_SWITCHES: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_ADDRESS: 1234,
-                    CONF_SLAVE: 1,
-                    CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                    CONF_SCAN_INTERVAL: 10,
-                    CONF_LAZY_ERROR: 2,
-                    CONF_VERIFY: {},
-                },
-            ],
-        },
-    ],
-)
-@pytest.mark.parametrize(
-    ("register_words", "do_exception", "start_expect", "end_expect"),
-    [
-        (
-            [0x00],
-            True,
-            STATE_OFF,
-            STATE_UNAVAILABLE,
-        ),
-    ],
-)
-async def test_lazy_error_switch(
-    hass: HomeAssistant, start_expect, end_expect, mock_do_cycle: FrozenDateTimeFactory
-) -> None:
-    """Run test for given config."""
-    assert hass.states.get(ENTITY_ID).state == start_expect
-    await do_next_cycle(hass, mock_do_cycle, 11)
-    assert hass.states.get(ENTITY_ID).state == start_expect
-    await do_next_cycle(hass, mock_do_cycle, 11)
-    assert hass.states.get(ENTITY_ID).state == end_expect
 
 
 @pytest.mark.parametrize(

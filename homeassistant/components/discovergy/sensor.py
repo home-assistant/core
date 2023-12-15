@@ -27,8 +27,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import DiscovergyData, DiscovergyUpdateCoordinator
 from .const import DOMAIN, MANUFACTURER
 
-PARALLEL_UPDATES = 1
-
 
 def _get_and_scale(reading: Reading, key: str, scale: int) -> datetime | float | None:
     """Get a value from a Reading and divide with scale it."""
@@ -168,10 +166,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Discovergy sensors."""
     data: DiscovergyData = hass.data[DOMAIN][entry.entry_id]
-    meters: list[Meter] = data.meters  # always returns a list
 
     entities: list[DiscovergySensor] = []
-    for meter in meters:
+    for meter in data.meters:
         sensors: tuple[DiscovergySensorEntityDescription, ...] = ()
         coordinator: DiscovergyUpdateCoordinator = data.coordinators[meter.meter_id]
 
@@ -186,6 +183,7 @@ async def async_setup_entry(
             for description in sensors
             for value_key in {description.key, *description.alternative_keys}
             if description.value_fn(coordinator.data, value_key, description.scale)
+            is not None
         )
 
     async_add_entities(entities)
