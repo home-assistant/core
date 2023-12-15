@@ -121,7 +121,7 @@ async def entity_registry_inquiry(
             if area_name := template.area_name(hass, entity_state.entity_id):
                 entry["area"] = area_name
             if len(registry_entry.aliases):
-                entry["aliases"] = registry_entry.aliases
+                entry["aliases"] = list(registry_entry.aliases)
 
         attributes = {}
         for attribute, value in entity_state.attributes.items():

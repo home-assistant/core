@@ -169,7 +169,7 @@ async def test_function_call(
     )
     entity_registry.async_update_entity(
         entity_id="light.bed_light",
-        aliases=["Bettlicht"],
+        aliases={"Bettlicht"},
         area_id=area_registry.async_get_area_by_name("Bedroom").id,
     )
 
