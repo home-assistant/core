@@ -26,6 +26,8 @@ DUNEHD_PLAYER_SUPPORT: Final[MediaPlayerEntityFeature] = (
     | MediaPlayerEntityFeature.PREVIOUS_TRACK
     | MediaPlayerEntityFeature.NEXT_TRACK
     | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.VOLUME_STEP
 )
 
 
@@ -99,11 +101,11 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
 
     def volume_up(self) -> None:
         """Volume up media player."""
-        self._state = self._player.volume_up()
+        self._state = self._player.volumeUp()
 
     def volume_down(self) -> None:
         """Volume down media player."""
-        self._state = self._player.volume_down()
+        self._state = self._player.volumeDown()
 
     def mute_volume(self, mute: bool) -> None:
         """Mute/unmute player volume."""
