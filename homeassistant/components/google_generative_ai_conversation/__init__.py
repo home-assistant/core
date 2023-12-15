@@ -3,18 +3,30 @@ from __future__ import annotations
 
 from functools import partial
 import logging
+from pathlib import Path
 from typing import Literal
 
 from google.api_core.exceptions import ClientError
 import google.generativeai as genai
 import google.generativeai.types as genai_types
+import voluptuous as vol
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, MATCH_ALL
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, TemplateError
-from homeassistant.helpers import intent, template
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
+from homeassistant.exceptions import (
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    TemplateError,
+)
+from homeassistant.helpers import config_validation as cv, intent, template
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import ulid
 
 from .const import (
@@ -30,9 +42,58 @@ from .const import (
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_K,
     DEFAULT_TOP_P,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
+SERVICE_GENERATE_CONTENT = "generate_content"
+CONF_IMAGE_FILENAME = "image_filename"
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up OpenAI Conversation."""
+
+    async def generate_content(call: ServiceCall) -> ServiceResponse:
+        """Generate content from text and optionally images."""
+        prompt_parts = [call.data[CONF_PROMPT]]
+        image_filenames = call.data[CONF_IMAGE_FILENAME]
+        for image_filename in image_filenames:
+            prompt_parts.append(
+                {"mime_type": "image/jpeg", "data": Path(image_filename).read_bytes()}
+            )
+
+        model_name = "gemini-pro-vision" if image_filenames else "gemini-pro"
+        model = genai.GenerativeModel(model_name=model_name)
+
+        try:
+            response = await model.generate_content_async(prompt_parts)
+        except (
+            ClientError,
+            ValueError,
+            genai_types.BlockedPromptException,
+            genai_types.StopCandidateException,
+        ) as err:
+            raise HomeAssistantError(f"Error generating content: {err}") from err
+
+        return {"text": response.text}
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GENERATE_CONTENT,
+        generate_content,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_PROMPT): cv.string,
+                vol.Optional(CONF_IMAGE_FILENAME, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+            }
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

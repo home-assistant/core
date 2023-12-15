@@ -26,5 +26,23 @@
         }
       }
     }
+  },
+  "services": {
+    "generate_content": {
+      "name": "Generate content",
+      "description": "Generate content from a prompt consisting of text and optionally images",
+      "fields": {
+        "prompt": {
+          "name": "Prompt",
+          "description": "The prompt",
+          "example": "Describe what you see in these images:"
+        },
+        "image_filename": {
+          "name": "Image filename",
+          "description": "Images",
+          "example": "/config/www/image.jpg"
+        }
+      }
+    }
   }
 }
