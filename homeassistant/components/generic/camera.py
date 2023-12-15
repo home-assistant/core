@@ -211,8 +211,6 @@ class GenericCamera(Camera):
             ):
                 return self._last_image
 
-            self._last_update = datetime.now()
-
             try:
                 async_client = get_async_client(self.hass, verify_ssl=self.verify_ssl)
                 response = await async_client.get(
@@ -223,6 +221,7 @@ class GenericCamera(Camera):
                 )
                 response.raise_for_status()
                 self._last_image = response.content
+                self._last_update = datetime.now()
 
             except httpx.TimeoutException:
                 _LOGGER.error("Timeout getting camera image from %s", self._name)
