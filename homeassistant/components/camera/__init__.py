@@ -277,6 +277,7 @@ async def async_get_still_stream(
     last_image = None
 
     while True:
+        last_fetch = datetime.now()
         img_bytes = await image_cb()
         if not img_bytes:
             break
@@ -290,7 +291,11 @@ async def async_get_still_stream(
                 await write_to_mjpeg_stream(img_bytes)
             last_image = img_bytes
 
-        await asyncio.sleep(interval)
+        next_fetch = last_fetch + timedelta(0, interval)
+        now = datetime.now()
+        if next_fetch > now:
+            sleep_time = (next_fetch - now).total_seconds()
+            await asyncio.sleep(sleep_time)
 
     return response
 
