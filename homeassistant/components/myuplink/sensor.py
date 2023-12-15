@@ -13,14 +13,13 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import MyUplinkDataCoordinator
 from .const import DOMAIN
 from .coordinator import CoordinatorData
+from .entity import MyUplinkEntity
 
 
 @dataclass(kw_only=True)
@@ -102,10 +101,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class MyUplinkDeviceSensor(CoordinatorEntity[MyUplinkDataCoordinator], SensorEntity):
+class MyUplinkDeviceSensor(MyUplinkEntity, SensorEntity):
     """Representation of a sensor."""
 
-    _attr_has_entity_name = True
     entity_description: MyUplinkDeviceSensorEntityDescription
 
     def __init__(
@@ -116,15 +114,12 @@ class MyUplinkDeviceSensor(CoordinatorEntity[MyUplinkDataCoordinator], SensorEnt
         unique_id_suffix: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(
+            coordinator=coordinator,
+            device_id=device_id,
+            unique_id_suffix=unique_id_suffix,
+        )
         self.entity_description = entity_description
-
-        # Internal properties
-        self.device_id = device_id
-
-        # Basic values
-        self._attr_unique_id = f"{device_id}-{unique_id_suffix}"
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
 
     @property
     def native_value(self) -> StateType:
@@ -133,12 +128,9 @@ class MyUplinkDeviceSensor(CoordinatorEntity[MyUplinkDataCoordinator], SensorEnt
         return value
 
 
-class MyUplinkDevicePointSensor(
-    CoordinatorEntity[MyUplinkDataCoordinator], SensorEntity
-):
+class MyUplinkDevicePointSensor(MyUplinkEntity, SensorEntity):
     """Representation of a sensor."""
 
-    _attr_has_entity_name = True
     entity_description: MyUplinkDevicePointSensorEntityDescription
 
     def __init__(
@@ -150,16 +142,15 @@ class MyUplinkDevicePointSensor(
         unique_id_suffix: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(
+            coordinator=coordinator,
+            device_id=device_id,
+            unique_id_suffix=unique_id_suffix,
+        )
         self.entity_description = entity_description
 
         # Internal properties
-        self.device_id = device_id
         self.point_id = device_point.parameter_id
-
-        # Basic values
-        self._attr_unique_id = f"{device_id}-{unique_id_suffix}"
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
 
         # Set unit of measurement and device class for device points
         self._attr_native_unit_of_measurement = device_point.parameter_unit
