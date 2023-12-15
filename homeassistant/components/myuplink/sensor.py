@@ -9,7 +9,10 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import MyUplinkDataCoordinator
 from .const import (
@@ -90,8 +93,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class MyUplinkSensor(SensorEntity):
+class MyUplinkSensor(CoordinatorEntity[MyUplinkDataCoordinator], SensorEntity):
     """Representation of a sensor."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -104,22 +109,17 @@ class MyUplinkSensor(SensorEntity):
         diag: bool,
     ) -> None:
         """Initialize the sensor."""
-
-        self._attr_should_poll = False
+        super().__init__(coordinator=coordinator)
 
         # Internal properties
         self.mu_device_id = device_id
         self.mu_data_group = data_group
         self.mu_data_id = data_id
 
-        # Coordinator
-        self.coordinator = coordinator
-
         # Basic values
-        self._attr_has_entity_name = True
         self._attr_name = name
         self._attr_unique_id = f"{device_id}-{u_id}"
-        self._attr_device_info = {"identifiers": {(DOMAIN, device_id)}}
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
 
         # Set unit of measurement and device class for device points
         if self.mu_data_group == MU_DATAGROUP_POINTS:
@@ -138,7 +138,7 @@ class MyUplinkSensor(SensorEntity):
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> StateType:
         """Sensor state value."""
         data_value = self.coordinator.data[self.mu_data_group][self.mu_device_id][
             self.mu_data_id
@@ -147,14 +147,6 @@ class MyUplinkSensor(SensorEntity):
         # Get state value from device point model
         if self.mu_data_group == MU_DATAGROUP_POINTS:
             device_point: DevicePoint = data_value
-            return device_point.value
+            return device_point.value  # type: ignore[no-any-return]
 
-        return data_value
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe for updates from coordinator."""
-        self.coordinator.async_add_listener(self.async_update_state)
-
-    def async_update_state(self) -> None:
-        """Update state on sensor."""
-        self.schedule_update_ha_state()
+        return data_value  # type: ignore[no-any-return]
