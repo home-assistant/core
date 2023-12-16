@@ -15,7 +15,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.util import uuid as uuid_util
 
 
 @pytest.fixture
@@ -28,18 +27,12 @@ def logger() -> logging.Logger:
 
 
 @pytest.fixture
-def unique_id() -> str:
-    """Return a random ID."""
-    return uuid_util.random_uuid_hex()
-
-
-@pytest.fixture
-def config_entry(unique_id: str) -> ConfigEntry:
+def config_entry() -> ConfigEntry:
     """Return a mock config entry."""
 
     config_entry_mock = AsyncMock(ConfigEntry)
     config_entry_mock.data = {"host": "test123", "port": 123}
-    config_entry_mock.unique_id = unique_id
+    config_entry_mock.unique_id = "1:2:3:4:5:6"
 
     return config_entry_mock
 
@@ -47,13 +40,16 @@ def config_entry(unique_id: str) -> ConfigEntry:
 @pytest.fixture
 def client() -> AprilaireClient:
     """Return a mock client."""
-    return AsyncMock(AprilaireClient)
+    client = AsyncMock(AprilaireClient)
+    client.data = {}
+    client.data["mac_address"] = "1:2:3:4:5:6"
+
+    return client
 
 
 async def test_async_setup_entry(
     client: AprilaireClient,
     config_entry: ConfigEntry,
-    unique_id: str,
     hass: HomeAssistant,
 ) -> None:
     """Test handling of setup with missing MAC address."""
@@ -68,7 +64,7 @@ async def test_async_setup_entry(
 
         client.start_listen.assert_called_once()
 
-        assert isinstance(hass.data[DOMAIN][unique_id], AprilaireCoordinator)
+        assert isinstance(hass.data[DOMAIN]["1:2:3:4:5:6"], AprilaireCoordinator)
 
 
 async def test_async_setup_entry_ready(

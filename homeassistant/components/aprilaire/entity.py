@@ -21,7 +21,7 @@ class BaseAprilaireEntity(BaseCoordinatorEntity[AprilaireCoordinator]):
     _attr_should_poll = False
 
     def __init__(
-        self, coordinator: AprilaireCoordinator, unique_id: str | None
+        self, coordinator: AprilaireCoordinator, unique_id: str | None = None
     ) -> None:
         """Initialize the entity."""
 

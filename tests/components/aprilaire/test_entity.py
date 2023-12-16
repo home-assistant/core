@@ -132,12 +132,9 @@ def test_should_poll(coordinator: AprilaireCoordinator) -> None:
 def test_unique_id(coordinator: AprilaireCoordinator) -> None:
     """Test the generation of the entity's unique ID."""
 
-    entity = BaseAprilaireEntity(coordinator)
-    entity._attr_translation_key = "test_entity"
+    entity = BaseAprilaireEntity(coordinator, "1:2:3:4:5:6")
 
-    coordinator.data["mac_address"] = "1:2:3:4:5:6"
-
-    assert entity.unique_id == "1:2:3:4:5:6_test_entity"
+    assert entity.unique_id == "1:2:3:4:5:6_None"
 
 
 def test_device_info(coordinator: AprilaireCoordinator) -> None:
