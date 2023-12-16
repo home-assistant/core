@@ -31,20 +31,12 @@ from .coordinator import WLEDDataUpdateCoordinator
 from .models import WLEDEntity
 
 
-@dataclass
-class WLEDSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
-
-    value_fn: Callable[[WLEDDevice], datetime | StateType]
-
-
-@dataclass
-class WLEDSensorEntityDescription(
-    SensorEntityDescription, WLEDSensorEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class WLEDSensorEntityDescription(SensorEntityDescription):
     """Describes WLED sensor entity."""
 
     exists_fn: Callable[[WLEDDevice], bool] = lambda _: True
+    value_fn: Callable[[WLEDDevice], datetime | StateType]
 
 
 SENSORS: tuple[WLEDSensorEntityDescription, ...] = (

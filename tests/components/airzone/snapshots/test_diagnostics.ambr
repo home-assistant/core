@@ -229,6 +229,7 @@
         'mac': '**REDACTED**',
         'wifi_channel': 6,
         'wifi_rssi': -42,
+        'ws_type': 'ws_az',
       }),
     }),
     'config_entry': dict({
@@ -239,6 +240,7 @@
       'disabled_by': None,
       'domain': 'airzone',
       'entry_id': '6e7a0798c1734ba81d26ced0e690eaec',
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -323,7 +325,9 @@
       }),
       'version': '1.62',
       'webserver': dict({
+        'full-name': 'Airzone WebServer',
         'mac': '**REDACTED**',
+        'model': 'Airzone WebServer',
         'wifi-channel': 6,
         'wifi-rssi': -42,
       }),
@@ -598,7 +602,7 @@
             1,
           ]),
           'demand': False,
-          'double-set-point': True,
+          'double-set-point': False,
           'full-name': 'Airzone [2:1] Airzone 2:1',
           'heat-stage': 1,
           'heat-stages': list([

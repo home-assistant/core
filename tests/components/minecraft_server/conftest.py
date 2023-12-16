@@ -5,7 +5,7 @@ from homeassistant.components.minecraft_server.api import MinecraftServerType
 from homeassistant.components.minecraft_server.const import DEFAULT_NAME, DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TYPE
 
-from .const import TEST_ADDRESS
+from .const import TEST_ADDRESS, TEST_CONFIG_ENTRY_ID
 
 from tests.common import MockConfigEntry
 
@@ -16,7 +16,7 @@ def java_mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=None,
-        entry_id="01234567890123456789012345678901",
+        entry_id=TEST_CONFIG_ENTRY_ID,
         data={
             CONF_NAME: DEFAULT_NAME,
             CONF_ADDRESS: TEST_ADDRESS,
@@ -32,7 +32,7 @@ def bedrock_mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=None,
-        entry_id="01234567890123456789012345678901",
+        entry_id=TEST_CONFIG_ENTRY_ID,
         data={
             CONF_NAME: DEFAULT_NAME,
             CONF_ADDRESS: TEST_ADDRESS,

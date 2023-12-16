@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from .const import _LOGGER, DEFAULT_PORT, DOMAIN
 
 DEFAULT_HOST = "192.168.1.252"
-DEFAULT_PIN = "111111"
+DEFAULT_PIN = 111111
 
 
 def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
@@ -31,7 +31,7 @@ def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
     )
 
 
-STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PIN): str})
+STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PIN): cv.positive_int})
 
 
 async def validate_input(

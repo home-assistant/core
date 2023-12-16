@@ -1,24 +1,26 @@
 """Bluetooth support for esphome."""
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Coroutine
 from functools import partial
 import logging
+from typing import Any
 
 from aioesphomeapi import APIClient, BluetoothProxyFeature
+from bleak_esphome.backend.cache import ESPHomeBluetoothCache
+from bleak_esphome.backend.client import ESPHomeClient, ESPHomeClientData
+from bleak_esphome.backend.device import ESPHomeBluetoothDevice
+from bleak_esphome.backend.scanner import ESPHomeScanner
 
 from homeassistant.components.bluetooth import (
     HaBluetoothConnector,
-    async_get_advertisement_callback,
     async_register_scanner,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 
 from ..entry_data import RuntimeEntryData
-from .cache import ESPHomeBluetoothCache
-from .client import ESPHomeClient, ESPHomeClientData
-from .device import ESPHomeBluetoothDevice
-from .scanner import ESPHomeScanner
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +45,13 @@ def _async_can_connect(
     return can_connect
 
 
+@hass_callback
+def _async_unload(unload_callbacks: list[CALLBACK_TYPE]) -> None:
+    """Cancel all the callbacks on unload."""
+    for callback in unload_callbacks:
+        callback()
+
+
 async def async_connect_scanner(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -53,7 +62,6 @@ async def async_connect_scanner(
     """Connect scanner."""
     assert entry.unique_id is not None
     source = str(entry.unique_id)
-    new_info_callback = async_get_advertisement_callback(hass)
     device_info = entry_data.device_info
     assert device_info is not None
     feature_flags = device_info.bluetooth_proxy_feature_flags_compat(
@@ -88,31 +96,38 @@ async def async_connect_scanner(
             partial(_async_can_connect, entry_data, bluetooth_device, source)
         ),
     )
-    scanner = ESPHomeScanner(
-        hass, source, entry.title, new_info_callback, connector, connectable
-    )
+    scanner = ESPHomeScanner(source, entry.title, connector, connectable)
     client_data.scanner = scanner
+    coros: list[Coroutine[Any, Any, CALLBACK_TYPE]] = []
+    # These calls all return a callback that can be used to unsubscribe
+    # but we never unsubscribe so we don't care about the return value
+
     if connectable:
         # If its connectable be sure not to register the scanner
         # until we know the connection is fully setup since otherwise
         # there is a race condition where the connection can fail
-        await cli.subscribe_bluetooth_connections_free(
-            bluetooth_device.async_update_ble_connection_limits
+        coros.append(
+            cli.subscribe_bluetooth_connections_free(
+                bluetooth_device.async_update_ble_connection_limits
+            )
         )
-    unload_callbacks = [
-        async_register_scanner(hass, scanner, connectable),
-        scanner.async_setup(),
-    ]
+
     if feature_flags & BluetoothProxyFeature.RAW_ADVERTISEMENTS:
-        await cli.subscribe_bluetooth_le_raw_advertisements(
-            scanner.async_on_raw_advertisements
+        coros.append(
+            cli.subscribe_bluetooth_le_raw_advertisements(
+                scanner.async_on_raw_advertisements
+            )
         )
     else:
-        await cli.subscribe_bluetooth_le_advertisements(scanner.async_on_advertisement)
+        coros.append(
+            cli.subscribe_bluetooth_le_advertisements(scanner.async_on_advertisement)
+        )
 
-    @hass_callback
-    def _async_unload() -> None:
-        for callback in unload_callbacks:
-            callback()
-
-    return _async_unload
+    await asyncio.gather(*coros)
+    return partial(
+        _async_unload,
+        [
+            async_register_scanner(hass, scanner, connectable),
+            scanner.async_setup(),
+        ],
+    )

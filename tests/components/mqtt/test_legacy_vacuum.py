@@ -642,12 +642,8 @@ async def test_missing_templates(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test to make sure missing template is not allowed."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
-    assert (
-        "Invalid config for [mqtt]: some but not all values in the same group of inclusion"
-        in caplog.text
-    )
+    assert await mqtt_mock_entry()
+    assert "some but not all values in the same group of inclusion" in caplog.text
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG_2])
