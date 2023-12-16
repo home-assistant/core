@@ -101,6 +101,39 @@ def log_exception(format_err: Callable[..., Any], *args: Any) -> None:
     logging.getLogger(module_name).error("%s\n%s", friendly_msg, exc_msg)
 
 
+async def _async_wrapper(
+    async_func: Callable[..., Coroutine[Any, Any, None]],
+    format_err: Callable[..., Any],
+    *args: Any,
+) -> None:
+    """Catch and log exception."""
+    try:
+        await async_func(*args)
+    except Exception:  # pylint: disable=broad-except
+        log_exception(format_err, *args)
+
+
+def _sync_wrapper(
+    func: Callable[..., Any], format_err: Callable[..., Any], *args: Any
+) -> None:
+    """Catch and log exception."""
+    try:
+        func(*args)
+    except Exception:  # pylint: disable=broad-except
+        log_exception(format_err, *args)
+
+
+@callback
+def _callback_wrapper(
+    func: Callable[..., Any], format_err: Callable[..., Any], *args: Any
+) -> None:
+    """Catch and log exception."""
+    try:
+        func(*args)
+    except Exception:  # pylint: disable=broad-except
+        log_exception(format_err, *args)
+
+
 @overload
 def catch_log_exception(
     func: Callable[..., Coroutine[Any, Any, Any]], format_err: Callable[..., Any]
@@ -128,35 +161,14 @@ def catch_log_exception(
     while isinstance(check_func, partial):
         check_func = check_func.func
 
-    wrapper_func: Callable[..., None] | Callable[..., Coroutine[Any, Any, None]]
     if asyncio.iscoroutinefunction(check_func):
         async_func = cast(Callable[..., Coroutine[Any, Any, None]], func)
+        return wraps(async_func)(partial(_async_wrapper, async_func, format_err))
 
-        @wraps(async_func)
-        async def async_wrapper(*args: Any) -> None:
-            """Catch and log exception."""
-            try:
-                await async_func(*args)
-            except Exception:  # pylint: disable=broad-except
-                log_exception(format_err, *args)
+    if is_callback(check_func):
+        return wraps(func)(partial(_callback_wrapper, func, format_err))
 
-        wrapper_func = async_wrapper
-
-    else:
-
-        @wraps(func)
-        def wrapper(*args: Any) -> None:
-            """Catch and log exception."""
-            try:
-                func(*args)
-            except Exception:  # pylint: disable=broad-except
-                log_exception(format_err, *args)
-
-        if is_callback(check_func):
-            wrapper = callback(wrapper)
-
-        wrapper_func = wrapper
-    return wrapper_func
+    return wraps(func)(partial(_sync_wrapper, func, format_err))
 
 
 def catch_log_coro_exception(

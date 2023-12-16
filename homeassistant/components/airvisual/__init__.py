@@ -19,6 +19,7 @@ from homeassistant.components import automation
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_COUNTRY,
     CONF_IP_ADDRESS,
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -44,7 +45,6 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     CONF_CITY,
-    CONF_COUNTRY,
     CONF_GEOGRAPHIES,
     CONF_INTEGRATION_TYPE,
     DOMAIN,

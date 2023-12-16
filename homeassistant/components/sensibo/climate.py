@@ -22,7 +22,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -314,11 +314,17 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         """Set new target temperature."""
         if "targetTemperature" not in self.device_data.active_features:
             raise HomeAssistantError(
-                "Current mode doesn't support setting Target Temperature"
+                "Current mode doesn't support setting Target Temperature",
+                translation_domain=DOMAIN,
+                translation_key="no_target_temperature_in_features",
             )
 
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            raise ValueError("No target temperature provided")
+            raise ServiceValidationError(
+                "No target temperature provided",
+                translation_domain=DOMAIN,
+                translation_key="no_target_temperature",
+            )
 
         if temperature == self.target_temperature:
             return
@@ -334,10 +340,17 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         if "fanLevel" not in self.device_data.active_features:
-            raise HomeAssistantError("Current mode doesn't support setting Fanlevel")
+            raise HomeAssistantError(
+                "Current mode doesn't support setting Fanlevel",
+                translation_domain=DOMAIN,
+                translation_key="no_fan_level_in_features",
+            )
         if fan_mode not in AVAILABLE_FAN_MODES:
             raise HomeAssistantError(
-                f"Climate fan mode {fan_mode} is not supported by the integration, please open an issue"
+                f"Climate fan mode {fan_mode} is not supported by the integration, please open an issue",
+                translation_domain=DOMAIN,
+                translation_key="fan_mode_not_supported",
+                translation_placeholders={"fan_mode": fan_mode},
             )
 
         transformation = self.device_data.fan_modes_translated
@@ -379,10 +392,17 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
         if "swing" not in self.device_data.active_features:
-            raise HomeAssistantError("Current mode doesn't support setting Swing")
+            raise HomeAssistantError(
+                "Current mode doesn't support setting Swing",
+                translation_domain=DOMAIN,
+                translation_key="no_swing_in_features",
+            )
         if swing_mode not in AVAILABLE_SWING_MODES:
             raise HomeAssistantError(
-                f"Climate swing mode {swing_mode} is not supported by the integration, please open an issue"
+                f"Climate swing mode {swing_mode} is not supported by the integration, please open an issue",
+                translation_domain=DOMAIN,
+                translation_key="swing_not_supported",
+                translation_placeholders={"swing_mode": swing_mode},
             )
 
         transformation = self.device_data.swing_modes_translated

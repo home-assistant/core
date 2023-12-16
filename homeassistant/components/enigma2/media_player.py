@@ -115,6 +115,7 @@ class Enigma2Device(MediaPlayerEntity):
         | MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
+    _attr_volume_step = 5 / 100
 
     def __init__(self, name, device):
         """Initialize the Enigma2 device."""
@@ -184,14 +185,6 @@ class Enigma2Device(MediaPlayerEntity):
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self.e2_box.set_volume(int(volume * 100))
-
-    def volume_up(self) -> None:
-        """Volume up the media player."""
-        self.e2_box.set_volume(int(self.e2_box.volume * 100) + 5)
-
-    def volume_down(self) -> None:
-        """Volume down media player."""
-        self.e2_box.set_volume(int(self.e2_box.volume * 100) - 5)
 
     @property
     def volume_level(self):

@@ -59,7 +59,7 @@ class FrozenOrThawed(type):
         for base in bases:
             dataclass_bases.append(getattr(base, "_dataclass", base))
         cls._dataclass = dataclasses.make_dataclass(
-            f"{name}_dataclass", class_fields, bases=tuple(dataclass_bases), frozen=True
+            name, class_fields, bases=tuple(dataclass_bases), frozen=True
         )
 
     def __new__(
@@ -87,15 +87,17 @@ class FrozenOrThawed(type):
         class will be a real dataclass, i.e. it's decorated with @dataclass.
         """
         if not namespace["_FrozenOrThawed__frozen_or_thawed"]:
-            parent = cls.__mro__[1]
             # This class is a real dataclass, optionally inject the parent's annotations
-            if dataclasses.is_dataclass(parent) or not hasattr(parent, "_dataclass"):
-                # Rely on dataclass inheritance
+            if all(dataclasses.is_dataclass(base) for base in bases):
+                # All direct parents are dataclasses, rely on dataclass inheritance
                 return
-            # Parent is not a dataclass, inject its annotations
-            cls.__annotations__ = (
-                parent._dataclass.__annotations__ | cls.__annotations__
-            )
+            # Parent is not a dataclass, inject all parents' annotations
+            annotations: dict = {}
+            for parent in cls.__mro__[::-1]:
+                if parent is object:
+                    continue
+                annotations |= parent.__annotations__
+            cls.__annotations__ = annotations
             return
 
         # First try without setting the kw_only flag, and if that fails, try setting it
@@ -104,30 +106,16 @@ class FrozenOrThawed(type):
         except TypeError:
             cls._make_dataclass(name, bases, True)
 
-        def __delattr__(self: object, name: str) -> None:
-            """Delete an attribute.
+        def __new__(*args: Any, **kwargs: Any) -> object:
+            """Create a new instance.
 
-            If self is a real dataclass, this is called if the dataclass is not frozen.
-            If self is not a real dataclass, forward to cls._dataclass.__delattr.
+            The function has no named arguments to avoid name collisions with dataclass
+            field names.
             """
-            if dataclasses.is_dataclass(self):
-                return object.__delattr__(self, name)
-            return self._dataclass.__delattr__(self, name)  # type: ignore[attr-defined, no-any-return]
+            cls, *_args = args
+            if dataclasses.is_dataclass(cls):
+                return object.__new__(cls)
+            return cls._dataclass(*_args, **kwargs)
 
-        def __setattr__(self: object, name: str, value: Any) -> None:
-            """Set an attribute.
-
-            If self is a real dataclass, this is called if the dataclass is not frozen.
-            If self is not a real dataclass, forward to cls._dataclass.__setattr__.
-            """
-            if dataclasses.is_dataclass(self):
-                return object.__setattr__(self, name, value)
-            return self._dataclass.__setattr__(self, name, value)  # type: ignore[attr-defined, no-any-return]
-
-        # Set generated dunder methods from the dataclass
-        # MyPy doesn't understand what's happening, so we ignore it
-        cls.__delattr__ = __delattr__  # type: ignore[assignment, method-assign]
-        cls.__eq__ = cls._dataclass.__eq__  # type: ignore[method-assign]
         cls.__init__ = cls._dataclass.__init__  # type: ignore[misc]
-        cls.__repr__ = cls._dataclass.__repr__  # type: ignore[method-assign]
-        cls.__setattr__ = __setattr__  # type: ignore[assignment, method-assign]
+        cls.__new__ = __new__  # type: ignore[method-assign]
