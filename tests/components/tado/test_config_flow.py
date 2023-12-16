@@ -295,20 +295,20 @@ async def test_import_step(hass: HomeAssistant) -> None:
 
 async def test_import_step_existing_entry(hass: HomeAssistant) -> None:
     """Test import step with existing entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "username": "test-username",
+            "password": "test-password",
+            "home_id": 1,
+        },
+    )
+    entry.add_to_hass(hass)
+
     with patch(
         "homeassistant.components.tado.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            data={
-                "username": "test-username",
-                "password": "test-password",
-                "home_id": 1,
-            },
-        )
-        entry.add_to_hass(hass)
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -328,7 +328,7 @@ async def test_import_step_existing_entry(hass: HomeAssistant) -> None:
 async def test_import_step_validation_failed(hass: HomeAssistant) -> None:
     """Test import step with validation failed."""
     with patch(
-        "homeassistant.components.tado.config_flow.validate_input",
+        "homeassistant.components.tado.config_flow.Tado",
         side_effect=RuntimeError,
     ):
         result = await hass.config_entries.flow.async_init(
