@@ -290,7 +290,7 @@ async def test_import_step(hass: HomeAssistant) -> None:
         "password": "test-password",
         "home_id": "1",
     }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert mock_setup_entry.call_count == 1
 
 
 async def test_import_step_existing_entry(hass: HomeAssistant) -> None:
