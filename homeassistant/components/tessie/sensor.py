@@ -31,8 +31,6 @@ from .const import DOMAIN, TessieStatus
 from .coordinator import TessieDataUpdateCoordinator
 from .entity import TessieEntity
 
-PARALLEL_UPDATES = 0
-
 
 @dataclass
 class TessieSensorEntityDescription(SensorEntityDescription):
@@ -222,4 +220,4 @@ class TessieSensorEntity(TessieEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.value)
+        return self.entity_description.value_fn(self._value)
