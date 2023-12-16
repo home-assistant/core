@@ -33,6 +33,7 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import (
     HomeKitDiscoveredIntegration,
+    ZeroconfMatcher,
     async_get_homekit,
     async_get_zeroconf,
     bind_hass,
@@ -320,16 +321,14 @@ async def _async_register_hass_zc_service(
     await aio_zc.async_register_service(info, allow_name_change=True)
 
 
-def _match_against_data(
-    matcher: dict[str, str | dict[str, str]], match_data: dict[str, str]
-) -> bool:
+def _match_against_data(matcher: ZeroconfMatcher, match_data: dict[str, str]) -> bool:
     """Check a matcher to ensure all values in match_data match."""
     for key in LOWER_MATCH_ATTRS:
         if key not in matcher:
             continue
         if key not in match_data:
             return False
-        match_val = matcher[key]
+        match_val = matcher[key]  # type: ignore[literal-required]
         if TYPE_CHECKING:
             assert isinstance(match_val, str)
 
@@ -366,7 +365,7 @@ class ZeroconfDiscovery:
         self,
         hass: HomeAssistant,
         zeroconf: HaZeroconf,
-        zeroconf_types: dict[str, list[dict[str, str | dict[str, str]]]],
+        zeroconf_types: dict[str, list[ZeroconfMatcher]],
         homekit_model_lookups: dict[str, HomeKitDiscoveredIntegration],
         homekit_model_matchers: dict[re.Pattern, HomeKitDiscoveredIntegration],
         ipv6: bool,
@@ -514,14 +513,10 @@ class ZeroconfDiscovery:
                     continue
                 if ATTR_PROPERTIES in matcher:
                     matcher_props = matcher[ATTR_PROPERTIES]
-                    if TYPE_CHECKING:
-                        assert isinstance(matcher_props, dict)
                     if not _match_against_props(matcher_props, props):
                         continue
 
             matcher_domain = matcher["domain"]
-            if TYPE_CHECKING:
-                assert isinstance(matcher_domain, str)
             context = {
                 "source": config_entries.SOURCE_ZEROCONF,
             }
