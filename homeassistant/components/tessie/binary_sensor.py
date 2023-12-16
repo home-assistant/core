@@ -139,4 +139,4 @@ class TessieBinarySensorEntity(TessieEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the binary sensor."""
-        return self.entity_description.is_on(self.native_value)
+        return self.entity_description.is_on(self._value)
