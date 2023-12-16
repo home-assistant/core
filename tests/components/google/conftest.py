@@ -168,7 +168,7 @@ def token_scopes() -> list[str]:
 def token_expiry() -> datetime.datetime:
     """Expiration time for credentials used in the test."""
     # OAuth library returns an offset-naive timestamp
-    return dt_util.utcnow() + datetime.timedelta(hours=1)
+    return dt_util.utcnow().replace(tzinfo=None) + datetime.timedelta(hours=1)
 
 
 @pytest.fixture
@@ -191,7 +191,7 @@ def creds(
 @pytest.fixture
 def config_entry_token_expiry(token_expiry: datetime.datetime) -> float:
     """Fixture for token expiration value stored in the config entry."""
-    return token_expiry.timestamp()
+    return token_expiry.replace(tzinfo=dt_util.UTC).timestamp()
 
 
 @pytest.fixture
