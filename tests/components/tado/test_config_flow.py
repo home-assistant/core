@@ -322,7 +322,7 @@ async def test_import_step_existing_entry(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert len(mock_setup_entry.mock_calls) == 0
+    assert mock_setup_entry.call_count == 0
 
 
 async def test_import_step_validation_failed(hass: HomeAssistant) -> None:
