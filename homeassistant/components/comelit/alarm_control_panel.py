@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from aiocomelit.api import ComelitVedoApi, ComelitVedoAreaObject
+from aiocomelit.api import ComelitVedoAreaObject
 from aiocomelit.const import ALARM_AREAS, AlarmAreaState
 
 from homeassistant.components.alarm_control_panel import (
@@ -79,7 +79,7 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
         config_entry_entry_id: str,
     ) -> None:
         """Initialize the alarm panel."""
-        self._api: ComelitVedoApi = coordinator.api
+        self._api = coordinator.api
         self._area_index = area.index
         super().__init__(coordinator)
         # Use config_entry.entry_id as base for unique_id

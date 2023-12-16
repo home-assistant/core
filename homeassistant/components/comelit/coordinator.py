@@ -27,7 +27,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     _hw_version: str
     config_entry: ConfigEntry
-    api: Any
+    api: ComeliteSerialBridgeApi | ComelitVedoApi
 
     def __init__(self, hass: HomeAssistant, device: str, host: str) -> None:
         """Initialize the scanner."""

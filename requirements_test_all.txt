@@ -194,7 +194,7 @@ aiobafi6==0.9.0
 aiobotocore==2.6.0
 
 # homeassistant.components.comelit
-aiocomelit==0.6.2
+aiocomelit==0.7.0
 
 # homeassistant.components.dhcp
 aiodiscover==1.5.1

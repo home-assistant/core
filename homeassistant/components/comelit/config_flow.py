@@ -45,7 +45,7 @@ async def validate_input(
 ) -> dict[str, str]:
     """Validate the user input allows us to connect."""
 
-    api: Any
+    api: ComeliteSerialBridgeApi | ComelitVedoApi
     if data.get(CONF_TYPE, BRIDGE) == BRIDGE:
         api = ComeliteSerialBridgeApi(data[CONF_HOST], data[CONF_PORT], data[CONF_PIN])
     else:
