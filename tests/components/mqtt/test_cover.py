@@ -1,4 +1,5 @@
 """The tests for the MQTT cover platform."""
+from copy import deepcopy
 from typing import Any
 from unittest.mock import patch
 
@@ -3582,7 +3583,7 @@ async def test_publishing_with_custom_encoding(
 ) -> None:
     """Test publishing MQTT payload with different encoding."""
     domain = cover.DOMAIN
-    config = DEFAULT_CONFIG
+    config = deepcopy(DEFAULT_CONFIG)
     config[mqtt.DOMAIN][domain]["position_topic"] = "some-position-topic"
 
     await help_test_publishing_with_custom_encoding(

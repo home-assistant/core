@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.4.6
+AEMET-OpenData==0.4.7
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.58
@@ -170,7 +170,7 @@ aioairq==0.3.1
 aioairzone-cloud==0.3.6
 
 # homeassistant.components.airzone
-aioairzone==0.6.9
+aioairzone==0.7.2
 
 # homeassistant.components.ambient_station
 aioambient==2023.04.0
@@ -353,7 +353,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==67
+aiounifi==68
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -456,6 +456,9 @@ bellows==0.37.3
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.14.6
 
+# homeassistant.components.esphome
+bleak-esphome==0.3.0
+
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.3.0
 
@@ -497,7 +500,7 @@ broadlink==0.18.3
 brother==3.0.0
 
 # homeassistant.components.brottsplatskartan
-brottsplatskartan==0.0.1
+brottsplatskartan==1.0.5
 
 # homeassistant.components.brunt
 brunt==1.2.0
@@ -643,7 +646,7 @@ faadelays==2023.9.1
 fastdotcom==0.0.3
 
 # homeassistant.components.feedreader
-feedparser==6.0.10
+feedparser==6.0.11
 
 # homeassistant.components.file
 file-read-backwards==2.0.0
@@ -1099,7 +1102,7 @@ openerz-api==0.2.0
 openhomedevice==2.2.0
 
 # homeassistant.components.opower
-opower==0.0.40
+opower==0.0.41
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1694,7 +1697,7 @@ pytradfri[async]==9.0.1
 # homeassistant.components.trafikverket_ferry
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.3.9.1
+pytrafikverket==0.3.9.2
 
 # homeassistant.components.v2c
 pytrydan==0.4.0
@@ -1703,7 +1706,7 @@ pytrydan==0.4.0
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.22.0
+pyunifiprotect==4.22.3
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1860,7 +1863,7 @@ smhi-pkg==1.0.16
 snapcast==2.3.3
 
 # homeassistant.components.sonos
-soco==0.29.1
+soco==0.30.0
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
@@ -1920,7 +1923,7 @@ subarulink==0.7.9
 sunwatcher==0.2.1
 
 # homeassistant.components.sunweg
-sunweg==2.0.0
+sunweg==2.0.1
 
 # homeassistant.components.surepetcare
 surepy==0.8.0
