@@ -137,10 +137,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except RuntimeError:
             return self.async_abort(reason="import_failed")
 
-        home_id = validate_result["unique_id"]
-        if home_id is not None:
-            await self.async_set_unique_id(home_id)
-            self._abort_if_unique_id_configured()
+        home_id = validate_result[UNIQUE_ID]
+        await self.async_set_unique_id(home_id)
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=import_config[CONF_USERNAME],
