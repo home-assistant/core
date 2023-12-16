@@ -1,4 +1,5 @@
 """Support for Comelit."""
+from abc import abstractmethod
 from datetime import timedelta
 from typing import Any
 
@@ -86,12 +87,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         _LOGGER.debug("Polling Comelit %s host: %s", self._device, self._host)
         try:
             await self.api.login()
-            if type(self.api) == ComelitVedoApi:
-                return await self.api.get_all_areas_and_zones()
-
-            if type(self.api) == ComeliteSerialBridgeApi:
-                return await self.api.get_all_devices()
-
+            return await self._async_update_system_data()
         except exceptions.CannotConnect as err:
             _LOGGER.warning("Connection error for %s", self._host)
             await self.api.close()
@@ -101,20 +97,36 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         return {}
 
+    @abstractmethod
+    async def _async_update_system_data(self) -> dict[str, Any]:
+        """Class method for updating data."""
+
 
 class ComelitSerialBridge(ComelitBaseCoordinator):
     """Queries Comelit Serial Bridge."""
+
+    api: ComeliteSerialBridgeApi
 
     def __init__(self, hass: HomeAssistant, host: str, port: int, pin: int) -> None:
         """Initialize the scanner."""
         self.api = ComeliteSerialBridgeApi(host, port, pin)
         super().__init__(hass, BRIDGE, "20003101", host)
 
+    async def _async_update_system_data(self) -> dict[str, Any]:
+        """Specific method for updating data."""
+        return await self.api.get_all_devices()
+
 
 class ComelitVedoSystem(ComelitBaseCoordinator):
     """Queries Comelit VEDO system."""
+
+    api: ComelitVedoApi
 
     def __init__(self, hass: HomeAssistant, host: str, port: int, pin: int) -> None:
         """Initialize the scanner."""
         self.api = ComelitVedoApi(host, port, pin)
         super().__init__(hass, VEDO, "VEDO IP", host)
+
+    async def _async_update_system_data(self) -> dict[str, Any]:
+        """Specific method for updating data."""
+        return await self.api.get_all_areas_and_zones()
