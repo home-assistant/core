@@ -1,6 +1,6 @@
 """Tessie parent entity class."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from typing import Any
 
@@ -53,7 +53,7 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
         """Return a specific value from coordinator data."""
         return self.coordinator.data.get(key or self.key, default)
 
-    async def run(self, func: Callable, **kargs: Any):
+    async def run(self, func: Callable[..., Awaitable[dict[str, bool]]], **kargs: Any):
         """Run a tessie_api function and handle exceptions."""
         try:
             response = await func(
