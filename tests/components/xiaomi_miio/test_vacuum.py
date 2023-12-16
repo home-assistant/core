@@ -24,7 +24,6 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.components.xiaomi_miio.const import (
     CONF_FLOW_TYPE,
-    CONF_MAC,
     DOMAIN as XIAOMI_DOMAIN,
     MODELS_VACUUM,
 )
@@ -44,6 +43,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_HOST,
+    CONF_MAC,
     CONF_MODEL,
     CONF_TOKEN,
     STATE_UNAVAILABLE,
