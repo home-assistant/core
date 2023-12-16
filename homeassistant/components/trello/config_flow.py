@@ -39,13 +39,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Prompt user for Trello API credentials."""
-        return await self._show_creds_form()
+        if user_input is None:
+            return await self._show_creds_form()
 
-    async def async_step_creds(self, user_input: dict[str, Any]) -> FlowResult:
-        """Re-prompt for creds if invalid. Otherwise, prompt user for boards.
-
-        :param user_input: api_key and api_token.
-        """
         self.api_key = user_input[CONF_API_KEY]
         self.api_token = user_input[CONF_API_TOKEN]
         self.trello_adapter = TrelloAdapter.from_creds(
@@ -90,7 +86,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _show_creds_form(self) -> FlowResult:
         return self.async_show_form(
-            step_id="creds", data_schema=CREDS_FORM_SCHEMA, last_step=False
+            step_id="user", data_schema=CREDS_FORM_SCHEMA, last_step=False
         )
 
     async def _show_board_form(
@@ -104,7 +100,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _show_error_creds_form(self, ex: Unauthorized) -> FlowResult:
         LOGGER.error("Unauthorized: %s)", ex)
         return self.async_show_form(
-            step_id="creds",
+            step_id="user",
             data_schema=CREDS_FORM_SCHEMA,
             errors={"base": "invalid_auth"},
             last_step=False,
