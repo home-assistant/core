@@ -82,15 +82,6 @@ HEAT_METER_SENSOR_TYPES = (
         value_fn=lambda res: res.heat_usage_gj,
     ),
     HeatMeterSensorEntityDescription(
-        key="heat_usage_gcal",
-        icon="mdi:radiator",
-        name="Heat usage GCal",
-        native_unit_of_measurement=UnitOfEnergy.GIGA_CALORIE,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
-        value_fn=lambda res: res.heat_usage_gcal,
-    ),
-    HeatMeterSensorEntityDescription(
         key="heat_previous_year_mwh",
         icon="mdi:fire",
         name="Heat previous year MWh",
