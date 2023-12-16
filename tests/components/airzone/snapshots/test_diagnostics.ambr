@@ -601,7 +601,7 @@
             1,
           ]),
           'demand': False,
-          'double-set-point': True,
+          'double-set-point': False,
           'full-name': 'Airzone [2:1] Airzone 2:1',
           'heat-stage': 1,
           'heat-stages': list([
