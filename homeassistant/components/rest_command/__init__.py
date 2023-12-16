@@ -106,15 +106,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             template_payload = command_config[CONF_PAYLOAD]
             template_payload.hass = hass
 
-        template_headers = None
-        if CONF_HEADERS in command_config:
-            template_headers = command_config[CONF_HEADERS]
-            for template_header in template_headers.values():
-                template_header.hass = hass
+        template_headers = command_config.get(CONF_HEADERS, {})
+        for template_header in template_headers.values():
+            template_header.hass = hass
 
-        content_type = None
-        if CONF_CONTENT_TYPE in command_config:
-            content_type = command_config[CONF_CONTENT_TYPE]
+        content_type = command_config.get(CONF_CONTENT_TYPE)
 
         async def async_service_handler(service: ServiceCall) -> ServiceResponse:
             """Execute a shell command service."""
@@ -131,17 +127,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 variables=service.data, parse_result=False
             )
 
-            headers = None
-            if template_headers:
-                headers = {}
-                for header_name, template_header in template_headers.items():
-                    headers[header_name] = template_header.async_render(
-                        variables=service.data, parse_result=False
-                    )
+            headers = {}
+            for header_name, template_header in template_headers.items():
+                headers[header_name] = template_header.async_render(
+                    variables=service.data, parse_result=False
+                )
 
             if content_type:
-                if headers is None:
-                    headers = {}
                 headers[hdrs.CONTENT_TYPE] = content_type
 
             try:
@@ -149,7 +141,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     request_url,
                     data=payload,
                     auth=auth,
-                    headers=headers,
+                    headers=headers or None,
                     timeout=timeout,
                 ) as response:
                     if response.status < HTTPStatus.BAD_REQUEST:
@@ -167,24 +159,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                             payload,
                         )
 
-                    if service.return_response:
-                        _content = None
-                        if response.content_type == "application/json":
-                            try:
-                                _content = await response.json()
-                            except (JSONDecodeError, AttributeError) as err:
-                                raise HomeAssistantError from err
-                        else:
-                            try:
-                                _content = await response.text()
-                            except (LookupError, UnicodeDecodeError) as err:
-                                _LOGGER.exception(
-                                    "Response of `%s` could not be interpreted as text",
-                                    request_url,
-                                )
-                                raise HomeAssistantError from err
-                        return {"content": _content, "status": response.status}
-                    return None
+                    if not service.return_response:
+                        return None
+
+                    _content = None
+                    if response.content_type == "application/json":
+                        _content = await response.json()
+                    else:
+                        _content = await response.text()
+
+                    return {"content": _content, "status": response.status}
 
             except asyncio.TimeoutError as err:
                 _LOGGER.warning("Timeout call %s", request_url)
@@ -195,6 +179,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     "Client error. Url: %s. Error: %s",
                     request_url,
                     err,
+                )
+                raise HomeAssistantError from err
+
+            except (JSONDecodeError, AttributeError) as err:
+                _LOGGER.error("Response of `%s` has invalid JSON", request_url)
+                raise HomeAssistantError from err
+
+            except (LookupError, UnicodeDecodeError) as err:
+                _LOGGER.error(
+                    "Response of `%s` could not be interpreted as text",
+                    request_url,
                 )
                 raise HomeAssistantError from err
 
