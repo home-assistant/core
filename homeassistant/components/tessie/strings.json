@@ -71,16 +71,16 @@
         "name": "Odometer"
       },
       "vehicle_state_tpms_pressure_fl": {
-        "name": "Tyre pressure front left"
+        "name": "Tire pressure front left"
       },
       "vehicle_state_tpms_pressure_fr": {
-        "name": "Tyre pressure front right"
+        "name": "Tire pressure front right"
       },
       "vehicle_state_tpms_pressure_rl": {
-        "name": "Tyre pressure rear left"
+        "name": "Tire pressure rear left"
       },
       "vehicle_state_tpms_pressure_rr": {
-        "name": "Tyre pressure rear right"
+        "name": "Tire pressure rear right"
       },
       "climate_state_inside_temp": {
         "name": "Inside temperature"
