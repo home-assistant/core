@@ -15,6 +15,11 @@ from homeassistant import config_entries
 from homeassistant.components import usb
 from homeassistant.const import CONF_DEVICE, CONF_MAC, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import DEFAULT_NAME, DOMAIN
 
@@ -63,18 +68,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             meter_macs = []
-            for raw_mac in user_input.get(CONF_MAC, "").split(","):
-                try:
-                    mac = bytes.fromhex(raw_mac).hex()
-                except ValueError:
-                    errors[CONF_MAC] = "invalid_mac"
-                    break
-                if len(mac) != 16:
-                    errors[CONF_MAC] = "invalid_mac"
-                    break
-                if mac not in self._meter_macs:
-                    errors[CONF_MAC] = "no_meters_found"
-                    break
+            for raw_mac in user_input.get(CONF_MAC, ()):
+                mac = bytes.fromhex(raw_mac).hex()
                 if mac not in meter_macs:
                     meter_macs.append(mac)
             if meter_macs and not errors:
@@ -88,10 +83,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_MAC,
-                    description={"suggested_value": ",".join(self._meter_macs)},
-                ): str
+                vol.Required(CONF_MAC): SelectSelector(
+                    SelectSelectorConfig(
+                        options=sorted(self._meter_macs),
+                        mode=SelectSelectorMode.DROPDOWN,
+                        multiple=True,
+                        translation_key=CONF_MAC,
+                    )
+                ),
             }
         )
         return self.async_show_form(step_id="meters", data_schema=schema, errors=errors)

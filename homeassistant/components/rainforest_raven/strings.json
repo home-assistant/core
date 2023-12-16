@@ -7,8 +7,6 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_mac": "Invalid meter MAC address",
-      "no_meters_found": "No compatible meters are connected to the device",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
     },
     "step": {

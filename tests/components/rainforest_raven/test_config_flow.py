@@ -5,6 +5,7 @@ from unittest.mock import patch
 from aioraven.device import RAVEnConnectionError
 import pytest
 import serial.tools.list_ports
+import voluptuous.error
 
 from homeassistant import data_entry_flow
 from homeassistant.components.rainforest_raven.const import DOMAIN
@@ -80,7 +81,7 @@ async def test_flow_usb(hass: HomeAssistant, mock_comports, mock_device):
     assert result.get("step_id") == "meters"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_MAC: METER_LIST.meter_mac_ids[0].hex()}
+        result["flow_id"], user_input={CONF_MAC: [METER_LIST.meter_mac_ids[0].hex()]}
     )
     assert result
     assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
@@ -147,7 +148,7 @@ async def test_flow_user(hass: HomeAssistant, mock_comports, mock_device):
     assert result.get("step_id") == "meters"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_MAC: METER_LIST.meter_mac_ids[0].hex()}
+        result["flow_id"], user_input={CONF_MAC: [METER_LIST.meter_mac_ids[0].hex()]}
     )
     assert result
     assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
@@ -238,10 +239,7 @@ async def test_flow_user_comm_error(
     assert result.get("errors") == {CONF_DEVICE: "cannot_connect"}
 
 
-@pytest.mark.parametrize("mac", ("abcdef012345678g", "abcdef01234567"))
-async def test_flow_user_invalid_mac(
-    hass: HomeAssistant, mock_comports, mock_device, mac
-):
+async def test_flow_user_invalid_mac(hass: HomeAssistant, mock_comports, mock_device):
     """Test user flow connection."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -256,35 +254,7 @@ async def test_flow_user_invalid_mac(
     assert result.get("flow_id")
     assert result.get("step_id") == "meters"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_MAC: mac}
-    )
-    assert result
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("errors") == {CONF_MAC: "invalid_mac"}
-
-
-@pytest.mark.parametrize("mac", ("9876543210fedcba", METER_LIST.meter_mac_ids[1].hex()))
-async def test_flow_user_invalid_type(
-    hass: HomeAssistant, mock_comports, mock_device, mac
-):
-    """Test user flow connection."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={CONF_SOURCE: SOURCE_USER},
-        data={
-            CONF_DEVICE: DEVICE_NAME,
-        },
-    )
-    assert result
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert not result.get("errors")
-    assert result.get("flow_id")
-    assert result.get("step_id") == "meters"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_MAC: mac}
-    )
-    assert result
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("errors") == {CONF_MAC: "no_meters_found"}
+    with pytest.raises(voluptuous.error.MultipleInvalid):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_MAC: ["abcdef1234567890"]}
+        )
