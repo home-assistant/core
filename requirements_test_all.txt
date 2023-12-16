@@ -509,7 +509,7 @@ bthome-ble==3.3.1
 buienradar==1.0.5
 
 # homeassistant.components.dhcp
-cached_ipaddress==0.1.0
+cached_ipaddress==0.2.0
 
 # homeassistant.components.caldav
 caldav==1.3.8
