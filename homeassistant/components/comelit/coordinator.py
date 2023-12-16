@@ -56,15 +56,9 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         object_class: ComelitVedoAreaObject
         | ComelitVedoZoneObject
         | ComelitSerialBridgeObject,
+        object_type: str,
     ) -> dr.DeviceInfo:
         """Set platform device info."""
-
-        if type(object_class) == ComelitSerialBridgeObject:
-            object_type = object_class.type
-        elif type(object_class) == ComelitVedoAreaObject:
-            object_type = "area"
-        else:
-            object_type = "zone"
 
         return dr.DeviceInfo(
             identifiers={

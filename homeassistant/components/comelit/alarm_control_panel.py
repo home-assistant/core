@@ -85,7 +85,7 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
         # Use config_entry.entry_id as base for unique_id
         # because no serial number or mac is available
         self._attr_unique_id = f"{config_entry_entry_id}-{area.index}"
-        self._attr_device_info = coordinator.platform_device_info(area)
+        self._attr_device_info = coordinator.platform_device_info(area, "area")
         if area.p2:
             self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_NIGHT
 
