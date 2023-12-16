@@ -45,9 +45,7 @@ def remove_stale_devices(
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )
-    all_device_ids: set = set()
-    for door in devices:
-        all_device_ids.add(f"{door['device_id']}-{door['door_number']}")
+    all_device_ids = {f"{door['device_id']}-{door['door_number']}" for door in devices}
 
     for device_entry in device_entries:
         device_id: str | None = None
