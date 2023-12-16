@@ -29,9 +29,9 @@
           "preset_mode": {
             "state": {
               "off": "Normal",
-              "on": "Keep Mode",
-              "dog": "Dog Mode",
-              "camp": "Camp Mode"
+              "on": "Keep mode",
+              "dog": "Dog mode",
+              "camp": "Camp mode"
             }
           }
         }
