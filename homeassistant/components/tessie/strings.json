@@ -71,16 +71,16 @@
         "name": "Odometer"
       },
       "vehicle_state_tpms_pressure_fl": {
-        "name": "Tyre pressure front left"
+        "name": "Tire pressure front left"
       },
       "vehicle_state_tpms_pressure_fr": {
-        "name": "Tyre pressure front right"
+        "name": "Tire pressure front right"
       },
       "vehicle_state_tpms_pressure_rl": {
-        "name": "Tyre pressure rear left"
+        "name": "Tire pressure rear left"
       },
       "vehicle_state_tpms_pressure_rr": {
-        "name": "Tyre pressure rear right"
+        "name": "Tire pressure rear right"
       },
       "climate_state_inside_temp": {
         "name": "Inside temperature"
@@ -93,6 +93,62 @@
       },
       "climate_state_passenger_temp_setting": {
         "name": "Passenger temperature setting"
+      }
+    },
+    "binary_sensor": {
+      "charge_state_battery_heater_on": {
+        "name": "Battery heater"
+      },
+      "charge_state_charge_enable_request": {
+        "name": "Charge enable request"
+      },
+      "charge_state_charge_port_door_open": {
+        "name": "Charge port door"
+      },
+      "charge_state_charging_state": {
+        "name": "Charging"
+      },
+      "charge_state_preconditioning_enabled": {
+        "name": "Preconditioning enabled"
+      },
+      "charge_state_scheduled_charging_pending": {
+        "name": "Scheduled charging pending"
+      },
+      "charge_state_trip_charging": {
+        "name": "Trip charging"
+      },
+      "climate_state_auto_seat_climate_left": {
+        "name": "Auto seat climate left"
+      },
+      "climate_state_auto_seat_climate_right": {
+        "name": "Auto seat climate right"
+      },
+      "climate_state_auto_steering_wheel_heater": {
+        "name": "Auto steering wheel heater"
+      },
+      "climate_state_cabin_overheat_protection": {
+        "name": "Cabin overheat protection"
+      },
+      "climate_state_cabin_overheat_protection_actively_cooling": {
+        "name": "Cabin overheat protection actively cooling"
+      },
+      "vehicle_state_dashcam_state": {
+        "name": "Dashcam"
+      },
+      "vehicle_state_is_user_present": {
+        "name": "User present"
+      },
+      "vehicle_state_tpms_soft_warning_fl": {
+        "name": "Tire pressure warning front left"
+      },
+      "vehicle_state_tpms_soft_warning_fr": {
+        "name": "Tire pressure warning front right"
+      },
+      "vehicle_state_tpms_soft_warning_rl": {
+        "name": "Tire pressure warning rear left"
+      },
+      "vehicle_state_tpms_soft_warning_rr": {
+        "name": "Tire pressure warning rear right"
       }
     }
   }
