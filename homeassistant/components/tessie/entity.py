@@ -53,7 +53,9 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
         """Return a specific value from coordinator data."""
         return self.coordinator.data.get(key or self.key, default)
 
-    async def run(self, func: Callable[..., Awaitable[dict[str, bool]]], **kargs: Any):
+    async def run(
+        self, func: Callable[..., Awaitable[dict[str, bool]]], **kargs: Any
+    ) -> bool:
         """Run a tessie_api function and handle exceptions."""
         try:
             response = await func(
@@ -78,7 +80,7 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
             raise HomeAssistantError from e
         return response.get("result") is True
 
-    def set(self, *args):
+    def set(self, *args) -> None:
         """Set a value in coordinator data."""
         for key, value in args:
             self.coordinator.data[key] = value
