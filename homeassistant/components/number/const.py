@@ -59,7 +59,7 @@ MODE_SLIDER: Final = "slider"
 class NumberDeviceClass(StrEnum):
     """Device class for numbers."""
 
-    # NumberDeviceClass should be aligned with NumberDeviceClass
+    # NumberDeviceClass should be aligned with SensorDeviceClass
 
     APPARENT_POWER = "apparent_power"
     """Apparent power.
