@@ -47,7 +47,7 @@ def remove_stale_devices(
     )
     all_device_ids: set = set()
     for door in devices:
-        all_device_ids.add(f"{door.get('device_id')}-{door.get('door_number')}")
+        all_device_ids.add(f"{door['device_id']}-{door['door_number']}")
 
     for device_entry in device_entries:
         device_id: str | None = None
