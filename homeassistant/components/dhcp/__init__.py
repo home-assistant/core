@@ -160,7 +160,7 @@ class WatcherBase(ABC):
         """Process a client."""
         if (made_ip_address := cached_ip_addresses(ip_address)) is None:
             # Ignore invalid addresses
-            _LOGGER.debug("Ignoring invalid ip_address: %s", ip_address)
+            _LOGGER.debug("Ignoring invalid IP Address: %s", ip_address)
             return
 
         if (

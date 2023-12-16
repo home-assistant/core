@@ -854,7 +854,7 @@ async def test_device_tracker_invalid_ip_address(
         await device_tracker_watcher.async_stop()
         await hass.async_block_till_done()
 
-    assert "Invalid ip address" in caplog.text
+    assert "Ignoring invalid IP Address: invalid" in caplog.text
     assert len(mock_init.mock_calls) == 0
 
 
