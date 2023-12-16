@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import TYPE_CHECKING, Any, final
+from typing import TYPE_CHECKING, Any, Literal, final
 
 import voluptuous as vol
 
@@ -518,19 +518,24 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @callback
-    def _valid_mode_or_raise(self, mode_type: str, mode: str, modes: list[str]) -> None:
+    def _valid_mode_or_raise(
+        self,
+        mode_type: Literal["preset", "swing", "fan"],
+        mode: str,
+        modes: list[str] | None,
+    ) -> None:
         """Raise ServiceValidationError on invalid modes."""
         if not modes or mode not in modes:
-            modes_str: str = ", ".join(modes or [])
+            modes_str: str = ", ".join(modes) if modes else ""
             if mode_type == "preset":
                 translation_key = "not_valid_preset_mode"
             elif mode_type == "swing":
                 translation_key = "not_valid_swing_mode"
-            else:
+            elif mode_type == "fan":
                 translation_key = "not_valid_fan_mode"
             raise ServiceValidationError(
                 f"The {mode_type}_mode {mode} is not a valid {mode_type}_mode:"
-                f" {', '.join(modes)}",
+                f" {', '.join(modes) if modes else ''}",
                 translation_domain=DOMAIN,
                 translation_key=translation_key,
                 translation_placeholders={
@@ -560,9 +565,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     async def async_handle_set_fan_mode_service(self, fan_mode: str) -> None:
         """Validate and set new preset mode."""
-        if self.fan_modes is not None:
-            self._valid_mode_or_raise("fan", fan_mode, self.fan_modes)
-            await self.async_set_fan_mode(fan_mode)
+        self._valid_mode_or_raise("fan", fan_mode, self.fan_modes)
+        await self.async_set_fan_mode(fan_mode)
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
@@ -583,9 +587,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     async def async_handle_set_swing_mode_service(self, swing_mode: str) -> None:
         """Validate and set new preset mode."""
-        if self.swing_modes is not None:
-            self._valid_mode_or_raise("swing", swing_mode, self.swing_modes)
-            await self.async_set_swing_mode(swing_mode)
+        self._valid_mode_or_raise("swing", swing_mode, self.swing_modes)
+        await self.async_set_swing_mode(swing_mode)
 
     def set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
@@ -598,9 +601,8 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     async def async_handle_set_preset_mode_service(self, preset_mode: str) -> None:
         """Validate and set new preset mode."""
-        if self.preset_modes is not None:
-            self._valid_mode_or_raise("preset", preset_mode, self.preset_modes)
-            await self.async_set_preset_mode(preset_mode)
+        self._valid_mode_or_raise("preset", preset_mode, self.preset_modes)
+        await self.async_set_preset_mode(preset_mode)
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
