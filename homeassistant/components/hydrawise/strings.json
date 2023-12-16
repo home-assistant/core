@@ -24,9 +24,21 @@
     "binary_sensor": {
       "watering": {
         "name": "Watering"
+      },
+      "rain_sensor": {
+        "name": "Rain sensor"
       }
     },
     "sensor": {
+      "daily_total_water_use": {
+        "name": "Daily total water use"
+      },
+      "daily_active_water_use": {
+        "name": "Daily active water use"
+      },
+      "daily_inactive_water_use": {
+        "name": "Daily inactive water use"
+      },
       "next_cycle": {
         "name": "Next cycle"
       },

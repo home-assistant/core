@@ -47,7 +47,7 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
     async_add_entities(
-        HydrawiseSwitch(coordinator, description, controller, zone)
+        HydrawiseSwitch(coordinator, description, controller, zone=zone)
         for controller in coordinator.data.controllers.values()
         for zone in controller.zones
         for description in SWITCH_TYPES

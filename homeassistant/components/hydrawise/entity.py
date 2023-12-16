@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pydrawise.schema import Controller, Zone
+from pydrawise.schema import Controller, Sensor, Zone
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -24,21 +24,25 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
         coordinator: HydrawiseDataUpdateCoordinator,
         description: EntityDescription,
         controller: Controller,
+        *,
         zone: Zone | None = None,
+        sensor: Sensor | None = None,
     ) -> None:
         """Initialize the Hydrawise entity."""
         super().__init__(coordinator=coordinator)
         self.entity_description = description
         self.controller = controller
         self.zone = zone
-        self._device_id = str(controller.id if zone is None else zone.id)
+        self.sensor = sensor
+        self._device_id = str(zone.id) if zone is not None else str(controller.id)
         self._attr_unique_id = f"{self._device_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
-            name=controller.name if zone is None else zone.name,
+            name=zone.name if zone is not None else controller.name,
+            model="Zone" if zone is not None else controller.hardware.model.description,
             manufacturer=MANUFACTURER,
         )
-        if zone is not None:
+        if zone is not None or sensor is not None:
             self._attr_device_info["via_device"] = (DOMAIN, str(controller.id))
         self._update_attrs()
 
@@ -52,5 +56,7 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
         self.controller = self.coordinator.data.controllers[self.controller.id]
         if self.zone:
             self.zone = self.coordinator.data.zones[self.zone.id]
+        if self.sensor:
+            self.sensor = self.coordinator.data.sensors[self.sensor.id]
         self._update_attrs()
         super()._handle_coordinator_update()
