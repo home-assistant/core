@@ -94,6 +94,84 @@
       "climate_state_passenger_temp_setting": {
         "name": "Passenger temperature setting"
       }
+    },
+    "select": {
+      "climate_state_seat_heater_left": {
+        "name": "Seat Heater Left",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
+      "climate_state_seat_heater_right": {
+        "name": "Seat Heater Right",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+        }
+      },
+      "climate_state_seat_heater_rear_left": {
+        "name": "Seat Heater Rear Left",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+        }
+      },
+      "climate_state_seat_heater_rear_center": {
+        "name": "Seat Heater Rear Center",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+        }
+      },
+      "climate_state_seat_heater_rear_right": {
+        "name": "Seat Heater Rear Right",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+        }
+      },
+      "climate_state_seat_heater_third_row_left": {
+        "name": "Seat Heater Third Row Left",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+        }
+      },
+      "climate_state_seat_heater_third_row_right": {
+        "name": "Seat Heater Third Row Right",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+        }
+      }
+    }
+  },
+  "issues": {
+    "virtual_key": {
+      "title": "Virtual Key setup required",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Virtual Key setup required",
+            "description": "Sending commands now requires a Virtual Key to be added to your Tesla. Open the Tessie App and send any command to setup the Virtual Key."
+          }
+        }
+      }
     }
   }
 }
