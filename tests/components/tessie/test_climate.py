@@ -127,7 +127,7 @@ async def test_errors(hass: HomeAssistant) -> None:
     issue_reg = ir.async_get(hass)
     assert issue_reg.async_get_issue(DOMAIN, "virtual_key")
 
-    # Test setting climate on with virtual key error
+    # Test setting climate on with timeout error
     with patch(
         "homeassistant.components.tessie.climate.start_climate_preconditioning",
         side_effect=ERROR_TIMEOUT,
@@ -138,8 +138,10 @@ async def test_errors(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
+        mock_set.assert_called_once()
+        assert error.from_exception == ERROR_TIMEOUT
 
-    # Test setting climate on with virtual key error
+    # Test setting climate on with unknown error
     with patch(
         "homeassistant.components.tessie.climate.start_climate_preconditioning",
         side_effect=ERROR_UNKNOWN,
