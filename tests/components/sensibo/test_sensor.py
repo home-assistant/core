@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from pysensibo.model import SensiboData
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -18,8 +19,9 @@ async def test_sensor(
     hass: HomeAssistant,
     entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
-    monkeypatch: pytest.pytest.MonkeyPatch,
+    monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Sensibo sensor."""
 
@@ -31,27 +33,8 @@ async def test_sensor(
     assert state2.state == "1"
     assert state3.state == "n"
     assert state4.state == "0.0"
-    assert state2.attributes == {
-        "state_class": "measurement",
-        "unit_of_measurement": "µg/m³",
-        "device_class": "pm25",
-        "icon": "mdi:air-filter",
-        "friendly_name": "Kitchen PM2.5",
-    }
-    assert state4.attributes == {
-        "device_class": "temperature",
-        "friendly_name": "Hallway Climate React low temperature threshold",
-        "state_class": "measurement",
-        "unit_of_measurement": "°C",
-        "on": True,
-        "targettemperature": 21,
-        "temperatureunit": "c",
-        "mode": "heat",
-        "fanlevel": "low",
-        "swing": "stopped",
-        "horizontalswing": "stopped",
-        "light": "on",
-    }
+    assert state2.attributes == snapshot
+    assert state4.attributes == snapshot
 
     monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pm25", 2)
 

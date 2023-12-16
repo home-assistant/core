@@ -59,9 +59,9 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Set up the instance."""
-        self.discovery_info = {}
+        self.discovery_info: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -116,8 +116,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
         name = discovery_info.name.replace(f".{zctype}", "")
         tls = zctype == "_ipps._tcp.local."
         base_path = discovery_info.properties.get("rp", "ipp/print")
-
-        self.context.update({"title_placeholders": {"name": name}})
+        unique_id = discovery_info.properties.get("UUID")
 
         self.discovery_info.update(
             {
@@ -127,9 +126,17 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_VERIFY_SSL: False,
                 CONF_BASE_PATH: f"/{base_path}",
                 CONF_NAME: name,
-                CONF_UUID: discovery_info.properties.get("UUID"),
+                CONF_UUID: unique_id,
             }
         )
+
+        if unique_id:
+            # If we already have the unique id, try to set it now
+            # so we can avoid probing the device if its already
+            # configured or ignored
+            await self._async_set_unique_id_and_abort_if_already_configured(unique_id)
+
+        self.context.update({"title_placeholders": {"name": name}})
 
         try:
             info = await validate_input(self.hass, self.discovery_info)
@@ -147,7 +154,6 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("IPP Error", exc_info=True)
             return self.async_abort(reason="ipp_error")
 
-        unique_id = self.discovery_info[CONF_UUID]
         if not unique_id and info[CONF_UUID]:
             _LOGGER.debug(
                 "Printer UUID is missing from discovery info. Falling back to IPP UUID"
@@ -164,17 +170,23 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
                 "Unable to determine unique id from discovery info and IPP response"
             )
 
-        if unique_id:
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured(
-                updates={
-                    CONF_HOST: self.discovery_info[CONF_HOST],
-                    CONF_NAME: self.discovery_info[CONF_NAME],
-                },
-            )
+        if unique_id and self.unique_id != unique_id:
+            await self._async_set_unique_id_and_abort_if_already_configured(unique_id)
 
         await self._async_handle_discovery_without_unique_id()
         return await self.async_step_zeroconf_confirm()
+
+    async def _async_set_unique_id_and_abort_if_already_configured(
+        self, unique_id: str
+    ) -> None:
+        """Set the unique ID and abort if already configured."""
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_HOST: self.discovery_info[CONF_HOST],
+                CONF_NAME: self.discovery_info[CONF_NAME],
+            },
+        )
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None

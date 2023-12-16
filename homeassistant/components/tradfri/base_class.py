@@ -55,7 +55,16 @@ class TradfriBaseEntity(CoordinatorEntity[TradfriDeviceDataUpdateCoordinator]):
         self._device_id = self._device.id
         self._api = handle_error(api)
 
-        self._attr_unique_id = f"{self._gateway_id}-{self._device.id}"
+        info = self._device.device_info
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer=info.manufacturer,
+            model=info.model_number,
+            name=self._device.name,
+            sw_version=info.firmware_version,
+            via_device=(DOMAIN, gateway_id),
+        )
+        self._attr_unique_id = f"{gateway_id}-{self._device_id}"
 
     @abstractmethod
     @callback
@@ -70,19 +79,6 @@ class TradfriBaseEntity(CoordinatorEntity[TradfriDeviceDataUpdateCoordinator]):
         """
         self._refresh()
         super()._handle_coordinator_update()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        info = self._device.device_info
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device.id)},
-            manufacturer=info.manufacturer,
-            model=info.model_number,
-            name=self._device.name,
-            sw_version=info.firmware_version,
-            via_device=(DOMAIN, self._gateway_id),
-        )
 
     @property
     def available(self) -> bool:

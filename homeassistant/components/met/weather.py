@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
@@ -17,7 +17,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
     Forecast,
-    WeatherEntity,
+    SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -31,14 +31,21 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, sun
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from . import MetDataUpdateCoordinator
-from .const import ATTR_MAP, CONDITIONS_MAP, CONF_TRACK_HOME, DOMAIN, FORECAST_MAP
+from .const import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_SUNNY,
+    ATTR_MAP,
+    CONDITIONS_MAP,
+    CONF_TRACK_HOME,
+    DOMAIN,
+    FORECAST_MAP,
+)
+from .coordinator import MetDataUpdateCoordinator
 
 DEFAULT_NAME = "Met.no"
 
@@ -52,11 +59,16 @@ async def async_setup_entry(
     coordinator: MetDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     entity_registry = er.async_get(hass)
 
-    entities = [
-        MetWeather(
-            coordinator, config_entry.data, hass.config.units is METRIC_SYSTEM, False
-        )
-    ]
+    name: str | None
+    is_metric = hass.config.units is METRIC_SYSTEM
+    if config_entry.data.get(CONF_TRACK_HOME, False):
+        name = hass.config.location_name
+    else:
+        name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
+        if TYPE_CHECKING:
+            assert isinstance(name, str)
+
+    entities = [MetWeather(coordinator, config_entry, False, name, is_metric)]
 
     # Add hourly entity to legacy config entries
     if entity_registry.async_get_entity_id(
@@ -64,11 +76,8 @@ async def async_setup_entry(
         DOMAIN,
         _calculate_unique_id(config_entry.data, True),
     ):
-        entities.append(
-            MetWeather(
-                coordinator, config_entry.data, hass.config.units is METRIC_SYSTEM, True
-            )
-        )
+        name = f"{name} hourly"
+        entities.append(MetWeather(coordinator, config_entry, True, name, is_metric))
 
     async_add_entities(entities)
 
@@ -92,7 +101,7 @@ def format_condition(condition: str) -> str:
     return condition
 
 
-class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
+class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
     """Implementation of a Met.no weather condition."""
 
     _attr_attribution = (
@@ -111,51 +120,28 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
     def __init__(
         self,
         coordinator: MetDataUpdateCoordinator,
-        config: MappingProxyType[str, Any],
-        is_metric: bool,
+        config_entry: ConfigEntry,
         hourly: bool,
+        name: str,
+        is_metric: bool,
     ) -> None:
         """Initialise the platform with a data instance and site."""
         super().__init__(coordinator)
-        self._attr_unique_id = _calculate_unique_id(config, hourly)
-        self._config = config
+        self._attr_unique_id = _calculate_unique_id(config_entry.data, hourly)
+        self._config = config_entry.data
         self._is_metric = is_metric
         self._hourly = hourly
-
-    @property
-    def track_home(self) -> Any | bool:
-        """Return if we are tracking home."""
-        return self._config.get(CONF_TRACK_HOME, False)
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        name = self._config.get(CONF_NAME)
-        name_appendix = ""
-        if self._hourly:
-            name_appendix = " hourly"
-
-        if name is not None:
-            return f"{name}{name_appendix}"
-
-        if self.track_home:
-            return f"{self.hass.config.location_name}{name_appendix}"
-
-        return f"{DEFAULT_NAME}{name_appendix}"
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return not self._hourly
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        super()._handle_coordinator_update()
-        assert self.platform.config_entry
-        self.platform.config_entry.async_create_task(
-            self.hass, self.async_update_listeners(("daily", "hourly"))
+        self._attr_entity_registry_enabled_default = not hourly
+        self._attr_device_info = DeviceInfo(
+            name="Forecast",
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, config_entry.entry_id)},
+            manufacturer="Met.no",
+            model="Forecast",
+            configuration_url="https://www.met.no/en",
         )
+        self._attr_track_home = self._config.get(CONF_TRACK_HOME, False)
+        self._attr_name = name
 
     @property
     def condition(self) -> str | None:
@@ -163,6 +149,10 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
         condition = self.coordinator.data.current_weather_data.get("condition")
         if condition is None:
             return None
+
+        if condition == ATTR_CONDITION_SUNNY and not sun.is_up(self.hass):
+            condition = ATTR_CONDITION_CLEAR_NIGHT
+
         return format_condition(condition)
 
     @property
@@ -249,22 +239,12 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
         """Return the forecast array."""
         return self._forecast(self._hourly)
 
-    async def async_forecast_daily(self) -> list[Forecast] | None:
+    @callback
+    def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         return self._forecast(False)
 
-    async def async_forecast_hourly(self) -> list[Forecast] | None:
+    @callback
+    def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
         return self._forecast(True)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info."""
-        return DeviceInfo(
-            name="Forecast",
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN,)},  # type: ignore[arg-type]
-            manufacturer="Met.no",
-            model="Forecast",
-            configuration_url="https://www.met.no/en",
-        )

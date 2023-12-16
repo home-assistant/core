@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Awaitable, Callable, Coroutine, Iterator
+import contextlib
 from enum import Enum
 import functools
 import logging
@@ -48,6 +49,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 RETRYABLE_REQUEST_DECORATOR = zigpy.util.retryable_request(tries=3)
+UNPROXIED_CLUSTER_METHODS = {"general_command"}
 
 
 _P = ParamSpec("_P")
@@ -55,24 +57,31 @@ _FuncType = Callable[_P, Awaitable[Any]]
 _ReturnFuncType = Callable[_P, Coroutine[Any, Any, Any]]
 
 
+@contextlib.contextmanager
+def wrap_zigpy_exceptions() -> Iterator[None]:
+    """Wrap zigpy exceptions in `HomeAssistantError` exceptions."""
+    try:
+        yield
+    except asyncio.TimeoutError as exc:
+        raise HomeAssistantError(
+            "Failed to send request: device did not respond"
+        ) from exc
+    except zigpy.exceptions.ZigbeeException as exc:
+        message = "Failed to send request"
+
+        if str(exc):
+            message = f"{message}: {exc}"
+
+        raise HomeAssistantError(message) from exc
+
+
 def retry_request(func: _FuncType[_P]) -> _ReturnFuncType[_P]:
     """Send a request with retries and wrap expected zigpy exceptions."""
 
     @functools.wraps(func)
     async def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> Any:
-        try:
+        with wrap_zigpy_exceptions():
             return await RETRYABLE_REQUEST_DECORATOR(func)(*args, **kwargs)
-        except asyncio.TimeoutError as exc:
-            raise HomeAssistantError(
-                "Failed to send request: device did not respond"
-            ) from exc
-        except zigpy.exceptions.ZigbeeException as exc:
-            message = "Failed to send request"
-
-            if str(exc):
-                message = f"{message}: {exc}"
-
-            raise HomeAssistantError(message) from exc
 
     return wrapper
 
@@ -501,6 +510,26 @@ class ClusterHandler(LogMixin):
 
     get_attributes = functools.partialmethod(_get_attributes, False)
 
+    async def write_attributes_safe(
+        self, attributes: dict[str, Any], manufacturer: int | None = None
+    ) -> None:
+        """Wrap `write_attributes` to throw an exception on attribute write failure."""
+
+        res = await self.write_attributes(attributes, manufacturer=manufacturer)
+
+        for record in res[0]:
+            if record.status != Status.SUCCESS:
+                try:
+                    name = self.cluster.attributes[record.attrid].name
+                    value = attributes.get(name, "unknown")
+                except KeyError:
+                    name = f"0x{record.attrid:04x}"
+                    value = "unknown"
+
+                raise HomeAssistantError(
+                    f"Failed to write attribute {name}={value}: {record.status}",
+                )
+
     def log(self, level, msg, *args, **kwargs):
         """Log a message."""
         msg = f"[%s:%s]: {msg}"
@@ -509,11 +538,16 @@ class ClusterHandler(LogMixin):
 
     def __getattr__(self, name):
         """Get attribute or a decorated cluster command."""
-        if hasattr(self._cluster, name) and callable(getattr(self._cluster, name)):
+        if (
+            hasattr(self._cluster, name)
+            and callable(getattr(self._cluster, name))
+            and name not in UNPROXIED_CLUSTER_METHODS
+        ):
             command = getattr(self._cluster, name)
-            command.__name__ = name
+            wrapped_command = retry_request(command)
+            wrapped_command.__name__ = name
 
-            return retry_request(command)
+            return wrapped_command
         return self.__getattribute__(name)
 
 

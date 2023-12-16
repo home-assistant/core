@@ -40,6 +40,7 @@ class RiscoCloudSwitch(RiscoCloudZoneEntity, SwitchEntity):
     """Representation of a bypass switch for a Risco cloud zone."""
 
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "bypassed"
 
     def __init__(
         self, coordinator: RiscoDataUpdateCoordinator, zone_id: int, zone: Zone
@@ -47,7 +48,6 @@ class RiscoCloudSwitch(RiscoCloudZoneEntity, SwitchEntity):
         """Init the zone."""
         super().__init__(
             coordinator=coordinator,
-            name="Bypassed",
             suffix="_bypassed",
             zone_id=zone_id,
             zone=zone,
@@ -76,12 +76,12 @@ class RiscoLocalSwitch(RiscoLocalZoneEntity, SwitchEntity):
     """Representation of a bypass switch for a Risco local zone."""
 
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "bypassed"
 
     def __init__(self, system_id: str, zone_id: int, zone: Zone) -> None:
         """Init the zone."""
         super().__init__(
             system_id=system_id,
-            name="Bypassed",
             suffix="_bypassed",
             zone_id=zone_id,
             zone=zone,

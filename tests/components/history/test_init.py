@@ -1,5 +1,4 @@
 """The tests the History component."""
-# pylint: disable=invalid-name
 from datetime import timedelta
 from http import HTTPStatus
 import json

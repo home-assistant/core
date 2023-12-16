@@ -9,10 +9,10 @@ import logging
 from typing import Any, Generic, TypeVar
 
 from bleak import BleakError
+from bluetooth_data_tools import monotonic_time_coarse
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.util.dt import monotonic_time_coarse
 
 from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 from .passive_update_processor import PassiveBluetoothProcessorCoordinator
@@ -103,7 +103,7 @@ class ActiveBluetoothProcessorCoordinator(
             return False
         poll_age: float | None = None
         if self._last_poll:
-            poll_age = monotonic_time_coarse() - self._last_poll
+            poll_age = service_info.time - self._last_poll
         return self._needs_poll_method(service_info, poll_age)
 
     async def _async_poll_data(

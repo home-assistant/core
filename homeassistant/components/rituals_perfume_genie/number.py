@@ -17,19 +17,12 @@ from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
 
-@dataclass
-class RitualsNumberEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(kw_only=True)
+class RitualsNumberEntityDescription(NumberEntityDescription):
+    """Class describing Rituals number entities."""
 
     value_fn: Callable[[Diffuser], int]
     set_value_fn: Callable[[Diffuser, int], Awaitable[Any]]
-
-
-@dataclass
-class RitualsNumberEntityDescription(
-    NumberEntityDescription, RitualsNumberEntityDescriptionMixin
-):
-    """Class describing Rituals number entities."""
 
 
 ENTITY_DESCRIPTIONS = (

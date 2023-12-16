@@ -14,7 +14,9 @@ import time
 from typing import Any
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
+from freezegun import freeze_time
 import pytest
+from pytest_unordered import unordered
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -35,6 +37,7 @@ from homeassistant.const import (
 )
 import homeassistant.core as ha
 from homeassistant.core import (
+    CoreState,
     HassJob,
     HomeAssistant,
     ServiceCall,
@@ -42,6 +45,7 @@ from homeassistant.core import (
     State,
     SupportsResponse,
     callback,
+    get_release_channel,
 )
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -397,6 +401,32 @@ async def test_stage_shutdown(hass: HomeAssistant) -> None:
     assert len(test_all) == 2
 
 
+async def test_stage_shutdown_timeouts(hass: HomeAssistant) -> None:
+    """Simulate a shutdown, test timeouts at each step."""
+
+    with patch.object(hass.timeout, "async_timeout", side_effect=asyncio.TimeoutError):
+        await hass.async_stop()
+
+    assert hass.state == CoreState.stopped
+
+
+async def test_stage_shutdown_generic_error(hass: HomeAssistant, caplog) -> None:
+    """Simulate a shutdown, test that a generic error at the final stage doesn't prevent it."""
+
+    task = asyncio.Future()
+    hass._tasks.add(task)
+
+    def fail_the_task(_):
+        task.set_exception(Exception("test_exception"))
+
+    with patch.object(task, "cancel", side_effect=fail_the_task) as patched_call:
+        await hass.async_stop()
+        assert patched_call.called
+
+    assert "test_exception" in caplog.text
+    assert hass.state == ha.CoreState.stopped
+
+
 async def test_stage_shutdown_with_exit_code(hass: HomeAssistant) -> None:
     """Simulate a shutdown, test calling stuff with exit code checks."""
     test_stop = async_capture_events(hass, EVENT_HOMEASSISTANT_STOP)
@@ -670,11 +700,11 @@ def test_state_as_dict_json() -> None:
         '"last_changed":"1984-12-08T12:00:00","last_updated":"1984-12-08T12:00:00",'
         '"context":{"id":"01H0D6K3RFJAYAV2093ZW30PCW","parent_id":null,"user_id":null}}'
     )
-    as_dict_json_1 = state.as_dict_json()
+    as_dict_json_1 = state.as_dict_json
     assert as_dict_json_1 == expected
     # 2nd time to verify cache
-    assert state.as_dict_json() == expected
-    assert state.as_dict_json() is as_dict_json_1
+    assert state.as_dict_json == expected
+    assert state.as_dict_json is as_dict_json_1
 
 
 def test_state_as_compressed_state() -> None:
@@ -693,12 +723,12 @@ def test_state_as_compressed_state() -> None:
         "lc": last_time.timestamp(),
         "s": "on",
     }
-    as_compressed_state = state.as_compressed_state()
+    as_compressed_state = state.as_compressed_state
     # We are not too concerned about these being ReadOnlyDict
     # since we don't expect them to be called by external callers
     assert as_compressed_state == expected
     # 2nd time to verify cache
-    assert state.as_compressed_state() == expected
+    assert state.as_compressed_state == expected
 
 
 def test_state_as_compressed_state_unique_last_updated() -> None:
@@ -719,12 +749,12 @@ def test_state_as_compressed_state_unique_last_updated() -> None:
         "lu": last_updated.timestamp(),
         "s": "on",
     }
-    as_compressed_state = state.as_compressed_state()
+    as_compressed_state = state.as_compressed_state
     # We are not too concerned about these being ReadOnlyDict
     # since we don't expect them to be called by external callers
     assert as_compressed_state == expected
     # 2nd time to verify cache
-    assert state.as_compressed_state() == expected
+    assert state.as_compressed_state == expected
 
 
 def test_state_as_compressed_state_json() -> None:
@@ -739,13 +769,13 @@ def test_state_as_compressed_state_json() -> None:
         context=ha.Context(id="01H0D6H5K3SZJ3XGDHED1TJ79N"),
     )
     expected = '"happy.happy":{"s":"on","a":{"pig":"dog"},"c":"01H0D6H5K3SZJ3XGDHED1TJ79N","lc":471355200.0}'
-    as_compressed_state = state.as_compressed_state_json()
+    as_compressed_state = state.as_compressed_state_json
     # We are not too concerned about these being ReadOnlyDict
     # since we don't expect them to be called by external callers
     assert as_compressed_state == expected
     # 2nd time to verify cache
-    assert state.as_compressed_state_json() == expected
-    assert state.as_compressed_state_json() is as_compressed_state
+    assert state.as_compressed_state_json == expected
+    assert state.as_compressed_state_json is as_compressed_state
 
 
 async def test_eventbus_add_remove_listener(hass: HomeAssistant) -> None:
@@ -812,6 +842,16 @@ async def test_eventbus_run_immediately(hass: HomeAssistant) -> None:
     assert len(calls) == 1
 
     unsub()
+
+
+async def test_eventbus_run_immediately_not_callback(hass: HomeAssistant) -> None:
+    """Test we raise when passing a non-callback with run_immediately."""
+
+    def listener(event):
+        """Mock listener."""
+
+    with pytest.raises(HomeAssistantError):
+        hass.bus.async_listen("test", listener, run_immediately=True)
 
 
 async def test_eventbus_unsubscribe_listener(hass: HomeAssistant) -> None:
@@ -1031,17 +1071,18 @@ async def test_statemachine_is_state(hass: HomeAssistant) -> None:
 
 
 async def test_statemachine_entity_ids(hass: HomeAssistant) -> None:
-    """Test get_entity_ids method."""
+    """Test async_entity_ids method."""
+    assert hass.states.async_entity_ids() == []
+    assert hass.states.async_entity_ids("light") == []
+    assert hass.states.async_entity_ids(("light", "switch", "other")) == []
+
     hass.states.async_set("light.bowl", "on", {})
     hass.states.async_set("SWITCH.AC", "off", {})
-    ent_ids = hass.states.async_entity_ids()
-    assert len(ent_ids) == 2
-    assert "light.bowl" in ent_ids
-    assert "switch.ac" in ent_ids
-
-    ent_ids = hass.states.async_entity_ids("light")
-    assert len(ent_ids) == 1
-    assert "light.bowl" in ent_ids
+    assert hass.states.async_entity_ids() == unordered(["light.bowl", "switch.ac"])
+    assert hass.states.async_entity_ids("light") == ["light.bowl"]
+    assert hass.states.async_entity_ids(("light", "switch", "other")) == unordered(
+        ["light.bowl", "switch.ac"]
+    )
 
     states = sorted(state.entity_id for state in hass.states.async_all())
     assert states == ["light.bowl", "switch.ac"]
@@ -1089,7 +1130,7 @@ async def test_statemachine_last_changed_not_updated_on_same_state(
 
     future = dt_util.utcnow() + timedelta(hours=10)
 
-    with patch("homeassistant.util.dt.utcnow", return_value=future):
+    with freeze_time(future):
         hass.states.async_set("light.Bowl", "on", {"attr": "triggers_change"})
         await hass.async_block_till_done()
 
@@ -1446,7 +1487,7 @@ async def test_config_defaults() -> None:
     assert config.allowlist_external_dirs == set()
     assert config.allowlist_external_urls == set()
     assert config.media_dirs == {}
-    assert config.safe_mode is False
+    assert config.recovery_mode is False
     assert config.legacy_templates is False
     assert config.currency == "EUR"
     assert config.country is None
@@ -1484,13 +1525,14 @@ async def test_config_as_dict() -> None:
         "allowlist_external_urls": set(),
         "version": __version__,
         "config_source": ha.ConfigSource.DEFAULT,
-        "safe_mode": False,
+        "recovery_mode": False,
         "state": "RUNNING",
         "external_url": None,
         "internal_url": None,
         "currency": "EUR",
         "country": None,
         "language": "en",
+        "safe_mode": False,
     }
 
     assert expected == config.as_dict()
@@ -1902,6 +1944,9 @@ async def test_chained_logging_misses_log_timeout(
 
 async def test_async_all(hass: HomeAssistant) -> None:
     """Test async_all."""
+    assert hass.states.async_all() == []
+    assert hass.states.async_all("light") == []
+    assert hass.states.async_all(["light", "switch"]) == []
 
     hass.states.async_set("switch.link", "on")
     hass.states.async_set("light.bowl", "on")
@@ -1926,6 +1971,10 @@ async def test_async_all(hass: HomeAssistant) -> None:
 async def test_async_entity_ids_count(hass: HomeAssistant) -> None:
     """Test async_entity_ids_count."""
 
+    assert hass.states.async_entity_ids_count() == 0
+    assert hass.states.async_entity_ids_count("light") == 0
+    assert hass.states.async_entity_ids_count({"light", "vacuum"}) == 0
+
     hass.states.async_set("switch.link", "on")
     hass.states.async_set("light.bowl", "on")
     hass.states.async_set("light.frog", "on")
@@ -1938,6 +1987,7 @@ async def test_async_entity_ids_count(hass: HomeAssistant) -> None:
 
     assert hass.states.async_entity_ids_count() == 5
     assert hass.states.async_entity_ids_count("light") == 3
+    assert hass.states.async_entity_ids_count({"light", "vacuum"}) == 4
 
 
 async def test_hassjob_forbid_coroutine() -> None:
@@ -2464,3 +2514,110 @@ async def test_cancellable_hassjob(hass: HomeAssistant) -> None:
 
     # Cleanup
     timer2.cancel()
+
+
+async def test_validate_state(hass: HomeAssistant) -> None:
+    """Test validate_state."""
+    assert ha.validate_state("test") == "test"
+    with pytest.raises(InvalidStateError):
+        ha.validate_state("t" * 256)
+
+
+@pytest.mark.parametrize(
+    ("version", "release_channel"),
+    [
+        ("0.115.0.dev20200815", "nightly"),
+        ("0.115.0", "stable"),
+        ("0.115.0b4", "beta"),
+        ("0.115.0dev0", "dev"),
+    ],
+)
+async def test_get_release_channel(version: str, release_channel: str) -> None:
+    """Test if release channel detection works from Home Assistant version number."""
+    with patch("homeassistant.core.__version__", f"{version}"):
+        assert get_release_channel() == release_channel
+
+
+def test_is_callback_check_partial():
+    """Test is_callback_check_partial matches HassJob."""
+
+    @ha.callback
+    def callback_func():
+        pass
+
+    def not_callback_func():
+        pass
+
+    assert ha.is_callback(callback_func)
+    assert HassJob(callback_func).job_type == ha.HassJobType.Callback
+    assert ha.is_callback_check_partial(functools.partial(callback_func))
+    assert HassJob(functools.partial(callback_func)).job_type == ha.HassJobType.Callback
+    assert ha.is_callback_check_partial(
+        functools.partial(functools.partial(callback_func))
+    )
+    assert HassJob(functools.partial(functools.partial(callback_func))).job_type == (
+        ha.HassJobType.Callback
+    )
+    assert not ha.is_callback_check_partial(not_callback_func)
+    assert HassJob(not_callback_func).job_type == ha.HassJobType.Executor
+    assert not ha.is_callback_check_partial(functools.partial(not_callback_func))
+    assert HassJob(functools.partial(not_callback_func)).job_type == (
+        ha.HassJobType.Executor
+    )
+
+    # We check the inner function, not the outer one
+    assert not ha.is_callback_check_partial(
+        ha.callback(functools.partial(not_callback_func))
+    )
+    assert HassJob(ha.callback(functools.partial(not_callback_func))).job_type == (
+        ha.HassJobType.Executor
+    )
+
+
+def test_hassjob_passing_job_type():
+    """Test passing the job type to HassJob when we already know it."""
+
+    @ha.callback
+    def callback_func():
+        pass
+
+    def not_callback_func():
+        pass
+
+    assert (
+        HassJob(callback_func, job_type=ha.HassJobType.Callback).job_type
+        == ha.HassJobType.Callback
+    )
+
+    # We should trust the job_type passed in
+    assert (
+        HassJob(not_callback_func, job_type=ha.HassJobType.Callback).job_type
+        == ha.HassJobType.Callback
+    )
+
+
+async def test_shutdown_job(hass: HomeAssistant) -> None:
+    """Test async_add_shutdown_job."""
+    evt = asyncio.Event()
+
+    async def shutdown_func() -> None:
+        evt.set()
+
+    job = HassJob(shutdown_func, "shutdown_job")
+    hass.async_add_shutdown_job(job)
+    await hass.async_stop()
+    assert evt.is_set()
+
+
+async def test_cancel_shutdown_job(hass: HomeAssistant) -> None:
+    """Test cancelling a job added to async_add_shutdown_job."""
+    evt = asyncio.Event()
+
+    async def shutdown_func() -> None:
+        evt.set()
+
+    job = HassJob(shutdown_func, "shutdown_job")
+    cancel = hass.async_add_shutdown_job(job)
+    cancel()
+    await hass.async_stop()
+    assert not evt.is_set()

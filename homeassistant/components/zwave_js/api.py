@@ -1,10 +1,10 @@
 """Websocket API for Z-Wave JS."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 import dataclasses
 from functools import partial, wraps
-from typing import Any, Literal, cast
+from typing import Any, Concatenate, Literal, ParamSpec, cast
 
 from aiohttp import web, web_exceptions, web_request
 import voluptuous as vol
@@ -82,9 +82,10 @@ from .const import (
 from .helpers import (
     async_enable_statistics,
     async_get_node_from_device_id,
-    async_update_data_collection_preference,
     get_device_id,
 )
+
+_P = ParamSpec("_P")
 
 DATA_UNSUBSCRIBE = "unsubs"
 
@@ -265,8 +266,11 @@ QR_CODE_STRING_SCHEMA = vol.All(str, vol.Length(min=MINIMUM_QR_STRING_LENGTH))
 
 
 async def _async_get_entry(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict, entry_id: str
-) -> tuple[ConfigEntry | None, Client | None, Driver | None]:
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    entry_id: str,
+) -> tuple[ConfigEntry, Client, Driver] | tuple[None, None, None]:
     """Get config entry and client from message data."""
     entry = hass.config_entries.async_get_entry(entry_id)
     if entry is None:
@@ -294,19 +298,26 @@ async def _async_get_entry(
     return entry, client, client.driver
 
 
-def async_get_entry(orig_func: Callable) -> Callable:
+def async_get_entry(
+    orig_func: Callable[
+        [HomeAssistant, ActiveConnection, dict[str, Any], ConfigEntry, Client, Driver],
+        Coroutine[Any, Any, None],
+    ],
+) -> Callable[
+    [HomeAssistant, ActiveConnection, dict[str, Any]], Coroutine[Any, Any, None]
+]:
     """Decorate async function to get entry."""
 
     @wraps(orig_func)
     async def async_get_entry_func(
-        hass: HomeAssistant, connection: ActiveConnection, msg: dict
+        hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
     ) -> None:
         """Provide user specific data and store to function."""
         entry, client, driver = await _async_get_entry(
             hass, connection, msg, msg[ENTRY_ID]
         )
 
-        if not entry and not client and not driver:
+        if not entry or not client or not driver:
             return
 
         await orig_func(hass, connection, msg, entry, client, driver)
@@ -329,12 +340,19 @@ async def _async_get_node(
     return node
 
 
-def async_get_node(orig_func: Callable) -> Callable:
+def async_get_node(
+    orig_func: Callable[
+        [HomeAssistant, ActiveConnection, dict[str, Any], Node],
+        Coroutine[Any, Any, None],
+    ],
+) -> Callable[
+    [HomeAssistant, ActiveConnection, dict[str, Any]], Coroutine[Any, Any, None]
+]:
     """Decorate async function to get node."""
 
     @wraps(orig_func)
     async def async_get_node_func(
-        hass: HomeAssistant, connection: ActiveConnection, msg: dict
+        hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
     ) -> None:
         """Provide user specific data and store to function."""
         node = await _async_get_node(hass, connection, msg, msg[DEVICE_ID])
@@ -345,16 +363,24 @@ def async_get_node(orig_func: Callable) -> Callable:
     return async_get_node_func
 
 
-def async_handle_failed_command(orig_func: Callable) -> Callable:
+def async_handle_failed_command(
+    orig_func: Callable[
+        Concatenate[HomeAssistant, ActiveConnection, dict[str, Any], _P],
+        Coroutine[Any, Any, None],
+    ],
+) -> Callable[
+    Concatenate[HomeAssistant, ActiveConnection, dict[str, Any], _P],
+    Coroutine[Any, Any, None],
+]:
     """Decorate async function to handle FailedCommand and send relevant error."""
 
     @wraps(orig_func)
     async def async_handle_failed_command_func(
         hass: HomeAssistant,
         connection: ActiveConnection,
-        msg: dict,
-        *args: Any,
-        **kwargs: Any,
+        msg: dict[str, Any],
+        *args: _P.args,
+        **kwargs: _P.kwargs,
     ) -> None:
         """Handle FailedCommand within function and send relevant error."""
         try:
@@ -394,7 +420,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_subscribe_node_status)
     websocket_api.async_register_command(hass, websocket_node_status)
     websocket_api.async_register_command(hass, websocket_node_metadata)
-    websocket_api.async_register_command(hass, websocket_node_comments)
+    websocket_api.async_register_command(hass, websocket_node_alerts)
     websocket_api.async_register_command(hass, websocket_add_node)
     websocket_api.async_register_command(hass, websocket_grant_security_classes)
     websocket_api.async_register_command(hass, websocket_validate_dsk_and_enter_pin)
@@ -411,15 +437,15 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_remove_node)
     websocket_api.async_register_command(hass, websocket_remove_failed_node)
     websocket_api.async_register_command(hass, websocket_replace_failed_node)
-    websocket_api.async_register_command(hass, websocket_begin_healing_network)
+    websocket_api.async_register_command(hass, websocket_begin_rebuilding_routes)
     websocket_api.async_register_command(
-        hass, websocket_subscribe_heal_network_progress
+        hass, websocket_subscribe_rebuild_routes_progress
     )
-    websocket_api.async_register_command(hass, websocket_stop_healing_network)
+    websocket_api.async_register_command(hass, websocket_stop_rebuilding_routes)
     websocket_api.async_register_command(hass, websocket_refresh_node_info)
     websocket_api.async_register_command(hass, websocket_refresh_node_values)
     websocket_api.async_register_command(hass, websocket_refresh_node_cc_values)
-    websocket_api.async_register_command(hass, websocket_heal_node)
+    websocket_api.async_register_command(hass, websocket_rebuild_node_routes)
     websocket_api.async_register_command(hass, websocket_set_config_parameter)
     websocket_api.async_register_command(hass, websocket_get_config_parameters)
     websocket_api.async_register_command(hass, websocket_subscribe_log_updates)
@@ -448,6 +474,7 @@ def async_register_api(hass: HomeAssistant) -> None:
         hass, websocket_subscribe_controller_statistics
     )
     websocket_api.async_register_command(hass, websocket_subscribe_node_statistics)
+    websocket_api.async_register_command(hass, websocket_hard_reset_controller)
     hass.http.register_view(FirmwareUploadView(dr.async_get(hass)))
 
 
@@ -490,6 +517,7 @@ async def websocket_network_status(
             "state": "connected" if client.connected else "disconnected",
             "driver_version": client_version_info.driver_version,
             "server_version": client_version_info.server_version,
+            "server_logging_enabled": client.server_logging_enabled,
         },
         "controller": {
             "home_id": controller.home_id,
@@ -511,9 +539,10 @@ async def websocket_network_status(
             "supported_function_types": controller.supported_function_types,
             "suc_node_id": controller.suc_node_id,
             "supports_timers": controller.supports_timers,
-            "is_heal_network_active": controller.is_heal_network_active,
+            "is_rebuilding_routes": controller.is_rebuilding_routes,
             "inclusion_state": controller.inclusion_state,
             "rf_region": controller.rf_region,
+            "status": controller.status,
             "nodes": [node_status(node) for node in driver.controller.nodes.values()],
         },
     }
@@ -614,22 +643,25 @@ async def websocket_node_metadata(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/node_comments",
+        vol.Required(TYPE): "zwave_js/node_alerts",
         vol.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
 @async_get_node
-async def websocket_node_comments(
+async def websocket_node_alerts(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
     node: Node,
 ) -> None:
-    """Get the comments of a Z-Wave JS node."""
+    """Get the alerts for a Z-Wave JS node."""
     connection.send_result(
         msg[ID],
-        {"comments": node.device_config.metadata.comments},
+        {
+            "comments": node.device_config.metadata.comments,
+            "is_embedded": node.device_config.is_embedded,
+        },
     )
 
 
@@ -1378,14 +1410,14 @@ async def websocket_remove_failed_node(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/begin_healing_network",
+        vol.Required(TYPE): "zwave_js/begin_rebuilding_routes",
         vol.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
 @async_handle_failed_command
 @async_get_entry
-async def websocket_begin_healing_network(
+async def websocket_begin_rebuilding_routes(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
@@ -1393,10 +1425,10 @@ async def websocket_begin_healing_network(
     client: Client,
     driver: Driver,
 ) -> None:
-    """Begin healing the Z-Wave network."""
+    """Begin rebuilding Z-Wave routes."""
     controller = driver.controller
 
-    result = await controller.async_begin_healing_network()
+    result = await controller.async_begin_rebuilding_routes()
     connection.send_result(
         msg[ID],
         result,
@@ -1406,13 +1438,13 @@ async def websocket_begin_healing_network(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/subscribe_heal_network_progress",
+        vol.Required(TYPE): "zwave_js/subscribe_rebuild_routes_progress",
         vol.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
 @async_get_entry
-async def websocket_subscribe_heal_network_progress(
+async def websocket_subscribe_rebuild_routes_progress(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
@@ -1420,7 +1452,7 @@ async def websocket_subscribe_heal_network_progress(
     client: Client,
     driver: Driver,
 ) -> None:
-    """Subscribe to heal Z-Wave network status updates."""
+    """Subscribe to rebuild Z-Wave routes status updates."""
     controller = driver.controller
 
     @callback
@@ -1433,30 +1465,39 @@ async def websocket_subscribe_heal_network_progress(
     def forward_event(key: str, event: dict) -> None:
         connection.send_message(
             websocket_api.event_message(
-                msg[ID], {"event": event["event"], "heal_node_status": event[key]}
+                msg[ID], {"event": event["event"], "rebuild_routes_status": event[key]}
             )
         )
 
     connection.subscriptions[msg["id"]] = async_cleanup
     msg[DATA_UNSUBSCRIBE] = unsubs = [
-        controller.on("heal network progress", partial(forward_event, "progress")),
-        controller.on("heal network done", partial(forward_event, "result")),
+        controller.on("rebuild routes progress", partial(forward_event, "progress")),
+        controller.on("rebuild routes done", partial(forward_event, "result")),
     ]
 
-    connection.send_result(msg[ID], controller.heal_network_progress)
+    if controller.rebuild_routes_progress:
+        connection.send_result(
+            msg[ID],
+            {
+                node.node_id: status
+                for node, status in controller.rebuild_routes_progress.items()
+            },
+        )
+    else:
+        connection.send_result(msg[ID], None)
 
 
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/stop_healing_network",
+        vol.Required(TYPE): "zwave_js/stop_rebuilding_routes",
         vol.Required(ENTRY_ID): str,
     }
 )
 @websocket_api.async_response
 @async_handle_failed_command
 @async_get_entry
-async def websocket_stop_healing_network(
+async def websocket_stop_rebuilding_routes(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
@@ -1464,9 +1505,9 @@ async def websocket_stop_healing_network(
     client: Client,
     driver: Driver,
 ) -> None:
-    """Stop healing the Z-Wave network."""
+    """Stop rebuilding Z-Wave routes."""
     controller = driver.controller
-    result = await controller.async_stop_healing_network()
+    result = await controller.async_stop_rebuilding_routes()
     connection.send_result(
         msg[ID],
         result,
@@ -1476,14 +1517,14 @@ async def websocket_stop_healing_network(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/heal_node",
+        vol.Required(TYPE): "zwave_js/rebuild_node_routes",
         vol.Required(DEVICE_ID): str,
     }
 )
 @websocket_api.async_response
 @async_handle_failed_command
 @async_get_node
-async def websocket_heal_node(
+async def websocket_rebuild_node_routes(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
@@ -1494,7 +1535,7 @@ async def websocket_heal_node(
     assert driver is not None  # The node comes from the driver instance.
     controller = driver.controller
 
-    result = await controller.async_heal_node(node)
+    result = await controller.async_rebuild_node_routes(node)
     connection.send_result(
         msg[ID],
         result,
@@ -1730,7 +1771,7 @@ async def websocket_subscribe_log_updates(
     @callback
     def async_cleanup() -> None:
         """Remove signal listeners."""
-        hass.async_create_task(driver.async_stop_listening_logs())
+        hass.async_create_task(client.async_stop_listening_logs())
         for unsub in unsubs:
             unsub()
 
@@ -1771,7 +1812,7 @@ async def websocket_subscribe_log_updates(
     ]
     connection.subscriptions[msg["id"]] = async_cleanup
 
-    await driver.async_start_listening_logs()
+    await client.async_start_listening_logs()
     connection.send_result(msg[ID])
 
 
@@ -1865,7 +1906,10 @@ async def websocket_update_data_collection_preference(
 ) -> None:
     """Update preference for data collection and enable/disable collection."""
     opted_in = msg[OPTED_IN]
-    async_update_data_collection_preference(hass, entry, opted_in)
+    if entry.data.get(CONF_DATA_COLLECTION_OPTED_IN) != opted_in:
+        new_data = entry.data.copy()
+        new_data[CONF_DATA_COLLECTION_OPTED_IN] = opted_in
+        hass.config_entries.async_update_entry(entry, data=new_data)
 
     if opted_in:
         await async_enable_statistics(driver)
@@ -2428,3 +2472,45 @@ async def websocket_subscribe_node_statistics(
             },
         )
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/hard_reset_controller",
+        vol.Required(ENTRY_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_hard_reset_controller(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    entry: ConfigEntry,
+    client: Client,
+    driver: Driver,
+) -> None:
+    """Hard reset controller."""
+
+    @callback
+    def async_cleanup() -> None:
+        """Remove signal listeners."""
+        for unsub in unsubs:
+            unsub()
+        unsubs.clear()
+
+    @callback
+    def _handle_device_added(device: dr.DeviceEntry) -> None:
+        """Handle device is added."""
+        if entry.entry_id in device.config_entries:
+            connection.send_result(msg[ID], device.id)
+            async_cleanup()
+
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
+        async_dispatcher_connect(
+            hass, EVENT_DEVICE_ADDED_TO_REGISTRY, _handle_device_added
+        )
+    ]
+    await driver.async_hard_reset()

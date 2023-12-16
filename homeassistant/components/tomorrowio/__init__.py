@@ -221,7 +221,9 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             await self.async_refresh()
 
         self.update_interval = async_set_update_interval(self.hass, self._api)
-        self._schedule_refresh()
+        self._async_unsub_refresh()
+        if self._listeners:
+            self._schedule_refresh()
 
     async def async_unload_entry(self, entry: ConfigEntry) -> bool | None:
         """Unload a config entry from coordinator.
@@ -299,6 +301,8 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     [
                         TMRW_ATTR_TEMPERATURE_LOW,
                         TMRW_ATTR_TEMPERATURE_HIGH,
+                        TMRW_ATTR_DEW_POINT,
+                        TMRW_ATTR_HUMIDITY,
                         TMRW_ATTR_WIND_SPEED,
                         TMRW_ATTR_WIND_DIRECTION,
                         TMRW_ATTR_CONDITION,
@@ -323,6 +327,7 @@ class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
     """Base Tomorrow.io Entity."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -336,7 +341,6 @@ class TomorrowioEntity(CoordinatorEntity[TomorrowioDataUpdateCoordinator]):
         self._config_entry = config_entry
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._config_entry.data[CONF_API_KEY])},
-            name=INTEGRATION_NAME,
             manufacturer=INTEGRATION_NAME,
             sw_version=f"v{self.api_version}",
             entry_type=DeviceEntryType.SERVICE,

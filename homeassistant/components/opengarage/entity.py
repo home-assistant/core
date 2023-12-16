@@ -12,6 +12,8 @@ from . import DOMAIN, OpenGarageDataUpdateCoordinator
 class OpenGarageEntity(CoordinatorEntity[OpenGarageDataUpdateCoordinator]):
     """Representation of a OpenGarage entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         open_garage_data_coordinator: OpenGarageDataUpdateCoordinator,

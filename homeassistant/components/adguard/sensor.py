@@ -22,18 +22,11 @@ SCAN_INTERVAL = timedelta(seconds=300)
 PARALLEL_UPDATES = 4
 
 
-@dataclass
-class AdGuardHomeEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(kw_only=True)
+class AdGuardHomeEntityDescription(SensorEntityDescription):
+    """Describes AdGuard Home sensor entity."""
 
     value_fn: Callable[[AdGuardHome], Coroutine[Any, Any, int | float]]
-
-
-@dataclass
-class AdGuardHomeEntityDescription(
-    SensorEntityDescription, AdGuardHomeEntityDescriptionMixin
-):
-    """Describes AdGuard Home sensor entity."""
 
 
 SENSORS: tuple[AdGuardHomeEntityDescription, ...] = (

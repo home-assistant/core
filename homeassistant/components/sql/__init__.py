@@ -24,7 +24,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.template_entity import CONF_AVAILABILITY, CONF_PICTURE
+from homeassistant.helpers.trigger_template_entity import (
+    CONF_AVAILABILITY,
+    CONF_PICTURE,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN, PLATFORMS

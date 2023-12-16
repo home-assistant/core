@@ -7,12 +7,27 @@ set_location:
       required: true
       example: 32.87336
       selector:
-        text:
+        number:
+          mode: box
+          min: -90
+          max: 90
+          step: any
     longitude:
       required: true
       example: 117.22743
       selector:
-        text:
+        number:
+          mode: box
+          min: -180
+          max: 180
+          step: any
+    elevation:
+      required: false
+      example: 120
+      selector:
+        number:
+          mode: box
+          step: any
 
 stop:
 toggle:
@@ -45,3 +60,5 @@ reload_config_entry:
         text:
 
 save_persistent_states:
+
+reload_all:

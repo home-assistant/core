@@ -16,7 +16,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
@@ -204,7 +204,7 @@ class FroniusSolarNet:
 
             # Only for re-scans. Initial setup adds entities through sensor.async_setup_entry
             if self.config_entry.state == ConfigEntryState.LOADED:
-                dispatcher_send(self.hass, SOLAR_NET_DISCOVERY_NEW, _coordinator)
+                async_dispatcher_send(self.hass, SOLAR_NET_DISCOVERY_NEW, _coordinator)
 
             _LOGGER.debug(
                 "New inverter added (UID: %s)",

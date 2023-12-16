@@ -1,7 +1,5 @@
 """Test removing statistics duplicates."""
 from collections.abc import Callable
-
-# pylint: disable=invalid-name
 import importlib
 from pathlib import Path
 import sys

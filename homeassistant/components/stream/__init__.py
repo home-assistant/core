@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING, Any, Final, cast
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_LOGGING_CHANGED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -188,36 +188,32 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def filter_libav_logging() -> None:
-    """Filter libav logging to only log when the stream logger is at DEBUG."""
+@callback
+def update_pyav_logging(_event: Event | None = None) -> None:
+    """Adjust libav logging to only log when the stream logger is at DEBUG."""
 
-    def libav_filter(record: logging.LogRecord) -> bool:
-        return logging.getLogger(__name__).isEnabledFor(logging.DEBUG)
+    def set_pyav_logging(enable: bool) -> None:
+        """Turn PyAV logging on or off."""
+        import av  # pylint: disable=import-outside-toplevel
 
-    for logging_namespace in (
-        "libav.NULL",
-        "libav.h264",
-        "libav.hevc",
-        "libav.hls",
-        "libav.mp4",
-        "libav.mpegts",
-        "libav.rtsp",
-        "libav.tcp",
-        "libav.tls",
-    ):
-        logging.getLogger(logging_namespace).addFilter(libav_filter)
+        av.logging.set_level(av.logging.VERBOSE if enable else av.logging.FATAL)
 
-    # Set log level to error for libav.mp4
-    logging.getLogger("libav.mp4").setLevel(logging.ERROR)
-    # Suppress "deprecated pixel format" WARNING
-    logging.getLogger("libav.swscaler").setLevel(logging.ERROR)
+    # enable PyAV logging iff Stream logger is set to debug
+    set_pyav_logging(logging.getLogger(__name__).isEnabledFor(logging.DEBUG))
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up stream."""
 
-    # Drop libav log messages if stream logging is above DEBUG
-    filter_libav_logging()
+    # Only pass through PyAV log messages if stream logging is above DEBUG
+    cancel_logging_listener = hass.bus.async_listen(
+        EVENT_LOGGING_CHANGED, update_pyav_logging
+    )
+    # libav.mp4 and libav.swscaler have a few unimportant messages that are logged
+    # at logging.WARNING. Set those Logger levels to logging.ERROR
+    for logging_namespace in ("libav.mp4", "libav.swscaler"):
+        logging.getLogger(logging_namespace).setLevel(logging.ERROR)
+    update_pyav_logging()
 
     # Keep import here so that we can import stream integration without installing reqs
     # pylint: disable-next=import-outside-toplevel
@@ -258,6 +254,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ]:
             await asyncio.wait(awaitables)
         _LOGGER.debug("Stopped stream workers")
+        cancel_logging_listener()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
@@ -537,6 +534,7 @@ class Stream:
         self,
         width: int | None = None,
         height: int | None = None,
+        wait_for_next_keyframe: bool = False,
     ) -> bytes | None:
         """Fetch an image from the Stream and return it as a jpeg in bytes.
 
@@ -548,7 +546,9 @@ class Stream:
         self.add_provider(HLS_PROVIDER)
         await self.start()
         return await self._keyframe_converter.async_get_image(
-            width=width, height=height
+            width=width,
+            height=height,
+            wait_for_next_keyframe=wait_for_next_keyframe,
         )
 
     def get_diagnostics(self) -> dict[str, Any]:

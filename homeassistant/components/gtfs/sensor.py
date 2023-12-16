@@ -505,7 +505,6 @@ def setup_platform(
     joined_path = os.path.join(gtfs_dir, sqlite_file)
     gtfs = pygtfs.Schedule(joined_path)
 
-    # pylint: disable=no-member
     if not gtfs.feeds:
         pygtfs.append_feed(gtfs, os.path.join(gtfs_dir, data))
 

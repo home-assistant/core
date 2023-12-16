@@ -38,7 +38,7 @@ class DatasetEntry:
     tlv: str
 
     created: datetime = dataclasses.field(default_factory=dt_util.utcnow)
-    id: str = dataclasses.field(default_factory=ulid_util.ulid)
+    id: str = dataclasses.field(default_factory=ulid_util.ulid_now)
 
     @property
     def channel(self) -> int | None:
@@ -202,8 +202,17 @@ class DatasetStore:
             raise HomeAssistantError("Invalid dataset")
 
         # Bail out if the dataset already exists
-        if any(entry for entry in self.datasets.values() if entry.dataset == dataset):
-            return
+        entry: DatasetEntry | None
+        for entry in self.datasets.values():
+            if entry.dataset == dataset:
+                if (
+                    preferred_border_agent_id
+                    and entry.preferred_border_agent_id is None
+                ):
+                    self.async_set_preferred_border_agent_id(
+                        entry.id, preferred_border_agent_id
+                    )
+                return
 
         # Update if dataset with same extended pan id exists and the timestamp
         # is newer
@@ -248,6 +257,10 @@ class DatasetStore:
                 self.datasets[entry.id], tlv=tlv
             )
             self.async_schedule_save()
+            if preferred_border_agent_id and entry.preferred_border_agent_id is None:
+                self.async_set_preferred_border_agent_id(
+                    entry.id, preferred_border_agent_id
+                )
             return
 
         entry = DatasetEntry(

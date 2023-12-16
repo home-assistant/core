@@ -4,10 +4,15 @@ from __future__ import annotations
 import contextlib
 from typing import Any, Final
 
-from aioshelly.block_device import BlockDevice
+from aioshelly.block_device import BlockDevice, BlockUpdateType
 from aioshelly.common import ConnectionOptions
-from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
-from aioshelly.rpc_device import RpcDevice, UpdateType
+from aioshelly.const import RPC_GENERATIONS
+from aioshelly.exceptions import (
+    DeviceConnectionError,
+    InvalidAuthError,
+    MacAddressMismatchError,
+)
+from aioshelly.rpc_device import RpcDevice, RpcUpdateType
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -45,7 +50,6 @@ from .utils import (
     get_block_device_sleep_period,
     get_coap_context,
     get_device_entry_gen,
-    get_rpc_device_sleep_period,
     get_rpc_device_wakeup_period,
     get_ws_context,
 )
@@ -54,6 +58,7 @@ BLOCK_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.COVER,
+    Platform.EVENT,
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -68,7 +73,9 @@ BLOCK_SLEEPING_PLATFORMS: Final = [
 RPC_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.COVER,
+    Platform.EVENT,
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -117,7 +124,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     get_entry_data(hass)[entry.entry_id] = ShellyEntryData()
 
-    if get_device_entry_gen(entry) == 2:
+    if get_device_entry_gen(entry) in RPC_GENERATIONS:
         return await _async_setup_rpc_entry(hass, entry)
 
     return await _async_setup_block_entry(hass, entry)
@@ -168,7 +175,7 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     @callback
-    def _async_device_online(_: Any) -> None:
+    def _async_device_online(_: Any, update_type: BlockUpdateType) -> None:
         LOGGER.debug("Device %s is online, resuming setup", entry.title)
         shelly_entry_data.device = None
 
@@ -185,7 +192,7 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         LOGGER.debug("Setting up online block device %s", entry.title)
         try:
             await device.initialize()
-        except DeviceConnectionError as err:
+        except (DeviceConnectionError, MacAddressMismatchError) as err:
             raise ConfigEntryNotReady(repr(err)) from err
         except InvalidAuthError as err:
             raise ConfigEntryAuthFailed(repr(err)) from err
@@ -253,15 +260,13 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
         await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     @callback
-    def _async_device_online(_: Any, update_type: UpdateType) -> None:
+    def _async_device_online(_: Any, update_type: RpcUpdateType) -> None:
         LOGGER.debug("Device %s is online, resuming setup", entry.title)
         shelly_entry_data.device = None
 
         if sleep_period is None:
             data = {**entry.data}
-            data[CONF_SLEEP_PERIOD] = get_rpc_device_sleep_period(
-                device.config
-            ) or get_rpc_device_wakeup_period(device.status)
+            data[CONF_SLEEP_PERIOD] = get_rpc_device_wakeup_period(device.status)
             hass.config_entries.async_update_entry(entry, data=data)
 
         hass.async_create_task(_async_rpc_device_setup())
@@ -271,7 +276,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
         LOGGER.debug("Setting up online RPC device %s", entry.title)
         try:
             await device.initialize()
-        except DeviceConnectionError as err:
+        except (DeviceConnectionError, MacAddressMismatchError) as err:
             raise ConfigEntryNotReady(repr(err)) from err
         except InvalidAuthError as err:
             raise ConfigEntryAuthFailed(repr(err)) from err
@@ -309,7 +314,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not entry.data.get(CONF_SLEEP_PERIOD):
         platforms = RPC_PLATFORMS
 
-    if get_device_entry_gen(entry) == 2:
+    if get_device_entry_gen(entry) in RPC_GENERATIONS:
         if unload_ok := await hass.config_entries.async_unload_platforms(
             entry, platforms
         ):

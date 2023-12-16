@@ -313,6 +313,7 @@ async def test_fix_issue(
         "flow_id": ANY,
         "handler": domain,
         "last_step": None,
+        "preview": None,
         "step_id": step,
         "type": "form",
     }
@@ -337,6 +338,7 @@ async def test_fix_issue(
         "description_placeholders": None,
         "flow_id": flow_id,
         "handler": domain,
+        "minor_version": 1,
         "type": "create_entry",
         "version": 1,
     }

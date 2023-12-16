@@ -99,10 +99,9 @@ from homeassistant.generated.countries import COUNTRIES
 from homeassistant.generated.languages import LANGUAGES
 from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
+from homeassistant.util.yaml.objects import NodeStrClass
 
 from . import script_variables as script_variables_helper, template as template_helper
-
-# pylint: disable=invalid-name
 
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
 
@@ -205,12 +204,9 @@ def boolean(value: Any) -> bool:
     raise vol.Invalid(f"invalid boolean value {value}")
 
 
-_WS = re.compile("\\s*")
-
-
 def whitespace(value: Any) -> str:
     """Validate result contains only whitespace."""
-    if isinstance(value, str) and _WS.fullmatch(value):
+    if isinstance(value, str) and (value == "" or value.isspace()):
         return value
 
     raise vol.Invalid(f"contains non-whitespace: {value}")
@@ -353,6 +349,30 @@ comp_entity_ids_or_uuids = vol.Any(
     vol.All(vol.Lower, vol.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_NONE)),
     entity_ids_or_uuids,
 )
+
+
+def domain_key(config_key: Any) -> str:
+    """Validate a top level config key with an optional label and return the domain.
+
+    A domain is separated from a label by one or more spaces, empty labels are not
+    allowed.
+
+    Examples:
+    'hue' returns 'hue'
+    'hue 1' returns 'hue'
+    'hue  1' returns 'hue'
+    'hue ' raises
+    'hue  ' raises
+    """
+    if not isinstance(config_key, str):
+        raise vol.Invalid("invalid domain", path=[config_key])
+
+    parts = config_key.partition(" ")
+    _domain = parts[0] if parts[2].strip(" ") else config_key
+    if not _domain or _domain.strip(" ") != _domain:
+        raise vol.Invalid("invalid domain", path=[config_key])
+
+    return _domain
 
 
 def entity_domain(domain: str | list[str]) -> Callable[[Any], str]:
@@ -586,7 +606,11 @@ def string(value: Any) -> str:
         raise vol.Invalid("string value is None")
 
     # This is expected to be the most common case, so check it first.
-    if type(value) is str:  # noqa: E721
+    if (
+        type(value) is str  # noqa: E721
+        or type(value) is NodeStrClass  # noqa: E721
+        or isinstance(value, str)
+    ):
         return value
 
     if isinstance(value, template_helper.ResultWrapper):
@@ -601,7 +625,7 @@ def string(value: Any) -> str:
 def string_with_no_html(value: Any) -> str:
     """Validate that the value is a string without HTML."""
     value = string(value)
-    regex = re.compile(r"<[a-z][\s\S]*>")
+    regex = re.compile(r"<[a-z].*?>", re.IGNORECASE)
     if regex.search(value):
         raise vol.Invalid("the string should not contain HTML")
     return str(value)
@@ -743,7 +767,6 @@ def socket_timeout(value: Any | None) -> object:
         raise vol.Invalid(f"Invalid socket timeout: {err}") from err
 
 
-# pylint: disable=no-value-for-parameter
 def url(
     value: Any,
     _schema_list: frozenset[UrlProtocolSchema] = EXTERNAL_URL_PROTOCOL_SCHEMA_LIST,
@@ -1360,7 +1383,7 @@ STATE_CONDITION_ATTRIBUTE_SCHEMA = vol.Schema(
 )
 
 
-def STATE_CONDITION_SCHEMA(value: Any) -> dict:  # pylint: disable=invalid-name
+def STATE_CONDITION_SCHEMA(value: Any) -> dict:
     """Validate a state condition."""
     if not isinstance(value, dict):
         raise vol.Invalid("Expected a dictionary")

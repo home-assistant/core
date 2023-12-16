@@ -33,7 +33,13 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL, CONF_TOKEN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_DEVICE,
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_TOKEN,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -41,7 +47,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import color, dt as dt_util
 
 from .const import (
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     DOMAIN,
@@ -449,14 +454,11 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 
         if ATTR_BRIGHTNESS in kwargs and ATTR_COLOR_TEMP in kwargs:
             _LOGGER.debug(
-                (
-                    "Setting brightness and color temperature: "
-                    "%s %s%%, %s mireds, %s%% cct"
-                ),
+                "Setting brightness and color temperature: %s %s%%, %s mireds, %s%% cct",
                 brightness,
-                percent_brightness,  # pylint: disable=used-before-assignment
+                percent_brightness,
                 color_temp,
-                percent_color_temp,  # pylint: disable=used-before-assignment
+                percent_color_temp,
             )
 
             result = await self._try_command(
@@ -832,8 +834,8 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
             _LOGGER.debug(
                 "Setting brightness and color: %s %s%%, %s",
                 brightness,
-                percent_brightness,  # pylint: disable=used-before-assignment
-                rgb,  # pylint: disable=used-before-assignment
+                percent_brightness,
+                rgb,
             )
 
             result = await self._try_command(
@@ -856,7 +858,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
                 brightness,
                 percent_brightness,
                 color_temp,
-                percent_color_temp,  # pylint: disable=used-before-assignment
+                percent_color_temp,
             )
 
             result = await self._try_command(

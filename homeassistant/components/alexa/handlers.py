@@ -73,6 +73,7 @@ from .errors import (
     AlexaSecurityPanelAuthorizationRequired,
     AlexaTempRangeError,
     AlexaUnsupportedThermostatModeError,
+    AlexaUnsupportedThermostatTargetStateError,
     AlexaVideoActionNotPermittedForContentError,
 )
 from .state_report import AlexaDirective, AlexaResponse, async_enable_proactive_mode
@@ -911,7 +912,13 @@ async def async_api_adjust_target_temp(
             }
         )
     else:
-        target_temp = float(entity.attributes[ATTR_TEMPERATURE]) + temp_delta
+        current_target_temp: str | None = entity.attributes.get(ATTR_TEMPERATURE)
+        if current_target_temp is None:
+            raise AlexaUnsupportedThermostatTargetStateError(
+                "The current target temperature is not set, "
+                "cannot adjust target temperature"
+            )
+        target_temp = float(current_target_temp) + temp_delta
 
         if target_temp < min_temp or target_temp > max_temp:
             raise AlexaTempRangeError(hass, target_temp, min_temp, max_temp)
@@ -1297,13 +1304,14 @@ async def async_api_set_range(
     service = None
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
     range_value = directive.payload["rangeValue"]
+    supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
     # Cover Position
     if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         range_value = int(range_value)
-        if range_value == 0:
+        if supported & cover.CoverEntityFeature.CLOSE and range_value == 0:
             service = cover.SERVICE_CLOSE_COVER
-        elif range_value == 100:
+        elif supported & cover.CoverEntityFeature.OPEN and range_value == 100:
             service = cover.SERVICE_OPEN_COVER
         else:
             service = cover.SERVICE_SET_COVER_POSITION
@@ -1312,9 +1320,9 @@ async def async_api_set_range(
     # Cover Tilt
     elif instance == f"{cover.DOMAIN}.tilt":
         range_value = int(range_value)
-        if range_value == 0:
+        if supported & cover.CoverEntityFeature.CLOSE_TILT and range_value == 0:
             service = cover.SERVICE_CLOSE_COVER_TILT
-        elif range_value == 100:
+        elif supported & cover.CoverEntityFeature.OPEN_TILT and range_value == 100:
             service = cover.SERVICE_OPEN_COVER_TILT
         else:
             service = cover.SERVICE_SET_COVER_TILT_POSITION
@@ -1325,13 +1333,11 @@ async def async_api_set_range(
         range_value = int(range_value)
         if range_value == 0:
             service = fan.SERVICE_TURN_OFF
+        elif supported & fan.FanEntityFeature.SET_SPEED:
+            service = fan.SERVICE_SET_PERCENTAGE
+            data[fan.ATTR_PERCENTAGE] = range_value
         else:
-            supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-            if supported and fan.FanEntityFeature.SET_SPEED:
-                service = fan.SERVICE_SET_PERCENTAGE
-                data[fan.ATTR_PERCENTAGE] = range_value
-            else:
-                service = fan.SERVICE_TURN_ON
+            service = fan.SERVICE_TURN_ON
 
     # Humidifier target humidity
     elif instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}":

@@ -23,18 +23,11 @@ from homeassistant.helpers.update_coordinator import (
 from .const import DOMAIN
 
 
-@dataclass
-class RDWBinarySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(kw_only=True)
+class RDWBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes RDW binary sensor entity."""
 
     is_on_fn: Callable[[Vehicle], bool | None]
-
-
-@dataclass
-class RDWBinarySensorEntityDescription(
-    BinarySensorEntityDescription, RDWBinarySensorEntityDescriptionMixin
-):
-    """Describes RDW binary sensor entity."""
 
 
 BINARY_SENSORS: tuple[RDWBinarySensorEntityDescription, ...] = (

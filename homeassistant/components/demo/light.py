@@ -106,7 +106,7 @@ class DemoLight(LightEntity):
         state: bool,
         available: bool = False,
         brightness: int = 180,
-        ct: int | None = None,  # pylint: disable=invalid-name
+        ct: int | None = None,
         effect_list: list[str] | None = None,
         effect: str | None = None,
         hs_color: tuple[int, int] | None = None,

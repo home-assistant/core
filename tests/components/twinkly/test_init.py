@@ -3,14 +3,9 @@
 from unittest.mock import patch
 from uuid import uuid4
 
-from homeassistant.components.twinkly.const import (
-    CONF_HOST,
-    CONF_ID,
-    CONF_NAME,
-    DOMAIN as TWINKLY_DOMAIN,
-)
+from homeassistant.components.twinkly.const import DOMAIN as TWINKLY_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_MODEL
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from . import TEST_HOST, TEST_MODEL, TEST_NAME_ORIGINAL, ClientMock

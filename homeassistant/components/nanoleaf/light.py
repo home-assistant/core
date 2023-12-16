@@ -47,6 +47,7 @@ class NanoleafLight(NanoleafEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
     _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
     _attr_name = None
+    _attr_icon = "mdi:triangle-outline"
 
     def __init__(
         self, nanoleaf: Nanoleaf, coordinator: DataUpdateCoordinator[None]
@@ -82,11 +83,6 @@ class NanoleafLight(NanoleafEntity, LightEntity):
     def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
         return self._nanoleaf.effects_list
-
-    @property
-    def icon(self) -> str:
-        """Return the icon to use in the frontend, if any."""
-        return "mdi:triangle-outline"
 
     @property
     def is_on(self) -> bool:

@@ -36,7 +36,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.template_entity import (
+from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
     ManualTriggerSensorEntity,
@@ -123,7 +123,7 @@ async def async_setup_entry(
             value_template.hass = hass
 
     name_template = Template(name, hass)
-    trigger_entity_config = {CONF_NAME: name_template}
+    trigger_entity_config = {CONF_NAME: name_template, CONF_UNIQUE_ID: entry.entry_id}
     for key in TRIGGER_ENTITY_OPTIONS:
         if key not in entry.options:
             continue
@@ -321,13 +321,12 @@ class SQLSensor(ManualTriggerSensorEntity):
         self._attr_extra_state_attributes = {}
         self._use_database_executor = use_database_executor
         self._lambda_stmt = _generate_lambda_stmt(query)
-        if not yaml:
+        if not yaml and (unique_id := trigger_entity_config.get(CONF_UNIQUE_ID)):
             self._attr_name = None
             self._attr_has_entity_name = True
-        if not yaml and trigger_entity_config.get(CONF_UNIQUE_ID):
             self._attr_device_info = DeviceInfo(
                 entry_type=DeviceEntryType.SERVICE,
-                identifiers={(DOMAIN, trigger_entity_config[CONF_UNIQUE_ID])},
+                identifiers={(DOMAIN, unique_id)},
                 manufacturer="SQL",
                 name=self.name,
             )
@@ -363,6 +362,8 @@ class SQLSensor(ManualTriggerSensorEntity):
                 self._query,
                 redact_credentials(str(err)),
             )
+            sess.rollback()
+            sess.close()
             return
 
         for res in result.mappings():

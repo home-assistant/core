@@ -2,7 +2,6 @@
 from datetime import timedelta
 import logging
 import time
-from unittest.mock import patch
 
 import pytest
 
@@ -25,6 +24,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import (
     inject_bluetooth_service_info,
     patch_all_discovered_devices,
+    patch_bluetooth_time,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -869,7 +869,6 @@ async def test_v1_sensors(
                 {
                     "sensor_entity": "sensor.test_device_18b2_timestamp",
                     "friendly_name": "Test Device 18B2 Timestamp",
-                    "unit_of_measurement": "s",
                     "state_class": "measurement",
                     "expected_state": "2023-05-14T19:41:17+00:00",
                 },
@@ -940,6 +939,36 @@ async def test_v1_sensors(
                     "unit_of_measurement": "L",
                     "state_class": "total",
                     "expected_state": "19551.879",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x44\x53\x0C\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x21",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_text",
+                    "friendly_name": "Test Device 18B2 Text",
+                    "expected_state": "Hello World!",
+                },
+            ],
+        ),
+        (
+            "A4:C1:38:8D:18:B2",
+            make_bthome_v2_adv(
+                "A4:C1:38:8D:18:B2",
+                b"\x44\x54\x0C\x48\x65\x6C\x6C\x6F\x20\x57\x6F\x72\x6C\x64\x21",
+            ),
+            None,
+            [
+                {
+                    "sensor_entity": "sensor.test_device_18b2_raw",
+                    "friendly_name": "Test Device 18B2 Raw",
+                    "expected_state": "48656c6c6f20576f726c6421",
                 },
             ],
         ),
@@ -1080,7 +1109,9 @@ async def test_v2_sensors(
         if ATTR_UNIT_OF_MEASUREMENT in sensor_attr:
             # Some sensors don't have a unit of measurement
             assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == meas["unit_of_measurement"]
-        assert sensor_attr[ATTR_STATE_CLASS] == meas["state_class"]
+        if ATTR_STATE_CLASS in sensor_attr:
+            # Some sensors have state class None
+            assert sensor_attr[ATTR_STATE_CLASS] == meas["state_class"]
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -1119,10 +1150,7 @@ async def test_unavailable(hass: HomeAssistant) -> None:
     # Fastforward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with patch_bluetooth_time(monotonic_now), patch_all_discovered_devices([]):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()
@@ -1175,10 +1203,7 @@ async def test_sleepy_device(hass: HomeAssistant) -> None:
     # Fastforward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with patch_bluetooth_time(monotonic_now), patch_all_discovered_devices([]):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()
@@ -1231,10 +1256,7 @@ async def test_sleepy_device_restore_state(hass: HomeAssistant) -> None:
     # Fastforward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with patch_bluetooth_time(monotonic_now), patch_all_discovered_devices([]):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()

@@ -63,6 +63,7 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
         """Return the brightness of the light."""
         return self._device["status"] == OCCUPANCY_GROUP_OCCUPIED
 
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._smartbridge.add_occupancy_subscriber(

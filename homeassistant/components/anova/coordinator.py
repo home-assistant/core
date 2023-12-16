@@ -30,7 +30,7 @@ class AnovaCoordinator(DataUpdateCoordinator[APCUpdate]):
             update_interval=timedelta(seconds=30),
         )
         assert self.config_entry is not None
-        self._device_unique_id = anova_device.device_key
+        self.device_unique_id = anova_device.device_key
         self.anova_device = anova_device
         self.device_info: DeviceInfo | None = None
 
@@ -38,7 +38,7 @@ class AnovaCoordinator(DataUpdateCoordinator[APCUpdate]):
     def async_setup(self, firmware_version: str) -> None:
         """Set the firmware version info."""
         self.device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device_unique_id)},
+            identifiers={(DOMAIN, self.device_unique_id)},
             name="Anova Precision Cooker",
             manufacturer="Anova",
             model="Precision Cooker",

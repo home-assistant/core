@@ -95,6 +95,12 @@
         "temperature_difference": -0.4,
         "valve_position": 0.0
       },
+      "temperature_offset": {
+        "lower_bound": -2.0,
+        "resolution": 0.1,
+        "setpoint": 0.0,
+        "upper_bound": 2.0
+      },
       "vendor": "Plugwise",
       "zigbee_mac_address": "ABCD012345670A17"
     },
@@ -106,12 +112,12 @@
         "Bios Schema met Film Avond",
         "GF7  Woonkamer",
         "Badkamer Schema",
-        "CV Jessie"
+        "CV Jessie",
+        "off"
       ],
       "dev_class": "zone_thermostat",
       "firmware": "2016-10-27T02:00:00+02:00",
       "hardware": "255",
-      "last_used": "CV Jessie",
       "location": "82fa13f017d240daa0d0ea1775420f24",
       "mode": "auto",
       "model": "Lisa",
@@ -122,6 +128,12 @@
         "battery": 37,
         "setpoint": 15.0,
         "temperature": 17.2
+      },
+      "temperature_offset": {
+        "lower_bound": -2.0,
+        "resolution": 0.1,
+        "setpoint": 0.0,
+        "upper_bound": 2.0
       },
       "thermostat": {
         "lower_bound": 0.0,
@@ -200,6 +212,12 @@
         "temperature_difference": -0.2,
         "valve_position": 0.0
       },
+      "temperature_offset": {
+        "lower_bound": -2.0,
+        "resolution": 0.1,
+        "setpoint": 0.0,
+        "upper_bound": 2.0
+      },
       "vendor": "Plugwise",
       "zigbee_mac_address": "ABCD012345670A09"
     },
@@ -217,6 +235,12 @@
         "temperature_difference": 3.5,
         "valve_position": 100
       },
+      "temperature_offset": {
+        "lower_bound": -2.0,
+        "resolution": 0.1,
+        "setpoint": 0.0,
+        "upper_bound": 2.0
+      },
       "vendor": "Plugwise",
       "zigbee_mac_address": "ABCD012345670A02"
     },
@@ -228,12 +252,12 @@
         "Bios Schema met Film Avond",
         "GF7  Woonkamer",
         "Badkamer Schema",
-        "CV Jessie"
+        "CV Jessie",
+        "off"
       ],
       "dev_class": "zone_thermostat",
       "firmware": "2016-08-02T02:00:00+02:00",
       "hardware": "255",
-      "last_used": "GF7  Woonkamer",
       "location": "c50f167537524366a5af7aa3942feb1e",
       "mode": "auto",
       "model": "Lisa",
@@ -244,6 +268,12 @@
         "battery": 34,
         "setpoint": 21.5,
         "temperature": 20.9
+      },
+      "temperature_offset": {
+        "lower_bound": -2.0,
+        "resolution": 0.1,
+        "setpoint": 0.0,
+        "upper_bound": 2.0
       },
       "thermostat": {
         "lower_bound": 0.0,
@@ -289,6 +319,12 @@
         "temperature_difference": 0.1,
         "valve_position": 0.0
       },
+      "temperature_offset": {
+        "lower_bound": -2.0,
+        "resolution": 0.1,
+        "setpoint": 0.0,
+        "upper_bound": 2.0
+      },
       "vendor": "Plugwise",
       "zigbee_mac_address": "ABCD012345670A10"
     },
@@ -300,22 +336,28 @@
         "Bios Schema met Film Avond",
         "GF7  Woonkamer",
         "Badkamer Schema",
-        "CV Jessie"
+        "CV Jessie",
+        "off"
       ],
       "dev_class": "zone_thermostat",
       "firmware": "2016-10-27T02:00:00+02:00",
       "hardware": "255",
-      "last_used": "Badkamer Schema",
       "location": "12493538af164a409c6a1c79e38afe1c",
       "mode": "heat",
       "model": "Lisa",
       "name": "Zone Lisa Bios",
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
-      "select_schedule": "None",
+      "select_schedule": "off",
       "sensors": {
         "battery": 67,
         "setpoint": 13.0,
         "temperature": 16.5
+      },
+      "temperature_offset": {
+        "lower_bound": -2.0,
+        "resolution": 0.1,
+        "setpoint": 0.0,
+        "upper_bound": 2.0
       },
       "thermostat": {
         "lower_bound": 0.0,
@@ -334,24 +376,30 @@
         "Bios Schema met Film Avond",
         "GF7  Woonkamer",
         "Badkamer Schema",
-        "CV Jessie"
+        "CV Jessie",
+        "off"
       ],
       "dev_class": "thermostatic_radiator_valve",
       "firmware": "2019-03-27T01:00:00+01:00",
       "hardware": "1",
-      "last_used": "Badkamer Schema",
       "location": "446ac08dd04d4eff8ac57489757b7314",
       "mode": "heat",
       "model": "Tom/Floor",
       "name": "CV Kraan Garage",
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
-      "select_schedule": "None",
+      "select_schedule": "off",
       "sensors": {
         "battery": 68,
         "setpoint": 5.5,
         "temperature": 15.6,
         "temperature_difference": 0.0,
         "valve_position": 0.0
+      },
+      "temperature_offset": {
+        "lower_bound": -2.0,
+        "resolution": 0.1,
+        "setpoint": 0.0,
+        "upper_bound": 2.0
       },
       "thermostat": {
         "lower_bound": 0.0,
@@ -370,12 +418,12 @@
         "Bios Schema met Film Avond",
         "GF7  Woonkamer",
         "Badkamer Schema",
-        "CV Jessie"
+        "CV Jessie",
+        "off"
       ],
       "dev_class": "zone_thermostat",
       "firmware": "2016-10-27T02:00:00+02:00",
       "hardware": "255",
-      "last_used": "Badkamer Schema",
       "location": "08963fec7c53423ca5680aa4cb502c63",
       "mode": "auto",
       "model": "Lisa",
@@ -386,6 +434,12 @@
         "battery": 92,
         "setpoint": 14.0,
         "temperature": 18.9
+      },
+      "temperature_offset": {
+        "lower_bound": -2.0,
+        "resolution": 0.1,
+        "setpoint": 0.0,
+        "upper_bound": 2.0
       },
       "thermostat": {
         "lower_bound": 0.0,
@@ -419,6 +473,7 @@
     "cooling_present": false,
     "gateway_id": "fe799307f1624099878210aa0b9f1475",
     "heater_id": "90986d591dcd426cae3ec3e8111ff730",
+    "item_count": 315,
     "notifications": {
       "af82e4ccf9c548528166d38e560662a4": {
         "warning": "Node Plug (with MAC address 000D6F000D13CB01, in room 'n.a.') has been unreachable since 23:03 2020-01-18. Please check the connection and restart the device."

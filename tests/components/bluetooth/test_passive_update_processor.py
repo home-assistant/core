@@ -48,6 +48,7 @@ from . import (
     inject_bluetooth_service_info,
     inject_bluetooth_service_info_bleak,
     patch_all_discovered_devices,
+    patch_bluetooth_time,
 )
 
 from tests.common import (
@@ -110,6 +111,65 @@ GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
             device_class=SensorDeviceClass.PRESSURE,
         ),
     },
+)
+
+GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE_WITH_TEMP_CHANGE = PassiveBluetoothDataUpdate(
+    devices={
+        None: DeviceInfo(
+            name="Test Device", model="Test Model", manufacturer="Test Manufacturer"
+        ),
+    },
+    entity_data={
+        PassiveBluetoothEntityKey("temperature", None): 15.5,
+        PassiveBluetoothEntityKey("pressure", None): 1234,
+    },
+    entity_names={
+        PassiveBluetoothEntityKey("temperature", None): "Temperature",
+        PassiveBluetoothEntityKey("pressure", None): "Pressure",
+    },
+    entity_descriptions={
+        PassiveBluetoothEntityKey("temperature", None): SensorEntityDescription(
+            key="temperature",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_class=SensorDeviceClass.TEMPERATURE,
+        ),
+        PassiveBluetoothEntityKey("pressure", None): SensorEntityDescription(
+            key="pressure",
+            native_unit_of_measurement="hPa",
+            device_class=SensorDeviceClass.PRESSURE,
+        ),
+    },
+)
+
+
+GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE_WITH_DEVICE_NAME_AND_TEMP_CHANGE = (
+    PassiveBluetoothDataUpdate(
+        devices={
+            None: DeviceInfo(
+                name="Changed", model="Test Model", manufacturer="Test Manufacturer"
+            ),
+        },
+        entity_data={
+            PassiveBluetoothEntityKey("temperature", None): 15.5,
+            PassiveBluetoothEntityKey("pressure", None): 1234,
+        },
+        entity_names={
+            PassiveBluetoothEntityKey("temperature", None): "Temperature",
+            PassiveBluetoothEntityKey("pressure", None): "Pressure",
+        },
+        entity_descriptions={
+            PassiveBluetoothEntityKey("temperature", None): SensorEntityDescription(
+                key="temperature",
+                native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+                device_class=SensorDeviceClass.TEMPERATURE,
+            ),
+            PassiveBluetoothEntityKey("pressure", None): SensorEntityDescription(
+                key="pressure",
+                native_unit_of_measurement="hPa",
+                device_class=SensorDeviceClass.PRESSURE,
+            ),
+        },
+    )
 )
 
 
@@ -189,9 +249,9 @@ async def test_basic_usage(
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
 
-    # Each listener should receive the same data
-    # since both match
-    assert len(entity_key_events) == 2
+    # Only the all listener should receive the new data
+    # since temperature is not in the new data
+    assert len(entity_key_events) == 1
     assert len(all_events) == 2
 
     # On the second, the entities should already be created
@@ -206,8 +266,130 @@ async def test_basic_usage(
 
     # Each listener should not trigger any more now
     # that they were cancelled
+    assert len(entity_key_events) == 1
+    assert len(all_events) == 2
+    assert len(mock_entity.mock_calls) == 2
+    assert coordinator.available is True
+
+    unregister_processor()
+    cancel_coordinator()
+
+
+async def test_entity_key_is_dispatched_on_entity_key_change(
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
+    """Test entity key listeners are only dispatched on change."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    update_count = 0
+
+    @callback
+    def _mock_update_method(
+        service_info: BluetoothServiceInfo,
+    ) -> dict[str, str]:
+        return {"test": "data"}
+
+    @callback
+    def _async_generate_mock_data(
+        data: dict[str, str],
+    ) -> PassiveBluetoothDataUpdate:
+        """Generate mock data."""
+        assert data == {"test": "data"}
+        nonlocal update_count
+        update_count += 1
+        if update_count > 2:
+            return (
+                GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE_WITH_DEVICE_NAME_AND_TEMP_CHANGE
+            )
+        if update_count > 1:
+            return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE_WITH_TEMP_CHANGE
+        return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
+
+    coordinator = PassiveBluetoothProcessorCoordinator(
+        hass,
+        _LOGGER,
+        "aa:bb:cc:dd:ee:ff",
+        BluetoothScanningMode.ACTIVE,
+        _mock_update_method,
+    )
+    assert coordinator.available is False  # no data yet
+
+    processor = PassiveBluetoothDataProcessor(_async_generate_mock_data)
+
+    unregister_processor = coordinator.async_register_processor(processor)
+    cancel_coordinator = coordinator.async_start()
+
+    entity_key = PassiveBluetoothEntityKey("temperature", None)
+    entity_key_events = []
+    all_events = []
+    mock_entity = MagicMock()
+    mock_add_entities = MagicMock()
+
+    def _async_entity_key_listener(data: PassiveBluetoothDataUpdate | None) -> None:
+        """Mock entity key listener."""
+        entity_key_events.append(data)
+
+    cancel_async_add_entity_key_listener = processor.async_add_entity_key_listener(
+        _async_entity_key_listener,
+        entity_key,
+    )
+
+    def _all_listener(data: PassiveBluetoothDataUpdate | None) -> None:
+        """Mock an all listener."""
+        all_events.append(data)
+
+    cancel_listener = processor.async_add_listener(
+        _all_listener,
+    )
+
+    cancel_async_add_entities_listener = processor.async_add_entities_listener(
+        mock_entity,
+        mock_add_entities,
+    )
+
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+
+    # Each listener should receive the same data
+    # since both match
+    assert len(entity_key_events) == 1
+    assert len(all_events) == 1
+
+    # There should be 4 calls to create entities
+    assert len(mock_entity.mock_calls) == 2
+
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
+
+    # Both listeners should receive the new data
+    # since temperature IS in the new data
     assert len(entity_key_events) == 2
     assert len(all_events) == 2
+
+    # On the second, the entities should already be created
+    # so the mock should not be called again
+    assert len(mock_entity.mock_calls) == 2
+
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+
+    # All listeners should receive the data since
+    # the device name changed
+    assert len(entity_key_events) == 3
+    assert len(all_events) == 3
+
+    # On the second, the entities should already be created
+    # so the mock should not be called again
+    assert len(mock_entity.mock_calls) == 2
+
+    cancel_async_add_entity_key_listener()
+    cancel_listener()
+    cancel_async_add_entities_listener()
+
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
+
+    # Each listener should not trigger any more now
+    # that they were cancelled
+    assert len(entity_key_events) == 3
+    assert len(all_events) == 3
     assert len(mock_entity.mock_calls) == 2
     assert coordinator.available is True
 
@@ -290,9 +472,8 @@ async def test_unavailable_after_no_data(
     assert processor.available is True
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now,
+    with patch_bluetooth_time(
+        monotonic_now,
     ), patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -309,9 +490,8 @@ async def test_unavailable_after_no_data(
 
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 2
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now,
+    with patch_bluetooth_time(
+        monotonic_now,
     ), patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -406,7 +586,7 @@ async def test_exception_from_update_method(
         """Generate mock data."""
         nonlocal run_count
         run_count += 1
-        if run_count == 1:
+        if run_count == 2:
             raise Exception("Test exception")
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
@@ -436,6 +616,7 @@ async def test_exception_from_update_method(
     processor.async_add_listener(MagicMock())
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     assert processor.available is True
 
     # We should go unavailable once we get an exception
@@ -473,7 +654,7 @@ async def test_bad_data_from_update_method(
         """Generate mock data."""
         nonlocal run_count
         run_count += 1
-        if run_count == 1:
+        if run_count == 2:
             return "bad_data"
         return GENERIC_PASSIVE_BLUETOOTH_DATA_UPDATE
 
@@ -503,6 +684,7 @@ async def test_bad_data_from_update_method(
     processor.async_add_listener(MagicMock())
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    saved_callback(GENERIC_BLUETOOTH_SERVICE_INFO, BluetoothChange.ADVERTISEMENT)
     assert processor.available is True
 
     # We should go unavailable once we get bad data
@@ -856,21 +1038,48 @@ async def test_integration_with_entity(
         mock_add_entities,
     )
 
+    entity_key_events = []
+
+    def _async_entity_key_listener(data: PassiveBluetoothDataUpdate | None) -> None:
+        """Mock entity key listener."""
+        entity_key_events.append(data)
+
+    cancel_async_add_entity_key_listener = processor.async_add_entity_key_listener(
+        _async_entity_key_listener,
+        PassiveBluetoothEntityKey(key="humidity", device_id="primary"),
+    )
+
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     # First call with just the remote sensor entities results in them being added
     assert len(mock_add_entities.mock_calls) == 1
+
+    # should have triggered the entity key listener since the
+    # the device is becoming available
+    assert len(entity_key_events) == 1
 
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
     # Second call with just the remote sensor entities does not add them again
     assert len(mock_add_entities.mock_calls) == 1
 
+    # should not have triggered the entity key listener since there
+    # there is no update with the entity key
+    assert len(entity_key_events) == 1
+
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
     # Third call with primary and remote sensor entities adds the primary sensor entities
     assert len(mock_add_entities.mock_calls) == 2
 
+    # should not have triggered the entity key listener since there
+    # there is an update with the entity key
+    assert len(entity_key_events) == 2
+
     inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO_2)
     # Forth call with both primary and remote sensor entities does not add them again
     assert len(mock_add_entities.mock_calls) == 2
+
+    # should not have triggered the entity key listener humidity
+    # is not in the update
+    assert len(entity_key_events) == 2
 
     entities = [
         *mock_add_entities.mock_calls[0][1][0],
@@ -890,6 +1099,7 @@ async def test_integration_with_entity(
     assert entity_one.entity_key == PassiveBluetoothEntityKey(
         key="temperature", device_id="remote"
     )
+    cancel_async_add_entity_key_listener()
     cancel_coordinator()
 
 
@@ -997,6 +1207,7 @@ async def test_integration_with_entity_without_a_device(
     assert entity_one.unique_id == "aa:bb:cc:dd:ee:ff-temperature"
     assert entity_one.device_info == {
         "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
         "name": "Generic",
     }
     assert entity_one.entity_key == PassiveBluetoothEntityKey(
@@ -1185,6 +1396,7 @@ async def test_integration_multiple_entity_platforms(
     assert sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-pressure"
     assert sensor_entity_one.device_info == {
         "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
         "manufacturer": "Test Manufacturer",
         "model": "Test Model",
         "name": "Test Device",
@@ -1201,6 +1413,7 @@ async def test_integration_multiple_entity_platforms(
     assert binary_sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-motion"
     assert binary_sensor_entity_one.device_info == {
         "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
         "manufacturer": "Test Manufacturer",
         "model": "Test Model",
         "name": "Test Device",
@@ -1345,6 +1558,7 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
     assert sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-pressure"
     assert sensor_entity_one.device_info == {
         "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
         "manufacturer": "Test Manufacturer",
         "model": "Test Model",
         "name": "Test Device",
@@ -1361,6 +1575,7 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
     assert binary_sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-motion"
     assert binary_sensor_entity_one.device_info == {
         "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
         "manufacturer": "Test Manufacturer",
         "model": "Test Model",
         "name": "Test Device",
@@ -1425,6 +1640,7 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
     assert sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-pressure"
     assert sensor_entity_one.device_info == {
         "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
         "manufacturer": "Test Manufacturer",
         "model": "Test Model",
         "name": "Test Device",
@@ -1441,6 +1657,7 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
     assert binary_sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-motion"
     assert binary_sensor_entity_one.device_info == {
         "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
         "manufacturer": "Test Manufacturer",
         "model": "Test Model",
         "name": "Test Device",
@@ -1519,6 +1736,7 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
     assert sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-pressure"
     assert sensor_entity_one.device_info == {
         "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
         "manufacturer": "Test Manufacturer",
         "model": "Test Model",
         "name": "Test Device",
@@ -1535,6 +1753,7 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
     assert binary_sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-motion"
     assert binary_sensor_entity_one.device_info == {
         "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
         "manufacturer": "Test Manufacturer",
         "model": "Test Model",
         "name": "Test Device",

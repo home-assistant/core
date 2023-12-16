@@ -42,7 +42,6 @@ from tests.components.media_player import common
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
-# pylint: disable=invalid-name
 FakeUUID = UUID("57355bce-9364-4aa6-ac1e-eb849dccf9e2")
 FakeUUID2 = UUID("57355bce-9364-4aa6-ac1e-eb849dccf9e4")
 FakeGroupUUID = UUID("57355bce-9364-4aa6-ac1e-eb849dccf9e3")
@@ -553,6 +552,7 @@ async def test_auto_cast_chromecasts(hass: HomeAssistant) -> None:
 
 async def test_discover_dynamic_group(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     get_multizone_status_mock,
     get_chromecast_mock,
     caplog: pytest.LogCaptureFixture,
@@ -562,8 +562,6 @@ async def test_discover_dynamic_group(
     cast_2 = get_fake_chromecast_info(host="host_2", port=34567, uuid=FakeUUID2)
     zconf_1 = get_fake_zconf(host="host_1", port=23456)
     zconf_2 = get_fake_zconf(host="host_2", port=34567)
-
-    reg = er.async_get(hass)
 
     # Fake dynamic group info
     tmp1 = MagicMock()
@@ -607,7 +605,9 @@ async def test_discover_dynamic_group(
     get_chromecast_mock.assert_called()
     get_chromecast_mock.reset_mock()
     assert add_dev1.call_count == 0
-    assert reg.async_get_entity_id("media_player", "cast", cast_1.uuid) is None
+    assert (
+        entity_registry.async_get_entity_id("media_player", "cast", cast_1.uuid) is None
+    )
 
     # Discover other dynamic group cast service
     with patch(
@@ -633,7 +633,9 @@ async def test_discover_dynamic_group(
     get_chromecast_mock.assert_called()
     get_chromecast_mock.reset_mock()
     assert add_dev1.call_count == 0
-    assert reg.async_get_entity_id("media_player", "cast", cast_2.uuid) is None
+    assert (
+        entity_registry.async_get_entity_id("media_player", "cast", cast_2.uuid) is None
+    )
 
     # Get update for cast service
     with patch(
@@ -656,7 +658,9 @@ async def test_discover_dynamic_group(
     assert len(tasks) == 0
     get_chromecast_mock.assert_not_called()
     assert add_dev1.call_count == 0
-    assert reg.async_get_entity_id("media_player", "cast", cast_1.uuid) is None
+    assert (
+        entity_registry.async_get_entity_id("media_player", "cast", cast_1.uuid) is None
+    )
 
     # Remove cast service
     assert "Disconnecting from chromecast" not in caplog.text
@@ -766,14 +770,17 @@ async def test_entity_availability(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(("port", "entry_type"), ((8009, None), (12345, None)))
 async def test_device_registry(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, port, entry_type
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    port,
+    entry_type,
 ) -> None:
     """Test device registry integration."""
     assert await async_setup_component(hass, "config", {})
 
     entity_id = "media_player.speaker"
-    reg = er.async_get(hass)
-    dev_reg = dr.async_get(hass)
 
     info = get_fake_chromecast_info(port=port)
 
@@ -791,9 +798,11 @@ async def test_device_registry(
     assert state is not None
     assert state.name == "Speaker"
     assert state.state == "off"
-    assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
-    entity_entry = reg.async_get(entity_id)
-    device_entry = dev_reg.async_get(entity_entry.device_id)
+    assert entity_id == entity_registry.async_get_entity_id(
+        "media_player", "cast", str(info.uuid)
+    )
+    entity_entry = entity_registry.async_get(entity_id)
+    device_entry = device_registry.async_get(entity_entry.device_id)
     assert entity_entry.device_id == device_entry.id
     assert device_entry.entry_type == entry_type
 
@@ -816,14 +825,15 @@ async def test_device_registry(
     await hass.async_block_till_done()
     chromecast.disconnect.assert_called_once()
 
-    assert reg.async_get(entity_id) is None
-    assert dev_reg.async_get(entity_entry.device_id) is None
+    assert entity_registry.async_get(entity_id) is None
+    assert device_registry.async_get(entity_entry.device_id) is None
 
 
-async def test_entity_cast_status(hass: HomeAssistant) -> None:
+async def test_entity_cast_status(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test handling of cast status."""
     entity_id = "media_player.speaker"
-    reg = er.async_get(hass)
 
     info = get_fake_chromecast_info()
 
@@ -840,7 +850,9 @@ async def test_entity_cast_status(hass: HomeAssistant) -> None:
     assert state is not None
     assert state.name == "Speaker"
     assert state.state == "off"
-    assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
+    assert entity_id == entity_registry.async_get_entity_id(
+        "media_player", "cast", str(info.uuid)
+    )
 
     # No media status, pause, play, stop not supported
     assert state.attributes.get("supported_features") == (
@@ -1089,10 +1101,11 @@ async def test_entity_browse_media_audio_only(
     assert expected_child_2 in response["result"]["children"]
 
 
-async def test_entity_play_media(hass: HomeAssistant, quick_play_mock) -> None:
+async def test_entity_play_media(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, quick_play_mock
+) -> None:
     """Test playing media."""
     entity_id = "media_player.speaker"
-    reg = er.async_get(hass)
 
     info = get_fake_chromecast_info()
 
@@ -1108,7 +1121,9 @@ async def test_entity_play_media(hass: HomeAssistant, quick_play_mock) -> None:
     assert state is not None
     assert state.name == "Speaker"
     assert state.state == "off"
-    assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
+    assert entity_id == entity_registry.async_get_entity_id(
+        "media_player", "cast", str(info.uuid)
+    )
 
     # Play_media
     await hass.services.async_call(
@@ -1135,10 +1150,11 @@ async def test_entity_play_media(hass: HomeAssistant, quick_play_mock) -> None:
     )
 
 
-async def test_entity_play_media_cast(hass: HomeAssistant, quick_play_mock) -> None:
+async def test_entity_play_media_cast(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, quick_play_mock
+) -> None:
     """Test playing media with cast special features."""
     entity_id = "media_player.speaker"
-    reg = er.async_get(hass)
 
     info = get_fake_chromecast_info()
 
@@ -1154,7 +1170,9 @@ async def test_entity_play_media_cast(hass: HomeAssistant, quick_play_mock) -> N
     assert state is not None
     assert state.name == "Speaker"
     assert state.state == "off"
-    assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
+    assert entity_id == entity_registry.async_get_entity_id(
+        "media_player", "cast", str(info.uuid)
+    )
 
     # Play_media - cast with app ID
     await common.async_play_media(hass, "cast", '{"app_id": "abc123"}', entity_id)
@@ -1178,11 +1196,13 @@ async def test_entity_play_media_cast(hass: HomeAssistant, quick_play_mock) -> N
 
 
 async def test_entity_play_media_cast_invalid(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, quick_play_mock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    quick_play_mock,
 ) -> None:
     """Test playing media."""
     entity_id = "media_player.speaker"
-    reg = er.async_get(hass)
 
     info = get_fake_chromecast_info()
 
@@ -1198,7 +1218,9 @@ async def test_entity_play_media_cast_invalid(
     assert state is not None
     assert state.name == "Speaker"
     assert state.state == "off"
-    assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
+    assert entity_id == entity_registry.async_get_entity_id(
+        "media_player", "cast", str(info.uuid)
+    )
 
     # play_media - media_type cast with invalid JSON
     with pytest.raises(json.decoder.JSONDecodeError):
@@ -1346,11 +1368,13 @@ async def test_entity_play_media_playlist(
     ],
 )
 async def test_entity_media_content_type(
-    hass: HomeAssistant, cast_type, default_content_type
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    cast_type,
+    default_content_type,
 ) -> None:
     """Test various content types."""
     entity_id = "media_player.speaker"
-    reg = er.async_get(hass)
 
     info = get_fake_chromecast_info()
 
@@ -1367,7 +1391,9 @@ async def test_entity_media_content_type(
     assert state is not None
     assert state.name == "Speaker"
     assert state.state == "off"
-    assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
+    assert entity_id == entity_registry.async_get_entity_id(
+        "media_player", "cast", str(info.uuid)
+    )
 
     media_status = MagicMock(images=None)
     media_status.media_is_movie = False
@@ -1399,10 +1425,11 @@ async def test_entity_media_content_type(
     assert state.attributes.get("media_content_type") == "movie"
 
 
-async def test_entity_control(hass: HomeAssistant, quick_play_mock) -> None:
+async def test_entity_control(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, quick_play_mock
+) -> None:
     """Test various device and media controls."""
     entity_id = "media_player.speaker"
-    reg = er.async_get(hass)
 
     info = get_fake_chromecast_info()
 
@@ -1428,7 +1455,9 @@ async def test_entity_control(hass: HomeAssistant, quick_play_mock) -> None:
     assert state is not None
     assert state.name == "Speaker"
     assert state.state == "playing"
-    assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
+    assert entity_id == entity_registry.async_get_entity_id(
+        "media_player", "cast", str(info.uuid)
+    )
 
     assert state.attributes.get("supported_features") == (
         MediaPlayerEntityFeature.PAUSE
@@ -1528,10 +1557,11 @@ async def test_entity_control(hass: HomeAssistant, quick_play_mock) -> None:
     ("app_id", "state_no_media"),
     [(pychromecast.APP_YOUTUBE, "idle"), ("Netflix", "playing")],
 )
-async def test_entity_media_states(hass: HomeAssistant, app_id, state_no_media) -> None:
+async def test_entity_media_states(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, app_id, state_no_media
+) -> None:
     """Test various entity media states."""
     entity_id = "media_player.speaker"
-    reg = er.async_get(hass)
 
     info = get_fake_chromecast_info()
 
@@ -1547,7 +1577,9 @@ async def test_entity_media_states(hass: HomeAssistant, app_id, state_no_media) 
     assert state is not None
     assert state.name == "Speaker"
     assert state.state == "off"
-    assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
+    assert entity_id == entity_registry.async_get_entity_id(
+        "media_player", "cast", str(info.uuid)
+    )
 
     # App id updated, but no media status
     chromecast.app_id = app_id
@@ -1607,10 +1639,11 @@ async def test_entity_media_states(hass: HomeAssistant, app_id, state_no_media) 
     assert state.state == "unknown"
 
 
-async def test_entity_media_states_lovelace_app(hass: HomeAssistant) -> None:
+async def test_entity_media_states_lovelace_app(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test various entity media states when the lovelace app is active."""
     entity_id = "media_player.speaker"
-    reg = er.async_get(hass)
 
     info = get_fake_chromecast_info()
 
@@ -1626,7 +1659,9 @@ async def test_entity_media_states_lovelace_app(hass: HomeAssistant) -> None:
     assert state is not None
     assert state.name == "Speaker"
     assert state.state == "off"
-    assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
+    assert entity_id == entity_registry.async_get_entity_id(
+        "media_player", "cast", str(info.uuid)
+    )
 
     chromecast.app_id = CAST_APP_ID_HOMEASSISTANT_LOVELACE
     cast_status = MagicMock()
@@ -1678,10 +1713,11 @@ async def test_entity_media_states_lovelace_app(hass: HomeAssistant) -> None:
     assert state.state == "unknown"
 
 
-async def test_group_media_states(hass: HomeAssistant, mz_mock) -> None:
+async def test_group_media_states(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mz_mock
+) -> None:
     """Test media states are read from group if entity has no state."""
     entity_id = "media_player.speaker"
-    reg = er.async_get(hass)
 
     info = get_fake_chromecast_info()
 
@@ -1699,7 +1735,9 @@ async def test_group_media_states(hass: HomeAssistant, mz_mock) -> None:
     assert state is not None
     assert state.name == "Speaker"
     assert state.state == "off"
-    assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
+    assert entity_id == entity_registry.async_get_entity_id(
+        "media_player", "cast", str(info.uuid)
+    )
 
     group_media_status = MagicMock(images=None)
     player_media_status = MagicMock(images=None)
@@ -1735,13 +1773,14 @@ async def test_group_media_states(hass: HomeAssistant, mz_mock) -> None:
     assert state.state == "playing"
 
 
-async def test_group_media_states_early(hass: HomeAssistant, mz_mock) -> None:
+async def test_group_media_states_early(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mz_mock
+) -> None:
     """Test media states are read from group if entity has no state.
 
     This tests case asserts group state is polled when the player is created.
     """
     entity_id = "media_player.speaker"
-    reg = er.async_get(hass)
 
     info = get_fake_chromecast_info()
 
@@ -1757,7 +1796,9 @@ async def test_group_media_states_early(hass: HomeAssistant, mz_mock) -> None:
     assert state is not None
     assert state.name == "Speaker"
     assert state.state == "unavailable"
-    assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
+    assert entity_id == entity_registry.async_get_entity_id(
+        "media_player", "cast", str(info.uuid)
+    )
 
     # Check group state is polled when player is first created
     connection_status = MagicMock()
@@ -1789,11 +1830,10 @@ async def test_group_media_states_early(hass: HomeAssistant, mz_mock) -> None:
 
 
 async def test_group_media_control(
-    hass: HomeAssistant, mz_mock, quick_play_mock
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mz_mock, quick_play_mock
 ) -> None:
     """Test media controls are handled by group if entity has no state."""
     entity_id = "media_player.speaker"
-    reg = er.async_get(hass)
 
     info = get_fake_chromecast_info()
 
@@ -1812,7 +1852,9 @@ async def test_group_media_control(
     assert state is not None
     assert state.name == "Speaker"
     assert state.state == "off"
-    assert entity_id == reg.async_get_entity_id("media_player", "cast", str(info.uuid))
+    assert entity_id == entity_registry.async_get_entity_id(
+        "media_player", "cast", str(info.uuid)
+    )
 
     group_media_status = MagicMock(images=None)
     player_media_status = MagicMock(images=None)

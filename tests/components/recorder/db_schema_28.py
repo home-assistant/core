@@ -45,7 +45,6 @@ from homeassistant.core import Context, Event, EventOrigin, State, split_entity_
 import homeassistant.util.dt as dt_util
 
 # SQLAlchemy Schema
-# pylint: disable=invalid-name
 Base = declarative_base()
 
 SCHEMA_VERSION = 28

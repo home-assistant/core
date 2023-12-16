@@ -6,7 +6,16 @@ from typing import Any, cast
 
 from aiohttp.web import Request, WebSocketResponse
 from aioshelly.block_device import COAP, Block, BlockDevice
-from aioshelly.const import MODEL_NAMES
+from aioshelly.const import (
+    BLOCK_GENERATIONS,
+    MODEL_1L,
+    MODEL_DIMMER,
+    MODEL_DIMMER_2,
+    MODEL_EM3,
+    MODEL_I3,
+    MODEL_NAMES,
+    RPC_GENERATIONS,
+)
 from aioshelly.rpc_device import RpcDevice, WsServer
 
 from homeassistant.components.http import HomeAssistantView
@@ -26,7 +35,10 @@ from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
     CONF_COAP_PORT,
     DEFAULT_COAP_PORT,
+    DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
+    GEN1_RELEASE_URL,
+    GEN2_RELEASE_URL,
     LOGGER,
     RPC_INPUTS_EVENTS_TYPES,
     SHBTN_INPUTS_EVENTS_TYPES,
@@ -54,7 +66,11 @@ def get_number_of_channels(device: BlockDevice, block: Block) -> int:
 
     if block.type == "input":
         # Shelly Dimmer/1L has two input channels and missing "num_inputs"
-        if device.settings["device"]["type"] in ["SHDM-1", "SHDM-2", "SHSW-L"]:
+        if device.settings["device"]["type"] in [
+            MODEL_DIMMER,
+            MODEL_DIMMER_2,
+            MODEL_1L,
+        ]:
             channels = 2
         else:
             channels = device.shelly.get("num_inputs")
@@ -72,26 +88,26 @@ def get_block_entity_name(
     device: BlockDevice,
     block: Block | None,
     description: str | None = None,
-) -> str | None:
+) -> str:
     """Naming for block based switch and sensors."""
     channel_name = get_block_channel_name(device, block)
 
-    if description and channel_name:
-        return f"{channel_name} {uncapitalize(description)}"
     if description:
-        return description
+        return f"{channel_name} {description.lower()}"
 
     return channel_name
 
 
-def get_block_channel_name(device: BlockDevice, block: Block | None) -> str | None:
+def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
     """Get name based on device and channel name."""
+    entity_name = device.name
+
     if (
         not block
         or block.type == "device"
         or get_number_of_channels(device, block) == 1
     ):
-        return None
+        return entity_name
 
     assert block.channel
 
@@ -103,12 +119,12 @@ def get_block_channel_name(device: BlockDevice, block: Block | None) -> str | No
     if channel_name:
         return channel_name
 
-    if device.settings["device"]["type"] == "SHEM-3":
+    if device.settings["device"]["type"] == MODEL_EM3:
         base = ord("A")
     else:
         base = ord("1")
 
-    return f"Channel {chr(int(block.channel)+base)}"
+    return f"{entity_name} channel {chr(int(block.channel)+base)}"
 
 
 def is_block_momentary_input(
@@ -133,7 +149,7 @@ def is_block_momentary_input(
         return False
 
     # Shelly 1L has two button settings in the first channel
-    if settings["device"]["type"] == "SHSW-L":
+    if settings["device"]["type"] == MODEL_1L:
         channel = int(block.channel or 0) + 1
         button_type = button[0].get("btn" + str(channel) + "_type")
     else:
@@ -177,7 +193,7 @@ def get_block_input_triggers(
 
     if device.settings["device"]["type"] in SHBTN_MODELS:
         trigger_types = SHBTN_INPUTS_EVENTS_TYPES
-    elif device.settings["device"]["type"] == "SHIX3-1":
+    elif device.settings["device"]["type"] == MODEL_I3:
         trigger_types = SHIX3_1_INPUTS_EVENTS_TYPES
     else:
         trigger_types = BASIC_INPUTS_EVENTS_TYPES
@@ -253,15 +269,6 @@ def get_block_device_sleep_period(settings: dict[str, Any]) -> int:
     return sleep_period * 60  # minutes to seconds
 
 
-def get_rpc_device_sleep_period(config: dict[str, Any]) -> int:
-    """Return the device sleep period in seconds or 0 for non sleeping devices.
-
-    sys.sleep.wakeup_period value is deprecated and not available in Shelly
-    firmware 1.0.0 or later.
-    """
-    return cast(int, config["sys"].get("sleep", {}).get("wakeup_period", 0))
-
-
 def get_rpc_device_wakeup_period(status: dict[str, Any]) -> int:
     """Return the device wakeup period in seconds or 0 for non sleeping devices."""
     return cast(int, status["sys"].get("wakeup_period", 0))
@@ -279,38 +286,39 @@ def get_info_gen(info: dict[str, Any]) -> int:
 
 def get_model_name(info: dict[str, Any]) -> str:
     """Return the device model name."""
-    if get_info_gen(info) == 2:
+    if get_info_gen(info) in RPC_GENERATIONS:
         return cast(str, MODEL_NAMES.get(info["model"], info["model"]))
 
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
 
 
-def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
+def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
     """Get name based on device and channel name."""
     key = key.replace("emdata", "em")
-    if device.config.get("switch:0"):
-        key = key.replace("input", "switch")
+    key = key.replace("em1data", "em1")
+    device_name = device.name
     entity_name: str | None = None
     if key in device.config:
-        entity_name = device.config[key].get("name")
+        entity_name = device.config[key].get("name", device_name)
 
     if entity_name is None:
         if key.startswith(("input:", "light:", "switch:")):
-            return key.replace(":", " ").capitalize()
+            return f"{device_name} {key.replace(':', '_')}"
+        if key.startswith("em1"):
+            return f"{device_name} EM{key.split(':')[-1]}"
+        return device_name
 
     return entity_name
 
 
 def get_rpc_entity_name(
     device: RpcDevice, key: str, description: str | None = None
-) -> str | None:
+) -> str:
     """Naming for RPC based switch and sensors."""
     channel_name = get_rpc_channel_name(device, key)
 
-    if description and channel_name:
-        return f"{channel_name} {uncapitalize(description)}"
     if description:
-        return description
+        return f"{channel_name} {description.lower()}"
 
     return channel_name
 
@@ -374,13 +382,10 @@ def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
 
 
 @callback
-def device_update_info(
+def update_device_fw_info(
     hass: HomeAssistant, shellydevice: BlockDevice | RpcDevice, entry: ConfigEntry
 ) -> None:
-    """Update device registry info."""
-
-    LOGGER.debug("Updating device registry info for %s", entry.title)
-
+    """Update the firmware version information in the device registry."""
     assert entry.unique_id
 
     dev_reg = dr_async_get(hass)
@@ -388,6 +393,11 @@ def device_update_info(
         identifiers={(DOMAIN, entry.entry_id)},
         connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
     ):
+        if device.sw_version == shellydevice.firmware_version:
+            return
+
+        LOGGER.debug("Updating device registry info for %s", entry.title)
+
         dev_reg.async_update_device(device.id, sw_version=shellydevice.firmware_version)
 
 
@@ -407,6 +417,9 @@ def mac_address_from_name(name: str) -> str | None:
     return mac.upper() if len(mac) == 12 else None
 
 
-def uncapitalize(description: str) -> str:
-    """Uncapitalize the first letter of a description."""
-    return description[:1].lower() + description[1:]
+def get_release_url(gen: int, model: str, beta: bool) -> str | None:
+    """Return release URL or None."""
+    if beta or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
+        return None
+
+    return GEN1_RELEASE_URL if gen in BLOCK_GENERATIONS else GEN2_RELEASE_URL

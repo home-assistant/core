@@ -5,6 +5,8 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, Generic, TypeVar
 
+from aioshelly.const import RPC_GENERATIONS
+
 from homeassistant.components.button import (
     ButtonDeviceClass,
     ButtonEntity,
@@ -126,7 +128,7 @@ async def async_setup_entry(
         return async_migrate_unique_ids(entity_entry, coordinator)
 
     coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator | None = None
-    if get_device_entry_gen(config_entry) == 2:
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
         coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
     else:
         coordinator = get_entry_data(hass)[config_entry.entry_id].block
@@ -154,7 +156,6 @@ class ShellyButton(
     entity_description: ShellyButtonDescription[
         ShellyRpcCoordinator | ShellyBlockCoordinator
     ]
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -167,6 +168,7 @@ class ShellyButton(
         super().__init__(coordinator)
         self.entity_description = description
 
+        self._attr_name = f"{coordinator.device.name} {description.name}"
         self._attr_unique_id = f"{coordinator.mac}_{description.key}"
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}

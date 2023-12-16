@@ -42,6 +42,7 @@ class NexiaFanSpeedEntity(NexiaThermostatEntity, NumberEntity):
 
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_icon = "mdi:fan"
+    _attr_translation_key = "fan_speed"
 
     def __init__(
         self,
@@ -53,7 +54,6 @@ class NexiaFanSpeedEntity(NexiaThermostatEntity, NumberEntity):
         super().__init__(
             coordinator,
             thermostat,
-            name=f"{thermostat.get_name()} Fan speed",
             unique_id=f"{thermostat.thermostat_id}_fan_speed_setpoint",
         )
         min_value, max_value = valid_range

@@ -27,7 +27,7 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.template_entity import (
+from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     TEMPLATE_ENTITY_BASE_SCHEMA,
     TEMPLATE_SENSOR_BASE_SCHEMA,

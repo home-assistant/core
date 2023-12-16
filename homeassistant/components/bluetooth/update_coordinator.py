@@ -4,6 +4,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import logging
 
+from habluetooth import BluetoothScanningMode
+
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 
 from .api import (
@@ -13,7 +15,7 @@ from .api import (
     async_track_unavailable,
 )
 from .match import BluetoothCallbackMatcher
-from .models import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
+from .models import BluetoothChange, BluetoothServiceInfoBleak
 
 
 class BasePassiveBluetoothCoordinator(ABC):
@@ -39,17 +41,15 @@ class BasePassiveBluetoothCoordinator(ABC):
         self.mode = mode
         self._last_unavailable_time = 0.0
         self._last_name = address
+        # Subclasses are responsible for setting _available to True
+        # when the abstractmethod _async_handle_bluetooth_event is called.
+        self._available = async_address_present(hass, address, connectable)
 
     @callback
     def async_start(self) -> CALLBACK_TYPE:
         """Start the data updater."""
         self._async_start()
-
-        @callback
-        def _async_cancel() -> None:
-            self._async_stop()
-
-        return _async_cancel
+        return self._async_stop
 
     @callback
     @abstractmethod
@@ -85,7 +85,7 @@ class BasePassiveBluetoothCoordinator(ABC):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return async_address_present(self.hass, self.address, self.connectable)
+        return self._available
 
     @callback
     def _async_start(self) -> None:
@@ -123,3 +123,4 @@ class BasePassiveBluetoothCoordinator(ABC):
         """Handle the device going unavailable."""
         self._last_unavailable_time = service_info.time
         self._last_name = service_info.name
+        self._available = False

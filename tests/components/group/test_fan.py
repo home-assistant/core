@@ -112,7 +112,9 @@ async def setup_comp(hass, config_count):
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
-async def test_state(hass: HomeAssistant, setup_comp) -> None:
+async def test_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, setup_comp
+) -> None:
     """Test handling of state.
 
     The group state is on if at least one group member is on.
@@ -201,7 +203,6 @@ async def test_state(hass: HomeAssistant, setup_comp) -> None:
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     # Test entity registry integration
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get(FAN_GROUP)
     assert entry
     assert entry.unique_id == "unique_identifier"
@@ -247,11 +248,7 @@ async def test_attributes(hass: HomeAssistant, setup_comp) -> None:
     assert state.attributes[ATTR_PERCENTAGE] == 50
     assert ATTR_ASSUMED_STATE not in state.attributes
 
-    # Add Entity that supports
-    # ### Test assumed state ###
-    # ##########################
-
-    # Add Entity with a different speed should set assumed state
+    # Add Entity with a different speed should not set assumed state
     hass.states.async_set(
         PERCENTAGE_LIMITED_FAN_ENTITY_ID,
         STATE_ON,
@@ -264,7 +261,7 @@ async def test_attributes(hass: HomeAssistant, setup_comp) -> None:
 
     state = hass.states.get(FAN_GROUP)
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_ASSUMED_STATE] is True
+    assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_PERCENTAGE] == int((50 + 75) / 2)
 
 
@@ -306,11 +303,7 @@ async def test_direction_oscillating(hass: HomeAssistant, setup_comp) -> None:
     assert state.attributes[ATTR_DIRECTION] == DIRECTION_FORWARD
     assert ATTR_ASSUMED_STATE not in state.attributes
 
-    # Add Entity that supports
-    # ### Test assumed state ###
-    # ##########################
-
-    # Add Entity with a different direction should set assumed state
+    # Add Entity with a different direction should not set assumed state
     hass.states.async_set(
         PERCENTAGE_FULL_FAN_ENTITY_ID,
         STATE_ON,
@@ -325,11 +318,10 @@ async def test_direction_oscillating(hass: HomeAssistant, setup_comp) -> None:
 
     state = hass.states.get(FAN_GROUP)
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_ASSUMED_STATE] is True
+    assert ATTR_ASSUMED_STATE not in state.attributes
     assert ATTR_PERCENTAGE in state.attributes
     assert state.attributes[ATTR_PERCENTAGE] == 50
     assert state.attributes[ATTR_OSCILLATING] is True
-    assert ATTR_ASSUMED_STATE in state.attributes
 
     # Now that everything is the same, no longer assumed state
 

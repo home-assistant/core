@@ -39,6 +39,26 @@ async def async_setup_platform(
 class VeluxCover(VeluxEntity, CoverEntity):
     """Representation of a Velux cover."""
 
+    _is_blind = False
+
+    def __init__(self, node: OpeningDevice) -> None:
+        """Initialize VeluxCover."""
+        super().__init__(node)
+        self._attr_device_class = CoverDeviceClass.WINDOW
+        if isinstance(node, Awning):
+            self._attr_device_class = CoverDeviceClass.AWNING
+        if isinstance(node, Blind):
+            self._attr_device_class = CoverDeviceClass.BLIND
+            self._is_blind = True
+        if isinstance(node, GarageDoor):
+            self._attr_device_class = CoverDeviceClass.GARAGE
+        if isinstance(node, Gate):
+            self._attr_device_class = CoverDeviceClass.GATE
+        if isinstance(node, RollerShutter):
+            self._attr_device_class = CoverDeviceClass.SHUTTER
+        if isinstance(node, Window):
+            self._attr_device_class = CoverDeviceClass.WINDOW
+
     @property
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
@@ -65,26 +85,9 @@ class VeluxCover(VeluxEntity, CoverEntity):
     @property
     def current_cover_tilt_position(self) -> int | None:
         """Return the current position of the cover."""
-        if isinstance(self.node, Blind):
+        if self._is_blind:
             return 100 - self.node.orientation.position_percent
         return None
-
-    @property
-    def device_class(self) -> CoverDeviceClass:
-        """Define this cover as either awning, blind, garage, gate, shutter or window."""
-        if isinstance(self.node, Awning):
-            return CoverDeviceClass.AWNING
-        if isinstance(self.node, Blind):
-            return CoverDeviceClass.BLIND
-        if isinstance(self.node, GarageDoor):
-            return CoverDeviceClass.GARAGE
-        if isinstance(self.node, Gate):
-            return CoverDeviceClass.GATE
-        if isinstance(self.node, RollerShutter):
-            return CoverDeviceClass.SHUTTER
-        if isinstance(self.node, Window):
-            return CoverDeviceClass.WINDOW
-        return CoverDeviceClass.WINDOW
 
     @property
     def is_closed(self) -> bool:

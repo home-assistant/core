@@ -1,7 +1,6 @@
 """Provides functionality to interact with climate devices."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 import functools as ft
 import logging
@@ -201,13 +200,26 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class ClimateEntityDescription(EntityDescription):
+class ClimateEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes climate entities."""
 
 
 class ClimateEntity(Entity):
     """Base class for climate entities."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {
+            ATTR_HVAC_MODES,
+            ATTR_FAN_MODES,
+            ATTR_SWING_MODES,
+            ATTR_MIN_TEMP,
+            ATTR_MAX_TEMP,
+            ATTR_MIN_HUMIDITY,
+            ATTR_MAX_HUMIDITY,
+            ATTR_TARGET_TEMP_STEP,
+            ATTR_PRESET_MODES,
+        }
+    )
 
     entity_description: ClimateEntityDescription
     _attr_current_humidity: int | None = None
@@ -242,8 +254,9 @@ class ClimateEntity(Entity):
         hvac_mode = self.hvac_mode
         if hvac_mode is None:
             return None
+        # Support hvac_mode as string for custom integration backwards compatibility
         if not isinstance(hvac_mode, HVACMode):
-            return HVACMode(hvac_mode).value
+            return HVACMode(hvac_mode).value  # type: ignore[unreachable]
         return hvac_mode.value
 
     @property
@@ -458,11 +471,11 @@ class ClimateEntity(Entity):
         """
         return self._attr_swing_modes
 
-    def set_temperature(self, **kwargs) -> None:
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         raise NotImplementedError()
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self.hass.async_add_executor_job(
             ft.partial(self.set_temperature, **kwargs)
