@@ -1748,7 +1748,7 @@ pyyardian==1.1.1
 pyzerproc==0.4.8
 
 # homeassistant.components.qingping
-qingping-ble==0.8.2
+qingping-ble==0.9.0
 
 # homeassistant.components.qnap
 qnapstats==0.4.0
