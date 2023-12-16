@@ -37,6 +37,8 @@ class TessieSensorEntityDescription(SensorEntityDescription):
     """Describes Tessie Sensor entity."""
 
     value_fn: Callable[[StateType], StateType] = lambda x: x
+    frozen = True
+    kw_only = True
 
 
 DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (

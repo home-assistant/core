@@ -24,6 +24,8 @@ class TessieBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Tessie binary sensor entity."""
 
     is_on: Callable[..., bool] = lambda x: x
+    frozen = True
+    kw_only = True
 
 
 DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
