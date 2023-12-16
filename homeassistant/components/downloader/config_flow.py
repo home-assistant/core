@@ -54,7 +54,7 @@ class DownloaderConfigFlow(ConfigFlow, domain=DOMAIN):
             self.hass,
             HOMEASSISTANT_DOMAIN,
             f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2024.2.0",
+            breaks_in_ha_version="2024.6.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
