@@ -376,4 +376,4 @@ async def test_import_step_unique_id_configured(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert len(mock_setup_entry.mock_calls) == 0
+    assert mock_setup_entry.call_count == 0
