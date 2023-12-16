@@ -31,7 +31,7 @@ class DownloaderConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await self._validate_input(user_input)
-            except CannotConnect:
+            except DirectoryDoesNotExist:
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
@@ -77,8 +77,8 @@ class DownloaderConfigFlow(ConfigFlow, domain=DOMAIN):
                 "Download path %s does not exist. File Downloader not active",
                 download_path,
             )
-            raise CannotConnect
+            raise DirectoryDoesNotExist
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class DirectoryDoesNotExist(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
