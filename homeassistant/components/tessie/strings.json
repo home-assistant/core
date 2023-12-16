@@ -139,16 +139,16 @@
         "name": "User present"
       },
       "vehicle_state_tpms_soft_warning_fl": {
-        "name": "Tyre pressure warning front left"
+        "name": "Tire pressure warning front left"
       },
       "vehicle_state_tpms_soft_warning_fr": {
-        "name": "Tyre pressure warning front right"
+        "name": "Tire pressure warning front right"
       },
       "vehicle_state_tpms_soft_warning_rl": {
-        "name": "Tyre pressure warning rear left"
+        "name": "Tire pressure warning rear left"
       },
       "vehicle_state_tpms_soft_warning_rr": {
-        "name": "Tyre pressure warning rear right"
+        "name": "Tire pressure warning rear right"
       }
     }
   }
