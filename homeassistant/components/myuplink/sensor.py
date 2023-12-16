@@ -153,6 +153,7 @@ class MyUplinkDevicePointSensor(MyUplinkEntity, SensorEntity):
             self.entity_description = entity_description
         else:
             self._attr_native_unit_of_measurement = device_point.parameter_unit
+            self._attr_name = device_point.parameter_name
 
     @property
     def native_value(self) -> StateType:
