@@ -71,7 +71,7 @@ async def async_setup_entry(
 
     coordinator: AprilaireCoordinator = hass.data[DOMAIN][config_entry.unique_id]
 
-    async_add_entities([AprilaireClimate(coordinator)])
+    async_add_entities([AprilaireClimate(coordinator, config_entry.unique_id)])
 
 
 class AprilaireClimate(BaseAprilaireEntity, ClimateEntity):

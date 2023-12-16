@@ -6,7 +6,6 @@ import logging
 
 from pyaprilaire.const import Attribute
 
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import BaseCoordinatorEntity
 
 from .coordinator import AprilaireCoordinator
@@ -21,12 +20,15 @@ class BaseAprilaireEntity(BaseCoordinatorEntity[AprilaireCoordinator]):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, coordinator: AprilaireCoordinator) -> None:
+    def __init__(
+        self, coordinator: AprilaireCoordinator, unique_id: str | None
+    ) -> None:
         """Initialize the entity."""
 
         super().__init__(coordinator)
 
         self._attr_device_info = coordinator.device_info
+        self._attr_unique_id = f"{unique_id}_{self.translation_key}"
 
         self._update_available()
 
@@ -45,16 +47,6 @@ class BaseAprilaireEntity(BaseCoordinatorEntity[AprilaireCoordinator]):
             self._attr_available = (
                 self.coordinator.data.get(Attribute.MAC_ADDRESS, None) is not None
             )
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._attr_available
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return f"{format_mac(self.coordinator.data[Attribute.MAC_ADDRESS])}_{self.translation_key}"
 
     async def async_update(self) -> None:
         """Implement abstract base method."""
