@@ -176,7 +176,7 @@ class GenericCamera(Camera):
 
         self._last_url = None
         self._last_image = None
-        self._last_update = datetime.now()
+        self._last_update = datetime.min
         self._update_lock = asyncio.Lock()
 
         self._attr_device_info = DeviceInfo(
@@ -206,7 +206,9 @@ class GenericCamera(Camera):
 
         async with self._update_lock:
             if (
-                self._last_update + timedelta(0, self._attr_frame_interval)
+                self._last_image is not None
+                and url == self._last_url
+                and self._last_update + timedelta(0, self._attr_frame_interval)
                 > datetime.now()
             ):
                 return self._last_image
