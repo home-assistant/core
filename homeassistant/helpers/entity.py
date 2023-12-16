@@ -79,6 +79,8 @@ FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) 
 # How many times per hour we allow capabilities to be updated before logging a warning
 CAPABILITIES_UPDATE_LIMIT = 100
 
+CONTEXT_RECENT_TIME = timedelta(seconds=5)  # Time that a context is considered recent
+
 
 @callback
 def async_setup(hass: HomeAssistant) -> None:
@@ -340,7 +342,6 @@ class Entity(ABC):
     _attr_attribution: str | None = None
     _attr_available: bool = True
     _attr_capability_attributes: Mapping[str, Any] | None = None
-    _attr_context_recent_time: timedelta = timedelta(seconds=5)
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
     _attr_entity_category: EntityCategory | None
@@ -540,15 +541,6 @@ class Entity(ABC):
         return None
 
     @property
-    def device_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return entity specific state attributes.
-
-        This method is deprecated, platform classes should implement
-        extra_state_attributes instead.
-        """
-        return None
-
-    @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes.
 
@@ -626,11 +618,6 @@ class Entity(ABC):
     def supported_features(self) -> int | None:
         """Flag supported features."""
         return self._attr_supported_features
-
-    @property
-    def context_recent_time(self) -> timedelta:
-        """Time that a context is considered recent."""
-        return self._attr_context_recent_time
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -942,7 +929,7 @@ class Entity(ABC):
         if (
             self._context_set is not None
             and hass.loop.time() - self._context_set
-            > self.context_recent_time.total_seconds()
+            > CONTEXT_RECENT_TIME.total_seconds()
         ):
             self._context = None
             self._context_set = None

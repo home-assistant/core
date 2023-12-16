@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import timedelta
+from typing import Literal
 
 from brottsplatskartan import ATTRIBUTION, BrottsplatsKartan
 
@@ -29,9 +30,11 @@ async def async_setup_entry(
     app = entry.data[CONF_APP_ID]
     name = entry.title
 
-    bpk = BrottsplatsKartan(app=app, area=area, latitude=latitude, longitude=longitude)
+    bpk = BrottsplatsKartan(
+        app=app, areas=[area] if area else None, latitude=latitude, longitude=longitude
+    )
 
-    async_add_entities([BrottsplatskartanSensor(bpk, name, entry.entry_id)], True)
+    async_add_entities([BrottsplatskartanSensor(bpk, name, entry.entry_id, area)], True)
 
 
 class BrottsplatskartanSensor(SensorEntity):
@@ -41,9 +44,12 @@ class BrottsplatskartanSensor(SensorEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, bpk: BrottsplatsKartan, name: str, entry_id: str) -> None:
+    def __init__(
+        self, bpk: BrottsplatsKartan, name: str, entry_id: str, area: str | None
+    ) -> None:
         """Initialize the Brottsplatskartan sensor."""
         self._brottsplatskartan = bpk
+        self._area = area
         self._attr_unique_id = entry_id
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
@@ -56,11 +62,18 @@ class BrottsplatskartanSensor(SensorEntity):
         """Update device state."""
 
         incident_counts: defaultdict[str, int] = defaultdict(int)
-        incidents = self._brottsplatskartan.get_incidents()
+        get_incidents: dict[str, list] | Literal[
+            False
+        ] = self._brottsplatskartan.get_incidents()
 
-        if incidents is False:
+        if get_incidents is False:
             LOGGER.debug("Problems fetching incidents")
             return
+
+        if self._area:
+            incidents = get_incidents.get(self._area) or []
+        else:
+            incidents = get_incidents.get("latlng") or []
 
         for incident in incidents:
             if (incident_type := incident.get("title_type")) is not None:
