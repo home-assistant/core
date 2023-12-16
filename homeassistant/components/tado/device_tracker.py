@@ -57,7 +57,7 @@ async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> None:
         hass,
         DOMAIN,
         "deprecated_yaml_import_device_tracker",
-        breaks_in_ha_version="2024.5.0",
+        breaks_in_ha_version="2024.6.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key=translation_key,
