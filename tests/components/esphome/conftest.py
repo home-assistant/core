@@ -335,7 +335,7 @@ async def mock_bluetooth_entry(
 
 @pytest.fixture
 async def mock_bluetooth_entry_with_raw_adv(mock_bluetooth_entry) -> MockESPHomeDevice:
-    """Set up an ESPHome entry with bluetooth."""
+    """Set up an ESPHome entry with bluetooth and raw advertisements."""
     return await mock_bluetooth_entry(
         bluetooth_proxy_feature_flags=BluetoothProxyFeature.PASSIVE_SCAN
         | BluetoothProxyFeature.ACTIVE_CONNECTIONS
@@ -343,6 +343,20 @@ async def mock_bluetooth_entry_with_raw_adv(mock_bluetooth_entry) -> MockESPHome
         | BluetoothProxyFeature.PAIRING
         | BluetoothProxyFeature.CACHE_CLEARING
         | BluetoothProxyFeature.RAW_ADVERTISEMENTS
+    )
+
+
+@pytest.fixture
+async def mock_bluetooth_entry_with_legacy_adv(
+    mock_bluetooth_entry
+) -> MockESPHomeDevice:
+    """Set up an ESPHome entry with bluetooth with legacy advertisements."""
+    return await mock_bluetooth_entry(
+        bluetooth_proxy_feature_flags=BluetoothProxyFeature.PASSIVE_SCAN
+        | BluetoothProxyFeature.ACTIVE_CONNECTIONS
+        | BluetoothProxyFeature.REMOTE_CACHING
+        | BluetoothProxyFeature.PAIRING
+        | BluetoothProxyFeature.CACHE_CLEARING
     )
 
 
