@@ -13,7 +13,7 @@ _DataT = TypeVar("_DataT")
 class BaseTableManager(Generic[_DataT]):
     """Base class for table managers."""
 
-    _id_map: LRU[str, int]
+    _id_map: "LRU[str, int]"
 
     def __init__(self, recorder: "Recorder") -> None:
         """Initialize the table manager.
@@ -62,7 +62,7 @@ class BaseLRUTableManager(BaseTableManager[_DataT]):
         and evict the least recently used items when the cache is full.
         """
         super().__init__(recorder)
-        self._id_map: LRU[str, int] = LRU(lru_size)
+        self._id_map: "LRU[str, int]" = LRU(lru_size)
 
     def adjust_lru_size(self, new_size: int) -> None:
         """Adjust the LRU cache size.
@@ -70,6 +70,6 @@ class BaseLRUTableManager(BaseTableManager[_DataT]):
         This call is not thread-safe and must be called from the
         recorder thread.
         """
-        lru: LRU = self._id_map
+        lru = self._id_map
         if new_size > lru.get_size():
             lru.set_size(new_size)
