@@ -10,6 +10,6 @@
   "requirements": [
     "scapy==2.5.0",
     "aiodiscover==1.5.1",
-    "cached_ipaddress==0.2.0"
+    "cached_ipaddress==0.3.0"
   ]
 }

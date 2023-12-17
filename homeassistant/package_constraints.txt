@@ -16,7 +16,7 @@ bleak==0.21.1
 bluetooth-adapters==0.16.1
 bluetooth-auto-recovery==1.2.3
 bluetooth-data-tools==1.18.0
-cached_ipaddress==0.2.0
+cached_ipaddress==0.3.0
 certifi>=2021.5.30
 ciso8601==2.3.0
 cryptography==41.0.7
