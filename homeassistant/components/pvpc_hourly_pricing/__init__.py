@@ -25,10 +25,9 @@ CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up pvpc hourly pricing from a config entry."""
     entity_registry = er.async_get(hass)
-    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     sensor_keys = get_enabled_sensor_keys(
         using_private_api=entry.data.get(CONF_API_TOKEN) is not None,
-        disabled_sensor_ids=[sensor.unique_id for sensor in entries if sensor.disabled],
+        entries=er.async_entries_for_config_entry(entity_registry, entry.entry_id),
     )
     coordinator = ElecPricesDataUpdateCoordinator(hass, entry, sensor_keys)
     await coordinator.async_config_entry_first_refresh()

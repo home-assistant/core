@@ -8,6 +8,8 @@ from aiopvpc.const import (
     TARIFFS,
 )
 
+from homeassistant.helpers.entity_registry import RegistryEntry
+
 _ha_uniqueid_to_sensor_key = {
     TARIFFS[0]: KEY_PVPC,
     TARIFFS[1]: KEY_PVPC,
@@ -21,16 +23,20 @@ _ha_uniqueid_to_sensor_key = {
 
 
 def get_enabled_sensor_keys(
-    using_private_api: bool, disabled_sensor_ids: list[str]
+    using_private_api: bool, entries: list[RegistryEntry]
 ) -> set[str]:
-    """(HA) Get enabled API indicators."""
-    sensor_keys = set(ALL_SENSORS) if using_private_api else {KEY_PVPC}
-    for unique_id in disabled_sensor_ids:
-        disabled_ind = _ha_uniqueid_to_sensor_key[unique_id]
-        if disabled_ind in sensor_keys:
-            sensor_keys.remove(disabled_ind)
-
-    return sensor_keys
+    """Get enabled API indicators."""
+    if not using_private_api:
+        return {KEY_PVPC}
+    if len(entries) > 1:
+        # activate only enabled sensors
+        return {
+            _ha_uniqueid_to_sensor_key[sensor.unique_id]
+            for sensor in entries
+            if not sensor.disabled
+        }
+    # default sensors when enabling token access
+    return {KEY_PVPC, KEY_INJECTION}
 
 
 def make_sensor_unique_id(config_entry_id: str | None, sensor_key: str) -> str:

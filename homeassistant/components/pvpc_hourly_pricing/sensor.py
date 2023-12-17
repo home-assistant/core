@@ -181,11 +181,6 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
             manufacturer="REE",
             name="ESIOS",
         )
-        self.async_on_remove(
-            lambda: coordinator.api.update_active_sensors(
-                self.entity_description.key, False
-            )
-        )
 
     @property
     def available(self) -> bool:
@@ -197,6 +192,13 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
+        # Enable API downloads for this sensor
+        self.coordinator.api.update_active_sensors(self.entity_description.key, True)
+        self.async_on_remove(
+            lambda: self.coordinator.api.update_active_sensors(
+                self.entity_description.key, False
+            )
+        )
 
         # Update 'state' value in hour changes
         self.async_on_remove(
@@ -210,11 +212,6 @@ class ElecPriceSensor(CoordinatorEntity[ElecPricesDataUpdateCoordinator], Sensor
             self.entity_id,
             self._attr_unique_id,
         )
-
-    @callback
-    def async_registry_entry_updated(self) -> None:
-        """Enable API downloads for this sensor."""
-        self.coordinator.api.update_active_sensors(self.entity_description.key, True)
 
     @callback
     def update_current_price(self, now: datetime) -> None:
