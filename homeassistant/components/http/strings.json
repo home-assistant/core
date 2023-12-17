@@ -1,0 +1,22 @@
+{
+  "exceptions": {
+    "ip_not_banned": {
+      "message": "The IP address {ip_address} is not banned"
+    },
+    "invalid_ip_address": {
+      "message": "{ip_address} is not a valid IP address"
+    }
+  },
+  "services": {
+    "unban_ip": {
+      "name": "Unban an IP",
+      "description": "Remove a previously banned IP address from the ban list.",
+      "fields": {
+        "ip_address": {
+          "name": "IP address",
+          "description": "The IP address (IPv4 or IPv6) to unban."
+        }
+      }
+    }
+  }
+}
