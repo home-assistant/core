@@ -179,10 +179,6 @@ async def test_stale_device_removal(
         merge_identifiers={(DOMAIN, "533255-2")},
     )
 
-    device_entry = dr.async_entries_for_config_entry(
-        device_registry, config_entry.entry_id
-    )
-
     with patch(
         "homeassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
