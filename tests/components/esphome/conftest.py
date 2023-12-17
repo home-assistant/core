@@ -10,6 +10,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from aioesphomeapi import (
     APIClient,
     APIVersion,
+    BluetoothProxyFeature,
     DeviceInfo,
     EntityInfo,
     EntityState,
@@ -309,6 +310,40 @@ async def mock_voice_assistant_v1_entry(mock_voice_assistant_entry) -> MockConfi
 async def mock_voice_assistant_v2_entry(mock_voice_assistant_entry) -> MockConfigEntry:
     """Set up an ESPHome entry with voice assistant."""
     return await mock_voice_assistant_entry(version=2)
+
+
+@pytest.fixture
+async def mock_bluetooth_entry(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+):
+    """Set up an ESPHome entry with bluetooth."""
+
+    async def _mock_bluetooth_entry(
+        bluetooth_proxy_feature_flags: BluetoothProxyFeature
+    ) -> MockESPHomeDevice:
+        return await _mock_generic_device_entry(
+            hass,
+            mock_client,
+            {"bluetooth_proxy_feature_flags": bluetooth_proxy_feature_flags},
+            ([], []),
+            [],
+        )
+
+    return _mock_bluetooth_entry
+
+
+@pytest.fixture
+async def mock_bluetooth_entry_with_raw_adv(mock_bluetooth_entry) -> MockESPHomeDevice:
+    """Set up an ESPHome entry with bluetooth."""
+    return await mock_bluetooth_entry(
+        bluetooth_proxy_feature_flags=BluetoothProxyFeature.PASSIVE_SCAN
+        | BluetoothProxyFeature.ACTIVE_CONNECTIONS
+        | BluetoothProxyFeature.REMOTE_CACHING
+        | BluetoothProxyFeature.PAIRING
+        | BluetoothProxyFeature.CACHE_CLEARING
+        | BluetoothProxyFeature.RAW_ADVERTISEMENTS
+    )
 
 
 @pytest.fixture
