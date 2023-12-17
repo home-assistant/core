@@ -27,6 +27,7 @@ from homeassistant.components import (
     sensor,
     switch,
     vacuum,
+    water_heater,
 )
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.components.camera import CameraEntityFeature
@@ -44,6 +45,7 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.components.vacuum import VacuumEntityFeature
+from homeassistant.components.water_heater import WaterHeaterEntityFeature
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -75,6 +77,7 @@ from homeassistant.core import (
     State,
 )
 from homeassistant.util import color
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import BASIC_CONFIG, MockConfig
 
@@ -391,6 +394,35 @@ async def test_onoff_humidifier(hass: HomeAssistant) -> None:
     await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
     assert len(off_calls) == 1
     assert off_calls[0].data == {ATTR_ENTITY_ID: "humidifier.bla"}
+
+
+async def test_onoff_water_heater(hass: HomeAssistant) -> None:
+    """Test OnOff trait support for water_heater domain."""
+    assert helpers.get_google_type(water_heater.DOMAIN, None) is not None
+    assert trait.OnOffTrait.supported(
+        water_heater.DOMAIN, WaterHeaterEntityFeature.ON_OFF, None, None
+    )
+
+    trt_on = trait.OnOffTrait(hass, State("water_heater.bla", STATE_ON), BASIC_CONFIG)
+
+    assert trt_on.sync_attributes() == {}
+
+    assert trt_on.query_attributes() == {"on": True}
+
+    trt_off = trait.OnOffTrait(hass, State("water_heater.bla", STATE_OFF), BASIC_CONFIG)
+
+    assert trt_off.query_attributes() == {"on": False}
+
+    on_calls = async_mock_service(hass, water_heater.DOMAIN, SERVICE_TURN_ON)
+    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": True}, {})
+    assert len(on_calls) == 1
+    assert on_calls[0].data == {ATTR_ENTITY_ID: "water_heater.bla"}
+
+    off_calls = async_mock_service(hass, water_heater.DOMAIN, SERVICE_TURN_OFF)
+
+    await trt_on.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
+    assert len(off_calls) == 1
+    assert off_calls[0].data == {ATTR_ENTITY_ID: "water_heater.bla"}
 
 
 async def test_dock_vacuum(hass: HomeAssistant) -> None:
@@ -1244,6 +1276,135 @@ async def test_temperature_control(hass: HomeAssistant) -> None:
     with pytest.raises(helpers.SmartHomeError) as err:
         await trt.execute(trait.COMMAND_ONOFF, BASIC_DATA, {"on": False}, {})
     assert err.value.code == const.ERR_NOT_SUPPORTED
+
+
+@pytest.mark.parametrize(
+    ("unit_in", "unit_out", "temp_in", "temp_out", "current_in", "current_out"),
+    [
+        (UnitOfTemperature.CELSIUS, "C", "120", 120, "130", 130),
+        (UnitOfTemperature.FAHRENHEIT, "F", "248", 120, "266", 130),
+    ],
+)
+async def test_temperature_control_water_heater(
+    hass: HomeAssistant,
+    unit_in: UnitOfTemperature,
+    unit_out: str,
+    temp_in: str,
+    temp_out: float,
+    current_in: str,
+    current_out: float,
+) -> None:
+    """Test TemperatureControl trait support for water heater domain."""
+    hass.config.units.temperature_unit = unit_in
+
+    min_temp = TemperatureConverter.convert(
+        water_heater.DEFAULT_MIN_TEMP,
+        UnitOfTemperature.CELSIUS,
+        unit_in,
+    )
+    max_temp = TemperatureConverter.convert(
+        water_heater.DEFAULT_MAX_TEMP,
+        UnitOfTemperature.CELSIUS,
+        unit_in,
+    )
+
+    trt = trait.TemperatureControlTrait(
+        hass,
+        State(
+            "water_heater.bla",
+            "attributes",
+            {
+                "min_temp": min_temp,
+                "max_temp": max_temp,
+                "temperature": temp_in,
+                "current_temperature": current_in,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.sync_attributes() == {
+        "temperatureUnitForUX": unit_out,
+        "temperatureRange": {
+            "maxThresholdCelsius": water_heater.DEFAULT_MAX_TEMP,
+            "minThresholdCelsius": water_heater.DEFAULT_MIN_TEMP,
+        },
+    }
+    assert trt.query_attributes() == {
+        "temperatureSetpointCelsius": temp_out,
+        "temperatureAmbientCelsius": current_out,
+    }
+
+
+@pytest.mark.parametrize(
+    ("unit", "temp_init", "temp_in", "temp_out", "current_init"),
+    [
+        (UnitOfTemperature.CELSIUS, "180", 220, 220, "180"),
+        (UnitOfTemperature.FAHRENHEIT, "356", 220, 428, "356"),
+    ],
+)
+async def test_temperature_control_water_heater_set_temperature(
+    hass: HomeAssistant,
+    unit: UnitOfTemperature,
+    temp_init: str,
+    temp_in: float,
+    temp_out: float,
+    current_init: str,
+) -> None:
+    """Test TemperatureControl trait support for water heater domain - SetTemperature."""
+    hass.config.units.temperature_unit = unit
+
+    min_temp = TemperatureConverter.convert(
+        40,
+        UnitOfTemperature.CELSIUS,
+        unit,
+    )
+    max_temp = TemperatureConverter.convert(
+        230,
+        UnitOfTemperature.CELSIUS,
+        unit,
+    )
+
+    trt = trait.TemperatureControlTrait(
+        hass,
+        State(
+            "water_heater.bla",
+            "attributes",
+            {
+                "min_temp": min_temp,
+                "max_temp": max_temp,
+                "temperature": temp_init,
+                "current_temperature": current_init,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    assert trt.can_execute(trait.COMMAND_SET_TEMPERATURE, {})
+
+    calls = async_mock_service(
+        hass, water_heater.DOMAIN, water_heater.SERVICE_SET_TEMPERATURE
+    )
+
+    with pytest.raises(helpers.SmartHomeError):
+        await trt.execute(
+            trait.COMMAND_SET_TEMPERATURE,
+            BASIC_DATA,
+            {"temperature": -100},
+            {},
+        )
+
+    await trt.execute(
+        trait.COMMAND_SET_TEMPERATURE,
+        BASIC_DATA,
+        {"temperature": temp_in},
+        {},
+    )
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: "water_heater.bla",
+        ATTR_TEMPERATURE: temp_out,
+    }
 
 
 async def test_humidity_setting_humidifier_setpoint(hass: HomeAssistant) -> None:
@@ -2408,6 +2569,84 @@ async def test_modes_humidifier(hass: HomeAssistant) -> None:
     assert calls[0].data == {
         "entity_id": "humidifier.humidifier",
         "mode": "away",
+    }
+
+
+async def test_modes_water_heater(hass: HomeAssistant) -> None:
+    """Test Humidifier Mode trait."""
+    assert helpers.get_google_type(water_heater.DOMAIN, None) is not None
+    assert trait.ModesTrait.supported(
+        water_heater.DOMAIN, WaterHeaterEntityFeature.OPERATION_MODE, None, None
+    )
+
+    trt = trait.ModesTrait(
+        hass,
+        State(
+            "water_heater.water_heater",
+            STATE_OFF,
+            attributes={
+                water_heater.ATTR_OPERATION_LIST: [
+                    water_heater.STATE_ECO,
+                    water_heater.STATE_HEAT_PUMP,
+                    water_heater.STATE_GAS,
+                ],
+                ATTR_SUPPORTED_FEATURES: WaterHeaterEntityFeature.OPERATION_MODE,
+                water_heater.ATTR_OPERATION_MODE: water_heater.STATE_HEAT_PUMP,
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    attribs = trt.sync_attributes()
+    assert attribs == {
+        "availableModes": [
+            {
+                "name": "operation mode",
+                "name_values": [{"name_synonym": ["operation mode"], "lang": "en"}],
+                "settings": [
+                    {
+                        "setting_name": "eco",
+                        "setting_values": [{"setting_synonym": ["eco"], "lang": "en"}],
+                    },
+                    {
+                        "setting_name": "heat_pump",
+                        "setting_values": [
+                            {"setting_synonym": ["heat_pump"], "lang": "en"}
+                        ],
+                    },
+                    {
+                        "setting_name": "gas",
+                        "setting_values": [{"setting_synonym": ["gas"], "lang": "en"}],
+                    },
+                ],
+                "ordered": False,
+            },
+        ]
+    }
+
+    assert trt.query_attributes() == {
+        "currentModeSettings": {"operation mode": "heat_pump"},
+        "on": False,
+    }
+
+    assert trt.can_execute(
+        trait.COMMAND_MODES, params={"updateModeSettings": {"operation mode": "gas"}}
+    )
+
+    calls = async_mock_service(
+        hass, water_heater.DOMAIN, water_heater.SERVICE_SET_OPERATION_MODE
+    )
+    await trt.execute(
+        trait.COMMAND_MODES,
+        BASIC_DATA,
+        {"updateModeSettings": {"operation mode": "gas"}},
+        {},
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "entity_id": "water_heater.water_heater",
+        "operation_mode": "gas",
     }
 
 
