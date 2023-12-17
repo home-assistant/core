@@ -152,16 +152,6 @@ async def test_remove_stale_device(
         merge_identifiers={(DOMAIN, 7654321)},
     )
 
-    device_entry = dr.async_entries_for_config_entry(
-        device_registry, config_entry.entry_id
-    )
-
-    device_registry.async_update_device(
-        device_entry_other.id,
-        add_config_entry_id=config_entry.entry_id,
-        merge_identifiers={("OtherDomain", 7654321)},
-    )
-
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
