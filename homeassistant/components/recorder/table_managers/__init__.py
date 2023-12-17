@@ -62,7 +62,7 @@ class BaseLRUTableManager(BaseTableManager[_DataT]):
         and evict the least recently used items when the cache is full.
         """
         super().__init__(recorder)
-        self._id_map: "LRU[str, int]" = LRU(lru_size)
+        self._id_map = LRU(lru_size)
 
     def adjust_lru_size(self, new_size: int) -> None:
         """Adjust the LRU cache size.
