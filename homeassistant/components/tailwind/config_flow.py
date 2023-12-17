@@ -68,9 +68,7 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_HOST, default=user_input.get(CONF_HOST)
                     ): TextSelector(TextSelectorConfig(autocomplete="off")),
                     vol.Required(CONF_TOKEN): TextSelector(
-                        TextSelectorConfig(
-                            type=TextSelectorType.PASSWORD, autocomplete="off"
-                        )
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
                 }
             ),
