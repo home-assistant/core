@@ -74,6 +74,16 @@ async def test_user_flow_errors(
     assert result.get("step_id") == "user"
     assert result.get("errors") == expected_error
 
+    mock_tailwind.status.side_effect = None
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "127.0.0.2",
+            CONF_TOKEN: "123456",
+        },
+    )
+    assert result2.get("type") == FlowResultType.CREATE_ENTRY
+
 
 async def test_unsupported_firmware_version(
     hass: HomeAssistant, mock_tailwind: MagicMock
