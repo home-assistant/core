@@ -96,7 +96,7 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
         """Turn the device on."""
         if self.entity_description.key == "manual_watering":
             await self.coordinator.api.start_zone(
-                self.zone, custom_run_duration=DEFAULT_WATERING_TIME.seconds
+                self.zone, custom_run_duration=DEFAULT_WATERING_TIME.total_seconds()
             )
         elif self.entity_description.key == "auto_watering":
             await self.coordinator.api.resume_zone(self.zone)
