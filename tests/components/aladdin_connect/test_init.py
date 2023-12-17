@@ -169,15 +169,20 @@ async def test_stale_device_removal(
     config_entry_other.add_to_hass(hass)
 
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_or_create(
+    device_entry_other = device_registry.async_get_or_create(
         config_entry_id=config_entry_other.entry_id,
         identifiers={("OtherDomain", "533255-2")},
     )
     device_registry.async_update_device(
-        device_entry.id,
+        device_entry_other.id,
         add_config_entry_id=config_entry.entry_id,
-        merge_identifiers={(DOMAIN, "533244-1")},
+        merge_identifiers={(DOMAIN, "533255-2")},
     )
+
+    device_entry = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+
     with patch(
         "homeassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
@@ -193,15 +198,21 @@ async def test_stale_device_removal(
     device_entry = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )
+
     assert len(device_entry) == 2
     assert any((DOMAIN, "533255-1") in device.identifiers for device in device_entry)
     assert any((DOMAIN, "533255-2") in device.identifiers for device in device_entry)
+    assert any(
+        ("OtherDomain", "533255-2") in device.identifiers for device in device_entry
+    )
 
     device_entry_other = dr.async_entries_for_config_entry(
         device_registry, config_entry_other.entry_id
     )
-
     assert len(device_entry_other) == 1
+    assert any(
+        (DOMAIN, "533255-2") in device.identifiers for device in device_entry_other
+    )
     assert any(
         ("OtherDomain", "533255-2") in device.identifiers
         for device in device_entry_other
@@ -227,6 +238,9 @@ async def test_stale_device_removal(
     )
     assert len(device_entry) == 1
     assert any((DOMAIN, "533255-1") in device.identifiers for device in device_entry)
+    assert not any(
+        (DOMAIN, "533255-2") in device.identifiers for device in device_entry
+    )
 
     device_entry_other = dr.async_entries_for_config_entry(
         device_registry, config_entry_other.entry_id
