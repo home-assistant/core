@@ -692,7 +692,7 @@ class EvoChild(EvoDevice):
                 )
 
                 self._setpoints[f"{key}_sp_from"] = dt_aware.isoformat()
-                try:  # heatSetpoint is the only pascalCase string
+                try:
                     self._setpoints[f"{key}_sp_temp"] = switchpoint[SZ_HEAT_SETPOINT]
                 except KeyError:
                     self._setpoints[f"{key}_sp_state"] = switchpoint["DhwState"]
