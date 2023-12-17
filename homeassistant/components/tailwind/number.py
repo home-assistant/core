@@ -53,8 +53,8 @@ async def async_setup_entry(
     coordinator: TailwindDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         TailwindNumberEntity(
-            coordinator=coordinator,
-            description=description,
+            coordinator,
+            description,
         )
         for description in DESCRIPTIONS
     )

@@ -15,7 +15,7 @@ class TailwindEntity(CoordinatorEntity[TailwindDataUpdateCoordinator]):
 
     def __init__(self, coordinator: TailwindDataUpdateCoordinator) -> None:
         """Initialize an Tailwind entity."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data.device_id)},
             connections={(CONNECTION_NETWORK_MAC, coordinator.data.mac_address)},
