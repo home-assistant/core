@@ -348,21 +348,21 @@ async def test_import_step_validation_failed(hass: HomeAssistant) -> None:
 
 async def test_import_step_unique_id_configured(hass: HomeAssistant) -> None:
     """Test import step with unique ID already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "username": "test-username",
+            "password": "test-password",
+            "home_id": 1,
+        },
+        unique_id="unique_id",
+    )
+    entry.add_to_hass(hass)
+
     with patch(
         "homeassistant.components.tado.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        entry = MockConfigEntry(
-            domain=DOMAIN,
-            data={
-                "username": "test-username",
-                "password": "test-password",
-                "home_id": 1,
-            },
-            unique_id="unique_id",
-        )
-        entry.add_to_hass(hass)
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
