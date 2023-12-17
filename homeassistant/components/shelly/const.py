@@ -6,7 +6,22 @@ from logging import Logger, getLogger
 import re
 from typing import Final
 
-from awesomeversion import AwesomeVersion
+from aioshelly.const import (
+    MODEL_BULB,
+    MODEL_BULB_RGBW,
+    MODEL_BUTTON1,
+    MODEL_BUTTON1_V2,
+    MODEL_DIMMER,
+    MODEL_DIMMER_2,
+    MODEL_DUO,
+    MODEL_GAS,
+    MODEL_MOTION,
+    MODEL_MOTION_2,
+    MODEL_RGBW2,
+    MODEL_VALVE,
+    MODEL_VINTAGE_V2,
+    MODEL_WALL_DISPLAY,
+)
 
 DOMAIN: Final = "shelly"
 
@@ -17,36 +32,33 @@ CONF_COAP_PORT: Final = "coap_port"
 DEFAULT_COAP_PORT: Final = 5683
 FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
 
-# Firmware 1.11.0 release date, this firmware supports light transition
-LIGHT_TRANSITION_MIN_FIRMWARE_DATE: Final = 20210226
-
 # max light transition time in milliseconds
 MAX_TRANSITION_TIME: Final = 5000
 
 RGBW_MODELS: Final = (
-    "SHBLB-1",
-    "SHRGBW2",
+    MODEL_BULB,
+    MODEL_RGBW2,
 )
 
 MODELS_SUPPORTING_LIGHT_TRANSITION: Final = (
-    "SHBDUO-1",
-    "SHCB-1",
-    "SHDM-1",
-    "SHDM-2",
-    "SHRGBW2",
-    "SHVIN-1",
+    MODEL_DUO,
+    MODEL_BULB_RGBW,
+    MODEL_DIMMER,
+    MODEL_DIMMER_2,
+    MODEL_RGBW2,
+    MODEL_VINTAGE_V2,
 )
 
 MODELS_SUPPORTING_LIGHT_EFFECTS: Final = (
-    "SHBLB-1",
-    "SHCB-1",
-    "SHRGBW2",
+    MODEL_BULB,
+    MODEL_BULB_RGBW,
+    MODEL_RGBW2,
 )
 
 # Bulbs that support white & color modes
 DUAL_MODE_LIGHT_MODELS: Final = (
-    "SHBLB-1",
-    "SHCB-1",
+    MODEL_BULB,
+    MODEL_BULB_RGBW,
 )
 
 # Refresh interval for REST sensors
@@ -79,7 +91,11 @@ INPUTS_EVENTS_DICT: Final = {
 }
 
 # List of battery devices that maintain a permanent WiFi connection
-BATTERY_DEVICES_WITH_PERMANENT_CONNECTION: Final = ["SHMOS-01"]
+BATTERY_DEVICES_WITH_PERMANENT_CONNECTION: Final = [
+    MODEL_MOTION,
+    MODEL_MOTION_2,
+    MODEL_VALVE,
+]
 
 # Button/Click events for Block & RPC devices
 EVENT_SHELLY_CLICK: Final = "shelly.click"
@@ -124,7 +140,7 @@ INPUTS_EVENTS_SUBTYPES: Final = {
     "button4": 4,
 }
 
-SHBTN_MODELS: Final = ["SHBTN-1", "SHBTN-2"]
+SHBTN_MODELS: Final = [MODEL_BUTTON1, MODEL_BUTTON1_V2]
 
 STANDARD_RGB_EFFECTS: Final = {
     0: "Off",
@@ -149,6 +165,11 @@ SHTRV_01_TEMPERATURE_SETTINGS: Final = {
     "step": 0.5,
     "default": 20.0,
 }
+RPC_THERMOSTAT_SETTINGS: Final = {
+    "min": 5,
+    "max": 35,
+    "step": 0.5,
+}
 
 # Kelvin value for colorTemp
 KELVIN_MAX_VALUE: Final = 6500
@@ -160,9 +181,7 @@ UPTIME_DEVIATION: Final = 5
 # Time to wait before reloading entry upon device config change
 ENTRY_RELOAD_COOLDOWN = 60
 
-SHELLY_GAS_MODELS = ["SHGS-1"]
-
-BLE_MIN_VERSION = AwesomeVersion("0.12.0-beta2")
+SHELLY_GAS_MODELS = [MODEL_GAS]
 
 CONF_BLE_SCANNER_MODE = "ble_scanner_mode"
 
@@ -187,13 +206,11 @@ OTA_ERROR = "ota_error"
 OTA_PROGRESS = "ota_progress"
 OTA_SUCCESS = "ota_success"
 
-MODEL_WALL_DISPLAY = "SAWD-0A1XX10EU1"
-
 GEN1_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen1/#changelog"
 GEN2_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen2/changelog/"
 DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
     MODEL_WALL_DISPLAY,
-    "SHMOS-01",
-    "SHMOS-02",
-    "SHTRV-01",
+    MODEL_MOTION,
+    MODEL_MOTION_2,
+    MODEL_VALVE,
 )

@@ -1,7 +1,7 @@
 """Test the air-Q config flow."""
 from unittest.mock import patch
 
-from aioairq.core import DeviceInfo, InvalidAuth, InvalidInput
+from aioairq import DeviceInfo, InvalidAuth, InvalidInput
 from aiohttp.client_exceptions import ClientConnectionError
 import pytest
 

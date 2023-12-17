@@ -772,7 +772,9 @@ def state_to_json(config: Config, state: State) -> dict[str, Any]:
         "swversion": "123",
     }
 
-    if light.color_supported(color_modes) and light.color_temp_supported(color_modes):
+    color_supported = light.color_supported(color_modes)
+    color_temp_supported = light.color_temp_supported(color_modes)
+    if color_supported and color_temp_supported:
         # Extended Color light (Zigbee Device ID: 0x0210)
         # Same as Color light, but which supports additional setting of color temperature
         retval["type"] = "Extended color light"
@@ -790,7 +792,7 @@ def state_to_json(config: Config, state: State) -> dict[str, Any]:
             json_state[HUE_API_STATE_COLORMODE] = "hs"
         else:
             json_state[HUE_API_STATE_COLORMODE] = "ct"
-    elif light.color_supported(color_modes):
+    elif color_supported:
         # Color light (Zigbee Device ID: 0x0200)
         # Supports on/off, dimming and color control (hue/saturation, enhanced hue, color loop and XY)
         retval["type"] = "Color light"
@@ -804,7 +806,7 @@ def state_to_json(config: Config, state: State) -> dict[str, Any]:
                 HUE_API_STATE_EFFECT: "none",
             }
         )
-    elif light.color_temp_supported(color_modes):
+    elif color_temp_supported:
         # Color temperature light (Zigbee Device ID: 0x0220)
         # Supports groups, scenes, on/off, dimming, and setting of a color temperature
         retval["type"] = "Color temperature light"

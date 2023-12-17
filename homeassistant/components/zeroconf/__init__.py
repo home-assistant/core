@@ -128,12 +128,12 @@ class ZeroconfServiceInfo(BaseServiceInfo):
     @property
     def host(self) -> str:
         """Return the host."""
-        return _stringify_ip_address(self.ip_address)
+        return str(self.ip_address)
 
     @property
     def addresses(self) -> list[str]:
         """Return the addresses."""
-        return [_stringify_ip_address(ip_address) for ip_address in self.ip_addresses]
+        return [str(ip_address) for ip_address in self.ip_addresses]
 
 
 @bind_hass
@@ -338,12 +338,13 @@ def _match_against_data(
     return True
 
 
-def _match_against_props(matcher: dict[str, str], props: dict[str, str]) -> bool:
+def _match_against_props(matcher: dict[str, str], props: dict[str, str | None]) -> bool:
     """Check a matcher to ensure all values in props."""
     return not any(
         key
         for key in matcher
-        if key not in props or not _memorized_fnmatch(props[key].lower(), matcher[key])
+        if key not in props
+        or not _memorized_fnmatch((props[key] or "").lower(), matcher[key])
     )
 
 
@@ -467,7 +468,7 @@ class ZeroconfDiscovery:
             _LOGGER.debug("Failed to get addresses for device %s", name)
             return
         _LOGGER.debug("Discovered new device %s %s", name, info)
-        props: dict[str, str] = info.properties
+        props: dict[str, str | None] = info.properties
         domain = None
 
         # If we can handle it as a HomeKit discovery, we do that here.
@@ -563,10 +564,6 @@ def async_get_homekit_discovery(
     return None
 
 
-# matches to the cache in zeroconf itself
-_stringify_ip_address = lru_cache(maxsize=256)(str)
-
-
 def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
     """Return prepared info from mDNS entries."""
     # See https://ietf.org/rfc/rfc6763.html#section-6.4 and
@@ -586,19 +583,10 @@ def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
     if not ip_address:
         return None
 
-    # Service properties are always bytes if they are set from the network.
-    # For legacy backwards compatibility zeroconf allows properties to be set
-    # as strings but we never do that so we can safely cast here.
-    service_properties = cast(dict[bytes, bytes | None], service.properties)
-
-    properties: dict[str, Any] = {
-        k.decode("ascii", "replace"): None
-        if v is None
-        else v.decode("utf-8", "replace")
-        for k, v in service_properties.items()
-    }
-
-    assert service.server is not None, "server cannot be none if there are addresses"
+    if TYPE_CHECKING:
+        assert (
+            service.server is not None
+        ), "server cannot be none if there are addresses"
     return ZeroconfServiceInfo(
         ip_address=ip_address,
         ip_addresses=ip_addresses,
@@ -606,7 +594,7 @@ def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
         hostname=service.server,
         type=service.type,
         name=service.name,
-        properties=properties,
+        properties=service.decoded_properties,
     )
 
 
