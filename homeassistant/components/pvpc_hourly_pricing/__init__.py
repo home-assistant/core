@@ -14,13 +14,8 @@ import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    ATTR_POWER,
-    ATTR_POWER_P3,
-    ATTR_TARIFF,
-    DOMAIN,
-    get_enabled_sensor_keys,
-)
+from .const import ATTR_POWER, ATTR_POWER_P3, ATTR_TARIFF, DOMAIN
+from .helpers import get_enabled_sensor_keys
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.SENSOR]

@@ -23,7 +23,8 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ElecPricesDataUpdateCoordinator
-from .const import DOMAIN, make_sensor_unique_id
+from .const import DOMAIN
+from .helpers import make_sensor_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
