@@ -35,6 +35,7 @@ from aioesphomeapi import (
     build_unique_id,
 )
 from aioesphomeapi.model import ButtonInfo
+from bleak_esphome.backend.device import ESPHomeBluetoothDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -43,7 +44,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 
-from .bluetooth.device import ESPHomeBluetoothDevice
 from .const import DOMAIN
 from .dashboard import async_get_dashboard
 

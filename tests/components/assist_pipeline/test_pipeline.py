@@ -1,6 +1,6 @@
 """Websocket tests for Voice Assistant integration."""
 from typing import Any
-from unittest.mock import ANY, AsyncMock, patch
+from unittest.mock import ANY, patch
 
 import pytest
 
@@ -21,9 +21,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import MANY_LANGUAGES
-from .conftest import MockSttPlatform, MockSttProvider, MockTTSPlatform, MockTTSProvider
+from .conftest import MockSttProvider, MockTTSProvider
 
-from tests.common import MockModule, flush_store, mock_integration, mock_platform
+from tests.common import flush_store
 
 
 @pytest.fixture(autouse=True)
@@ -237,13 +237,26 @@ async def test_create_default_pipeline(
     store = pipeline_data.pipeline_store
     assert len(store.data) == 1
 
-    assert await async_create_default_pipeline(hass, "bla", "bla") is None
-    assert await async_create_default_pipeline(hass, "test", "test") == Pipeline(
+    assert (
+        await async_create_default_pipeline(
+            hass,
+            stt_engine_id="bla",
+            tts_engine_id="bla",
+            pipeline_name="Bla pipeline",
+        )
+        is None
+    )
+    assert await async_create_default_pipeline(
+        hass,
+        stt_engine_id="test",
+        tts_engine_id="test",
+        pipeline_name="Test pipeline",
+    ) == Pipeline(
         conversation_engine="homeassistant",
         conversation_language="en",
         id=ANY,
         language="en",
-        name="Home Assistant",
+        name="Test pipeline",
         stt_engine="test",
         stt_language="en-US",
         tts_engine="test",
@@ -462,56 +475,6 @@ async def test_default_pipeline_unsupported_tts_language(
         tts_engine=None,
         tts_language=None,
         tts_voice=None,
-        wake_word_entity=None,
-        wake_word_id=None,
-    )
-
-
-async def test_default_pipeline_cloud(
-    hass: HomeAssistant,
-    mock_stt_provider: MockSttProvider,
-    mock_tts_provider: MockTTSProvider,
-) -> None:
-    """Test async_get_pipeline."""
-
-    mock_integration(hass, MockModule("cloud"))
-    mock_platform(
-        hass,
-        "cloud.tts",
-        MockTTSPlatform(
-            async_get_engine=AsyncMock(return_value=mock_tts_provider),
-        ),
-    )
-    mock_platform(
-        hass,
-        "cloud.stt",
-        MockSttPlatform(
-            async_get_engine=AsyncMock(return_value=mock_stt_provider),
-        ),
-    )
-    mock_platform(hass, "test.config_flow")
-
-    assert await async_setup_component(hass, "tts", {"tts": {"platform": "cloud"}})
-    assert await async_setup_component(hass, "stt", {"stt": {"platform": "cloud"}})
-    assert await async_setup_component(hass, "assist_pipeline", {})
-
-    pipeline_data: PipelineData = hass.data[DOMAIN]
-    store = pipeline_data.pipeline_store
-    assert len(store.data) == 1
-
-    # Check the default pipeline
-    pipeline = async_get_pipeline(hass, None)
-    assert pipeline == Pipeline(
-        conversation_engine="homeassistant",
-        conversation_language="en",
-        id=pipeline.id,
-        language="en",
-        name="Home Assistant Cloud",
-        stt_engine="cloud",
-        stt_language="en-US",
-        tts_engine="cloud",
-        tts_language="en-US",
-        tts_voice="james_earl_jones",
         wake_word_entity=None,
         wake_word_id=None,
     )

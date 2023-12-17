@@ -110,7 +110,7 @@ async def test_library_sensor_values(
     mock_plex_server = await setup_plex_server()
     await wait_for_debouncer(hass)
 
-    activity_sensor = hass.states.get("sensor.plex_plex_server_1")
+    activity_sensor = hass.states.get("sensor.plex_server_1")
     assert activity_sensor.state == "1"
 
     # Ensure sensor is created as disabled

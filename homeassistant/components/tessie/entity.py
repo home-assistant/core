@@ -25,7 +25,7 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
         self.vin = coordinator.vin
         self.key = key
 
-        car_type = coordinator.data["vehicle_config-car_type"]
+        car_type = coordinator.data["vehicle_config_car_type"]
 
         self._attr_translation_key = key
         self._attr_unique_id = f"{self.vin}-{key}"
@@ -35,11 +35,11 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
             configuration_url="https://my.tessie.com/",
             name=coordinator.data["display_name"],
             model=MODELS.get(car_type, car_type),
-            sw_version=coordinator.data["vehicle_state-car_version"],
-            hw_version=coordinator.data["vehicle_config-driver_assist"],
+            sw_version=coordinator.data["vehicle_state_car_version"],
+            hw_version=coordinator.data["vehicle_config_driver_assist"],
         )
 
     @property
-    def value(self) -> Any:
+    def _value(self) -> Any:
         """Return value from coordinator data."""
         return self.coordinator.data[self.key]
