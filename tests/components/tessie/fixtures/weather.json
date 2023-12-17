@@ -1,0 +1,14 @@
+{
+  "location": "Myrtletown",
+  "condition": "Clouds",
+  "temperature": 31.41,
+  "feels_like": 35.73,
+  "humidity": 60,
+  "visibility": 10000,
+  "pressure": 1010,
+  "sunrise": 1702752440,
+  "sunset": 1702802337,
+  "cloudiness": 75,
+  "wind_speed": 7.72,
+  "wind_direction": 20
+}
