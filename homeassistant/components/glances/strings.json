@@ -30,5 +30,11 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "issues": {
+    "deprecated_version": {
+      "title": "Glances servers with version 2 is deprecated",
+      "description": "Glances servers with version 2 is deprecated and will not be supported in future versions of HA. It is recommended to update to version 3."
+    }
   }
 }

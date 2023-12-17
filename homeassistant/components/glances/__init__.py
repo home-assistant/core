@@ -8,8 +8,9 @@ from homeassistant.const import CONF_NAME, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import DOMAIN
+from .const import CONF_VERSION, DOMAIN
 from .coordinator import GlancesDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -26,6 +27,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    if config_entry.data[CONF_VERSION] == 2:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_version",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_version",
+        )
 
     return True
 
