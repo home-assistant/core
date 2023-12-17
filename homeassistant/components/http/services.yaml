@@ -1,0 +1,7 @@
+unban_ip:
+  fields:
+    ip_address:
+      required: true
+      example: "192.168.178.2"
+      selector:
+        text:
