@@ -155,9 +155,7 @@ async def test_remove_stale_device(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
-    assert (
-        hass.states.async_entity_ids_count() == 6
-    )  # 2 climate entities; 4 sensor entities
+    assert hass.states.async_entity_ids_count() == 6
 
     device_entry = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
