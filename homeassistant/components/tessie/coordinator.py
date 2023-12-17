@@ -41,7 +41,7 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator):
         self.api_key = api_key
         self.vin = vin
         self.session = async_get_clientsession(hass)
-        self.data = self._flattern(data)
+        self.data = self._flatten(data)
         self.did_first_update = False
 
     async def async_update_data(self) -> dict[str, Any]:
@@ -66,22 +66,22 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator):
         self.did_first_update = True
         if vehicle["state"] == TessieStatus.ONLINE:
             # Vehicle is online, all data is fresh
-            return self._flattern(vehicle)
+            return self._flatten(vehicle)
 
         # Vehicle is asleep, only update state
         self.data["state"] = vehicle["state"]
         return self.data
 
-    def _flattern(
+    def _flatten(
         self, data: dict[str, Any], parent: str | None = None
     ) -> dict[str, Any]:
-        """Flattern the data structure."""
+        """Flatten the data structure."""
         result = {}
         for key, value in data.items():
             if parent:
                 key = f"{parent}_{key}"
             if isinstance(value, dict):
-                result.update(self._flattern(value, key))
+                result.update(self._flatten(value, key))
             else:
                 result[key] = value
         return result
