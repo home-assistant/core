@@ -197,7 +197,7 @@ aiobotocore==2.6.0
 aiocomelit==0.6.2
 
 # homeassistant.components.dhcp
-aiodiscover==1.5.1
+aiodiscover==1.6.0
 
 # homeassistant.components.dnsip
 aiodns==3.0.0
