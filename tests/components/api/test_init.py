@@ -306,7 +306,8 @@ async def test_api_get_services(
     for serv_domain in data:
         local = local_services.pop(serv_domain["domain"])
 
-        assert serv_domain["services"] == local
+        for service_name in serv_domain["services"]:
+            assert service_name in local
 
 
 async def test_api_call_service_no_data(

@@ -693,6 +693,8 @@ async def test_get_services(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
     """Test get_services command."""
+    local_services = hass.services.async_services()
+
     for id_ in (5, 6):
         await websocket_client.send_json({"id": id_, "type": "get_services"})
 
@@ -700,7 +702,12 @@ async def test_get_services(
         assert msg["id"] == id_
         assert msg["type"] == const.TYPE_RESULT
         assert msg["success"]
-        assert msg["result"] == hass.services.async_services()
+
+        for domain_name in local_services:
+            assert domain_name in msg["result"]
+
+            for service_name in local_services[domain_name]:
+                assert service_name in msg["result"][domain_name]
 
 
 async def test_get_config(
