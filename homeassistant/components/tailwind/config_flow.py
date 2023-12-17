@@ -21,7 +21,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 
 
 class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -50,6 +50,7 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
             except TailwindConnectionError:
                 errors[CONF_HOST] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
