@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 
+import sqlparse
 import voluptuous as vol
 
 from homeassistant.components.recorder import CONF_DB_URL, get_instance
@@ -38,7 +39,9 @@ _LOGGER = logging.getLogger(__name__)
 
 def validate_sql_select(value: str) -> str:
     """Validate that value is a SQL SELECT query."""
-    if not value.lstrip().lower().startswith("select"):
+    query_type = sqlparse.parse(value)[0].get_type().upper()
+    _LOGGER.debug("The SQL query is of type %s", query_type)
+    if not query_type == "SELECT":
         raise vol.Invalid("Only SELECT queries allowed")
     return value
 

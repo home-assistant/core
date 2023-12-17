@@ -362,8 +362,6 @@ class SQLSensor(ManualTriggerSensorEntity):
                 self._query,
                 redact_credentials(str(err)),
             )
-            sess.rollback()
-            sess.close()
             return
 
         for res in result.mappings():

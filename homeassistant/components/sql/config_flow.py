@@ -8,6 +8,7 @@ import sqlalchemy
 from sqlalchemy.engine import Result
 from sqlalchemy.exc import NoSuchColumnError, SQLAlchemyError
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
+import sqlparse
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -82,8 +83,10 @@ CONFIG_SCHEMA: vol.Schema = vol.Schema(
 
 def validate_sql_select(value: str) -> str | None:
     """Validate that value is a SQL SELECT query."""
-    if not value.lstrip().lower().startswith("select"):
-        raise ValueError("Incorrect Query")
+    query_type = sqlparse.parse(value)[0].get_type().upper()
+    _LOGGER.debug("The SQL query is of type %s", query_type)
+    if not query_type == "SELECT":
+        raise ValueError("query_no_read_only")
     return value
 
 
@@ -158,8 +161,12 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders = {"column": column}
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
-            except ValueError:
-                errors["query"] = "query_invalid"
+            except ValueError as err:
+                _LOGGER.debug("Invalid query: %s", err)
+                if str(err) == "query_no_read_only":
+                    errors["query"] = "query_no_read_only"
+                else:
+                    errors["query"] = "query_invalid"
 
             options = {
                 CONF_QUERY: query,
@@ -219,8 +226,12 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 description_placeholders = {"column": column}
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
-            except ValueError:
-                errors["query"] = "query_invalid"
+            except ValueError as err:
+                _LOGGER.debug("Invalid query: %s", err)
+                if str(err) == "query_no_read_only":
+                    errors["query"] = "query_no_read_only"
+                else:
+                    errors["query"] = "query_invalid"
             else:
                 recorder_db = get_instance(self.hass).db_url
                 _LOGGER.debug(
