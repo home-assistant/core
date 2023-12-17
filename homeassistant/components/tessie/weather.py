@@ -96,44 +96,44 @@ class TessieWeatherEntity(TessieEntity, WeatherEntity):
     @property
     def native_apparent_temperature(self) -> float | None:
         """Return the apparent temperature in native units."""
-        return self.coordinator.data["feels_like"]
+        return self.coordinator.data.get("feels_like")
 
     @property
     def native_temperature(self) -> float | None:
         """Return the temperature in native units."""
-        return self.coordinator.data["temperature"]
+        return self.coordinator.data.get("temperature")
 
     @property
     def native_pressure(self) -> float | None:
         """Return the pressure in native units."""
-        return self.coordinator.data["pressure"]
+        return self.coordinator.data.get("pressure")
 
     @property
     def humidity(self) -> float | None:
         """Return the humidity in native units."""
-        return self.coordinator.data["humidity"]
+        return self.coordinator.data.get("humidity")
 
     @property
     def native_wind_speed(self) -> float | None:
         """Return the wind speed in native units."""
-        return self.coordinator.data["wind_speed"]
+        return self.coordinator.data.get("wind_speed")
 
     @property
     def wind_bearing(self) -> float | str | None:
         """Return the wind bearing."""
-        return self.coordinator.data["wind_direction"]
+        return self.coordinator.data.get("wind_direction")
 
     @property
     def cloud_coverage(self) -> float | None:
         """Return the Cloud coverage in %."""
-        return self.coordinator.data["cloudiness"]
+        return self.coordinator.data.get("cloudiness")
 
     @property
     def native_visibility(self) -> float | None:
         """Return the visibility in native units."""
-        return self.coordinator.data["visibility"]
+        return self.coordinator.data.get("visibility")
 
     @property
     def condition(self) -> str | None:
         """Return the current condition."""
-        return self.coordinator.data["condition"]
+        return self.coordinator.data.get("condition")
