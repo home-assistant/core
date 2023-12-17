@@ -197,7 +197,7 @@ aiobotocore==2.6.0
 aiocomelit==0.6.2
 
 # homeassistant.components.dhcp
-aiodiscover==1.5.1
+aiodiscover==1.6.0
 
 # homeassistant.components.dnsip
 aiodns==3.0.0
@@ -454,7 +454,7 @@ bellows==0.37.3
 bimmer-connected[china]==0.14.6
 
 # homeassistant.components.esphome
-bleak-esphome==0.3.0
+bleak-esphome==0.4.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.3.0
@@ -472,13 +472,12 @@ blinkpy==0.22.3
 bluemaestro-ble==0.2.3
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.16.1
+bluetooth-adapters==0.16.2
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.2.3
 
 # homeassistant.components.bluetooth
-# homeassistant.components.esphome
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
@@ -2136,7 +2135,7 @@ yt-dlp==2023.11.16
 zamg==0.3.3
 
 # homeassistant.components.zeroconf
-zeroconf==0.129.0
+zeroconf==0.130.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1

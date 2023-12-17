@@ -420,6 +420,8 @@ class RuntimeEntryData:
         Safe to call multiple times.
         """
         self.available = False
+        if self.bluetooth_device:
+            self.bluetooth_device.available = False
         # Make a copy since calling the disconnect callbacks
         # may also try to discard/remove themselves.
         for disconnect_cb in self.disconnect_callbacks.copy():
@@ -428,3 +430,21 @@ class RuntimeEntryData:
         # to it and make sure all the callbacks can be GC'd.
         self.disconnect_callbacks.clear()
         self.disconnect_callbacks = set()
+
+    @callback
+    def async_on_connect(
+        self, device_info: DeviceInfo, api_version: APIVersion
+    ) -> None:
+        """Call when the entry has been connected."""
+        self.available = True
+        if self.bluetooth_device:
+            self.bluetooth_device.available = True
+
+        self.device_info = device_info
+        self.api_version = api_version
+        # Reset expected disconnect flag on successful reconnect
+        # as it will be flipped to False on unexpected disconnect.
+        #
+        # We use this to determine if a deep sleep device should
+        # be marked as unavailable or not.
+        self.expected_disconnect = True
