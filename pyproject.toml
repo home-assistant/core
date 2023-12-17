@@ -37,7 +37,7 @@ dependencies    = [
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.25.0",
-    "home-assistant-bluetooth==1.10.4",
+    "home-assistant-bluetooth==1.11.0",
     "ifaddr==0.2.0",
     "Jinja2==3.1.2",
     "lru-dict==1.2.0",
@@ -52,7 +52,7 @@ dependencies    = [
     "python-slugify==4.0.1",
     "PyYAML==6.0.1",
     "requests==2.31.0",
-    "typing-extensions>=4.8.0,<5.0",
+    "typing-extensions>=4.9.0,<5.0",
     "ulid-transform==0.9.0",
     "voluptuous==0.13.1",
     "voluptuous-serialize==2.6.0",
@@ -481,8 +481,6 @@ filterwarnings = [
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:dateparser.timezone_parser",
     # https://github.com/zopefoundation/DateTime/pull/55 - >5.2
     "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:DateTime.pytz_support",
-    # https://github.com/kurtmckee/feedparser/issues/330 - >6.0.10
-    "ignore:'cgi' is deprecated and slated for removal in Python 3.13:DeprecationWarning:feedparser.encodings",
     # https://github.com/jaraco/jaraco.abode/commit/9e3e789efc96cddcaa15f920686bbeb79a7469e0 - update jaraco.abode to >=5.1.0
     "ignore:`jaraco.functools.call_aside` is deprecated, use `jaraco.functools.invoke` instead:DeprecationWarning:jaraco.abode.helpers.timeline",
     # https://github.com/nextcord/nextcord/pull/1095 - >2.6.1

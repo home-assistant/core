@@ -15,7 +15,7 @@ from tests.typing import ClientSessionGenerator
 
 
 async def test_config_entry(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, utcnow
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test generating diagnostics for a config entry."""
     accessories = await setup_accessories_from_file(hass, "koogeek_ls1.json")
@@ -293,7 +293,6 @@ async def test_device(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     device_registry: dr.DeviceRegistry,
-    utcnow,
 ) -> None:
     """Test generating diagnostics for a device entry."""
     accessories = await setup_accessories_from_file(hass, "koogeek_ls1.json")

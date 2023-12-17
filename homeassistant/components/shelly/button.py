@@ -5,6 +5,8 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, Generic, TypeVar
 
+from aioshelly.const import RPC_GENERATIONS
+
 from homeassistant.components.button import (
     ButtonDeviceClass,
     ButtonEntity,
@@ -126,7 +128,7 @@ async def async_setup_entry(
         return async_migrate_unique_ids(entity_entry, coordinator)
 
     coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator | None = None
-    if get_device_entry_gen(config_entry) == 2:
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
         coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
     else:
         coordinator = get_entry_data(hass)[config_entry.entry_id].block
