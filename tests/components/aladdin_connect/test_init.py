@@ -161,13 +161,23 @@ async def test_stale_device_removal(
     mock_aladdinconnect_api.get_doors = AsyncMock(
         return_value=[DEVICE_CONFIG_OPEN, DEVICE_CONFIG_DOOR_2]
     )
+    config_entry_other = MockConfigEntry(
+        domain="OtherDomain",
+        data=CONFIG,
+        unique_id="unique_id",
+    )
+    config_entry_other.add_to_hass(hass)
 
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_other.entry_id,
         identifiers={("OtherDomain", "533255-2")},
     )
-
+    device_registry.async_update_device(
+        device_entry.id,
+        add_config_entry_id=config_entry.entry_id,
+        merge_identifiers={(DOMAIN, "533244-1")},
+    )
     with patch(
         "homeassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
@@ -183,11 +193,18 @@ async def test_stale_device_removal(
     device_entry = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )
-    assert len(device_entry) == 3
+    assert len(device_entry) == 2
     assert any((DOMAIN, "533255-1") in device.identifiers for device in device_entry)
     assert any((DOMAIN, "533255-2") in device.identifiers for device in device_entry)
+
+    device_entry_other = dr.async_entries_for_config_entry(
+        device_registry, config_entry_other.entry_id
+    )
+
+    assert len(device_entry_other) == 1
     assert any(
-        ("OtherDomain", "533255-2") in device.identifiers for device in device_entry
+        ("OtherDomain", "533255-2") in device.identifiers
+        for device in device_entry_other
     )
 
     assert await config_entry.async_unload(hass)
@@ -208,8 +225,15 @@ async def test_stale_device_removal(
     device_entry = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )
-    assert len(device_entry) == 2
+    assert len(device_entry) == 1
     assert any((DOMAIN, "533255-1") in device.identifiers for device in device_entry)
+
+    device_entry_other = dr.async_entries_for_config_entry(
+        device_registry, config_entry_other.entry_id
+    )
+
+    assert len(device_entry_other) == 1
     assert any(
-        ("OtherDomain", "533255-2") in device.identifiers for device in device_entry
+        ("OtherDomain", "533255-2") in device.identifiers
+        for device in device_entry_other
     )
