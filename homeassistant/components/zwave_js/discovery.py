@@ -530,6 +530,68 @@ DISCOVERY_SCHEMAS = [
         primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
         assumed_state=True,
     ),
+    # Heatit Z-TRM6
+    ZWaveDiscoverySchema(
+        platform=Platform.CLIMATE,
+        hint="dynamic_current_temp",
+        manufacturer_id={0x019B},
+        product_id={0x3001},
+        product_type={0x0030},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.THERMOSTAT_MODE},
+            property={THERMOSTAT_MODE_PROPERTY},
+            type={ValueType.NUMBER},
+        ),
+        data_template=DynamicCurrentTempClimateDataTemplate(
+            lookup_table={
+                # Floor sensor
+                "Floor": ZwaveValueID(
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
+                    endpoint=4,
+                ),
+                # Internal sensor
+                "Internal": ZwaveValueID(
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
+                    endpoint=2,
+                ),
+                # Internal with limit by floor sensor
+                "Internal with floor limit": ZwaveValueID(
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
+                    endpoint=2,
+                ),
+                # External sensor (connected to device)
+                "External": ZwaveValueID(
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
+                    endpoint=3,
+                ),
+                # External sensor (connected to device) with limit by floor sensor (2x sensors)
+                "External with floor limit": ZwaveValueID(
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
+                    endpoint=3,
+                ),
+                # PWER - Power regulator mode (no sensor used).
+                # This mode is not supported by the climate entity.
+                # Heating is set by adjusting parameter 25.
+                # P25: Set % of time the relay should be active when using PWER mode.
+                # (30-minute duty cycle)
+                # Use the air temperature as current temperature in the climate entity
+                # as we have nothing else.
+                "Power regulator": ZwaveValueID(
+                    property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
+                    command_class=CommandClass.SENSOR_MULTILEVEL,
+                    endpoint=2,
+                ),
+            },
+            dependent_value=ZwaveValueID(
+                property_=2, command_class=CommandClass.CONFIGURATION, endpoint=0
+            ),
+        ),
+    ),
     # Heatit Z-TRM3
     ZWaveDiscoverySchema(
         platform=Platform.CLIMATE,
@@ -664,7 +726,14 @@ DISCOVERY_SCHEMAS = [
     # locks
     # Door Lock CC
     ZWaveDiscoverySchema(
-        platform=Platform.LOCK, primary_value=DOOR_LOCK_CURRENT_MODE_SCHEMA
+        platform=Platform.LOCK,
+        primary_value=DOOR_LOCK_CURRENT_MODE_SCHEMA,
+        allow_multi=True,
+    ),
+    ZWaveDiscoverySchema(
+        platform=Platform.SELECT,
+        primary_value=DOOR_LOCK_CURRENT_MODE_SCHEMA,
+        hint="door_lock",
     ),
     # Only discover the Lock CC if the Door Lock CC isn't also present on the node
     ZWaveDiscoverySchema(

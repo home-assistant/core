@@ -21,6 +21,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
     ATTR_TEMPERATURE,
+    CONF_DEVICE,
     CONF_HOST,
     CONF_MODEL,
     CONF_TOKEN,
@@ -31,7 +32,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     DOMAIN,
