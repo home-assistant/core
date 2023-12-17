@@ -21,7 +21,7 @@ from .const import (
     ICON_OCCUPIED,
 )
 from .coordinator import SleepIQData, SleepIQDataUpdateCoordinator
-from .entity import SleepIQBedEntity
+from .entity import SleepIQBedEntity, sleeper_for_side
 
 
 @dataclass
@@ -83,15 +83,12 @@ async def _async_set_foot_warmer_time(
 
 
 def _get_foot_warming_name(bed: SleepIQBed, foot_warmer: SleepIQFootWarmer) -> str:
-    sleeper_name = next(
-        (sleeper.name for sleeper in bed.sleepers if sleeper.side == foot_warmer.side),
-        foot_warmer.side.value,
-    )
-    return f"SleepNumber {bed.name} {sleeper_name} {ENTITY_TYPES[FOOT_WARMING_TIMER]}"
+    sleeper = sleeper_for_side(bed, foot_warmer.side)
+    return f"SleepNumber {bed.name} {sleeper.name} {ENTITY_TYPES[FOOT_WARMING_TIMER]}"
 
 
 def _get_foot_warming_unique_id(bed: SleepIQBed, foot_warmer: SleepIQFootWarmer) -> str:
-    return f"{bed.id}_{foot_warmer.side}_{FOOT_WARMING_TIMER}"
+    return f"{bed.id}_{foot_warmer.side.value}_{FOOT_WARMING_TIMER}"
 
 
 NUMBER_DESCRIPTIONS: dict[str, SleepIQNumberEntityDescription] = {
@@ -125,7 +122,7 @@ NUMBER_DESCRIPTIONS: dict[str, SleepIQNumberEntityDescription] = {
         native_max_value=360,
         native_step=30,
         name=ENTITY_TYPES[FOOT_WARMING_TIMER],
-        icon=ICON_OCCUPIED,
+        icon="mdi:timer",
         value_fn=lambda foot_warmer: foot_warmer.timer,
         set_value_fn=_async_set_foot_warmer_time,
         get_name_fn=_get_foot_warming_name,
@@ -194,6 +191,8 @@ class SleepIQNumberEntity(SleepIQBedEntity[SleepIQDataUpdateCoordinator], Number
 
         self._attr_name = description.get_name_fn(bed, device)
         self._attr_unique_id = description.get_unique_id_fn(bed, device)
+        if description.icon:
+            self._attr_icon = description.icon
 
         super().__init__(coordinator, bed)
 

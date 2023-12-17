@@ -14,9 +14,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, ENTITY_TYPES, FOOT_WARMER
+from .const import DOMAIN, FOOT_WARMER
 from .coordinator import SleepIQData, SleepIQDataUpdateCoordinator
-from .entity import SleepIQBedEntity, SleepIQSleeperEntity
+from .entity import SleepIQBedEntity, SleepIQSleeperEntity, sleeper_for_side
 
 
 async def async_setup_entry(
@@ -76,7 +76,9 @@ class SleepIQSelectEntity(SleepIQBedEntity[SleepIQDataUpdateCoordinator], Select
 class SleepIQFootWarmingTempSelectEntity(
     SleepIQSleeperEntity[SleepIQDataUpdateCoordinator], SelectEntity
 ):
-    """Representation of a SleepIQ foot warming temperatuer select entity."""
+    """Representation of a SleepIQ foot warming temperature select entity."""
+
+    _attr_icon = "mdi:heat-wave"
 
     def __init__(
         self,
@@ -86,13 +88,8 @@ class SleepIQFootWarmingTempSelectEntity(
     ) -> None:
         """Initialize the select entity."""
         self.foot_warmer = foot_warmer
-        for s in bed.sleepers:
-            if s.side == foot_warmer.side:
-                sleeper = s
-                break
-        else:
-            sleeper = bed.sleepers[0]
-        super().__init__(coordinator, bed, sleeper, ENTITY_TYPES[FOOT_WARMER])
+        sleeper = sleeper_for_side(bed, foot_warmer.side)
+        super().__init__(coordinator, bed, sleeper, FOOT_WARMER)
         self._attr_options = [e.name.title() for e in FootWarmingTemps]
         self._async_update_attrs()
 
