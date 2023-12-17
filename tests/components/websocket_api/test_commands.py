@@ -695,6 +695,8 @@ async def test_get_services(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
     """Test get_services command."""
+    local_services = hass.services.async_services()
+
     for id_ in (5, 6):
         await websocket_client.send_json({"id": id_, "type": "get_services"})
 
