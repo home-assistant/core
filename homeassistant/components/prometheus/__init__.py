@@ -25,6 +25,9 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
+    ATTR_GPS_ACCURACY,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     ATTR_MODE,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -40,7 +43,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, State
 from homeassistant.helpers import entityfilter, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
@@ -168,7 +171,7 @@ class PrometheusMetrics:
         self._metrics = {}
         self._climate_units = climate_units
 
-    def handle_state_changed_event(self, event):
+    def handle_state_changed_event(self, event: Event):
         """Handle new messages from the bus."""
         if (state := event.data.get("new_state")) is None:
             return
@@ -184,7 +187,7 @@ class PrometheusMetrics:
 
         self.handle_state(state)
 
-    def handle_state(self, state):
+    def handle_state(self, state: State):
         """Add/update a state in Prometheus."""
         entity_id = state.entity_id
         _LOGGER.debug("Handling state update for %s", entity_id)
@@ -385,7 +388,9 @@ class PrometheusMetrics:
     def _handle_number(self, state):
         self._numeric_handler(state, "number", "number")
 
-    def _handle_device_tracker(self, state):
+    def _handle_device_tracker(self, state: State):
+        # state here converts the state string (usually home/not-home) to a numeric value.
+        # this is the same logic as _handle_binary_sensor but with its own metric name.
         metric = self._metric(
             "device_tracker_state",
             self.prometheus_cli.Gauge,
@@ -393,6 +398,26 @@ class PrometheusMetrics:
         )
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
+
+        # record battery level of the device tracker if available
+        self._battery(state)
+
+        # device-tracker entities have certain well known attributes that we can record here in prometheus as a
+        # time series.
+        well_known_attributes = {
+            # base state attributes
+            ATTR_LATITUDE: "Latitude of the device tracker measured in decimal degrees",
+            ATTR_LONGITUDE: "Longitude of the device tracker measured in decimal degrees",
+            ATTR_GPS_ACCURACY: "GPS accuracy of the device tracker location",
+        }
+        for attr, description in well_known_attributes.items():
+            value = state.attributes.get(attr)
+            if value is not None and isinstance(value, (int, float)):
+                self._metric(
+                    f"device_tracker_{attr}",
+                    self.prometheus_cli.Gauge,
+                    description,
+                ).labels(**self._labels(state)).set(value)
 
     def _handle_person(self, state):
         metric = self._metric(

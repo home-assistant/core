@@ -40,6 +40,9 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
+    ATTR_GPS_ACCURACY,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     ATTR_MODE,
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -584,6 +587,26 @@ async def test_device_tracker(client, device_tracker_entities) -> None:
         'device_tracker_state{domain="device_tracker",'
         'entity="device_tracker.phone",'
         'friendly_name="Phone"} 1.0' in body
+    )
+    assert (
+        'device_tracker_latitude{domain="device_tracker",'
+        'entity="device_tracker.phone",'
+        'friendly_name="Phone"} 51.509865' in body
+    )
+    assert (
+        'device_tracker_longitude{domain="device_tracker",'
+        'entity="device_tracker.phone",'
+        'friendly_name="Phone"} -0.118092' in body
+    )
+    assert (
+        'device_tracker_gps_accuracy{domain="device_tracker",'
+        'entity="device_tracker.phone",'
+        'friendly_name="Phone"} 42.0' in body
+    )
+    assert (
+        'battery_level_percent{domain="device_tracker",'
+        'entity="device_tracker.phone",'
+        'friendly_name="Phone"} 50.0' in body
     )
     assert (
         'device_tracker_state{domain="device_tracker",'
@@ -1657,7 +1680,17 @@ async def device_tracker_fixture(
         suggested_object_id="phone",
         original_name="Phone",
     )
-    set_state_with_entry(hass, device_tracker_1, STATE_HOME)
+    set_state_with_entry(
+        hass,
+        device_tracker_1,
+        STATE_HOME,
+        {
+            ATTR_BATTERY_LEVEL: 50,
+            ATTR_LATITUDE: 51.509865,
+            ATTR_LONGITUDE: -0.118092,
+            ATTR_GPS_ACCURACY: 42,
+        },
+    )
     data["device_tracker_1"] = device_tracker_1
 
     device_tracker_2 = entity_registry.async_get_or_create(
