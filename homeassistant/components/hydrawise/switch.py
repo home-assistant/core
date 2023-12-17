@@ -53,7 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             cv.ensure_list, [vol.In(SWITCH_KEYS)]
         ),
         vol.Optional(
-            CONF_WATERING_TIME, default=DEFAULT_WATERING_TIME.seconds
+            CONF_WATERING_TIME, default=DEFAULT_WATERING_TIME.total_seconds() // 60
         ): vol.All(vol.In(ALLOWED_WATERING_TIME)),
     }
 )
