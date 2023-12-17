@@ -134,7 +134,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_PASSWORD: password,
                 },
             )
-        except CannotConnect:
+        except exceptions.HomeAssistantError:
             return self.async_abort(reason="import_failed")
 
         home_id = validate_result[UNIQUE_ID]
