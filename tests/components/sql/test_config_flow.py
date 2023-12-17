@@ -19,6 +19,8 @@ from . import (
     ENTRY_CONFIG_INVALID_QUERY,
     ENTRY_CONFIG_INVALID_QUERY_OPT,
     ENTRY_CONFIG_NO_RESULTS,
+    ENTRY_CONFIG_QUERY_NO_READ_ONLY,
+    ENTRY_CONFIG_QUERY_NO_READ_ONLY_OPT,
     ENTRY_CONFIG_WITH_VALUE_TEMPLATE,
 )
 
@@ -130,6 +132,16 @@ async def test_flow_fails_invalid_query(
     assert result5["type"] == FlowResultType.FORM
     assert result5["errors"] == {
         "query": "query_invalid",
+    }
+
+    result5 = await hass.config_entries.flow.async_configure(
+        result4["flow_id"],
+        user_input=ENTRY_CONFIG_QUERY_NO_READ_ONLY,
+    )
+
+    assert result5["type"] == FlowResultType.FORM
+    assert result5["errors"] == {
+        "query": "query_no_read_only",
     }
 
     result5 = await hass.config_entries.flow.async_configure(
@@ -378,6 +390,16 @@ async def test_options_flow_fails_invalid_query(
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {
         "query": "query_invalid",
+    }
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=ENTRY_CONFIG_QUERY_NO_READ_ONLY_OPT,
+    )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {
+        "query": "query_no_read_only",
     }
 
     result4 = await hass.config_entries.options.async_configure(
