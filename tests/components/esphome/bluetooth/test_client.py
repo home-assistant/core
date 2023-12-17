@@ -32,11 +32,11 @@ async def client_data_fixture(
             mac_address=ESP_MAC_ADDRESS,
             name=ESP_NAME,
             bluetooth_proxy_feature_flags=BluetoothProxyFeature.PASSIVE_SCAN
-            & BluetoothProxyFeature.ACTIVE_CONNECTIONS
-            & BluetoothProxyFeature.REMOTE_CACHING
-            & BluetoothProxyFeature.PAIRING
-            & BluetoothProxyFeature.CACHE_CLEARING
-            & BluetoothProxyFeature.RAW_ADVERTISEMENTS,
+            | BluetoothProxyFeature.ACTIVE_CONNECTIONS
+            | BluetoothProxyFeature.REMOTE_CACHING
+            | BluetoothProxyFeature.PAIRING
+            | BluetoothProxyFeature.CACHE_CLEARING
+            | BluetoothProxyFeature.RAW_ADVERTISEMENTS,
         ),
         api_version=APIVersion(1, 9),
         title=ESP_NAME,

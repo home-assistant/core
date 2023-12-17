@@ -79,7 +79,7 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator):
         result = {}
         for key, value in data.items():
             if parent:
-                key = f"{parent}-{key}"
+                key = f"{parent}_{key}"
             if isinstance(value, dict):
                 result.update(self._flattern(value, key))
             else:

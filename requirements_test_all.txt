@@ -170,7 +170,7 @@ aioairq==0.3.1
 aioairzone-cloud==0.3.6
 
 # homeassistant.components.airzone
-aioairzone==0.7.0
+aioairzone==0.7.2
 
 # homeassistant.components.ambient_station
 aioambient==2023.04.0
@@ -197,7 +197,7 @@ aiobotocore==2.6.0
 aiocomelit==0.6.2
 
 # homeassistant.components.dhcp
-aiodiscover==1.5.1
+aiodiscover==1.6.0
 
 # homeassistant.components.dnsip
 aiodns==3.0.0
@@ -350,7 +350,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==67
+aiounifi==68
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -454,7 +454,7 @@ bellows==0.37.3
 bimmer-connected[china]==0.14.6
 
 # homeassistant.components.esphome
-bleak-esphome==0.3.0
+bleak-esphome==0.4.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.3.0
@@ -472,13 +472,12 @@ blinkpy==0.22.3
 bluemaestro-ble==0.2.3
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.16.1
+bluetooth-adapters==0.16.2
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.2.3
 
 # homeassistant.components.bluetooth
-# homeassistant.components.esphome
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
@@ -503,7 +502,7 @@ brottsplatskartan==1.0.5
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.2.0
+bthome-ble==3.3.1
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
@@ -643,7 +642,7 @@ faadelays==2023.9.1
 fastdotcom==0.0.3
 
 # homeassistant.components.feedreader
-feedparser==6.0.10
+feedparser==6.0.11
 
 # homeassistant.components.file
 file-read-backwards==2.0.0
@@ -721,7 +720,7 @@ getmac==0.8.2
 gios==3.2.2
 
 # homeassistant.components.glances
-glances-api==0.4.3
+glances-api==0.5.0
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -1703,7 +1702,7 @@ pytrydan==0.4.0
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.22.0
+pyunifiprotect==4.22.3
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1748,7 +1747,7 @@ pyyardian==1.1.1
 pyzerproc==0.4.8
 
 # homeassistant.components.qingping
-qingping-ble==0.8.2
+qingping-ble==0.9.0
 
 # homeassistant.components.qnap
 qnapstats==0.4.0
@@ -1860,7 +1859,7 @@ smhi-pkg==1.0.16
 snapcast==2.3.3
 
 # homeassistant.components.sonos
-soco==0.29.1
+soco==0.30.0
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
@@ -2133,7 +2132,7 @@ yt-dlp==2023.11.16
 zamg==0.3.3
 
 # homeassistant.components.zeroconf
-zeroconf==0.129.0
+zeroconf==0.130.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
