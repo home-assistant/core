@@ -35,7 +35,6 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name="Tessie",
-            update_method=self.async_update_data,
             update_interval=timedelta(seconds=TESSIE_SYNC_INTERVAL),
         )
         self.api_key = api_key
@@ -44,7 +43,7 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator):
         self.data = self._flatten(data)
         self.did_first_update = False
 
-    async def async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Tessie API."""
         try:
             vehicle = await get_state(
