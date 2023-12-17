@@ -19,7 +19,6 @@ class TailwindDataUpdateCoordinator(DataUpdateCoordinator[TailwindDeviceStatus])
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the coordinator."""
-        self.config_entry = entry
         self.tailwind = Tailwind(
             host=entry.data[CONF_HOST],
             token=entry.data[CONF_TOKEN],
