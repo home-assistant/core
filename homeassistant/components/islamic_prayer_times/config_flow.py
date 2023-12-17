@@ -85,9 +85,12 @@ class IslamicPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not (errors := await async_validate_location(self.hass, lat, lon)):
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=user_input[CONF_NAME],
+                    data={
+                        CONF_LATITUDE: lat,
+                        CONF_LONGITUDE: lon,
+                    },
                 )
-        print(errors)
 
         home_location = {
             CONF_LATITUDE: self.hass.config.latitude,

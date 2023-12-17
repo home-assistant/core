@@ -16,7 +16,7 @@ from homeassistant.components.islamic_prayer_times.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import MOCK_CONFIG
+from . import MOCK_CONFIG, MOCK_USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -36,7 +36,7 @@ async def test_flow_works(hass: HomeAssistant) -> None:
         return_value={},
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=MOCK_CONFIG
+            result["flow_id"], user_input=MOCK_USER_INPUT
         )
         await hass.async_block_till_done()
 
@@ -66,7 +66,7 @@ async def test_flow_error(
         side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=MOCK_CONFIG
+            result["flow_id"], user_input=MOCK_USER_INPUT
         )
         await hass.async_block_till_done()
 
@@ -118,7 +118,7 @@ async def test_integration_already_configured(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_CONFIG
+        result["flow_id"], user_input=MOCK_USER_INPUT
     )
     await hass.async_block_till_done()
 

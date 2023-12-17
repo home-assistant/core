@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, Platform
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 
@@ -32,10 +32,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     # add lat and lon to entry data if not present
     if not config_entry.data:
         data = {
-            CONF_LOCATION: {
-                CONF_LATITUDE: hass.config.latitude,
-                CONF_LONGITUDE: hass.config.longitude,
-            }
+            CONF_LATITUDE: hass.config.latitude,
+            CONF_LONGITUDE: hass.config.longitude,
         }
         hass.config_entries.async_update_entry(config_entry, data=data)
 
