@@ -27,7 +27,7 @@
   "entity": {
     "number": {
       "brightness": {
-        "name": "Status LED"
+        "name": "Status LED brightness"
       }
     }
   }

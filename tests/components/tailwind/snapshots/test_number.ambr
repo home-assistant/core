@@ -2,7 +2,7 @@
 # name: test_number_entities
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Tailwind iQ3 Status LED',
+      'friendly_name': 'Tailwind iQ3 Status LED brightness',
       'icon': 'mdi:led-on',
       'max': 100,
       'min': 0,
@@ -11,7 +11,7 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.tailwind_iq3_status_led',
+    'entity_id': 'number.tailwind_iq3_status_led_brightness',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
@@ -34,7 +34,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.tailwind_iq3_status_led',
+    'entity_id': 'number.tailwind_iq3_status_led_brightness',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -44,7 +44,7 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:led-on',
-    'original_name': 'Status LED',
+    'original_name': 'Status LED brightness',
     'platform': 'tailwind',
     'previous_unique_id': None,
     'supported_features': 0,
