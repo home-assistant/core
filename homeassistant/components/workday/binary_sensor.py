@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LANGUAGE, CONF_NAME
+from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -26,7 +26,6 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ALLOWED_DAYS,
     CONF_ADD_HOLIDAYS,
-    CONF_COUNTRY,
     CONF_EXCLUDES,
     CONF_OFFSET,
     CONF_PROVINCE,

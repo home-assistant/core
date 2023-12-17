@@ -52,6 +52,22 @@ RESOURCE = "http://localhost/"
 STATE_RESOURCE = RESOURCE
 
 
+@pytest.fixture(
+    params=(
+        HTTPStatus.OK,
+        HTTPStatus.CREATED,
+        HTTPStatus.ACCEPTED,
+        HTTPStatus.NON_AUTHORITATIVE_INFORMATION,
+        HTTPStatus.NO_CONTENT,
+        HTTPStatus.RESET_CONTENT,
+        HTTPStatus.PARTIAL_CONTENT,
+    )
+)
+def http_success_code(request: pytest.FixtureRequest) -> HTTPStatus:
+    """Fixture providing different successful HTTP response code."""
+    return request.param
+
+
 async def test_setup_missing_config(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -261,11 +277,14 @@ async def test_is_on_before_update(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_turn_on_success(hass: HomeAssistant) -> None:
+async def test_turn_on_success(
+    hass: HomeAssistant,
+    http_success_code: HTTPStatus,
+) -> None:
     """Test turn_on."""
     await _async_setup_test_switch(hass)
 
-    route = respx.post(RESOURCE) % HTTPStatus.OK
+    route = respx.post(RESOURCE) % http_success_code
     respx.get(RESOURCE).mock(side_effect=httpx.RequestError)
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -319,11 +338,14 @@ async def test_turn_on_timeout(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_turn_off_success(hass: HomeAssistant) -> None:
+async def test_turn_off_success(
+    hass: HomeAssistant,
+    http_success_code: HTTPStatus,
+) -> None:
     """Test turn_off."""
     await _async_setup_test_switch(hass)
 
-    route = respx.post(RESOURCE) % HTTPStatus.OK
+    route = respx.post(RESOURCE) % http_success_code
     respx.get(RESOURCE).mock(side_effect=httpx.RequestError)
     await hass.services.async_call(
         SWITCH_DOMAIN,

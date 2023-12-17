@@ -71,7 +71,7 @@ def create_lightbulb_service(accessory):
 
 
 async def test_storage_is_updated_on_add(
-    hass: HomeAssistant, hass_storage: dict[str, Any], utcnow
+    hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test entity map storage is cleaned up on adding an accessory."""
     await setup_test_component(hass, create_lightbulb_service)
