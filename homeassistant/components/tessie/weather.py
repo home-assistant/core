@@ -1,6 +1,7 @@
 """Weather platform for Tessie integration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 from http import HTTPStatus
 import logging
@@ -24,6 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+from .coordinator import TessieDataUpdateCoordinator
 from .entity import TessieEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,11 +39,19 @@ async def async_setup_entry(
     """Set up the Tessie Weather platform from a config entry."""
     coordinators = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(
-        TessieWeatherEntity(
-            TessieWeatherDataCoordinator(hass, coordinator.api_key, coordinator.vin)
-        )
+    weathercoordinators = (
+        TessieWeatherDataCoordinator(hass, coordinator.api_key, coordinator.vin)
         for coordinator in coordinators
+    )
+
+    tasks = (
+        weathercoordinator.async_refresh() for weathercoordinator in weathercoordinators
+    )
+    await asyncio.gather(*tasks)
+
+    async_add_entities(
+        TessieWeatherEntity(coordinator, weathercoordinator)
+        for coordinator, weathercoordinator in zip(coordinators, weathercoordinators)
     )
 
 
@@ -68,6 +78,7 @@ class TessieWeatherDataCoordinator(DataUpdateCoordinator):
 
     async def async_update_data(self) -> dict[str, Any]:
         """Update weather data using Tessie API."""
+
         try:
             return await get_weather(
                 session=self.session,
@@ -89,51 +100,56 @@ class TessieWeatherEntity(TessieEntity, WeatherEntity):
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
     _attr_native_visibility_unit = UnitOfLength.METERS
 
-    def __init__(self, coordinator: TessieWeatherDataCoordinator) -> None:
+    def __init__(
+        self,
+        coordinator: TessieDataUpdateCoordinator,
+        weathercoordinator: TessieWeatherDataCoordinator,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, "weather")
+        self.weathercoordinator = weathercoordinator
 
     @property
     def native_apparent_temperature(self) -> float | None:
         """Return the apparent temperature in native units."""
-        return self.coordinator.data.get("feels_like")
+        return self.weathercoordinator.data.get("feels_like")
 
     @property
     def native_temperature(self) -> float | None:
         """Return the temperature in native units."""
-        return self.coordinator.data.get("temperature")
+        return self.weathercoordinator.data.get("temperature")
 
     @property
     def native_pressure(self) -> float | None:
         """Return the pressure in native units."""
-        return self.coordinator.data.get("pressure")
+        return self.weathercoordinator.data.get("pressure")
 
     @property
     def humidity(self) -> float | None:
         """Return the humidity in native units."""
-        return self.coordinator.data.get("humidity")
+        return self.weathercoordinator.data.get("humidity")
 
     @property
     def native_wind_speed(self) -> float | None:
         """Return the wind speed in native units."""
-        return self.coordinator.data.get("wind_speed")
+        return self.weathercoordinator.data.get("wind_speed")
 
     @property
     def wind_bearing(self) -> float | str | None:
         """Return the wind bearing."""
-        return self.coordinator.data.get("wind_direction")
+        return self.weathercoordinator.data.get("wind_direction")
 
     @property
     def cloud_coverage(self) -> float | None:
         """Return the Cloud coverage in %."""
-        return self.coordinator.data.get("cloudiness")
+        return self.weathercoordinator.data.get("cloudiness")
 
     @property
     def native_visibility(self) -> float | None:
         """Return the visibility in native units."""
-        return self.coordinator.data.get("visibility")
+        return self.weathercoordinator.data.get("visibility")
 
     @property
     def condition(self) -> str | None:
         """Return the current condition."""
-        return self.coordinator.data.get("condition")
+        return self.weathercoordinator.data.get("condition")
