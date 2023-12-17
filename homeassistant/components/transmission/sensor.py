@@ -43,19 +43,12 @@ MODES: dict[str, list[str] | None] = {
 }
 
 
-@dataclass
-class TransmissionSsensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(kw_only=True)
+class TransmissionSensorEntityDescription(SensorEntityDescription):
+    """Entity description class for Transmission sensors."""
 
     val_func: Callable[[TransmissionDataUpdateCoordinator], StateType]
-    extra_state_attr_func: Callable[[Any], dict[str, str]] | None
-
-
-@dataclass
-class TransmissionSensorEntityDescription(
-    SensorEntityDescription, TransmissionSsensorEntityDescriptionMixin
-):
-    """Entity description class for Transmission sensors."""
+    extra_state_attr_func: Callable[[Any], dict[str, str]] | None = None
 
 
 SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
@@ -67,7 +60,6 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
         val_func=lambda coordinator: float(coordinator.data.download_speed),
-        extra_state_attr_func=None,
     ),
     TransmissionSensorEntityDescription(
         key="upload",
@@ -77,7 +69,6 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
         val_func=lambda coordinator: float(coordinator.data.upload_speed),
-        extra_state_attr_func=None,
     ),
     TransmissionSensorEntityDescription(
         key="status",
@@ -87,7 +78,6 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         val_func=lambda coordinator: get_state(
             coordinator.data.upload_speed, coordinator.data.download_speed
         ),
-        extra_state_attr_func=None,
     ),
     TransmissionSensorEntityDescription(
         key="active_torrents",
@@ -190,8 +180,8 @@ class TransmissionSensor(
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes, if any."""
-        if self.entity_description.extra_state_attr_func:
-            return self.entity_description.extra_state_attr_func(self.coordinator)
+        if attr_func := self.entity_description.extra_state_attr_func:
+            return attr_func(self.coordinator)
         return None
 
 
