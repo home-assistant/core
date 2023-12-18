@@ -1,7 +1,7 @@
 """Support for a ScreenLogic Sensor."""
 from collections.abc import Callable
 from copy import copy
-from dataclasses import dataclass
+import dataclasses
 import logging
 
 from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
@@ -35,21 +35,21 @@ from .util import cleanup_excluded_entity, get_ha_unit
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclasses.dataclass
 class ScreenLogicSensorMixin:
     """Mixin for SecreenLogic sensor entity."""
 
     value_mod: Callable[[int | str], int | str] | None = None
 
 
-@dataclass
+@dataclasses.dataclass
 class ScreenLogicSensorDescription(
     ScreenLogicSensorMixin, SensorEntityDescription, ScreenLogicEntityDescription
 ):
     """Describes a ScreenLogic sensor."""
 
 
-@dataclass
+@dataclasses.dataclass
 class ScreenLogicPushSensorDescription(
     ScreenLogicSensorDescription, ScreenLogicPushEntityDescription
 ):
@@ -336,7 +336,9 @@ class ScreenLogicPumpSensor(ScreenLogicSensor):
         pump_type: int,
     ) -> None:
         """Initialize of the entity."""
-        entity_description.data_root = (DEVICE.PUMP, pump_index)
+        entity_description = dataclasses.replace(
+            entity_description, data_root=(DEVICE.PUMP, pump_index)
+        )
         super().__init__(coordinator, entity_description)
         if entity_description.enabled_lambda:
             self._attr_entity_registry_enabled_default = (
