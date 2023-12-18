@@ -82,7 +82,7 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
     TransmissionSensorEntityDescription(
         key="active_torrents",
         translation_key="active_torrents",
-        native_unit_of_measurement="Torrents",
+        native_unit_of_measurement="torrents",
         val_func=lambda coordinator: coordinator.data.active_torrent_count,
         extra_state_attr_func=lambda coordinator: _torrents_info_attr(
             coordinator=coordinator, key="active_torrents"
