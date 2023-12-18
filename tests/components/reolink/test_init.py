@@ -172,7 +172,7 @@ async def test_cleanup_disconnected_cams(
     assert sorted(device_models) == sorted(expected_models)
 
 
-async def test_cleanup_depricated_entities(
+async def test_cleanup_deprecated_entities(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_connect: MagicMock,
@@ -191,10 +191,7 @@ async def test_cleanup_depricated_entities(
         disabled_by=None,
     )
 
-    assert (
-        entity_registry.async_get_entity_id(Platform.LIGHT, const.DOMAIN, ir_id)
-        is not None
-    )
+    assert entity_registry.async_get_entity_id(Platform.LIGHT, const.DOMAIN, ir_id)
     assert (
         entity_registry.async_get_entity_id(Platform.SWITCH, const.DOMAIN, ir_id)
         is None
@@ -208,10 +205,7 @@ async def test_cleanup_depricated_entities(
     assert (
         entity_registry.async_get_entity_id(Platform.LIGHT, const.DOMAIN, ir_id) is None
     )
-    assert (
-        entity_registry.async_get_entity_id(Platform.SWITCH, const.DOMAIN, ir_id)
-        is not None
-    )
+    assert entity_registry.async_get_entity_id(Platform.SWITCH, const.DOMAIN, ir_id)
 
 
 async def test_no_repair_issue(
