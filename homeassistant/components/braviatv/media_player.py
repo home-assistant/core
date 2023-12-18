@@ -58,6 +58,7 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
+    _attr_volume_step = 1 / 100
 
     @property
     def state(self) -> MediaPlayerState:
@@ -122,14 +123,6 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self.coordinator.async_set_volume_level(volume)
-
-    async def async_volume_up(self) -> None:
-        """Send volume up command."""
-        await self.coordinator.async_volume_up()
-
-    async def async_volume_down(self) -> None:
-        """Send volume down command."""
-        await self.coordinator.async_volume_down()
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""

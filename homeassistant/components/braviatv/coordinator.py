@@ -261,16 +261,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         await self.client.volume_level(round(volume * 100))
 
     @catch_braviatv_errors
-    async def async_volume_up(self) -> None:
-        """Send volume up command to device."""
-        await self.client.volume_up()
-
-    @catch_braviatv_errors
-    async def async_volume_down(self) -> None:
-        """Send volume down command to device."""
-        await self.client.volume_down()
-
-    @catch_braviatv_errors
     async def async_volume_mute(self, mute: bool) -> None:
         """Send mute command to device."""
         await self.client.volume_mute()
