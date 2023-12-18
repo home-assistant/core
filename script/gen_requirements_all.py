@@ -24,6 +24,7 @@ COMMENT_REQUIREMENTS = (
     "beacontools",
     "beewi-smartclim",  # depends on bluepy
     "bluepy",
+    "dacite",
     "decora",
     "decora-wifi",
     "evdev",
@@ -181,7 +182,7 @@ get-mac==1000000000.0.0
 charset-normalizer==3.2.0
 
 # dacite: Ensure we have a version that is able to handle type unions.
-dacite==1.8.1
+dacite>=1.8.0
 """
 
 GENERATED_MESSAGE = (
