@@ -179,6 +179,9 @@ get-mac==1000000000.0.0
 # They are build with mypyc, but causes issues with our wheel builder.
 # In order to do so, we need to constrain the version.
 charset-normalizer==3.2.0
+
+# dacite: Ensure we have a version that is able to handle type unions.
+dacite==1.8.1
 """
 
 GENERATED_MESSAGE = (

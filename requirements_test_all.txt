@@ -532,9 +532,6 @@ crownstone-sse==2.0.4
 # homeassistant.components.crownstone
 crownstone-uart==2.1.0
 
-# homeassistant.components.roborock
-dacite==1.8.1
-
 # homeassistant.components.datadog
 datadog==0.15.0
 
