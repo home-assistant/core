@@ -43,7 +43,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .const import DOMAIN, LOGGER, format_dispatch_call
+from .const import _LOGGER, DOMAIN, format_dispatch_call
 
 
 @dataclass(frozen=True)
@@ -309,7 +309,7 @@ async def async_setup_entry(
     @callback
     def async_add_sensor(device: WeatherFlowDevice) -> None:
         """Add WeatherFlow sensor."""
-        LOGGER.debug("Adding sensors for %s", device)
+        _LOGGER.debug("Adding sensors for %s", device)
 
         sensors: list[WeatherFlowSensorEntity] = [
             WeatherFlowSensorEntity(

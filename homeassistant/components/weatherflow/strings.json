@@ -1,19 +1,37 @@
 {
+  "options": {
+    "step": {
+      "init": {
+        "description": "Update your options",
+                "data": {
+          "station_id": "Station ID",
+          "api_token": "API Token",
+          "local_sensors": "Configure local (UDP) Sensors",
+          "cloud_sensors": "Configure cloud (REST) Sensors"
+        }
+      }
+    }
+  },
   "config": {
     "step": {
       "user": {
-        "description": "Unable to discover Tempest WeatherFlow devices. Click submit to try again.",
+        "description": "Enter your cloud credentials. {note}",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
-        },
-        "data_description": {
-          "host": "Hostname or IP address of your Tempest WeatherFlow device."
+          "station_id": "Station ID",
+          "api_token": "API Token",
+          "local_sensors": "Add Local (UDP) Sensors",
+          "cloud_sensors": "Add Cloud (REST) Sensors"
         }
       }
     },
     "error": {
+      "no_device_found": "No local WeatherFlow devices found.",
       "address_in_use": "Unable to open local UDP port 50222.",
-      "cannot_connect": "UDP discovery error."
+      "cannot_connect": "UDP discovery error.",
+       "wrong_station_id": "The Station ID entered is not correct.",
+      "server_error": "WeatherFlow servers encountered an unexpected error",
+      "wrong_token": "The API Token is incorrect or does not match the Station ID.",
+      "bad_request": "An unknown error occurred when retrieving data."
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
