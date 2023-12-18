@@ -23,14 +23,6 @@
   },
   "entity": {
     "sensor": {
-      "state": {
-        "name": "Status",
-        "state": {
-          "online": "Online",
-          "asleep": "Asleep",
-          "offline": "Offline"
-        }
-      },
       "charge_state_usable_battery_level": {
         "name": "Battery level"
       },
@@ -96,6 +88,9 @@
       }
     },
     "binary_sensor": {
+      "state": {
+        "name": "Status"
+      },
       "charge_state_battery_heater_on": {
         "name": "Battery heater"
       },
