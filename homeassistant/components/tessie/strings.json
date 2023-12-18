@@ -10,7 +10,7 @@
         "data": {
           "access_token": "[%key:common::config_flow::data::access_token%]"
         },
-        "description": "Enter your access token from [my.tessie.com/settings/api](https://my.tessie.com/settings/api)."
+        "description": "Enter your access token from {url}."
       },
       "reauth_confirm": {
         "data": {
@@ -38,14 +38,6 @@
       }
     },
     "sensor": {
-      "state": {
-        "name": "Status",
-        "state": {
-          "online": "Online",
-          "asleep": "Asleep",
-          "offline": "Offline"
-        }
-      },
       "charge_state_usable_battery_level": {
         "name": "Battery level"
       },
@@ -111,6 +103,9 @@
       }
     },
     "binary_sensor": {
+      "state": {
+        "name": "Status"
+      },
       "charge_state_battery_heater_on": {
         "name": "Battery heater"
       },
