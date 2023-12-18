@@ -269,8 +269,10 @@ async def test_valve_device_class(hass: HomeAssistant) -> None:
 
     assert default_valve.device_class is None
 
-    entity_description = ValveEntityDescription("test")
-    entity_description.device_class = ValveDeviceClass.GAS
+    entity_description = ValveEntityDescription(
+        key="test",
+        device_class=ValveDeviceClass.GAS,
+    )
     default_valve.entity_description = entity_description
     assert default_valve.device_class is ValveDeviceClass.GAS
 
@@ -293,8 +295,7 @@ async def test_valve_report_position(hass: HomeAssistant) -> None:
 
     assert second_valve.reports_position is True
 
-    entity_description = ValveEntityDescription("test")
-    entity_description.reports_position = True
+    entity_description = ValveEntityDescription(key="test", reports_position=True)
     third_valve = MockValveEntity(reports_position=None)
     third_valve.entity_description = entity_description
     assert third_valve.reports_position is True
