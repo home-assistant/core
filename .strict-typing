@@ -43,6 +43,7 @@ homeassistant.components.abode.*
 homeassistant.components.accuweather.*
 homeassistant.components.acer_projector.*
 homeassistant.components.actiontec.*
+homeassistant.components.adax.*
 homeassistant.components.adguard.*
 homeassistant.components.aftership.*
 homeassistant.components.air_quality.*
@@ -334,6 +335,7 @@ homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*
 homeassistant.components.tag.*
 homeassistant.components.tailscale.*
+homeassistant.components.tailwind.*
 homeassistant.components.tami4.*
 homeassistant.components.tautulli.*
 homeassistant.components.tcp.*

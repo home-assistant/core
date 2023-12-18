@@ -1038,6 +1038,7 @@ async def test_add_item_intent(
     assert len(entity1.items) == 1
     assert len(entity2.items) == 0
     assert entity1.items[0].summary == "beer"
+    assert entity1.items[0].status == TodoItemStatus.NEEDS_ACTION
     entity1.items.clear()
 
     # Add to second list
@@ -1052,6 +1053,7 @@ async def test_add_item_intent(
     assert len(entity1.items) == 0
     assert len(entity2.items) == 1
     assert entity2.items[0].summary == "cheese"
+    assert entity2.items[0].status == TodoItemStatus.NEEDS_ACTION
 
     # List name is case insensitive
     response = await intent.async_handle(
@@ -1065,6 +1067,7 @@ async def test_add_item_intent(
     assert len(entity1.items) == 0
     assert len(entity2.items) == 2
     assert entity2.items[1].summary == "wine"
+    assert entity2.items[1].status == TodoItemStatus.NEEDS_ACTION
 
     # Missing list
     with pytest.raises(intent.IntentHandleError):
