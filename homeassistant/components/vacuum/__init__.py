@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntFlag
 from functools import partial
@@ -367,8 +366,7 @@ class _BaseVacuum(Entity):
         )
 
 
-@dataclass
-class VacuumEntityDescription(ToggleEntityDescription):
+class VacuumEntityDescription(ToggleEntityDescription, frozen_or_thawed=True):
     """A class that describes vacuum entities."""
 
 
@@ -490,8 +488,7 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
         await self.hass.async_add_executor_job(partial(self.start_pause, **kwargs))
 
 
-@dataclass
-class StateVacuumEntityDescription(EntityDescription):
+class StateVacuumEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes vacuum entities."""
 
 
