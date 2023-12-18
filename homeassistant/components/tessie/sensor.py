@@ -27,11 +27,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN, TessieStatus
+from .const import DOMAIN
 from .coordinator import TessieDataUpdateCoordinator
 from .entity import TessieEntity
-
-PARALLEL_UPDATES = 0
 
 
 @dataclass
@@ -42,11 +40,6 @@ class TessieSensorEntityDescription(SensorEntityDescription):
 
 
 DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
-    TessieSensorEntityDescription(
-        key="state",
-        options=[status.value for status in TessieStatus],
-        device_class=SensorDeviceClass.ENUM,
-    ),
     TessieSensorEntityDescription(
         key="charge_state_usable_battery_level",
         state_class=SensorStateClass.MEASUREMENT,
@@ -222,4 +215,5 @@ class TessieSensorEntity(TessieEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data[self.key])
+        return self.entity_description.value_fn(self._value)
+
