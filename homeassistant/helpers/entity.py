@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from abc import ABC
 import asyncio
+from collections import deque
 from collections.abc import Coroutine, Iterable, Mapping, MutableMapping
 import dataclasses
 from datetime import timedelta
@@ -23,7 +24,6 @@ from typing import (
     final,
 )
 
-from typing_extensions import dataclass_transform
 import voluptuous as vol
 
 from homeassistant.backports.functools import cached_property
@@ -75,6 +75,11 @@ DATA_ENTITY_SOURCE = "entity_info"
 # Used when converting float states to string: limit precision according to machine
 # epsilon to make the string representation readable
 FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
+
+# How many times per hour we allow capabilities to be updated before logging a warning
+CAPABILITIES_UPDATE_LIMIT = 100
+
+CONTEXT_RECENT_TIME = timedelta(seconds=5)  # Time that a context is considered recent
 
 
 @callback
@@ -220,17 +225,7 @@ class EntityPlatformState(Enum):
     REMOVED = auto()
 
 
-@dataclass_transform(
-    field_specifiers=(dataclasses.field, dataclasses.Field),
-    kw_only_default=True,  # Set to allow setting kw_only in child classes
-)
-class _EntityDescriptionBase:
-    """Add PEP 681 decorator (dataclass transform)."""
-
-
-class EntityDescription(
-    _EntityDescriptionBase, metaclass=FrozenOrThawed, frozen_or_thawed=True
-):
+class EntityDescription(metaclass=FrozenOrThawed, frozen_or_thawed=True):
     """A class that describes Home Assistant entities."""
 
     # This is the key identifier for this entity
@@ -246,6 +241,22 @@ class EntityDescription(
     name: str | UndefinedType | None = UNDEFINED
     translation_key: str | None = None
     unit_of_measurement: str | None = None
+
+
+@dataclasses.dataclass(frozen=True, slots=True)
+class CalculatedState:
+    """Container with state and attributes.
+
+    Returned by Entity._async_calculate_state.
+    """
+
+    state: str
+    # The union of all attributes, after overriding with entity registry settings
+    attributes: dict[str, Any]
+    # Capability attributes returned by the capability_attributes property
+    capability_attributes: Mapping[str, Any] | None
+    # Attributes which may be overridden by the entity registry
+    shadowed_attributes: Mapping[str, Any]
 
 
 class Entity(ABC):
@@ -322,6 +333,8 @@ class Entity(ABC):
     # and removes the need for constant None checks or asserts.
     _state_info: StateInfo = None  # type: ignore[assignment]
 
+    __capabilities_updated_at: deque[float]
+    __capabilities_updated_at_reported: bool = False
     __remove_event: asyncio.Event | None = None
 
     # Entity Properties
@@ -329,7 +342,6 @@ class Entity(ABC):
     _attr_attribution: str | None = None
     _attr_available: bool = True
     _attr_capability_attributes: Mapping[str, Any] | None = None
-    _attr_context_recent_time: timedelta = timedelta(seconds=5)
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
     _attr_entity_category: EntityCategory | None
@@ -529,15 +541,6 @@ class Entity(ABC):
         return None
 
     @property
-    def device_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return entity specific state attributes.
-
-        This method is deprecated, platform classes should implement
-        extra_state_attributes instead.
-        """
-        return None
-
-    @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes.
 
@@ -615,11 +618,6 @@ class Entity(ABC):
     def supported_features(self) -> int | None:
         """Flag supported features."""
         return self._attr_supported_features
-
-    @property
-    def context_recent_time(self) -> timedelta:
-        """Time that a context is considered recent."""
-        return self._attr_context_recent_time
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -786,12 +784,29 @@ class Entity(ABC):
         return f"{device_name} {name}" if device_name else name
 
     @callback
-    def _async_generate_attributes(self) -> tuple[str, dict[str, Any]]:
+    def _async_calculate_state(self) -> CalculatedState:
         """Calculate state string and attribute mapping."""
+        return CalculatedState(*self.__async_calculate_state())
+
+    def __async_calculate_state(
+        self,
+    ) -> tuple[str, dict[str, Any], Mapping[str, Any] | None, Mapping[str, Any]]:
+        """Calculate state string and attribute mapping.
+
+        Returns a tuple (state, attr, capability_attr, shadowed_attr).
+        state - the stringified state
+        attr - the attribute dictionary
+        capability_attr - a mapping with capability attributes
+        shadowed_attr - a mapping with attributes which may be overridden
+
+        This method is called when writing the state to avoid the overhead of creating
+        a dataclass object.
+        """
         entry = self.registry_entry
 
-        attr = self.capability_attributes
-        attr = dict(attr) if attr else {}
+        capability_attr = self.capability_attributes
+        attr = dict(capability_attr) if capability_attr else {}
+        shadowed_attr = {}
 
         available = self.available  # only call self.available once per update cycle
         state = self._stringify_state(available)
@@ -808,26 +823,30 @@ class Entity(ABC):
         if (attribution := self.attribution) is not None:
             attr[ATTR_ATTRIBUTION] = attribution
 
+        shadowed_attr[ATTR_DEVICE_CLASS] = self.device_class
         if (
-            device_class := (entry and entry.device_class) or self.device_class
+            device_class := (entry and entry.device_class)
+            or shadowed_attr[ATTR_DEVICE_CLASS]
         ) is not None:
             attr[ATTR_DEVICE_CLASS] = str(device_class)
 
         if (entity_picture := self.entity_picture) is not None:
             attr[ATTR_ENTITY_PICTURE] = entity_picture
 
-        if (icon := (entry and entry.icon) or self.icon) is not None:
+        shadowed_attr[ATTR_ICON] = self.icon
+        if (icon := (entry and entry.icon) or shadowed_attr[ATTR_ICON]) is not None:
             attr[ATTR_ICON] = icon
 
+        shadowed_attr[ATTR_FRIENDLY_NAME] = self._friendly_name_internal()
         if (
-            name := (entry and entry.name) or self._friendly_name_internal()
+            name := (entry and entry.name) or shadowed_attr[ATTR_FRIENDLY_NAME]
         ) is not None:
             attr[ATTR_FRIENDLY_NAME] = name
 
         if (supported_features := self.supported_features) is not None:
             attr[ATTR_SUPPORTED_FEATURES] = supported_features
 
-        return (state, attr)
+        return (state, attr, capability_attr, shadowed_attr)
 
     @callback
     def _async_write_ha_state(self) -> None:
@@ -853,8 +872,44 @@ class Entity(ABC):
             return
 
         start = timer()
-        state, attr = self._async_generate_attributes()
+        state, attr, capabilities, shadowed_attr = self.__async_calculate_state()
         end = timer()
+
+        if entry:
+            # Make sure capabilities in the entity registry are up to date. Capabilities
+            # include capability attributes, device class and supported features
+            original_device_class: str | None = shadowed_attr[ATTR_DEVICE_CLASS]
+            supported_features: int = attr.get(ATTR_SUPPORTED_FEATURES) or 0
+            if (
+                capabilities != entry.capabilities
+                or original_device_class != entry.original_device_class
+                or supported_features != entry.supported_features
+            ):
+                if not self.__capabilities_updated_at_reported:
+                    time_now = hass.loop.time()
+                    capabilities_updated_at = self.__capabilities_updated_at
+                    capabilities_updated_at.append(time_now)
+                    while time_now - capabilities_updated_at[0] > 3600:
+                        capabilities_updated_at.popleft()
+                    if len(capabilities_updated_at) > CAPABILITIES_UPDATE_LIMIT:
+                        self.__capabilities_updated_at_reported = True
+                        report_issue = self._suggest_report_issue()
+                        _LOGGER.warning(
+                            (
+                                "Entity %s (%s) is updating its capabilities too often,"
+                                " please %s"
+                            ),
+                            entity_id,
+                            type(self),
+                            report_issue,
+                        )
+                entity_registry = er.async_get(self.hass)
+                self.registry_entry = entity_registry.async_update_entity(
+                    self.entity_id,
+                    capabilities=capabilities,
+                    original_device_class=original_device_class,
+                    supported_features=supported_features,
+                )
 
         if end - start > 0.4 and not self._slow_reported:
             self._slow_reported = True
@@ -874,7 +929,7 @@ class Entity(ABC):
         if (
             self._context_set is not None
             and hass.loop.time() - self._context_set
-            > self.context_recent_time.total_seconds()
+            > CONTEXT_RECENT_TIME.total_seconds()
         ):
             self._context = None
             self._context_set = None
@@ -1129,6 +1184,8 @@ class Entity(ABC):
             )
             self._async_subscribe_device_updates()
 
+        self.__capabilities_updated_at = deque(maxlen=CAPABILITIES_UPDATE_LIMIT + 1)
+
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
 
@@ -1256,8 +1313,7 @@ class Entity(ABC):
         )
 
 
-@dataclasses.dataclass(slots=True)
-class ToggleEntityDescription(EntityDescription):
+class ToggleEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes toggle entities."""
 
 

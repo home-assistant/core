@@ -7,12 +7,14 @@ from typing import Any, cast
 from aiohttp.web import Request, WebSocketResponse
 from aioshelly.block_device import COAP, Block, BlockDevice
 from aioshelly.const import (
+    BLOCK_GENERATIONS,
     MODEL_1L,
     MODEL_DIMMER,
     MODEL_DIMMER_2,
     MODEL_EM3,
     MODEL_I3,
     MODEL_NAMES,
+    RPC_GENERATIONS,
 )
 from aioshelly.rpc_device import RpcDevice, WsServer
 
@@ -284,7 +286,7 @@ def get_info_gen(info: dict[str, Any]) -> int:
 
 def get_model_name(info: dict[str, Any]) -> str:
     """Return the device model name."""
-    if get_info_gen(info) == 2:
+    if get_info_gen(info) in RPC_GENERATIONS:
         return cast(str, MODEL_NAMES.get(info["model"], info["model"]))
 
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
@@ -420,4 +422,4 @@ def get_release_url(gen: int, model: str, beta: bool) -> str | None:
     if beta or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
         return None
 
-    return GEN1_RELEASE_URL if gen == 1 else GEN2_RELEASE_URL
+    return GEN1_RELEASE_URL if gen in BLOCK_GENERATIONS else GEN2_RELEASE_URL
