@@ -25,6 +25,7 @@ class MockConfig(smart_home.AlexaConfig):
         "binary_sensor.test_motion_forced": {"display_categories": "MOTION_SENSOR"},
         "binary_sensor.test_motion_camera_event": {"display_categories": "CAMERA"},
         "camera.test": {"display_categories": "CAMERA"},
+        "water_heater.boyler": {"display_categories": "WATER_HEATER"},
     }
 
     def __init__(self, hass):
@@ -128,12 +129,14 @@ async def assert_request_calls_service(
 
 
 async def assert_request_fails(
-    namespace, name, endpoint, service_not_called, hass, payload=None
+    namespace, name, endpoint, service_not_called, hass, payload=None, instance=None
 ):
     """Assert an API request returns an ErrorResponse."""
     request = get_new_request(namespace, name, endpoint)
     if payload:
         request["directive"]["payload"] = payload
+    if instance:
+        request["directive"]["header"]["instance"] = instance
 
     domain, service_name = service_not_called.split(".")
     call = async_mock_service(hass, domain, service_name)

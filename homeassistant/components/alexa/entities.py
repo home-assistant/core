@@ -32,6 +32,7 @@ from homeassistant.components import (
     switch,
     timer,
     vacuum,
+    water_heater,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -248,6 +249,9 @@ class DisplayCategory:
     # Indicates a vacuum cleaner.
     VACUUM_CLEANER = "VACUUM_CLEANER"
 
+    # Indicates a water heater.
+    WATER_HEATER = "WATER_HEATER"
+
     # Indicates a network-connected wearable device, such as an Apple Watch,
     # Fitbit, or Samsung Gear.
     WEARABLE = "WEARABLE"
@@ -456,23 +460,46 @@ class ButtonCapabilities(AlexaEntity):
 
 
 @ENTITY_ADAPTERS.register(climate.DOMAIN)
+@ENTITY_ADAPTERS.register(water_heater.DOMAIN)
 class ClimateCapabilities(AlexaEntity):
     """Class to represent Climate capabilities."""
 
     def default_display_categories(self) -> list[str]:
         """Return the display categories for this entity."""
+        if self.entity.domain == water_heater.DOMAIN:
+            return [DisplayCategory.WATER_HEATER]
         return [DisplayCategory.THERMOSTAT]
 
     def interfaces(self) -> Generator[AlexaCapability, None, None]:
         """Yield the supported interfaces."""
         # If we support two modes, one being off, we allow turning on too.
-        if climate.HVACMode.OFF in self.entity.attributes.get(
-            climate.ATTR_HVAC_MODES, []
+        supported_features = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if (
+            self.entity.domain == climate.DOMAIN
+            and climate.HVACMode.OFF
+            in self.entity.attributes.get(climate.ATTR_HVAC_MODES, [])
+            or self.entity.domain == water_heater.DOMAIN
+            and (supported_features & water_heater.WaterHeaterEntityFeature.ON_OFF)
         ):
             yield AlexaPowerController(self.entity)
 
-        yield AlexaThermostatController(self.hass, self.entity)
-        yield AlexaTemperatureSensor(self.hass, self.entity)
+        if (
+            self.entity.domain == climate.DOMAIN
+            or self.entity.domain == water_heater.DOMAIN
+            and (
+                supported_features
+                & water_heater.WaterHeaterEntityFeature.OPERATION_MODE
+            )
+        ):
+            yield AlexaThermostatController(self.hass, self.entity)
+            yield AlexaTemperatureSensor(self.hass, self.entity)
+        if self.entity.domain == water_heater.DOMAIN and (
+            supported_features & water_heater.WaterHeaterEntityFeature.OPERATION_MODE
+        ):
+            yield AlexaModeController(
+                self.entity,
+                instance=f"{water_heater.DOMAIN}.{water_heater.ATTR_OPERATION_MODE}",
+            )
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.entity)
 

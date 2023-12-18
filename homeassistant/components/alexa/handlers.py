@@ -22,6 +22,7 @@ from homeassistant.components import (
     number,
     timer,
     vacuum,
+    water_heater,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -804,8 +805,8 @@ async def async_api_set_target_temp(
 ) -> AlexaResponse:
     """Process a set target temperature request."""
     entity = directive.entity
-    min_temp = entity.attributes[climate.ATTR_MIN_TEMP]
-    max_temp = entity.attributes[climate.ATTR_MAX_TEMP]
+    min_temp = entity.attributes["min_temp"]
+    max_temp = entity.attributes["max_temp"]
     unit = hass.config.units.temperature_unit
 
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
@@ -849,9 +850,14 @@ async def async_api_set_target_temp(
             }
         )
 
+    if entity.domain == water_heater.DOMAIN:
+        service = water_heater.SERVICE_SET_TEMPERATURE
+    else:
+        service = climate.SERVICE_SET_TEMPERATURE
+
     await hass.services.async_call(
         entity.domain,
-        climate.SERVICE_SET_TEMPERATURE,
+        service,
         data,
         blocking=False,
         context=context,
@@ -870,8 +876,9 @@ async def async_api_adjust_target_temp(
     """Process an adjust target temperature request."""
     data: dict[str, Any]
     entity = directive.entity
-    min_temp = entity.attributes[climate.ATTR_MIN_TEMP]
-    max_temp = entity.attributes[climate.ATTR_MAX_TEMP]
+    # Shared code for both climate and water heater devices
+    min_temp = entity.attributes["min_temp"]
+    max_temp = entity.attributes["max_temp"]
     unit = hass.config.units.temperature_unit
 
     temp_delta = temperature_from_object(
@@ -932,9 +939,14 @@ async def async_api_adjust_target_temp(
             }
         )
 
+    if entity.domain == water_heater.DOMAIN:
+        service = water_heater.SERVICE_SET_TEMPERATURE
+    else:
+        service = climate.SERVICE_SET_TEMPERATURE
+
     await hass.services.async_call(
         entity.domain,
-        climate.SERVICE_SET_TEMPERATURE,
+        service,
         data,
         blocking=False,
         context=context,
@@ -1163,7 +1175,24 @@ async def async_api_set_mode(
             msg = f"Entity '{entity.entity_id}' does not support Mode '{mode}'"
             raise AlexaInvalidValueError(msg)
 
-    # Cover Position
+    # Water heater operation mode
+    elif instance == f"{water_heater.DOMAIN}.{water_heater.ATTR_OPERATION_MODE}":
+        operation_mode = mode.split(".")[1]
+        operation_modes: list[str] | None = entity.attributes.get(
+            water_heater.ATTR_OPERATION_LIST
+        )
+        if (
+            operation_mode != PRESET_MODE_NA
+            and operation_modes
+            and operation_mode in operation_modes
+        ):
+            service = water_heater.SERVICE_SET_OPERATION_MODE
+            data[water_heater.ATTR_OPERATION_MODE] = operation_mode
+        else:
+            msg = f"Entity '{entity.entity_id}' does not support Operation mode '{operation_mode}'"
+            raise AlexaInvalidValueError(msg)
+
+    # Cover Position/
     elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         position = mode.split(".")[1]
 
