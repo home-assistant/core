@@ -89,7 +89,9 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
                 self.available = False
                 retries -= 1
                 _LOGGER.warning(
-                    "Exception: %s occurred, %d retries remaining", repr(error), retries
+                    "Exception: %s occurred, %d retries remaining",
+                    repr(error),
+                    retries,
                 )
                 sleep(1)
             else:
@@ -97,7 +99,7 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
                 data["temp"] = round(temperature_c, 1)
                 data["totalenergy"] = round(energy_wh / 1000, 2)
                 data["alarm"] = alarm
-            self.available = True
+                self.available = True
                 retries = 0
             finally:
                 if self.available != self.available_prev:
