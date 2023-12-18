@@ -35,14 +35,65 @@ PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.CAMERA, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up PrusaLink from a config entry."""
+async def _migrate_to_version_2(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> PrusaLink | None:
+    """Migrate to Version 2."""
+    _LOGGER.debug("Migrating entry to version 2")
+
+    data = dict(entry.data)
+    # "maker" is currently hardcoded in the firmware
+    # https://github.com/prusa3d/Prusa-Firmware-Buddy/blob/bfb0ffc745ee6546e7efdba618d0e7c0f4c909cd/lib/WUI/wui_api.h#L19
+    data[CONF_USERNAME] = "maker"
+    data[CONF_PASSWORD] = entry.data[CONF_API_KEY]
+    data.pop(CONF_API_KEY)
+
     api = PrusaLink(
         async_get_clientsession(hass),
-        entry.data[CONF_HOST],
-        entry.data[CONF_USERNAME],
-        entry.data[CONF_PASSWORD],
+        data[CONF_HOST],
+        data[CONF_USERNAME],
+        data[CONF_PASSWORD],
     )
+    try:
+        await api.get_info()
+    except InvalidAuth:
+        # We don't know for sure if the firmware is actually outdated
+        # If we hit an InvalidAuth error after the user configured this integration
+        # (where we already checked that credentials are correct)
+        # then its most likely an issue with unsupported firmware.
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "firmware_5_1_required",
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="firmware_5_1_required",
+            translation_placeholders={
+                "entry_title": entry.title,
+                "prusa_mini_firmware_update": "https://help.prusa3d.com/article/firmware-updating-mini-mini_124784",
+                "prusa_mk4_xl_firmware_update": "https://help.prusa3d.com/article/how-to-update-firmware-mk4-xl_453086",
+            },
+        )
+        return None
+
+    entry.version = 2
+    hass.config_entries.async_update_entry(entry, data=data)
+    _LOGGER.info("Migrated config entry to version %d", entry.version)
+    return api
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up PrusaLink from a config entry."""
+    if entry.version == 1:
+        if (api := await _migrate_to_version_2(hass, entry)) is None:
+            return False
+    else:
+        api = PrusaLink(
+            async_get_clientsession(hass),
+            entry.data[CONF_HOST],
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+        )
 
     coordinators = {
         "legacy_status": LegacyStatusCoordinator(hass, api),
@@ -59,30 +110,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+
+    # Version 1 migration are handled in async_setup_entry
+    if entry.version == 1:
+        return True
+
+    return True
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
-
-    if config_entry.version == 1:
-        config_entry.version = 2
-        data = dict(config_entry.data)
-        # "maker" is currently hardcoded in the firmware
-        # https://github.com/prusa3d/Prusa-Firmware-Buddy/blob/bfb0ffc745ee6546e7efdba618d0e7c0f4c909cd/lib/WUI/wui_api.h#L19
-        data[CONF_USERNAME] = "maker"
-        data[CONF_PASSWORD] = config_entry.data[CONF_API_KEY]
-        data.pop(CONF_API_KEY)
-        hass.config_entries.async_update_entry(config_entry, data=data)
-        _LOGGER.info("Migrated config entry to version %d", config_entry.version)
-
-    return True
 
 
 T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
@@ -97,7 +140,6 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):
     def __init__(self, hass: HomeAssistant, api: PrusaLink) -> None:
         """Initialize the update coordinator."""
         self.api = api
-        self.hass = hass
 
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=self._get_update_interval(None)
@@ -108,27 +150,7 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):
         try:
             async with asyncio.timeout(5):
                 data = await self._fetch_data()
-                # Authentication is working again so we can safely remove it again
-                ir.async_delete_issue(self.hass, DOMAIN, "firmware_5_1_required")
         except InvalidAuth:
-            # We don't know for sure if the firmware is actually outdated
-            # If we hit an InvalidAuth error after the user configured this integration
-            # (where we already checked that credentials are correct)
-            # then its most likely an issue with unsupported firmware.
-            ir.async_create_issue(
-                self.hass,
-                DOMAIN,
-                "firmware_5_1_required",
-                is_fixable=False,
-                severity=ir.IssueSeverity.ERROR,
-                translation_key="firmware_5_1_required",
-                translation_placeholders={
-                    "entry_title": self.config_entry.title,
-                    "prusa_mini_firmware_update": "https://help.prusa3d.com/article/firmware-updating-mini-mini_124784",
-                    "prusa_mk4_xl_firmware_update": "https://help.prusa3d.com/article/how-to-update-firmware-mk4-xl_453086",
-                },
-            )
-
             raise UpdateFailed("Invalid authentication") from None
         except PrusaLinkError as err:
             raise UpdateFailed(str(err)) from err

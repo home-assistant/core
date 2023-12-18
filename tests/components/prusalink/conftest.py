@@ -34,6 +34,20 @@ def mock_version_api(hass):
 
 
 @pytest.fixture
+def mock_info_api(hass):
+    """Mock PrusaLink info API."""
+    resp = {
+        "nozzle_diameter": 0.40,
+        "mmu": False,
+        "serial": "serial-1337",
+        "hostname": "PrusaXL",
+        "min_extrusion_temp": 170,
+    }
+    with patch("pyprusalink.PrusaLink.get_info", return_value=resp):
+        yield resp
+
+
+@pytest.fixture
 def mock_get_legacy_printer(hass):
     """Mock PrusaLink printer API."""
     resp = {"telemetry": {"material": "PLA"}}
@@ -140,6 +154,10 @@ def mock_job_api_paused(hass, mock_get_status_printing, mock_job_api_printing):
 
 @pytest.fixture
 def mock_api(
-    mock_version_api, mock_get_legacy_printer, mock_get_status_idle, mock_job_api_idle
+    mock_version_api,
+    mock_info_api,
+    mock_get_legacy_printer,
+    mock_get_status_idle,
+    mock_job_api_idle,
 ):
     """Mock PrusaLink API."""

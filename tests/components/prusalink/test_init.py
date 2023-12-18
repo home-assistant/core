@@ -84,3 +84,25 @@ async def test_migration_1_2(hass: HomeAssistant, mock_api) -> None:
         CONF_USERNAME: "maker",
         CONF_PASSWORD: "api-key",
     }
+
+
+async def test_outdated_firmware_migration_1_2(hass: HomeAssistant, mock_api) -> None:
+    """Test migrating from version 1 to 2."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "http://prusaxl.local",
+            CONF_API_KEY: "api-key",
+        },
+        version=1,
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "pyprusalink.PrusaLink.get_info",
+        side_effect=InvalidAuth,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state == ConfigEntryState.SETUP_ERROR
