@@ -22,7 +22,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN
 from .coordinator import TessieDataUpdateCoordinator
@@ -102,11 +105,14 @@ class TessieWeatherEntity(TessieEntity, WeatherEntity):
 
     def __init__(
         self,
-        coordinator: TessieDataUpdateCoordinator,
+        vehiclecoordinator: TessieDataUpdateCoordinator,
         weathercoordinator: TessieWeatherDataCoordinator,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, "weather")
+        # Setup base data
+        super().__init__(vehiclecoordinator, "weather")
+        # Setup CoordinatorEntity with weathercoordinator instead.
+        CoordinatorEntity.__init__(self, weathercoordinator)
         self.weathercoordinator = weathercoordinator
 
     @property
