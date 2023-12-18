@@ -5,7 +5,6 @@ import abc
 import asyncio
 from collections.abc import Callable, Iterable
 from contextlib import suppress
-from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 import logging
@@ -251,8 +250,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class WeatherEntityDescription(EntityDescription):
+class WeatherEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes weather entities."""
 
 

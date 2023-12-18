@@ -27,11 +27,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN, TessieStatus
+from .const import DOMAIN
 from .coordinator import TessieDataUpdateCoordinator
 from .entity import TessieEntity
-
-PARALLEL_UPDATES = 0
 
 
 @dataclass
@@ -43,79 +41,74 @@ class TessieSensorEntityDescription(SensorEntityDescription):
 
 DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
     TessieSensorEntityDescription(
-        key="state",
-        options=[status.value for status in TessieStatus],
-        device_class=SensorDeviceClass.ENUM,
-    ),
-    TessieSensorEntityDescription(
-        key="charge_state-usable_battery_level",
+        key="charge_state_usable_battery_level",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
     ),
     TessieSensorEntityDescription(
-        key="charge_state-charge_energy_added",
+        key="charge_state_charge_energy_added",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         suggested_display_precision=1,
     ),
     TessieSensorEntityDescription(
-        key="charge_state-charger_power",
+        key="charge_state_charger_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
     ),
     TessieSensorEntityDescription(
-        key="charge_state-charger_voltage",
+        key="charge_state_charger_voltage",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieSensorEntityDescription(
-        key="charge_state-charger_actual_current",
+        key="charge_state_charger_actual_current",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieSensorEntityDescription(
-        key="charge_state-charge_rate",
+        key="charge_state_charge_rate",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieSensorEntityDescription(
-        key="charge_state-battery_range",
+        key="charge_state_battery_range",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfLength.MILES,
         device_class=SensorDeviceClass.DISTANCE,
         suggested_display_precision=1,
     ),
     TessieSensorEntityDescription(
-        key="drive_state-speed",
+        key="drive_state_speed",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
     ),
     TessieSensorEntityDescription(
-        key="drive_state-power",
+        key="drive_state_power",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieSensorEntityDescription(
-        key="drive_state-shift_state",
+        key="drive_state_shift_state",
         icon="mdi:car-shift-pattern",
         options=["p", "d", "r", "n"],
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda x: x.lower() if isinstance(x, str) else x,
     ),
     TessieSensorEntityDescription(
-        key="vehicle_state-odometer",
+        key="vehicle_state_odometer",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfLength.MILES,
         device_class=SensorDeviceClass.DISTANCE,
@@ -123,7 +116,7 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieSensorEntityDescription(
-        key="vehicle_state-tpms_pressure_fl",
+        key="vehicle_state_tpms_pressure_fl",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.BAR,
         suggested_unit_of_measurement=UnitOfPressure.PSI,
@@ -132,7 +125,7 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieSensorEntityDescription(
-        key="vehicle_state-tpms_pressure_fr",
+        key="vehicle_state_tpms_pressure_fr",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.BAR,
         suggested_unit_of_measurement=UnitOfPressure.PSI,
@@ -141,7 +134,7 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieSensorEntityDescription(
-        key="vehicle_state-tpms_pressure_rl",
+        key="vehicle_state_tpms_pressure_rl",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.BAR,
         suggested_unit_of_measurement=UnitOfPressure.PSI,
@@ -150,7 +143,7 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieSensorEntityDescription(
-        key="vehicle_state-tpms_pressure_rr",
+        key="vehicle_state_tpms_pressure_rr",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.BAR,
         suggested_unit_of_measurement=UnitOfPressure.PSI,
@@ -159,21 +152,21 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieSensorEntityDescription(
-        key="climate_state-inside_temp",
+        key="climate_state_inside_temp",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         suggested_display_precision=1,
     ),
     TessieSensorEntityDescription(
-        key="climate_state-outside_temp",
+        key="climate_state_outside_temp",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         suggested_display_precision=1,
     ),
     TessieSensorEntityDescription(
-        key="climate_state-driver_temp_setting",
+        key="climate_state_driver_temp_setting",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -181,7 +174,7 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieSensorEntityDescription(
-        key="climate_state-passenger_temp_setting",
+        key="climate_state_passenger_temp_setting",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -222,4 +215,4 @@ class TessieSensorEntity(TessieEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.value)
+        return self.entity_description.value_fn(self._value)

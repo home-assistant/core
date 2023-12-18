@@ -202,7 +202,7 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
             identifiers={(DOMAIN, station_id)},
             manufacturer=ATTRIBUTION,
             configuration_url=MANUFACTURER_URL,
-            name=coordinator.name,
+            name=name,
         )
         coordinator.api_fields = API_FIELDS
 

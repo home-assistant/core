@@ -1291,6 +1291,8 @@ build.json @home-assistant/supervisor
 /tests/components/tag/ @balloob @dmulcahey
 /homeassistant/components/tailscale/ @frenck
 /tests/components/tailscale/ @frenck
+/homeassistant/components/tailwind/ @frenck
+/tests/components/tailwind/ @frenck
 /homeassistant/components/tami4/ @Guy293
 /tests/components/tami4/ @Guy293
 /homeassistant/components/tankerkoenig/ @guillempages @mib1185
