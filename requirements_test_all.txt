@@ -478,7 +478,6 @@ bluetooth-adapters==0.16.2
 bluetooth-auto-recovery==1.2.3
 
 # homeassistant.components.bluetooth
-# homeassistant.components.esphome
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
@@ -1245,7 +1244,7 @@ pyairnow==1.2.1
 pyairvisual==2023.08.1
 
 # homeassistant.components.asuswrt
-pyasuswrt==0.1.20
+pyasuswrt==0.1.21
 
 # homeassistant.components.atag
 pyatag==0.3.5.3
