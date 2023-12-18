@@ -485,6 +485,7 @@ FLOWS = {
         "system_bridge",
         "tado",
         "tailscale",
+        "tailwind",
         "tami4",
         "tankerkoenig",
         "tasmota",
