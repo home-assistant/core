@@ -3,6 +3,15 @@ from __future__ import annotations
 
 import logging
 
+from evohomeasync2.schema.const import (
+    SZ_ACTIVE_FAULTS,
+    SZ_DHW_ID,
+    SZ_OFF,
+    SZ_ON,
+    SZ_STATE_STATUS,
+    SZ_TEMPERATURE_STATUS,
+)
+
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
@@ -26,10 +35,10 @@ _LOGGER = logging.getLogger(__name__)
 
 STATE_AUTO = "auto"
 
-HA_STATE_TO_EVO = {STATE_AUTO: "", STATE_ON: "On", STATE_OFF: "Off"}
+HA_STATE_TO_EVO = {STATE_AUTO: "", STATE_ON: SZ_ON, STATE_OFF: SZ_OFF}
 EVO_STATE_TO_HA = {v: k for k, v in HA_STATE_TO_EVO.items() if k != ""}
 
-STATE_ATTRS_DHW = ["dhwId", "activeFaults", "stateStatus", "temperatureStatus"]
+STATE_ATTRS_DHW = [SZ_DHW_ID, SZ_ACTIVE_FAULTS, SZ_STATE_STATUS, SZ_TEMPERATURE_STATUS]
 
 
 async def async_setup_platform(

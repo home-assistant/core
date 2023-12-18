@@ -5,6 +5,20 @@ from datetime import datetime as dt
 import logging
 from typing import Any
 
+from evohomeasync2.schema.const import (
+    SZ_ACTIVE_FAULTS,
+    SZ_ALLOWED_SYSTEM_MODES,
+    SZ_SETPOINT_STATUS,
+    SZ_SYSTEM_ID,
+    SZ_SYSTEM_MODE,
+    SZ_SYSTEM_MODE_STATUS,
+    SZ_TEMPERATURE_STATUS,
+    SZ_UNTIL,
+    SZ_ZONE_ID,
+    ZoneModelType,
+    ZoneType,
+)
+
 from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_ECO,
@@ -71,8 +85,13 @@ EVO_PRESET_TO_HA = {
 }
 HA_PRESET_TO_EVO = {v: k for k, v in EVO_PRESET_TO_HA.items()}
 
-STATE_ATTRS_TCS = ["systemId", "activeFaults", "systemModeStatus"]
-STATE_ATTRS_ZONES = ["zoneId", "activeFaults", "setpointStatus", "temperatureStatus"]
+STATE_ATTRS_TCS = [SZ_SYSTEM_ID, SZ_ACTIVE_FAULTS, SZ_SYSTEM_MODE_STATUS]
+STATE_ATTRS_ZONES = [
+    SZ_ZONE_ID,
+    SZ_ACTIVE_FAULTS,
+    SZ_SETPOINT_STATUS,
+    SZ_TEMPERATURE_STATUS,
+]
 
 
 async def async_setup_platform(
@@ -98,7 +117,10 @@ async def async_setup_platform(
     entities: list[EvoClimateEntity] = [EvoController(broker, broker.tcs)]
 
     for zone in broker.tcs.zones.values():
-        if zone.modelType == "HeatingZone" or zone.zoneType == "Thermostat":
+        if (
+            zone.modelType == ZoneModelType.HEATING_ZONE
+            or zone.zoneType == ZoneType.THERMOSTAT
+        ):
             _LOGGER.debug(
                 "Adding: %s (%s), id=%s, name=%s",
                 zone.zoneType,
@@ -237,7 +259,9 @@ class EvoZone(EvoChild, EvoClimateEntity):
                 await self._update_schedule()
                 until = dt_util.parse_datetime(self.setpoints.get("next_sp_from", ""))
             elif self._evo_device.mode == EVO_TEMPOVER:
-                until = dt_util.parse_datetime(self._evo_device.setpointStatus["until"])
+                until = dt_util.parse_datetime(
+                    self._evo_device.setpointStatus[SZ_UNTIL]
+                )
 
         until = dt_util.as_utc(until) if until else None
         await self._evo_broker.call_client_api(
@@ -318,7 +342,7 @@ class EvoController(EvoClimateEntity):
         self._evo_id = evo_device.systemId
         self._attr_name = evo_device.location.name
 
-        modes = [m["systemMode"] for m in evo_broker.config["allowedSystemModes"]]
+        modes = [m[SZ_SYSTEM_MODE] for m in evo_broker.config[SZ_ALLOWED_SYSTEM_MODES]]
         self._attr_preset_modes = [
             TCS_PRESET_TO_HA[m] for m in modes if m in list(TCS_PRESET_TO_HA)
         ]
@@ -400,7 +424,7 @@ class EvoController(EvoClimateEntity):
 
         attrs = self._device_state_attrs
         for attr in STATE_ATTRS_TCS:
-            if attr == "activeFaults":
+            if attr == SZ_ACTIVE_FAULTS:
                 attrs["activeSystemFaults"] = getattr(self._evo_tcs, attr)
             else:
                 attrs[attr] = getattr(self._evo_tcs, attr)
