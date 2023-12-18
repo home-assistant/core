@@ -1628,7 +1628,7 @@ pyairnow==1.2.1
 pyairvisual==2023.08.1
 
 # homeassistant.components.asuswrt
-pyasuswrt==0.1.20
+pyasuswrt==0.1.21
 
 # homeassistant.components.atag
 pyatag==0.3.5.3
