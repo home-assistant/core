@@ -19,18 +19,11 @@ from .entity import LaMetricEntity
 from .helpers import lametric_exception_handler
 
 
-@dataclass
-class LaMetricButtonEntityDescriptionMixin:
-    """Mixin values for LaMetric entities."""
+@dataclass(kw_only=True)
+class LaMetricButtonEntityDescription(ButtonEntityDescription):
+    """Class describing LaMetric button entities."""
 
     press_fn: Callable[[LaMetricDevice], Awaitable[Any]]
-
-
-@dataclass
-class LaMetricButtonEntityDescription(
-    ButtonEntityDescription, LaMetricButtonEntityDescriptionMixin
-):
-    """Class describing LaMetric button entities."""
 
 
 BUTTONS = [

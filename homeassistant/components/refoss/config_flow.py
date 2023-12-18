@@ -1,4 +1,4 @@
-"""ConfigFlow for Refoss."""
+"""Config Flow for Refoss integration."""
 
 from __future__ import annotations
 

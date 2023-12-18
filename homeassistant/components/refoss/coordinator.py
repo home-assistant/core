@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
 
 from refoss_ha.controller.device import BaseDevice
 from refoss_ha.exceptions import DeviceTimeoutError
@@ -10,9 +9,7 @@ from refoss_ha.exceptions import DeviceTimeoutError
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, MAX_ERRORS
-
-_LOGGER = logging.getLogger(__name__)
+from .const import _LOGGER, DOMAIN, MAX_ERRORS
 
 
 class RefossDataUpdateCoordinator(DataUpdateCoordinator[None]):

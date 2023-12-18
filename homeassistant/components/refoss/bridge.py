@@ -1,4 +1,4 @@
-"""Helper and wrapper classes for refoss module."""
+"""Refoss integration."""
 from __future__ import annotations
 
 from refoss_ha.device import DeviceInfo

@@ -32,7 +32,7 @@ REQUIREMENTS = ("colorlog==6.7.0",)
 _LOGGER = logging.getLogger(__name__)
 MOCKS: dict[str, tuple[str, Callable]] = {
     "load": ("homeassistant.util.yaml.loader.load_yaml", yaml_loader.load_yaml),
-    "load*": ("homeassistant.config.load_yaml", yaml_loader.load_yaml),
+    "load*": ("homeassistant.config.load_yaml_dict", yaml_loader.load_yaml_dict),
     "secrets": ("homeassistant.util.yaml.loader.secret_yaml", yaml_loader.secret_yaml),
 }
 
@@ -290,13 +290,13 @@ def dump_dict(layer, indent_count=3, listi=False, **kwargs):
         for key, value in sorted(layer.items(), key=sort_dict_key):
             if isinstance(value, (dict, list)):
                 print(indent_str, str(key) + ":", line_info(value, **kwargs))
-                dump_dict(value, indent_count + 2)
+                dump_dict(value, indent_count + 2, **kwargs)
             else:
-                print(indent_str, str(key) + ":", value)
+                print(indent_str, str(key) + ":", value, line_info(key, **kwargs))
             indent_str = indent_count * " "
     if isinstance(layer, Sequence):
         for i in layer:
             if isinstance(i, dict):
-                dump_dict(i, indent_count + 2, True)
+                dump_dict(i, indent_count + 2, True, **kwargs)
             else:
                 print(" ", indent_str, i)
