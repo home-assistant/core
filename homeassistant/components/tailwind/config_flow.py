@@ -15,6 +15,7 @@ from gotailwind import (
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
+from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
@@ -181,6 +182,15 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={"url": LOCAL_CONTROL_KEY_URL},
             errors=errors,
         )
+
+    async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
+        """Handle dhcp discovery to update existing entries.
+
+        This flow is triggered only by DHCP discovery of known devices.
+        """
+        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+        return self.async_abort(reason="already_configured")
 
     async def _async_step_create_entry(self, *, host: str, token: str) -> FlowResult:
         """Create entry."""
