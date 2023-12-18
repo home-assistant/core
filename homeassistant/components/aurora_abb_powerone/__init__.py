@@ -106,7 +106,7 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
                     if self.available:
                         _LOGGER.info("Communication with %s back online", self.name)
                     else:
-                        _LOGGER.warning(
+                        _LOGGER.info(
                             "Communication with %s lost",
                             self.name,
                         )
