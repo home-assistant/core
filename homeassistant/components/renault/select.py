@@ -80,7 +80,7 @@ class RenaultSelectEntity(
 
 def _get_charge_mode_icon(entity: RenaultSelectEntity) -> str:
     """Return the icon of this entity."""
-    if entity.data == "schedule_mode":
+    if entity.data == "schedule_mode" or entity.data == "scheduled":
         return "mdi:calendar-clock"
     return "mdi:calendar-remove"
 
@@ -92,6 +92,6 @@ SENSOR_TYPES: tuple[RenaultSelectEntityDescription, ...] = (
         data_key="chargeMode",
         translation_key="charge_mode",
         icon_lambda=_get_charge_mode_icon,
-        options=["always", "always_charging", "schedule_mode"],
+        options=["always", "always_charging", "schedule_mode", "scheduled"],
     ),
 )
