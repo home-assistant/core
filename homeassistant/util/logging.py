@@ -160,16 +160,16 @@ def catch_log_exception(
     # Check for partials to properly determine if coroutine function
     check_func = func
     while isinstance(check_func, partial):
-        check_func = check_func.func
+        check_func = check_func.func  # type: ignore[unreachable]  # false positive
 
     if asyncio.iscoroutinefunction(check_func):
         async_func = cast(Callable[[*_Ts], Coroutine[Any, Any, None]], func)
-        return wraps(async_func)(partial(_async_wrapper, async_func, format_err))
+        return wraps(async_func)(partial(_async_wrapper, async_func, format_err))  # type: ignore[return-value]
 
     if is_callback(check_func):
-        return wraps(func)(partial(_callback_wrapper, func, format_err))
+        return wraps(func)(partial(_callback_wrapper, func, format_err))  # type: ignore[return-value]
 
-    return wraps(func)(partial(_sync_wrapper, func, format_err))
+    return wraps(func)(partial(_sync_wrapper, func, format_err))  # type: ignore[return-value]
 
 
 def catch_log_coro_exception(
