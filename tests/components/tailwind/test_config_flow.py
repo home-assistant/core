@@ -425,4 +425,4 @@ async def test_dhcp_discovery_ignores_unknown(hass: HomeAssistant) -> None:
     )
 
     assert result.get("type") == FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
+    assert result.get("reason") == "unknown"

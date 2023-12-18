@@ -190,7 +190,11 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
         """
         await self.async_set_unique_id(format_mac(discovery_info.macaddress))
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
-        return self.async_abort(reason="already_configured")
+
+        # This situation should never happen, as Home Assistant will only
+        # send updates for existing entries. In case it does, we'll just
+        # abort the flow with an unknown error.
+        return self.async_abort(reason="unknown")
 
     async def _async_step_create_entry(self, *, host: str, token: str) -> FlowResult:
         """Create entry."""
