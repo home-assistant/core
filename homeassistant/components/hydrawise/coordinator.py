@@ -23,7 +23,7 @@ class HydrawiseData:
     zones: dict[int, Zone]
 
 
-class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator[User]):
+class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator[HydrawiseData]):
     """The Hydrawise Data Update Coordinator."""
 
     api: HydrawiseBase
