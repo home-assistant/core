@@ -116,7 +116,7 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         unique_id = new_discovered_romy.unique_id
         LOGGER.debug("ZeroConf Unique_id: %s", unique_id)
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
 
         self.context.update(
             {
