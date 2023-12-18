@@ -26,16 +26,18 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+async def validate_input(
+    hass: HomeAssistant, data: dict[str, Any], existing_titles: list[str]
+) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
     host: str = data[CONF_HOST]
-    for entry in hass.data[DOMAIN]:
-        if entry.coordinator.get_host() == host:
-            raise CannotConnect
+    for title in existing_titles:
+        if title == host:
+            raise DuplicateEntry
 
     hub = CCM15Coordinator(hass, host, data[CONF_PORT])
     if not await hub.async_test_connection():
@@ -60,7 +62,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
+                existing_titles = [
+                    entry.title for entry in self._async_current_entries()
+                ]
+                info = await validate_input(self.hass, user_input, existing_titles)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
@@ -76,3 +81,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
+
+
+class DuplicateEntry(HomeAssistantError):
+    """Error to indicate an existing entry already exist."""
