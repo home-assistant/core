@@ -14,6 +14,7 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
@@ -105,7 +106,8 @@ async def __get_prices(
     return __serialize_prices(data)
 
 
-async def async_register_services(
+@callback
+def async_register_services(
     hass: HomeAssistant, coordinator: EnergyZeroDataUpdateCoordinator
 ):
     """Set up EnergyZero services."""
