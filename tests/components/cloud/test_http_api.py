@@ -150,7 +150,7 @@ async def test_login_view_existing_pipeline(
     cloud_client = await hass_client()
 
     with patch(
-        "homeassistant.components.cloud.http_api.assist_pipeline.async_create_default_pipeline",
+        "homeassistant.components.cloud.assist_pipeline.async_create_default_pipeline",
     ) as create_pipeline_mock:
         req = await cloud_client.post(
             "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
@@ -183,7 +183,7 @@ async def test_login_view_create_pipeline(
     cloud_client = await hass_client()
 
     with patch(
-        "homeassistant.components.cloud.http_api.assist_pipeline.async_create_default_pipeline",
+        "homeassistant.components.cloud.assist_pipeline.async_create_default_pipeline",
         return_value=AsyncMock(id="12345"),
     ) as create_pipeline_mock:
         req = await cloud_client.post(
@@ -222,7 +222,7 @@ async def test_login_view_create_pipeline_fail(
     cloud_client = await hass_client()
 
     with patch(
-        "homeassistant.components.cloud.http_api.assist_pipeline.async_create_default_pipeline",
+        "homeassistant.components.cloud.assist_pipeline.async_create_default_pipeline",
         return_value=None,
     ) as create_pipeline_mock:
         req = await cloud_client.post(
@@ -1204,10 +1204,19 @@ async def test_list_alexa_entities(
         "interfaces": ["Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"],
     }
 
-    # Add the entity to the entity registry
-    entity_registry.async_get_or_create(
-        "light", "test", "unique", suggested_object_id="kitchen"
-    )
+    with patch(
+        (
+            "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
+            ".async_get_access_token"
+        ),
+    ), patch(
+        "homeassistant.components.cloud.alexa_config.alexa_state_report.async_send_add_or_update_message"
+    ):
+        # Add the entity to the entity registry
+        entity_registry.async_get_or_create(
+            "light", "test", "unique", suggested_object_id="kitchen"
+        )
+        await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.alexa.entities.async_get_entities",

@@ -5,7 +5,7 @@ import asyncio
 import collections
 from collections.abc import Awaitable, Callable, Iterable
 from contextlib import suppress
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
 from datetime import datetime, timedelta
 from enum import IntFlag
 from functools import partial
@@ -132,8 +132,7 @@ CAMERA_SERVICE_RECORD: Final = {
 }
 
 
-@dataclass
-class CameraEntityDescription(EntityDescription):
+class CameraEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes camera entities."""
 
 
