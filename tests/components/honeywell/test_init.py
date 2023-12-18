@@ -156,25 +156,28 @@ async def test_remove_stale_device(
     assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.async_entity_ids_count() == 6
 
-    device_entry = dr.async_entries_for_config_entry(
+    device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )
 
-    device_entry_other = dr.async_entries_for_config_entry(
+    device_entries_other = dr.async_entries_for_config_entry(
         device_registry, config_entry_other.entry_id
     )
 
-    assert len(device_entry) == 2
-    assert any((DOMAIN, 1234567) in device.identifiers for device in device_entry)
-    assert any((DOMAIN, 7654321) in device.identifiers for device in device_entry)
+    assert len(device_entries) == 2
+    assert any((DOMAIN, 1234567) in device.identifiers for device in device_entries)
+    assert any((DOMAIN, 7654321) in device.identifiers for device in device_entries)
     assert any(
-        ("OtherDomain", 7654321) in device.identifiers for device in device_entry
+        ("OtherDomain", 7654321) in device.identifiers for device in device_entries
     )
-    assert len(device_entry_other) == 1
+    assert len(device_entries_other) == 1
     assert any(
-        ("OtherDomain", 7654321) in device.identifiers for device in device_entry_other
+        ("OtherDomain", 7654321) in device.identifiers
+        for device in device_entries_other
     )
-    assert any((DOMAIN, 7654321) in device.identifiers for device in device_entry_other)
+    assert any(
+        (DOMAIN, 7654321) in device.identifiers for device in device_entries_other
+    )
 
     assert await config_entry.async_unload(hass)
     await hass.async_block_till_done()
@@ -189,20 +192,21 @@ async def test_remove_stale_device(
         hass.states.async_entity_ids_count() == 3
     )  # 1 climate entities; 2 sensor entities
 
-    device_entry = dr.async_entries_for_config_entry(
+    device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )
-    assert len(device_entry) == 1
-    assert any((DOMAIN, 1234567) in device.identifiers for device in device_entry)
-    assert not any((DOMAIN, 7654321) in device.identifiers for device in device_entry)
+    assert len(device_entries) == 1
+    assert any((DOMAIN, 1234567) in device.identifiers for device in device_entries)
+    assert not any((DOMAIN, 7654321) in device.identifiers for device in device_entries)
     assert not any(
-        ("OtherDomain", 7654321) in device.identifiers for device in device_entry
+        ("OtherDomain", 7654321) in device.identifiers for device in device_entries
     )
 
-    device_entry_other = dr.async_entries_for_config_entry(
+    device_entries_other = dr.async_entries_for_config_entry(
         device_registry, config_entry_other.entry_id
     )
-    assert len(device_entry_other) == 1
+    assert len(device_entries_other) == 1
     assert any(
-        ("OtherDomain", 7654321) in device.identifiers for device in device_entry_other
+        ("OtherDomain", 7654321) in device.identifiers
+        for device in device_entries_other
     )
