@@ -116,7 +116,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ValveEntityDescription(EntityDescription):
     """A class that describes valve entities."""
 
