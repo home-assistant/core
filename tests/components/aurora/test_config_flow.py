@@ -10,7 +10,6 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 DATA = {
-    "name": "Home",
     "latitude": -10,
     "longitude": 10.2,
 }
@@ -39,7 +38,7 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Aurora - Home"
+    assert result2["title"] == "Aurora visibility"
     assert result2["data"] == DATA
     assert len(mock_setup_entry.mock_calls) == 1
 

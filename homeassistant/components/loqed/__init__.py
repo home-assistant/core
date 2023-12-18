@@ -1,14 +1,17 @@
 """The loqed integration."""
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 
+import aiohttp
 from loqedAPI import loqed
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -27,12 +30,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     apiclient = loqed.APIClient(websession, f"http://{host}")
     api = loqed.LoqedAPI(apiclient)
 
-    lock = await api.async_get_lock(
-        entry.data["lock_key_key"],
-        entry.data["bridge_key"],
-        int(entry.data["lock_key_local_id"]),
-        re.sub(r"LOQED-([a-f0-9]+)\.local", r"\1", entry.data["bridge_mdns_hostname"]),
-    )
+    try:
+        lock = await api.async_get_lock(
+            entry.data["lock_key_key"],
+            entry.data["bridge_key"],
+            int(entry.data["lock_key_local_id"]),
+            re.sub(
+                r"LOQED-([a-f0-9]+)\.local", r"\1", entry.data["bridge_mdns_hostname"]
+            ),
+        )
+    except (
+        asyncio.TimeoutError,
+        aiohttp.ClientError,
+    ) as ex:
+        raise ConfigEntryNotReady(f"Unable to connect to bridge at {host}") from ex
     coordinator = LoqedDataCoordinator(hass, api, lock, entry)
     await coordinator.ensure_webhooks()
 

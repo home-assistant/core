@@ -1,8 +1,7 @@
 """Component providing binary sensors for UniFi Protect."""
 from __future__ import annotations
 
-from copy import copy
-from dataclasses import dataclass
+import dataclasses
 import logging
 
 from pyunifiprotect.data import (
@@ -43,14 +42,14 @@ _LOGGER = logging.getLogger(__name__)
 _KEY_DOOR = "door"
 
 
-@dataclass
+@dataclasses.dataclass
 class ProtectBinaryEntityDescription(
     ProtectRequiredKeysMixin, BinarySensorEntityDescription
 ):
     """Describes UniFi Protect Binary Sensor entity."""
 
 
-@dataclass
+@dataclasses.dataclass
 class ProtectBinaryEventEntityDescription(
     ProtectEventMixin, BinarySensorEntityDescription
 ):
@@ -561,9 +560,11 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
         self._attr_is_on = entity_description.get_ufp_value(updated_device)
         # UP Sense can be any of the 3 contact sensor device classes
         if entity_description.key == _KEY_DOOR and isinstance(updated_device, Sensor):
-            entity_description.device_class = MOUNT_DEVICE_CLASS_MAP.get(
+            self._attr_device_class = MOUNT_DEVICE_CLASS_MAP.get(
                 updated_device.mount_type, BinarySensorDeviceClass.DOOR
             )
+        else:
+            self._attr_device_class = self.entity_description.device_class
 
 
 class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
@@ -584,9 +585,11 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
         # backwards compat with old unique IDs
         index = self._disk.slot - 1
 
-        description = copy(description)
-        description.key = f"{description.key}_{index}"
-        description.name = f"{disk.type} {disk.slot}"
+        description = dataclasses.replace(
+            description,
+            key=f"{description.key}_{index}",
+            name=f"{disk.type} {disk.slot}",
+        )
         super().__init__(data, device, description)
 
     @callback
@@ -621,3 +624,23 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
         if not is_on:
             self._event = None
             self._attr_extra_state_attributes = {}
+
+    @callback
+    def _async_updated_event(self, device: ProtectModelWithId) -> None:
+        """Call back for incoming data that only writes when state has changed.
+
+        Only the is_on, _attr_extra_state_attributes, and available are ever
+        updated for these entities, and since the websocket update for the
+        device will trigger an update for all entities connected to the device,
+        we want to avoid writing state unless something has actually changed.
+        """
+        previous_is_on = self._attr_is_on
+        previous_available = self._attr_available
+        previous_extra_state_attributes = self._attr_extra_state_attributes
+        self._async_update_device_from_protect(device)
+        if (
+            self._attr_is_on != previous_is_on
+            or self._attr_extra_state_attributes != previous_extra_state_attributes
+            or self._attr_available != previous_available
+        ):
+            self.async_write_ha_state()

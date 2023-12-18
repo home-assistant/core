@@ -12,26 +12,6 @@ from homeassistant import setup
 from homeassistant.components.command_line import DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.issue_registry as ir
-
-
-async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
-    """Test sensor setup."""
-    assert await setup.async_setup_component(
-        hass,
-        NOTIFY_DOMAIN,
-        {
-            NOTIFY_DOMAIN: [
-                {"platform": "command_line", "name": "Test1", "command": "exit 0"},
-            ]
-        },
-    )
-    await hass.async_block_till_done()
-    assert hass.services.has_service(NOTIFY_DOMAIN, "test1")
-
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_notify")
-    assert issue.translation_key == "deprecated_platform_yaml"
 
 
 @pytest.mark.parametrize(

@@ -18,6 +18,10 @@
     "press": {
       "name": "Press",
       "description": "Mimics the physical button press on the device."
+    },
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads helpers from the YAML-configuration."
     }
   }
 }

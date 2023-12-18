@@ -14,14 +14,17 @@ from homeassistant.components.google_assistant.const import (
     SOURCE_LOCAL,
     STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
+from homeassistant.components.matter.models import MatterDeviceInfo
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import MockConfig
 
 from tests.common import (
+    MockConfigEntry,
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
@@ -71,6 +74,57 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass: HomeAssistant) 
             serialized = entity.sync_serialize(None, "mock-uuid")
             assert "otherDeviceIds" not in serialized
             assert "customData" not in serialized
+
+
+async def test_google_entity_sync_serialize_with_matter(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sync serialize attributes of a GoogleEntity that is also a Matter device."""
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        manufacturer="Someone",
+        model="Some model",
+        sw_version="Some Version",
+        identifiers={("matter", "12345678")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "1235",
+        suggested_object_id="ceiling_lights",
+        device_id=device.id,
+    )
+    hass.states.async_set("light.ceiling_lights", "off")
+
+    entity = helpers.GoogleEntity(
+        hass, MockConfig(hass=hass), hass.states.get("light.ceiling_lights")
+    )
+
+    serialized = entity.sync_serialize(None, "mock-uuid")
+    assert "matterUniqueId" not in serialized
+    assert "matterOriginalVendorId" not in serialized
+    assert "matterOriginalProductId" not in serialized
+
+    hass.config.components.add("matter")
+
+    with patch(
+        "homeassistant.components.matter.get_matter_device_info",
+        return_value=MatterDeviceInfo(
+            unique_id="mock-unique-id",
+            vendor_id="mock-vendor-id",
+            product_id="mock-product-id",
+        ),
+    ):
+        serialized = entity.sync_serialize("mock-user-id", "abcdef")
+
+    assert serialized["matterUniqueId"] == "mock-unique-id"
+    assert serialized["matterOriginalVendorId"] == "mock-vendor-id"
+    assert serialized["matterOriginalProductId"] == "mock-product-id"
 
 
 async def test_config_local_sdk(
@@ -306,12 +360,34 @@ async def test_agent_user_id_connect() -> None:
 
 @pytest.mark.parametrize("agents", [{}, {"1"}, {"1", "2"}])
 async def test_report_state_all(agents) -> None:
-    """Test a disconnect message."""
+    """Test sync of all states."""
     config = MockConfig(agent_user_ids=agents)
     data = {}
     with patch.object(config, "async_report_state") as mock:
         await config.async_report_state_all(data)
         assert sorted(mock.mock_calls) == sorted(call(data, agent) for agent in agents)
+
+
+@pytest.mark.parametrize("agents", [{}, {"1"}, {"1", "2"}])
+async def test_sync_entities(agents) -> None:
+    """Test sync of all entities."""
+    config = MockConfig(agent_user_ids=agents)
+    with patch.object(
+        config, "async_sync_entities", return_value=HTTPStatus.NO_CONTENT
+    ) as mock:
+        await config.async_sync_entities_all()
+        assert sorted(mock.mock_calls) == sorted(call(agent) for agent in agents)
+
+
+@pytest.mark.parametrize("agents", [{}, {"1"}, {"1", "2"}])
+async def test_sync_notifications(agents) -> None:
+    """Test sync of notifications."""
+    config = MockConfig(agent_user_ids=agents)
+    with patch.object(
+        config, "async_sync_notification", return_value=HTTPStatus.NO_CONTENT
+    ) as mock:
+        await config.async_sync_notification_all("1234", {})
+        assert not agents or bool(mock.mock_calls) and agents
 
 
 @pytest.mark.parametrize(

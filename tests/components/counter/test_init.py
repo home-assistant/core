@@ -24,7 +24,7 @@ from homeassistant.components.counter import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON, ATTR_NAME
 from homeassistant.core import Context, CoreState, HomeAssistant, State
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .common import async_decrement, async_increment, async_reset
@@ -432,148 +432,6 @@ async def test_counter_max(hass: HomeAssistant, hass_admin_user: MockUser) -> No
     assert state2.state == "-1"
 
 
-async def test_configure(
-    hass: HomeAssistant, hass_admin_user: MockUser, issue_registry: ir.IssueRegistry
-) -> None:
-    """Test that setting values through configure works."""
-    assert await async_setup_component(
-        hass, "counter", {"counter": {"test": {"maximum": "10", "initial": "10"}}}
-    )
-
-    state = hass.states.get("counter.test")
-    assert state is not None
-    assert state.state == "10"
-    assert state.attributes.get("maximum") == 10
-
-    # update max
-    await hass.services.async_call(
-        "counter",
-        "configure",
-        {"entity_id": state.entity_id, "maximum": 0},
-        True,
-        Context(user_id=hass_admin_user.id),
-    )
-
-    state = hass.states.get("counter.test")
-    assert state is not None
-    assert state.state == "0"
-    assert state.attributes.get("maximum") == 0
-
-    # Ensure an issue is raised for the use of this deprecated service
-    assert issue_registry.async_get_issue(
-        domain=DOMAIN, issue_id="deprecated_configure_service"
-    )
-
-    # disable max
-    await hass.services.async_call(
-        "counter",
-        "configure",
-        {"entity_id": state.entity_id, "maximum": None},
-        True,
-        Context(user_id=hass_admin_user.id),
-    )
-
-    state = hass.states.get("counter.test")
-    assert state is not None
-    assert state.state == "0"
-    assert state.attributes.get("maximum") is None
-
-    # update min
-    assert state.attributes.get("minimum") is None
-    await hass.services.async_call(
-        "counter",
-        "configure",
-        {"entity_id": state.entity_id, "minimum": 5},
-        True,
-        Context(user_id=hass_admin_user.id),
-    )
-
-    state = hass.states.get("counter.test")
-    assert state is not None
-    assert state.state == "5"
-    assert state.attributes.get("minimum") == 5
-
-    # disable min
-    await hass.services.async_call(
-        "counter",
-        "configure",
-        {"entity_id": state.entity_id, "minimum": None},
-        True,
-        Context(user_id=hass_admin_user.id),
-    )
-
-    state = hass.states.get("counter.test")
-    assert state is not None
-    assert state.state == "5"
-    assert state.attributes.get("minimum") is None
-
-    # update step
-    assert state.attributes.get("step") == 1
-    await hass.services.async_call(
-        "counter",
-        "configure",
-        {"entity_id": state.entity_id, "step": 3},
-        True,
-        Context(user_id=hass_admin_user.id),
-    )
-
-    state = hass.states.get("counter.test")
-    assert state is not None
-    assert state.state == "5"
-    assert state.attributes.get("step") == 3
-
-    # update value
-    await hass.services.async_call(
-        "counter",
-        "configure",
-        {"entity_id": state.entity_id, "value": 6},
-        True,
-        Context(user_id=hass_admin_user.id),
-    )
-
-    state = hass.states.get("counter.test")
-    assert state is not None
-    assert state.state == "6"
-
-    # update initial
-    await hass.services.async_call(
-        "counter",
-        "configure",
-        {"entity_id": state.entity_id, "initial": 5},
-        True,
-        Context(user_id=hass_admin_user.id),
-    )
-
-    state = hass.states.get("counter.test")
-    assert state is not None
-    assert state.state == "6"
-    assert state.attributes.get("initial") == 5
-
-    # update all
-    await hass.services.async_call(
-        "counter",
-        "configure",
-        {
-            "entity_id": state.entity_id,
-            "step": 5,
-            "minimum": 0,
-            "maximum": 9,
-            "value": 5,
-            "initial": 6,
-        },
-        True,
-        Context(user_id=hass_admin_user.id),
-    )
-
-    state = hass.states.get("counter.test")
-    assert state is not None
-    assert state.state == "5"
-    assert state.attributes.get("step") == 5
-    assert state.attributes.get("minimum") == 0
-    assert state.attributes.get("maximum") == 9
-    assert state.attributes.get("initial") == 6
-
-
 async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
     """Test set up from storage."""
     assert await storage_setup()
@@ -644,18 +502,20 @@ async def test_ws_list(
 
 
 async def test_ws_delete(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    storage_setup,
 ) -> None:
     """Test WS delete cleans up entity registry."""
     assert await storage_setup()
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is not None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
 
     client = await hass_ws_client(hass)
 
@@ -667,7 +527,7 @@ async def test_ws_delete(
 
     state = hass.states.get(input_entity_id)
     assert state is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
 
 async def test_update_min_max(
@@ -688,7 +548,7 @@ async def test_update_min_max(
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = er.async_get(hass)
+    entity_registry = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is not None
@@ -696,7 +556,7 @@ async def test_update_min_max(
     assert state.attributes[ATTR_MAXIMUM] == 100
     assert state.attributes[ATTR_MINIMUM] == 10
     assert state.attributes[ATTR_STEP] == 3
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
 
     client = await hass_ws_client(hass)
 
@@ -769,11 +629,11 @@ async def test_create(
 
     counter_id = "new_counter"
     input_entity_id = f"{DOMAIN}.{counter_id}"
-    ent_reg = er.async_get(hass)
+    entity_registry = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, counter_id) is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, counter_id) is None
 
     client = await hass_ws_client(hass)
 

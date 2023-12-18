@@ -23,7 +23,7 @@ from homeassistant.components.recorder.statistics import (
     statistics_during_period,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfEnergy, UnitOfVolume
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -58,6 +58,16 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             entry_data.get(CONF_TOTP_SECRET),
         )
 
+        @callback
+        def _dummy_listener() -> None:
+            pass
+
+        # Force the coordinator to periodically update by registering at least one listener.
+        # Needed when the _async_update_data below returns {} for utilities that don't provide
+        # forecast, which results to no sensors added, no registered listeners, and thus
+        # _async_update_data not periodically getting called which is needed for _insert_statistics.
+        self.async_add_listener(_dummy_listener)
+
     async def _async_update_data(
         self,
     ) -> dict[str, Forecast]:
@@ -71,6 +81,8 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             raise ConfigEntryAuthFailed from err
         forecasts: list[Forecast] = await self.api.async_get_forecast()
         _LOGGER.debug("Updating sensor data with: %s", forecasts)
+        # Because Opower provides historical usage/cost with a delay of a couple of days
+        # we need to insert data into statistics.
         await self._insert_statistics()
         return {forecast.account.utility_account_id: forecast for forecast in forecasts}
 

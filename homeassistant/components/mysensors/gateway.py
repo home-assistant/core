@@ -18,14 +18,13 @@ from homeassistant.components.mqtt import (
     ReceivePayloadType,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_DEVICE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     CONF_BAUD_RATE,
-    CONF_DEVICE,
     CONF_GATEWAY_TYPE,
     CONF_GATEWAY_TYPE_MQTT,
     CONF_GATEWAY_TYPE_SERIAL,
@@ -42,6 +41,7 @@ from .const import (
 )
 from .handler import HANDLERS
 from .helpers import (
+    discover_mysensors_node,
     discover_mysensors_platform,
     on_unload,
     validate_child,
@@ -244,6 +244,7 @@ async def _discover_persistent_devices(
     for node_id in gateway.sensors:
         if not validate_node(gateway, node_id):
             continue
+        discover_mysensors_node(hass, entry.entry_id, node_id)
         node: Sensor = gateway.sensors[node_id]
         for child in node.children.values():  # child is of type ChildSensor
             validated = validate_child(entry.entry_id, gateway, node_id, child)

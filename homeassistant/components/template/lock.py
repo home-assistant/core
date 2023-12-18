@@ -90,11 +90,7 @@ class TemplateLock(TemplateEntity, LockEntity):
         self._command_lock = Script(hass, config[CONF_LOCK], name, DOMAIN)
         self._command_unlock = Script(hass, config[CONF_UNLOCK], name, DOMAIN)
         self._optimistic = config.get(CONF_OPTIMISTIC)
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return true if we do optimistic updates."""
-        return bool(self._optimistic)
+        self._attr_assumed_state = bool(self._optimistic)
 
     @property
     def is_locked(self) -> bool:

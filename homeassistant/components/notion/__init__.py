@@ -189,8 +189,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 raise UpdateFailed(
                     f"There was an unknown error while updating {attr}: {result}"
                 ) from result
+            if isinstance(result, BaseException):
+                raise result from None
 
-            data.update_data_from_response(result)
+            data.update_data_from_response(result)  # type: ignore[arg-type]
 
         return data
 

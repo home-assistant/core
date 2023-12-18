@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import datetime
 import logging
-import re
 from typing import Any
 
 import voluptuous as vol
@@ -280,7 +279,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         """Return one or more digits/characters."""
         if self._code is None:
             return None
-        if isinstance(self._code, str) and re.search("^\\d+$", self._code):
+        if isinstance(self._code, str) and self._code.isdigit():
             return alarm.CodeFormat.NUMBER
         return alarm.CodeFormat.TEXT
 

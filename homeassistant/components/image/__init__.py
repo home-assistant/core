@@ -44,8 +44,7 @@ _RND: Final = SystemRandom()
 GET_IMAGE_TIMEOUT: Final = 10
 
 
-@dataclass
-class ImageEntityDescription(EntityDescription):
+class ImageEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes image entities."""
 
 
@@ -125,6 +124,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 class ImageEntity(Entity):
     """The base class for image entities."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {"access_token", "entity_picture"}
+    )
 
     # Entity Properties
     _attr_content_type: str = DEFAULT_CONTENT_TYPE

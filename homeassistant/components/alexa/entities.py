@@ -707,7 +707,8 @@ class MediaPlayerCapabilities(AlexaEntity):
 
         # AlexaEqualizerController is disabled for denonavr
         # since it blocks alexa from discovering any devices.
-        domain = entity_sources(self.hass).get(self.entity_id, {}).get("domain")
+        entity_info = entity_sources(self.hass).get(self.entity_id)
+        domain = entity_info["domain"] if entity_info else None
         if (
             supported & media_player.MediaPlayerEntityFeature.SELECT_SOUND_MODE
             and domain != "denonavr"

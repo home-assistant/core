@@ -35,7 +35,7 @@ from miio import (
 from miio.gateway.gateway import GatewayException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TOKEN, Platform
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -43,7 +43,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     ATTR_AVAILABLE,
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     DOMAIN,
@@ -296,9 +295,15 @@ async def async_create_miio_device_and_coordinator(
     name = entry.title
     device: MiioDevice | None = None
     migrate = False
-    lazy_discover = False
     update_method = _async_update_data_default
     coordinator_class: type[DataUpdateCoordinator[Any]] = DataUpdateCoordinator
+
+    # List of models requiring specific lazy_discover setting
+    LAZY_DISCOVER_FOR_MODEL = {
+        "zhimi.fan.za5": True,
+        "zhimi.airpurifier.za1": True,
+    }
+    lazy_discover = LAZY_DISCOVER_FOR_MODEL.get(model, False)
 
     if (
         model not in MODELS_HUMIDIFIER

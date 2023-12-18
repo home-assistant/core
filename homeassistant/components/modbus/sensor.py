@@ -27,7 +27,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import get_hub
 from .base_platform import BaseStructPlatform
-from .const import CONF_SLAVE_COUNT
+from .const import CONF_SLAVE_COUNT, CONF_VIRTUAL_COUNT
 from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,8 +49,10 @@ async def async_setup_platform(
     sensors: list[ModbusRegisterSensor | SlaveSensor] = []
     hub = get_hub(hass, discovery_info[CONF_NAME])
     for entry in discovery_info[CONF_SENSORS]:
-        slave_count = entry.get(CONF_SLAVE_COUNT, 0)
-        sensor = ModbusRegisterSensor(hub, entry, slave_count)
+        slave_count = entry.get(CONF_SLAVE_COUNT, None) or entry.get(
+            CONF_VIRTUAL_COUNT, 0
+        )
+        sensor = ModbusRegisterSensor(hass, hub, entry, slave_count)
         if slave_count > 0:
             sensors.extend(await sensor.async_setup_slaves(hass, slave_count, entry))
         sensors.append(sensor)
@@ -62,12 +64,13 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         hub: ModbusHub,
         entry: dict[str, Any],
         slave_count: int,
     ) -> None:
         """Initialize the modbus register sensor."""
-        super().__init__(hub, entry)
+        super().__init__(hass, hub, entry)
         if slave_count:
             self._count = self._count * (slave_count + 1)
         self._coordinator: DataUpdateCoordinator[list[int] | None] | None = None
@@ -106,14 +109,11 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         """Update the state of the sensor."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
+        self._cancel_call = None
         raw_result = await self._hub.async_pb_call(
             self._slave, self._address, self._count, self._input_type
         )
         if raw_result is None:
-            if self._lazy_errors:
-                self._lazy_errors -= 1
-                return
-            self._lazy_errors = self._lazy_error_count
             self._attr_available = False
             self._attr_native_value = None
             if self._coordinator:
@@ -135,7 +135,6 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         else:
             self._attr_native_value = result
         self._attr_available = self._attr_native_value is not None
-        self._lazy_errors = self._lazy_error_count
         self.async_write_ha_state()
 
 
@@ -161,6 +160,7 @@ class SlaveSensor(
             self._attr_unique_id = f"{self._attr_unique_id}_{idx}"
         self._attr_native_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = entry.get(CONF_STATE_CLASS)
+        self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
         self._attr_available = False
         super().__init__(coordinator)
 

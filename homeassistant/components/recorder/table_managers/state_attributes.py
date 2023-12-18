@@ -11,7 +11,6 @@ from homeassistant.core import Event
 from homeassistant.helpers.entity import entity_sources
 from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS
 
-from ..const import SQLITE_MAX_BIND_VARS
 from ..db_schema import StateAttributes
 from ..queries import get_shared_attributes
 from ..util import chunked, execute_stmt_lambda_element
@@ -34,13 +33,10 @@ _LOGGER = logging.getLogger(__name__)
 class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
     """Manage the StateAttributes table."""
 
-    def __init__(
-        self, recorder: Recorder, exclude_attributes_by_domain: dict[str, set[str]]
-    ) -> None:
+    def __init__(self, recorder: Recorder) -> None:
         """Initialize the event type manager."""
         super().__init__(recorder, CACHE_SIZE)
         self.active = True  # always active
-        self._exclude_attributes_by_domain = exclude_attributes_by_domain
         self._entity_sources = entity_sources(recorder.hass)
 
     def serialize_from_event(self, event: Event) -> bytes | None:
@@ -49,7 +45,6 @@ class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
             return StateAttributes.shared_attrs_bytes_from_event(
                 event,
                 self._entity_sources,
-                self._exclude_attributes_by_domain,
                 self.recorder.dialect_name,
             )
         except JSON_ENCODE_EXCEPTIONS as ex:
@@ -112,7 +107,7 @@ class StateAttributesManager(BaseLRUTableManager[StateAttributes]):
         """
         results: dict[str, int | None] = {}
         with session.no_autoflush:
-            for hashs_chunk in chunked(hashes, SQLITE_MAX_BIND_VARS):
+            for hashs_chunk in chunked(hashes, self.recorder.max_bind_vars):
                 for attributes_id, shared_attrs in execute_stmt_lambda_element(
                     session, get_shared_attributes(hashs_chunk), orm_rows=False
                 ):
