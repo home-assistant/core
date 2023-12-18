@@ -12,7 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import zeroconf
 from homeassistant.components.tailwind.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -293,3 +293,88 @@ async def test_zeroconf_flow_not_discovered_again(
     assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
     assert mock_config_entry.data[CONF_HOST] == "127.0.0.1"
+
+
+@pytest.mark.usefixtures("mock_tailwind")
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reauthentication configuration flow."""
+    mock_config_entry.add_to_hass(hass)
+    assert mock_config_entry.data[CONF_TOKEN] == "123456"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "unique_id": mock_config_entry.unique_id,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=mock_config_entry.data,
+    )
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "reauth_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_TOKEN: "987654"},
+    )
+    await hass.async_block_till_done()
+
+    assert result2.get("type") == FlowResultType.ABORT
+    assert result2.get("reason") == "reauth_successful"
+
+    assert mock_config_entry.data[CONF_TOKEN] == "987654"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (TailwindConnectionError, {"base": "cannot_connect"}),
+        (TailwindAuthenticationError, {CONF_TOKEN: "invalid_auth"}),
+        (Exception, {"base": "unknown"}),
+    ],
+)
+async def test_reauth_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tailwind: MagicMock,
+    side_effect: Exception,
+    expected_error: dict[str, str],
+) -> None:
+    """Test we show form on a error."""
+    mock_config_entry.add_to_hass(hass)
+    mock_tailwind.status.side_effect = side_effect
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "unique_id": mock_config_entry.unique_id,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=mock_config_entry.data,
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_TOKEN: "123456",
+        },
+    )
+
+    assert result2.get("type") == FlowResultType.FORM
+    assert result2.get("step_id") == "reauth_confirm"
+    assert result2.get("errors") == expected_error
+
+    mock_tailwind.status.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_TOKEN: "123456",
+        },
+    )
+
+    assert result3.get("type") == FlowResultType.ABORT
+    assert result3.get("reason") == "reauth_successful"

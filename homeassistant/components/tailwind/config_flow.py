@@ -1,6 +1,7 @@
 """Config flow to configure the Tailwind integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from gotailwind import (
@@ -14,7 +15,7 @@ from gotailwind import (
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -38,6 +39,7 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     host: str
+    reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -140,6 +142,46 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reauth(self, _: Mapping[str, Any]) -> FlowResult:
+        """Handle initiation of re-authentication with a Tailwind device."""
+        self.reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle re-authentication with a Tailwind device."""
+        errors = {}
+
+        if user_input is not None and self.reauth_entry:
+            try:
+                return await self._async_step_create_entry(
+                    host=self.reauth_entry.data[CONF_HOST],
+                    token=user_input[CONF_TOKEN],
+                )
+            except TailwindAuthenticationError:
+                errors[CONF_TOKEN] = "invalid_auth"
+            except TailwindConnectionError:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_TOKEN): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    ),
+                }
+            ),
+            description_placeholders={"url": LOCAL_CONTROL_KEY_URL},
+            errors=errors,
+        )
+
     async def _async_step_create_entry(self, *, host: str, token: str) -> FlowResult:
         """Create entry."""
         tailwind = Tailwind(
@@ -150,6 +192,16 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
             status = await tailwind.status()
         except TailwindUnsupportedFirmwareVersionError:
             return self.async_abort(reason="unsupported_firmware")
+
+        if self.reauth_entry:
+            self.hass.config_entries.async_update_entry(
+                self.reauth_entry,
+                data={CONF_HOST: host, CONF_TOKEN: token},
+            )
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
+            )
+            return self.async_abort(reason="reauth_successful")
 
         await self.async_set_unique_id(
             format_mac(status.mac_address), raise_on_progress=False
