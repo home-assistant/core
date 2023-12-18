@@ -1,18 +1,16 @@
-"""Test fixtures for bangolufsen."""
+"""Test fixtures for bang_olufsen."""
 
 from unittest.mock import AsyncMock, patch
 
-from mozart_api.models import BeolinkPeer, VolumeLevel, VolumeSettings
+from mozart_api.models import BeolinkPeer
 import pytest
 
-from homeassistant.components.bangolufsen.const import DOMAIN
+from homeassistant.components.bang_olufsen.const import DOMAIN
 
 from .const import (
     TEST_DATA_CONFIRM,
-    TEST_DEFAULT_VOLUME,
     TEST_FRIENDLY_NAME,
     TEST_JID_1,
-    TEST_MAX_VOLUME,
     TEST_NAME,
     TEST_SERIAL_NUMBER,
 )
@@ -34,17 +32,9 @@ class MockMozartClient:
         friendly_name=TEST_FRIENDLY_NAME, jid=TEST_JID_1
     )
 
-    get_volume_settings_result = VolumeSettings(
-        default=VolumeLevel(level=TEST_DEFAULT_VOLUME),
-        maximum=VolumeLevel(level=TEST_MAX_VOLUME),
-    )
-
     # API endpoints
     get_beolink_self = AsyncMock()
     get_beolink_self.return_value = get_beolink_self_result
-
-    get_volume_settings = AsyncMock()
-    get_volume_settings.return_value = get_volume_settings_result
 
 
 @pytest.fixture
@@ -68,7 +58,6 @@ def mock_client():
         yield client
 
     # Reset mocked API call counts and side effects
-    client.get_volume_settings.reset_mock(side_effect=True)
     client.get_beolink_self.reset_mock(side_effect=True)
 
 
@@ -76,6 +65,6 @@ def mock_client():
 def mock_setup_entry():
     """Mock successful setup entry."""
     with patch(
-        "homeassistant.components.bangolufsen.async_setup_entry", return_value=True
+        "homeassistant.components.bang_olufsen.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry

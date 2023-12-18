@@ -346,7 +346,7 @@ ZEROCONF = {
     ],
     "_bangolufsen._tcp.local.": [
         {
-            "domain": "bangolufsen",
+            "domain": "bang_olufsen",
         },
     ],
     "_bbxsrv._tcp.local.": [

@@ -1,19 +1,17 @@
-"""Constants used for testing the bangolufsen integration."""
+"""Constants used for testing the bang_olufsen integration."""
 
 
 from ipaddress import IPv4Address
 
-from homeassistant.components.bangolufsen.const import (
+from homeassistant.components.bang_olufsen.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ITEM_NUMBER,
     ATTR_SERIAL_NUMBER,
     ATTR_TYPE_NUMBER,
     CONF_BEOLINK_JID,
-    CONF_DEFAULT_VOLUME,
-    CONF_MAX_VOLUME,
 )
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
-from homeassistant.const import CONF_HOST, CONF_MODEL
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
 
 TEST_HOST = "192.168.0.1"
 TEST_HOST_INVALID = "192.168.0"
@@ -26,20 +24,7 @@ TEST_FRIENDLY_NAME = "Living room Balance"
 TEST_TYPE_NUMBER = "1111"
 TEST_ITEM_NUMBER = "1111111"
 TEST_JID_1 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER}@products.bang-olufsen.com"
-TEST_JID_2 = f"{2222}.{2222222}.{22222222}@products.bang-olufsen.com"
-TEST_JID_3 = f"{3333}.{3333333}.{33333333}@products.bang-olufsen.com"
-TEST_DEFAULT_VOLUME = 40
-TEST_MAX_VOLUME = 100
-TEST_VOLUME_STEP = 5
 
-
-SETUP_ENTRY = "homeassistant.components.bangolufsen.async_setup_entry"
-
-TEST_HOST_OPTIONS = "192.168.0.2"
-TEST_NAME_OPTIONS = "Test name options"
-TEST_DEFAULT_VOLUME_OPTIONS = 20
-TEST_MAX_VOLUME_OPTIONS = 70
-TEST_VOLUME_STEP_OPTIONS = 7
 
 TEST_HOSTNAME_ZEROCONF = TEST_NAME.replace(" ", "-") + ".local."
 TEST_TYPE_ZEROCONF = "_bangolufsen._tcp.local."
@@ -48,17 +33,12 @@ TEST_NAME_ZEROCONF = TEST_NAME.replace(" ", "-") + "." + TEST_TYPE_ZEROCONF
 TEST_DATA_USER = {CONF_HOST: TEST_HOST, CONF_MODEL: TEST_MODEL_BALANCE}
 TEST_DATA_USER_INVALID = {CONF_HOST: TEST_HOST_INVALID, CONF_MODEL: TEST_MODEL_BALANCE}
 
-TEST_DATA_NO_HOST = {
-    CONF_DEFAULT_VOLUME: TEST_DEFAULT_VOLUME,
-    CONF_MAX_VOLUME: TEST_MAX_VOLUME,
-}
 
 TEST_DATA_CONFIRM = {
     CONF_HOST: TEST_HOST,
-    CONF_DEFAULT_VOLUME: TEST_DEFAULT_VOLUME,
-    CONF_MAX_VOLUME: TEST_MAX_VOLUME,
     CONF_MODEL: TEST_MODEL_BALANCE,
     CONF_BEOLINK_JID: TEST_JID_1,
+    CONF_NAME: TEST_NAME,
 }
 
 TEST_DATA_ZEROCONF = ZeroconfServiceInfo(

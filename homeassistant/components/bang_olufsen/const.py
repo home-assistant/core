@@ -33,7 +33,7 @@ class SOURCE_ENUM(StrEnum):
     tidalConnect = "Tidal Connect"  # noqa: N815
 
 
-BANGOLUFSEN_STATES: dict[str, MediaPlayerState] = {
+BANG_OLUFSEN_STATES: dict[str, MediaPlayerState] = {
     # Dict used for translating device states to Home Assistant states.
     "started": MediaPlayerState.PLAYING,
     "buffering": MediaPlayerState.PLAYING,
@@ -48,7 +48,7 @@ BANGOLUFSEN_STATES: dict[str, MediaPlayerState] = {
 
 
 # Media types for play_media
-class BANGOLUFSEN_MEDIA_TYPE(StrEnum):
+class BANG_OLUFSEN_MEDIA_TYPE(StrEnum):
     """Bang & Olufsen specific media types."""
 
     FAVOURITE = "favourite"
@@ -91,22 +91,12 @@ class WEBSOCKET_NOTIFICATION(StrEnum):
     ALL: Final[str] = "all"
 
 
-DOMAIN: Final[str] = "bangolufsen"
+DOMAIN: Final[str] = "bang_olufsen"
 
 # Default values for configuration.
-DEFAULT_DEFAULT_VOLUME: Final[int] = 40
-DEFAULT_MAX_VOLUME: Final[int] = 100
-DEFAULT_VOLUME_STEP: Final[int] = 5
 DEFAULT_MODEL: Final[str] = MODEL_ENUM.BEOSOUND_BALANCE
 
-# Acceptable ranges for configuration.
-DEFAULT_VOLUME_RANGE: Final[range] = range(1, 70, 1)
-MAX_VOLUME_RANGE: Final[range] = range(20, 100, 1)
-VOLUME_STEP_RANGE: Final[range] = range(1, 20, 1)
-
 # Configuration.
-CONF_DEFAULT_VOLUME: Final = "default_volume"
-CONF_MAX_VOLUME: Final = "max_volume"
 CONF_SERIAL_NUMBER: Final = "serial_number"
 CONF_BEOLINK_JID: Final = "jid"
 
@@ -120,20 +110,20 @@ ATTR_ITEM_NUMBER: Final[str] = "in"
 ATTR_FRIENDLY_NAME: Final[str] = "fn"
 
 # Power states.
-BANGOLUFSEN_ON: Final[str] = "on"
+BANG_OLUFSEN_ON: Final[str] = "on"
 
 VALID_MEDIA_TYPES: Final[tuple] = (
-    BANGOLUFSEN_MEDIA_TYPE.FAVOURITE,
-    BANGOLUFSEN_MEDIA_TYPE.DEEZER,
-    BANGOLUFSEN_MEDIA_TYPE.RADIO,
-    BANGOLUFSEN_MEDIA_TYPE.TTS,
+    BANG_OLUFSEN_MEDIA_TYPE.FAVOURITE,
+    BANG_OLUFSEN_MEDIA_TYPE.DEEZER,
+    BANG_OLUFSEN_MEDIA_TYPE.RADIO,
+    BANG_OLUFSEN_MEDIA_TYPE.TTS,
     MediaType.MUSIC,
     MediaType.URL,
     MediaType.CHANNEL,
 )
 
 # Playback states for playing and not playing
-PLAYING: Final[tuple] = ("started", "buffering", BANGOLUFSEN_ON)
+PLAYING: Final[tuple] = ("started", "buffering", BANG_OLUFSEN_ON)
 NOT_PLAYING: Final[tuple] = ("idle", "paused", "stopped", "ended", "unknown", "error")
 
 # Sources on the device that should not be selectable by the user
@@ -215,7 +205,7 @@ FALLBACK_SOURCES: Final[SourceArray] = SourceArray(
 
 
 # Device events
-BANGOLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
+BANG_OLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 
 
 CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"

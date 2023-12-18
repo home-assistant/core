@@ -63,7 +63,7 @@ FLOWS = {
         "azure_event_hub",
         "baf",
         "balboa",
-        "bangolufsen",
+        "bang_olufsen",
         "blebox",
         "blink",
         "bluemaestro",

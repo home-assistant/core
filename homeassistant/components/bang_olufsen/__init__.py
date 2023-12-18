@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 
 from aiohttp.client_exceptions import ClientConnectorError
 from mozart_api.exceptions import ApiException
@@ -17,7 +16,6 @@ from .const import DOMAIN
 from .websocket import BangOlufsenWebsocket
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -37,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await client.get_battery_state(_request_timeout=3)
     except (ApiException, ClientConnectorError, TimeoutError) as error:
-        await client.close()
+        await client.close_api_client()
         raise ConfigEntryNotReady(f"Unable to connect to {entry.title}") from error
 
     websocket = BangOlufsenWebsocket(hass, entry, client)
@@ -49,15 +47,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    websocket.connect_websocket()
+    client.connect_notifications()
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    # Close the API client
-    await hass.data[DOMAIN][entry.entry_id].client.close()
+    # Close the API client and WebSocket notification listener
+    hass.data[DOMAIN][entry.entry_id].client.disconnect_notifications()
+    await hass.data[DOMAIN][entry.entry_id].client.close_api_client()
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

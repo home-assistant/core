@@ -22,8 +22,8 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 
 
-class BangOlufsenVariables:
-    """Shared variables for various classes."""
+class BangOlufsenBase:
+    """Base class for BangOlufsen Home Assistant objects."""
 
     def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Initialize the object."""
@@ -52,15 +52,14 @@ class BangOlufsenVariables:
         )
 
 
-class BangOlufsenEntity(Entity, BangOlufsenVariables):
+class BangOlufsenEntity(Entity, BangOlufsenBase):
     """Base Entity for BangOlufsen entities."""
 
     _attr_has_entity_name = True
 
     def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Initialize the object."""
-        Entity.__init__(self)
-        BangOlufsenVariables.__init__(self, entry, client)
+        super().__init__(entry, client)
 
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
         self._attr_device_class = None

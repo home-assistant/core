@@ -1,4 +1,4 @@
-"""Test the bangolufsen config_flow."""
+"""Test the bang_olufsen config_flow."""
 
 
 from unittest.mock import Mock
@@ -6,7 +6,7 @@ from unittest.mock import Mock
 from aiohttp.client_exceptions import ClientConnectorError
 import pytest
 
-from homeassistant.components.bangolufsen.const import DOMAIN
+from homeassistant.components.bang_olufsen.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
@@ -39,7 +39,6 @@ async def test_config_flow_timeout_error(
     assert result_user["reason"] == "timeout_error"
 
     assert mock_client.get_beolink_self.call_count == 1
-    assert mock_client.get_volume_settings.call_count == 0
 
 
 async def test_config_flow_client_connector_error(
@@ -57,7 +56,6 @@ async def test_config_flow_client_connector_error(
     assert result_user["reason"] == "client_connector_error"
 
     assert mock_client.get_beolink_self.call_count == 1
-    assert mock_client.get_volume_settings.call_count == 0
 
 
 async def test_config_flow_value_error(hass: HomeAssistant) -> None:
@@ -103,7 +101,6 @@ async def test_config_flow(
     assert result_entry["data"] == TEST_DATA_CONFIRM
 
     assert mock_client.get_beolink_self.call_count == 1
-    assert mock_client.get_volume_settings.call_count == 1
 
 
 async def test_config_flow_zeroconf(
@@ -129,7 +126,6 @@ async def test_config_flow_zeroconf(
     assert result_confirm["data"] == TEST_DATA_CONFIRM
 
     assert mock_client.get_beolink_self.call_count == 0
-    assert mock_client.get_volume_settings.call_count == 1
 
 
 async def test_config_flow_zeroconf_not_mozart_device(hass: HomeAssistant) -> None:

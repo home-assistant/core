@@ -22,24 +22,17 @@ from .const import (
     ATTR_SERIAL_NUMBER,
     ATTR_TYPE_NUMBER,
     COMPATIBLE_MODELS,
-    CONF_BEOLINK_JID,
-    CONF_DEFAULT_VOLUME,
-    CONF_MAX_VOLUME,
     CONF_SERIAL_NUMBER,
-    DEFAULT_DEFAULT_VOLUME,
-    DEFAULT_MAX_VOLUME,
     DEFAULT_MODEL,
     DOMAIN,
 )
 
 
-class UserInput(TypedDict, total=False):
-    """TypedDict for user_input."""
+class EntryData(TypedDict, total=False):
+    """TypedDict for config_entry data."""
 
-    default_volume: int
     host: str
     jid: str
-    max_volume: int
     model: str
     name: str
 
@@ -58,31 +51,6 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Init the config flow."""
 
     VERSION = 1
-
-    async def _compile_data(self) -> UserInput:
-        """Compile data for entry creation."""
-        # Get current volume settings
-        async with self._client:
-            volume_settings = await self._client.get_volume_settings()
-
-        # Create a dict containing all necessary information for setup
-        data = UserInput()
-
-        data[CONF_HOST] = self._host
-        data[CONF_MODEL] = self._model
-        data[CONF_BEOLINK_JID] = self._beolink_jid
-        data[CONF_DEFAULT_VOLUME] = (
-            volume_settings.default.level
-            if volume_settings.default and volume_settings.default.level
-            else DEFAULT_DEFAULT_VOLUME
-        )
-        data[CONF_MAX_VOLUME] = (
-            volume_settings.maximum.level
-            if volume_settings.maximum and volume_settings.maximum.level
-            else DEFAULT_MAX_VOLUME
-        )
-
-        return data
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -106,6 +74,7 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     beolink_self = await self._client.get_beolink_self(
                         _request_timeout=3
                     )
+
                 except (ApiException, ClientConnectorError, TimeoutError) as error:
                     return self.async_abort(
                         reason={
@@ -156,18 +125,25 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self._serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
-        self._client = MozartClient(self._host, urllib3_logging_level=logging.ERROR)
-
         return await self.async_step_confirm()
 
     async def async_step_confirm(
-        self, user_input: UserInput | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm the configuration of the device."""
-        if user_input is not None:
-            data = await self._compile_data()
-            return self.async_create_entry(title=self._name, data=data)
 
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self._name,
+                data=EntryData(
+                    host=self._host,
+                    jid=self._beolink_jid,
+                    model=self._model,
+                    name=self._name,
+                ),
+            )
+
+        # Ensure that created entities have a unique and easily identifiable id and not a "friendly name"
         self._name = f"{self._model}-{self._serial_number}"
 
         await self.async_set_unique_id(self._serial_number)

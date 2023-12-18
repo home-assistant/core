@@ -143,8 +143,8 @@ build.json @home-assistant/supervisor
 /tests/components/baf/ @bdraco @jfroy
 /homeassistant/components/balboa/ @garbled1 @natekspencer
 /tests/components/balboa/ @garbled1 @natekspencer
-/homeassistant/components/bangolufsen/ @mj23000
-/tests/components/bangolufsen/ @mj23000
+/homeassistant/components/bang_olufsen/ @mj23000
+/tests/components/bang_olufsen/ @mj23000
 /homeassistant/components/bayesian/ @HarvsG
 /tests/components/bayesian/ @HarvsG
 /homeassistant/components/beewi_smartclim/ @alemuro

@@ -110,12 +110,12 @@ omit =
     homeassistant/components/baf/sensor.py
     homeassistant/components/baf/switch.py
     homeassistant/components/baidu/tts.py
-    homeassistant/components/bangolufsen/__init__.py
-    homeassistant/components/bangolufsen/const.py
-    homeassistant/components/bangolufsen/entity.py
-    homeassistant/components/bangolufsen/media_player.py
-    homeassistant/components/bangolufsen/util.py
-    homeassistant/components/bangolufsen/websocket.py
+    homeassistant/components/bang_olufsen/__init__.py
+    homeassistant/components/bang_olufsen/const.py
+    homeassistant/components/bang_olufsen/entity.py
+    homeassistant/components/bang_olufsen/media_player.py
+    homeassistant/components/bang_olufsen/util.py
+    homeassistant/components/bang_olufsen/websocket.py
     homeassistant/components/bbox/device_tracker.py
     homeassistant/components/bbox/sensor.py
     homeassistant/components/beewi_smartclim/sensor.py

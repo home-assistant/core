@@ -1,7 +1,6 @@
 """Media player entity for the Bang & Olufsen integration."""
 from __future__ import annotations
 
-from datetime import timedelta
 import json
 import logging
 from typing import Any, cast
@@ -26,7 +25,6 @@ from mozart_api.models import (
     UserFlow,
     VolumeLevel,
     VolumeMute,
-    VolumeSettings,
     VolumeState,
 )
 from mozart_api.mozart_client import MozartClient, get_highest_resolution_artwork
@@ -46,18 +44,16 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from . import BangOlufsenData
 from .const import (
-    BANGOLUFSEN_MEDIA_TYPE,
-    BANGOLUFSEN_STATES,
+    BANG_OLUFSEN_MEDIA_TYPE,
+    BANG_OLUFSEN_STATES,
     CONF_BEOLINK_JID,
-    CONF_DEFAULT_VOLUME,
-    CONF_MAX_VOLUME,
     CONNECTION_STATUS,
     DOMAIN,
     FALLBACK_SOURCES,
@@ -71,7 +67,7 @@ from .util import get_device
 
 _LOGGER = logging.getLogger(__name__)
 
-BANGOLUFSEN_FEATURES = (
+BANG_OLUFSEN_FEATURES = (
     MediaPlayerEntityFeature.PAUSE
     | MediaPlayerEntityFeature.SEEK
     | MediaPlayerEntityFeature.VOLUME_SET
@@ -86,9 +82,6 @@ BANGOLUFSEN_FEATURES = (
     | MediaPlayerEntityFeature.BROWSE_MEDIA
     | MediaPlayerEntityFeature.TURN_OFF
 )
-
-
-SCAN_INTERVAL = timedelta(minutes=2)
 
 
 async def async_setup_entry(
@@ -108,15 +101,13 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
     _attr_has_entity_name = False
     _attr_icon = "mdi:speaker-wireless"
-    _attr_supported_features = BANGOLUFSEN_FEATURES
+    _attr_supported_features = BANG_OLUFSEN_FEATURES
 
     def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Initialize the media player."""
         super().__init__(entry, client)
 
         self._beolink_jid: str = self.entry.data[CONF_BEOLINK_JID]
-        self._default_volume: int = self.entry.data[CONF_DEFAULT_VOLUME]
-        self._max_volume: int = self.entry.data[CONF_MAX_VOLUME]
         self._model: str = self.entry.data[CONF_MODEL]
 
         self._attr_device_info = DeviceInfo(
@@ -125,6 +116,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
             manufacturer="Bang & Olufsen",
             model=self._model,
             name=cast(str, self.name),
+            serial_number=self._unique_id,
         )
         self._attr_name = self._name
         self._attr_unique_id = self._unique_id
@@ -223,14 +215,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
             self._model,
             self._unique_id,
             self._software_status.software_version,
-        )
-
-        # Set the default and maximum volume of the product.
-        await self._client.set_volume_settings(
-            volume_settings=VolumeSettings(
-                default=VolumeLevel(level=self._default_volume),
-                maximum=VolumeLevel(level=self._max_volume),
-            )
         )
 
         # Get overall device state once. This is handled by WebSocket events the rest of the time.
@@ -376,23 +360,23 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         software_status = await self._client.get_softwareupdate_status()
 
         # Update the HA device if the sw version does not match
-        if not isinstance(self._device, DeviceEntry):
-            self._device = get_device(self.hass, self._unique_id)
+        if not self.device_entry:
+            self.device_entry = get_device(self.hass, self._unique_id)
 
-        assert isinstance(self._device, DeviceEntry)
+        assert self.device_entry
 
-        if software_status.software_version != self._device.sw_version:
+        if software_status.software_version != self.device_entry.sw_version:
             device_registry = dr.async_get(self.hass)
 
             device_registry.async_update_device(
-                device_id=self._device.id,
+                device_id=self.device_entry.id,
                 sw_version=software_status.software_version,
             )
 
     @property
     def state(self) -> MediaPlayerState:
         """Return the current state of the media player."""
-        return BANGOLUFSEN_STATES[self._state]
+        return BANG_OLUFSEN_STATES[self._state]
 
     @property
     def volume_level(self) -> float | None:
@@ -614,14 +598,14 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
 
         # The "provider" media_type may not be suitable for overlay all the time.
         # Use it for now.
-        elif media_type == BANGOLUFSEN_MEDIA_TYPE.TTS:
+        elif media_type == BANG_OLUFSEN_MEDIA_TYPE.TTS:
             await self._client.post_overlay_play(
                 overlay_play_request=OverlayPlayRequest(
                     uri=Uri(location=media_id),
                 )
             )
 
-        elif media_type == BANGOLUFSEN_MEDIA_TYPE.RADIO:
+        elif media_type == BANG_OLUFSEN_MEDIA_TYPE.RADIO:
             await self._client.run_provided_scene(
                 scene_properties=SceneProperties(
                     action_list=[
@@ -633,10 +617,10 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                 )
             )
 
-        elif media_type == BANGOLUFSEN_MEDIA_TYPE.FAVOURITE:
+        elif media_type == BANG_OLUFSEN_MEDIA_TYPE.FAVOURITE:
             await self._client.activate_preset(id=int(media_id))
 
-        elif media_type == BANGOLUFSEN_MEDIA_TYPE.DEEZER:
+        elif media_type == BANG_OLUFSEN_MEDIA_TYPE.DEEZER:
             try:
                 if media_id == "flow":
                     deezer_id = None
