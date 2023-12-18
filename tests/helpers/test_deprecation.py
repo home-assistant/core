@@ -7,7 +7,6 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.deprecation import (
-    _REPORTED_DEPRECATIONS,
     DeprecatedConstant,
     DeprecatedConstantEnum,
     check_if_deprecated_constant,
@@ -286,10 +285,6 @@ def test_check_if_deprecated_constant(
     extra_extra_msg: str,
 ) -> None:
     """Test check_if_deprecated_constant."""
-
-    # clear reported integrations
-    _REPORTED_DEPRECATIONS.clear()
-
     module_globals = {
         "__name__": module_name,
         "_DEPRECATED_TEST_CONSTANT": deprecated_constant,

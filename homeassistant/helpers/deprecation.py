@@ -19,9 +19,6 @@ _ObjectT = TypeVar("_ObjectT", bound=object)
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
 
-# Keep track of already reported deprecations to prevent flooding
-_REPORTED_DEPRECATIONS: set[str] = set()
-
 
 def deprecated_substitute(
     substitute_name: str,
@@ -175,11 +172,6 @@ def _print_deprecation_warning_internal(
     verb: str,
     breaks_in_ha_version: str | None,
 ) -> None:
-    report_name = f"{module_name}.{obj_name}"
-    if report_name in _REPORTED_DEPRECATIONS:
-        return
-
-    _REPORTED_DEPRECATIONS.add(report_name)
     logger = logging.getLogger(module_name)
     if breaks_in_ha_version:
         breaks_in = f" which will be removed in HA Core {breaks_in_ha_version}"
