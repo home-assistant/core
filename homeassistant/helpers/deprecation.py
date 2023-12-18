@@ -258,11 +258,17 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
         )
         breaks_in_ha_version = deprecated_const.breaks_in_ha_version
     else:
-        logger.debug(
-            "Invalid value for deprecated constant %s, should be DeprecatedConstant or DeprecatedConstantEnum",
-            name,
+        msg = (
+            f"Value of _DEPRECATED_{name!r} is a instance of {type(deprecated_const)}"
+            "but a instance of DeprecatedConstant or DeprecatedConstantEnum is required"
         )
-        raise AttributeError(f"Module {module_name!r} has no attribute {name!r}")  # noqa: TRY004
+
+        logger.debug(msg)
+        # PEP 562 -- Module __getattr__ and __dir__
+        # specifies that __getattr__ should raise AttributeError if the attribute is not
+        # found.
+        # https://peps.python.org/pep-0562/#specification
+        raise AttributeError(msg)  # noqa: TRY004
 
     _print_deprecation_warning_internal(
         name,
