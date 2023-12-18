@@ -108,7 +108,7 @@ class Switch(ZhaEntity, SwitchEntity):
 
     async def async_update(self) -> None:
         """Attempt to retrieve on off state from the switch."""
-        await super().async_update()
+        self.debug("Polling current state")
         await self._on_off_cluster_handler.get_attribute_value(
             "on_off", from_cache=False
         )
@@ -254,7 +254,6 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
 
     async def async_update(self) -> None:
         """Attempt to retrieve the state of the entity."""
-        await super().async_update()
         self.debug("Polling current state")
         value = await self._cluster_handler.get_attribute_value(
             self._attribute_name, from_cache=False
