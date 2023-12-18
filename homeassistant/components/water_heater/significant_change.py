@@ -4,7 +4,10 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.significant_change import check_absolute_change
+from homeassistant.helpers.significant_change import (
+    check_absolute_change,
+    check_valid_float,
+)
 
 from . import (
     ATTR_AWAY_MODE,
@@ -14,16 +17,6 @@ from . import (
     ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
 )
-
-
-def _check_valid_float(value: str | int | float) -> bool:
-    """Check if given value is a valid float."""
-    try:
-        float(value)
-    except ValueError:
-        return False
-    return True
-
 
 SIGNIFICANT_ATTRIBUTES: set[str] = {
     ATTR_CURRENT_TEMPERATURE,
@@ -61,11 +54,11 @@ def async_check_significant_change(
 
         old_attr_value = old_attrs.get(attr_name)
         new_attr_value = new_attrs.get(attr_name)
-        if new_attr_value is None or not _check_valid_float(new_attr_value):
+        if new_attr_value is None or not check_valid_float(new_attr_value):
             # New attribute value is invalid, ignore it
             continue
 
-        if old_attr_value is None or not _check_valid_float(old_attr_value):
+        if old_attr_value is None or not check_valid_float(old_attr_value):
             # Old attribute value was invalid, we should report again
             return True
 
