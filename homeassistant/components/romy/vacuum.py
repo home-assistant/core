@@ -82,6 +82,7 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
         self._device_info = DeviceInfo(
             identifiers={(DOMAIN, romy.unique_id)},
             manufacturer="ROMY",
+            name=romy.name,
             model=romy.model,
         )
 

@@ -2437,7 +2437,7 @@ rocketchat-API==0.6.1
 rokuecp==0.18.1
 
 # homeassistant.components.romy
-romy==0.0.2
+romy==0.0.5
 
 # homeassistant.components.roomba
 roombapy==1.6.10
