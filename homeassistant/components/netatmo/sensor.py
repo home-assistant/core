@@ -447,17 +447,17 @@ class NetatmoWeatherSensor(NetatmoBase, SensorEntity):
                     }
                 )
 
-    @property
-    def available(self) -> bool:
-        """Return entity availability."""
-        return self.state is not None
-
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         if (
-            state := getattr(self._module, self.entity_description.netatmo_name)
-        ) is None:
+            not self._module.reachable
+            or (state := getattr(self._module, self.entity_description.netatmo_name))
+            is None
+        ):
+            if self.available:
+                self._attr_available = False
+                self._attr_native_value = None
             return
 
         if self.entity_description.netatmo_name in {
@@ -475,6 +475,7 @@ class NetatmoWeatherSensor(NetatmoBase, SensorEntity):
         else:
             self._attr_native_value = state
 
+        self._attr_available = True
         self.async_write_ha_state()
 
 
@@ -565,9 +566,16 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
+        if not self._module.reachable:
+            if self.available:
+                self._attr_available = False
+                self._attr_native_value = None
+            return
+
         if (state := getattr(self._module, self.entity_description.key)) is None:
             return
 
+        self._attr_available = True
         self._attr_native_value = state
 
         self.async_write_ha_state()
