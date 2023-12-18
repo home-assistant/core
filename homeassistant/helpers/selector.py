@@ -951,9 +951,6 @@ def validate_slider(data: Any) -> Any:
     if "min" not in data or "max" not in data:
         raise vol.Invalid("min and max are required in slider mode")
 
-    if "step" in data and data["step"] == "any":
-        raise vol.Invalid("step 'any' is not allowed in slider mode")
-
     return data
 
 
