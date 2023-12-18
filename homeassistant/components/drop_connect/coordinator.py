@@ -11,19 +11,9 @@ from dropmqttapi.mqttapi import DropAPI
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (
-    CONF_DATA_TOPIC,
-    CONF_DEVICE_DESC,
-    CONF_DEVICE_NAME,
-    CONF_DEVICE_OWNER_ID,
-    CONF_DEVICE_TYPE,
-    CONF_HUB_ID,
-    DEV_HUB,
-    DOMAIN,
-)
+from .const import CONF_DATA_TOPIC, CONF_DEVICE_TYPE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,23 +62,3 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         if TYPE_CHECKING:
             assert self._drop_api is not None
         return self._drop_api
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description."""
-        assert self.config_entry is not None
-        assert self.config_entry.unique_id is not None
-        model: str = self.config_entry.data[CONF_DEVICE_DESC]
-        if self.config_entry.data[CONF_DEVICE_TYPE] == DEV_HUB:
-            model = f"Hub {self.config_entry.data[CONF_HUB_ID]}"
-        device_info = DeviceInfo(
-            manufacturer="Chandler Systems, Inc.",
-            model=model,
-            name=self.config_entry.data[CONF_DEVICE_NAME],
-            identifiers={(DOMAIN, self.config_entry.unique_id)},
-        )
-        if self.config_entry.data[CONF_DEVICE_TYPE] != DEV_HUB:
-            device_info.update(
-                {"via_device": (DOMAIN, self.config_entry.data[CONF_DEVICE_OWNER_ID])}
-            )
-        return device_info
