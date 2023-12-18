@@ -259,7 +259,7 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
         breaks_in_ha_version = deprecated_const.breaks_in_ha_version
     else:
         msg = (
-            f"Value of _DEPRECATED_{name!r} is a instance of {type(deprecated_const)}"
+            f"Value of _DEPRECATED_{name!r} is a instance of {type(deprecated_const)} "
             "but a instance of DeprecatedConstant or DeprecatedConstantEnum is required"
         )
 

@@ -332,13 +332,12 @@ def test_test_check_if_deprecated_constant_invalid(
     module_globals = {"__name__": module_name, "_DEPRECATED_TEST_CONSTANT": 1}
     name = "TEST_CONSTANT"
 
-    with pytest.raises(
-        AttributeError, match=f"Module '{module_name}' has no attribute '{name}'"
-    ):
+    excepted_msg = (
+        f"Value of _DEPRECATED_{name!r} is a instance of <class 'int'> "
+        "but a instance of DeprecatedConstant or DeprecatedConstantEnum is required"
+    )
+
+    with pytest.raises(AttributeError, match=excepted_msg):
         check_if_deprecated_constant(name, module_globals)
 
-    assert (
-        module_name,
-        logging.DEBUG,
-        f"Invalid value for deprecated constant {name}, should be DeprecatedConstant or DeprecatedConstantEnum",
-    ) in caplog.record_tuples
+    assert (module_name, logging.DEBUG, excepted_msg) in caplog.record_tuples
