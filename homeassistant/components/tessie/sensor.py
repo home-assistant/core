@@ -216,4 +216,3 @@ class TessieSensorEntity(TessieEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._value)
-
