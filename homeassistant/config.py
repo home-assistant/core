@@ -289,9 +289,7 @@ def _raise_issue_if_legacy_templates(
             severity=ir.IssueSeverity.WARNING,
             translation_key="legacy_templates_true",
         )
-        return
-
-    if legacy_templates is False:
+    elif legacy_templates is False:
         ir.async_create_issue(
             hass,
             "homeassistant",
