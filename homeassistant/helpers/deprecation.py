@@ -239,7 +239,7 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
     module_name = module_globals.get("__name__")
     logger = logging.getLogger(module_name)
     if (deprecated_const := module_globals.get(f"_DEPRECATED_{name}")) is None:
-        raise AttributeError(f"module {module_name!r} has no attribute {name!r}")
+        raise AttributeError(f"Module {module_name!r} has no attribute {name!r}")
     if isinstance(deprecated_const, DeprecatedConstant):
         value = deprecated_const.value
         replacement = deprecated_const.replacement
@@ -255,7 +255,7 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
             "Invalid value for deprecated constant %s, should be DeprecatedConstant or DeprecatedConstantEnum",
             name,
         )
-        raise AttributeError(f"module {module_name!r} has no attribute {name!r}")  # noqa: TRY004
+        raise AttributeError(f"Module {module_name!r} has no attribute {name!r}")  # noqa: TRY004
 
     _print_deprecation_warning_internal(
         name,
