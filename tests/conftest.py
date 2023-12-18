@@ -1545,7 +1545,7 @@ async def mock_enable_bluetooth(
 @pytest.fixture(scope="session")
 def mock_bluetooth_adapters() -> Generator[None, None, None]:
     """Fixture to mock bluetooth adapters."""
-    with patch(
+    with patch("bluetooth_auto_recovery.recover_adapter"), patch(
         "bluetooth_adapters.systems.platform.system", return_value="Linux"
     ), patch("bluetooth_adapters.systems.linux.LinuxAdapters.refresh"), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
