@@ -32,7 +32,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    hub = CCM15Coordinator(hass, data[CONF_HOST], data[CONF_PORT])
+    host: str = data[CONF_HOST]
+    for entry in hass.data[DOMAIN]:
+        if entry.coordinator.get_host() == host:
+            raise CannotConnect
+
+    hub = CCM15Coordinator(hass, host, data[CONF_PORT])
     if not await hub.async_test_connection():
         raise CannotConnect
 
