@@ -22,7 +22,7 @@ SCAN_INTERVAL = timedelta(seconds=300)
 PARALLEL_UPDATES = 4
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class AdGuardHomeEntityDescription(SensorEntityDescription):
     """Describes AdGuard Home sensor entity."""
 

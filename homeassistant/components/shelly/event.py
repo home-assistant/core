@@ -37,14 +37,14 @@ from .utils import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class ShellyBlockEventDescription(EventEntityDescription):
     """Class to describe Shelly event."""
 
     removal_condition: Callable[[dict, Block], bool] | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class ShellyRpcEventDescription(EventEntityDescription):
     """Class to describe Shelly event."""
 

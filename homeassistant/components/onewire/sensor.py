@@ -42,7 +42,7 @@ from .onewire_entities import OneWireEntity, OneWireEntityDescription
 from .onewirehub import OneWireHub
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class OneWireSensorEntityDescription(OneWireEntityDescription, SensorEntityDescription):
     """Class describing OneWire sensor entities."""
 

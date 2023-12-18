@@ -39,14 +39,14 @@ TUYA_HVAC_TO_HA = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class TuyaClimateSensorDescriptionMixin:
     """Define an entity description mixin for climate entities."""
 
     switch_only_hvac_mode: HVACMode
 
 
-@dataclass
+@dataclass(frozen=True)
 class TuyaClimateEntityDescription(
     ClimateEntityDescription, TuyaClimateSensorDescriptionMixin
 ):
