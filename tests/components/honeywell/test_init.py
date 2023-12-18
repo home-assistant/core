@@ -134,9 +134,13 @@ async def test_remove_stale_device(
 
     config_entry.add_to_hass(hass)
 
-    device_registry.async_get_or_create(
+    other_device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={("OtherDomain", 7654321)},
+    )
+    other_config_entry = MockConfigEntry()
+    device_registry.async_update_device(
+        other_device.id, add_config_entry_id=other_config_entry.entry_id
     )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -146,15 +150,12 @@ async def test_remove_stale_device(
         hass.states.async_entity_ids_count() == 6
     )  # 2 climate entities; 4 sensor entities
 
-    device_entry = dr.async_entries_for_config_entry(
+    device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )
-    assert len(device_entry) == 3
-    assert any((DOMAIN, 1234567) in device.identifiers for device in device_entry)
-    assert any((DOMAIN, 7654321) in device.identifiers for device in device_entry)
-    assert any(
-        ("OtherDomain", 7654321) in device.identifiers for device in device_entry
-    )
+    assert len(device_entries) == 2
+    assert any((DOMAIN, 1234567) in device.identifiers for device in device_entries)
+    assert any((DOMAIN, 7654321) in device.identifiers for device in device_entries)
 
     assert await config_entry.async_unload(hass)
     await hass.async_block_till_done()
@@ -169,11 +170,8 @@ async def test_remove_stale_device(
         hass.states.async_entity_ids_count() == 3
     )  # 1 climate entities; 2 sensor entities
 
-    device_entry = dr.async_entries_for_config_entry(
+    device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )
-    assert len(device_entry) == 2
-    assert any((DOMAIN, 1234567) in device.identifiers for device in device_entry)
-    assert any(
-        ("OtherDomain", 7654321) in device.identifiers for device in device_entry
-    )
+    assert len(device_entries) == 1
+    assert any((DOMAIN, 1234567) in device.identifiers for device in device_entries)
