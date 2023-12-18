@@ -227,23 +227,63 @@ class OutdoorCameraSensor(SimpliSafeEntity, BinarySensorEntity):
             event,
         )
 
-        if not hasattr(event, "mediaUrls"):
-            # Used when simplipy version is 2023.08.0 and below
-            self.hass.async_create_task(
-                self._async_update_camera_media_the_old_way(event.timestamp)
-            )
-            return
-        if event.mediaUrls is not None:
-            # Used when simplipy version is greater 2023.08.0 (or when the "mediaUrls" pull request was approved)
-            imageUrl = event.mediaUrls["snapshot/jpg"]["href"]
-            clipUrl = event.mediaUrls["download/mp4"]["href"]
-            timestamp = event.timestamp
+        self.hass.async_create_task(
+            self._async_update_camera_media_with_timeline(event.timestamp)
+        )
+
+    async def _async_update_camera_media_with_timeline(
+        self, ws_timestamp: datetime
+    ) -> None:
+        """Obtain media URLs by fetching timeline from Simplisafe API."""
+        try:
+            events = await self._system.async_get_events(num_events=10)
+            # filter for events belonging to me at the websocket timestamp
+            my_events = [
+                ev
+                for ev in events
+                if ev.get("sensorSerial") == self._device.serial
+                and ws_timestamp == utc_from_timestamp(ev["eventTimestamp"])
+            ]
+            if len(my_events) == 0:
+                LOGGER.error(
+                    "Could not find an event for serial: %s at time: %s",
+                    self._device.serial,
+                    ws_timestamp,
+                )
+                LOGGER.debug("Here are the events fetched: %s", events)
+                return
+
+            ev = my_events[0]
+            vid = ev["videoStartedBy"]
+            # This happends sometimes ...
+            if vid == "":
+                LOGGER.warning(
+                    "Received a motion event for serial %s, but videoStartedBy key is empty!",
+                    self._device.serial,
+                )
+                LOGGER.warning("Here are the events fetched: %s", events)
+                return
+
+            urls = ev["video"][vid]["_links"]
+            imageUrl = urls["snapshot/jpg"]["href"]
+            clipUrl = urls["download/mp4"]["href"]
+            timestamp = utc_from_timestamp(ev["eventTimestamp"])
+
             if timestamp != self._attr_image_last_updated:
                 self._attr_image_url = imageUrl
                 self._attr_clip_url = clipUrl
                 self._attr_is_on = True
                 self._attr_image_last_updated = timestamp
-                self.hass.async_create_task(self._async_update_camera_media())
+                self.async_write_ha_state()
+                await self._async_update_camera_media()
+
+        except SimplipyError as err:
+            LOGGER.error("Error while fetching most recent image: %s", err)
+
+    async def _async_update_camera_media(self):
+        await self._async_get_and_store_media()
+        self._attr_is_on = False
+        self.async_write_ha_state()
 
     async def _async_get_media_content(self, url: str) -> bytes | None:
         """Get a media file from a URL.
@@ -292,59 +332,6 @@ class OutdoorCameraSensor(SimpliSafeEntity, BinarySensorEntity):
         return await self._async_get_media_content(
             url.replace("{&width}", "&width=" + str(width))
         )
-
-    async def _async_update_camera_media_the_old_way(
-        self, ws_timestamp: datetime
-    ) -> None:
-        """Obtain media URLs by fetching timeline from Simplisafe API.
-
-        The simplipy library <= 2023.08.0 does not transmit "mediaUrls" property in websocket events.
-        The only way to obtain media urls is to get the event "timeline" and parse that ...
-        """
-        try:
-            events = await self._system.async_get_events(num_events=10)
-            # filter for events belonging to me at the websocket timestamp
-            my_events = [
-                ev
-                for ev in events
-                if ev.get("sensorSerial") == self._device.serial
-                and ws_timestamp == utc_from_timestamp(ev["eventTimestamp"])
-            ]
-            if len(my_events) == 0:
-                LOGGER.error(
-                    "Could not find an event for serial: %s at time: %s",
-                    self._device.serial,
-                    ws_timestamp,
-                )
-                LOGGER.debug("Here are the events fetched: %s", events)
-                return
-
-            ev = my_events[0]
-            vid = ev["videoStartedBy"]
-            # This happends sometimes ...
-            if vid == "":
-                LOGGER.warning(
-                    "Received a motion event for serial %s, but videoStartedBy key is empty!",
-                    self._device.serial,
-                )
-                LOGGER.warning("Here are the events fetched: %s", events)
-                return
-
-            urls = ev["video"][vid]["_links"]
-            imageUrl = urls["snapshot/jpg"]["href"]
-            clipUrl = urls["download/mp4"]["href"]
-            timestamp = utc_from_timestamp(ev["eventTimestamp"])
-
-            if timestamp != self._attr_image_last_updated:
-                self._attr_image_url = imageUrl
-                self._attr_clip_url = clipUrl
-                self._attr_is_on = True
-                self._attr_image_last_updated = timestamp
-                self.async_write_ha_state()
-                await self._async_update_camera_media()
-
-        except SimplipyError as err:
-            LOGGER.error("Error while fetching most recent image: %s", err)
 
     async def _save_media_file(
         self, hass: HomeAssistant, filename: str, content: bytes
@@ -397,8 +384,3 @@ class OutdoorCameraSensor(SimpliSafeEntity, BinarySensorEntity):
         )
 
         return None
-
-    async def _async_update_camera_media(self):
-        await self._async_get_and_store_media()
-        self._attr_is_on = False
-        self.async_write_ha_state()
