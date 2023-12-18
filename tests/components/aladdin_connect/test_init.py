@@ -237,7 +237,7 @@ async def test_stale_device_removal(
     assert not any(
         (DOMAIN, "533255-2") in device.identifiers for device in device_entry
     )
-    assert any(
+    assert not any(
         ("OtherDomain", "533255-2") in device.identifiers for device in device_entry
     )
 
