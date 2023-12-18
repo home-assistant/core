@@ -95,26 +95,41 @@ async def test_sunwegdata_get_data_drop_threshold() -> None:
     )
     entity_description.previous_value_drop_threshold = 0.1
     data.get_api_value.return_value = 3.0
-    assert (
-        data.get_data(
-            entity_description=entity_description, device_type=DeviceType.TOTAL
-        )
-        == 3.0
-    )
+    assert data.get_data(
+        api_variable_key=entity_description.api_variable_key,
+        api_variable_unit=entity_description.api_variable_unit,
+        deep_name=None,
+        device_type=DeviceType.TOTAL,
+        inverter_id=0,
+        name=entity_description.name,
+        native_unit_of_measurement=entity_description.native_unit_of_measurement,
+        never_resets=entity_description.never_resets,
+        previous_value_drop_threshold=entity_description.previous_value_drop_threshold,
+    ) == (3.0, None)
     data.get_api_value.return_value = 2.91
-    assert (
-        data.get_data(
-            entity_description=entity_description, device_type=DeviceType.TOTAL
-        )
-        == 3.0
-    )
+    assert data.get_data(
+        api_variable_key=entity_description.api_variable_key,
+        api_variable_unit=entity_description.api_variable_unit,
+        deep_name=None,
+        device_type=DeviceType.TOTAL,
+        inverter_id=0,
+        name=entity_description.name,
+        native_unit_of_measurement=entity_description.native_unit_of_measurement,
+        never_resets=entity_description.never_resets,
+        previous_value_drop_threshold=entity_description.previous_value_drop_threshold,
+    ) == (3.0, None)
     data.get_api_value.return_value = 2.8
-    assert (
-        data.get_data(
-            entity_description=entity_description, device_type=DeviceType.TOTAL
-        )
-        == 2.8
-    )
+    assert data.get_data(
+        api_variable_key=entity_description.api_variable_key,
+        api_variable_unit=entity_description.api_variable_unit,
+        deep_name=None,
+        device_type=DeviceType.TOTAL,
+        inverter_id=0,
+        name=entity_description.name,
+        native_unit_of_measurement=entity_description.native_unit_of_measurement,
+        never_resets=entity_description.never_resets,
+        previous_value_drop_threshold=entity_description.previous_value_drop_threshold,
+    ) == (2.8, None)
 
 
 async def test_sunwegdata_get_data_never_reset() -> None:
@@ -127,23 +142,38 @@ async def test_sunwegdata_get_data_never_reset() -> None:
     )
     entity_description.never_resets = True
     data.get_api_value.return_value = 3.0
-    assert (
-        data.get_data(
-            entity_description=entity_description, device_type=DeviceType.TOTAL
-        )
-        == 3.0
-    )
+    assert data.get_data(
+        api_variable_key=entity_description.api_variable_key,
+        api_variable_unit=entity_description.api_variable_unit,
+        deep_name=None,
+        device_type=DeviceType.TOTAL,
+        inverter_id=0,
+        name=entity_description.name,
+        native_unit_of_measurement=entity_description.native_unit_of_measurement,
+        never_resets=entity_description.never_resets,
+        previous_value_drop_threshold=entity_description.previous_value_drop_threshold,
+    ) == (3.0, None)
     data.get_api_value.return_value = 0
-    assert (
-        data.get_data(
-            entity_description=entity_description, device_type=DeviceType.TOTAL
-        )
-        == 3.0
-    )
+    assert data.get_data(
+        api_variable_key=entity_description.api_variable_key,
+        api_variable_unit=entity_description.api_variable_unit,
+        deep_name=None,
+        device_type=DeviceType.TOTAL,
+        inverter_id=0,
+        name=entity_description.name,
+        native_unit_of_measurement=entity_description.native_unit_of_measurement,
+        never_resets=entity_description.never_resets,
+        previous_value_drop_threshold=entity_description.previous_value_drop_threshold,
+    ) == (3.0, None)
     data.get_api_value.return_value = 2.8
-    assert (
-        data.get_data(
-            entity_description=entity_description, device_type=DeviceType.TOTAL
-        )
-        == 2.8
-    )
+    assert data.get_data(
+        api_variable_key=entity_description.api_variable_key,
+        api_variable_unit=entity_description.api_variable_unit,
+        deep_name=None,
+        device_type=DeviceType.TOTAL,
+        inverter_id=0,
+        name=entity_description.name,
+        native_unit_of_measurement=entity_description.native_unit_of_measurement,
+        never_resets=entity_description.never_resets,
+        previous_value_drop_threshold=entity_description.previous_value_drop_threshold,
+    ) == (2.8, None)
