@@ -32,8 +32,12 @@ from .const import (
 )
 from .entity import DevoloCoordinatorEntity
 
-_DataT = TypeVar(
-    "_DataT",
+_CoordinatorDataT = TypeVar(
+    "_CoordinatorDataT",
+    bound=LogicalNetwork | DataRate | list[ConnectedStationInfo] | list[NeighborAPInfo],
+)
+_ValueDataT = TypeVar(
+    "_ValueDataT",
     bound=LogicalNetwork | DataRate | list[ConnectedStationInfo] | list[NeighborAPInfo],
 )
 
@@ -46,15 +50,15 @@ class DataRateDirection(StrEnum):
 
 
 @dataclass
-class DevoloSensorRequiredKeysMixin(Generic[_DataT]):
+class DevoloSensorRequiredKeysMixin(Generic[_CoordinatorDataT]):
     """Mixin for required keys."""
 
-    value_func: Callable[[_DataT], float]
+    value_func: Callable[[_CoordinatorDataT], float]
 
 
 @dataclass
 class DevoloSensorEntityDescription(
-    SensorEntityDescription, DevoloSensorRequiredKeysMixin[_DataT]
+    SensorEntityDescription, DevoloSensorRequiredKeysMixin[_CoordinatorDataT]
 ):
     """Describes devolo sensor entity."""
 
@@ -112,7 +116,7 @@ async def async_setup_entry(
         entry.entry_id
     ]["coordinators"]
 
-    entities: list[DevoloSensorEntity[Any]] = []
+    entities: list[BaseDevoloSensorEntity[Any, Any]] = []
     if device.plcnet:
         entities.append(
             DevoloSensorEntity(
@@ -165,21 +169,29 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class DevoloSensorEntity(DevoloCoordinatorEntity[_DataT], SensorEntity):
+class BaseDevoloSensorEntity(
+    Generic[_CoordinatorDataT, _ValueDataT],
+    DevoloCoordinatorEntity[_CoordinatorDataT],
+    SensorEntity,
+):
     """Representation of a devolo sensor."""
-
-    entity_description: DevoloSensorEntityDescription[_DataT]
 
     def __init__(
         self,
         entry: ConfigEntry,
-        coordinator: DataUpdateCoordinator[_DataT],
-        description: DevoloSensorEntityDescription[_DataT],
+        coordinator: DataUpdateCoordinator[_CoordinatorDataT],
+        description: DevoloSensorEntityDescription[_ValueDataT],
         device: Device,
     ) -> None:
         """Initialize entity."""
         self.entity_description = description
         super().__init__(entry, coordinator, device)
+
+
+class DevoloSensorEntity(BaseDevoloSensorEntity[_CoordinatorDataT, _CoordinatorDataT]):
+    """Representation of a generic devolo sensor."""
+
+    entity_description: DevoloSensorEntityDescription[_CoordinatorDataT]
 
     @property
     def native_value(self) -> float:
@@ -187,7 +199,7 @@ class DevoloSensorEntity(DevoloCoordinatorEntity[_DataT], SensorEntity):
         return self.entity_description.value_func(self.coordinator.data)
 
 
-class DevoloPlcDataRateSensorEntity(DevoloSensorEntity[LogicalNetwork]):
+class DevoloPlcDataRateSensorEntity(BaseDevoloSensorEntity[LogicalNetwork, DataRate]):
     """Representation of a devolo PLC data rate sensor."""
 
     entity_description: DevoloSensorEntityDescription[DataRate]
