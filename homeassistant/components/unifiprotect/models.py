@@ -52,9 +52,11 @@ class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
 
     def __post_init__(self) -> None:
         """Pre-convert strings to tuples for faster get_nested_attr."""
-        self.ufp_required_field = split_tuple(self.ufp_required_field)
-        self.ufp_value = split_tuple(self.ufp_value)
-        self.ufp_enabled = split_tuple(self.ufp_enabled)
+        object.__setattr__(
+            self, "ufp_required_field", split_tuple(self.ufp_required_field)
+        )
+        object.__setattr__(self, "ufp_value", split_tuple(self.ufp_value))
+        object.__setattr__(self, "ufp_enabled", split_tuple(self.ufp_enabled))
 
     def get_ufp_value(self, obj: T) -> Any:
         """Return value from UniFi Protect device."""

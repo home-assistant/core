@@ -424,7 +424,7 @@ arcam-fmj==1.4.0
 async-upnp-client==0.36.2
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.3.7
+asyncsleepiq==1.4.0
 
 # homeassistant.components.aurora
 auroranoaa==0.0.3
@@ -736,13 +736,16 @@ google-api-python-client==2.71.0
 google-cloud-pubsub==2.13.11
 
 # homeassistant.components.google_generative_ai_conversation
-google-generativeai==0.1.0
+google-generativeai==0.3.1
 
 # homeassistant.components.nest
 google-nest-sdm==3.0.3
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
+
+# homeassistant.components.tailwind
+gotailwind==0.2.1
 
 # homeassistant.components.govee_ble
 govee-ble==0.24.0
@@ -997,7 +1000,7 @@ moehlenhoff-alpha2==1.3.0
 mopeka-iot-ble==0.5.0
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.18
+motionblinds==0.6.19
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.14
@@ -1098,7 +1101,7 @@ openerz-api==0.2.0
 openhomedevice==2.2.0
 
 # homeassistant.components.opower
-opower==0.0.41
+opower==0.1.0
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1250,7 +1253,7 @@ pyasuswrt==0.1.21
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==7.6.0
+pyatmo==8.0.0
 
 # homeassistant.components.apple_tv
 pyatv==0.14.3
@@ -1771,7 +1774,7 @@ renault-api==0.2.1
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.8.3
+reolink-aio==0.8.4
 
 # homeassistant.components.rflink
 rflink==0.0.65
