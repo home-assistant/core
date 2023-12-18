@@ -457,7 +457,6 @@ class NetatmoWeatherSensor(NetatmoBase, SensorEntity):
         ):
             if self.available:
                 self._attr_available = False
-                self._attr_native_value = None
             return
 
         if self.entity_description.netatmo_name in {
@@ -520,7 +519,6 @@ class NetatmoClimateBatterySensor(NetatmoBase, SensorEntity):
         if not self._module.reachable:
             if self.available:
                 self._attr_available = False
-                self._attr_native_value = None
             return
 
         self._attr_available = True
@@ -569,7 +567,6 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
         if not self._module.reachable:
             if self.available:
                 self._attr_available = False
-                self._attr_native_value = None
             return
 
         if (state := getattr(self._module, self.entity_description.key)) is None:
@@ -785,7 +782,6 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
                     self.entity_description.key,
                     self._area_name,
                 )
-                self._attr_native_value = None
 
             self._attr_available = False
             return
