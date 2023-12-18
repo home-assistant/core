@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.significant_change import (
     check_absolute_change,
@@ -44,6 +45,7 @@ def async_check_significant_change(
     old_attrs_s = set(old_attrs.items())
     new_attrs_s = set(new_attrs.items())
     changed_attrs: set[str] = {item[0] for item in old_attrs_s ^ new_attrs_s}
+    ha_unit = hass.config.units.temperature_unit
 
     for attr_name in changed_attrs:
         if attr_name not in SIGNIFICANT_ATTRIBUTES:
@@ -62,7 +64,12 @@ def async_check_significant_change(
             # Old attribute value was invalid, we should report again
             return True
 
-        if check_absolute_change(old_attr_value, new_attr_value, 0.5):
+        if ha_unit == UnitOfTemperature.FAHRENHEIT:
+            absolute_change = 1.0
+        else:
+            absolute_change = 0.5
+
+        if check_absolute_change(old_attr_value, new_attr_value, absolute_change):
             return True
 
     # no significant attribute change detected
