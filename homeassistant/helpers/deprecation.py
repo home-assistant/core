@@ -1,13 +1,13 @@
 """Deprecation helpers for Home Assistant."""
 from __future__ import annotations
 
-from collections import namedtuple
 from collections.abc import Callable
 from contextlib import suppress
+from enum import Enum
 import functools
 import inspect
 import logging
-from typing import Any, ParamSpec, TypeVar
+from typing import Any, NamedTuple, ParamSpec, TypeVar
 
 from homeassistant.core import HomeAssistant, async_get_hass
 from homeassistant.exceptions import HomeAssistantError
@@ -222,12 +222,19 @@ def _print_deprecation_warning_internal(
             )
 
 
-DeprecatedConstant = namedtuple(
-    "DeprecatedConstant", ("value", "replacement", "breaks_in_ha_version")
-)
-DeprecatedConstantEnum = namedtuple(
-    "DeprecatedConstantEnum", ("enum", "breaks_in_ha_version")
-)
+class DeprecatedConstant(NamedTuple):
+    """Deprecated constant."""
+
+    value: Any
+    replacement: str
+    breaks_in_ha_version: str | None
+
+
+class DeprecatedConstantEnum(NamedTuple):
+    """Deprecated constant."""
+
+    enum: Enum
+    breaks_in_ha_version: str | None
 
 
 def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> Any:
