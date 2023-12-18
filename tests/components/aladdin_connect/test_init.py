@@ -237,6 +237,9 @@ async def test_stale_device_removal(
     assert not any(
         (DOMAIN, "533255-2") in device.identifiers for device in device_entry
     )
+    assert any(
+        ("OtherDomain", "533255-2") in device.identifiers for device in device_entry
+    )
 
     device_entry_other = dr.async_entries_for_config_entry(
         device_registry, config_entry_other.entry_id
@@ -246,4 +249,7 @@ async def test_stale_device_removal(
     assert any(
         ("OtherDomain", "533255-2") in device.identifiers
         for device in device_entry_other
+    )
+    assert any(
+        (DOMAIN, "533255-2") in device.identifiers for device in device_entry_other
     )
