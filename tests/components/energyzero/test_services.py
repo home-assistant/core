@@ -2,6 +2,7 @@
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+import voluptuous as vol
 
 from homeassistant.components.energyzero.const import DOMAIN
 from homeassistant.components.energyzero.services import (
@@ -24,12 +25,8 @@ async def test_has_services(
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize("service", [GAS_SERVICE_NAME, ENERGY_SERVICE_NAME])
 @pytest.mark.parametrize("incl_vat", [{"incl_vat": False}, {"incl_vat": True}])
-@pytest.mark.parametrize(
-    "start", [{"start": "2023-01-01 00:00:00"}, {"start": "incorrect date"}, {}]
-)
-@pytest.mark.parametrize(
-    "end", [{"end": "2023-01-01 00:00:00"}, {"end": "incorrect date"}, {}]
-)
+@pytest.mark.parametrize("start", [{"start": "2023-01-01 00:00:00"}, {}])
+@pytest.mark.parametrize("end", [{"end": "2023-01-01 00:00:00"}, {}])
 async def test_service(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -42,14 +39,38 @@ async def test_service(
 
     data = incl_vat | start | end
 
-    try:
-        response = await hass.services.async_call(
+    assert snapshot == await hass.services.async_call(
+        DOMAIN,
+        service,
+        data,
+        blocking=True,
+        return_response=True,
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("service", [GAS_SERVICE_NAME, ENERGY_SERVICE_NAME])
+@pytest.mark.parametrize(
+    "service_data",
+    [
+        {},
+        {"incl_vat": "incorrect vat"},
+        {"incl_vat": True, "start": "incorrect date"},
+        {"incl_vat": True, "end": "incorrect date"},
+    ],
+)
+async def test_service_validation(
+    hass: HomeAssistant,
+    service: str,
+    service_data: dict[str, str],
+) -> None:
+    """Test the EnergyZero Service validation."""
+
+    with pytest.raises((ServiceValidationError, vol.er.Error)):
+        await hass.services.async_call(
             DOMAIN,
             service,
-            data,
+            service_data,
             blocking=True,
             return_response=True,
         )
-        assert response == snapshot
-    except ServiceValidationError as e:
-        assert e == snapshot
