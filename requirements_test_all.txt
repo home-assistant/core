@@ -736,7 +736,7 @@ google-api-python-client==2.71.0
 google-cloud-pubsub==2.13.11
 
 # homeassistant.components.google_generative_ai_conversation
-google-generativeai==0.1.0
+google-generativeai==0.3.1
 
 # homeassistant.components.nest
 google-nest-sdm==3.0.3
@@ -1253,7 +1253,7 @@ pyasuswrt==0.1.21
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==7.6.0
+pyatmo==8.0.0
 
 # homeassistant.components.apple_tv
 pyatv==0.14.3
