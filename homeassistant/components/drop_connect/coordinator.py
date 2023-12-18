@@ -1,9 +1,11 @@
 """DROP device data update coordinator object."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Any
+from typing import TYPE_CHECKING
 
+import attr
 from dropmqttapi.mqttapi import DropAPI
 
 from homeassistant.components import mqtt
@@ -35,13 +37,14 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize the device."""
         super().__init__(hass, _LOGGER, name=f"{DOMAIN}-{unique_id}")
         assert self.config_entry is not None
-        self._model: str = self.config_entry.data[CONF_DEVICE_DESC]
-        if self.config_entry.data[CONF_DEVICE_TYPE] == DEV_HUB:
-            self._model = f"Hub {self.config_entry.data[CONF_HUB_ID]}"
-        self._manufacturer: str = "Chandler Systems, Inc."
-        self._device_name: str = self.config_entry.data[CONF_DEVICE_NAME]
-        self._device_information: dict[str, Any] = {}
         self._drop_api = DropAPI()
+        self._unsubscribe_callback: Callable[[], None] = attr.ib()
+        hass.async_create_task(self.subscribe_mqtt(hass))
+        self.config_entry.async_on_unload(self._unsubscribe_callback)
+
+    async def subscribe_mqtt(self, hass: HomeAssistant) -> None:
+        """Subscribe to the data topic."""
+        assert self.config_entry is not None
 
         @callback
         def mqtt_callback(msg: ReceiveMessage) -> None:
@@ -52,10 +55,8 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
                 ):
                     self.async_set_updated_data(None)
 
-        hass.async_create_task(
-            mqtt.async_subscribe(
-                hass, self.config_entry.data[CONF_DATA_TOPIC], mqtt_callback, 0
-            )
+        self._unsubscribe_callback = await mqtt.async_subscribe(
+            hass, self.config_entry.data[CONF_DATA_TOPIC], mqtt_callback, 0
         )
         _LOGGER.debug(
             "Entry %s (%s) subscribed to %s",
@@ -68,7 +69,8 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     @property
     def drop_api(self) -> DropAPI:
         """Return the API instance."""
-        assert self._drop_api is not None
+        if TYPE_CHECKING:
+            assert self._drop_api is not None
         return self._drop_api
 
     @property
@@ -76,10 +78,13 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         """Return a device description."""
         assert self.config_entry is not None
         assert self.config_entry.unique_id is not None
+        model: str = self.config_entry.data[CONF_DEVICE_DESC]
+        if self.config_entry.data[CONF_DEVICE_TYPE] == DEV_HUB:
+            model = f"Hub {self.config_entry.data[CONF_HUB_ID]}"
         device_info = DeviceInfo(
-            manufacturer=self._manufacturer,
-            model=self._model,
-            name=self._device_name,
+            manufacturer="Chandler Systems, Inc.",
+            model=model,
+            name=self.config_entry.data[CONF_DEVICE_NAME],
             identifiers={(DOMAIN, self.config_entry.unique_id)},
         )
         if self.config_entry.data[CONF_DEVICE_TYPE] != DEV_HUB:
