@@ -60,6 +60,7 @@ from .core.const import (
     CLUSTER_HANDLER_SOIL_MOISTURE,
     CLUSTER_HANDLER_TEMPERATURE,
     CLUSTER_HANDLER_THERMOSTAT,
+    DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_ZHA_ENTITIES_INITIALIZED,
@@ -71,8 +72,6 @@ from .entity import ZhaEntity
 if TYPE_CHECKING:
     from .core.cluster_handlers import ClusterHandler
     from .core.device import ZHADevice
-
-PARALLEL_UPDATES = 5
 
 BATTERY_SIZES = {
     0: "No battery",
@@ -209,14 +208,16 @@ class PollableSensor(Sensor):
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
-
         if self._use_custom_polling:
-            self.async_accept_signal(
-                None,
-                SIGNAL_ZHA_ENTITIES_INITIALIZED,
-                self.async_start_polling,
-                signal_override=True,
-            )
+            if self.hass.data[DATA_ZHA].initialized:
+                self.async_start_polling()
+            else:
+                self.async_accept_signal(
+                    None,
+                    SIGNAL_ZHA_ENTITIES_INITIALIZED,
+                    self.async_start_polling,
+                    signal_override=True,
+                )
 
     @callback
     def async_start_polling(self) -> None:

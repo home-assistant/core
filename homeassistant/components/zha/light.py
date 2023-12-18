@@ -47,6 +47,7 @@ from .core.const import (
     CONF_ENABLE_ENHANCED_LIGHT_TRANSITION,
     CONF_ENABLE_LIGHT_TRANSITIONING_FLAG,
     CONF_GROUP_MEMBERS_ASSUME_STATE,
+    DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_SET_LEVEL,
@@ -76,7 +77,6 @@ FLASH_EFFECTS = {
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.LIGHT)
 GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, Platform.LIGHT)
-PARALLEL_UPDATES = 0
 SIGNAL_LIGHT_GROUP_STATE_CHANGED = "zha_light_group_state_changed"
 SIGNAL_LIGHT_GROUP_TRANSITION_START = "zha_light_group_transition_start"
 SIGNAL_LIGHT_GROUP_TRANSITION_FINISHED = "zha_light_group_transition_finished"
@@ -785,12 +785,15 @@ class Light(BaseLight, ZhaEntity):
             self.async_accept_signal(
                 self._level_cluster_handler, SIGNAL_SET_LEVEL, self.set_level
             )
-        self.async_accept_signal(
-            None,
-            SIGNAL_ZHA_ENTITIES_INITIALIZED,
-            self.async_start_polling,
-            signal_override=True,
-        )
+        if self.hass.data[DATA_ZHA].initialized:
+            self.async_start_polling()
+        else:
+            self.async_accept_signal(
+                None,
+                SIGNAL_ZHA_ENTITIES_INITIALIZED,
+                self.async_start_polling,
+                signal_override=True,
+            )
         self.async_accept_signal(
             None,
             SIGNAL_LIGHT_GROUP_STATE_CHANGED,

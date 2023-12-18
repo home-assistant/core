@@ -47,6 +47,7 @@ from .const import (
     ATTR_TYPE,
     CONF_RADIO_TYPE,
     CONF_ZIGPY,
+    DATA_ZHA,
     DEBUG_COMP_BELLOWS,
     DEBUG_COMP_ZHA,
     DEBUG_COMP_ZIGPY,
@@ -297,6 +298,7 @@ class ZHAGateway:
                 "completed fetching current state for mains powered devices - sending signal to establish polling"
             )
             async_dispatcher_send(self.hass, SIGNAL_ZHA_ENTITIES_INITIALIZED)
+            self.hass.data[DATA_ZHA].initialized = True
 
         # background the fetching of state for mains powered devices
         self.config_entry.async_create_background_task(
@@ -672,8 +674,6 @@ class ZHAGateway:
         )
         await zha_device.async_initialize(from_cache=False)
         async_dispatcher_send(self.hass, SIGNAL_ADD_ENTITIES)
-        _LOGGER.debug("added new device - sending signal to establish polling")
-        async_dispatcher_send(self.hass, SIGNAL_ZHA_ENTITIES_INITIALIZED)
 
     async def _async_device_rejoined(self, zha_device: ZHADevice) -> None:
         _LOGGER.debug(
