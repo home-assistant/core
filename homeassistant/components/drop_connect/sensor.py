@@ -203,6 +203,42 @@ SENSORS: list[DROPSensorEntityDescription] = [
     ),
 ]
 
+# Defines which sensors are used by each device type
+DEVICE_SENSORS: dict[str, list[str]] = {
+    DEV_HUB: [
+        AVERAGE_WATER_USED,
+        BATTERY,
+        CURRENT_FLOW_RATE,
+        CURRENT_SYSTEM_PRESSURE,
+        HIGH_SYSTEM_PRESSURE,
+        LOW_SYSTEM_PRESSURE,
+        PEAK_FLOW_RATE,
+        WATER_USED_TODAY,
+    ],
+    DEV_SOFTENER: [
+        BATTERY,
+        CAPACITY_REMAINING,
+        CURRENT_FLOW_RATE,
+        CURRENT_SYSTEM_PRESSURE,
+    ],
+    DEV_FILTER: [BATTERY, CURRENT_FLOW_RATE, CURRENT_SYSTEM_PRESSURE],
+    DEV_LEAK_DETECTOR: [BATTERY, TEMPERATURE],
+    DEV_PROTECTION_VALVE: [
+        BATTERY,
+        CURRENT_FLOW_RATE,
+        CURRENT_SYSTEM_PRESSURE,
+        TEMPERATURE,
+    ],
+    DEV_PUMP_CONTROLLER: [CURRENT_FLOW_RATE, CURRENT_SYSTEM_PRESSURE, TEMPERATURE],
+    DEV_RO_FILTER: [
+        CARTRIDGE_1_LIFE,
+        CARTRIDGE_2_LIFE,
+        CARTRIDGE_3_LIFE,
+        INLET_TDS,
+        OUTLET_TDS,
+    ],
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -216,94 +252,11 @@ async def async_setup_entry(
         config_entry.entry_id,
     )
 
-    coordinator: DROPDeviceDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
-    device_type: str = config_entry.data[CONF_DEVICE_TYPE]
-    if device_type == DEV_HUB:
+    if config_entry.data[CONF_DEVICE_TYPE] in DEVICE_SENSORS:
         async_add_entities(
-            DROPSensor(coordinator, sensor)
+            DROPSensor(hass.data[DOMAIN][config_entry.entry_id], sensor)
             for sensor in SENSORS
-            if sensor.key
-            in (
-                AVERAGE_WATER_USED,
-                BATTERY,
-                CURRENT_FLOW_RATE,
-                CURRENT_SYSTEM_PRESSURE,
-                HIGH_SYSTEM_PRESSURE,
-                LOW_SYSTEM_PRESSURE,
-                PEAK_FLOW_RATE,
-                WATER_USED_TODAY,
-            )
-        )
-    elif device_type == DEV_SOFTENER:
-        async_add_entities(
-            DROPSensor(coordinator, sensor)
-            for sensor in SENSORS
-            if sensor.key
-            in (
-                BATTERY,
-                CAPACITY_REMAINING,
-                CURRENT_FLOW_RATE,
-                CURRENT_SYSTEM_PRESSURE,
-            )
-        )
-    elif device_type == DEV_FILTER:
-        async_add_entities(
-            DROPSensor(coordinator, sensor)
-            for sensor in SENSORS
-            if sensor.key
-            in (
-                BATTERY,
-                CURRENT_FLOW_RATE,
-                CURRENT_SYSTEM_PRESSURE,
-            )
-        )
-    elif device_type == DEV_LEAK_DETECTOR:
-        async_add_entities(
-            DROPSensor(coordinator, sensor)
-            for sensor in SENSORS
-            if sensor.key
-            in (
-                BATTERY,
-                TEMPERATURE,
-            )
-        )
-    elif device_type == DEV_PROTECTION_VALVE:
-        async_add_entities(
-            DROPSensor(coordinator, sensor)
-            for sensor in SENSORS
-            if sensor.key
-            in (
-                BATTERY,
-                CURRENT_FLOW_RATE,
-                CURRENT_SYSTEM_PRESSURE,
-                TEMPERATURE,
-            )
-        )
-    elif device_type == DEV_PUMP_CONTROLLER:
-        async_add_entities(
-            DROPSensor(coordinator, sensor)
-            for sensor in SENSORS
-            if sensor.key
-            in (
-                CURRENT_FLOW_RATE,
-                CURRENT_SYSTEM_PRESSURE,
-                TEMPERATURE,
-            )
-        )
-    elif device_type == DEV_RO_FILTER:
-        async_add_entities(
-            DROPSensor(coordinator, sensor)
-            for sensor in SENSORS
-            if sensor.key
-            in (
-                CARTRIDGE_1_LIFE,
-                CARTRIDGE_2_LIFE,
-                CARTRIDGE_3_LIFE,
-                INLET_TDS,
-                OUTLET_TDS,
-            )
+            if sensor.key in DEVICE_SENSORS[config_entry.data[CONF_DEVICE_TYPE]]
         )
 
 
