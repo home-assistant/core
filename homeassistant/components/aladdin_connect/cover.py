@@ -51,11 +51,9 @@ def remove_stale_devices(
         device_id: str | None = None
 
         for identifier in device_entry.identifiers:
-            if identifier[0] != DOMAIN:
-                continue
-
-            device_id = identifier[1]
-            break
+            if identifier[0] == DOMAIN:
+                device_id = identifier[1]
+                break
 
         if device_id is None or device_id not in all_device_ids:
             # If device_id is None an invalid device entry was found for this config entry.
