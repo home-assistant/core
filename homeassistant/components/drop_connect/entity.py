@@ -1,6 +1,8 @@
 """Base entity class for DROP entities."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -26,8 +28,9 @@ class DROPEntity(CoordinatorEntity[DROPDeviceDataUpdateCoordinator]):
     ) -> None:
         """Init DROP entity."""
         super().__init__(coordinator)
-        assert coordinator.config_entry is not None
-        assert coordinator.config_entry.unique_id is not None
+        if TYPE_CHECKING:
+            assert coordinator.config_entry is not None
+            assert coordinator.config_entry.unique_id is not None
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{entity_type}"
         model: str = coordinator.config_entry.data[CONF_DEVICE_DESC]
         if coordinator.config_entry.data[CONF_DEVICE_TYPE] == DEV_HUB:

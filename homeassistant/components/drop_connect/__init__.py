@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from homeassistant.components import mqtt
 from homeassistant.config_entries import ConfigEntry
@@ -24,7 +25,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         _LOGGER.error("MQTT integration is not available")
         return False
 
-    assert config_entry.unique_id is not None
+    if TYPE_CHECKING:
+        assert config_entry.unique_id is not None
     hass.data.setdefault(DOMAIN, {})[
         config_entry.entry_id
     ] = DROPDeviceDataUpdateCoordinator(hass, config_entry.unique_id)

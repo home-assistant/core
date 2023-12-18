@@ -26,7 +26,8 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, unique_id: str) -> None:
         """Initialize the device."""
         super().__init__(hass, _LOGGER, name=f"{DOMAIN}-{unique_id}")
-        assert self.config_entry is not None
+        if TYPE_CHECKING:
+            assert self.config_entry is not None
         self._drop_api = DropAPI()
         self._unsubscribe_callback: Callable[[], None] = attr.ib()
         hass.async_create_task(self.subscribe_mqtt(hass))
@@ -34,7 +35,8 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def subscribe_mqtt(self, hass: HomeAssistant) -> None:
         """Subscribe to the data topic."""
-        assert self.config_entry is not None
+        if TYPE_CHECKING:
+            assert self.config_entry is not None
 
         @callback
         def mqtt_callback(msg: ReceiveMessage) -> None:

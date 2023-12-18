@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from dropmqttapi.discovery import DropDiscovery
 
@@ -71,7 +71,8 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm the setup."""
-        assert self._drop_discovery is not None
+        if TYPE_CHECKING:
+            assert self._drop_discovery is not None
         if user_input is not None:
             device_data = {
                 CONF_COMMAND_TOPIC: self._drop_discovery.command_topic,
