@@ -392,6 +392,7 @@ async def test_dhcp_discovery_updates_entry(
 ) -> None:
     """Test DHCP discovery updates config entries."""
     mock_config_entry.add_to_hass(hass)
+    assert mock_config_entry.data[CONF_HOST] == "127.0.0.127"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
