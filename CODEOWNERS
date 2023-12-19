@@ -346,7 +346,7 @@ build.json @home-assistant/supervisor
 /tests/components/energy/ @home-assistant/core
 /homeassistant/components/energyzero/ @klaasnicolaas
 /tests/components/energyzero/ @klaasnicolaas
-/homeassistant/components/enigma2/ @fbradyirl
+/homeassistant/components/enigma2/ @autinerd
 /homeassistant/components/enocean/ @bdurrer
 /tests/components/enocean/ @bdurrer
 /homeassistant/components/enphase_envoy/ @bdraco @cgarwood @dgomes @joostlek @catsmanac
@@ -1405,6 +1405,8 @@ build.json @home-assistant/supervisor
 /tests/components/vacuum/ @home-assistant/core
 /homeassistant/components/vallox/ @andre-richter @slovdahl @viiru-
 /tests/components/vallox/ @andre-richter @slovdahl @viiru-
+/homeassistant/components/valve/ @home-assistant/core
+/tests/components/valve/ @home-assistant/core
 /homeassistant/components/velbus/ @Cereal2nd @brefra
 /tests/components/velbus/ @Cereal2nd @brefra
 /homeassistant/components/velux/ @Julius2342

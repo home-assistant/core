@@ -6,14 +6,14 @@ from dataclasses import dataclass
 from homeassistant.components.sensor import SensorEntityDescription
 
 
-@dataclass
+@dataclass(frozen=True)
 class SunWEGRequiredKeysMixin:
     """Mixin for required keys."""
 
     api_variable_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class SunWEGSensorEntityDescription(SensorEntityDescription, SunWEGRequiredKeysMixin):
     """Describes SunWEG sensor entity."""
 
