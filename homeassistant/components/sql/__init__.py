@@ -38,9 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def validate_sql_select(value: str) -> str:
     """Validate that value is a SQL SELECT or WITH ... SELECT (a SELECT using a Common Table Expression) query."""
-    if not value.lstrip().lower().startswith(
-        "select"
-    ) and not value.lstrip().lower().startswith("with"):
+    if not value.lstrip().lower().startswith(("select", "with")):
         raise vol.Invalid("Only SELECT queries allowed")
     return value
 

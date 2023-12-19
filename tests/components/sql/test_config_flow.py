@@ -19,6 +19,7 @@ from . import (
     ENTRY_CONFIG_INVALID_QUERY,
     ENTRY_CONFIG_INVALID_QUERY_OPT,
     ENTRY_CONFIG_NO_RESULTS,
+    ENTRY_CONFIG_WITH_CTE,
     ENTRY_CONFIG_WITH_VALUE_TEMPLATE,
 )
 
@@ -49,6 +50,38 @@ async def test_form(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     assert result2["options"] == {
         "name": "Get Value",
         "query": "SELECT 5 as value",
+        "column": "value",
+        "unit_of_measurement": "MiB",
+        "device_class": SensorDeviceClass.DATA_SIZE,
+        "state_class": SensorStateClass.TOTAL,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_with_cte(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+    """Test we get the form."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.sql.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            ENTRY_CONFIG_WITH_CTE,
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Get Value"
+    assert result2["options"] == {
+        "name": "Get Value",
+        "query": "WITH test AS (SELECT 5 as value) SELECT value FROM test",
         "column": "value",
         "unit_of_measurement": "MiB",
         "device_class": SensorDeviceClass.DATA_SIZE,

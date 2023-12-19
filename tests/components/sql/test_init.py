@@ -59,6 +59,15 @@ async def test_invalid_query(hass: HomeAssistant) -> None:
         validate_sql_select("DROP TABLE *")
 
 
+async def test_valid_query(hass: HomeAssistant) -> None:
+    """Test valid query."""
+    try:
+        validate_sql_select("SELECT 5 as value")
+        validate_sql_select("WITH test AS (SELECT 5 as value) SELECT value FROM test")
+    except vol.Invalid:
+        pytest.fail("Unexpected validation error")
+
+
 async def test_remove_configured_db_url_if_not_needed_when_not_needed(
     recorder_mock: Recorder,
     hass: HomeAssistant,

@@ -82,7 +82,7 @@ CONFIG_SCHEMA: vol.Schema = vol.Schema(
 
 def validate_sql_select(value: str) -> str | None:
     """Validate that value is a SQL SELECT query."""
-    if not value.lstrip().lower().startswith("select"):
+    if not value.lstrip().lower().startswith(("select", "with")):
         raise ValueError("Incorrect Query")
     return value
 

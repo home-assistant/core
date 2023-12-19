@@ -36,6 +36,15 @@ ENTRY_CONFIG = {
     CONF_STATE_CLASS: SensorStateClass.TOTAL,
 }
 
+ENTRY_CONFIG_WITH_CTE = {
+    CONF_NAME: "Get Value",
+    CONF_QUERY: "WITH test AS (SELECT 5 as value) SELECT value FROM test",
+    CONF_COLUMN_NAME: "value",
+    CONF_UNIT_OF_MEASUREMENT: "MiB",
+    CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
+    CONF_STATE_CLASS: SensorStateClass.TOTAL,
+}
+
 ENTRY_CONFIG_WITH_VALUE_TEMPLATE = {
     CONF_NAME: "Get Value",
     CONF_QUERY: "SELECT 5 as value",
