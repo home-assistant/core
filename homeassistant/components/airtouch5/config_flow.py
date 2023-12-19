@@ -49,9 +49,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors = {"base": "cannot_connect"}
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors = {"base": "unknown"}
             else:
                 await self.async_set_unique_id(user_input[CONF_HOST])
                 self._abort_if_unique_id_configured()
