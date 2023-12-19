@@ -112,11 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-
-    # Version 1 migration are handled in async_setup_entry
-    if entry.version == 1:
-        return True
-
+    # Version 1->2 migration are handled in async_setup_entry.
     return True
 
 
