@@ -163,11 +163,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         return None
 
                     _content = None
-                    if response.content_type == "application/json":
-                        _content = await response.json()
-                    else:
-                        _content = await response.text()
+                    try:
+                        if response.content_type == "application/json":
+                            _content = await response.json()
+                        else:
+                            _content = await response.text()
+                    except (JSONDecodeError, AttributeError) as err:
+                        _LOGGER.error("Response of `%s` has invalid JSON", request_url)
+                        raise HomeAssistantError from err
 
+                    except (LookupError, UnicodeDecodeError) as err:
+                        _LOGGER.error(
+                            "Response of `%s` could not be interpreted as text",
+                            request_url,
+                        )
+                        raise HomeAssistantError from err
                     return {"content": _content, "status": response.status}
 
             except asyncio.TimeoutError as err:
@@ -179,17 +189,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     "Client error. Url: %s. Error: %s",
                     request_url,
                     err,
-                )
-                raise HomeAssistantError from err
-
-            except (JSONDecodeError, AttributeError) as err:
-                _LOGGER.error("Response of `%s` has invalid JSON", request_url)
-                raise HomeAssistantError from err
-
-            except UnicodeDecodeError as err:
-                _LOGGER.error(
-                    "Response of `%s` could not be interpreted as text",
-                    request_url,
                 )
                 raise HomeAssistantError from err
 
