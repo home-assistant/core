@@ -9,6 +9,7 @@ from homeassistant.components.prusalink import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -60,7 +61,9 @@ async def test_failed_update(
         assert state.state == "unavailable"
 
 
-async def test_migration_1_2(hass: HomeAssistant, mock_api) -> None:
+async def test_migration_1_2(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, mock_api
+) -> None:
     """Test migrating from version 1 to 2."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -84,9 +87,13 @@ async def test_migration_1_2(hass: HomeAssistant, mock_api) -> None:
         CONF_USERNAME: "maker",
         CONF_PASSWORD: "api-key",
     }
+    # Make sure that we don't have any issues
+    assert len(issue_registry.issues) == 0
 
 
-async def test_outdated_firmware_migration_1_2(hass: HomeAssistant, mock_api) -> None:
+async def test_outdated_firmware_migration_1_2(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, mock_api
+) -> None:
     """Test migrating from version 1 to 2."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -106,3 +113,13 @@ async def test_outdated_firmware_migration_1_2(hass: HomeAssistant, mock_api) ->
         await hass.async_block_till_done()
 
     assert entry.state == ConfigEntryState.SETUP_ERROR
+    # Make sure that we don't have thrown the issues
+    assert len(issue_registry.issues) == 1
+
+    # Reloading the integration with a working API (e.g. User updated firmware)
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Integration should be running now, the issue should be gone
+    assert entry.state == ConfigEntryState.LOADED
+    assert len(issue_registry.issues) == 0
