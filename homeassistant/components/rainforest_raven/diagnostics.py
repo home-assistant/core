@@ -22,11 +22,12 @@ def async_redact_meter_macs(data: dict) -> dict:
     if not data.get("Meters"):
         return data
 
+    # Create a shallow copy of the 'Meters' dictionary so that the mac IDs
+    # can be redacted.
     redacted = {**data, "Meters": {**data["Meters"]}}
 
     for idx, mac_id in enumerate(data["Meters"]):
-        redacted["Meters"][f"**REDACTED{idx}**"] = redacted["Meters"][mac_id]
-        del redacted["Meters"][mac_id]
+        redacted["Meters"][f"**REDACTED{idx}**"] = redacted["Meters"].pop(mac_id)
 
     return redacted
 

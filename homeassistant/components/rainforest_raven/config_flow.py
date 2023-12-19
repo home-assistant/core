@@ -32,7 +32,10 @@ def _format_id(value: str | int) -> str:
 
 def _generate_unique_id(info: ListPortInfo | usb.UsbServiceInfo) -> str:
     """Generate unique id from usb attributes."""
-    return f"{_format_id(info.vid)}:{_format_id(info.pid)}_{info.serial_number}_{info.manufacturer}_{info.description}"
+    return (
+        f"{_format_id(info.vid)}:{_format_id(info.pid)}_{info.serial_number}"
+        f"_{info.manufacturer}_{info.description}"
+    )
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

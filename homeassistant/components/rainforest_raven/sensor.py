@@ -133,16 +133,15 @@ class RAVEnSensor(CoordinatorEntity[RAVEnDataCoordinator], SensorEntity):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._attr_device_info = coordinator.device_info
+        self._attr_unique_id = (
+            f"{self.coordinator.device_mac_address}"
+            f".{self.entity_description.message_key}.{self.entity_description.key}"
+        )
 
     @property
     def _data(self) -> Any:
         """Return the raw sensor data from the source."""
         return self.coordinator.data.get(self.entity_description.message_key, {})
-
-    @property
-    def _source_mac_address(self) -> Any:
-        """Return the MAC address of the data source."""
-        return self.coordinator.device_mac_address
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -153,11 +152,6 @@ class RAVEnSensor(CoordinatorEntity[RAVEnDataCoordinator], SensorEntity):
                 for key in self.entity_description.attribute_keys
             }
         return None
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID of entity."""
-        return f"{self._source_mac_address}.{self.entity_description.message_key}.{self.entity_description.key}"
 
     @property
     def native_value(self) -> StateType:
@@ -177,6 +171,10 @@ class RAVEnMeterSensor(RAVEnSensor):
         """Initialize the sensor."""
         super().__init__(coordinator, entity_description)
         self._meter_mac_addr = meter_mac_addr
+        self._attr_unique_id = (
+            f"{self._meter_mac_addr}"
+            f".{self.entity_description.message_key}.{self.entity_description.key}"
+        )
 
     @property
     def _data(self) -> Any:
@@ -186,8 +184,3 @@ class RAVEnMeterSensor(RAVEnSensor):
             .get(self._meter_mac_addr, {})
             .get(self.entity_description.message_key, {})
         )
-
-    @property
-    def _source_mac_address(self) -> str:
-        """Return the MAC address of the data source."""
-        return self._meter_mac_addr
