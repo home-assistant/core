@@ -333,8 +333,8 @@ def test_test_check_if_deprecated_constant_invalid(
     name = "TEST_CONSTANT"
 
     excepted_msg = (
-        f"Value of _DEPRECATED_{name!r} is a instance of <class 'int'> "
-        "but a instance of DeprecatedConstant or DeprecatedConstantEnum is required"
+        f"Value of _DEPRECATED_{name!r} is an instance of <class 'int'> "
+        "but an instance of DeprecatedConstant or DeprecatedConstantEnum is required"
     )
 
     with pytest.raises(AttributeError, match=excepted_msg):
