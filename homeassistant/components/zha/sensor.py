@@ -208,21 +208,11 @@ class PollableSensor(Sensor):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         if self._use_custom_polling:
-            self.async_start_polling()
-
-    @callback
-    def async_start_polling(self) -> None:
-        """Start polling this entity at a randomized interval."""
-        # the signal gets sent after initializing all entities post restart and
-        # after adding new devices to the network so check to make sure we need
-        # to start the polling loop
-        if self._cancel_refresh_handle is not None:
-            return
-        refresh_interval = random.randint(30, 60)
-        self._cancel_refresh_handle = async_track_time_interval(
-            self.hass, self._refresh, timedelta(seconds=refresh_interval)
-        )
-        self.debug("started polling with refresh interval of %s", refresh_interval)
+            refresh_interval = random.randint(30, 60)
+            self._cancel_refresh_handle = async_track_time_interval(
+                self.hass, self._refresh, timedelta(seconds=refresh_interval)
+            )
+            self.debug("started polling with refresh interval of %s", refresh_interval)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
