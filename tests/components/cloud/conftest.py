@@ -1,5 +1,5 @@
 """Fixtures for cloud tests."""
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import DEFAULT, MagicMock, PropertyMock, patch
 
@@ -15,7 +15,6 @@ import jwt
 import pytest
 
 from homeassistant.components.cloud import CloudClient, const, prefs
-from homeassistant.core import HomeAssistant
 
 from . import mock_cloud, mock_cloud_prefs
 
@@ -118,34 +117,6 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock, None]:
         mock_cloud.login.side_effect = mock_login
 
         yield mock_cloud
-
-
-@pytest.fixture(name="set_cloud_prefs")
-def set_cloud_prefs_fixture(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
-) -> Callable[[dict[str, Any]], None]:
-    """Fixture for cloud component."""
-
-    def set_cloud_prefs(prefs: dict[str, Any]) -> None:
-        """Set cloud prefs."""
-        prefs_to_set = {
-            const.PREF_ALEXA_SETTINGS_VERSION: prefs.ALEXA_SETTINGS_VERSION,
-            const.PREF_ENABLE_ALEXA: True,
-            const.PREF_ENABLE_GOOGLE: True,
-            const.PREF_GOOGLE_SECURE_DEVICES_PIN: None,
-            const.PREF_GOOGLE_SETTINGS_VERSION: prefs.GOOGLE_SETTINGS_VERSION,
-        }
-        prefs_to_set.update(prefs)
-        hass.data[const.DOMAIN].client._prefs._prefs = prefs_to_set
-        hass_storage[const.DOMAIN] = prefs_to_set
-        hass_storage[prefs.STORAGE_KEY] = {
-            "version": prefs.STORAGE_VERSION,
-            "minor_version": prefs.STORAGE_VERSION_MINOR,
-            "key": prefs.STORAGE_KEY,
-            "data": prefs_to_set,
-        }
-
-    return set_cloud_prefs
 
 
 @pytest.fixture(autouse=True)
