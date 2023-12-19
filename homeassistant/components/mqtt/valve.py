@@ -85,11 +85,14 @@ MQTT_VALVE_ATTRIBUTES_BLOCKED = frozenset(
 def _validate_valve_payload_options(config: ConfigType) -> ConfigType:
     """Validate the use of payload close and open options."""
     if config[CONF_REPORTS_POSITION] and (
-        CONF_PAYLOAD_CLOSE in config or CONF_PAYLOAD_OPEN in config
+        CONF_PAYLOAD_CLOSE in config
+        or CONF_PAYLOAD_OPEN in config
+        or CONF_STATE_CLOSED in config
+        or CONF_STATE_OPEN in config
     ):
         raise vol.Invalid(
-            "Options `payload_open` and `payload_close` cannot be "
-            "used if the valve reports a position."
+            "Options `payload_open`, `payload_close`, `state_open` and "
+            "`state_closed` are only allowed if the valve reports a position."
         )
     return config
 
@@ -108,9 +111,9 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_POSITION_OPEN, default=DEFAULT_POSITION_OPEN): int,
         vol.Optional(CONF_REPORTS_POSITION, default=False): cv.boolean,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED): cv.string,
+        vol.Optional(CONF_STATE_CLOSED): cv.string,
         vol.Optional(CONF_STATE_CLOSING, default=STATE_CLOSING): cv.string,
-        vol.Optional(CONF_STATE_OPEN, default=STATE_OPEN): cv.string,
+        vol.Optional(CONF_STATE_OPEN): cv.string,
         vol.Optional(CONF_STATE_OPENING, default=STATE_OPENING): cv.string,
         vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -244,15 +247,20 @@ class MqttValve(MqttEntity, ValveEntity):
             position_payload = payload if position_payload is None else position_payload
 
             state: str | None = None
+            reports_position: bool = self._config[CONF_REPORTS_POSITION]
             if state_payload == self._config[CONF_STATE_OPENING]:
                 state = STATE_OPENING
             elif state_payload == self._config[CONF_STATE_CLOSING]:
                 state = STATE_CLOSING
-            elif state_payload == self._config[CONF_STATE_OPEN]:
+            elif not reports_position and state_payload == self._config.get(
+                CONF_STATE_OPEN, STATE_OPEN
+            ):
                 state = STATE_OPEN
-            elif state_payload == self._config[CONF_STATE_CLOSED]:
+            elif not reports_position and state_payload == self._config.get(
+                CONF_STATE_CLOSED, STATE_CLOSED
+            ):
                 state = STATE_CLOSED
-            if self._config[CONF_REPORTS_POSITION] and (
+            if reports_position and (
                 state is None or position_payload != state_payload
             ):
                 try:

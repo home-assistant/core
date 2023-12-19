@@ -64,6 +64,17 @@ DEFAULT_CONFIG = {
     mqtt.DOMAIN: {valve.DOMAIN: {"name": "test", "state_topic": "test-topic"}}
 }
 
+DEFAULT_CONFIG_REPORTS_POSITION = {
+    mqtt.DOMAIN: {
+        valve.DOMAIN: {
+            "name": "test",
+            "command_topic": "command-topic",
+            "state_topic": "test-topic",
+            "reports_position": True,
+        }
+    }
+}
+
 
 @pytest.fixture(autouse=True)
 def valve_platform_only():
@@ -385,18 +396,18 @@ async def tests_controling_valve_by_state(
 @pytest.mark.parametrize(
     "hass_config",
     [
-        {
-            mqtt.DOMAIN: {
-                valve.DOMAIN: {
-                    "name": "test",
-                    "state_topic": "state-topic",
-                    "command_topic": "command-topic",
-                    "reports_position": True,
-                    "payload_open": "OPEN",
-                    "payload_close": "CLOSE",
-                }
-            }
-        }
+        help_custom_config(
+            valve.DOMAIN, DEFAULT_CONFIG_REPORTS_POSITION, ({"payload_open": "OPEN"},)
+        ),
+        help_custom_config(
+            valve.DOMAIN, DEFAULT_CONFIG_REPORTS_POSITION, ({"payload_close": "CLOSE"},)
+        ),
+        help_custom_config(
+            valve.DOMAIN, DEFAULT_CONFIG_REPORTS_POSITION, ({"state_open": "open"},)
+        ),
+        help_custom_config(
+            valve.DOMAIN, DEFAULT_CONFIG_REPORTS_POSITION, ({"state_closed": "closed"},)
+        ),
     ],
 )
 async def tests_open_close_payload_config_not_allowed(
@@ -410,8 +421,9 @@ async def tests_open_close_payload_config_not_allowed(
     assert hass.states.get("valve.test") is None
 
     assert (
-        "Options `payload_open` and `payload_close` cannot be "
-        "used if the valve reports a position." in caplog.text
+        "Options `payload_open`, `payload_close`, `state_open` and "
+        "`state_closed` are only allowed if the valve reports a position."
+        in caplog.text
     )
 
 
