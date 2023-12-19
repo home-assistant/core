@@ -51,7 +51,7 @@ async def test_service(
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize("service", [GAS_SERVICE_NAME, ENERGY_SERVICE_NAME])
 @pytest.mark.parametrize(
-    "data",
+    ("service_data", "error", "error_message"),
     [
         ({}, vol.er.Error, "required key not provided .+"),
         (
@@ -74,10 +74,11 @@ async def test_service(
 async def test_service_validation(
     hass: HomeAssistant,
     service: str,
-    data: tuple[dict[str, str], type[Exception], str],
+    service_data: dict[str, str],
+    error: type[Exception],
+    error_message: str,
 ) -> None:
     """Test the EnergyZero Service validation."""
-    (service_data, error, error_message) = data
 
     with pytest.raises(error, match=error_message):
         await hass.services.async_call(
