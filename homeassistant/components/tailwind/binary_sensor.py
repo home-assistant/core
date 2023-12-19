@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from gotailwind.models import TailwindDoor
+from gotailwind import TailwindDoor
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,

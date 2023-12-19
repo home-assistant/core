@@ -934,7 +934,7 @@ googlemaps==2.5.1
 goslide-api==0.5.1
 
 # homeassistant.components.tailwind
-gotailwind==0.2.1
+gotailwind==0.2.2
 
 # homeassistant.components.govee_ble
 govee-ble==0.24.0
