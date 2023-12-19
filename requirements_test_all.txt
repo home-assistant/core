@@ -421,7 +421,7 @@ arcam-fmj==1.4.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.36.2
+async-upnp-client==0.38.0
 
 # homeassistant.components.sleepiq
 asyncsleepiq==1.4.0
@@ -1931,7 +1931,7 @@ sunweg==2.0.1
 surepy==0.8.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==1.2.1
+switchbot-api==1.3.0
 
 # homeassistant.components.system_bridge
 systembridgeconnector==3.10.0
