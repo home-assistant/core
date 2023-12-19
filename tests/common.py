@@ -20,7 +20,8 @@ from types import ModuleType
 from typing import Any, NoReturn
 from unittest.mock import AsyncMock, Mock, patch
 
-import pytest  # noqa: F401
+from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
+import pytest
 import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader
