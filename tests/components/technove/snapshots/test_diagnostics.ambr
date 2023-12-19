@@ -1,0 +1,35 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'info': dict({
+      'auto_charge': True,
+      'conflict_in_sharing_config': False,
+      'current': 23.75,
+      'energy_session': 12.34,
+      'energy_total': 1234,
+      'high_charge_period_active': False,
+      'id': 'AA:AA:AA:AA:AA:BB',
+      'in_sharing_mode': True,
+      'is_battery_protected': False,
+      'is_session_active': True,
+      'is_static_ip': False,
+      'is_up_to_date': True,
+      'last_charge': '''
+        1701072080,0,17.39
+  
+      ''',
+      'max_charge_percentage': 0.9,
+      'max_current': 24,
+      'max_station_current': 32,
+      'name': 'TechnoVE Station',
+      'network_ssid': 'Connecting...',
+      'normal_period_active': False,
+      'rssi': -82,
+      'status': 67,
+      'time': 1701000000,
+      'version': '1.82',
+      'voltage_in': 238,
+      'voltage_out': 238,
+    }),
+  })
+# ---

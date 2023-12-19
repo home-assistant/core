@@ -1,0 +1,66 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "description": "Set up your TechnoVE station to integrate with Home Assistant.",
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "ip_address": "Hostname or IP address of your WLED device."
+        }
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add the TechnoVE Station named `{name}` to Home Assistant?",
+        "title": "Discovered TechnoVE station"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "voltage_in": {
+        "name": "Input Voltage"
+      },
+      "voltage_out": {
+        "name": "Output Voltage"
+      },
+      "max_current": {
+        "name": "Max Current"
+      },
+      "max_station_current": {
+        "name": "Max Station Current"
+      },
+      "current": {
+        "name": "Current"
+      },
+      "energy_total": {
+        "name": "Total Energy Usage"
+      },
+      "energy_session": {
+        "name": "Last Session Energy Usage"
+      },
+      "rssi": {
+        "name": "Wi-Fi Signal Strength"
+      },
+      "ssid": {
+        "name": "Wi-Fi Network Name"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "65": "Unplugged",
+          "66": "Plugged, Waiting",
+          "67": "Plugged, Charging"
+        }
+      }
+    }
+  }
+}
