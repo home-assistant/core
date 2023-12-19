@@ -60,16 +60,6 @@ class TailwindButtonEntity(TailwindEntity, ButtonEntity):
 
     entity_description: TailwindButtonEntityDescription
 
-    def __init__(
-        self,
-        coordinator: TailwindDataUpdateCoordinator,
-        description: TailwindButtonEntityDescription,
-    ) -> None:
-        """Initiate Tailwind button entity."""
-        super().__init__(coordinator=coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.data.device_id}-{description.key}"
-
     async def async_press(self) -> None:
         """Trigger button press on the Tailwind device."""
         await self.entity_description.press_fn(self.coordinator.tailwind)
