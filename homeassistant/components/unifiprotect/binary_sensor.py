@@ -564,7 +564,7 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
                 updated_device.mount_type, BinarySensorDeviceClass.DOOR
             )
         else:
-            self._attr_device_class = self.entity_description.device_class
+            self._attr_device_class = self.entity_description.device_class  # type: ignore[assignment]
 
 
 class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
