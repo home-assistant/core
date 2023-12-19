@@ -30,7 +30,7 @@ from .utils import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class BlockSwitchDescription(BlockEntityDescription, SwitchEntityDescription):
     """Class to describe a BLOCK switch."""
 

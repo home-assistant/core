@@ -33,7 +33,7 @@ from .helper import PlenticoreDataFormatter, ProcessDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class PlenticoreRequiredKeysMixin:
     """A class that describes required properties for plenticore sensor entities."""
 
@@ -41,7 +41,7 @@ class PlenticoreRequiredKeysMixin:
     formatter: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class PlenticoreSensorEntityDescription(
     SensorEntityDescription, PlenticoreRequiredKeysMixin
 ):

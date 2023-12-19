@@ -23,7 +23,7 @@ from .entity import PlugwiseEntity
 SEVERITIES = ["other", "info", "warning", "error"]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PlugwiseBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes a Plugwise binary sensor entity."""
 

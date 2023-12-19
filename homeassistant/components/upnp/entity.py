@@ -10,7 +10,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .coordinator import UpnpDataUpdateCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class UpnpEntityDescription(EntityDescription):
     """UPnP entity description."""
 
