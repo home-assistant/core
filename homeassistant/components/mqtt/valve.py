@@ -104,8 +104,8 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-        vol.Optional(CONF_PAYLOAD_CLOSE): cv.string,
-        vol.Optional(CONF_PAYLOAD_OPEN): cv.string,
+        vol.Optional(CONF_PAYLOAD_CLOSE): vol.Any(cv.string, None),
+        vol.Optional(CONF_PAYLOAD_OPEN): vol.Any(cv.string, None),
         vol.Optional(CONF_PAYLOAD_STOP): vol.Any(cv.string, None),
         vol.Optional(CONF_POSITION_CLOSED, default=DEFAULT_POSITION_CLOSED): int,
         vol.Optional(CONF_POSITION_OPEN, default=DEFAULT_POSITION_OPEN): int,
@@ -195,7 +195,10 @@ class MqttValve(MqttEntity, ValveEntity):
 
         supported_features = ValveEntityFeature(0)
         if has_command_topic := (config.get(CONF_COMMAND_TOPIC) is not None):
-            supported_features |= ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
+            if config.get(CONF_PAYLOAD_OPEN, DEFAULT_PAYLOAD_OPEN) is not None:
+                supported_features |= ValveEntityFeature.OPEN
+            if config.get(CONF_PAYLOAD_CLOSE, DEFAULT_PAYLOAD_CLOSE) is not None:
+                supported_features |= ValveEntityFeature.CLOSE
 
         if config[CONF_REPORTS_POSITION] and has_command_topic is not None:
             supported_features |= ValveEntityFeature.SET_POSITION

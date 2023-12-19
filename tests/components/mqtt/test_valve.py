@@ -5,7 +5,10 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import mqtt, valve
-from homeassistant.components.mqtt.valve import MQTT_VALVE_ATTRIBUTES_BLOCKED
+from homeassistant.components.mqtt.valve import (
+    MQTT_VALVE_ATTRIBUTES_BLOCKED,
+    ValveEntityFeature,
+)
 from homeassistant.components.valve import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
@@ -14,6 +17,7 @@ from homeassistant.components.valve import (
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
     SERVICE_STOP_VALVE,
@@ -61,7 +65,13 @@ from tests.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {valve.DOMAIN: {"name": "test", "state_topic": "test-topic"}}
+    mqtt.DOMAIN: {
+        valve.DOMAIN: {
+            "command_topic": "command-topic",
+            "state_topic": "test-topic",
+            "name": "test",
+        }
+    }
 }
 
 DEFAULT_CONFIG_REPORTS_POSITION = {
@@ -391,6 +401,68 @@ async def tests_controling_valve_by_state(
 
     state = hass.states.get("valve.test")
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("hass_config", "supported_features"),
+    [
+        (DEFAULT_CONFIG, ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE),
+        (
+            help_custom_config(
+                valve.DOMAIN,
+                DEFAULT_CONFIG,
+                ({"payload_open": "OPEN", "payload_close": "CLOSE"},),
+            ),
+            ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE,
+        ),
+        (
+            help_custom_config(
+                valve.DOMAIN,
+                DEFAULT_CONFIG,
+                ({"payload_open": "OPEN", "payload_close": None},),
+            ),
+            ValveEntityFeature.OPEN,
+        ),
+        (
+            help_custom_config(
+                valve.DOMAIN,
+                DEFAULT_CONFIG,
+                ({"payload_open": None, "payload_close": "CLOSE"},),
+            ),
+            ValveEntityFeature.CLOSE,
+        ),
+        (
+            help_custom_config(
+                valve.DOMAIN, DEFAULT_CONFIG, ({"payload_stop": "STOP"},)
+            ),
+            ValveEntityFeature.OPEN
+            | ValveEntityFeature.CLOSE
+            | ValveEntityFeature.STOP,
+        ),
+        (
+            help_custom_config(
+                valve.DOMAIN,
+                DEFAULT_CONFIG_REPORTS_POSITION,
+                ({"payload_stop": "STOP"},),
+            ),
+            ValveEntityFeature.OPEN
+            | ValveEntityFeature.CLOSE
+            | ValveEntityFeature.STOP
+            | ValveEntityFeature.SET_POSITION,
+        ),
+    ],
+)
+async def tests_supported_features(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    supported_features: ValveEntityFeature,
+) -> None:
+    """Test the valve's supported features."""
+    assert await mqtt_mock_entry()
+
+    state = hass.states.get("valve.test")
+    assert state is not None
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == supported_features
 
 
 @pytest.mark.parametrize(
