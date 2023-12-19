@@ -114,10 +114,10 @@ class PrusaLinkButtonEntity(PrusaLinkEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
+        job_id = self.coordinator.data["job"]["id"]
+        func = self.entity_description.press_fn(self.coordinator.api)
         try:
-            await self.entity_description.press_fn(
-                self.coordinator.api, self.coordinator.data
-            )
+            await func(job_id)
         except Conflict as err:
             raise HomeAssistantError(
                 "Action conflicts with current printer state"
