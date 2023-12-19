@@ -82,6 +82,4 @@ async def async_migrate_cloud_pipeline_stt_engine(
     for pipeline in pipelines:
         if pipeline.stt_engine != DOMAIN:
             continue
-        updates = pipeline.to_json() | {"stt_engine": stt_engine_id}
-        updates.pop("id")
-        await async_update_pipeline(hass, pipeline, updates)
+        await async_update_pipeline(hass, pipeline, stt_engine=stt_engine_id)
