@@ -881,12 +881,11 @@ async def test_turn_on_intent(
     hass.states.async_set("light.kitchen", "off")
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
-    data = {
-        conversation.ATTR_TEXT: sentence,
-        conversation.ATTR_CONVERSATION_ID: conversation_id,
-    }
+    data = {conversation.ATTR_TEXT: sentence}
     if agent_id is not None:
         data[conversation.ATTR_AGENT_ID] = agent_id
+    if conversation_id is not None:
+        data[conversation.ATTR_CONVERSATION_ID] = conversation_id
     result = await hass.services.async_call(
         "conversation",
         "process",
