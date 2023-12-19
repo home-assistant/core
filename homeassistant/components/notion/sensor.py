@@ -19,7 +19,7 @@ from .const import DOMAIN, SENSOR_MOLD, SENSOR_TEMPERATURE
 from .model import NotionEntityDescriptionMixin
 
 
-@dataclass
+@dataclass(frozen=True)
 class NotionSensorDescription(SensorEntityDescription, NotionEntityDescriptionMixin):
     """Describe a Notion sensor."""
 
