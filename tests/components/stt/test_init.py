@@ -468,7 +468,11 @@ async def test_default_engine_none(hass: HomeAssistant, tmp_path: Path) -> None:
     assert async_default_engine(hass) is None
 
 
-async def test_default_engine(hass: HomeAssistant, tmp_path: Path) -> None:
+async def test_default_engine(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_provider: MockProvider,
+) -> None:
     """Test async_default_engine."""
     mock_stt_platform(
         hass,
@@ -496,28 +500,22 @@ async def test_default_engine_prefer_cloud(
     hass: HomeAssistant,
     tmp_path: Path,
     mock_provider_entity: MockProviderEntity,
+    mock_provider: MockProvider,
     config_flow_test_domain: str,
 ) -> None:
     """Test async_default_engine."""
-    mock_stt_platform(
-        hass,
-        tmp_path,
-        TEST_DOMAIN,
-        async_get_engine=AsyncMock(return_value=mock_provider),
-    )
-
     mock_provider_entity.url_path = "stt.cloud"
     mock_provider_entity._attr_name = "Cloud"
     mock_provider_entity._attr_unique_id = "cloud-speech-to-text"
 
+    await mock_setup(hass, tmp_path, mock_provider)
     await mock_config_entry_setup(
         hass, tmp_path, mock_provider_entity, test_domain=config_flow_test_domain
     )
-    assert await async_setup_component(
-        hass, "stt", {"stt": [{"platform": TEST_DOMAIN}]}
-    )
     await hass.async_block_till_done()
 
+    assert async_get_speech_to_text_engine(hass, "stt.cloud").name == "Cloud"
+    assert async_get_speech_to_text_engine(hass, "test").name == "test"
     assert async_default_engine(hass) == "stt.cloud"
 
 
