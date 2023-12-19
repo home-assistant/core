@@ -142,6 +142,6 @@
     'serial_number': None,
     'suggested_area': None,
     'sw_version': '10.10',
-    'via_device_id': <ANY>,
+    'via_device_id': None,
   })
 # ---
