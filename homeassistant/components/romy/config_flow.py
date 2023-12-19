@@ -62,8 +62,6 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 if not new_romy.is_unlocked:
                     return await self.async_step_password()
-
-            if not errors:
                 return await self._async_step_finish_config()
 
         return self.async_show_form(
