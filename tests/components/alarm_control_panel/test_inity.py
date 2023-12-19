@@ -20,7 +20,7 @@ def test_deprecated_constant_code_format(
     code_format: alarm_control_panel.CodeFormat,
 ) -> None:
     """Test deprecated binary sensor device classes."""
-    import_deprecated_code_format(code_format)
+    import_deprecated_code_format(code_format, alarm_control_panel)
     validate_deprecated_constant(
         caplog, alarm_control_panel, code_format, "FORMAT_", "2025.1"
     )
@@ -35,7 +35,7 @@ def test_deprecated_constant_entity_feature(
     entity_feature: alarm_control_panel.AlarmControlPanelEntityFeature,
 ) -> None:
     """Test deprecated binary sensor device classes."""
-    import_deprecated_entity_feature(entity_feature)
+    import_deprecated_entity_feature(entity_feature, alarm_control_panel)
     validate_deprecated_constant(
         caplog, alarm_control_panel, entity_feature, "SUPPORT_ALARM_", "2025.1"
     )

@@ -47,7 +47,7 @@ from .const import (  # noqa: F401
     CodeFormat,
 )
 
-# As we import constant of the cost module here, we need to add the following
+# As we import constants of the cost module here, we need to add the following
 # functions to check for deprecated constants again
 # Both can be removed if no deprecated constant are in this module anymore
 __getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
