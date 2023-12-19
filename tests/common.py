@@ -1465,7 +1465,7 @@ def async_mock_cloud_connection_status(hass: HomeAssistant, connected: bool) -> 
     async_dispatcher_send(hass, SIGNAL_CLOUD_CONNECTION_STATE, state)
 
 
-def validate_deprecated_constant(
+def validate_deprecated_constant_enum(
     caplog: pytest.LogCaptureFixture,
     module: ModuleType,
     replacement: Enum,
@@ -1473,16 +1473,33 @@ def validate_deprecated_constant(
     breaks_in_ha_version: str,
 ) -> None:
     """Validate deprecated constant creates a log entry and is included in the modules.__dir__()."""
+    validate_deprecated_constant(
+        caplog,
+        module,
+        constant_prefix + replacement.name,
+        f"{replacement.__class__.__name__}.{replacement.name}",
+        breaks_in_ha_version,
+    )
+
+
+def validate_deprecated_constant(
+    caplog: pytest.LogCaptureFixture,
+    module: ModuleType,
+    constant_name: str,
+    replacement_name: str,
+    breaks_in_ha_version: str,
+) -> None:
+    """Validate deprecated constant creates a log entry and is included in the modules.__dir__()."""
     assert (
         module.__name__,
         logging.WARNING,
         (
-            f"{constant_prefix}{replacement.name} was used from test_constant_deprecation,"
+            f"{constant_name} was used from test_constant_deprecation,"
             f" this is a deprecated constant which will be removed in HA Core {breaks_in_ha_version}. "
-            f"Use {replacement.__class__.__name__}.{replacement.name} instead, please report "
+            f"Use {replacement_name} instead, please report "
             "it to the author of the 'test_constant_deprecation' custom integration"
         ),
     ) in caplog.record_tuples
 
     # verify deprecated constant is included in dir()
-    assert f"{constant_prefix}{replacement.name}" in dir(module)
+    assert constant_name in dir(module)

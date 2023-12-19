@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -46,6 +47,7 @@ from homeassistant.helpers.script import (
     SCRIPT_MODE_SINGLE,
     _async_stop_scripts_at_shutdown,
 )
+from homeassistant.helpers.trigger import TriggerActionType, TriggerData, TriggerInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml
 import homeassistant.util.dt as dt_util
@@ -58,9 +60,13 @@ from tests.common import (
     async_fire_time_changed,
     async_mock_service,
     mock_restore_cache,
+    validate_deprecated_constant,
 )
 from tests.components.logbook.common import MockRow, mock_humanify
 from tests.components.repairs import get_repairs
+from tests.testing_config.custom_components.test_constant_deprecation.util import (
+    import_and_test_deprecated_costant,
+)
 from tests.typing import WebSocketGenerator
 
 
@@ -2564,3 +2570,23 @@ async def test_websocket_config(
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"]["code"] == "not_found"
+
+
+@pytest.mark.parametrize(
+    ("constant_name", "replacement"),
+    [
+        ("AutomationActionType", TriggerActionType),
+        ("AutomationTriggerData", TriggerData),
+        ("AutomationTriggerInfo", TriggerInfo),
+    ],
+)
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    constant_name: str,
+    replacement: Any,
+) -> None:
+    """Test deprecated binary sensor device classes."""
+    import_and_test_deprecated_costant(automation, constant_name, replacement)
+    validate_deprecated_constant(
+        caplog, automation, constant_name, replacement.__name__, "2025.1"
+    )
