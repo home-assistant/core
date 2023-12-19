@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .coordinator import ShellyBlockCoordinator, get_entry_data
 from .entity import (
     BlockEntityDescription,
-    ShellyBlockEntity,
+    ShellyBlockAttributeEntity,
     async_setup_block_attribute_entities,
 )
 from .utils import get_device_entry_gen
@@ -69,15 +69,21 @@ def async_setup_block_entry(
         )
 
 
-class BlockShellyValve(ShellyBlockEntity, ValveEntity):
+class BlockShellyValve(ShellyBlockAttributeEntity, ValveEntity):
     """Entity that controls a valve on block based Shelly devices."""
 
     _attr_device_class = ValveDeviceClass.GAS
     _attr_supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
 
-    def __init__(self, coordinator: ShellyBlockCoordinator, block: Block) -> None:
+    def __init__(
+        self,
+        coordinator: ShellyBlockCoordinator,
+        block: Block,
+        attribute: str,
+        description: BlockValveDescription,
+    ) -> None:
         """Initialize block valve."""
-        super().__init__(coordinator, block)
+        super().__init__(coordinator, block, attribute, description)
         self.control_result: dict[str, Any] | None = None
 
     @property
