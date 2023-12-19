@@ -55,30 +55,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
     if entry.data.get(CONF_TYPE, BRIDGE) == BRIDGE:
-        return await _async_unload_bridge_entry(hass, entry)
+        platforms = BRIDGE_PLATFORMS
+    else:
+        platforms = VEDO_PLATFORMS
 
-    return await _async_unload_vedo_entry(hass, entry)
-
-
-async def _async_unload_bridge_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload Comelit Serial Bridge entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(
-        entry, BRIDGE_PLATFORMS
-    ):
-        coordinator: ComelitSerialBridge = hass.data[DOMAIN][entry.entry_id]
-        await coordinator.api.logout()
-        await coordinator.api.close()
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
-
-
-async def _async_unload_vedo_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload Comelit VEDO system entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(
-        entry, VEDO_PLATFORMS
-    ):
-        coordinator: ComelitVedoSystem = hass.data[DOMAIN][entry.entry_id]
+    coordinator: ComelitBaseCoordinator = hass.data[DOMAIN][entry.entry_id]
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, platforms):
         await coordinator.api.logout()
         await coordinator.api.close()
         hass.data[DOMAIN].pop(entry.entry_id)
