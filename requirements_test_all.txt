@@ -1928,7 +1928,7 @@ sunweg==2.0.1
 surepy==0.8.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==1.2.1
+switchbot-api==1.3.0
 
 # homeassistant.components.system_bridge
 systembridgeconnector==3.10.0
