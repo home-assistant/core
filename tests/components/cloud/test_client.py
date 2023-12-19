@@ -389,7 +389,7 @@ async def test_cloud_connection_info(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize(
     "translation_key",
-    VALID_REPAIR_TRANSLATION_KEYS,
+    sorted(VALID_REPAIR_TRANSLATION_KEYS),
 )
 async def test_async_create_repair_issue_known(
     hass: HomeAssistant,
