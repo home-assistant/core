@@ -168,7 +168,8 @@ class FinTsClient:
         if not account_information:
             return False
 
-        if 1 <= account_information["type"] <= 9:
+        account_type = account_information.get("type")
+        if isinstance(account_type, int) and 1 <= account_type <= 9:
             return True
 
         if (
@@ -188,7 +189,8 @@ class FinTsClient:
         if not account_information:
             return False
 
-        if 30 <= account_information["type"] <= 39:
+        account_type = account_information.get("type")
+        if isinstance(account_type, int) and 30 <= account_type <= 39:
             return True
 
         if (
