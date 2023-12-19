@@ -17,15 +17,15 @@ from homeassistant.components.select import (
 )
 from homeassistant.components.xiaomi_miio import UPDATE_INTERVAL
 from homeassistant.components.xiaomi_miio.const import (
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
-    CONF_MAC,
     DOMAIN as XIAOMI_DOMAIN,
     MODEL_AIRFRESH_T2017,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_DEVICE,
     CONF_HOST,
+    CONF_MAC,
     CONF_MODEL,
     CONF_TOKEN,
     Platform,

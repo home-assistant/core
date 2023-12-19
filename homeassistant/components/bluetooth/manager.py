@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
+from functools import partial
 import itertools
 import logging
 
 from bleak_retry_connector import BleakSlotManager
 from bluetooth_adapters import BluetoothAdapters
-from habluetooth import BluetoothManager
+from habluetooth import BaseHaRemoteScanner, BaseHaScanner, BluetoothManager
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_LOGGING_CHANGED
@@ -189,7 +190,45 @@ class HomeAssistantBluetoothManager(BluetoothManager):
     def async_stop(self) -> None:
         """Stop the Bluetooth integration at shutdown."""
         _LOGGER.debug("Stopping bluetooth manager")
+        self._async_save_scanner_histories()
         super().async_stop()
         if self._cancel_logging_listener:
             self._cancel_logging_listener()
             self._cancel_logging_listener = None
+
+    def _async_save_scanner_histories(self) -> None:
+        """Save the scanner histories."""
+        for scanner in itertools.chain(
+            self._connectable_scanners, self._non_connectable_scanners
+        ):
+            self._async_save_scanner_history(scanner)
+
+    def _async_save_scanner_history(self, scanner: BaseHaScanner) -> None:
+        """Save the scanner history."""
+        if isinstance(scanner, BaseHaRemoteScanner):
+            self.storage.async_set_advertisement_history(
+                scanner.source, scanner.serialize_discovered_devices()
+            )
+
+    def _async_unregister_scanner(
+        self, scanner: BaseHaScanner, unregister: CALLBACK_TYPE
+    ) -> None:
+        """Unregister a scanner."""
+        unregister()
+        self._async_save_scanner_history(scanner)
+
+    def async_register_scanner(
+        self,
+        scanner: BaseHaScanner,
+        connectable: bool,
+        connection_slots: int | None = None,
+    ) -> CALLBACK_TYPE:
+        """Register a scanner."""
+        if isinstance(scanner, BaseHaRemoteScanner):
+            if history := self.storage.async_get_advertisement_history(scanner.source):
+                scanner.restore_discovered_devices(history)
+
+        unregister = super().async_register_scanner(
+            scanner, connectable, connection_slots
+        )
+        return partial(self._async_unregister_scanner, scanner, unregister)

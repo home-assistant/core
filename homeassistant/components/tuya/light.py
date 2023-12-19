@@ -49,7 +49,7 @@ DEFAULT_COLOR_TYPE_DATA_V2 = ColorTypeData(
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class TuyaLightEntityDescription(LightEntityDescription):
     """Describe an Tuya light entity."""
 

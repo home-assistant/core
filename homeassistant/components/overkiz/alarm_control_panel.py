@@ -35,7 +35,7 @@ from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class OverkizAlarmDescriptionMixin:
     """Define an entity description mixin for switch entities."""
 
@@ -43,7 +43,7 @@ class OverkizAlarmDescriptionMixin:
     fn_state: Callable[[Callable[[str], OverkizStateType]], str]
 
 
-@dataclass
+@dataclass(frozen=True)
 class OverkizAlarmDescription(
     AlarmControlPanelEntityDescription, OverkizAlarmDescriptionMixin
 ):

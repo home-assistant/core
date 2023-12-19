@@ -17,8 +17,12 @@ from tests.common import (
     mock_config_flow,
     mock_integration,
     mock_platform,
+    validate_deprecated_constant,
 )
 from tests.testing_config.custom_components.test.binary_sensor import MockBinarySensor
+from tests.testing_config.custom_components.test_constant_deprecation.binary_sensor import (
+    import_deprecated,
+)
 
 TEST_DOMAIN = "test"
 
@@ -102,7 +106,7 @@ async def test_name(hass: HomeAssistant) -> None:
         config_entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
-        """Set up test stt platform via config entry."""
+        """Set up test binary_sensor platform via config entry."""
         async_add_entities([entity1, entity2, entity3, entity4])
 
     mock_platform(
@@ -172,7 +176,7 @@ async def test_entity_category_config_raises_error(
         config_entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
-        """Set up test stt platform via config entry."""
+        """Set up test binary_sensor platform via config entry."""
         async_add_entities([entity1, entity2])
 
     mock_platform(
@@ -193,4 +197,19 @@ async def test_entity_category_config_raises_error(
     assert (
         "Entity binary_sensor.test2 cannot be added as the entity category is set to config"
         in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "device_class",
+    list(binary_sensor.BinarySensorDeviceClass),
+)
+def test_deprecated_constant_device_class(
+    caplog: pytest.LogCaptureFixture,
+    device_class: binary_sensor.BinarySensorDeviceClass,
+) -> None:
+    """Test deprecated binary sensor device classes."""
+    import_deprecated(device_class)
+    validate_deprecated_constant(
+        caplog, binary_sensor, device_class, "DEVICE_CLASS_", "2025.1"
     )
