@@ -93,15 +93,22 @@ NO_POSITION_KEYS = (
     CONF_STATE_OPEN,
 )
 
+DEFAULTS = {
+    CONF_PAYLOAD_CLOSE: DEFAULT_PAYLOAD_CLOSE,
+    CONF_PAYLOAD_OPEN: DEFAULT_PAYLOAD_OPEN,
+    CONF_STATE_OPEN: STATE_OPEN,
+    CONF_STATE_CLOSED: STATE_CLOSED,
+}
 
-def _validate_valve_payload_options(config: ConfigType) -> ConfigType:
+
+def _validate_and_add_defaults(config: ConfigType) -> ConfigType:
     """Validate the use of payload close and open options."""
     if config[CONF_REPORTS_POSITION] and any(key in config for key in NO_POSITION_KEYS):
         raise vol.Invalid(
             "Options `payload_open`, `payload_close`, `state_open` and "
             "`state_closed` are not allowed if the valve reports a position."
         )
-    return config
+    return {**DEFAULTS, **config}
 
 
 _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
@@ -127,11 +134,11 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA_MODERN = vol.All(_PLATFORM_SCHEMA_BASE, _validate_valve_payload_options)
+PLATFORM_SCHEMA_MODERN = vol.All(_PLATFORM_SCHEMA_BASE, _validate_and_add_defaults)
 
 DISCOVERY_SCHEMA = vol.All(
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
-    _validate_valve_payload_options,
+    _validate_and_add_defaults,
 )
 
 
@@ -202,9 +209,9 @@ class MqttValve(MqttEntity, ValveEntity):
 
         supported_features = ValveEntityFeature(0)
         if CONF_COMMAND_TOPIC in config:
-            if config.get(CONF_PAYLOAD_OPEN, DEFAULT_PAYLOAD_OPEN) is not None:
+            if config[CONF_PAYLOAD_OPEN] is not None:
                 supported_features |= ValveEntityFeature.OPEN
-            if config.get(CONF_PAYLOAD_CLOSE, DEFAULT_PAYLOAD_CLOSE) is not None:
+            if config[CONF_PAYLOAD_CLOSE] is not None:
                 supported_features |= ValveEntityFeature.CLOSE
 
         if config[CONF_REPORTS_POSITION]:
@@ -231,9 +238,9 @@ class MqttValve(MqttEntity, ValveEntity):
             state = STATE_OPENING
         elif state_payload == self._config[CONF_STATE_CLOSING]:
             state = STATE_CLOSING
-        elif state_payload == self._config.get(CONF_STATE_OPEN, STATE_OPEN):
+        elif state_payload == self._config[CONF_STATE_OPEN]:
             state = STATE_OPEN
-        elif state_payload == self._config.get(CONF_STATE_CLOSED, STATE_CLOSED):
+        elif state_payload == self._config[CONF_STATE_CLOSED]:
             state = STATE_CLOSED
         if state is None:
             _LOGGER.warning(
