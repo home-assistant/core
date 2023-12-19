@@ -170,7 +170,7 @@ async def test_state_via_state_topic_with_template(
                     "name": "test",
                     "state_topic": "state-topic",
                     "command_topic": "command-topic",
-                    "position": True,
+                    "reports_position": True,
                     "value_template": "{{ value_json.position }}",
                 }
             }
@@ -215,7 +215,7 @@ async def test_state_via_state_topic_with_position_template(
                     "name": "test",
                     "state_topic": "state-topic",
                     "command_topic": "command-topic",
-                    "position": True,
+                    "reports_position": True,
                 }
             }
         }
@@ -278,7 +278,7 @@ async def test_state_via_state_topic_through_position(
                     "name": "test",
                     "state_topic": "state-topic",
                     "command_topic": "command-topic",
-                    "position": True,
+                    "reports_position": True,
                     "position_closed": -128,
                     "position_open": 127,
                 }
@@ -339,7 +339,9 @@ async def test_state_via_state_trough_position_with_alt_range(
                     "name": "test",
                     "state_topic": "state-topic",
                     "command_topic": "command-topic",
-                    "payload_stop": "STOP",
+                    "payload_stop": "SToP",
+                    "payload_open": "OPeN",
+                    "payload_close": "CLOsE",
                 }
             }
         }
@@ -348,9 +350,9 @@ async def test_state_via_state_trough_position_with_alt_range(
 @pytest.mark.parametrize(
     ("service", "asserted_message"),
     [
-        (SERVICE_CLOSE_VALVE, "CLOSE"),
-        (SERVICE_OPEN_VALVE, "OPEN"),
-        (SERVICE_STOP_VALVE, "STOP"),
+        (SERVICE_CLOSE_VALVE, "CLOsE"),
+        (SERVICE_OPEN_VALVE, "OPeN"),
+        (SERVICE_STOP_VALVE, "SToP"),
     ],
 )
 async def tests_controling_valve_by_state(
@@ -389,47 +391,28 @@ async def tests_controling_valve_by_state(
                     "name": "test",
                     "state_topic": "state-topic",
                     "command_topic": "command-topic",
-                    "stop_command_topic": "stop-command-topic",
-                    "payload_stop": "STOP",
+                    "reports_position": True,
+                    "payload_open": "OPEN",
+                    "payload_close": "CLOSE",
                 }
             }
         }
     ],
 )
-@pytest.mark.parametrize(
-    ("service", "asserted_message", "asserted_topic"),
-    [
-        (SERVICE_CLOSE_VALVE, "CLOSE", "command-topic"),
-        (SERVICE_OPEN_VALVE, "OPEN", "command-topic"),
-        (SERVICE_STOP_VALVE, "STOP", "stop-command-topic"),
-    ],
-)
-async def tests_stopping_valve_with_stop_command_topic(
+async def tests_open_close_payload_config_not_allowed(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
-    service: str,
-    asserted_message: str,
-    asserted_topic: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test controlling and stopping a valve."""
-    mqtt_mock = await mqtt_mock_entry()
+    """Test open or close payload configs fail if valve reports position."""
+    assert await mqtt_mock_entry()
 
-    state = hass.states.get("valve.test")
-    assert state.state == STATE_UNKNOWN
+    assert hass.states.get("valve.test") is None
 
-    await hass.services.async_call(
-        valve.DOMAIN,
-        service,
-        {ATTR_ENTITY_ID: "valve.test"},
-        blocking=True,
+    assert (
+        "Options `payload_open` and `payload_close` cannot be "
+        "used if the valve reports a position." in caplog.text
     )
-
-    mqtt_mock.async_publish.assert_called_once_with(
-        asserted_topic, asserted_message, 0, False
-    )
-
-    state = hass.states.get("valve.test")
-    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
@@ -502,7 +485,7 @@ async def tests_controling_valve_by_state_optimistic(
                     "state_topic": "state-topic",
                     "command_topic": "command-topic",
                     "payload_stop": "-1",
-                    "position": True,
+                    "reports_position": True,
                 }
             }
         }
@@ -553,7 +536,7 @@ async def tests_controling_valve_by_position(
                     "state_topic": "state-topic",
                     "command_topic": "command-topic",
                     "payload_stop": "-1",
-                    "position": True,
+                    "reports_position": True,
                 }
             }
         }
@@ -604,7 +587,7 @@ async def tests_controling_valve_by_set_valve_position(
                     "state_topic": "state-topic",
                     "command_topic": "command-topic",
                     "payload_stop": "-1",
-                    "position": True,
+                    "reports_position": True,
                     "optimistic": True,
                 }
             }
@@ -659,7 +642,7 @@ async def tests_controling_valve_optimistic_by_set_valve_position(
                     "state_topic": "state-topic",
                     "command_topic": "command-topic",
                     "payload_stop": "-1",
-                    "position": True,
+                    "reports_position": True,
                     "position_closed": -128,
                     "position_open": 127,
                 }
@@ -712,7 +695,7 @@ async def tests_controling_valve_with_alt_range_by_set_valve_position(
                     "name": "test",
                     "state_topic": "state-topic",
                     "command_topic": "command-topic",
-                    "position": True,
+                    "reports_position": True,
                     "position_closed": -128,
                     "position_open": 127,
                 }
@@ -765,7 +748,7 @@ async def tests_controling_valve_with_alt_range_by_position(
                     "command_topic": "command-topic",
                     "payload_stop": "STOP",
                     "optimistic": True,
-                    "position": True,
+                    "reports_position": True,
                 }
             }
         },
@@ -775,7 +758,7 @@ async def tests_controling_valve_with_alt_range_by_position(
                     "name": "test",
                     "command_topic": "command-topic",
                     "payload_stop": "STOP",
-                    "position": True,
+                    "reports_position": True,
                 }
             }
         },
@@ -829,7 +812,7 @@ async def tests_controling_valve_by_position_optimistic(
                     "state_topic": "state-topic",
                     "command_topic": "command-topic",
                     "payload_stop": "-1",
-                    "position": True,
+                    "reports_position": True,
                     "optimistic": True,
                     "position_closed": -128,
                     "position_open": 127,

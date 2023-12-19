@@ -71,9 +71,7 @@ from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_POSITION = "position"
-
-CONF_STOP_COMMAND_TOPIC = "stop_command_topic"
+CONF_REPORTS_POSITION = "reports_position"
 
 DEFAULT_NAME = "MQTT Valve"
 
@@ -84,36 +82,46 @@ MQTT_VALVE_ATTRIBUTES_BLOCKED = frozenset(
 )
 
 
+def _validate_valve_payload_options(config: ConfigType) -> ConfigType:
+    """Validate the use of payload close and open options."""
+    if config[CONF_REPORTS_POSITION] and (
+        CONF_PAYLOAD_CLOSE in config or CONF_PAYLOAD_OPEN in config
+    ):
+        raise vol.Invalid(
+            "Options `payload_open` and `payload_close` cannot be "
+            "used if the valve reports a position."
+        )
+    return config
+
+
 _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
-        vol.Optional(CONF_POSITION, default=False): cv.boolean,
         vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-        vol.Optional(CONF_PAYLOAD_CLOSE, default=DEFAULT_PAYLOAD_CLOSE): cv.string,
-        vol.Optional(CONF_PAYLOAD_OPEN, default=DEFAULT_PAYLOAD_OPEN): cv.string,
+        vol.Optional(CONF_PAYLOAD_CLOSE): cv.string,
+        vol.Optional(CONF_PAYLOAD_OPEN): cv.string,
         vol.Optional(CONF_PAYLOAD_STOP): vol.Any(cv.string, None),
         vol.Optional(CONF_POSITION_CLOSED, default=DEFAULT_POSITION_CLOSED): int,
         vol.Optional(CONF_POSITION_OPEN, default=DEFAULT_POSITION_OPEN): int,
+        vol.Optional(CONF_REPORTS_POSITION, default=False): cv.boolean,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         vol.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED): cv.string,
         vol.Optional(CONF_STATE_CLOSING, default=STATE_CLOSING): cv.string,
         vol.Optional(CONF_STATE_OPEN, default=STATE_OPEN): cv.string,
         vol.Optional(CONF_STATE_OPENING, default=STATE_OPENING): cv.string,
         vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_STOP_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA_MODERN = vol.All(
-    _PLATFORM_SCHEMA_BASE,
-)
+PLATFORM_SCHEMA_MODERN = vol.All(_PLATFORM_SCHEMA_BASE, _validate_valve_payload_options)
 
 DISCOVERY_SCHEMA = vol.All(
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+    _validate_valve_payload_options,
 )
 
 
@@ -152,7 +160,7 @@ class MqttValve(MqttEntity, ValveEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """Set up valve from config."""
-        self._attr_reports_position = config[CONF_POSITION]
+        self._attr_reports_position = config[CONF_REPORTS_POSITION]
         self._range = (
             self._config[CONF_POSITION_CLOSED] + 1,
             self._config[CONF_POSITION_OPEN],
@@ -186,7 +194,7 @@ class MqttValve(MqttEntity, ValveEntity):
         if has_command_topic := (config.get(CONF_COMMAND_TOPIC) is not None):
             supported_features |= ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
 
-        if config[CONF_POSITION] and has_command_topic is not None:
+        if config[CONF_REPORTS_POSITION] and has_command_topic is not None:
             supported_features |= ValveEntityFeature.SET_POSITION
         if config.get(CONF_PAYLOAD_STOP) is not None:
             supported_features |= ValveEntityFeature.STOP
@@ -244,7 +252,7 @@ class MqttValve(MqttEntity, ValveEntity):
                 state = STATE_OPEN
             elif state_payload == self._config[CONF_STATE_CLOSED]:
                 state = STATE_CLOSED
-            if self._config[CONF_POSITION] and (
+            if self._config[CONF_REPORTS_POSITION] and (
                 state is None or position_payload != state_payload
             ):
                 try:
@@ -288,7 +296,9 @@ class MqttValve(MqttEntity, ValveEntity):
 
         This method is a coroutine.
         """
-        payload = self._command_template(self._config[CONF_PAYLOAD_OPEN])
+        payload = self._command_template(
+            self._config.get(CONF_PAYLOAD_OPEN, DEFAULT_PAYLOAD_OPEN)
+        )
         await self.async_publish(
             self._config[CONF_COMMAND_TOPIC],
             payload,
@@ -306,7 +316,9 @@ class MqttValve(MqttEntity, ValveEntity):
 
         This method is a coroutine.
         """
-        payload = self._command_template(self._config[CONF_PAYLOAD_CLOSE])
+        payload = self._command_template(
+            self._config.get(CONF_PAYLOAD_CLOSE, DEFAULT_PAYLOAD_CLOSE)
+        )
         await self.async_publish(
             self._config[CONF_COMMAND_TOPIC],
             payload,
@@ -325,10 +337,8 @@ class MqttValve(MqttEntity, ValveEntity):
         This method is a coroutine.
         """
         payload = self._command_template(self._config[CONF_PAYLOAD_STOP])
-        if (command_topic := self._config.get(CONF_STOP_COMMAND_TOPIC)) is None:
-            command_topic = self._config[CONF_COMMAND_TOPIC]
         await self.async_publish(
-            command_topic,
+            self._config[CONF_COMMAND_TOPIC],
             payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
