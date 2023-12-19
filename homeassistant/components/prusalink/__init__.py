@@ -60,10 +60,8 @@ async def _migrate_to_version_2(
     try:
         await api.get_info()
     except InvalidAuth:
-        # We don't know for sure if the firmware is actually outdated
-        # If we hit an InvalidAuth error after the user configured this integration
-        # (where we already checked that credentials are correct)
-        # then its most likely an issue with unsupported firmware.
+        # We are unable to reach the new API which usually means
+        # that the user is running an outdated firmware version
         ir.async_create_issue(
             hass,
             DOMAIN,
