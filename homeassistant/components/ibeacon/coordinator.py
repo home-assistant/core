@@ -146,6 +146,9 @@ class IBeaconCoordinator:
         self._major_minor_by_uuid: dict[str, set[tuple[int, int]]] = {}
 
         # iBeacons from devices with no name
+        self._allow_nameless_uuids = set(
+            entry.options.get(CONF_ALLOW_NAMELESS_UUIDS, [])
+        )
         self._ignored_nameless_by_uuid: dict[str, set[str]] = {}
 
         self._entry.add_update_listener(self.async_config_entry_updated)
@@ -312,7 +315,7 @@ class IBeaconCoordinator:
         # Reject creating new trackers if the name is not set (unless the uuid is allowlisted).
         if (
             new
-            and uuid not in self._entry.options.get(CONF_ALLOW_NAMELESS_UUIDS, [])
+            and uuid not in self._allow_nameless_uuids
             and (
                 service_info.device.name is None
                 or service_info.device.name.replace("-", ":")
@@ -456,7 +459,11 @@ class IBeaconCoordinator:
     ) -> None:
         """Restore ignored nameless beacons when the allowlist is updated."""
 
-        for uuid in self._entry.options.get(CONF_ALLOW_NAMELESS_UUIDS, []):
+        self._allow_nameless_uuids = set(
+            self._entry.options.get(CONF_ALLOW_NAMELESS_UUIDS, [])
+        )
+
+        for uuid in self._allow_nameless_uuids:
             for address in self._ignored_nameless_by_uuid.pop(uuid, set()):
                 _LOGGER.debug(
                     "restoring nameless iBeacon %s from address %s", uuid, address
