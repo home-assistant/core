@@ -29,7 +29,7 @@ class TailwindDoorEntity(CoordinatorEntity[TailwindDataUpdateCoordinator]):
     """Defines an Tailwind door entity.
 
     These are the entities that belong to a specific garage door opener
-    that is through to the Tailwind controller.
+    that is connected via the Tailwind controller.
     """
 
     _attr_has_entity_name = True
