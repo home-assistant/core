@@ -398,7 +398,6 @@ def get_entities(
                         native_unit_of_measurement=PERCENTAGE,
                         translation_key=f"wetness_{s_id}",
                     )
-                    _LOGGER.info(description.translation_key)
             override_key = None
             if description.override_key:
                 override_key = description.override_key(device_id, options)

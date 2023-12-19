@@ -272,7 +272,9 @@ async def async_setup_entry(
             cleanup_excluded_entity(coordinator, DOMAIN, chem_sensor_data_path)
             continue
         if gateway.get_data(*chem_sensor_data_path):
-            chem_sensor_description.entity_category = EntityCategory.DIAGNOSTIC
+            chem_sensor_description = dataclasses.replace(
+                chem_sensor_description, entity_category=EntityCategory.DIAGNOSTIC
+            )
             entities.append(ScreenLogicPushSensor(coordinator, chem_sensor_description))
 
     scg_sensor_description: ScreenLogicSensorDescription
@@ -285,7 +287,9 @@ async def async_setup_entry(
             cleanup_excluded_entity(coordinator, DOMAIN, scg_sensor_data_path)
             continue
         if gateway.get_data(*scg_sensor_data_path):
-            scg_sensor_description.entity_category = EntityCategory.DIAGNOSTIC
+            scg_sensor_description = dataclasses.replace(
+                scg_sensor_description, entity_category=EntityCategory.DIAGNOSTIC
+            )
             entities.append(ScreenLogicSensor(coordinator, scg_sensor_description))
 
     async_add_entities(entities)
