@@ -152,9 +152,10 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_step_finish_config(self) -> FlowResult:
         """Finish the configuration setup."""
-        romy_info: dict[str, Any] = {}
-        romy_info[CONF_HOST] = self.host
-        romy_info[CONF_PASSWORD] = self.password
         return self.async_create_entry(
-            title=self.robot_name_given_by_user, data=romy_info
+            title=self.robot_name_given_by_user,
+            data={
+                CONF_HOST: self.host,
+                CONF_PASSWORD: self.password,
+            }
         )
