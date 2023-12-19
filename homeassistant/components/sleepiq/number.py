@@ -24,7 +24,7 @@ from .coordinator import SleepIQData, SleepIQDataUpdateCoordinator
 from .entity import SleepIQBedEntity, sleeper_for_side
 
 
-@dataclass
+@dataclass(frozen=True)
 class SleepIQNumberEntityDescriptionMixin:
     """Mixin to describe a SleepIQ number entity."""
 
@@ -34,7 +34,7 @@ class SleepIQNumberEntityDescriptionMixin:
     get_unique_id_fn: Callable[[SleepIQBed, Any], str]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SleepIQNumberEntityDescription(
     NumberEntityDescription, SleepIQNumberEntityDescriptionMixin
 ):
