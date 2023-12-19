@@ -10,7 +10,7 @@ import functools
 import logging
 from random import randint
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Self, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Self, TypedDict, TypeVar, cast
 
 from . import data_entry_flow, loader
 from .components import persistent_notification
@@ -1529,13 +1529,17 @@ def _async_abort_entries_match(
             raise data_entry_flow.AbortFlow("already_configured")
 
 
-class ConfigEntryContext(FlowContext, total=False):
-    """Context of a flow."""
+class _ConfigEntryContext(TypedDict, total=False):
+    """Additional context for a config entry flow."""
 
     unique_id: str | None
     confirm_only: bool
     entry_id: str
     title_placeholders: dict[str, str]
+
+
+class ConfigEntryContext(FlowContext, _ConfigEntryContext):
+    """Context for a config entry flow."""
 
 
 class ConfigFlow(data_entry_flow.FlowHandler):
@@ -1875,7 +1879,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return result
 
 
-class OptionsFlowContext(FlowContext, total=False):
+class OptionsFlowContext(FlowContext):
     """Context of a options flow."""
 
 
