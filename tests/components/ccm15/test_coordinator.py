@@ -6,6 +6,7 @@ from ccm15 import CCM15DeviceState, CCM15SlaveDevice
 import pytest
 
 from homeassistant.components.ccm15 import CCM15Coordinator
+from homeassistant.components.ccm15.climate import CCM15Climate
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE,
     FAN_AUTO,
@@ -42,7 +43,9 @@ async def test_coordinator(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
         await coordinator.async_refresh()
 
     data = coordinator.data
-    devices = coordinator.get_devices()
+    devices = []
+    for ac_index in data.devices:
+        devices.append(CCM15Climate(coordinator.get_host(), ac_index, coordinator))
 
     assert len(data.devices) == 2
     assert len(devices) == 2
