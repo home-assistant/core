@@ -326,8 +326,6 @@ class CloudClient(Interface):
             issue_id=identifier,
             translation_key=translation_key,
             translation_placeholders=placeholders,
-            severity=IssueSeverity.ERROR
-            if severity == "error"
-            else IssueSeverity.WARNING,
+            severity=IssueSeverity(severity),
             is_fixable=False,
         )
