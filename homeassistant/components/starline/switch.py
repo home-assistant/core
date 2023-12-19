@@ -15,7 +15,7 @@ from .const import DOMAIN
 from .entity import StarlineEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class StarlineRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -23,7 +23,7 @@ class StarlineRequiredKeysMixin:
     icon_off: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class StarlineSwitchEntityDescription(
     SwitchEntityDescription, StarlineRequiredKeysMixin
 ):

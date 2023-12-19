@@ -466,7 +466,7 @@ bleak==0.21.1
 blebox-uniapi==2.2.0
 
 # homeassistant.components.blink
-blinkpy==0.22.3
+blinkpy==0.22.4
 
 # homeassistant.components.bluemaestro
 bluemaestro-ble==0.2.3
@@ -564,7 +564,7 @@ denonavr==0.11.4
 devialet==1.4.3
 
 # homeassistant.components.devolo_home_control
-devolo-home-control-api==0.18.2
+devolo-home-control-api==0.18.3
 
 # homeassistant.components.devolo_home_network
 devolo-plc-api==1.4.1
@@ -686,7 +686,7 @@ fritzconnection[qr]==1.13.2
 gTTS==2.2.4
 
 # homeassistant.components.gardena_bluetooth
-gardena-bluetooth==1.4.0
+gardena-bluetooth==1.4.1
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.10
@@ -791,7 +791,7 @@ habitipy==0.2.0
 habluetooth==1.0.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.74.0
+hass-nabucasa==0.75.1
 
 # homeassistant.components.conversation
 hassil==1.5.1
@@ -1666,7 +1666,7 @@ python-picnic-api==1.1.0
 python-qbittorrent==0.4.3
 
 # homeassistant.components.roborock
-python-roborock==0.36.2
+python-roborock==0.38.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36

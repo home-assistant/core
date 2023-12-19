@@ -41,10 +41,20 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_device_id": "The discovered Tailwind device did not provide a device ID.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
       "unsupported_firmware": "The firmware of your Tailwind device is not supported. Please update your Tailwind device to the latest firmware version using the Tailwind app."
     }
   },
   "entity": {
+    "binary_sensor": {
+      "operational_status": {
+        "name": "Operational status",
+        "state": {
+          "off": "Locked out",
+          "on": "Operational"
+        }
+      }
+    },
     "number": {
       "brightness": {
         "name": "Status LED brightness"
