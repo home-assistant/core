@@ -165,7 +165,17 @@ class ZHADevice(LogMixin):
                 self._endpoints[ep_id] = Endpoint.new(endpoint, self)
 
         if not self.is_coordinator:
-            self.start_availability_checks()
+            keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
+            self.debug(
+                "starting availability checks - interval: %s", keep_alive_interval
+            )
+            self.unsubs.append(
+                async_track_time_interval(
+                    self.hass,
+                    self._check_available,
+                    timedelta(seconds=keep_alive_interval),
+                )
+            )
 
     @property
     def device_id(self) -> str:
@@ -420,19 +430,6 @@ class ZHADevice(LogMixin):
         device_registry = dr.async_get(self.hass)
         device_registry.async_update_device(
             self.device_id, sw_version=f"0x{sw_version:08x}"
-        )
-
-    @callback
-    def start_availability_checks(self) -> None:
-        """Start availability checks."""
-        keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
-        self.debug("starting availability checks - interval: %s", keep_alive_interval)
-        self.unsubs.append(
-            async_track_time_interval(
-                self.hass,
-                self._check_available,
-                timedelta(seconds=keep_alive_interval),
-            )
         )
 
     async def _check_available(self, *_: Any) -> None:

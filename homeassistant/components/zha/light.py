@@ -784,7 +784,11 @@ class Light(BaseLight, ZhaEntity):
             self.async_accept_signal(
                 self._level_cluster_handler, SIGNAL_SET_LEVEL, self.set_level
             )
-        self.async_start_polling()
+        refresh_interval = random.randint(*(x * 60 for x in self._REFRESH_INTERVAL))
+        self._cancel_refresh_handle = async_track_time_interval(
+            self.hass, self._refresh, timedelta(seconds=refresh_interval)
+        )
+        self.debug("started polling with refresh interval of %s", refresh_interval)
         self.async_accept_signal(
             None,
             SIGNAL_LIGHT_GROUP_STATE_CHANGED,
@@ -830,17 +834,6 @@ class Light(BaseLight, ZhaEntity):
             self._assume_group_state,
             signal_override=True,
         )
-
-    @callback
-    def async_start_polling(self) -> None:
-        """Start polling this light at a randomized interval."""
-        if self._cancel_refresh_handle is not None:
-            return
-        refresh_interval = random.randint(*(x * 60 for x in self._REFRESH_INTERVAL))
-        self._cancel_refresh_handle = async_track_time_interval(
-            self.hass, self._refresh, timedelta(seconds=refresh_interval)
-        )
-        self.debug("started polling with refresh interval of %s", refresh_interval)
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
