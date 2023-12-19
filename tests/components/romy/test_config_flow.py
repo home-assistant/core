@@ -210,7 +210,7 @@ async def test_show_user_with_locked_interface_robot_with_connection_loss(
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "user"
+        assert result["step_id"] == "password"
 
 
 # zero conf tests

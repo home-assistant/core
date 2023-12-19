@@ -1,8 +1,6 @@
 """Config flow for ROMY integration."""
 from __future__ import annotations
 
-from typing import Any
-
 import romy
 import voluptuous as vol
 
@@ -13,20 +11,6 @@ from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, LOGGER
-
-
-def _schema_with_host() -> vol.Schema:
-    return vol.Schema(
-        {
-            vol.Required(CONF_HOST): cv.string,
-        },
-    )
-
-
-def _schema_with_password() -> vol.Schema:
-    return vol.Schema(
-        {vol.Required(CONF_PASSWORD): vol.All(cv.string, vol.Length(8))},
-    )
 
 
 class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -65,7 +49,13 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self._async_step_finish_config()
 
         return self.async_show_form(
-            step_id="user", data_schema=_schema_with_host(), errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST): cv.string,
+                },
+            ),
+            errors=errors,
         )
 
     async def async_step_password(
@@ -79,19 +69,19 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             new_romy = await romy.create_romy(self.host, self.password)
 
             if not new_romy.is_initialized:
-                errors[CONF_HOST] = "cannot_connect"
-                return self.async_show_form(
-                    step_id="user", data_schema=_schema_with_host(), errors=errors
-                )
-
-            if not new_romy.is_unlocked:
+                errors[CONF_PASSWORD] = "cannot_connect"
+            elif not new_romy.is_unlocked:
                 errors[CONF_PASSWORD] = "invalid_auth"
 
             if not errors:
                 return await self._async_step_finish_config()
 
         return self.async_show_form(
-            step_id="password", data_schema=_schema_with_password(), errors=errors
+            step_id="password",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_PASSWORD): vol.All(cv.string, vol.Length(8))},
+            ),
+            errors=errors,
         )
 
     async def async_step_zeroconf(
@@ -155,5 +145,5 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data={
                 CONF_HOST: self.host,
                 CONF_PASSWORD: self.password,
-            }
+            },
         )
