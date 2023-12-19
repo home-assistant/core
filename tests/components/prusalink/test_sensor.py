@@ -155,7 +155,7 @@ async def test_sensors_active_job(
 
     state = hass.states.get("sensor.mock_title_progress")
     assert state is not None
-    assert state.state == "50.0"
+    assert state.state == "37.0"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
 
     state = hass.states.get("sensor.mock_title_filename")
@@ -164,12 +164,12 @@ async def test_sensors_active_job(
 
     state = hass.states.get("sensor.mock_title_print_start")
     assert state is not None
-    assert state.state == "2022-08-27T13:50:00+00:00"
+    assert state.state == "2022-08-27T01:46:53+00:00"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
 
     state = hass.states.get("sensor.mock_title_print_finish")
     assert state is not None
-    assert state.state == "2022-08-27T14:20:00+00:00"
+    assert state.state == "2022-08-28T10:17:00+00:00"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TIMESTAMP
 
     state = hass.states.get("sensor.mock_title_hotend_fan")

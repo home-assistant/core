@@ -89,7 +89,7 @@ def mock_get_status_printing(hass):
     resp = {
         "job": {
             "id": 129,
-            "progress": 50.00,
+            "progress": 37.00,
             "time_remaining": 1200,
             "time_printing": 600,
         },
@@ -125,9 +125,9 @@ def mock_job_api_printing(hass):
     resp = {
         "id": 129,
         "state": "PRINTING",
-        "progress": 50.00,
-        "time_remaining": 1200,
-        "time_printing": 600,
+        "progress": 37.00,
+        "time_remaining": 73020,
+        "time_printing": 43987,
         "file": {
             "refs": {
                 "icon": "/thumb/s/usb/TabletStand3~4.BGC",
