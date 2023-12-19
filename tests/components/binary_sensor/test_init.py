@@ -14,15 +14,12 @@ from tests.common import (
     MockConfigEntry,
     MockModule,
     MockPlatform,
+    import_and_test_deprecated_constant_enum,
     mock_config_flow,
     mock_integration,
     mock_platform,
-    validate_deprecated_constant_enum,
 )
 from tests.testing_config.custom_components.test.binary_sensor import MockBinarySensor
-from tests.testing_config.custom_components.test_constant_deprecation.binary_sensor import (
-    import_deprecated,
-)
 
 TEST_DOMAIN = "test"
 
@@ -209,7 +206,6 @@ def test_deprecated_constant_device_class(
     device_class: binary_sensor.BinarySensorDeviceClass,
 ) -> None:
     """Test deprecated binary sensor device classes."""
-    import_deprecated(device_class)
-    validate_deprecated_constant_enum(
+    import_and_test_deprecated_constant_enum(
         caplog, binary_sensor, device_class, "DEVICE_CLASS_", "2025.1"
     )

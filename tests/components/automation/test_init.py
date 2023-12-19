@@ -59,14 +59,11 @@ from tests.common import (
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
+    import_and_test_deprecated_constant,
     mock_restore_cache,
-    validate_deprecated_constant,
 )
 from tests.components.logbook.common import MockRow, mock_humanify
 from tests.components.repairs import get_repairs
-from tests.testing_config.custom_components.test_constant_deprecation.util import (
-    import_and_test_deprecated_costant,
-)
 from tests.typing import WebSocketGenerator
 
 
@@ -2586,7 +2583,6 @@ def test_deprecated_constants(
     replacement: Any,
 ) -> None:
     """Test deprecated binary sensor device classes."""
-    import_and_test_deprecated_costant(automation, constant_name, replacement)
-    validate_deprecated_constant(
-        caplog, automation, constant_name, replacement.__name__, "2025.1"
+    import_and_test_deprecated_constant(
+        caplog, automation, constant_name, replacement.__name__, replacement, "2025.1"
     )
