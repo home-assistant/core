@@ -447,16 +447,10 @@ class ESPHomeManager:
                 entry, data={**entry.data, CONF_DEVICE_NAME: device_info.name}
             )
 
-        entry_data.device_info = device_info
-        assert cli.api_version is not None
-        entry_data.api_version = cli.api_version
-        entry_data.available = True
-        # Reset expected disconnect flag on successful reconnect
-        # as it will be flipped to False on unexpected disconnect.
-        #
-        # We use this to determine if a deep sleep device should
-        # be marked as unavailable or not.
-        entry_data.expected_disconnect = True
+        api_version = cli.api_version
+        assert api_version is not None, "API version must be set"
+        entry_data.async_on_connect(device_info, api_version)
+
         if device_info.name:
             reconnect_logic.name = device_info.name
 
@@ -472,10 +466,10 @@ class ESPHomeManager:
         setup_coros_with_disconnect_callbacks: list[
             Coroutine[Any, Any, CALLBACK_TYPE]
         ] = []
-        if device_info.bluetooth_proxy_feature_flags_compat(cli.api_version):
+        if device_info.bluetooth_proxy_feature_flags_compat(api_version):
             setup_coros_with_disconnect_callbacks.append(
                 async_connect_scanner(
-                    hass, entry, cli, entry_data, self.domain_data.bluetooth_cache
+                    hass, entry_data, cli, device_info, self.domain_data.bluetooth_cache
                 )
             )
 
@@ -507,7 +501,7 @@ class ESPHomeManager:
             entry_data.disconnect_callbacks.add(cancel_callback)
 
         hass.async_create_task(entry_data.async_save_to_store())
-        _async_check_firmware_version(hass, device_info, entry_data.api_version)
+        _async_check_firmware_version(hass, device_info, api_version)
         _async_check_using_api_password(hass, device_info, bool(self.password))
 
     async def on_disconnect(self, expected_disconnect: bool) -> None:

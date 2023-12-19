@@ -19,7 +19,7 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .conftest import TEST_CAM_MODEL, TEST_HOST_MODEL, TEST_NVR_NAME
+from .conftest import TEST_CAM_MODEL, TEST_HOST_MODEL, TEST_MAC, TEST_NVR_NAME
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -170,6 +170,42 @@ async def test_cleanup_disconnected_cams(
     )
     device_models = [device.model for device in device_entries]
     assert sorted(device_models) == sorted(expected_models)
+
+
+async def test_cleanup_deprecated_entities(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test deprecated ir_lights light entity is cleaned."""
+    reolink_connect.channels = [0]
+    ir_id = f"{TEST_MAC}_0_ir_lights"
+
+    entity_registry.async_get_or_create(
+        domain=Platform.LIGHT,
+        platform=const.DOMAIN,
+        unique_id=ir_id,
+        config_entry=config_entry,
+        suggested_object_id=ir_id,
+        disabled_by=None,
+    )
+
+    assert entity_registry.async_get_entity_id(Platform.LIGHT, const.DOMAIN, ir_id)
+    assert (
+        entity_registry.async_get_entity_id(Platform.SWITCH, const.DOMAIN, ir_id)
+        is None
+    )
+
+    # setup CH 0 and NVR switch entities/device
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(Platform.LIGHT, const.DOMAIN, ir_id) is None
+    )
+    assert entity_registry.async_get_entity_id(Platform.SWITCH, const.DOMAIN, ir_id)
 
 
 async def test_no_repair_issue(

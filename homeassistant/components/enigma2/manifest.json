@@ -1,7 +1,7 @@
 {
   "domain": "enigma2",
   "name": "Enigma2 (OpenWebif)",
-  "codeowners": ["@fbradyirl"],
+  "codeowners": ["@autinerd"],
   "documentation": "https://www.home-assistant.io/integrations/enigma2",
   "iot_class": "local_polling",
   "loggers": ["openwebif"],

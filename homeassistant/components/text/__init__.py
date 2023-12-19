@@ -98,8 +98,7 @@ class TextMode(StrEnum):
     TEXT = "text"
 
 
-@dataclass
-class TextEntityDescription(EntityDescription):
+class TextEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes text entities."""
 
     native_min: int = 0
