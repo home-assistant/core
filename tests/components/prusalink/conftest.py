@@ -90,8 +90,8 @@ def mock_get_status_printing(hass):
         "job": {
             "id": 129,
             "progress": 37.00,
-            "time_remaining": 1200,
-            "time_printing": 600,
+            "time_remaining": 73020,
+            "time_printing": 43987,
         },
         "storage": {"path": "/usb/", "name": "usb", "read_only": False},
         "printer": {
