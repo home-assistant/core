@@ -85,14 +85,7 @@ class BlockShellyValve(ShellyBlockAttributeEntity, ValveEntity):
         """Initialize block valve."""
         super().__init__(coordinator, block, attribute, description)
         self.control_result: dict[str, Any] | None = None
-
-    @property
-    def is_closed(self) -> bool:
-        """Return if the valve is closed or not."""
-        if self.control_result:
-            return self.control_result["state"] == "closed"
-
-        return self.attribute_value == "closed"
+        self._attr_is_closed = bool(self.attribute_value == "closed")
 
     @property
     def is_closing(self) -> bool:
@@ -124,4 +117,5 @@ class BlockShellyValve(ShellyBlockAttributeEntity, ValveEntity):
     def _update_callback(self) -> None:
         """When device updates, clear control result that overrides state."""
         self.control_result = None
+        self._attr_is_closed = bool(self.attribute_value == "closed")
         super()._update_callback()
