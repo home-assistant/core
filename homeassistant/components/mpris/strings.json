@@ -50,5 +50,14 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "remove_clones": "Remove additional instances of a multi-instance media player as they exit."
+        }
+      }
+    }
   }
 }

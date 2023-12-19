@@ -35,6 +35,7 @@ from .const import (
     EXPECTED_HEARTBEAT_FREQUENCY,
     LOGGER as _LOGGER,
 )
+from .helpers import get_remove_clones
 
 PLAYER_STATE_MAP: dict[Any, MediaPlayerState] = {
     mpris_pb2.PlayerStatus.GONE: MediaPlayerState.OFF,  # type: ignore[attr-defined]
@@ -50,18 +51,6 @@ SUPPORTED_MINIMAL = (
     | MediaPlayerEntityFeature.PLAY
     | MediaPlayerEntityFeature.STOP
 )
-SUPPORTED_TURN_OFF = MediaPlayerEntityFeature.TURN_OFF
-SUPPORTED_TURN_ON = MediaPlayerEntityFeature.TURN_ON
-
-# Enable to remove clones (second / third, nth instances)
-# of any player when the player exits or the integration
-# reconnects to an agent and these instances of the player
-# are no longer running.
-# Not enabled by default because events in the logbook
-# disappear when the player is removed.
-# This will become a setting configurable through the UI
-# once it's figured out how to add settings.
-REMOVE_CLONES_WHILE_RUNNING = False
 
 WAIT_BETWEEN_RECONNECTS: Final = 5
 
@@ -79,49 +68,45 @@ async def async_setup_entry(
 ) -> None:
     """Set up all the media players for the MPRIS integration."""
     # Suppress circular import induced by merging media_player_entity_manager.py
-    # into media_player.py.  HassmprisData refers to MPRISCoordinator
-    # and async_setup_entry refers to HassmprisData.
-    from .models import HassmprisData  # pylint: disable=import-outside-toplevel
+    # into media_player.py.  MPRISData refers to MPRISCoordinator
+    # and async_setup_entry refers to MPRISData.
+    from .models import MPRISData  # pylint: disable=import-outside-toplevel
 
-    component_data = cast(
-        HassmprisData,
+    mpris_data = cast(
+        MPRISData,
         hass.data[DOMAIN][config_entry.entry_id],
     )
-    mpris_client = component_data.client
-    manager = MPRISCoordinator(
+    mpris_client = mpris_data.client
+    coordinator = MPRISCoordinator(
         hass,
         config_entry,
         mpris_client,
         async_add_entities,
     )
-    await manager.start()
-    component_data.entity_manager = manager
 
-    async def _async_stop_manager(*unused_args: Any) -> None:
-        # The following is a very simple trick to delete the
-        # reference to the manager once the manager is stopped
-        # once via this mechanism.
-        # That way, if the manager is stopped because the entry
-        # was unloaded (e.g. integration deleted), this will
-        # not try to stop the manager again.
-        if component_data.entity_manager:
-            _LOGGER.debug("Stopping entity manager")
-            await component_data.entity_manager.stop()
-            _LOGGER.debug("Entity manager stopped")
-            component_data.entity_manager = None
+    async def _async_stop_coordinator(*unused_args: Any) -> None:
+        """Stop the coordinator."""
+        _LOGGER.debug("Stopping entity manager")
+        await coordinator.stop()
+        _LOGGER.debug("Entity manager stopped")
 
-    component_data.unloaders.append(_async_stop_manager)
+    # Start the manager
+    await coordinator.start()
+    # Register the stop of the coordinator through the MPRIS data
+    # unloaders mechanism to run when the entry unloads or HA
+    # shuts down, but before cutting the connection to the client.
+    mpris_data.unloaders.append(_async_stop_coordinator)
 
 
-class HASSMPRISEntity(CoordinatorEntity["MPRISCoordinator"], MediaPlayerEntity):
+class MPRISEntity(CoordinatorEntity["MPRISCoordinator"], MediaPlayerEntity):
     """Represents an MPRIS media player entity."""
 
     _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_supported_features = SUPPORTED_MINIMAL
     _attr_playback_rate: float = 1.0
-    _attr_should_poll: bool = False
     _attr_has_entity_name = True
 
+    # For this coordinator entity, the context is a string.
     coordinator_context: str
 
     def __init__(
@@ -147,13 +132,20 @@ class HASSMPRISEntity(CoordinatorEntity["MPRISCoordinator"], MediaPlayerEntity):
 
     @property
     def available(self) -> bool:
-        """Return True if entity is available.  Overridden from Coordinator."""
+        """Return True if entity is available.
+
+        Overridden from CoordinatorEntity which looks at last_update_successful
+        in the coordinator.  We do not use this because we let the coordinator
+        push the availability to the entity, as availability may be more than
+        just "coordinator succeeded last time" -- there is technically no "last
+        time" the coordinator succeeded, since the updates stream from the agent.
+        """
         return self._attr_available
 
     @callback
     def _handle_coordinator_update(self) -> None:
         if self.coordinator_context not in self.coordinator.data:
-            # This player has been removed.  Ignore this.
+            # There is no update for this player.  Pass.
             return
 
         updated = False
@@ -243,12 +235,11 @@ class HASSMPRISEntity(CoordinatorEntity["MPRISCoordinator"], MediaPlayerEntity):
                     self._debug(
                         "Setting media position to %s", self._attr_media_position
                     )
-                # We update the time that the position update was sent
-                # from the server, so that UI can keep accurate track
-                # of where the play head is.  Think of someone seeking
-                # to second 33 of a music track twice in a row.  If we
-                # did not update this timestamp, then the play head UI
-                # shows would be in second 66.
+                # We update the "updated_at" time field, so that UI can
+                # keep accurate track of where the play head is.
+                # Think of someone seeking to second 33 of a music track
+                # twice in a row.  If we did not update this timestamp,
+                # then what the play head UI shows would be in second 66.
                 self._attr_media_position_updated_at = dt_util.utcnow()
 
             if data.HasField("properties"):  # type: ignore[attr-defined]
@@ -410,7 +401,7 @@ class MPRISCoordinator(
         self._client = mpris_client
         self._shutdown: asyncio.Future[bool] = asyncio.Future()
         self._started = False
-        self._deferred_task: asyncio.Task | None = None
+        self._coalescer_task: asyncio.Task[None] | None = None
 
     @property
     def client(self) -> hassmpris_client.AsyncMPRISClient:
@@ -492,15 +483,15 @@ class MPRISCoordinator(
 
         Coalescence happens in increments of 20 milliseconds.
         """
-        if self._deferred_task is not None:
-            self._deferred_task.cancel()
+        if self._coalescer_task is not None:
+            self._coalescer_task.cancel()
 
         async def update() -> None:
             await asyncio.sleep(0.02)
             self.async_set_updated_data(self.data)
-            self._deferred_task = None
+            self._coalescer_task = None
 
-        self._deferred_task = self.hass.loop.create_task(update())
+        self._coalescer_task = self.hass.async_create_task(update())
 
     async def _monitor_updates(self) -> AsyncGenerator[None, None]:
         """Obtain a real-time feed of player updates."""
@@ -560,7 +551,7 @@ class MPRISCoordinator(
 
         if player_id not in self.data:
             _LOGGER.debug("Adding player %s", player_id)
-            entity = HASSMPRISEntity(
+            entity = MPRISEntity(
                 self,
                 player_id,
                 self.config_entry.entry_id,
@@ -595,31 +586,51 @@ class MPRISCoordinator(
         return (
             name_without_2 != player_id
             and name_without_2 in self.data
-            and REMOVE_CLONES_WHILE_RUNNING
+            and get_remove_clones(self.config_entry)
         )
 
     def _add_players_not_running(self) -> None:
         for entry in self._player_registry_entries():
             player_id = _get_player_id(entry)
             if self._should_remove(player_id):
-                _LOGGER.debug("Removing player %s from registry", player_id)
-                if player_id in self.data:
-                    del self.data[player_id]
-                er.async_get(self.hass).async_remove(entry.entity_id)
-            elif player_id not in self.data:
-                _LOGGER.debug("Resuscitating player from registry %s", player_id)
-                entity = HASSMPRISEntity(
+                if player_id not in self.data:
+                    _LOGGER.debug(
+                        "Player %s from registry was never initializd, removing from registry",
+                        player_id,
+                    )
+                    er.async_get(self.hass).async_remove(entry.entity_id)
+                elif not self.data[player_id]:
+                    _LOGGER.debug(
+                        "Player %s from registry received no updates upon reconnect, removing from registry",
+                        player_id,
+                    )
+                    er.async_get(self.hass).async_remove(entry.entity_id)
+                continue
+
+            if player_id not in self.data:
+                _LOGGER.debug(
+                    "Resuscitating player from registry %s and setting it to off",
+                    player_id,
+                )
+                entity = MPRISEntity(
                     self,
                     player_id,
                     self.config_entry.entry_id,
                 )
                 self.async_add_entities([entity])
-                self.data[player_id] = []
-            elif not self.data[player_id]:
-                _LOGGER.debug("Setting absent player %s to off", player_id)
+                # This player is now officially off.
                 self.data[player_id] = [
                     mpris_pb2.MPRISPlayerUpdate(
                         player_id=player_id,
                         status=mpris_pb2.PlayerStatus.GONE,  # type: ignore[attr-defined]
-                    ),
+                    )
+                ]
+            elif not self.data[player_id]:
+                _LOGGER.debug("Setting absent player %s to off", player_id)
+                # This player is now officially off.
+                self.data[player_id] = [
+                    mpris_pb2.MPRISPlayerUpdate(
+                        player_id=player_id,
+                        status=mpris_pb2.PlayerStatus.GONE,  # type: ignore[attr-defined]
+                    )
                 ]

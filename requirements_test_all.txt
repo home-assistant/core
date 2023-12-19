@@ -780,7 +780,7 @@ hass-nabucasa==0.74.0
 # homeassistant.components.conversation
 hassil==1.5.1
 
-# homeassistant.components.hassmpris
+# homeassistant.components.mpris
 hassmpris_client==0.0.25
 
 # homeassistant.components.jewish_calendar

@@ -481,9 +481,9 @@ omit =
     homeassistant/components/harmony/data.py
     homeassistant/components/harmony/remote.py
     homeassistant/components/harmony/util.py
-    homeassistant/components/hassmpris/__init__.py
-    homeassistant/components/hassmpris/media_player.py
-    homeassistant/components/hassmpris/models.py
+    homeassistant/components/mpris/__init__.py
+    homeassistant/components/mpris/media_player.py
+    homeassistant/components/mpris/models.py
     homeassistant/components/haveibeenpwned/sensor.py
     homeassistant/components/heatmiser/climate.py
     homeassistant/components/hikvision/binary_sensor.py

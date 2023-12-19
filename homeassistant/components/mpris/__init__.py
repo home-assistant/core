@@ -1,19 +1,19 @@
 """The MPRIS media playback remote control integration."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import cast
 
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
 import hassmpris_client
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .cert_data import CertStore
 from .const import CONF_HOST, CONF_MPRIS_PORT, DOMAIN, LOGGER as _LOGGER
-from .models import ConfigEntryData, HassmprisData
+from .models import ConfigEntryData, MPRISData
 
 PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
 
@@ -45,53 +45,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("Pinging the MPRIS agent")
         await clnt.ping()
         _LOGGER.info("Successfully pinged the MPRIS agent")
-
     except hassmpris_client.Unauthenticated as exc:
         raise ConfigEntryAuthFailed(exc) from exc
     except Exception as exc:
         raise ConfigEntryNotReady(str(exc)) from exc
 
     hass.data.setdefault(DOMAIN, {})
-    component_data = hass.data[DOMAIN][entry.entry_id] = HassmprisData(
-        clnt, [], None, None
-    )
+    mpris_data = hass.data[DOMAIN][entry.entry_id] = MPRISData(clnt, [])
 
-    async def _run_unloaders(*unused_args: Any) -> None:
-        _LOGGER.debug("Running unloaders")
-        while component_data.unloaders:
-            await component_data.unloaders.pop()()
-        _LOGGER.debug("Unloaders complete")
-
-    component_data.unload_func = _run_unloaders
+    async def on_unload(_: Event) -> None:
+        await _run_unloaders(mpris_data)
 
     entry.async_on_unload(
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP,
-            component_data.unload_func,
-        )
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_unload)
     )
 
-    async def async_close_client() -> None:
-        _LOGGER.debug("Closing connection to agent")
-        await component_data.client.close()
-        _LOGGER.debug("Connection closed")
-
-    component_data.unloaders.append(async_close_client)
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     return True
+
+
+async def _run_unloaders(mpris_data: MPRISData) -> None:
+    _LOGGER.debug("Running unloaders")
+    for unloader in reversed(mpris_data.unloaders):
+        await unloader()
+    _LOGGER.debug("Unloaders ran")
+    _LOGGER.debug("Closing connection to agent")
+    await mpris_data.client.close()
+    _LOGGER.debug("Connection closed")
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        component_data = cast(HassmprisData, hass.data[DOMAIN].pop(entry.entry_id))
-        unload_func = component_data.unload_func
-        if unload_func is not None:
-            await unload_func()
-            component_data.unload_func = None
-
+        mpris_data = cast(MPRISData, hass.data[DOMAIN].pop(entry.entry_id))
+        await _run_unloaders(mpris_data)
     return unload_ok
 
 

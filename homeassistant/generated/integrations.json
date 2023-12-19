@@ -2294,12 +2294,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "hassmpris": {
-      "name": "MPRIS media playback remote control",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_push"
-    },
     "havana_shade": {
       "name": "Havana Shade",
       "integration_type": "virtual",
@@ -3571,6 +3565,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "mpris": {
+      "name": "MPRIS media playback remote control",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "mqtt": {
       "name": "MQTT",

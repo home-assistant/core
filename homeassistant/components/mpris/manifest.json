@@ -1,9 +1,9 @@
 {
-  "domain": "hassmpris",
+  "domain": "mpris",
   "name": "MPRIS media playback remote control",
   "codeowners": ["@Rudd-O"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/hassmpris",
+  "documentation": "https://www.home-assistant.io/integrations/mpris",
   "iot_class": "local_push",
   "requirements": ["hassmpris_client==0.0.25"],
   "zeroconf": ["_hassmpris._tcp.local."]

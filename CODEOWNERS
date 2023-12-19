@@ -502,8 +502,6 @@ build.json @home-assistant/supervisor
 /tests/components/harmony/ @ehendrix23 @bramkragten @bdraco @mkeesey @Aohzan
 /homeassistant/components/hassio/ @home-assistant/supervisor
 /tests/components/hassio/ @home-assistant/supervisor
-/homeassistant/components/hassmpris/ @Rudd-O
-/tests/components/hassmpris/ @Rudd-O
 /homeassistant/components/hdmi_cec/ @inytar
 /tests/components/hdmi_cec/ @inytar
 /homeassistant/components/heatmiser/ @andylockran
@@ -804,6 +802,8 @@ build.json @home-assistant/supervisor
 /tests/components/motion_blinds/ @starkillerOG
 /homeassistant/components/motioneye/ @dermotduffy
 /tests/components/motioneye/ @dermotduffy
+/homeassistant/components/mpris/ @Rudd-O
+/tests/components/mpris/ @Rudd-O
 /homeassistant/components/mqtt/ @emontnemery @jbouwh
 /tests/components/mqtt/ @emontnemery @jbouwh
 /homeassistant/components/msteams/ @peroyvind

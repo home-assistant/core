@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigEntry, OptionsFlowWithConfigEntry
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
@@ -19,7 +20,7 @@ from .const import (
     CONF_CAKES_PORT,
     CONF_HOST,
     CONF_MPRIS_PORT,
-    CONF_UNIQUE_ID,
+    CONF_REMOVE_CLONES,
     DEF_CAKES_PORT,
     DEF_HOST,
     DEF_MPRIS_PORT,
@@ -36,6 +37,7 @@ from .const import (
     STEP_USER,
     STEP_ZEROCONF_CONFIRM,
 )
+from .helpers import get_remove_clones
 from .models import ConfigEntryData
 
 
@@ -100,7 +102,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._count = 0
         self._host: str = DEF_HOST
         self._title: str | None = None
-        self._unique_id: str | None = None
         self._cakes_port: int = DEF_CAKES_PORT
         self._mpris_port: int = DEF_MPRIS_PORT
         self._client_cert: Certificate | None = None
@@ -110,11 +111,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @callback
     def _get_data(self) -> ConfigEntryData:
-        assert self._unique_id is not None
         return cast(
             ConfigEntryData,
             {
-                CONF_UNIQUE_ID: self._unique_id,
                 CONF_HOST: self._host,
                 CONF_CAKES_PORT: self._cakes_port,
                 CONF_MPRIS_PORT: self._mpris_port,
@@ -136,24 +135,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         host: str,
         cakes_port: int,
         mpris_port: int,
-        unique_id: str | None = None,
     ) -> None:
         self._title = title
         self._host = host
         self._cakes_port = cakes_port
         self._mpris_port = mpris_port
-        self._unique_id = unique_id
 
-    def _get_unique_id_by_connection_data(self) -> str:
+    def _regen_unique_id(self) -> str:
         return _genuid(self._host, self._cakes_port, self._mpris_port)
-
-    def _get_unique_id_by_zeroconf(self) -> str | None:
-        return self._unique_id
-
-    def _get_any_unique_id(self) -> str:
-        if id_ := self._get_unique_id_by_zeroconf():
-            return id_
-        return self._get_unique_id_by_connection_data()
 
     def _update_server_data(self, host: str, cakes_port: int, mpris_port: int) -> None:
         self._host = host
@@ -170,20 +159,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         data = self._get_data()
 
-        # Update existing entry that has the same unique ID.
-        if zeroconf_uid := self._get_unique_id_by_zeroconf():
-            if existing_entry := await self.async_set_unique_id(zeroconf_uid):
-                _LOGGER.debug("Existing entry, unique ID: %s", existing_entry.unique_id)
-                assert existing_entry.unique_id is not None  # for type checker
-                await persist_cert_data(existing_entry.unique_id)
-                self.hass.config_entries.async_update_entry(existing_entry, data=data)
-                await self.hass.config_entries.async_reload(existing_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
-
         # Update existing entry that has the same host / ports.
-        if existing_entry := await self.async_set_unique_id(
-            self._get_unique_id_by_connection_data()
-        ):
+        if existing_entry := await self.async_set_unique_id(self._regen_unique_id()):
             _LOGGER.debug("Existing entry, generated ID: %s", existing_entry.unique_id)
             assert existing_entry.unique_id is not None  # for type checker
             await persist_cert_data(existing_entry.unique_id)
@@ -192,11 +169,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="reauth_successful")
 
         # OK, no entries found with those two identifiers.
-        # Let's set a unique ID.
-        await self.async_set_unique_id(self._get_any_unique_id())
         _LOGGER.debug("New entry")
         assert self._title, "Impossible: the title is %r" % self._title
-        await persist_cert_data(self._get_any_unique_id())
+        await persist_cert_data(self._regen_unique_id())
         return self.async_create_entry(
             title=self._title,
             data=data,
@@ -221,7 +196,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         # Do not proceed if the device is already configured by hand.
-        await self.async_set_unique_id(self._get_unique_id_by_connection_data())
+        await self.async_set_unique_id(self._regen_unique_id())
         self._abort_if_unique_id_configured()
 
         return await self.async_step_pairing()
@@ -230,14 +205,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        try:
-            assert discovery_info.host
-            assert discovery_info.port
-            assert discovery_info.hostname
-            assert discovery_info.name
-            assert discovery_info.properties
-            assert CONF_CAKES_PORT in discovery_info.properties
-        except AssertionError:
+        if (
+            not discovery_info.host
+            or not discovery_info.port
+            or not discovery_info.hostname
+            or not discovery_info.name
+            or not discovery_info.properties
+            or CONF_CAKES_PORT not in discovery_info.properties
+        ):
             _LOGGER.debug("Ignoring invalid zeroconf announcement: %s", discovery_info)
             return self.async_abort(reason=REASON_INVALID_ZEROCONF)
 
@@ -247,15 +222,34 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info.host,
             int(discovery_info.properties[CONF_CAKES_PORT]),
             int(discovery_info.port or DEF_MPRIS_PORT),
-            discovery_info.hostname,
         )
 
-        # # Do not proceed if the device is already configured by hand.
-        await self.async_set_unique_id(self._get_unique_id_by_connection_data())
-        self._abort_if_unique_id_configured()
-
-        # Do not proceed if the device is already configured by Zeroconf.
-        await self.async_set_unique_id(self._get_unique_id_by_zeroconf())
+        # Do not proceed if the device is already configured by hand
+        # or by zeroconf.
+        # User may have already added the agent by hostname manually,
+        # so we don't want to show this to the user again since the
+        # discovery is yielding a machine already added.
+        # There is a corner case we are not dealing with here, and that
+        # corner case is when the zeroconf hostname / port data has changed,
+        # indicating that the machine has changed networking, or the user
+        # of the agent machine has logged after someone else logged in
+        # (under such circumstance, the agent may decide to allocate
+        # different CAKES and MPRIS ports).
+        # Ideally, in this situation, we would detect that the agent is
+        # the same (by using some signed message in the zeroconf properties,
+        # or enforcing that the certificate fingerprint in the zeroconf
+        # properties is the same as the one we know about, which would
+        # require us to use the fingerprint as the unique ID, which is OK),
+        # then proceed to update the hostname, CAKES and MPRIS ports of any
+        # existing config entry, and reload the config entry in question.
+        # This is a corner case to be dealt with in the future rather than
+        # now, since it would require a mechanism for the integration to
+        # trust that the networking information change announced by the
+        # agent is in fact legitimate and corresponds to the existing
+        # config entry's certificate.  In the future, the zeroconf
+        # announcement will send a signed message that this integration
+        # can verify using the relevant certificate.
+        await self.async_set_unique_id(self._regen_unique_id())
         self._abort_if_unique_id_configured()
 
         return await self.async_step_zeroconf_confirm()
@@ -291,9 +285,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             entry_data[CONF_HOST],
             entry_data[CONF_CAKES_PORT],
             entry_data[CONF_MPRIS_PORT],
-            entry_data[CONF_UNIQUE_ID],
         )
-        await self.async_set_unique_id(self._get_any_unique_id())
+        await self.async_set_unique_id(self._regen_unique_id())
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -379,3 +372,34 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason=REASON_CANNOT_CONNECT)
 
         return await self._create_entry()
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> MPRISOptionsFlowHandler:
+        """Create the options flow."""
+        return MPRISOptionsFlowHandler(config_entry)
+
+
+class MPRISOptionsFlowHandler(OptionsFlowWithConfigEntry):
+    """Options flow for the MPRIS integration."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_REMOVE_CLONES,
+                        default=get_remove_clones(self.config_entry),
+                    ): bool,
+                }
+            ),
+        )

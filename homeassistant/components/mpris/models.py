@@ -1,4 +1,4 @@
-"""The hassmpris integration models."""
+"""The MPRIS integration models."""
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
@@ -7,17 +7,13 @@ from typing import Any, TypedDict
 
 import hassmpris_client
 
-from .media_player import MPRISCoordinator
-
 
 @dataclass
-class HassmprisData:
-    """Data for the hassmpris integration."""
+class MPRISData:
+    """Data for the MPRIS integration."""
 
     client: hassmpris_client.AsyncMPRISClient
     unloaders: list[Callable[[], Coroutine[Any, Any, None]]]
-    unload_func: Callable[..., Coroutine[Any, Any, None]] | None
-    entity_manager: MPRISCoordinator | None
 
 
 class ConfigEntryData(TypedDict):

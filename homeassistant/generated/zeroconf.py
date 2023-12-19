@@ -428,7 +428,7 @@ ZEROCONF = {
     ],
     "_hassmpris._tcp.local.": [
         {
-            "domain": "hassmpris",
+            "domain": "mpris",
         },
     ],
     "_homekit._tcp.local.": [

@@ -1,7 +1,7 @@
 """Test the MPRIS media playback remote control config flow."""
 import pytest
 
-from homeassistant.components.hassmpris.cert_data import CertStore
+from homeassistant.components.mpris.cert_data import CertStore
 from homeassistant.core import HomeAssistant
 
 

@@ -1,6 +1,7 @@
 """Code to persist and restore certificate data."""
 
 import os.path
+from typing import TypedDict
 
 from cryptography import x509
 from cryptography.hazmat.primitives import serialization
@@ -10,7 +11,7 @@ from cryptography.x509 import Certificate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
-from .const import CONF_CLIENT_CERT, CONF_CLIENT_KEY, CONF_TRUST_CHAIN
+from .const import CONF_CLIENT_CERT, CONF_CLIENT_KEY, CONF_TRUST_CHAIN, DOMAIN
 
 
 def _load_cert_chain(chain: bytes) -> list[Certificate]:
@@ -23,13 +24,21 @@ def _load_cert_chain(chain: bytes) -> list[Certificate]:
     return certificates
 
 
-class CertStore(Store):
+class CertData(TypedDict):
+    """The type of data stored by CertStore."""
+
+    client_cert: str
+    client_key: str
+    trust_chain: str
+
+
+class CertStore(Store[CertData]):
     """A store for certificate data used by AsyncMPRISClient."""
 
     def __init__(self, hass: HomeAssistant, unique_id: str) -> None:
         """Initialize the certificate store."""
         self.unique_id = unique_id
-        Store.__init__(self, hass, 1, "hassmpris" + os.path.sep + unique_id, True)
+        Store.__init__(self, hass, 1, DOMAIN + os.path.sep + unique_id, True)
 
     async def load_cert_data(
         self,
@@ -61,7 +70,7 @@ class CertStore(Store):
         trust_chain: list[Certificate],
     ) -> None:
         """Persist client cert, key, and trust chain for an entry."""
-        data = {
+        data: CertData = {
             CONF_CLIENT_CERT: client_cert.public_bytes(
                 serialization.Encoding.PEM
             ).decode("ascii"),
