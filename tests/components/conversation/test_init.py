@@ -873,14 +873,18 @@ async def test_http_processing_intent_conversion_not_expose_new(
 
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
 @pytest.mark.parametrize("sentence", ("turn on kitchen", "turn kitchen on"))
+@pytest.mark.parametrize("conversation_id", ("my_new_conversation", None))
 async def test_turn_on_intent(
-    hass: HomeAssistant, init_components, sentence, agent_id, snapshot
+    hass: HomeAssistant, init_components, conversation_id, sentence, agent_id, snapshot
 ) -> None:
     """Test calling the turn on intent."""
     hass.states.async_set("light.kitchen", "off")
     calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
 
-    data = {conversation.ATTR_TEXT: sentence}
+    data = {
+        conversation.ATTR_TEXT: sentence,
+        conversation.ATTR_CONVERSATION_ID: conversation_id,
+    }
     if agent_id is not None:
         data[conversation.ATTR_AGENT_ID] = agent_id
     result = await hass.services.async_call(

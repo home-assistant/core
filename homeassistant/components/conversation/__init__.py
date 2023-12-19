@@ -42,6 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_TEXT = "text"
 ATTR_LANGUAGE = "language"
 ATTR_AGENT_ID = "agent_id"
+ATTR_CONVERSATION_ID = "conversation_id"
 
 DOMAIN = "conversation"
 
@@ -66,6 +67,7 @@ SERVICE_PROCESS_SCHEMA = vol.Schema(
         vol.Required(ATTR_TEXT): cv.string,
         vol.Optional(ATTR_LANGUAGE): cv.string,
         vol.Optional(ATTR_AGENT_ID): agent_id_validator,
+        vol.Optional(ATTR_CONVERSATION_ID): cv.string,
     }
 )
 
@@ -164,7 +166,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             result = await async_converse(
                 hass=hass,
                 text=text,
-                conversation_id=None,
+                conversation_id=service.data.get(ATTR_CONVERSATION_ID),
                 context=service.context,
                 language=service.data.get(ATTR_LANGUAGE),
                 agent_id=service.data.get(ATTR_AGENT_ID),
