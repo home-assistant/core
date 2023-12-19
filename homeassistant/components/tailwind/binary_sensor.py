@@ -46,7 +46,7 @@ async def async_setup_entry(
     """Set up Tailwind binary sensor based on a config entry."""
     coordinator: TailwindDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        TailwindDoorBinarySensorEntity(coordinator, description, door_id)
+        TailwindDoorBinarySensorEntity(coordinator, door_id, description)
         for description in DESCRIPTIONS
         for door_id in coordinator.data.doors
     )
@@ -56,19 +56,6 @@ class TailwindDoorBinarySensorEntity(TailwindDoorEntity, BinarySensorEntity):
     """Representation of a Tailwind door binary sensor entity."""
 
     entity_description: TailwindDoorBinarySensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: TailwindDataUpdateCoordinator,
-        description: TailwindDoorBinarySensorEntityDescription,
-        door_id: str,
-    ) -> None:
-        """Initiate Tailwind button entity."""
-        super().__init__(coordinator, door_id)
-        self.entity_description = description
-        self._attr_unique_id = (
-            f"{coordinator.data.device_id}-{door_id}-{description.key}"
-        )
 
     @property
     def is_on(self) -> bool | None:
