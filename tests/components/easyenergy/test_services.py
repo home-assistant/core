@@ -2,6 +2,7 @@
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+import voluptuous as vol
 
 from homeassistant.components.easyenergy.const import DOMAIN
 from homeassistant.components.easyenergy.services import (
@@ -66,20 +67,36 @@ async def test_service(
     ],
 )
 @pytest.mark.parametrize(
-    "service_data",
+    ("service_data", "error", "error_message"),
     [
-        {"incl_vat": True, "start": "incorrect date"},
-        {"incl_vat": True, "end": "incorrect date"},
+        ({}, vol.er.Error, "required key not provided .+"),
+        (
+            {"incl_vat": "incorrect vat"},
+            vol.er.Error,
+            "expected bool for dictionary value .+",
+        ),
+        (
+            {"incl_vat": True, "start": "incorrect date"},
+            ServiceValidationError,
+            "Invalid datetime provided.",
+        ),
+        (
+            {"incl_vat": True, "end": "incorrect date"},
+            ServiceValidationError,
+            "Invalid datetime provided.",
+        ),
     ],
 )
 async def test_service_validation(
     hass: HomeAssistant,
     service: str,
     service_data: dict[str, str | bool],
+    error: type[Exception],
+    error_message: str,
 ) -> None:
     """Test the easyEnergy Service."""
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(error, match=error_message):
         await hass.services.async_call(
             DOMAIN,
             service,
