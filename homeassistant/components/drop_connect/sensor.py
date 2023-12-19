@@ -60,7 +60,7 @@ CARTRIDGE_2_LIFE = "cart2"
 CARTRIDGE_3_LIFE = "cart3"
 
 
-@dataclass(kw_only=True)
+@dataclass(kw_only=True, frozen=True)
 class DROPSensorEntityDescription(SensorEntityDescription):
     """Describes DROP sensor entity."""
 
