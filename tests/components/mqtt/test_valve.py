@@ -494,8 +494,7 @@ async def tests_open_close_payload_config_not_allowed(
 
     assert (
         "Options `payload_open`, `payload_close`, `state_open` and "
-        "`state_closed` are only allowed if the valve reports a position."
-        in caplog.text
+        "`state_closed` are not allowed if the valve reports a position." in caplog.text
     )
 
 

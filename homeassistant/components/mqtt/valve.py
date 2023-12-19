@@ -66,7 +66,12 @@ from .mixins import (
     async_setup_entity_entry_helper,
     write_state_on_attr_change,
 )
-from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
+from .models import (
+    MqttCommandTemplate,
+    MqttValueTemplate,
+    ReceiveMessage,
+    ReceivePayloadType,
+)
 from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,18 +86,20 @@ MQTT_VALVE_ATTRIBUTES_BLOCKED = frozenset(
     }
 )
 
+NO_POSITION_KEYS = (
+    CONF_PAYLOAD_CLOSE,
+    CONF_PAYLOAD_OPEN,
+    CONF_STATE_CLOSED,
+    CONF_STATE_OPEN,
+)
+
 
 def _validate_valve_payload_options(config: ConfigType) -> ConfigType:
     """Validate the use of payload close and open options."""
-    if config[CONF_REPORTS_POSITION] and (
-        CONF_PAYLOAD_CLOSE in config
-        or CONF_PAYLOAD_OPEN in config
-        or CONF_STATE_CLOSED in config
-        or CONF_STATE_OPEN in config
-    ):
+    if config[CONF_REPORTS_POSITION] and any(key in config for key in NO_POSITION_KEYS):
         raise vol.Invalid(
             "Options `payload_open`, `payload_close`, `state_open` and "
-            "`state_closed` are only allowed if the valve reports a position."
+            "`state_closed` are not allowed if the valve reports a position."
         )
     return config
 
@@ -194,13 +201,13 @@ class MqttValve(MqttEntity, ValveEntity):
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
         supported_features = ValveEntityFeature(0)
-        if has_command_topic := (config.get(CONF_COMMAND_TOPIC) is not None):
+        if CONF_COMMAND_TOPIC in config:
             if config.get(CONF_PAYLOAD_OPEN, DEFAULT_PAYLOAD_OPEN) is not None:
                 supported_features |= ValveEntityFeature.OPEN
             if config.get(CONF_PAYLOAD_CLOSE, DEFAULT_PAYLOAD_CLOSE) is not None:
                 supported_features |= ValveEntityFeature.CLOSE
 
-        if config[CONF_REPORTS_POSITION] and has_command_topic is not None:
+        if config[CONF_REPORTS_POSITION]:
             supported_features |= ValveEntityFeature.SET_POSITION
         if config.get(CONF_PAYLOAD_STOP) is not None:
             supported_features |= ValveEntityFeature.STOP
@@ -213,6 +220,56 @@ class MqttValve(MqttEntity, ValveEntity):
         self._attr_is_closed = state == STATE_CLOSED
         self._attr_is_opening = state == STATE_OPENING
         self._attr_is_closing = state == STATE_CLOSING
+
+    @callback
+    def _process_state_only_update(
+        self, payload: ReceivePayloadType, state_payload: str
+    ) -> None:
+        """Process an update for a valve that does not report the position."""
+        state: str | None = None
+        if state_payload == self._config[CONF_STATE_OPENING]:
+            state = STATE_OPENING
+        elif state_payload == self._config[CONF_STATE_CLOSING]:
+            state = STATE_CLOSING
+        elif state_payload == self._config.get(CONF_STATE_OPEN, STATE_OPEN):
+            state = STATE_OPEN
+        elif state_payload == self._config.get(CONF_STATE_CLOSED, STATE_CLOSED):
+            state = STATE_CLOSED
+        if state is None:
+            _LOGGER.warning(
+                "Payload is not one of [open, closed, opening, closing], got: %s",
+                payload,
+            )
+            return
+        self._update_state(state)
+
+    @callback
+    def _process_position_state_update(
+        self, payload: ReceivePayloadType, position_payload: str, state_payload: str
+    ) -> None:
+        """Process an update for a valve that reports the position."""
+        state: str | None = None
+        if state_payload == self._config[CONF_STATE_OPENING]:
+            state = STATE_OPENING
+        elif state_payload == self._config[CONF_STATE_CLOSING]:
+            state = STATE_CLOSING
+        if state is None or position_payload != state_payload:
+            try:
+                percentage_payload = ranged_value_to_percentage(
+                    self._range, float(position_payload)
+                )
+            except ValueError:
+                _LOGGER.warning("Payload '%s' is not numeric", position_payload)
+                return
+
+            self._attr_current_valve_position = min(max(percentage_payload, 0), 100)
+        if state is None:
+            _LOGGER.warning(
+                "Payload is not one of [opening, closing], got: %s",
+                payload,
+            )
+            return
+        self._update_state(state)
 
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
@@ -249,42 +306,12 @@ class MqttValve(MqttEntity, ValveEntity):
             state_payload = payload if state_payload is None else state_payload
             position_payload = payload if position_payload is None else position_payload
 
-            state: str | None = None
-            reports_position: bool = self._config[CONF_REPORTS_POSITION]
-            if state_payload == self._config[CONF_STATE_OPENING]:
-                state = STATE_OPENING
-            elif state_payload == self._config[CONF_STATE_CLOSING]:
-                state = STATE_CLOSING
-            elif not reports_position and state_payload == self._config.get(
-                CONF_STATE_OPEN, STATE_OPEN
-            ):
-                state = STATE_OPEN
-            elif not reports_position and state_payload == self._config.get(
-                CONF_STATE_CLOSED, STATE_CLOSED
-            ):
-                state = STATE_CLOSED
-            if reports_position and (
-                state is None or position_payload != state_payload
-            ):
-                try:
-                    percentage_payload = ranged_value_to_percentage(
-                        self._range, float(position_payload)
-                    )
-                except ValueError:
-                    _LOGGER.warning("Payload '%s' is not numeric", position_payload)
-                    return
-
-                self._attr_current_valve_position = min(max(percentage_payload, 0), 100)
-            if state is None:
-                _LOGGER.warning(
-                    (
-                        "Payload is not supported (e.g. open, closed, opening, closing)"
-                        ": %s"
-                    ),
-                    payload,
+            if self._config[CONF_REPORTS_POSITION]:
+                self._process_position_state_update(
+                    payload, position_payload, state_payload
                 )
-                return
-            self._update_state(state)
+            else:
+                self._process_state_only_update(payload, state_payload)
 
         if self._config.get(CONF_STATE_TOPIC):
             topics["state_topic"] = {
