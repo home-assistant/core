@@ -277,21 +277,6 @@ def async_get_pipelines(hass: HomeAssistant) -> Iterable[Pipeline]:
     return pipeline_data.pipeline_store.data.values()
 
 
-PIPELINE_FIELDS = {
-    vol.Required("conversation_engine"): str,
-    vol.Required("conversation_language"): str,
-    vol.Required("language"): str,
-    vol.Required("name"): str,
-    vol.Required("stt_engine"): vol.Any(str, None),
-    vol.Required("stt_language"): vol.Any(str, None),
-    vol.Required("tts_engine"): vol.Any(str, None),
-    vol.Required("tts_language"): vol.Any(str, None),
-    vol.Required("tts_voice"): vol.Any(str, None),
-    vol.Required("wake_word_entity"): vol.Any(str, None),
-    vol.Required("wake_word_id"): vol.Any(str, None),
-}
-
-
 async def async_update_pipeline(
     hass: HomeAssistant,
     pipeline: Pipeline,
