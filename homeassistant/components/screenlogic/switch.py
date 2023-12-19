@@ -128,3 +128,4 @@ class ScreenLogicSCGSwitchEntity(ScreenLogicCircuitEntity, SwitchEntity):
                 f"Failed to set_scg_config {self._data_key} {state.value}: {sle.msg}"
             ) from sle
         _LOGGER.debug("Set scg config %s %s", self._data_key, state.value)
+        await self._async_refresh()
