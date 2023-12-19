@@ -392,14 +392,12 @@ async def test_cloud_connection_info(hass: HomeAssistant) -> None:
     sorted(VALID_REPAIR_TRANSLATION_KEYS),
 )
 async def test_async_create_repair_issue_known(
-    hass: HomeAssistant,
+    cloud: MagicMock,
+    mock_cloud_setup: None,
     issue_registry: IssueRegistry,
     translation_key: str,
 ) -> None:
     """Test create repair issue for known repairs."""
-    with patch("hass_nabucasa.Cloud.initialize"):
-        assert await async_setup_component(hass, "cloud", {"cloud": {}})
-    cloud = hass.data["cloud"]
     identifier = f"test_identifier_{translation_key}"
     await cloud.client.async_create_repair_issue(
         identifier=identifier,
@@ -412,13 +410,11 @@ async def test_async_create_repair_issue_known(
 
 
 async def test_async_create_repair_issue_unknown(
-    hass: HomeAssistant,
+    cloud: MagicMock,
+    mock_cloud_setup: None,
     issue_registry: IssueRegistry,
 ) -> None:
     """Test not creating repair issue for unknown repairs."""
-    with patch("hass_nabucasa.Cloud.initialize"):
-        assert await async_setup_component(hass, "cloud", {"cloud": {}})
-    cloud = hass.data["cloud"]
     identifier = "abc123"
     with pytest.raises(
         ValueError,
