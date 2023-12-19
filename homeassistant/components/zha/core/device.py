@@ -158,7 +158,6 @@ class ZHADevice(LogMixin):
         self._identify_ch: ClusterHandler | None = None
         self._basic_ch: ClusterHandler | None = None
         self.status: DeviceStatus = DeviceStatus.CREATED
-        self._availability_checks_established: bool = False
 
         self._endpoints: dict[int, Endpoint] = {}
         for ep_id, endpoint in zigpy_device.endpoints.items():
@@ -435,7 +434,6 @@ class ZHADevice(LogMixin):
                 timedelta(seconds=keep_alive_interval),
             )
         )
-        self._availability_checks_established = True
 
     async def _check_available(self, *_: Any) -> None:
         # don't flip the availability state of the coordinator
