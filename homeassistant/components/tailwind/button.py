@@ -22,7 +22,7 @@ from .coordinator import TailwindDataUpdateCoordinator
 from .entity import TailwindEntity
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class TailwindButtonEntityDescription(ButtonEntityDescription):
     """Class describing Tailwind button entities."""
 

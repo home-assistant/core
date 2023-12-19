@@ -23,14 +23,14 @@ from .entity import IPMADevice
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class IPMARequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[Location, IPMA_API], Coroutine[Location, IPMA_API, int | None]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class IPMASensorEntityDescription(SensorEntityDescription, IPMARequiredKeysMixin):
     """Describes IPMA sensor entity."""
 

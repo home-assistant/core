@@ -23,14 +23,14 @@ from .entity import AnovaDescriptionEntity
 from .models import AnovaData
 
 
-@dataclass
+@dataclass(frozen=True)
 class AnovaSensorEntityDescriptionMixin:
     """Describes the mixin variables for anova sensors."""
 
     value_fn: Callable[[APCUpdateSensor], float | int | str]
 
 
-@dataclass
+@dataclass(frozen=True)
 class AnovaSensorEntityDescription(
     SensorEntityDescription, AnovaSensorEntityDescriptionMixin
 ):

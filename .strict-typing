@@ -366,6 +366,7 @@ homeassistant.components.uptimerobot.*
 homeassistant.components.usb.*
 homeassistant.components.vacuum.*
 homeassistant.components.vallox.*
+homeassistant.components.valve.*
 homeassistant.components.velbus.*
 homeassistant.components.vlc_telnet.*
 homeassistant.components.wake_on_lan.*

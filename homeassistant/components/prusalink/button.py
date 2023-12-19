@@ -19,14 +19,14 @@ from . import DOMAIN, PrusaLinkEntity, PrusaLinkUpdateCoordinator
 T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
 
 
-@dataclass
+@dataclass(frozen=True)
 class PrusaLinkButtonEntityDescriptionMixin(Generic[T]):
     """Mixin for required keys."""
 
     press_fn: Callable[[PrusaLink, PrinterStatus], Coroutine[Any, Any, None]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PrusaLinkButtonEntityDescription(
     ButtonEntityDescription, PrusaLinkButtonEntityDescriptionMixin[T], Generic[T]
 ):

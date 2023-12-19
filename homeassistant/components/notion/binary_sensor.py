@@ -33,14 +33,14 @@ from .const import (
 from .model import NotionEntityDescriptionMixin
 
 
-@dataclass
+@dataclass(frozen=True)
 class NotionBinarySensorDescriptionMixin:
     """Define an entity description mixin for binary and regular sensors."""
 
     on_state: Literal["alarm", "leak", "low", "not_missing", "open"]
 
 
-@dataclass
+@dataclass(frozen=True)
 class NotionBinarySensorDescription(
     BinarySensorEntityDescription,
     NotionBinarySensorDescriptionMixin,
