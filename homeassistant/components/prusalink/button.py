@@ -23,7 +23,7 @@ T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
 class PrusaLinkButtonEntityDescriptionMixin(Generic[T]):
     """Mixin for required keys."""
 
-    press_fn: Callable[[PrusaLink, PrinterStatus], Coroutine[Any, Any, None]]
+    press_fn: Callable[[PrusaLink], Callable[[int], Coroutine[Any, Any, None]]]
 
 
 @dataclass(frozen=True)
@@ -41,9 +41,7 @@ BUTTONS: dict[str, tuple[PrusaLinkButtonEntityDescription, ...]] = {
             key="printer.cancel_job",
             translation_key="cancel_job",
             icon="mdi:cancel",
-            press_fn=lambda api, data: cast(
-                Coroutine, api.cancel_job(data["job"]["id"])
-            ),
+            press_fn=lambda api: api.cancel_job,
             available_fn=lambda data: cast(
                 bool, data["printer"]["state"] == PrinterState.PRINTING.value
             ),
@@ -52,9 +50,7 @@ BUTTONS: dict[str, tuple[PrusaLinkButtonEntityDescription, ...]] = {
             key="job.pause_job",
             translation_key="pause_job",
             icon="mdi:pause",
-            press_fn=lambda api, data: cast(
-                Coroutine, api.pause_job(data["job"]["id"])
-            ),
+            press_fn=lambda api: api.pause_job,
             available_fn=lambda data: cast(
                 bool, data["printer"]["state"] == PrinterState.PRINTING.value
             ),
@@ -63,9 +59,7 @@ BUTTONS: dict[str, tuple[PrusaLinkButtonEntityDescription, ...]] = {
             key="job.resume_job",
             translation_key="resume_job",
             icon="mdi:play",
-            press_fn=lambda api, data: cast(
-                Coroutine, api.resume_job(data["job"]["id"])
-            ),
+            press_fn=lambda api: api.resume_job,
             available_fn=lambda data: cast(
                 bool, data["printer"]["state"] == PrinterState.PAUSED.value
             ),
