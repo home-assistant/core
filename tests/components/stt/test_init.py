@@ -495,8 +495,8 @@ async def test_default_engine_entity(
     assert async_default_engine(hass) == f"{DOMAIN}.{TEST_DOMAIN}"
 
 
-@pytest.mark.parametrize("config_flow_test_domain", ["cloud"])
-async def test_default_engine_prefer_cloud(
+@pytest.mark.parametrize("config_flow_test_domain", ["new_test"])
+async def test_default_engine_prefer_provider(
     hass: HomeAssistant,
     tmp_path: Path,
     mock_provider_entity: MockProviderEntity,
@@ -504,9 +504,8 @@ async def test_default_engine_prefer_cloud(
     config_flow_test_domain: str,
 ) -> None:
     """Test async_default_engine."""
-    mock_provider_entity.url_path = "stt.cloud"
-    mock_provider_entity._attr_name = "Cloud"
-    mock_provider_entity._attr_unique_id = "cloud-speech-to-text"
+    mock_provider_entity.url_path = "stt.new_test"
+    mock_provider_entity._attr_name = "New test"
 
     await mock_setup(hass, tmp_path, mock_provider)
     await mock_config_entry_setup(
@@ -514,9 +513,13 @@ async def test_default_engine_prefer_cloud(
     )
     await hass.async_block_till_done()
 
-    assert async_get_speech_to_text_engine(hass, "stt.cloud").name == "Cloud"
-    assert async_get_speech_to_text_engine(hass, "test").name == "test"
-    assert async_default_engine(hass) == "stt.cloud"
+    entity_engine = async_get_speech_to_text_engine(hass, "stt.new_test")
+    assert entity_engine is not None
+    assert entity_engine.name == "New test"
+    provider_engine = async_get_speech_to_text_engine(hass, "test")
+    assert provider_engine is not None
+    assert provider_engine.name == "test"
+    assert async_default_engine(hass) == "test"
 
 
 async def test_get_engine_legacy(
