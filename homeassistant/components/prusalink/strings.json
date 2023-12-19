@@ -71,10 +71,10 @@
         "name": "Print flow"
       },
       "fan_hotend": {
-        "name": "Hotend Fan"
+        "name": "Hotend fan"
       },
       "fan_print": {
-        "name": "Print Fan"
+        "name": "Print fan"
       },
       "z_height": {
         "name": "Z-Height"

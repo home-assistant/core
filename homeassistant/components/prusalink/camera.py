@@ -38,7 +38,7 @@ class PrusaLinkJobPreviewEntity(PrusaLinkEntity, Camera):
         return (
             super().available
             and (file := self.coordinator.data.get("file"))
-            and file.get("refs").get("thumbnail")
+            and file.get("refs", {}).get("thumbnail")
         )
 
     async def async_camera_image(
