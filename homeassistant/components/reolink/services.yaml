@@ -1,0 +1,18 @@
+# Describes the format for available reolink services
+
+ptz_move:
+  target:
+    entity:
+      integration: reolink
+      domain: button
+      supported_features:
+        - camera.CameraEntityFeature.STREAM
+  fields:
+    speed:
+      required: true
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 64
+          step: 1

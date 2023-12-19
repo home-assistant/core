@@ -29,14 +29,14 @@ from .const import DOMAIN, VOLUME_FLOW_RATE_LITERS_PER_MINUTE
 from .entity import JustNimbusEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class JustNimbusEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[JustNimbusCoordinator], Any]
 
 
-@dataclass
+@dataclass(frozen=True)
 class JustNimbusEntityDescription(
     SensorEntityDescription, JustNimbusEntityDescriptionMixin
 ):

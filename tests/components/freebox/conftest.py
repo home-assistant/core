@@ -12,13 +12,14 @@ from .const import (
     DATA_CALL_GET_CALLS_LOG,
     DATA_CONNECTION_GET_STATUS,
     DATA_HOME_GET_NODES,
-    DATA_HOME_PIR_GET_VALUES,
+    DATA_HOME_PIR_GET_VALUE,
+    DATA_HOME_SET_VALUE,
     DATA_LAN_GET_HOSTS_LIST,
     DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE,
     DATA_STORAGE_GET_DISKS,
     DATA_STORAGE_GET_RAIDS,
     DATA_SYSTEM_GET_CONFIG,
-    WIFI_GET_GLOBAL_CONFIG,
+    DATA_WIFI_GET_GLOBAL_CONFIG,
 )
 
 from tests.common import MockConfigEntry
@@ -84,11 +85,16 @@ def mock_router(mock_device_registry_devices):
             return_value=DATA_CONNECTION_GET_STATUS
         )
         # switch
-        instance.wifi.get_global_config = AsyncMock(return_value=WIFI_GET_GLOBAL_CONFIG)
+        instance.wifi.get_global_config = AsyncMock(
+            return_value=DATA_WIFI_GET_GLOBAL_CONFIG
+        )
         # home devices
         instance.home.get_home_nodes = AsyncMock(return_value=DATA_HOME_GET_NODES)
         instance.home.get_home_endpoint_value = AsyncMock(
-            return_value=DATA_HOME_PIR_GET_VALUES
+            return_value=DATA_HOME_PIR_GET_VALUE
+        )
+        instance.home.set_home_endpoint_value = AsyncMock(
+            return_value=DATA_HOME_SET_VALUE
         )
         instance.close = AsyncMock()
         yield service_mock
