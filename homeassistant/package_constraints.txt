@@ -6,7 +6,7 @@ aiohttp-zlib-ng==0.1.1
 aiohttp==3.9.1
 aiohttp_cors==0.7.0
 astral==2.2
-async-upnp-client==0.36.2
+async-upnp-client==0.38.0
 atomicwrites-homeassistant==1.4.1
 attrs==23.1.0
 awesomeversion==23.11.0
