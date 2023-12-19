@@ -123,6 +123,7 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self.coordinator.async_set_volume_level(volume)
+        await self.coordinator.async_refresh()
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
