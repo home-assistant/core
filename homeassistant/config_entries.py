@@ -16,7 +16,7 @@ from . import data_entry_flow, loader
 from .components import persistent_notification
 from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
 from .core import CALLBACK_TYPE, CoreState, Event, HassJob, HomeAssistant, callback
-from .data_entry_flow import FlowResult
+from .data_entry_flow import FlowContext, FlowResult
 from .exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -759,15 +759,20 @@ class ConfigEntry:
             if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
                 # Reauth flow already in progress for this entry
                 return
+
+            _context = {
+                "source": SOURCE_REAUTH,
+                "entry_id": self.entry_id,
+                "title_placeholders": {"name": self.title},
+                "unique_id": self.unique_id,
+            } | (context or {})
+            if TYPE_CHECKING:
+                config_entry_context = cast(ConfigEntryContext, _context)
+            else:
+                config_entry_context = _context
             await hass.config_entries.flow.async_init(
                 self.domain,
-                context={
-                    "source": SOURCE_REAUTH,
-                    "entry_id": self.entry_id,
-                    "title_placeholders": {"name": self.title},
-                    "unique_id": self.unique_id,
-                }
-                | (context or {}),
+                context=config_entry_context,
                 data=self.data | (data or {}),
             )
 
@@ -867,7 +872,11 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         )
 
     async def async_init(
-        self, handler: str, *, context: dict[str, Any] | None = None, data: Any = None
+        self,
+        handler: str,
+        *,
+        context: ConfigEntryContext | None = None,  # type: ignore[override]
+        data: Any = None,
     ) -> FlowResult:
         """Start a configuration flow."""
         if not context or "source" not in context:
@@ -899,7 +908,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         self,
         flow_id: str,
         handler: str,
-        context: dict,
+        context: ConfigEntryContext,
         data: Any,
     ) -> tuple[data_entry_flow.FlowHandler, FlowResult]:
         """Run the init in a task to allow it to be canceled at shutdown."""
@@ -1000,7 +1009,11 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         return result
 
     async def async_create_flow(
-        self, handler_key: str, *, context: dict | None = None, data: Any = None
+        self,
+        handler_key: str,
+        *,
+        context: ConfigEntryContext | None = None,  # type: ignore[override]
+        data: Any = None,
     ) -> ConfigFlow:
         """Create a flow for specified handler.
 
@@ -1516,8 +1529,19 @@ def _async_abort_entries_match(
             raise data_entry_flow.AbortFlow("already_configured")
 
 
+class ConfigEntryContext(FlowContext, total=False):
+    """Context of a flow."""
+
+    unique_id: str | None
+    confirm_only: bool
+    entry_id: str
+    title_placeholders: dict[str, str]
+
+
 class ConfigFlow(data_entry_flow.FlowHandler):
     """Base class for config flows with some helpers."""
+
+    context: ConfigEntryContext
 
     def __init_subclass__(cls, *, domain: str | None = None, **kwargs: Any) -> None:
         """Initialize a subclass, register if possible."""
@@ -1531,7 +1555,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         if not self.context:
             return None
 
-        return cast(str | None, self.context.get("unique_id"))
+        return self.context.get("unique_id")
 
     @staticmethod
     @callback
@@ -1851,6 +1875,10 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return result
 
 
+class OptionsFlowContext(FlowContext, total=False):
+    """Context of a options flow."""
+
+
 class OptionsFlowManager(data_entry_flow.FlowManager):
     """Flow to set options for a configuration entry."""
 
@@ -1866,7 +1894,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         self,
         handler_key: str,
         *,
-        context: dict[str, Any] | None = None,
+        context: OptionsFlowContext | None = None,
         data: dict[str, Any] | None = None,
     ) -> OptionsFlow:
         """Create an options flow for a config entry.

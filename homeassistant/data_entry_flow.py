@@ -92,7 +92,7 @@ class AbortFlow(FlowError):
 class FlowResult(TypedDict, total=False):
     """Typed result dict."""
 
-    context: dict[str, Any]
+    context: FlowContext
     data_schema: vol.Schema | None
     data: Mapping[str, Any]
     description_placeholders: Mapping[str, str | None] | None
@@ -156,7 +156,7 @@ class FlowManager(abc.ABC):
         self,
         handler_key: str,
         *,
-        context: dict[str, Any] | None = None,
+        context: FlowContext | None = None,
         data: dict[str, Any] | None = None,
     ) -> FlowHandler:
         """Create a flow for specified handler.
@@ -257,7 +257,7 @@ class FlowManager(abc.ABC):
         ]
 
     async def async_init(
-        self, handler: str, *, context: dict[str, Any] | None = None, data: Any = None
+        self, handler: str, *, context: FlowContext | None = None, data: Any = None
     ) -> FlowResult:
         """Start a data entry flow."""
         if context is None:
@@ -451,6 +451,13 @@ class FlowManager(abc.ABC):
             await flow.async_setup_preview(self.hass)
 
 
+class FlowContext(TypedDict, total=False):
+    """Context of a flow."""
+
+    source: str
+    show_advanced_options: bool
+
+
 class FlowHandler:
     """Handle a data entry flow."""
 
@@ -463,7 +470,7 @@ class FlowHandler:
     hass: HomeAssistant = None  # type: ignore[assignment]
     handler: str = None  # type: ignore[assignment]
     # Ensure the attribute has a subscriptable, but immutable, default value.
-    context: dict[str, Any] = MappingProxyType({})  # type: ignore[assignment]
+    context: FlowContext = MappingProxyType({})  # type: ignore[assignment]
 
     # Set by _async_create_flow callback
     init_step = "init"
@@ -478,12 +485,12 @@ class FlowHandler:
     @property
     def source(self) -> str | None:
         """Source that initialized the flow."""
-        return self.context.get("source", None)  # type: ignore[no-any-return]
+        return self.context.get("source", None)
 
     @property
     def show_advanced_options(self) -> bool:
         """If we should show advanced options."""
-        return self.context.get("show_advanced_options", False)  # type: ignore[no-any-return]
+        return self.context.get("show_advanced_options", False)
 
     def add_suggested_values_to_schema(
         self, data_schema: vol.Schema, suggested_values: Mapping[str, Any] | None
