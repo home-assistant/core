@@ -7,7 +7,7 @@ from roborock import RoborockCommand
 from vacuum_map_parser_base.config.color import ColorsPalette
 from vacuum_map_parser_base.config.drawable import Drawable
 from vacuum_map_parser_base.config.image_config import ImageConfig
-from vacuum_map_parser_base.config.size import Size, Sizes
+from vacuum_map_parser_base.config.size import Sizes
 from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 
 from homeassistant.components.image import ImageEntity
@@ -42,7 +42,7 @@ async def async_setup_entry(
     coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
         config_entry.entry_id
     ]
-    sizes = {**DEFAULT_SIZES, **config_entry.options.get(SIZES, {})}
+    sizes = Sizes({**DEFAULT_SIZES, **config_entry.options.get(SIZES, {})})
     drawables = [
         drawable
         for drawable, default_value in DEFAULT_DRAWABLES.items()
@@ -73,7 +73,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         map_flag: int,
         starting_map: bytes,
         map_name: str,
-        sizes: dict[Size, float],
+        sizes: Sizes,
         drawables: list[Drawable],
     ) -> None:
         """Initialize a Roborock map."""
@@ -81,7 +81,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         ImageEntity.__init__(self, coordinator.hass)
         self._attr_name = map_name
         self.parser = RoborockMapDataParser(
-            ColorsPalette(), Sizes(sizes), drawables, ImageConfig(), []
+            ColorsPalette(), sizes, drawables, ImageConfig(), []
         )
         self._attr_image_last_updated = dt_util.utcnow()
         self.map_flag = map_flag
@@ -136,7 +136,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
 
 
 async def create_coordinator_maps(
-    coord: RoborockDataUpdateCoordinator, sizes: dict, drawables: list[Drawable]
+    coord: RoborockDataUpdateCoordinator, sizes: Sizes, drawables: list[Drawable]
 ) -> list[RoborockMap]:
     """Get the starting map information for all maps for this device. The following steps must be done synchronously.
 

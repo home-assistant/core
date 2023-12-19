@@ -49,12 +49,12 @@
       "maps": {
         "description": "Configure setting options for all of your Roborock map's images.",
         "menu_options": {
-          "drawables": "Drawables",
+          "drawables": "Items to draw",
           "sizes": "Sizes"
         }
       },
       "sizes": {
-        "description": "Configure setting options for all of your Roborock map's sizes.",
+        "description": "Configure setting options for all of your Roborock maps' sizes.",
         "data": {
           "charger_radius": "Charger radius",
           "ignored_obstacle_radius": "Ignored obstacle radius",
@@ -67,7 +67,7 @@
         }
       },
       "drawables": {
-        "description": "Configure setting options for all of your Roborock map's drawables.",
+        "description": "Specify which features to draw on the map.",
         "data": {
           "charger": "Charger",
           "cleaned_area": "Cleaned area",

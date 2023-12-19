@@ -121,9 +121,6 @@ class RoborockFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                             CONF_USER_DATA: login_data.as_dict(),
                         },
                     )
-                    await self.hass.config_entries.async_reload(
-                        self.reauth_entry.entry_id
-                    )
                     return self.async_abort(reason="reauth_successful")
                 return self._create_entry(self._client, self._username, login_data)
 
