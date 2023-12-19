@@ -29,14 +29,14 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScreenLogicNumberRequiredMixin:
     """Describes a required mixin for a ScreenLogic number entity."""
 
     set_value_name: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScreenLogicNumberDescription(
     NumberEntityDescription,
     ScreenLogicEntityDescription,

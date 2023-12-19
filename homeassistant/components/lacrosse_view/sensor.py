@@ -35,14 +35,14 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class LaCrosseSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[Sensor, str], float | int | str | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class LaCrosseSensorEntityDescription(
     SensorEntityDescription, LaCrosseSensorEntityDescriptionMixin
 ):

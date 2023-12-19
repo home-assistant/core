@@ -58,7 +58,7 @@ VICARE_UNIT_TO_DEVICE_CLASS = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class ViCareSensorEntityDescription(SensorEntityDescription, ViCareRequiredKeysMixin):
     """Describes ViCare sensor entity."""
 
