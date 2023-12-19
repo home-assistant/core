@@ -102,7 +102,7 @@ DEFAULTS = {
 
 
 def _validate_and_add_defaults(config: ConfigType) -> ConfigType:
-    """Validate the use of payload close and open options."""
+    """Validate config options and set defaults."""
     if config[CONF_REPORTS_POSITION] and any(key in config for key in NO_POSITION_KEYS):
         raise vol.Invalid(
             "Options `payload_open`, `payload_close`, `state_open` and "
