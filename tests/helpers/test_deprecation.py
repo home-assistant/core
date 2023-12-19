@@ -327,7 +327,7 @@ def test_check_if_deprecated_constant(
 
 
 def test_test_check_if_deprecated_constant_invalid(
-    caplog: pytest.LogCaptureFixture
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test check_if_deprecated_constant will raise an attribute error and create an log entry on an invalid deprecation type."""
     module_name = "homeassistant.components.hue.light"

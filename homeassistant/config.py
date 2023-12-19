@@ -155,7 +155,7 @@ class IntegrationConfigInfo:
 
 
 def _no_duplicate_auth_provider(
-    configs: Sequence[dict[str, Any]]
+    configs: Sequence[dict[str, Any]],
 ) -> Sequence[dict[str, Any]]:
     """No duplicate auth provider config allowed in a list.
 
@@ -176,7 +176,7 @@ def _no_duplicate_auth_provider(
 
 
 def _no_duplicate_auth_mfa_module(
-    configs: Sequence[dict[str, Any]]
+    configs: Sequence[dict[str, Any]],
 ) -> Sequence[dict[str, Any]]:
     """No duplicate auth mfa module item allowed in a list.
 
