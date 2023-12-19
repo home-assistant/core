@@ -1,6 +1,5 @@
 """The tests for the Binary sensor component."""
 from collections.abc import Generator
-import logging
 from unittest import mock
 
 import pytest
@@ -18,6 +17,7 @@ from tests.common import (
     mock_config_flow,
     mock_integration,
     mock_platform,
+    validate_deprecated_constant,
 )
 from tests.testing_config.custom_components.test.binary_sensor import MockBinarySensor
 from tests.testing_config.custom_components.test_constant_deprecation.binary_sensor import (
@@ -210,14 +210,6 @@ def test_deprecated_constant_device_class(
 ) -> None:
     """Test deprecated binary sensor device classes."""
     import_deprecated(device_class)
-
-    assert (
-        "homeassistant.components.binary_sensor",
-        logging.WARNING,
-        (
-            f"DEVICE_CLASS_{device_class.name} was used from test_constant_deprecation,"
-            " this is a deprecated constant which will be removed in HA Core 2025.1. "
-            f"Use BinarySensorDeviceClass.{device_class.name} instead, please report "
-            "it to the author of the 'test_constant_deprecation' custom integration"
-        ),
-    ) in caplog.record_tuples
+    validate_deprecated_constant(
+        caplog, binary_sensor, device_class, "DEVICE_CLASS_", "2025.1"
+    )
