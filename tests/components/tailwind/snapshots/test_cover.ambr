@@ -1,0 +1,63 @@
+# serializer version: 1
+# name: test_cover_entities[cover.door_1]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.door_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tailwind',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': '_3c_e9_e_6d_21_84_-door1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities[cover.door_2]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.door_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.GARAGE: 'garage'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tailwind',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': '_3c_e9_e_6d_21_84_-door2',
+    'unit_of_measurement': None,
+  })
+# ---
