@@ -1,6 +1,5 @@
 """Comelit integration."""
 
-from typing import Any
 
 from aiocomelit.const import BRIDGE
 
@@ -9,7 +8,7 @@ from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE, Platf
 from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_PORT, DOMAIN
-from .coordinator import ComelitSerialBridge, ComelitVedoSystem
+from .coordinator import ComelitBaseCoordinator, ComelitSerialBridge, ComelitVedoSystem
 
 BRIDGE_PLATFORMS = [
     Platform.COVER,
@@ -25,7 +24,7 @@ VEDO_PLATFORMS = [
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Comelit platform."""
 
-    coordinator: Any
+    coordinator: ComelitBaseCoordinator
     if entry.data.get(CONF_TYPE, BRIDGE) == BRIDGE:
         coordinator = ComelitSerialBridge(
             hass,

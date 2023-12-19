@@ -9,6 +9,7 @@ from aiocomelit import (
     ComelitVedoApi,
     exceptions as aiocomelit_exceptions,
 )
+from aiocomelit.api import ComelitCommonApi
 from aiocomelit.const import BRIDGE
 import voluptuous as vol
 
@@ -45,7 +46,7 @@ async def validate_input(
 ) -> dict[str, str]:
     """Validate the user input allows us to connect."""
 
-    api: ComeliteSerialBridgeApi | ComelitVedoApi
+    api: ComelitCommonApi
     if data.get(CONF_TYPE, BRIDGE) == BRIDGE:
         api = ComeliteSerialBridgeApi(data[CONF_HOST], data[CONF_PORT], data[CONF_PIN])
     else:

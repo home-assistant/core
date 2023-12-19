@@ -8,9 +8,9 @@ from aiocomelit import (
     ComelitSerialBridgeObject,
     ComelitVedoApi,
     ComelitVedoAreaObject,
-    ComelitVedoZoneObject,
     exceptions,
 )
+from aiocomelit.api import ComelitCommonApi
 from aiocomelit.const import BRIDGE, VEDO
 
 from homeassistant.config_entries import ConfigEntry
@@ -27,7 +27,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     _hw_version: str
     config_entry: ConfigEntry
-    api: ComeliteSerialBridgeApi | ComelitVedoApi
+    api: ComelitCommonApi
 
     def __init__(self, hass: HomeAssistant, device: str, host: str) -> None:
         """Initialize the scanner."""
@@ -53,9 +53,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def platform_device_info(
         self,
-        object_class: ComelitVedoAreaObject
-        | ComelitVedoZoneObject
-        | ComelitSerialBridgeObject,
+        object_class: ComelitVedoAreaObject | ComelitSerialBridgeObject,
         object_type: str,
     ) -> dr.DeviceInfo:
         """Set platform device info."""
