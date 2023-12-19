@@ -1,6 +1,7 @@
 """Provides functionality to interact with fans."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntFlag
 import functools as ft
@@ -186,7 +187,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-class FanEntityDescription(ToggleEntityDescription, frozen_or_thawed=True):
+@dataclass(frozen=True)
+class FanEntityDescription(ToggleEntityDescription):
     """A class that describes fan entities."""
 
 

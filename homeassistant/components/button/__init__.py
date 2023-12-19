@@ -1,6 +1,7 @@
 """Component to pressing a button as platforms."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
 import logging
@@ -72,7 +73,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-class ButtonEntityDescription(EntityDescription, frozen_or_thawed=True):
+@dataclass(frozen=True)
+class ButtonEntityDescription(EntityDescription):
     """A class that describes button entities."""
 
     device_class: ButtonDeviceClass | None = None

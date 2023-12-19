@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntFlag
 import functools as ft
@@ -155,7 +156,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-class WaterHeaterEntityEntityDescription(EntityDescription, frozen_or_thawed=True):
+@dataclass(frozen=True)
+class WaterHeaterEntityEntityDescription(EntityDescription):
     """A class that describes water heater entities."""
 
 

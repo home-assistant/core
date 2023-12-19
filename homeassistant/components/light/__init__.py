@@ -816,7 +816,8 @@ class Profiles:
             params.setdefault(ATTR_TRANSITION, profile.transition)
 
 
-class LightEntityDescription(ToggleEntityDescription, frozen_or_thawed=True):
+@dataclasses.dataclass(frozen=True)
+class LightEntityDescription(ToggleEntityDescription):
     """A class that describes binary sensor entities."""
 
 

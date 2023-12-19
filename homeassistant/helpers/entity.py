@@ -52,7 +52,6 @@ from homeassistant.exceptions import (
 )
 from homeassistant.loader import async_suggest_report_issue, bind_hass
 from homeassistant.util import ensure_unique_string, slugify
-from homeassistant.util.frozen_dataclass_compat import FrozenOrThawed
 
 from . import device_registry as dr, entity_registry as er
 from .device_registry import DeviceInfo, EventDeviceRegistryUpdatedData
@@ -225,7 +224,8 @@ class EntityPlatformState(Enum):
     REMOVED = auto()
 
 
-class EntityDescription(metaclass=FrozenOrThawed, frozen_or_thawed=True):
+@dataclasses.dataclass(frozen=True)
+class EntityDescription:
     """A class that describes Home Assistant entities."""
 
     # This is the key identifier for this entity
@@ -1313,7 +1313,8 @@ class Entity(ABC):
         )
 
 
-class ToggleEntityDescription(EntityDescription, frozen_or_thawed=True):
+@dataclasses.dataclass(frozen=True, slots=True)
+class ToggleEntityDescription(EntityDescription):
     """A class that describes toggle entities."""
 
 

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 from enum import StrEnum
 import logging
@@ -119,7 +120,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class ImageProcessingEntityDescription(EntityDescription, frozen_or_thawed=True):
+@dataclass(frozen=True)
+class ImageProcessingEntityDescription(EntityDescription):
     """A class that describes sensor entities."""
 
     device_class: ImageProcessingDeviceClass | None = None

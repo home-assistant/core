@@ -1,6 +1,7 @@
 """Component to allow for providing device or service updates."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 from enum import StrEnum
 from functools import lru_cache
@@ -174,7 +175,8 @@ async def async_clear_skipped(entity: UpdateEntity, service_call: ServiceCall) -
     await entity.async_clear_skipped()
 
 
-class UpdateEntityDescription(EntityDescription, frozen_or_thawed=True):
+@dataclass(frozen=True)
+class UpdateEntityDescription(EntityDescription):
     """A class that describes update entities."""
 
     device_class: UpdateDeviceClass | None = None

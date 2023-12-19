@@ -1,6 +1,7 @@
 """Component to interface with an alarm control panel."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any, Final, final
@@ -120,7 +121,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-class AlarmControlPanelEntityDescription(EntityDescription, frozen_or_thawed=True):
+@dataclass(frozen=True)
+class AlarmControlPanelEntityDescription(EntityDescription):
     """A class that describes alarm control panel entities."""
 
 

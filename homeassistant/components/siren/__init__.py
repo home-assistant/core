@@ -1,6 +1,7 @@
 """Component to interface with various sirens/chimes."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any, TypedDict, cast, final
@@ -148,7 +149,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-class SirenEntityDescription(ToggleEntityDescription, frozen_or_thawed=True):
+@dataclass(frozen=True)
+class SirenEntityDescription(ToggleEntityDescription):
     """A class that describes siren entities."""
 
     available_tones: list[int | str] | dict[int, str] | None = None

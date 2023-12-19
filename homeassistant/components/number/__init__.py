@@ -120,7 +120,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-class NumberEntityDescription(EntityDescription, frozen_or_thawed=True):
+@dataclasses.dataclass(frozen=True)
+class NumberEntityDescription(EntityDescription):
     """A class that describes number entities."""
 
     device_class: NumberDeviceClass | None = None

@@ -1,6 +1,7 @@
 """Provides functionality to interact with climate devices."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import functools as ft
 import logging
@@ -200,7 +201,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-class ClimateEntityDescription(EntityDescription, frozen_or_thawed=True):
+@dataclass(frozen=True)
+class ClimateEntityDescription(EntityDescription):
     """A class that describes climate entities."""
 
 

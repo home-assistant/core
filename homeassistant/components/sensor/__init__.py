@@ -136,7 +136,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-class SensorEntityDescription(EntityDescription, frozen_or_thawed=True):
+@dataclass(frozen=True)
+class SensorEntityDescription(EntityDescription):
     """A class that describes sensor entities."""
 
     device_class: SensorDeviceClass | None = None

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntFlag, StrEnum
 import functools as ft
@@ -211,7 +212,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-class CoverEntityDescription(EntityDescription, frozen_or_thawed=True):
+@dataclass(frozen=True)
+class CoverEntityDescription(EntityDescription):
     """A class that describes cover entities."""
 
     device_class: CoverDeviceClass | None = None

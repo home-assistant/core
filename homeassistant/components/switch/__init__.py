@@ -1,6 +1,7 @@
 """Component to interface with switches that can be controlled remotely."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 from enum import StrEnum
 import logging
@@ -88,7 +89,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-class SwitchEntityDescription(ToggleEntityDescription, frozen_or_thawed=True):
+@dataclass(frozen=True)
+class SwitchEntityDescription(ToggleEntityDescription):
     """A class that describes switch entities."""
 
     device_class: SwitchDeviceClass | None = None

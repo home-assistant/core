@@ -1,6 +1,7 @@
 """Component to allow selecting an option from a list as platforms."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any, final
@@ -117,7 +118,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-class SelectEntityDescription(EntityDescription, frozen_or_thawed=True):
+@dataclass(frozen=True)
+class SelectEntityDescription(EntityDescription):
     """A class that describes select entities."""
 
     options: list[str] | None = None

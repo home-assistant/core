@@ -1,6 +1,7 @@
 """Component to interface with locks that can be controlled remotely."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntFlag
 import functools as ft
@@ -100,7 +101,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-class LockEntityDescription(EntityDescription, frozen_or_thawed=True):
+@dataclass(frozen=True)
+class LockEntityDescription(EntityDescription):
     """A class that describes lock entities."""
 
 
