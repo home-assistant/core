@@ -6,6 +6,7 @@ from collections import OrderedDict
 from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
+from enum import Enum
 import functools as ft
 from functools import lru_cache
 from io import StringIO
@@ -15,10 +16,11 @@ import os
 import pathlib
 import threading
 import time
+from types import ModuleType
 from typing import Any, NoReturn
 from unittest.mock import AsyncMock, Mock, patch
 
-from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
+import pytest  # noqa: F401
 import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader
@@ -1460,3 +1462,26 @@ def async_mock_cloud_connection_status(hass: HomeAssistant, connected: bool) -> 
     else:
         state = CloudConnectionState.CLOUD_DISCONNECTED
     async_dispatcher_send(hass, SIGNAL_CLOUD_CONNECTION_STATE, state)
+
+
+def validate_deprecated_constant(
+    caplog: pytest.LogCaptureFixture,
+    module: ModuleType,
+    replacement: Enum,
+    constant_prefix: str,
+    breaks_in_ha_version: str,
+) -> None:
+    """Validate deprecated constant creates a log entry and is included in the modules.__dir__()."""
+    assert (
+        module.__name__,
+        logging.WARNING,
+        (
+            f"{constant_prefix}{replacement.name} was used from test_constant_deprecation,"
+            f" this is a deprecated constant which will be removed in HA Core {breaks_in_ha_version}. "
+            f"Use {replacement.__class__.__name__}.{replacement.name} instead, please report "
+            "it to the author of the 'test_constant_deprecation' custom integration"
+        ),
+    ) in caplog.record_tuples
+
+    # verify deprecated constant is included in dir()
+    assert f"{constant_prefix}{replacement.name}" in dir(module)
