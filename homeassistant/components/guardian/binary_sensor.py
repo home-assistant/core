@@ -39,7 +39,7 @@ SENSOR_KIND_LEAK_DETECTED = "leak_detected"
 SENSOR_KIND_MOVED = "moved"
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValveControllerBinarySensorDescription(
     BinarySensorEntityDescription, ValveControllerEntityDescription
 ):

@@ -93,7 +93,7 @@ def async_client_device_info_fn(controller: UniFiController, obj_id: str) -> Dev
     )
 
 
-@dataclass
+@dataclass(frozen=True)
 class UnifiDescription(Generic[HandlerT, ApiItemT]):
     """Validate and load entities from different UniFi handlers."""
 
@@ -110,7 +110,7 @@ class UnifiDescription(Generic[HandlerT, ApiItemT]):
     unique_id_fn: Callable[[UniFiController, str], str]
 
 
-@dataclass
+@dataclass(frozen=True)
 class UnifiEntityDescription(EntityDescription, UnifiDescription[HandlerT, ApiItemT]):
     """UniFi Entity Description."""
 

@@ -22,7 +22,7 @@ from .model import (
 from .util import key_exists
 
 
-@dataclass
+@dataclass(frozen=True)
 class RainMachineSelectDescription(
     SelectEntityDescription,
     RainMachineEntityDescription,
@@ -40,14 +40,14 @@ class FreezeProtectionSelectOption:
     metric_label: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class FreezeProtectionTemperatureMixin:
     """Define an entity description mixin to include an options list."""
 
     extended_options: list[FreezeProtectionSelectOption]
 
 
-@dataclass
+@dataclass(frozen=True)
 class FreezeProtectionSelectDescription(
     RainMachineSelectDescription, FreezeProtectionTemperatureMixin
 ):

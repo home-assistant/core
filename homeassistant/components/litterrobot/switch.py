@@ -18,7 +18,7 @@ from .entity import LitterRobotEntity, _RobotT
 from .hub import LitterRobotHub
 
 
-@dataclass
+@dataclass(frozen=True)
 class RequiredKeysMixin(Generic[_RobotT]):
     """A class that describes robot switch entity required keys."""
 
@@ -26,7 +26,7 @@ class RequiredKeysMixin(Generic[_RobotT]):
     set_fn: Callable[[_RobotT, bool], Coroutine[Any, Any, bool]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RobotSwitchEntityDescription(SwitchEntityDescription, RequiredKeysMixin[_RobotT]):
     """A class that describes robot switch entities."""
 
