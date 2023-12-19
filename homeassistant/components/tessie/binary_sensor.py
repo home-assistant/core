@@ -19,7 +19,7 @@ from .coordinator import TessieDataUpdateCoordinator
 from .entity import TessieEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class TessieBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Tessie binary sensor entity."""
 

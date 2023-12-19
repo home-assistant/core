@@ -346,7 +346,7 @@ build.json @home-assistant/supervisor
 /tests/components/energy/ @home-assistant/core
 /homeassistant/components/energyzero/ @klaasnicolaas
 /tests/components/energyzero/ @klaasnicolaas
-/homeassistant/components/enigma2/ @fbradyirl
+/homeassistant/components/enigma2/ @autinerd
 /homeassistant/components/enocean/ @bdurrer
 /tests/components/enocean/ @bdurrer
 /homeassistant/components/enphase_envoy/ @bdraco @cgarwood @dgomes @joostlek @catsmanac
@@ -1068,6 +1068,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/repairs/ @home-assistant/core
 /tests/components/repairs/ @home-assistant/core
 /homeassistant/components/repetier/ @ShadowBr0ther
+/homeassistant/components/rest_command/ @jpbede
+/tests/components/rest_command/ @jpbede
 /homeassistant/components/rflink/ @javicalle
 /tests/components/rflink/ @javicalle
 /homeassistant/components/rfxtrx/ @danielhiversen @elupus @RobBie1221

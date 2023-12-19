@@ -21,7 +21,7 @@ from .coordinator import LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class LaMetricSensorEntityDescription(SensorEntityDescription):
     """Class describing LaMetric sensor entities."""
 
