@@ -18,7 +18,7 @@ from .coordinator import TailwindDataUpdateCoordinator
 from .entity import TailwindEntity
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class TailwindNumberEntityDescription(NumberEntityDescription):
     """Class describing Tailwind number entities."""
 

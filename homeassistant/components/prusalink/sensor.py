@@ -27,14 +27,14 @@ from . import DOMAIN, PrusaLinkEntity, PrusaLinkUpdateCoordinator
 T = TypeVar("T", PrinterInfo, JobInfo)
 
 
-@dataclass
+@dataclass(frozen=True)
 class PrusaLinkSensorEntityDescriptionMixin(Generic[T]):
     """Mixin for required keys."""
 
     value_fn: Callable[[T], datetime | StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PrusaLinkSensorEntityDescription(
     SensorEntityDescription, PrusaLinkSensorEntityDescriptionMixin[T], Generic[T]
 ):

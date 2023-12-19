@@ -18,7 +18,7 @@ from .const import DOMAIN
 from .entity import PhilipsJsEntity
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class PhilipsTVBinarySensorEntityDescription(BinarySensorEntityDescription):
     """A entity description for Philips TV binary sensor."""
 
