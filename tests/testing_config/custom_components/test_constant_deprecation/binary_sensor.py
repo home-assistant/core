@@ -1,7 +1,12 @@
 """Test deprecated binary sensor device classes."""
+from functools import partial
+
 from homeassistant.components import binary_sensor
 
+from .util import import_and_test_deprecated_costant
 
-def import_deprecated(device_class: binary_sensor.BinarySensorDeviceClass):
-    """Import deprecated device class constant."""
-    getattr(binary_sensor, f"DEVICE_CLASS_{device_class.name}")
+import_deprecated = partial(
+    import_and_test_deprecated_costant,
+    module=binary_sensor,
+    constant_prefix="DEVICE_CLASS_",
+)
