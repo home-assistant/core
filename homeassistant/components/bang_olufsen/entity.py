@@ -16,7 +16,7 @@ from mozart_api.mozart_client import MozartClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
-from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
@@ -33,8 +33,6 @@ class BangOlufsenBase:
 
         # get the input from the config entry.
         self.entry: ConfigEntry = entry
-
-        self._device: DeviceEntry | None = None
 
         # Set the configuration variables.
         self._host: str = self.entry.data[CONF_HOST]

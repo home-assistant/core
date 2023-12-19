@@ -42,6 +42,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         BangOlufsenBase.__init__(self, entry, client)
 
         self.hass = hass
+        self._device = get_device(hass, self._unique_id)
 
         # WebSocket callbacks
         self._client.get_on_connection(self.on_connection)

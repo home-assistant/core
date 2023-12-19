@@ -15,8 +15,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import DOMAIN
 from .websocket import BangOlufsenWebsocket
 
-PLATFORMS = [Platform.MEDIA_PLAYER]
-
 
 @dataclass
 class BangOlufsenData:
@@ -24,6 +22,9 @@ class BangOlufsenData:
 
     websocket: BangOlufsenWebsocket
     client: MozartClient
+
+
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
