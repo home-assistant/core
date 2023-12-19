@@ -222,7 +222,7 @@ class MqttValve(MqttEntity, ValveEntity):
         self._attr_is_closing = state == STATE_CLOSING
 
     @callback
-    def _process_state_only_update(
+    def _process_binary_valve_update(
         self, payload: ReceivePayloadType, state_payload: str
     ) -> None:
         """Process an update for a valve that does not report the position."""
@@ -244,7 +244,7 @@ class MqttValve(MqttEntity, ValveEntity):
         self._update_state(state)
 
     @callback
-    def _process_position_state_update(
+    def _process_position_valve_update(
         self, payload: ReceivePayloadType, position_payload: str, state_payload: str
     ) -> None:
         """Process an update for a valve that reports the position."""
@@ -307,11 +307,11 @@ class MqttValve(MqttEntity, ValveEntity):
             position_payload = payload if position_payload is None else position_payload
 
             if self._config[CONF_REPORTS_POSITION]:
-                self._process_position_state_update(
+                self._process_position_valve_update(
                     payload, position_payload, state_payload
                 )
             else:
-                self._process_state_only_update(payload, state_payload)
+                self._process_binary_valve_update(payload, state_payload)
 
         if self._config.get(CONF_STATE_TOPIC):
             topics["state_topic"] = {
