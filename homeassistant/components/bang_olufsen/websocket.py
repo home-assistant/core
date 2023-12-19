@@ -18,6 +18,7 @@ from mozart_api.mozart_client import MozartClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
@@ -45,9 +46,9 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         self._device = get_device(hass, self._unique_id)
 
         # WebSocket callbacks
-        self._client.get_on_connection(self.on_connection)
-        self._client.get_on_connection_lost(self.on_connection_lost)
         self._client.get_notification_notifications(self.on_notification_notification)
+        self._client.get_on_connection_lost(self.on_connection_lost)
+        self._client.get_on_connection(self.on_connection)
         self._client.get_playback_error_notifications(
             self.on_playback_error_notification
         )
@@ -60,11 +61,11 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         self._client.get_playback_state_notifications(
             self.on_playback_state_notification
         )
-        self._client.get_source_change_notifications(self.on_source_change_notification)
-        self._client.get_volume_notifications(self.on_volume_notification)
         self._client.get_software_update_state_notifications(
             self.on_software_update_state
         )
+        self._client.get_source_change_notifications(self.on_source_change_notification)
+        self._client.get_volume_notifications(self.on_volume_notification)
 
         # Used for firing events and debugging
         self._client.get_all_notifications_raw(self.on_all_notifications_raw)
@@ -148,13 +149,23 @@ class BangOlufsenWebsocket(BangOlufsenBase):
             notification,
         )
 
-    def on_software_update_state(self, notification: SoftwareUpdateState) -> None:
-        """Send software_update_state dispatch."""
-        async_dispatcher_send(
-            self.hass,
-            f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.SOFTWARE_UPDATE_STATE}",
-            notification,
-        )
+    async def on_software_update_state(self, notification: SoftwareUpdateState) -> None:
+        """Check device sw version."""
+        software_status = await self._client.get_softwareupdate_status()
+
+        # Update the HA device if the sw version does not match
+        if not self._device:
+            self._device = get_device(self.hass, self._unique_id)
+
+        assert self._device
+
+        if software_status.software_version != self._device.sw_version:
+            device_registry = dr.async_get(self.hass)
+
+            device_registry.async_update_device(
+                device_id=self._device.id,
+                sw_version=software_status.software_version,
+            )
 
     def on_all_notifications_raw(self, notification: dict) -> None:
         """Receive all notifications."""

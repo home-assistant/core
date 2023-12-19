@@ -43,7 +43,6 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -63,7 +62,6 @@ from .const import (
     WEBSOCKET_NOTIFICATION,
 )
 from .entity import BangOlufsenEntity
-from .util import get_device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -194,13 +192,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
                 self.hass,
                 f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.VOLUME}",
                 self._update_volume,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.SOFTWARE_UPDATE_STATE}",
-                self._update_device,
             )
         )
 
@@ -353,25 +344,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         self._volume = data
 
         self.async_write_ha_state()
-
-    async def _update_device(self, data: SoftwareUpdateState) -> None:
-        """Update HA device SW version."""
-        # Get software version.
-        software_status = await self._client.get_softwareupdate_status()
-
-        # Update the HA device if the sw version does not match
-        if not self.device_entry:
-            self.device_entry = get_device(self.hass, self._unique_id)
-
-        assert self.device_entry
-
-        if software_status.software_version != self.device_entry.sw_version:
-            device_registry = dr.async_get(self.hass)
-
-            device_registry.async_update_device(
-                device_id=self.device_entry.id,
-                sw_version=software_status.software_version,
-            )
 
     @property
     def state(self) -> MediaPlayerState:
