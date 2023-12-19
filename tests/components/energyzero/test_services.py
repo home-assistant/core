@@ -51,22 +51,35 @@ async def test_service(
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize("service", [GAS_SERVICE_NAME, ENERGY_SERVICE_NAME])
 @pytest.mark.parametrize(
-    "service_data",
+    "data",
     [
-        {},
-        {"incl_vat": "incorrect vat"},
-        {"incl_vat": True, "start": "incorrect date"},
-        {"incl_vat": True, "end": "incorrect date"},
+        ({}, vol.er.Error, "required key not provided .+"),
+        (
+            {"incl_vat": "incorrect vat"},
+            vol.er.Error,
+            "expected bool for dictionary value .+",
+        ),
+        (
+            {"incl_vat": True, "start": "incorrect date"},
+            ServiceValidationError,
+            "Invalid datetime provided.",
+        ),
+        (
+            {"incl_vat": True, "end": "incorrect date"},
+            ServiceValidationError,
+            "Invalid datetime provided.",
+        ),
     ],
 )
 async def test_service_validation(
     hass: HomeAssistant,
     service: str,
-    service_data: dict[str, str],
+    data: tuple[dict[str, str], type[Exception], str],
 ) -> None:
     """Test the EnergyZero Service validation."""
+    (service_data, error, error_message) = data
 
-    with pytest.raises((ServiceValidationError, vol.er.Error)):
+    with pytest.raises(error, match=error_message):
         await hass.services.async_call(
             DOMAIN,
             service,
