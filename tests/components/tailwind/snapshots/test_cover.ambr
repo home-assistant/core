@@ -1,5 +1,19 @@
 # serializer version: 1
 # name: test_cover_entities[cover.door_1]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'garage',
+      'friendly_name': 'Door 1',
+      'supported_features': <CoverEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.door_1',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities[cover.door_1].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -30,7 +44,49 @@
     'unit_of_measurement': None,
   })
 # ---
+# name: test_cover_entities[cover.door_1].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tailwind',
+        '_3c_e9_e_6d_21_84_-door1',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Tailwind',
+    'model': 'iQ3',
+    'name': 'Door 1',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '10.10',
+    'via_device_id': None,
+  })
+# ---
 # name: test_cover_entities[cover.door_2]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'garage',
+      'friendly_name': 'Door 2',
+      'supported_features': <CoverEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.door_2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_cover_entities[cover.door_2].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -59,5 +115,33 @@
     'translation_key': None,
     'unique_id': '_3c_e9_e_6d_21_84_-door2',
     'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities[cover.door_2].2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tailwind',
+        '_3c_e9_e_6d_21_84_-door2',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Tailwind',
+    'model': 'iQ3',
+    'name': 'Door 2',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '10.10',
+    'via_device_id': <ANY>,
   })
 # ---
