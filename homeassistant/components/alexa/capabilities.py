@@ -1512,7 +1512,7 @@ class AlexaModeController(AlexaCapability):
                     f"{water_heater.ATTR_OPERATION_MODE}.{operation_mode}",
                     [operation_mode],
                 )
-            # Water heaters with a single mode completely break Alexa discovery,
+            # Devices with a single mode completely break Alexa discovery,
             # add a fake preset (see issue #53832).
             if len(operation_modes) == 1:
                 self._resource.add_mode(

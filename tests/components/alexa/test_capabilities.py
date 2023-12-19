@@ -848,6 +848,33 @@ async def test_report_water_heater_state(hass: HomeAssistant) -> None:
         properties.assert_not_has_property("Alexa.ModeController", "mode")
 
 
+async def test_report_singe_mode_water_heater(hass: HomeAssistant) -> None:
+    """Test ThermostatController also reports state correctly for water heaters."""
+    operation_mode = STATE_ECO
+    hass.states.async_set(
+        "water_heater.boyler",
+        operation_mode,
+        {
+            "friendly_name": "Boyler",
+            "supported_features": 11,
+            ATTR_CURRENT_TEMPERATURE: 34,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+            ATTR_OPERATION_LIST: [STATE_ECO],
+            ATTR_OPERATION_MODE: operation_mode,
+        },
+    )
+    properties = await reported_properties(hass, "water_heater.boyler")
+    properties.assert_not_has_property("Alexa.ThermostatController", "thermostatMode")
+    properties.assert_equal(
+        "Alexa.ModeController", "mode", f"operation_mode.{operation_mode}"
+    )
+    properties.assert_equal(
+        "Alexa.TemperatureSensor",
+        "temperature",
+        {"value": 34.0, "scale": "CELSIUS"},
+    )
+
+
 async def test_temperature_sensor_sensor(hass: HomeAssistant) -> None:
     """Test TemperatureSensor reports sensor temperature correctly."""
     for bad_value in (STATE_UNKNOWN, STATE_UNAVAILABLE, "not-number"):

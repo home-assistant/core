@@ -25,7 +25,6 @@ class MockConfig(smart_home.AlexaConfig):
         "binary_sensor.test_motion_forced": {"display_categories": "MOTION_SENSOR"},
         "binary_sensor.test_motion_camera_event": {"display_categories": "CAMERA"},
         "camera.test": {"display_categories": "CAMERA"},
-        "water_heater.boyler": {"display_categories": "WATER_HEATER"},
     }
 
     def __init__(self, hass):
