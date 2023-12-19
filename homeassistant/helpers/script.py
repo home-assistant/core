@@ -700,6 +700,7 @@ class _ScriptRun:
             and params[CONF_SERVICE] == "trigger"
             or params[CONF_DOMAIN] in ("python_script", "script")
         )
+
         trace_set_result(params=params, running_script=running_script)
         response_data = await self._async_run_long_action(
             self._hass.async_create_task(
@@ -1047,6 +1048,7 @@ class _ScriptRun:
     @async_trace_path("parallel")
     async def _async_parallel_step(self) -> None:
         """Run a sequence in parallel."""
+
         # pylint: disable-next=protected-access
         scripts = await self._script._async_get_parallel_scripts(self._step)
 

@@ -13,8 +13,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.components.rascalscheduler import (
-    dag_opeator,
-    rascal_scheduler,
+    RoutineEntity,
     setup_rascal_scheduler_entity,
 )
 from homeassistant.const import (
@@ -450,6 +449,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self._blueprint_inputs = blueprint_inputs
         self._trace_config = trace_config
         self._attr_unique_id = automation_id
+        self.routine: RoutineEntity | None = None
 
     @property
     def name(self) -> str:
@@ -659,17 +659,41 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             # Make a new empty script stack; automations are allowed
             # to recursively trigger themselves
             script_stack_cv.set([])
+            # routine_id, routine_entity = dag_operator(
+            #     self.hass,
+            #     str(self._attr_unique_id),
+            #     self.action_script.sequence,
+            #     variables,
+            #     trigger_context,
+            # )
+            # component: EntityComponent[BaseScriptEntity] = self.hass.data['script']
+            # print("action: ", self.action_script.sequence, " \nvariables: ", variables, " \ntrigger: ", trigger_context)
+            # script = component.get_entity('script.1702482535051')
+            # component2: EntityComponent[SwitchEntity] = self.hass.data['switch']
+            # switch = component2.get_entity('switch.plug2')
 
-            routine_id, routine_entity = dag_opeator(
-                self.hass,
-                str(self._attr_unique_id),
-                self.action_script.sequence,
-                variables,
-                trigger_context,
-            )
+            # registry = self.hass.data['entity_registry']
+            # print("registry: ", registry.async_get('ce33eb765f51e0aadf0fc374d122d49c').as_partial_dict['entity_id'])
+            # print(registry.entities.values())
+
+            # print("switch: ", switch)
+            # print("entity: ", script.raw_config)
+            # print("entity1: ", script.referenced_entities)
+            # entity_registry = er.async_get(self.hass)
+            # result: dict[str, Mapping[str, Any]] = {}
+            # entities: dict[str, ExposedEntity]
+            # assistant_settings: Mapping
+            # if registry_entry := entity_registry.async_get('1702482535051'):
+            #     assistant_settings = registry_entry.options
+            # elif exposed_entity := entities.get('1702482535051'):
+            #     assistant_settings = exposed_entity.assistants
+
+            # print(async_get_entity_settings())
+            # routine_id, routine_entity =
 
             # for item in routine_entity.actions.values():
-            #     if not item.parents and not item.children:
+
+            #     if len(item.parents) != 0 and len(item.children)!=0:
             #         print(
             #             "routine_id:", item.routine_id,
             #             "action_id:", item.action_id,
@@ -677,7 +701,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             #             "parents:", item.parents[0].action_id,
             #             "children:", item.children[0].action_id
             #         )
-            #     elif not item.parents:
+            #     elif len(item.children)!=0:
             #         print(
             #             "routine_id:", item.routine_id,
             #             "action_id:", item.action_id,
@@ -685,7 +709,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             #             "parents:", item.parents,
             #             "children:", item.children[0].action_id
             #         )
-            #     elif not item.children:
+            #     elif len(item.parents)!=0:
             #         print(
             #             "routine_id:", item.routine_id,
             #             "action_id:", item.action_id,
@@ -702,8 +726,8 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             #             "children:", item.children
             #         )
 
-            rascal = rascal_scheduler(self.hass)
-            rascal.start_routine(routine_entity)
+            # rascal = rascal_scheduler(self.hass)
+            # rascal.start_routine(routine_entity)
 
             # try:
             #     with trace_path("action"):

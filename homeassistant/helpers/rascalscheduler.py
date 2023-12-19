@@ -50,6 +50,7 @@ class ActionEntity:
         routine_id: str | None,
         variables: dict[str, Any],
         context: Context | None,
+        parents: list[ActionEntity],
     ) -> None:
         """Initialize a routine entity."""
         self._hass = hass
@@ -61,7 +62,11 @@ class ActionEntity:
         else:
             self.action_state = action_state
 
-        self.parents: list[ActionEntity] = []
+        if parents:
+            self.parents = parents
+        else:
+            self.parents = []
+
         self.children: list[ActionEntity] = []
         self.routine_id = routine_id
         self.variables = variables

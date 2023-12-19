@@ -2,11 +2,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Sequence
 import threading
-from typing import Any
 
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.rascalscheduler import (
     ActionEntity,
     Queue,
@@ -19,6 +17,8 @@ from .const import DOMAIN, LOGGER
 CONFIG_ACTION_ID = "action_id"
 CONFIG_ENTITY_ID = "entity_id"
 CONFIG_ACTION_ENTITY = "action_entity"
+CONFIG_PARALLEL = "parallel"
+CONFIG_SEQUENCE = "sequence"
 
 
 RASC_SCHEDULED = "scheduled"
@@ -31,13 +31,7 @@ def setup_rascal_scheduler_entity(hass: HomeAssistant) -> None:
     """Set up RASC scheduler entity."""
     LOGGER.info("Setup rascal entity")
     hass.data[DOMAIN] = RascalSchedulerEntity(hass)
-    hass.bus.async_listen(RASC_RESPONSE, hass.data[DOMAIN].event_listener)
-
-
-# async def setup_rascal_listener(hass: HomeAssistant) -> None:
-#     """Setup listener."""
-#     # hass.data[DOMAIN]
-#     # Listen for when example_component_my_cool_event is fired
+    # hass.bus.async_listen(RASC_RESPONSE, hass.data[DOMAIN].event_listener)
 
 
 def create_x_ready_queue(hass: HomeAssistant, entity_id: str) -> None:
@@ -58,94 +52,9 @@ def create_x_ready_queue(hass: HomeAssistant, entity_id: str) -> None:
 #         LOGGER.warning("Unable to delete unknown queue %s", entity_id)
 
 
-# def add_scheduled_routine(hass: HomeAssistant, routine: RoutineEntity) -> None:
-#     """Add routine to scheduled_routines."""
-#     rascal_scheduler = hass.data[DOMAIN]
-#     rascal_scheduler.set_scheduled_routine(routine)
-
-
 def rascal_scheduler(hass: HomeAssistant) -> RascalSchedulerEntity:
-    """Ger rascal scheduler."""
+    """Get rascal scheduler."""
     return hass.data[DOMAIN]
-
-
-def add_ready_routines(hass: HomeAssistant, action_entity: ActionEntity) -> None:
-    """Add action_entity to ready queues."""
-    scheduler = hass.data[DOMAIN]
-    scheduler.set_ready_routines(action_entity.action[CONFIG_ENTITY_ID], action_entity)
-
-
-def add_ready_subroutines(hass: HomeAssistant, action_entity: ActionEntity) -> None:
-    """Add subroutines/next actions of action_entity to ready queues."""
-    scheduler = hass.data[DOMAIN]
-    scheduler.set_ready_subroutines(
-        action_entity.action[CONFIG_ENTITY_ID], action_entity
-    )
-
-
-def get_action_entity(
-    hass: HomeAssistant, routine_id: str, action_id: str
-) -> ActionEntity:
-    """Get action entity."""
-    scheduler = hass.data[DOMAIN]
-    return scheduler.get_action_entity(routine_id, action_id)
-
-
-def get_action_state(hass: HomeAssistant, routine_id: str, action_id: str) -> str:
-    """Get action state."""
-    scheduler = hass.data[DOMAIN]
-    return scheduler.get_action_state(routine_id, action_id)
-
-
-def update_action_state(
-    hass: HomeAssistant, routine_id: str, action_id: str, new_state: str
-) -> None:
-    """Update action state."""
-    scheduler = hass.data[DOMAIN]
-    scheduler.update_action_state(routine_id, action_id, new_state)
-
-
-def dag_opeator(
-    hass: HomeAssistant,
-    routine_id: str | None,
-    action_script: Sequence[dict[str, Any]],
-    variables: dict[str, Any],
-    context: Context | None,
-):
-    """Dag operator."""
-    entities = {}
-
-    if routine_id is None:
-        return
-
-    for step, action in enumerate(action_script):
-        action_id = routine_id + str(step)
-        entity = ActionEntity(
-            hass=hass,
-            action=action,
-            action_id=action_id,
-            action_state=None,
-            routine_id=routine_id,
-            variables=variables,
-            context=context,
-        )
-
-        entity.variables = variables
-        entity.context = context
-        entities[action_id] = entity
-
-    for step, _ in enumerate(entities):
-        if step != 0:
-            entities[routine_id + str(step)].parents.append(
-                entities[routine_id + str(step - 1)]
-            )
-
-        if step != len(action_script) - 1:
-            entities[routine_id + str(step)].children.append(
-                entities[routine_id + str(step + 1)]
-            )
-
-    return routine_id + "0", RoutineEntity(routine_id, entities)
 
 
 class BaseActiveRoutines:
@@ -231,7 +140,22 @@ class RascalSchedulerEntity(BaseActiveRoutines, BaseReadyQueues):
         """Schedule subroutines."""
         entity_id = action_entity.action[CONFIG_ENTITY_ID]
 
-        self._schedule_subroutines(action_entity)
+        def condition_check() -> bool:
+            if action_entity.children:
+                print("parents: ", action_entity.children[0].parents)  # noqa: T201
+                if action_entity.children[0].parents:
+                    for p in action_entity.children[0].parents:
+                        print(  # noqa: T201
+                            "parent: ", p.action, " state: ", p.action_state
+                        )
+                        if p.action_state != RASC_COMPLETE:
+                            return False
+
+            return True
+
+        if condition_check():
+            self._schedule_subroutines(action_entity)
+
         self._set_active_routine(entity_id, None)
         await self._async_run_next(entity_id)
 
@@ -251,7 +175,6 @@ class RascalSchedulerEntity(BaseActiveRoutines, BaseReadyQueues):
 
     def start_routine(self, routine_entity: RoutineEntity) -> None:
         """Start routine entity."""
-
         for _action_id, action_entity in routine_entity.actions.items():
             if not action_entity.parents:
                 self._set_ready_routines(action_entity)
