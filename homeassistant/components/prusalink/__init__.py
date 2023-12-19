@@ -87,6 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.version == 1:
         if (api := await _migrate_to_version_2(hass, entry)) is None:
             return False
+        ir.async_delete_issue(hass, DOMAIN, "firmware_5_1_required")
     else:
         api = PrusaLink(
             async_get_clientsession(hass),
