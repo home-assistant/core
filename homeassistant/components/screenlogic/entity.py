@@ -6,7 +6,11 @@ import logging
 from typing import Any
 
 from screenlogicpy import ScreenLogicGateway
-from screenlogicpy.const.common import ON_OFF
+from screenlogicpy.const.common import (
+    ON_OFF,
+    ScreenLogicCommunicationError,
+    ScreenLogicError,
+)
 from screenlogicpy.const.data import ATTR
 from screenlogicpy.const.msg import CODE
 
@@ -24,14 +28,14 @@ from .util import generate_unique_id
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScreenLogicEntityRequiredKeyMixin:
     """Mixin for required ScreenLogic entity data_path."""
 
     data_root: ScreenLogicDataPath
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScreenLogicEntityDescription(
     EntityDescription, ScreenLogicEntityRequiredKeyMixin
 ):
@@ -99,14 +103,14 @@ class ScreenlogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
             raise HomeAssistantError(f"Data not found: {self._data_path}") from ke
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScreenLogicPushEntityRequiredKeyMixin:
     """Mixin for required key for ScreenLogic push entities."""
 
     subscription_code: CODE
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScreenLogicPushEntityDescription(
     ScreenLogicEntityDescription,
     ScreenLogicPushEntityRequiredKeyMixin,
@@ -170,8 +174,10 @@ class ScreenLogicCircuitEntity(ScreenLogicPushEntity):
         await self._async_set_circuit(ON_OFF.OFF)
 
     async def _async_set_circuit(self, state: ON_OFF) -> None:
-        if not await self.gateway.async_set_circuit(self._data_key, state.value):
+        try:
+            await self.gateway.async_set_circuit(self._data_key, state.value)
+        except (ScreenLogicCommunicationError, ScreenLogicError) as sle:
             raise HomeAssistantError(
-                f"Failed to set_circuit {self._data_key} {state.value}"
-            )
+                f"Failed to set_circuit {self._data_key} {state.value}: {sle.msg}"
+            ) from sle
         _LOGGER.debug("Set circuit %s %s", self._data_key, state.value)

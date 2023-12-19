@@ -90,7 +90,7 @@ async def test_select_set_option(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
         return_value={"result": {"status": "failed"}},
     ), pytest.raises(
-        HomeAssistantError
+        HomeAssistantError,
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
@@ -132,7 +132,7 @@ async def test_select_set_option(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
         return_value={"result": {"status": "Failed", "failureReason": "No connection"}},
     ), pytest.raises(
-        HomeAssistantError
+        HomeAssistantError,
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,

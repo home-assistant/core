@@ -1,4 +1,5 @@
 """The tests for the MQTT cover platform."""
+from copy import deepcopy
 from typing import Any
 from unittest.mock import patch
 
@@ -3347,6 +3348,11 @@ async def test_set_state_via_stopped_state_no_position_topic(
     state = hass.states.get("cover.test")
     assert state.state == STATE_CLOSED
 
+    async_fire_mqtt_message(hass, "state-topic", "STOPPED")
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSED
+
 
 @pytest.mark.parametrize(
     "hass_config",
@@ -3577,7 +3583,7 @@ async def test_publishing_with_custom_encoding(
 ) -> None:
     """Test publishing MQTT payload with different encoding."""
     domain = cover.DOMAIN
-    config = DEFAULT_CONFIG
+    config = deepcopy(DEFAULT_CONFIG)
     config[mqtt.DOMAIN][domain]["position_topic"] = "some-position-topic"
 
     await help_test_publishing_with_custom_encoding(

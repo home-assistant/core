@@ -48,7 +48,7 @@ TYPE_RAIN_SENSOR_RAIN_START = "rain_sensor_rain_start"
 TYPE_ZONE_RUN_COMPLETION_TIME = "zone_run_completion_time"
 
 
-@dataclass
+@dataclass(frozen=True)
 class RainMachineSensorDataDescription(
     SensorEntityDescription,
     RainMachineEntityDescription,
@@ -57,7 +57,7 @@ class RainMachineSensorDataDescription(
     """Describe a RainMachine sensor."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class RainMachineSensorCompletionTimerDescription(
     SensorEntityDescription,
     RainMachineEntityDescription,

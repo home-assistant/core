@@ -18,6 +18,7 @@ from collections.abc import (
 )
 import concurrent.futures
 from contextlib import suppress
+from dataclasses import dataclass
 import datetime
 import enum
 import functools
@@ -80,7 +81,6 @@ from .exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
-from .helpers.aiohttp_compat import restore_original_aiohttp_cancel_behavior
 from .helpers.json import json_dumps
 from .util import dt as dt_util, location
 from .util.async_ import (
@@ -108,12 +108,12 @@ if TYPE_CHECKING:
     from .helpers.entity import StateInfo
 
 
-STAGE_1_SHUTDOWN_TIMEOUT = 100
-STAGE_2_SHUTDOWN_TIMEOUT = 60
-STAGE_3_SHUTDOWN_TIMEOUT = 30
+STOPPING_STAGE_SHUTDOWN_TIMEOUT = 20
+STOP_STAGE_SHUTDOWN_TIMEOUT = 100
+FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT = 60
+CLOSE_STAGE_SHUTDOWN_TIMEOUT = 30
 
 block_async_io.enable()
-restore_original_aiohttp_cancel_behavior()
 
 _T = TypeVar("_T")
 _R = TypeVar("_R")
@@ -301,6 +301,14 @@ class HassJob(Generic[_P, _R_co]):
         return f"<Job {self.name} {self.job_type} {self.target}>"
 
 
+@dataclass(frozen=True)
+class HassJobWithArgs:
+    """Container for a HassJob and arguments."""
+
+    job: HassJob[..., Coroutine[Any, Any, Any] | Any]
+    args: Iterable[Any]
+
+
 def _get_hassjob_callable_job_type(target: Callable[..., Any]) -> HassJobType:
     """Determine the job type from the callable."""
     # Check for partials to properly determine if coroutine function
@@ -372,6 +380,7 @@ class HomeAssistant:
         # Timeout handler for Core/Helper namespace
         self.timeout: TimeoutManager = TimeoutManager()
         self._stop_future: concurrent.futures.Future[None] | None = None
+        self._shutdown_jobs: list[HassJobWithArgs] = []
 
     @property
     def is_running(self) -> bool:
@@ -768,6 +777,42 @@ class HomeAssistant:
             for task in pending:
                 _LOGGER.debug("Waited %s seconds for task: %s", wait_time, task)
 
+    @overload
+    @callback
+    def async_add_shutdown_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, Any]], *args: Any
+    ) -> CALLBACK_TYPE:
+        ...
+
+    @overload
+    @callback
+    def async_add_shutdown_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, Any] | Any], *args: Any
+    ) -> CALLBACK_TYPE:
+        ...
+
+    @callback
+    def async_add_shutdown_job(
+        self, hassjob: HassJob[..., Coroutine[Any, Any, Any] | Any], *args: Any
+    ) -> CALLBACK_TYPE:
+        """Add a HassJob which will be executed on shutdown.
+
+        This method must be run in the event loop.
+
+        hassjob: HassJob
+        args: parameters for method to call.
+
+        Returns function to remove the job.
+        """
+        job_with_args = HassJobWithArgs(hassjob, args)
+        self._shutdown_jobs.append(job_with_args)
+
+        @callback
+        def remove_job() -> None:
+            self._shutdown_jobs.remove(job_with_args)
+
+        return remove_job
+
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
         if self.state == CoreState.not_running:  # just ignore
@@ -801,6 +846,26 @@ class HomeAssistant:
                     "Stopping Home Assistant before startup has completed may fail"
                 )
 
+        # Stage 1 - Run shutdown jobs
+        try:
+            async with self.timeout.async_timeout(STOPPING_STAGE_SHUTDOWN_TIMEOUT):
+                tasks: list[asyncio.Future[Any]] = []
+                for job in self._shutdown_jobs:
+                    task_or_none = self.async_run_hass_job(job.job, *job.args)
+                    if not task_or_none:
+                        continue
+                    tasks.append(task_or_none)
+                if tasks:
+                    asyncio.gather(*tasks, return_exceptions=True)
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                "Timed out waiting for shutdown jobs to complete, the shutdown will"
+                " continue"
+            )
+            self._async_log_running_tasks("run shutdown jobs")
+
+        # Stage 2 - Stop integrations
+
         # Keep holding the reference to the tasks but do not allow them
         # to block shutdown. Only tasks created after this point will
         # be waited for.
@@ -818,33 +883,32 @@ class HomeAssistant:
 
         self.exit_code = exit_code
 
-        # stage 1
         self.state = CoreState.stopping
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         try:
-            async with self.timeout.async_timeout(STAGE_1_SHUTDOWN_TIMEOUT):
+            async with self.timeout.async_timeout(STOP_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for shutdown stage 1 to complete, the shutdown will"
+                "Timed out waiting for integrations to stop, the shutdown will"
                 " continue"
             )
-            self._async_log_running_tasks(1)
+            self._async_log_running_tasks("stop integrations")
 
-        # stage 2
+        # Stage 3 - Final write
         self.state = CoreState.final_write
         self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
         try:
-            async with self.timeout.async_timeout(STAGE_2_SHUTDOWN_TIMEOUT):
+            async with self.timeout.async_timeout(FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for shutdown stage 2 to complete, the shutdown will"
+                "Timed out waiting for final writes to complete, the shutdown will"
                 " continue"
             )
-            self._async_log_running_tasks(2)
+            self._async_log_running_tasks("final write")
 
-        # stage 3
+        # Stage 4 - Close
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
 
@@ -858,12 +922,12 @@ class HomeAssistant:
                 # were awaiting another task
                 continue
             _LOGGER.warning(
-                "Task %s was still running after stage 2 shutdown; "
+                "Task %s was still running after final writes shutdown stage; "
                 "Integrations should cancel non-critical tasks when receiving "
                 "the stop event to prevent delaying shutdown",
                 task,
             )
-            task.cancel("Home Assistant stage 2 shutdown")
+            task.cancel("Home Assistant final writes shutdown stage")
             try:
                 async with asyncio.timeout(0.1):
                     await task
@@ -872,10 +936,12 @@ class HomeAssistant:
             except asyncio.TimeoutError:
                 # Task may be shielded from cancellation.
                 _LOGGER.exception(
-                    "Task %s could not be canceled during stage 3 shutdown", task
+                    "Task %s could not be canceled during final shutdown stage", task
                 )
-            except Exception as ex:  # pylint: disable=broad-except
-                _LOGGER.exception("Task %s error during stage 3 shutdown: %s", task, ex)
+            except Exception as exc:  # pylint: disable=broad-except
+                _LOGGER.exception(
+                    "Task %s error during final shutdown stage: %s", task, exc
+                )
 
         # Prevent run_callback_threadsafe from scheduling any additional
         # callbacks in the event loop as callbacks created on the futures
@@ -885,14 +951,14 @@ class HomeAssistant:
         shutdown_run_callback_threadsafe(self.loop)
 
         try:
-            async with self.timeout.async_timeout(STAGE_3_SHUTDOWN_TIMEOUT):
+            async with self.timeout.async_timeout(CLOSE_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for shutdown stage 3 to complete, the shutdown will"
+                "Timed out waiting for close event to be processed, the shutdown will"
                 " continue"
             )
-            self._async_log_running_tasks(3)
+            self._async_log_running_tasks("close")
 
         self.state = CoreState.stopped
 
@@ -912,10 +978,10 @@ class HomeAssistant:
             ):
                 handle.cancel()
 
-    def _async_log_running_tasks(self, stage: int) -> None:
+    def _async_log_running_tasks(self, stage: str) -> None:
         """Log all running tasks."""
         for task in self._tasks:
-            _LOGGER.warning("Shutdown stage %s: still running: %s", stage, task)
+            _LOGGER.warning("Shutdown stage '%s': still running: %s", stage, task)
 
 
 class Context:

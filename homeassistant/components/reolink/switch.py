@@ -17,30 +17,50 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkChannelCoordinatorEntity, ReolinkHostCoordinatorEntity
+from .entity import (
+    ReolinkChannelCoordinatorEntity,
+    ReolinkChannelEntityDescription,
+    ReolinkHostCoordinatorEntity,
+    ReolinkHostEntityDescription,
+)
 
 
-@dataclass(kw_only=True)
-class ReolinkSwitchEntityDescription(SwitchEntityDescription):
+@dataclass(frozen=True, kw_only=True)
+class ReolinkSwitchEntityDescription(
+    SwitchEntityDescription,
+    ReolinkChannelEntityDescription,
+):
     """A class that describes switch entities."""
 
     method: Callable[[Host, int, bool], Any]
-    supported: Callable[[Host, int], bool] = lambda api, ch: True
     value: Callable[[Host, int], bool]
 
 
-@dataclass(kw_only=True)
-class ReolinkNVRSwitchEntityDescription(SwitchEntityDescription):
+@dataclass(frozen=True, kw_only=True)
+class ReolinkNVRSwitchEntityDescription(
+    SwitchEntityDescription,
+    ReolinkHostEntityDescription,
+):
     """A class that describes NVR switch entities."""
 
     method: Callable[[Host, bool], Any]
-    supported: Callable[[Host], bool] = lambda api: True
     value: Callable[[Host], bool]
 
 
 SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
+        key="ir_lights",
+        cmd_key="GetIrLights",
+        translation_key="ir_lights",
+        icon="mdi:led-off",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api, ch: api.supported(ch, "ir_lights"),
+        value=lambda api, ch: api.ir_enabled(ch),
+        method=lambda api, ch, value: api.set_ir_lights(ch, value),
+    ),
+    ReolinkSwitchEntityDescription(
         key="record_audio",
+        cmd_key="GetEnc",
         translation_key="record_audio",
         icon="mdi:microphone",
         entity_category=EntityCategory.CONFIG,
@@ -50,6 +70,7 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="siren_on_event",
+        cmd_key="GetAudioAlarm",
         translation_key="siren_on_event",
         icon="mdi:alarm-light",
         entity_category=EntityCategory.CONFIG,
@@ -59,6 +80,7 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="auto_tracking",
+        cmd_key="GetAiCfg",
         translation_key="auto_tracking",
         icon="mdi:target-account",
         entity_category=EntityCategory.CONFIG,
@@ -68,6 +90,7 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="auto_focus",
+        cmd_key="GetAutoFocus",
         translation_key="auto_focus",
         icon="mdi:focus-field",
         entity_category=EntityCategory.CONFIG,
@@ -77,6 +100,7 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="gaurd_return",
+        cmd_key="GetPtzGuard",
         translation_key="gaurd_return",
         icon="mdi:crosshairs-gps",
         entity_category=EntityCategory.CONFIG,
@@ -86,6 +110,7 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="email",
+        cmd_key="GetEmail",
         translation_key="email",
         icon="mdi:email",
         entity_category=EntityCategory.CONFIG,
@@ -95,6 +120,7 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="ftp_upload",
+        cmd_key="GetFtp",
         translation_key="ftp_upload",
         icon="mdi:swap-horizontal",
         entity_category=EntityCategory.CONFIG,
@@ -104,6 +130,7 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="push_notifications",
+        cmd_key="GetPush",
         translation_key="push_notifications",
         icon="mdi:message-badge",
         entity_category=EntityCategory.CONFIG,
@@ -113,6 +140,7 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="record",
+        cmd_key="GetRec",
         translation_key="record",
         icon="mdi:record-rec",
         entity_category=EntityCategory.CONFIG,
@@ -122,6 +150,7 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="buzzer",
+        cmd_key="GetBuzzerAlarmV20",
         translation_key="buzzer",
         icon="mdi:room-service",
         entity_category=EntityCategory.CONFIG,
@@ -131,6 +160,7 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="doorbell_button_sound",
+        cmd_key="GetAudioCfg",
         translation_key="doorbell_button_sound",
         icon="mdi:volume-high",
         entity_category=EntityCategory.CONFIG,
@@ -140,6 +170,7 @@ SWITCH_ENTITIES = (
     ),
     ReolinkSwitchEntityDescription(
         key="hdr",
+        cmd_key="GetIsp",
         translation_key="hdr",
         icon="mdi:hdr",
         entity_category=EntityCategory.CONFIG,
@@ -153,6 +184,7 @@ SWITCH_ENTITIES = (
 NVR_SWITCH_ENTITIES = (
     ReolinkNVRSwitchEntityDescription(
         key="email",
+        cmd_key="GetEmail",
         translation_key="email",
         icon="mdi:email",
         entity_category=EntityCategory.CONFIG,
@@ -162,6 +194,7 @@ NVR_SWITCH_ENTITIES = (
     ),
     ReolinkNVRSwitchEntityDescription(
         key="ftp_upload",
+        cmd_key="GetFtp",
         translation_key="ftp_upload",
         icon="mdi:swap-horizontal",
         entity_category=EntityCategory.CONFIG,
@@ -171,6 +204,7 @@ NVR_SWITCH_ENTITIES = (
     ),
     ReolinkNVRSwitchEntityDescription(
         key="push_notifications",
+        cmd_key="GetPush",
         translation_key="push_notifications",
         icon="mdi:message-badge",
         entity_category=EntityCategory.CONFIG,
@@ -180,6 +214,7 @@ NVR_SWITCH_ENTITIES = (
     ),
     ReolinkNVRSwitchEntityDescription(
         key="record",
+        cmd_key="GetRec",
         translation_key="record",
         icon="mdi:record-rec",
         entity_category=EntityCategory.CONFIG,
@@ -189,6 +224,7 @@ NVR_SWITCH_ENTITIES = (
     ),
     ReolinkNVRSwitchEntityDescription(
         key="buzzer",
+        cmd_key="GetBuzzerAlarmV20",
         translation_key="buzzer",
         icon="mdi:room-service",
         entity_category=EntityCategory.CONFIG,
@@ -235,12 +271,8 @@ class ReolinkSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
         entity_description: ReolinkSwitchEntityDescription,
     ) -> None:
         """Initialize Reolink switch entity."""
-        super().__init__(reolink_data, channel)
         self.entity_description = entity_description
-
-        self._attr_unique_id = (
-            f"{self._host.unique_id}_{channel}_{entity_description.key}"
-        )
+        super().__init__(reolink_data, channel)
 
     @property
     def is_on(self) -> bool:
@@ -275,8 +307,8 @@ class ReolinkNVRSwitchEntity(ReolinkHostCoordinatorEntity, SwitchEntity):
         entity_description: ReolinkNVRSwitchEntityDescription,
     ) -> None:
         """Initialize Reolink switch entity."""
-        super().__init__(reolink_data)
         self.entity_description = entity_description
+        super().__init__(reolink_data)
 
         self._attr_unique_id = f"{self._host.unique_id}_{entity_description.key}"
 

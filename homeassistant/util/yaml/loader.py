@@ -1,7 +1,7 @@
 """Custom loader."""
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import suppress
 import fnmatch
 from io import StringIO, TextIOWrapper
@@ -23,6 +23,7 @@ except ImportError:
     )
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.frame import report
 
 from .const import SECRET_YAML
 from .objects import Input, NodeDictClass, NodeListClass, NodeStrClass
@@ -33,6 +34,10 @@ JSON_TYPE = list | dict | str
 _DictT = TypeVar("_DictT", bound=dict)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class YamlTypeError(HomeAssistantError):
+    """Raised by load_yaml_dict if top level data is not a dict."""
 
 
 class Secrets:
@@ -136,6 +141,37 @@ class FastSafeLoader(FastestAvailableSafeLoader, _LoaderMixin):
         self.secrets = secrets
 
 
+class SafeLoader(FastSafeLoader):
+    """Provided for backwards compatibility. Logs when instantiated."""
+
+    def __init__(*args: Any, **kwargs: Any) -> None:
+        """Log a warning and call super."""
+        SafeLoader.__report_deprecated()
+        FastSafeLoader.__init__(*args, **kwargs)
+
+    @classmethod
+    def add_constructor(cls, tag: str, constructor: Callable) -> None:
+        """Log a warning and call super."""
+        SafeLoader.__report_deprecated()
+        FastSafeLoader.add_constructor(tag, constructor)
+
+    @classmethod
+    def add_multi_constructor(
+        cls, tag_prefix: str, multi_constructor: Callable
+    ) -> None:
+        """Log a warning and call super."""
+        SafeLoader.__report_deprecated()
+        FastSafeLoader.add_multi_constructor(tag_prefix, multi_constructor)
+
+    @staticmethod
+    def __report_deprecated() -> None:
+        """Log deprecation warning."""
+        report(
+            "uses deprecated 'SafeLoader' instead of 'FastSafeLoader', "
+            "which will stop working in HA Core 2024.6,"
+        )
+
+
 class PythonSafeLoader(yaml.SafeLoader, _LoaderMixin):
     """Python safe loader."""
 
@@ -145,10 +181,41 @@ class PythonSafeLoader(yaml.SafeLoader, _LoaderMixin):
         self.secrets = secrets
 
 
+class SafeLineLoader(PythonSafeLoader):
+    """Provided for backwards compatibility. Logs when instantiated."""
+
+    def __init__(*args: Any, **kwargs: Any) -> None:
+        """Log a warning and call super."""
+        SafeLineLoader.__report_deprecated()
+        PythonSafeLoader.__init__(*args, **kwargs)
+
+    @classmethod
+    def add_constructor(cls, tag: str, constructor: Callable) -> None:
+        """Log a warning and call super."""
+        SafeLineLoader.__report_deprecated()
+        PythonSafeLoader.add_constructor(tag, constructor)
+
+    @classmethod
+    def add_multi_constructor(
+        cls, tag_prefix: str, multi_constructor: Callable
+    ) -> None:
+        """Log a warning and call super."""
+        SafeLineLoader.__report_deprecated()
+        PythonSafeLoader.add_multi_constructor(tag_prefix, multi_constructor)
+
+    @staticmethod
+    def __report_deprecated() -> None:
+        """Log deprecation warning."""
+        report(
+            "uses deprecated 'SafeLineLoader' instead of 'PythonSafeLoader', "
+            "which will stop working in HA Core 2024.6,"
+        )
+
+
 LoaderType = FastSafeLoader | PythonSafeLoader
 
 
-def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE:
+def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE | None:
     """Load a YAML file."""
     try:
         with open(fname, encoding="utf-8") as conf_file:
@@ -156,6 +223,20 @@ def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE:
     except UnicodeDecodeError as exc:
         _LOGGER.error("Unable to read file %s: %s", fname, exc)
         raise HomeAssistantError(exc) from exc
+
+
+def load_yaml_dict(fname: str, secrets: Secrets | None = None) -> dict:
+    """Load a YAML file and ensure the top level is a dict.
+
+    Raise if the top level is not a dict.
+    Return an empty dict if the file is empty.
+    """
+    loaded_yaml = load_yaml(fname, secrets)
+    if loaded_yaml is None:
+        loaded_yaml = {}
+    if not isinstance(loaded_yaml, dict):
+        raise YamlTypeError(f"YAML file {fname} does not contain a dict")
+    return loaded_yaml
 
 
 def parse_yaml(
@@ -192,12 +273,7 @@ def _parse_yaml(
     secrets: Secrets | None = None,
 ) -> JSON_TYPE:
     """Load a YAML file."""
-    # If configuration file is empty YAML returns None
-    # We convert that to an empty dict
-    return (
-        yaml.load(content, Loader=lambda stream: loader(stream, secrets))  # type: ignore[arg-type]
-        or NodeDictClass()
-    )
+    return yaml.load(content, Loader=lambda stream: loader(stream, secrets))  # type: ignore[arg-type]
 
 
 @overload
@@ -246,7 +322,10 @@ def _include_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
     """
     fname = os.path.join(os.path.dirname(loader.get_name()), node.value)
     try:
-        return _add_reference(load_yaml(fname, loader.secrets), loader, node)
+        loaded_yaml = load_yaml(fname, loader.secrets)
+        if loaded_yaml is None:
+            loaded_yaml = NodeDictClass()
+        return _add_reference(loaded_yaml, loader, node)
     except FileNotFoundError as exc:
         raise HomeAssistantError(
             f"{node.start_mark}: Unable to read file {fname}."
@@ -276,7 +355,10 @@ def _include_dir_named_yaml(loader: LoaderType, node: yaml.nodes.Node) -> NodeDi
         filename = os.path.splitext(os.path.basename(fname))[0]
         if os.path.basename(fname) == SECRET_YAML:
             continue
-        mapping[filename] = load_yaml(fname, loader.secrets)
+        loaded_yaml = load_yaml(fname, loader.secrets)
+        if loaded_yaml is None:
+            continue
+        mapping[filename] = loaded_yaml
     return _add_reference(mapping, loader, node)
 
 
@@ -301,9 +383,10 @@ def _include_dir_list_yaml(
     """Load multiple files from directory as a list."""
     loc = os.path.join(os.path.dirname(loader.get_name()), node.value)
     return [
-        load_yaml(f, loader.secrets)
+        loaded_yaml
         for f in _find_files(loc, "*.yaml")
         if os.path.basename(f) != SECRET_YAML
+        and (loaded_yaml := load_yaml(f, loader.secrets)) is not None
     ]
 
 
@@ -340,7 +423,12 @@ def _handle_mapping_tag(
             raise yaml.MarkedYAMLError(
                 context=f'invalid key: "{key}"',
                 context_mark=yaml.Mark(
-                    fname, 0, line, -1, None, None  # type: ignore[arg-type]
+                    fname,
+                    0,
+                    line,
+                    -1,
+                    None,
+                    None,  # type: ignore[arg-type]
                 ),
             ) from exc
 

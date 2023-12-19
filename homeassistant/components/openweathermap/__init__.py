@@ -10,6 +10,7 @@ from pyowm.utils.config import get_default_config
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_LANGUAGE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MODE,
@@ -18,7 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from .const import (
-    CONF_LANGUAGE,
     CONFIG_FLOW_VERSION,
     DOMAIN,
     ENTRY_NAME,

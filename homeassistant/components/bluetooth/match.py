@@ -7,7 +7,7 @@ from functools import lru_cache
 import re
 from typing import TYPE_CHECKING, Final, Generic, TypedDict, TypeVar
 
-from lru import LRU  # pylint: disable=no-name-in-module
+from lru import LRU
 
 from homeassistant.core import callback
 from homeassistant.loader import BluetoothMatcher, BluetoothMatcherOptional
@@ -15,8 +15,6 @@ from homeassistant.loader import BluetoothMatcher, BluetoothMatcherOptional
 from .models import BluetoothCallback, BluetoothServiceInfoBleak
 
 if TYPE_CHECKING:
-    from collections.abc import MutableMapping
-
     from bleak.backends.scanner import AdvertisementData
 
 
@@ -97,10 +95,8 @@ class IntegrationMatcher:
         self._integration_matchers = integration_matchers
         # Some devices use a random address so we need to use
         # an LRU to avoid memory issues.
-        self._matched: MutableMapping[str, IntegrationMatchHistory] = LRU(
-            MAX_REMEMBER_ADDRESSES
-        )
-        self._matched_connectable: MutableMapping[str, IntegrationMatchHistory] = LRU(
+        self._matched: LRU[str, IntegrationMatchHistory] = LRU(MAX_REMEMBER_ADDRESSES)
+        self._matched_connectable: LRU[str, IntegrationMatchHistory] = LRU(
             MAX_REMEMBER_ADDRESSES
         )
         self._index = BluetoothMatcherIndex()

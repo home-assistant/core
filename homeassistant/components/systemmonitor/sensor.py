@@ -64,7 +64,7 @@ SENSOR_TYPE_MANDATORY_ARG = 4
 SIGNAL_SYSTEMMONITOR_UPDATE = "systemmonitor_update"
 
 
-@dataclass
+@dataclass(frozen=True)
 class SysMonitorSensorEntityDescription(SensorEntityDescription):
     """Description for System Monitor sensor entities."""
 

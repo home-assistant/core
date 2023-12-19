@@ -48,7 +48,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    reauth_entry: ConfigEntry | None = None
+    _reauth_entry: ConfigEntry | None = None
     _api_type: APIType = APIType.CLOUD
     _user: str | None = None
     _server: str = DEFAULT_SERVER
@@ -175,22 +175,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
                 LOGGER.exception("Unknown error")
             else:
-                if self.reauth_entry:
-                    if self.reauth_entry.unique_id != self.unique_id:
+                if self._reauth_entry:
+                    if self._reauth_entry.unique_id != self.unique_id:
                         return self.async_abort(reason="reauth_wrong_account")
 
                     # Update existing entry during reauth
                     self.hass.config_entries.async_update_entry(
-                        self.reauth_entry,
+                        self._reauth_entry,
                         data={
-                            **self.reauth_entry.data,
+                            **self._reauth_entry.data,
                             **user_input,
                         },
                     )
 
                     self.hass.async_create_task(
                         self.hass.config_entries.async_reload(
-                            self.reauth_entry.entry_id
+                            self._reauth_entry.entry_id
                         )
                     )
 
@@ -258,22 +258,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
                 LOGGER.exception("Unknown error")
             else:
-                if self.reauth_entry:
-                    if self.reauth_entry.unique_id != self.unique_id:
+                if self._reauth_entry:
+                    if self._reauth_entry.unique_id != self.unique_id:
                         return self.async_abort(reason="reauth_wrong_account")
 
                     # Update existing entry during reauth
                     self.hass.config_entries.async_update_entry(
-                        self.reauth_entry,
+                        self._reauth_entry,
                         data={
-                            **self.reauth_entry.data,
+                            **self._reauth_entry.data,
                             **user_input,
                         },
                     )
 
                     self.hass.async_create_task(
                         self.hass.config_entries.async_reload(
-                            self.reauth_entry.entry_id
+                            self._reauth_entry.entry_id
                         )
                     )
 
@@ -343,19 +343,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle reauth."""
-        self.reauth_entry = cast(
+        self._reauth_entry = cast(
             ConfigEntry,
             self.hass.config_entries.async_get_entry(self.context["entry_id"]),
         )
 
-        self.context["title_placeholders"] = {"gateway_id": self.reauth_entry.unique_id}
+        self.context["title_placeholders"] = {
+            "gateway_id": self._reauth_entry.unique_id
+        }
 
-        self._user = self.reauth_entry.data[CONF_USERNAME]
-        self._server = self.reauth_entry.data[CONF_HUB]
-        self._api_type = self.reauth_entry.data[CONF_API_TYPE]
+        self._user = self._reauth_entry.data[CONF_USERNAME]
+        self._server = self._reauth_entry.data[CONF_HUB]
+        self._api_type = self._reauth_entry.data[CONF_API_TYPE]
 
-        if self.reauth_entry.data[CONF_API_TYPE] == APIType.LOCAL:
-            self._host = self.reauth_entry.data[CONF_HOST]
+        if self._reauth_entry.data[CONF_API_TYPE] == APIType.LOCAL:
+            self._host = self._reauth_entry.data[CONF_HOST]
 
         return await self.async_step_user(dict(entry_data))
 

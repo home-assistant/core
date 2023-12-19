@@ -5,7 +5,7 @@ import asyncio
 from datetime import datetime, timedelta
 import ssl
 from types import MappingProxyType
-from typing import Any
+from typing import Any, Literal
 
 from aiohttp import CookieJar
 import aiounifi
@@ -260,8 +260,8 @@ class UniFiController:
         for entry in async_entries_for_config_entry(
             entity_registry, self.config_entry.entry_id
         ):
-            if entry.domain == Platform.DEVICE_TRACKER:
-                macs.append(entry.unique_id.split("-", 1)[0])
+            if entry.domain == Platform.DEVICE_TRACKER and "-" in entry.unique_id:
+                macs.append(entry.unique_id.split("-", 1)[1])
 
         for mac in self.option_supported_clients + self.option_block_clients + macs:
             if mac not in self.api.clients and mac in self.api.clients_all:
@@ -458,7 +458,7 @@ async def get_unifi_controller(
     config: MappingProxyType[str, Any],
 ) -> aiounifi.Controller:
     """Create a controller object and verify authentication."""
-    ssl_context: ssl.SSLContext | bool = False
+    ssl_context: ssl.SSLContext | Literal[False] = False
 
     if verify_ssl := config.get(CONF_VERIFY_SSL):
         session = aiohttp_client.async_get_clientsession(hass)
@@ -505,6 +505,14 @@ async def get_unifi_controller(
             "Error connecting to the UniFi Network at %s: %s", config[CONF_HOST], err
         )
         raise CannotConnect from err
+
+    except aiounifi.Forbidden as err:
+        LOGGER.warning(
+            "Access forbidden to UniFi Network at %s, check access rights: %s",
+            config[CONF_HOST],
+            err,
+        )
+        raise AuthenticationRequired from err
 
     except aiounifi.LoginRequired as err:
         LOGGER.warning(

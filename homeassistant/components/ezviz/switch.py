@@ -22,14 +22,14 @@ from .coordinator import EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class EzvizSwitchEntityDescriptionMixin:
     """Mixin values for EZVIZ Switch entities."""
 
     supported_ext: str | None
 
 
-@dataclass
+@dataclass(frozen=True)
 class EzvizSwitchEntityDescription(
     SwitchEntityDescription, EzvizSwitchEntityDescriptionMixin
 ):

@@ -232,7 +232,8 @@ async def test_calendar_not_supported_by_device(
 
 
 @pytest.mark.parametrize(
-    "mock_insert_schedule_response", [([None])]  # Disable success responses
+    "mock_insert_schedule_response",
+    [([None])],  # Disable success responses
 )
 async def test_no_schedule(
     hass: HomeAssistant,
