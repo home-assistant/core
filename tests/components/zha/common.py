@@ -14,7 +14,6 @@ from homeassistant.components.zha.core.helpers import (
     get_zha_gateway,
 )
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
@@ -174,7 +173,6 @@ async def async_enable_traffic(hass, zha_devices, enabled=True):
     """Allow traffic to flow through the gateway and the ZHA device."""
     for zha_device in zha_devices:
         zha_device.update_available(enabled)
-    async_dispatcher_send(hass, zha_const.SIGNAL_ZHA_ENTITIES_INITIALIZED)
     await hass.async_block_till_done()
 
 

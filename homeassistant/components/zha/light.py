@@ -990,7 +990,7 @@ class Light(BaseLight, ZhaEntity):
         if self.is_transitioning:
             self.debug("skipping _refresh while transitioning")
             return
-        if self._zha_device.available and self.hass.data[DATA_ZHA].initialized:
+        if self._zha_device.available and self.hass.data[DATA_ZHA].allow_polling:
             self.debug("polling for updated state")
             await self.async_get_state()
             self.async_write_ha_state()
@@ -998,7 +998,7 @@ class Light(BaseLight, ZhaEntity):
             self.debug(
                 "skipping polling for updated state, available: %s, allow polled requests: %s",
                 self._zha_device.available,
-                self.hass.data[DATA_ZHA].initialized,
+                self.hass.data[DATA_ZHA].allow_polling,
             )
 
     async def _maybe_force_refresh(self, signal):
@@ -1007,7 +1007,7 @@ class Light(BaseLight, ZhaEntity):
             if self.is_transitioning:
                 self.debug("skipping _maybe_force_refresh while transitioning")
                 return
-            if self._zha_device.available and self.hass.data[DATA_ZHA].initialized:
+            if self._zha_device.available and self.hass.data[DATA_ZHA].allow_polling:
                 self.debug("forcing polling for updated state")
                 await self.async_get_state()
                 self.async_write_ha_state()
@@ -1015,7 +1015,7 @@ class Light(BaseLight, ZhaEntity):
                 self.debug(
                     "skipping _maybe_force_refresh, available: %s, allow polled requests: %s",
                     self._zha_device.available,
-                    self.hass.data[DATA_ZHA].initialized,
+                    self.hass.data[DATA_ZHA].allow_polling,
                 )
 
     @callback

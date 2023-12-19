@@ -78,7 +78,6 @@ from .const import (
     POWER_MAINS_POWERED,
     SIGNAL_AVAILABLE,
     SIGNAL_UPDATE_DEVICE,
-    SIGNAL_ZHA_ENTITIES_INITIALIZED,
     UNKNOWN,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
@@ -167,13 +166,7 @@ class ZHADevice(LogMixin):
                 self._endpoints[ep_id] = Endpoint.new(endpoint, self)
 
         if not self.is_coordinator:
-            self.unsubs.append(
-                async_dispatcher_connect(
-                    hass,
-                    SIGNAL_ZHA_ENTITIES_INITIALIZED,
-                    self.start_availability_checks,
-                )
-            )
+            self.start_availability_checks()
 
     @property
     def device_id(self) -> str:
@@ -433,21 +426,16 @@ class ZHADevice(LogMixin):
     @callback
     def start_availability_checks(self) -> None:
         """Start availability checks."""
-        if not self._availability_checks_established:
-            keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
-            self.debug(
-                "starting availability checks - interval: %s", keep_alive_interval
+        keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
+        self.debug("starting availability checks - interval: %s", keep_alive_interval)
+        self.unsubs.append(
+            async_track_time_interval(
+                self.hass,
+                self._check_available,
+                timedelta(seconds=keep_alive_interval),
             )
-            self.unsubs.append(
-                async_track_time_interval(
-                    self.hass,
-                    self._check_available,
-                    timedelta(seconds=keep_alive_interval),
-                )
-            )
-            self._availability_checks_established = True
-        else:
-            self.debug("availability checks already established")
+        )
+        self._availability_checks_established = True
 
     async def _check_available(self, *_: Any) -> None:
         # don't flip the availability state of the coordinator
@@ -467,35 +455,36 @@ class ZHADevice(LogMixin):
             self._checkins_missed_count = 0
             return
 
-        if (
-            self._checkins_missed_count >= _CHECKIN_GRACE_PERIODS
-            or self.manufacturer == "LUMI"
-            or not self._endpoints
-        ):
-            self.debug(
-                (
-                    "last_seen is %s seconds ago and ping attempts have been exhausted,"
-                    " marking the device unavailable"
-                ),
-                difference,
-            )
-            self.update_available(False)
-            return
+        if self.hass.data[const.DATA_ZHA].allow_polling:
+            if (
+                self._checkins_missed_count >= _CHECKIN_GRACE_PERIODS
+                or self.manufacturer == "LUMI"
+                or not self._endpoints
+            ):
+                self.debug(
+                    (
+                        "last_seen is %s seconds ago and ping attempts have been exhausted,"
+                        " marking the device unavailable"
+                    ),
+                    difference,
+                )
+                self.update_available(False)
+                return
 
-        self._checkins_missed_count += 1
-        self.debug(
-            "Attempting to checkin with device - missed checkins: %s",
-            self._checkins_missed_count,
-        )
-        if not self.basic_ch:
-            self.debug("does not have a mandatory basic cluster")
-            self.update_available(False)
-            return
-        res = await self.basic_ch.get_attribute_value(
-            ATTR_MANUFACTURER, from_cache=False
-        )
-        if res is not None:
-            self._checkins_missed_count = 0
+            self._checkins_missed_count += 1
+            self.debug(
+                "Attempting to checkin with device - missed checkins: %s",
+                self._checkins_missed_count,
+            )
+            if not self.basic_ch:
+                self.debug("does not have a mandatory basic cluster")
+                self.update_available(False)
+                return
+            res = await self.basic_ch.get_attribute_value(
+                ATTR_MANUFACTURER, from_cache=False
+            )
+            if res is not None:
+                self._checkins_missed_count = 0
 
     def update_available(self, available: bool) -> None:
         """Update device availability and signal entities."""

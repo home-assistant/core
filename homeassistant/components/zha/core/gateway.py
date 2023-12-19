@@ -65,7 +65,6 @@ from .const import (
     SIGNAL_ADD_ENTITIES,
     SIGNAL_GROUP_MEMBERSHIP_CHANGE,
     SIGNAL_REMOVE,
-    SIGNAL_ZHA_ENTITIES_INITIALIZED,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
     ZHA_GW_MSG,
@@ -297,10 +296,7 @@ class ZHAGateway:
             _LOGGER.debug(
                 "completed fetching current state for mains powered devices - allowing polled requests"
             )
-            # signal allows device availability polling
-            async_dispatcher_send(self.hass, SIGNAL_ZHA_ENTITIES_INITIALIZED)
-            # this flag is checked by polling entities to see if they can send requests
-            self.hass.data[DATA_ZHA].initialized = True
+            self.hass.data[DATA_ZHA].allow_polling = True
 
         # background the fetching of state for mains powered devices
         self.config_entry.async_create_background_task(

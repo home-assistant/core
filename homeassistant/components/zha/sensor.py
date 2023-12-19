@@ -234,7 +234,7 @@ class PollableSensor(Sensor):
 
     async def _refresh(self, time):
         """Call async_update at a constrained random interval."""
-        if self._zha_device.available and self.hass.data[DATA_ZHA].initialized:
+        if self._zha_device.available and self.hass.data[DATA_ZHA].allow_polling:
             self.debug("polling for updated state")
             await self.async_update()
             self.async_write_ha_state()
@@ -242,7 +242,7 @@ class PollableSensor(Sensor):
             self.debug(
                 "skipping polling for updated state, available: %s, allow polled requests: %s",
                 self._zha_device.available,
-                self.hass.data[DATA_ZHA].initialized,
+                self.hass.data[DATA_ZHA].allow_polling,
             )
 
 
