@@ -2,38 +2,40 @@
 
 import pytest
 
-from homeassistant.components.alarm_control_panel import const
+from homeassistant.components import alarm_control_panel
 
 from tests.common import validate_deprecated_constant
 from tests.testing_config.custom_components.test_constant_deprecation.alarm_control_panel import (
-    import_deprecated_code_format_const,
-    import_deprecated_entity_feature_const,
+    import_deprecated_code_format,
+    import_deprecated_entity_feature,
 )
 
 
 @pytest.mark.parametrize(
     "code_format",
-    list(const.CodeFormat),
+    list(alarm_control_panel.CodeFormat),
 )
 def test_deprecated_constant_code_format(
     caplog: pytest.LogCaptureFixture,
-    code_format: const.CodeFormat,
+    code_format: alarm_control_panel.CodeFormat,
 ) -> None:
     """Test deprecated binary sensor device classes."""
-    import_deprecated_code_format_const(code_format)
-    validate_deprecated_constant(caplog, const, code_format, "FORMAT_", "2025.1")
+    import_deprecated_code_format(code_format)
+    validate_deprecated_constant(
+        caplog, alarm_control_panel, code_format, "FORMAT_", "2025.1"
+    )
 
 
 @pytest.mark.parametrize(
     "entity_feature",
-    list(const.AlarmControlPanelEntityFeature),
+    list(alarm_control_panel.AlarmControlPanelEntityFeature),
 )
 def test_deprecated_constant_entity_feature(
     caplog: pytest.LogCaptureFixture,
-    entity_feature: const.AlarmControlPanelEntityFeature,
+    entity_feature: alarm_control_panel.AlarmControlPanelEntityFeature,
 ) -> None:
     """Test deprecated binary sensor device classes."""
-    import_deprecated_entity_feature_const(entity_feature)
+    import_deprecated_entity_feature(entity_feature)
     validate_deprecated_constant(
-        caplog, const, entity_feature, "SUPPORT_ALARM_", "2025.1"
+        caplog, alarm_control_panel, entity_feature, "SUPPORT_ALARM_", "2025.1"
     )

@@ -6,6 +6,7 @@ from typing import Final
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
     check_if_deprecated_constant,
+    dir_with_deprecated_constants,
 )
 
 DOMAIN: Final = "alarm_control_panel"
@@ -59,8 +60,9 @@ _DEPRECATED_SUPPORT_ALARM_ARM_VACATION: Final = DeprecatedConstantEnum(
     AlarmControlPanelEntityFeature.ARM_VACATION, "2025.1"
 )
 
-# Can be removed if no deprecated constant are in this module anymore
+# Both can be removed if no deprecated constant are in this module anymore
 __getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 CONDITION_TRIGGERED: Final = "is_triggered"
 CONDITION_DISARMED: Final = "is_disarmed"
