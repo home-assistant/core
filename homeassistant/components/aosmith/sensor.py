@@ -19,7 +19,7 @@ from .coordinator import AOSmithCoordinator
 from .entity import AOSmithEntity
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class AOSmithSensorEntityDescription(SensorEntityDescription):
     """Define sensor entity description class."""
 

@@ -49,14 +49,14 @@ def with_error_wrapping(
     return wrapper
 
 
-@dataclass
+@dataclass(frozen=True)
 class SFRBoxButtonMixin:
     """Mixin for SFR Box buttons."""
 
     async_press: Callable[[SFRBox], Coroutine[None, None, None]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SFRBoxButtonEntityDescription(ButtonEntityDescription, SFRBoxButtonMixin):
     """Description for SFR Box buttons."""
 
