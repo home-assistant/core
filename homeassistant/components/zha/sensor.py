@@ -63,7 +63,6 @@ from .core.const import (
     DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
-    SIGNAL_ZHA_ENTITIES_INITIALIZED,
 )
 from .core.helpers import get_zha_data
 from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
@@ -209,15 +208,7 @@ class PollableSensor(Sensor):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         if self._use_custom_polling:
-            if self.hass.data[DATA_ZHA].initialized:
-                self.async_start_polling()
-            else:
-                self.async_accept_signal(
-                    None,
-                    SIGNAL_ZHA_ENTITIES_INITIALIZED,
-                    self.async_start_polling,
-                    signal_override=True,
-                )
+            self.async_start_polling()
 
     @callback
     def async_start_polling(self) -> None:
@@ -243,12 +234,16 @@ class PollableSensor(Sensor):
 
     async def _refresh(self, time):
         """Call async_update at a constrained random interval."""
-        if self._zha_device.available:
+        if self._zha_device.available and self.hass.data[DATA_ZHA].initialized:
             self.debug("polling for updated state")
             await self.async_update()
             self.async_write_ha_state()
         else:
-            self.debug("skipping polling for updated state, device is unavailable")
+            self.debug(
+                "skipping polling for updated state, available: %s, allow polled requests: %s",
+                self._zha_device.available,
+                self.hass.data[DATA_ZHA].initialized,
+            )
 
 
 @MULTI_MATCH(

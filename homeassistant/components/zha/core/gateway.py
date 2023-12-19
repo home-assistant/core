@@ -295,9 +295,11 @@ class ZHAGateway:
                 )
             )
             _LOGGER.debug(
-                "completed fetching current state for mains powered devices - sending signal to establish polling"
+                "completed fetching current state for mains powered devices - allowing polled requests"
             )
+            # signal allows device availability polling
             async_dispatcher_send(self.hass, SIGNAL_ZHA_ENTITIES_INITIALIZED)
+            # this flag is checked by polling entities to see if they can send requests
             self.hass.data[DATA_ZHA].initialized = True
 
         # background the fetching of state for mains powered devices

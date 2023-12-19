@@ -928,7 +928,7 @@ async def test_elec_measurement_sensor_type(
 async def test_elec_measurement_sensor_polling(
     hass: HomeAssistant,
     elec_measurement_zigpy_dev,
-    zha_device_joined,
+    zha_device_joined_restored,
 ) -> None:
     """Test ZHA electrical measurement sensor polling."""
 
@@ -938,7 +938,7 @@ async def test_elec_measurement_sensor_polling(
         "active_power"
     ] = 20
 
-    await zha_device_joined(zigpy_dev)
+    await zha_device_joined_restored(zigpy_dev)
 
     # test that the sensor has an initial state of 2.0
     state = hass.states.get(entity_id)

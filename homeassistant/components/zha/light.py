@@ -51,7 +51,6 @@ from .core.const import (
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_SET_LEVEL,
-    SIGNAL_ZHA_ENTITIES_INITIALIZED,
     ZHA_OPTIONS,
 )
 from .core.helpers import LogMixin, async_get_zha_config_value, get_zha_data
@@ -785,15 +784,7 @@ class Light(BaseLight, ZhaEntity):
             self.async_accept_signal(
                 self._level_cluster_handler, SIGNAL_SET_LEVEL, self.set_level
             )
-        if self.hass.data[DATA_ZHA].initialized:
-            self.async_start_polling()
-        else:
-            self.async_accept_signal(
-                None,
-                SIGNAL_ZHA_ENTITIES_INITIALIZED,
-                self.async_start_polling,
-                signal_override=True,
-            )
+        self.async_start_polling()
         self.async_accept_signal(
             None,
             SIGNAL_LIGHT_GROUP_STATE_CHANGED,
@@ -999,12 +990,16 @@ class Light(BaseLight, ZhaEntity):
         if self.is_transitioning:
             self.debug("skipping _refresh while transitioning")
             return
-        if self._zha_device.available:
+        if self._zha_device.available and self.hass.data[DATA_ZHA].initialized:
             self.debug("polling for updated state")
             await self.async_get_state()
             self.async_write_ha_state()
         else:
-            self.debug("skipping polling for updated state, device is unavailable")
+            self.debug(
+                "skipping polling for updated state, available: %s, allow polled requests: %s",
+                self._zha_device.available,
+                self.hass.data[DATA_ZHA].initialized,
+            )
 
     async def _maybe_force_refresh(self, signal):
         """Force update the state if the signal contains the entity id for this entity."""
