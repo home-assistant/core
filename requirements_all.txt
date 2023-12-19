@@ -992,7 +992,7 @@ habitipy==0.2.0
 habluetooth==1.0.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.74.0
+hass-nabucasa==0.75.1
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
