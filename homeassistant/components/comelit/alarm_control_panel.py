@@ -31,17 +31,26 @@ from .coordinator import ComelitVedoSystem
 
 _LOGGER = logging.getLogger(__name__)
 
+AWAY = "away"
+DISABLE = "disable"
+HOME = "home"
+HOME_P1 = "home_p1"
+HOME_P2 = "home_p2"
+NIGHT = "night"
+
 ALARM_ACTIONS: dict[str, str] = {
-    "disable": "dis",  # Disarm
-    "home": "p1",  # Arm P1
-    "night": "p12",  # Arm P1+P2
-    "away": "tot",  # Arm P1+P2 + IR / volumetric
+    DISABLE: "dis",  # Disarm
+    HOME: "p1",  # Arm P1
+    NIGHT: "p12",  # Arm P1+P2
+    AWAY: "tot",  # Arm P1+P2 + IR / volumetric
 }
+
+
 ALARM_AREA_ARMED_STATUS: dict[str, int] = {
-    "home_p1": 1,
-    "home_p2": 2,
-    "night": 3,
-    "away": 4,
+    HOME_P1: 1,
+    HOME_P2: 2,
+    NIGHT: 3,
+    AWAY: 4,
 }
 
 
@@ -112,9 +121,9 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
             self._area.armed,
         )
         if self._area.human_status == AlarmAreaState.ARMED:
-            if self._area.armed == ALARM_AREA_ARMED_STATUS["away"]:
+            if self._area.armed == ALARM_AREA_ARMED_STATUS[AWAY]:
                 return STATE_ALARM_ARMED_AWAY
-            if self._area.armed == ALARM_AREA_ARMED_STATUS["night"]:
+            if self._area.armed == ALARM_AREA_ARMED_STATUS[NIGHT]:
                 return STATE_ALARM_ARMED_NIGHT
             return STATE_ALARM_ARMED_HOME
 
@@ -133,16 +142,16 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
         """Send disarm command."""
         if code != str(self._api.device_pin):
             return
-        await self._api.set_zone_status(self._area.index, ALARM_ACTIONS["disable"])
+        await self._api.set_zone_status(self._area.index, ALARM_ACTIONS[DISABLE])
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self._api.set_zone_status(self._area.index, ALARM_ACTIONS["away"])
+        await self._api.set_zone_status(self._area.index, ALARM_ACTIONS[AWAY])
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        await self._api.set_zone_status(self._area.index, ALARM_ACTIONS["home"])
+        await self._api.set_zone_status(self._area.index, ALARM_ACTIONS[HOME])
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        await self._api.set_zone_status(self._area.index, ALARM_ACTIONS["night"])
+        await self._api.set_zone_status(self._area.index, ALARM_ACTIONS[NIGHT])
