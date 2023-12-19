@@ -10,8 +10,8 @@ from homeassistant.helpers import entity_registry as er
 from .common import TEST_TIME, selected_platforms
 
 
-async def test_weather_sensor(hass: HomeAssistant, config_entry, netatmo_auth) -> None:
-    """Test weather sensor setup."""
+async def test_indoor_sensor(hass: HomeAssistant, config_entry, netatmo_auth) -> None:
+    """Test indoor sensor setup."""
     with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
@@ -23,6 +23,18 @@ async def test_weather_sensor(hass: HomeAssistant, config_entry, netatmo_auth) -
     assert hass.states.get(f"{prefix}humidity").state == "63"
     assert hass.states.get(f"{prefix}co2").state == "494"
     assert hass.states.get(f"{prefix}pressure").state == "1014.5"
+
+
+async def test_weather_sensor(hass: HomeAssistant, config_entry, netatmo_auth) -> None:
+    """Test weather sensor unreachable."""
+    with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    prefix = "sensor.villa_outdoor_"
+
+    assert hass.states.get(f"{prefix}temperature").state == "unavailable"
 
 
 async def test_public_weather_sensor(

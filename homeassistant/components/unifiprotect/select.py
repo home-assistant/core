@@ -92,7 +92,7 @@ DEVICE_RECORDING_MODES = [
 DEVICE_CLASS_LCD_MESSAGE: Final = "unifiprotect__lcd_message"
 
 
-@dataclass
+@dataclass(frozen=True)
 class ProtectSelectEntityDescription(
     ProtectSetableKeysMixin[T], SelectEntityDescription
 ):

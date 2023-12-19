@@ -26,7 +26,7 @@ from .coordinator import AirzoneUpdateCoordinator
 from .entity import AirzoneEntity, AirzoneZoneEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class AirzoneSelectDescriptionMixin:
     """Define an entity description mixin for select entities."""
 
@@ -34,7 +34,7 @@ class AirzoneSelectDescriptionMixin:
     options_dict: dict[str, int]
 
 
-@dataclass
+@dataclass(frozen=True)
 class AirzoneSelectDescription(SelectEntityDescription, AirzoneSelectDescriptionMixin):
     """Class to describe an Airzone select entity."""
 

@@ -26,7 +26,7 @@ from .const import DOMAIN, SIGNAL_EVENTS_CHANGED, SIGNAL_POSITION_CHANGED
 ENTITY_ID_SENSOR_FORMAT = SENSOR_DOMAIN + ".sun_{}"
 
 
-@dataclass
+@dataclass(frozen=True)
 class SunEntityDescriptionMixin:
     """Mixin for required Sun base description keys."""
 
@@ -34,7 +34,7 @@ class SunEntityDescriptionMixin:
     signal: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class SunSensorEntityDescription(SensorEntityDescription, SunEntityDescriptionMixin):
     """Describes Sun sensor entity."""
 

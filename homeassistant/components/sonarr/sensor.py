@@ -31,7 +31,7 @@ from .coordinator import SonarrDataT, SonarrDataUpdateCoordinator
 from .entity import SonarrEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class SonarrSensorEntityDescriptionMixIn(Generic[SonarrDataT]):
     """Mixin for Sonarr sensor."""
 
@@ -39,7 +39,7 @@ class SonarrSensorEntityDescriptionMixIn(Generic[SonarrDataT]):
     value_fn: Callable[[SonarrDataT], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SonarrSensorEntityDescription(
     SensorEntityDescription, SonarrSensorEntityDescriptionMixIn[SonarrDataT]
 ):

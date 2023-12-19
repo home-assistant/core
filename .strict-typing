@@ -62,6 +62,7 @@ homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
 homeassistant.components.analytics.*
 homeassistant.components.android_ip_webcam.*
+homeassistant.components.androidtv_remote.*
 homeassistant.components.anova.*
 homeassistant.components.anthemav.*
 homeassistant.components.apcupsd.*
@@ -365,6 +366,7 @@ homeassistant.components.uptimerobot.*
 homeassistant.components.usb.*
 homeassistant.components.vacuum.*
 homeassistant.components.vallox.*
+homeassistant.components.valve.*
 homeassistant.components.velbus.*
 homeassistant.components.vlc_telnet.*
 homeassistant.components.wake_on_lan.*

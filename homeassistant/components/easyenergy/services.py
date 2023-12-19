@@ -14,6 +14,7 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
@@ -109,7 +110,8 @@ async def __get_prices(
     return __serialize_prices(data.timestamp_return_prices)
 
 
-async def async_setup_services(
+@callback
+def async_setup_services(
     hass: HomeAssistant,
     coordinator: EasyEnergyDataUpdateCoordinator,
 ) -> None:
