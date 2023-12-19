@@ -37,6 +37,10 @@ from .const import (
 )
 from .helpers import get_remove_clones
 
+# Enums from mpris_pb2 are not currently properly typed.
+# This is a limitation of grpclib, which I hope goes
+# away in the future.  It is also why the ignore[attr-defined]
+# typing remark is on each line that uses them.
 PLAYER_STATE_MAP: dict[Any, MediaPlayerState] = {
     mpris_pb2.PlayerStatus.GONE: MediaPlayerState.OFF,  # type: ignore[attr-defined]
     mpris_pb2.PlayerStatus.APPEARED: MediaPlayerState.IDLE,  # type: ignore[attr-defined]

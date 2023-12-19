@@ -261,7 +261,8 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
     ), patch(
         "hassmpris_client.AsyncMPRISClient", return_value=MockMprisClient()
     ), patch(
-        "pskca.create_certificate_signing_request", fakecsrkey()
+        "pskca.create_certificate_signing_request",
+        fakecsrkey(),
     ), patch(
         "homeassistant.components.mpris.media_player.MPRISCoordinator",
         MockCoordinator(),
