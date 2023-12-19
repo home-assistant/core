@@ -17,7 +17,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as SL_DOMAIN, LIGHT_CIRCUIT_FUNCTIONS
 from .coordinator import ScreenlogicDataUpdateCoordinator
-from .entity import ScreenLogicCircuitEntity, ScreenLogicPushEntityDescription
+from .entity import (
+    ScreenLogicCircuitEntity,
+    ScreenLogicPushEntity,
+    ScreenLogicPushEntityDescription,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +71,7 @@ class ScreenLogicLightDescription(
     """Describes a ScreenLogic light entity."""
 
 
-class ScreenLogicLight(ScreenLogicCircuitEntity, LightEntity):
+class ScreenLogicLight(ScreenLogicCircuitEntity, ScreenLogicPushEntity, LightEntity):
     """Class to represent a ScreenLogic Light."""
 
     entity_description: ScreenLogicLightDescription

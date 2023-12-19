@@ -157,7 +157,7 @@ class ScreenLogicPushEntity(ScreenlogicEntity):
             self._async_data_updated()
 
 
-class ScreenLogicCircuitEntity(ScreenLogicPushEntity):
+class ScreenLogicCircuitEntity(ScreenlogicEntity):
     """Base class for all ScreenLogic switch and light entities."""
 
     @property
@@ -167,13 +167,13 @@ class ScreenLogicCircuitEntity(ScreenLogicPushEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Send the ON command."""
-        await self._async_set_circuit(ON_OFF.ON)
+        await self._async_set_state(ON_OFF.ON)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the OFF command."""
-        await self._async_set_circuit(ON_OFF.OFF)
+        await self._async_set_state(ON_OFF.OFF)
 
-    async def _async_set_circuit(self, state: ON_OFF) -> None:
+    async def _async_set_state(self, state: ON_OFF) -> None:
         try:
             await self.gateway.async_set_circuit(self._data_key, state.value)
         except (ScreenLogicCommunicationError, ScreenLogicError) as sle:

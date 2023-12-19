@@ -58,6 +58,12 @@ SUPPORTED_SCG_NUMBERS = [
         key=VALUE.SPA_SETPOINT,
         entity_category=EntityCategory.CONFIG,
     ),
+    ScreenLogicNumberDescription(
+        set_value_name="async_set_scg_config",
+        data_root=(DEVICE.SCG, GROUP.CONFIGURATION),
+        key=VALUE.SUPER_CHLOR_TIMER,
+        entity_category=EntityCategory.CONFIG,
+    ),
 ]
 
 
