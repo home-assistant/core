@@ -1,5 +1,6 @@
 """The tests for the Binary sensor component."""
 from collections.abc import Generator
+import logging
 from unittest import mock
 
 import pytest
@@ -19,6 +20,9 @@ from tests.common import (
     mock_platform,
 )
 from tests.testing_config.custom_components.test.binary_sensor import MockBinarySensor
+from tests.testing_config.custom_components.test_constant_deprecation.binary_sensor import (
+    import_deprecated,
+)
 
 TEST_DOMAIN = "test"
 
@@ -194,3 +198,26 @@ async def test_entity_category_config_raises_error(
         "Entity binary_sensor.test2 cannot be added as the entity category is set to config"
         in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    "device_class",
+    list(binary_sensor.BinarySensorDeviceClass),
+)
+def test_deprecated_constant_device_class(
+    caplog: pytest.LogCaptureFixture,
+    device_class: binary_sensor.BinarySensorDeviceClass,
+) -> None:
+    """Test deprecated binary sensor device classes."""
+    import_deprecated(device_class)
+
+    assert (
+        "homeassistant.components.binary_sensor",
+        logging.WARNING,
+        (
+            f"DEVICE_CLASS_{device_class.name} was used from test_constant_deprecation,"
+            " this is a deprecated constant which will be removed in HA Core 2025.1. "
+            f"Use BinarySensorDeviceClass.{device_class.name} instead, please report "
+            "it to the author of the 'test_constant_deprecation' custom integration"
+        ),
+    ) in caplog.record_tuples
