@@ -1401,8 +1401,8 @@ async def test_translation_key(hass: HomeAssistant) -> None:
     assert mock_entity2.translation_key == "from_entity_description"
 
 
-async def test_repr_using_stringify_state() -> None:
-    """Test that repr uses stringify state."""
+async def test_repr(hass) -> None:
+    """Test Entity.__repr__."""
 
     class MyEntity(MockEntity):
         """Mock entity."""
@@ -1412,8 +1412,19 @@ async def test_repr_using_stringify_state() -> None:
             """Return the state."""
             raise ValueError("Boom")
 
+    platform = MockEntityPlatform(hass, domain="hello")
     my_entity = MyEntity(entity_id="test.test", available=False)
+
+    # Not yet added
+    assert str(my_entity) == "<entity test.test=unknown>"
+
+    # Added
+    await platform.async_add_entities([my_entity])
     assert str(my_entity) == "<entity test.test=unavailable>"
+
+    # Removed
+    await platform.async_remove_entity(my_entity.entity_id)
+    assert str(my_entity) == "<entity test.test=unknown>"
 
 
 async def test_warn_using_async_update_ha_state(

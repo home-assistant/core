@@ -1289,7 +1289,12 @@ class Entity(ABC):
             self.async_on_remove(self._async_unsubscribe_device_updates)
 
     def __repr__(self) -> str:
-        """Return the representation."""
+        """Return the representation.
+
+        If the entity is not added to a platform it's not safe to call _stringify_state.
+        """
+        if self._platform_state != EntityPlatformState.ADDED:
+            return f"<entity {self.entity_id}={STATE_UNKNOWN}>"
         return f"<entity {self.entity_id}={self._stringify_state(self.available)}>"
 
     async def async_request_call(self, coro: Coroutine[Any, Any, _T]) -> _T:
