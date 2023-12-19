@@ -44,8 +44,11 @@ async def _migrate_to_version_2(
     data = dict(entry.data)
     # "maker" is currently hardcoded in the firmware
     # https://github.com/prusa3d/Prusa-Firmware-Buddy/blob/bfb0ffc745ee6546e7efdba618d0e7c0f4c909cd/lib/WUI/wui_api.h#L19
-    data[CONF_USERNAME] = "maker"
-    data[CONF_PASSWORD] = entry.data[CONF_API_KEY]
+    data = {
+        **entry.data,
+        CONF_USERNAME: "maker",
+        CONF_PASSWORD: entry.data[CONF_API_KEY],
+    }
     data.pop(CONF_API_KEY)
 
     api = PrusaLink(
