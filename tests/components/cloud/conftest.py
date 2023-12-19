@@ -1,5 +1,5 @@
 """Fixtures for cloud tests."""
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable, Coroutine
 from typing import Any
 from unittest.mock import DEFAULT, MagicMock, PropertyMock, patch
 
@@ -15,6 +15,7 @@ import jwt
 import pytest
 
 from homeassistant.components.cloud import CloudClient, const, prefs
+from homeassistant.util.dt import utcnow
 
 from . import mock_cloud, mock_cloud_prefs
 
@@ -62,7 +63,8 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock, None]:
                 f"{name}_server": server
                 for name, server in DEFAULT_SERVERS[mode].items()
             }
-            mock_cloud.configure_mock(**default_values, **servers, **kwargs)
+            mock_cloud.configure_mock(**default_values, **servers)
+            mock_cloud.configure_mock(**kwargs)
             mock_cloud.mode = mode
 
             # Properties that we mock as attributes from the constructor.
@@ -101,7 +103,15 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock, None]:
         claims = PropertyMock(side_effect=mock_claims)
         type(mock_cloud).claims = claims
 
+        def mock_is_connected() -> bool:
+            """Return True if we are connected."""
+            return mock_cloud.iot.state == STATE_CONNECTED
+
+        is_connected = PropertyMock(side_effect=mock_is_connected)
+        type(mock_cloud).is_connected = is_connected
+
         # Properties that we mock as attributes.
+        mock_cloud.expiration_date = utcnow()
         mock_cloud.subscription_expired = False
 
         # Methods that we mock with a custom side effect.
@@ -117,6 +127,23 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock, None]:
         mock_cloud.login.side_effect = mock_login
 
         yield mock_cloud
+
+
+@pytest.fixture(name="set_cloud_prefs")
+def set_cloud_prefs_fixture(
+    cloud: MagicMock,
+) -> Callable[[dict[str, Any]], Coroutine[Any, Any, None]]:
+    """Fixture for cloud component."""
+
+    async def set_cloud_prefs(prefs_settings: dict[str, Any]) -> None:
+        """Set cloud prefs."""
+        prefs_to_set = cloud.client.prefs.as_dict()
+        prefs_to_set.pop(prefs.PREF_ALEXA_DEFAULT_EXPOSE)
+        prefs_to_set.pop(prefs.PREF_GOOGLE_DEFAULT_EXPOSE)
+        prefs_to_set.update(prefs_settings)
+        await cloud.client.prefs.async_update(**prefs_to_set)
+
+    return set_cloud_prefs
 
 
 @pytest.fixture(autouse=True)
