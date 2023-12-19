@@ -67,9 +67,12 @@ async def test_button_pause_cancel(
 
 @pytest.mark.parametrize(
     ("object_id", "method"),
-    (("mock_title_resume_job", "resume_job"),),
+    (
+        ("mock_title_cancel_job", "cancel_job"),
+        ("mock_title_resume_job", "resume_job"),
+    ),
 )
-async def test_button_resume(
+async def test_button_resume_cancel(
     hass: HomeAssistant,
     mock_config_entry,
     mock_api,

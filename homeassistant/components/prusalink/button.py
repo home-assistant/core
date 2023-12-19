@@ -42,8 +42,9 @@ BUTTONS: dict[str, tuple[PrusaLinkButtonEntityDescription, ...]] = {
             translation_key="cancel_job",
             icon="mdi:cancel",
             press_fn=lambda api: api.cancel_job,
-            available_fn=lambda data: cast(
-                bool, data["printer"]["state"] == PrinterState.PRINTING.value
+            available_fn=lambda data: (
+                data["printer"]["state"]
+                in [PrinterState.PRINTING.value, PrinterState.PAUSED.value]
             ),
         ),
         PrusaLinkButtonEntityDescription[PrinterStatus](
