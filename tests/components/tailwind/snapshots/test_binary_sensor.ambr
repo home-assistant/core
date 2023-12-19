@@ -9,7 +9,7 @@
     'entity_id': 'binary_sensor.door_1_operational_status',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_number_entities.1
@@ -81,7 +81,7 @@
     'entity_id': 'binary_sensor.door_2_operational_status',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_number_entities.4
