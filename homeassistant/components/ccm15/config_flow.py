@@ -27,7 +27,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 async def validate_input(
-    hass: HomeAssistant, data: dict[str, Any], existing_titles: list[str]
+    hass: HomeAssistant, data: dict[str, Any], existing_hosts: list[str]
 ) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
@@ -35,8 +35,8 @@ async def validate_input(
     """
 
     host: str = data[CONF_HOST]
-    for title in existing_titles:
-        if title == host:
+    for existing_host in existing_hosts:
+        if existing_host == host:
             raise DuplicateEntry
 
     hub = CCM15Coordinator(hass, host, data[CONF_PORT])
@@ -62,10 +62,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                existing_titles = [
-                    entry.title for entry in self._async_current_entries()
+                existing_hosts = [
+                    entry.data[CONF_HOST] for entry in self._async_current_entries()
                 ]
-                info = await validate_input(self.hass, user_input, existing_titles)
+                info = await validate_input(self.hass, user_input, existing_hosts)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
