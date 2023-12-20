@@ -66,7 +66,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for PrusaLink."""
 
-    VERSION = 2
+    VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
