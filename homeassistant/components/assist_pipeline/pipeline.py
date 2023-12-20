@@ -298,6 +298,8 @@ async def async_update_pipeline(
 
     updates: dict[str, Any] = pipeline.to_json()
     updates.pop("id")
+    # Refactor this once we bump to Python 3.12
+    # and have https://peps.python.org/pep-0692/
     for key, val in (
         ("conversation_engine", conversation_engine),
         ("conversation_language", conversation_language),

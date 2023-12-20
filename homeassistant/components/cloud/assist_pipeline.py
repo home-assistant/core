@@ -18,7 +18,7 @@ from .const import DATA_PLATFORMS_SETUP, DOMAIN, STT_ENTITY_UNIQUE_ID
 
 async def async_create_cloud_pipeline(hass: HomeAssistant) -> str | None:
     """Create a cloud assist pipeline."""
-    # Set up stt and tts platforms before creating the pipeline.
+    # Wait for stt and tts platforms to set up before creating the pipeline.
     platforms_setup: dict[str, asyncio.Event] = hass.data[DATA_PLATFORMS_SETUP]
     await asyncio.gather(*(event.wait() for event in platforms_setup.values()))
     # Make sure the pipeline store is loaded, needed because assist_pipeline
