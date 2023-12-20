@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from aioshelly.block_device import Block
 from aioshelly.const import BLOCK_GENERATIONS, MODEL_GAS
@@ -72,6 +72,7 @@ def async_setup_block_entry(
 class BlockShellyValve(ShellyBlockAttributeEntity, ValveEntity):
     """Entity that controls a valve on block based Shelly devices."""
 
+    entity_description: BlockValveDescription
     _attr_device_class = ValveDeviceClass.GAS
     _attr_supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
 
@@ -91,7 +92,7 @@ class BlockShellyValve(ShellyBlockAttributeEntity, ValveEntity):
     def is_closing(self) -> bool:
         """Return if the valve is closing."""
         if self.control_result:
-            return self.control_result["state"] == "closing"
+            return cast(bool, self.control_result["state"] == "closing")
 
         return self.attribute_value == "closing"
 
@@ -99,7 +100,7 @@ class BlockShellyValve(ShellyBlockAttributeEntity, ValveEntity):
     def is_opening(self) -> bool:
         """Return if the valve is opening."""
         if self.control_result:
-            return self.control_result["state"] == "opening"
+            return cast(bool, self.control_result["state"] == "opening")
 
         return self.attribute_value == "opening"
 
