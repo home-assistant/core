@@ -168,9 +168,8 @@ class FinTsClient:
         if not account_information:
             return False
 
-        account_type = account_information.get("type")
-        if isinstance(account_type, int) and 1 <= account_type <= 9:
-            return True
+        if account_type := account_information.get("type"):
+            return 1 <= account_type <= 9
 
         if (
             account_information["iban"] in self.account_config
@@ -189,9 +188,8 @@ class FinTsClient:
         if not account_information:
             return False
 
-        account_type = account_information.get("type")
-        if isinstance(account_type, int) and 30 <= account_type <= 39:
-            return True
+        if account_type := account_information.get("type"):
+            return 30 <= account_type <= 39
 
         if (
             account_information["iban"] in self.holdings_config
