@@ -44,7 +44,7 @@ from .const import (
 from .coordinator import PicnicUpdateCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class PicnicRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -54,7 +54,7 @@ class PicnicRequiredKeysMixin:
     value_fn: Callable[[Any], StateType | datetime]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PicnicSensorEntityDescription(SensorEntityDescription, PicnicRequiredKeysMixin):
     """Describes Picnic sensor entity."""
 

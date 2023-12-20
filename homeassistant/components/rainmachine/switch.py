@@ -133,7 +133,7 @@ def raise_on_request_error(
     return decorator
 
 
-@dataclass
+@dataclass(frozen=True)
 class RainMachineSwitchDescription(
     SwitchEntityDescription,
     RainMachineEntityDescription,
@@ -141,14 +141,14 @@ class RainMachineSwitchDescription(
     """Describe a RainMachine switch."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class RainMachineActivitySwitchDescription(
     RainMachineSwitchDescription, RainMachineEntityDescriptionMixinUid
 ):
     """Describe a RainMachine activity (program/zone) switch."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class RainMachineRestrictionSwitchDescription(
     RainMachineSwitchDescription, RainMachineEntityDescriptionMixinDataKey
 ):
