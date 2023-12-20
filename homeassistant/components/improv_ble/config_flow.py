@@ -405,7 +405,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise AbortFlow("characteristic_missing") from err
         except improv_ble_errors.CommandFailed:
             raise
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:
             _LOGGER.exception("Unexpected exception")
             raise AbortFlow("unknown") from err
 

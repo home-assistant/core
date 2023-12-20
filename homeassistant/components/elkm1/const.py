@@ -14,7 +14,6 @@ LOGIN_TIMEOUT = 20
 CONF_AUTO_CONFIGURE = "auto_configure"
 CONF_AREA = "area"
 CONF_COUNTER = "counter"
-CONF_ENABLED = "enabled"
 CONF_KEYPAD = "keypad"
 CONF_OUTPUT = "output"
 CONF_PLC = "plc"
