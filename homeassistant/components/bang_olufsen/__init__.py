@@ -41,14 +41,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     websocket = BangOlufsenWebsocket(hass, entry, client)
 
-    # Add the websocket
+    # Add the websocket and API client
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = BangOlufsenData(
         websocket,
         client,
     )
 
+    # Check and start WebSocket connection
+    if not await client.connect_notifications():
+        raise ConfigEntryNotReady(
+            f"Unable to connect to {entry.title} WebSocket notification channel"
+        )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    client.connect_notifications()
 
     return True
 
