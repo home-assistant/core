@@ -65,16 +65,6 @@ class TailwindNumberEntity(TailwindEntity, NumberEntity):
 
     entity_description: TailwindNumberEntityDescription
 
-    def __init__(
-        self,
-        coordinator: TailwindDataUpdateCoordinator,
-        description: TailwindNumberEntityDescription,
-    ) -> None:
-        """Initiate Tailwind number entity."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.data.device_id}-{description.key}"
-
     @property
     def native_value(self) -> int | None:
         """Return the number value."""
