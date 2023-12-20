@@ -38,7 +38,6 @@ STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.NUMBER)
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
     ZHA_ENTITIES.config_diagnostic_match, Platform.NUMBER
 )
-MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.NUMBER)
 
 
 UNITS = {
@@ -951,10 +950,7 @@ class AqaraThermostatAwayTemp(ZHANumberConfigurationEntity):
     _attr_icon: str = ICONS[0]
 
 
-@MULTI_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    stop_on_match_group=CLUSTER_HANDLER_THERMOSTAT,
-)
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class ThermostatLocalTempCalibration(ZHANumberConfigurationEntity):
     """Local temperature calibration."""
