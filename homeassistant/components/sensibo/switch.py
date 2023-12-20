@@ -24,7 +24,7 @@ from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 PARALLEL_UPDATES = 0
 
 
-@dataclass
+@dataclass(frozen=True)
 class DeviceBaseEntityDescriptionMixin:
     """Mixin for required Sensibo Device description keys."""
 
@@ -35,7 +35,7 @@ class DeviceBaseEntityDescriptionMixin:
     data_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class SensiboDeviceSwitchEntityDescription(
     SwitchEntityDescription, DeviceBaseEntityDescriptionMixin
 ):

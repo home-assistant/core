@@ -1,7 +1,6 @@
 """Read status of SunWEG inverters."""
 from __future__ import annotations
 
-import datetime
 import logging
 from types import MappingProxyType
 from typing import Any
@@ -16,7 +15,6 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from . import SunWEGData
 from .const import CONF_PLANT_ID, DEFAULT_PLANT_ID, DOMAIN, DeviceType
@@ -160,18 +158,20 @@ class SunWEGInverter(SensorEntity):
             name=name,
         )
 
-    @property
-    def native_value(
-        self,
-    ) -> StateType | datetime.datetime:
-        """Return the state of the sensor."""
-        return self.probe.get_data(
-            self.entity_description,
-            device_type=self.device_type,
-            inverter_id=self.inverter_id,
-            deep_name=self.deep_name,
-        )
-
     def update(self) -> None:
         """Get the latest data from the Sun WEG API and updates the state."""
         self.probe.update()
+        (
+            self._attr_native_value,
+            self._attr_native_unit_of_measurement,
+        ) = self.probe.get_data(
+            api_variable_key=self.entity_description.api_variable_key,
+            api_variable_unit=self.entity_description.api_variable_unit,
+            deep_name=self.deep_name,
+            device_type=self.device_type,
+            inverter_id=self.inverter_id,
+            name=self.entity_description.name,
+            native_unit_of_measurement=self.native_unit_of_measurement,
+            never_resets=self.entity_description.never_resets,
+            previous_value_drop_threshold=self.entity_description.previous_value_drop_threshold,
+        )

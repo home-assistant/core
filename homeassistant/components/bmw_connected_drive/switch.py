@@ -22,7 +22,7 @@ from .coordinator import BMWDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class BMWRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -31,7 +31,7 @@ class BMWRequiredKeysMixin:
     remote_service_off: Callable[[MyBMWVehicle], Coroutine[Any, Any, Any]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class BMWSwitchEntityDescription(SwitchEntityDescription, BMWRequiredKeysMixin):
     """Describes BMW switch entity."""
 
