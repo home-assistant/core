@@ -43,6 +43,8 @@ class TrelloSensor(CoordinatorEntity[TrelloDataUpdateCoordinator], SensorEntity)
     @property
     def available(self) -> bool:
         """Determine if sensor is available."""
+	if not super.available():
+	    return False
         board = self.coordinator.data[self.board.id]
         list_id = board.lists.get(self.list_id)
         return super().available and bool(board.lists and list_id)
