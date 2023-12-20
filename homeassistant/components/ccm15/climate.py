@@ -42,7 +42,6 @@ async def async_setup_entry(
         CCM15Climate(coordinator.get_host(), ac_index, coordinator)
         for ac_index in ac_data.devices
     ]
-    _LOGGER.debug("Creating new ac devices at indices '%s'", ac_data.devices)
     async_add_entities(entities)
 
 
@@ -90,7 +89,6 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     def current_temperature(self) -> int | None:
         """Return current temperature."""
         if data := self.coordinator.get_ac_data(self._ac_index):
-            _LOGGER.debug("temp[%s]=%s", self._ac_index, data.temperature)
             return data.temperature
         return None
 
@@ -98,7 +96,6 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     def target_temperature(self) -> int | None:
         """Return target temperature."""
         if data := self.coordinator.get_ac_data(self._ac_index):
-            _LOGGER.debug("set_temp[%s]=%s", self._ac_index, data.temperature_setpoint)
             return data.temperature_setpoint
         return None
 
@@ -107,7 +104,6 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         """Return hvac mode."""
         if data := self.coordinator.get_ac_data(self._ac_index):
             mode = data.ac_mode
-            _LOGGER.debug("hvac_mode[%s]=%s", self._ac_index, mode)
             return CONST_CMD_STATE_MAP[mode]
         return None
 
@@ -116,7 +112,6 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         """Return fan mode."""
         if data := self.coordinator.get_ac_data(self._ac_index):
             mode = data.fan_mode
-            _LOGGER.debug("fan_mode[%s]=%s", self._ac_index, mode)
             return CONST_CMD_FAN_MAP[mode]
         return None
 
@@ -124,7 +119,6 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     def swing_mode(self) -> str | None:
         """Return swing mode."""
         if data := self.coordinator.get_ac_data(self._ac_index):
-            _LOGGER.debug("is_swing_on[%s]=%s", self._ac_index, data.is_swing_on)
             return SWING_ON if data.is_swing_on else SWING_OFF
         return None
 
