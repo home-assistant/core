@@ -6436,6 +6436,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "weatherflow_cloud": {
+      "name": "WeatherflowCloud",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "webhook": {
       "name": "Webhook",
       "integration_type": "hub",

@@ -255,7 +255,7 @@ class FidoData:
         """Get the latest data from Fido."""
 
         try:
-            await self.client.fetch_data()
+            await self.client.fetch_forecast_data()
         except PyFidoError as exp:
             _LOGGER.error("Error on receive last Fido data: %s", exp)
             return False

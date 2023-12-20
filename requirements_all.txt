@@ -2295,6 +2295,9 @@ pyvolumio==0.1.5
 # homeassistant.components.waze_travel_time
 pywaze==0.5.1
 
+# homeassistant.components.weatherflow_cloud
+pyweatherflow-forecast==1.0.1
+
 # homeassistant.components.weatherflow
 pyweatherflowudp==1.4.5
 

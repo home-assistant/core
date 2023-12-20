@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up a WeatherFlow Forecast Station",
+        "title": "WeatherFlow Forecast",
+        "data": {
+          "station_id": "Station Id",
+          "api_token": "Personal Api Token"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "wrong_station_id": "The Station ID entered is not correct.",
+      "server_error": "WeatherFlow servers encountered an unexpected error",
+      "wrong_token": "The API Token is incorrect or does not match the Station ID.",
+      "bad_request": "An unknown error occurred when retrieving data."
+    },
+    "abort": {
+      "unique_id": "WeatherFlow Location has already been configured."
+    }
+  }
+}

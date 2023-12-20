@@ -1455,6 +1455,8 @@ build.json @home-assistant/supervisor
 /tests/components/weather/ @home-assistant/core
 /homeassistant/components/weatherflow/ @natekspencer @jeeftor
 /tests/components/weatherflow/ @natekspencer @jeeftor
+/homeassistant/components/weatherflow_cloud/ @briis @jeeftor
+/tests/components/weatherflow_cloud/ @briis @jeeftor
 /homeassistant/components/weatherkit/ @tjhorner
 /tests/components/weatherkit/ @tjhorner
 /homeassistant/components/webhook/ @home-assistant/core

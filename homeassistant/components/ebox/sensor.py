@@ -215,7 +215,7 @@ class EBoxData:
     async def async_update(self):
         """Get the latest data from Ebox."""
         try:
-            await self.client.fetch_data()
+            await self.client.fetch_forecast_data()
         except PyEboxError as exp:
             _LOGGER.error("Error on receive last EBox data: %s", exp)
             return
