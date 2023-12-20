@@ -31,7 +31,7 @@ from .const import DOMAIN
 DEFAULT_NEXT_LAUNCH_NAME = "Next launch"
 
 
-@dataclass
+@dataclass(frozen=True)
 class LaunchLibrarySensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -39,7 +39,7 @@ class LaunchLibrarySensorEntityDescriptionMixin:
     attributes_fn: Callable[[Launch | Event], dict[str, Any] | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class LaunchLibrarySensorEntityDescription(
     SensorEntityDescription, LaunchLibrarySensorEntityDescriptionMixin
 ):

@@ -499,6 +499,12 @@ ZEROCONF = {
                 "vendor": "synology*",
             },
         },
+        {
+            "domain": "tailwind",
+            "properties": {
+                "vendor": "tailwind",
+            },
+        },
     ],
     "_hue._tcp.local.": [
         {

@@ -28,7 +28,7 @@ from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class YoLinkBinarySensorEntityDescription(BinarySensorEntityDescription):
     """YoLink BinarySensorEntityDescription."""
 

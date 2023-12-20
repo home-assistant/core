@@ -22,6 +22,7 @@ from homeassistant.components import (
     number,
     timer,
     vacuum,
+    water_heater,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -80,6 +81,23 @@ from .state_report import AlexaDirective, AlexaResponse, async_enable_proactive_
 
 _LOGGER = logging.getLogger(__name__)
 DIRECTIVE_NOT_SUPPORTED = "Entity does not support directive"
+
+MIN_MAX_TEMP = {
+    climate.DOMAIN: {
+        "min_temp": climate.ATTR_MIN_TEMP,
+        "max_temp": climate.ATTR_MAX_TEMP,
+    },
+    water_heater.DOMAIN: {
+        "min_temp": water_heater.ATTR_MIN_TEMP,
+        "max_temp": water_heater.ATTR_MAX_TEMP,
+    },
+}
+
+SERVICE_SET_TEMPERATURE = {
+    climate.DOMAIN: climate.SERVICE_SET_TEMPERATURE,
+    water_heater.DOMAIN: water_heater.SERVICE_SET_TEMPERATURE,
+}
+
 HANDLERS: Registry[
     tuple[str, str],
     Callable[
@@ -804,8 +822,10 @@ async def async_api_set_target_temp(
 ) -> AlexaResponse:
     """Process a set target temperature request."""
     entity = directive.entity
-    min_temp = entity.attributes[climate.ATTR_MIN_TEMP]
-    max_temp = entity.attributes[climate.ATTR_MAX_TEMP]
+    domain = entity.domain
+
+    min_temp = entity.attributes[MIN_MAX_TEMP[domain]["min_temp"]]
+    max_temp = entity.attributes["max_temp"]
     unit = hass.config.units.temperature_unit
 
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
@@ -849,9 +869,11 @@ async def async_api_set_target_temp(
             }
         )
 
+    service = SERVICE_SET_TEMPERATURE[domain]
+
     await hass.services.async_call(
         entity.domain,
-        climate.SERVICE_SET_TEMPERATURE,
+        service,
         data,
         blocking=False,
         context=context,
@@ -867,11 +889,12 @@ async def async_api_adjust_target_temp(
     directive: AlexaDirective,
     context: ha.Context,
 ) -> AlexaResponse:
-    """Process an adjust target temperature request."""
+    """Process an adjust target temperature request for climates and water heaters."""
     data: dict[str, Any]
     entity = directive.entity
-    min_temp = entity.attributes[climate.ATTR_MIN_TEMP]
-    max_temp = entity.attributes[climate.ATTR_MAX_TEMP]
+    domain = entity.domain
+    min_temp = entity.attributes[MIN_MAX_TEMP[domain]["min_temp"]]
+    max_temp = entity.attributes[MIN_MAX_TEMP[domain]["max_temp"]]
     unit = hass.config.units.temperature_unit
 
     temp_delta = temperature_from_object(
@@ -932,9 +955,11 @@ async def async_api_adjust_target_temp(
             }
         )
 
+    service = SERVICE_SET_TEMPERATURE[domain]
+
     await hass.services.async_call(
         entity.domain,
-        climate.SERVICE_SET_TEMPERATURE,
+        service,
         data,
         blocking=False,
         context=context,
@@ -1163,6 +1188,23 @@ async def async_api_set_mode(
             msg = f"Entity '{entity.entity_id}' does not support Mode '{mode}'"
             raise AlexaInvalidValueError(msg)
 
+    # Water heater operation mode
+    elif instance == f"{water_heater.DOMAIN}.{water_heater.ATTR_OPERATION_MODE}":
+        operation_mode = mode.split(".")[1]
+        operation_modes: list[str] | None = entity.attributes.get(
+            water_heater.ATTR_OPERATION_LIST
+        )
+        if (
+            operation_mode != PRESET_MODE_NA
+            and operation_modes
+            and operation_mode in operation_modes
+        ):
+            service = water_heater.SERVICE_SET_OPERATION_MODE
+            data[water_heater.ATTR_OPERATION_MODE] = operation_mode
+        else:
+            msg = f"Entity '{entity.entity_id}' does not support Operation mode '{operation_mode}'"
+            raise AlexaInvalidValueError(msg)
+
     # Cover Position
     elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         position = mode.split(".")[1]
@@ -1304,13 +1346,14 @@ async def async_api_set_range(
     service = None
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
     range_value = directive.payload["rangeValue"]
+    supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
     # Cover Position
     if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         range_value = int(range_value)
-        if range_value == 0:
+        if supported & cover.CoverEntityFeature.CLOSE and range_value == 0:
             service = cover.SERVICE_CLOSE_COVER
-        elif range_value == 100:
+        elif supported & cover.CoverEntityFeature.OPEN and range_value == 100:
             service = cover.SERVICE_OPEN_COVER
         else:
             service = cover.SERVICE_SET_COVER_POSITION
@@ -1319,9 +1362,9 @@ async def async_api_set_range(
     # Cover Tilt
     elif instance == f"{cover.DOMAIN}.tilt":
         range_value = int(range_value)
-        if range_value == 0:
+        if supported & cover.CoverEntityFeature.CLOSE_TILT and range_value == 0:
             service = cover.SERVICE_CLOSE_COVER_TILT
-        elif range_value == 100:
+        elif supported & cover.CoverEntityFeature.OPEN_TILT and range_value == 100:
             service = cover.SERVICE_OPEN_COVER_TILT
         else:
             service = cover.SERVICE_SET_COVER_TILT_POSITION
@@ -1332,13 +1375,11 @@ async def async_api_set_range(
         range_value = int(range_value)
         if range_value == 0:
             service = fan.SERVICE_TURN_OFF
+        elif supported & fan.FanEntityFeature.SET_SPEED:
+            service = fan.SERVICE_SET_PERCENTAGE
+            data[fan.ATTR_PERCENTAGE] = range_value
         else:
-            supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-            if supported and fan.FanEntityFeature.SET_SPEED:
-                service = fan.SERVICE_SET_PERCENTAGE
-                data[fan.ATTR_PERCENTAGE] = range_value
-            else:
-                service = fan.SERVICE_TURN_ON
+            service = fan.SERVICE_TURN_ON
 
     # Humidifier target humidity
     elif instance == f"{humidifier.DOMAIN}.{humidifier.ATTR_HUMIDITY}":

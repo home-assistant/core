@@ -286,6 +286,12 @@
       "integration_type": "virtual",
       "supported_by": "energyzero"
     },
+    "aosmith": {
+      "name": "A. O. Smith",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "apache_kafka": {
       "name": "Apache Kafka",
       "integration_type": "hub",
@@ -5537,13 +5543,19 @@
     "suez_water": {
       "name": "Suez Water",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "sun": {
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "calculated"
+    },
+    "sunweg": {
+      "name": "Sun WEG",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "supervisord": {
       "name": "Supervisord",
@@ -5679,6 +5691,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "tailwind": {
+      "name": "Tailwind",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "tami4": {
       "name": "Tami4 Edge / Edge+",
       "integration_type": "hub",
@@ -5795,6 +5813,12 @@
           "name": "Tesla Wall Connector"
         }
       }
+    },
+    "tessie": {
+      "name": "Tessie",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "tfiac": {
       "name": "Tfiac",
@@ -6699,7 +6723,7 @@
       "iot_class": "local_polling"
     },
     "zamg": {
-      "name": "Zentralanstalt f\u00fcr Meteorologie und Geodynamik (ZAMG)",
+      "name": "GeoSphere Austria",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"

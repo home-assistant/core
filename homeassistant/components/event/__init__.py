@@ -71,8 +71,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class EventEntityDescription(EntityDescription):
+class EventEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes event entities."""
 
     device_class: EventDeviceClass | None = None

@@ -43,6 +43,7 @@ async def test_entry_diagnostics(
         "config_entry": {
             "entry_id": "2ab8dd92a62787ddfe213a67e09406bd",
             "version": 1,
+            "minor_version": 1,
             "domain": "kostal_plenticore",
             "title": "scb",
             "data": {"host": "192.168.1.2", "password": REDACTED},

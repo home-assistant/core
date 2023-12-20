@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import enum
 import logging
 from time import localtime, strftime, time
 from typing import Any
@@ -151,6 +152,13 @@ async def async_setup_entry(
     )
 
 
+class LyricThermostatType(enum.Enum):
+    """Lyric thermostats are classified as TCC or LCC devices."""
+
+    TCC = enum.auto()
+    LCC = enum.auto()
+
+
 class LyricClimate(LyricDeviceEntity, ClimateEntity):
     """Defines a Honeywell Lyric climate entity."""
 
@@ -201,8 +209,10 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         # Setup supported features
         if device.changeableValues.thermostatSetpointStatus:
             self._attr_supported_features = SUPPORT_FLAGS_LCC
+            self._attr_thermostat_type = LyricThermostatType.LCC
         else:
             self._attr_supported_features = SUPPORT_FLAGS_TCC
+            self._attr_thermostat_type = LyricThermostatType.TCC
 
         # Setup supported fan modes
         if device_fan_modes := device.settings.attributes.get("fan", {}).get(
@@ -365,56 +375,69 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         """Set hvac mode."""
         _LOGGER.debug("HVAC mode: %s", hvac_mode)
         try:
-            if LYRIC_HVAC_MODES[hvac_mode] == LYRIC_HVAC_MODE_HEAT_COOL:
-                # If the system is off, turn it to Heat first then to Auto,
-                # otherwise it turns to.
-                # Auto briefly and then reverts to Off (perhaps related to
-                # heatCoolMode). This is the behavior that happens with the
-                # native app as well, so likely a bug in the api itself
-                if HVAC_MODES[self.device.changeableValues.mode] == HVACMode.OFF:
-                    _LOGGER.debug(
-                        "HVAC mode passed to lyric: %s",
-                        HVAC_MODES[LYRIC_HVAC_MODE_COOL],
-                    )
-                    await self._update_thermostat(
-                        self.location,
-                        self.device,
-                        mode=HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
-                        autoChangeoverActive=False,
-                    )
-                    # Sleep 3 seconds before proceeding
-                    await asyncio.sleep(3)
-                    _LOGGER.debug(
-                        "HVAC mode passed to lyric: %s",
-                        HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
-                    )
-                    await self._update_thermostat(
-                        self.location,
-                        self.device,
-                        mode=HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
-                        autoChangeoverActive=True,
-                    )
-                else:
-                    _LOGGER.debug(
-                        "HVAC mode passed to lyric: %s",
-                        HVAC_MODES[self.device.changeableValues.mode],
-                    )
-                    await self._update_thermostat(
-                        self.location, self.device, autoChangeoverActive=True
-                    )
-            else:
+            match self._attr_thermostat_type:
+                case LyricThermostatType.TCC:
+                    await self._async_set_hvac_mode_tcc(hvac_mode)
+                case LyricThermostatType.LCC:
+                    await self._async_set_hvac_mode_lcc(hvac_mode)
+        except LYRIC_EXCEPTIONS as exception:
+            _LOGGER.error(exception)
+        await self.coordinator.async_refresh()
+
+    async def _async_set_hvac_mode_tcc(self, hvac_mode: HVACMode) -> None:
+        if LYRIC_HVAC_MODES[hvac_mode] == LYRIC_HVAC_MODE_HEAT_COOL:
+            # If the system is off, turn it to Heat first then to Auto,
+            # otherwise it turns to.
+            # Auto briefly and then reverts to Off (perhaps related to
+            # heatCoolMode). This is the behavior that happens with the
+            # native app as well, so likely a bug in the api itself
+            if HVAC_MODES[self.device.changeableValues.mode] == HVACMode.OFF:
                 _LOGGER.debug(
-                    "HVAC mode passed to lyric: %s", LYRIC_HVAC_MODES[hvac_mode]
+                    "HVAC mode passed to lyric: %s",
+                    HVAC_MODES[LYRIC_HVAC_MODE_COOL],
                 )
                 await self._update_thermostat(
                     self.location,
                     self.device,
-                    mode=LYRIC_HVAC_MODES[hvac_mode],
+                    mode=HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
                     autoChangeoverActive=False,
                 )
-        except LYRIC_EXCEPTIONS as exception:
-            _LOGGER.error(exception)
-        await self.coordinator.async_refresh()
+                # Sleep 3 seconds before proceeding
+                await asyncio.sleep(3)
+                _LOGGER.debug(
+                    "HVAC mode passed to lyric: %s",
+                    HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
+                )
+                await self._update_thermostat(
+                    self.location,
+                    self.device,
+                    mode=HVAC_MODES[LYRIC_HVAC_MODE_HEAT],
+                    autoChangeoverActive=True,
+                )
+            else:
+                _LOGGER.debug(
+                    "HVAC mode passed to lyric: %s",
+                    HVAC_MODES[self.device.changeableValues.mode],
+                )
+                await self._update_thermostat(
+                    self.location, self.device, autoChangeoverActive=True
+                )
+        else:
+            _LOGGER.debug("HVAC mode passed to lyric: %s", LYRIC_HVAC_MODES[hvac_mode])
+            await self._update_thermostat(
+                self.location,
+                self.device,
+                mode=LYRIC_HVAC_MODES[hvac_mode],
+                autoChangeoverActive=False,
+            )
+
+    async def _async_set_hvac_mode_lcc(self, hvac_mode: HVACMode) -> None:
+        _LOGGER.debug("HVAC mode passed to lyric: %s", LYRIC_HVAC_MODES[hvac_mode])
+        await self._update_thermostat(
+            self.location,
+            self.device,
+            mode=LYRIC_HVAC_MODES[hvac_mode],
+        )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset (PermanentHold, HoldUntil, NoHold, VacationHold) mode."""

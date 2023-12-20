@@ -42,7 +42,7 @@ ATTR_USED: Final = "used"
 PIXELS: Final = "px"
 
 
-@dataclass
+@dataclass(frozen=True)
 class SystemBridgeSensorEntityDescription(SensorEntityDescription):
     """Class describing System Bridge sensor entities."""
 

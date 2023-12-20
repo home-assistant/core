@@ -649,7 +649,7 @@ class DefaultAgent(AbstractConversationAgent):
         if device_area is None:
             return None
 
-        return {"area": device_area.name}
+        return {"area": device_area.id}
 
     def _get_error_text(
         self, response_type: ResponseType, lang_intents: LanguageIntents | None
