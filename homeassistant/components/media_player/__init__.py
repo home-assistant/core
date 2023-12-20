@@ -5,7 +5,6 @@ import asyncio
 import collections
 from collections.abc import Callable
 from contextlib import suppress
-from dataclasses import dataclass
 import datetime as dt
 from enum import StrEnum
 import functools as ft
@@ -449,8 +448,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class MediaPlayerEntityDescription(EntityDescription):
+class MediaPlayerEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes media player entities."""
 
     device_class: MediaPlayerDeviceClass | None = None

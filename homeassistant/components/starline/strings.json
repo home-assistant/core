@@ -113,6 +113,9 @@
       },
       "horn": {
         "name": "Horn"
+      },
+      "service_mode": {
+        "name": "Service mode"
       }
     },
     "button": {
