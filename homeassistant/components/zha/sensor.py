@@ -230,8 +230,7 @@ class Battery(Sensor):
         # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
         if not isinstance(value, numbers.Number) or value == -1:
             return None
-        value = value / 2
-        return value
+        return value / 2
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
