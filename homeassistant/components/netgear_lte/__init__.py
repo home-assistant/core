@@ -150,8 +150,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if lte_config := config.get(DOMAIN):
         for entry in lte_config:
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
+            result = await hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
+                )
             )
             if result.get("reason") == "cannot_connect":
                 async_create_issue(
