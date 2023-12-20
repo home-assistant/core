@@ -9,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -26,23 +25,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-
-    ccm15 = CCM15Device(data[CONF_HOST], data[CONF_PORT], DEFAULT_TIMEOUT)
-    if not await ccm15.async_test_connection():
-        raise CannotConnect
-
-    # Return info that you want to store in the config entry.
-    return {
-        CONF_HOST: data[CONF_HOST],
-        CONF_PORT: data[CONF_PORT],
-    }
-
-
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Midea ccm15 AC Controller."""
 
@@ -56,13 +38,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 self._async_abort_entries_match(user_input)
-                info = await validate_input(self.hass, user_input)
+                ccm15 = CCM15Device(
+                    user_input[CONF_HOST], user_input[CONF_PORT], DEFAULT_TIMEOUT
+                )
+                if not await ccm15.async_test_connection():
+                    raise CannotConnect
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                info = {
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_PORT: user_input[CONF_PORT],
+                }
                 return self.async_create_entry(title=info[CONF_HOST], data=user_input)
 
         return self.async_show_form(
