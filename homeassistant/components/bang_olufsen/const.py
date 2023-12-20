@@ -122,10 +122,6 @@ VALID_MEDIA_TYPES: Final[tuple] = (
     MediaType.CHANNEL,
 )
 
-# Playback states for playing and not playing
-PLAYING: Final[tuple] = ("started", "buffering", BANG_OLUFSEN_ON)
-NOT_PLAYING: Final[tuple] = ("idle", "paused", "stopped", "ended", "unknown", "error")
-
 # Sources on the device that should not be selectable by the user
 HIDDEN_SOURCE_IDS: Final[tuple] = (
     "airPlay",
@@ -209,6 +205,3 @@ BANG_OLUFSEN_WEBSOCKET_EVENT: Final[str] = f"{DOMAIN}_websocket_event"
 
 
 CONNECTION_STATUS: Final[str] = "CONNECTION_STATUS"
-
-# Misc.
-WEBSOCKET_CONNECTION_DELAY: Final[float] = 3.0
