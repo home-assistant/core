@@ -31,9 +31,9 @@ ENERGY_USAGE_SERVICE_NAME: Final = "get_energy_usage_prices"
 ENERGY_RETURN_SERVICE_NAME: Final = "get_energy_return_prices"
 SERVICE_SCHEMA: Final = vol.Schema(
     {
+        vol.Required(ATTR_INCL_VAT): bool,
         vol.Optional(ATTR_START): str,
         vol.Optional(ATTR_END): str,
-        vol.Required(ATTR_INCL_VAT, default=True): bool,
     }
 )
 
@@ -55,6 +55,7 @@ def __get_date(date_input: str | None) -> date | datetime:
         return value
 
     raise ServiceValidationError(
+        "Invalid datetime provided.",
         translation_domain=DOMAIN,
         translation_key="invalid_date",
         translation_placeholders={

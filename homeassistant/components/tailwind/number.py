@@ -18,7 +18,7 @@ from .coordinator import TailwindDataUpdateCoordinator
 from .entity import TailwindEntity
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class TailwindNumberEntityDescription(NumberEntityDescription):
     """Class describing Tailwind number entities."""
 
@@ -64,16 +64,6 @@ class TailwindNumberEntity(TailwindEntity, NumberEntity):
     """Representation of a Tailwind number entity."""
 
     entity_description: TailwindNumberEntityDescription
-
-    def __init__(
-        self,
-        coordinator: TailwindDataUpdateCoordinator,
-        description: TailwindNumberEntityDescription,
-    ) -> None:
-        """Initiate Tailwind number entity."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.data.device_id}-{description.key}"
 
     @property
     def native_value(self) -> int | None:

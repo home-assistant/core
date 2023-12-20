@@ -21,7 +21,7 @@ from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .helpers import on_unload
 
 
-@dataclass
+@dataclass(frozen=True)
 class MySensorsBinarySensorDescription(BinarySensorEntityDescription):
     """Describe a MySensors binary sensor entity."""
 

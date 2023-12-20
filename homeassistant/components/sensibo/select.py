@@ -20,7 +20,7 @@ from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 PARALLEL_UPDATES = 0
 
 
-@dataclass
+@dataclass(frozen=True)
 class SensiboSelectDescriptionMixin:
     """Mixin values for Sensibo entities."""
 
@@ -30,7 +30,7 @@ class SensiboSelectDescriptionMixin:
     transformation: Callable[[SensiboDevice], dict | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SensiboSelectEntityDescription(
     SelectEntityDescription, SensiboSelectDescriptionMixin
 ):
