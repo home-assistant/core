@@ -11,21 +11,16 @@ from simplipy.errors import SimplipyError
 from simplipy.system.v3 import SystemV3
 from simplipy.util.dt import utc_from_timestamp
 from simplipy.websocket import EVENT_CAMERA_MOTION_DETECTED, WebsocketEvent
-
 import voluptuous as vol
-
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    EntityCategory,
-    ATTR_ENTITY_ID
-)
+from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 
@@ -87,15 +82,14 @@ SERVICE_OC_SNAPSHOT_SCHEMA = cv.make_entity_service_schema(
     }
 )
 SERVICE_OC_CLIP_SCHEMA = cv.make_entity_service_schema(
-    {
-        vol.Required(ATTR_FILENAME): cv.template
-    }
+    {vol.Required(ATTR_FILENAME): cv.template}
 )
 
 SERVICES = (
     SERVICE_OUTDOOR_CAMERA_SAVE_LATEST_SNAPSHOT,
-    SERVICE_OUTDOOR_CAMERA_SAVE_LATEST_CLIP
+    SERVICE_OUTDOOR_CAMERA_SAVE_LATEST_CLIP,
 )
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -222,9 +216,7 @@ class OutdoorCameraSensor(SimpliSafeEntity, BinarySensorEntity):
         # self._attr_unique_id = f"{super().unique_id}-motion-camera"
         self._device: SensorV3
         self._attr_is_on = False
-        self._attr_supported_features = (
-            MotionEntityFeature.MOTION_MEDIA
-        )
+        self._attr_supported_features = MotionEntityFeature.MOTION_MEDIA
 
     @callback
     def async_unload(self) -> None:
@@ -256,10 +248,11 @@ class OutdoorCameraSensor(SimpliSafeEntity, BinarySensorEntity):
                 return
 
             try:
-                await self.hass.async_add_executor_job(_write_image, snapshot_file, snapshot)
+                await self.hass.async_add_executor_job(
+                    _write_image, snapshot_file, snapshot
+                )
             except OSError as err:
                 LOGGER.error("Can't write image to file: %s", err)
-
 
         async def save_clip_handler(call: ServiceCall) -> None:
             if self._attr_clip_url is None:
@@ -282,14 +275,14 @@ class OutdoorCameraSensor(SimpliSafeEntity, BinarySensorEntity):
             DOMAIN,
             SERVICE_OUTDOOR_CAMERA_SAVE_LATEST_SNAPSHOT,
             save_snapshot_handler,
-            schema=SERVICE_OC_SNAPSHOT_SCHEMA
+            schema=SERVICE_OC_SNAPSHOT_SCHEMA,
         )
 
         self.hass.services.async_register(
             DOMAIN,
             SERVICE_OUTDOOR_CAMERA_SAVE_LATEST_CLIP,
             save_clip_handler,
-            schema=SERVICE_OC_CLIP_SCHEMA
+            schema=SERVICE_OC_CLIP_SCHEMA,
         )
 
     @callback
@@ -304,7 +297,7 @@ class OutdoorCameraSensor(SimpliSafeEntity, BinarySensorEntity):
             "Outdoor Camera %s received a websocket event: %s, at %s",
             self._device.serial,
             event,
-            datetime.now()
+            datetime.now(),
         )
 
         self._attr_is_on = True
