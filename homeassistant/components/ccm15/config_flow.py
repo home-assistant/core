@@ -26,20 +26,13 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(
-    hass: HomeAssistant, data: dict[str, Any], existing_hosts: list[str]
-) -> dict[str, Any]:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    host: str = data[CONF_HOST]
-    for existing_host in existing_hosts:
-        if existing_host == host:
-            raise DuplicateEntry
-
-    ccm15 = CCM15Device(host, data[CONF_PORT], DEFAULT_TIMEOUT)
+    ccm15 = CCM15Device(data[CONF_HOST], data[CONF_PORT], DEFAULT_TIMEOUT)
     if not await ccm15.async_test_connection():
         raise CannotConnect
 
@@ -62,10 +55,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                existing_hosts = [
-                    entry.data[CONF_HOST] for entry in self._async_current_entries()
-                ]
-                info = await validate_input(self.hass, user_input, existing_hosts)
+                self._async_abort_entries_match(user_input)
+                info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
@@ -81,7 +72,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class DuplicateEntry(HomeAssistantError):
-    """Error to indicate an existing entry already exist."""
