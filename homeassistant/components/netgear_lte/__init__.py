@@ -202,10 +202,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     update_unsub = async_track_time_interval(hass, _update, SCAN_INTERVAL)
 
-    def cleanup(event: Event | None = None) -> None:
+    async def cleanup(event: Event | None = None) -> None:
         """Clean up resources."""
         update_unsub()
-        modem.logout()
+        await modem.logout()
         if DOMAIN in hass.data:
             del hass.data[DOMAIN].modem_data[modem_data.host]
 
