@@ -289,7 +289,11 @@ def _raise_issue_if_legacy_templates(
             severity=ir.IssueSeverity.WARNING,
             translation_key="legacy_templates_true",
         )
-    elif legacy_templates is False:
+        return
+
+    ir.async_delete_issue(hass, "homeassistant", "legacy_templates_true")
+
+    if legacy_templates is False:
         ir.async_create_issue(
             hass,
             "homeassistant",
@@ -299,6 +303,8 @@ def _raise_issue_if_legacy_templates(
             severity=ir.IssueSeverity.WARNING,
             translation_key="legacy_templates_false",
         )
+    else:
+        ir.async_delete_issue(hass, "homeassistant", "legacy_templates_false")
 
 
 def _validate_currency(data: Any) -> Any:
