@@ -1,5 +1,4 @@
 """Test the Midea ccm15 AC Controller config flow."""
-import unittest
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -7,6 +6,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.ccm15.config_flow import CannotConnect
 from homeassistant.components.ccm15.const import DOMAIN
+from homeassistant.config_entries import data_entry_flow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -22,7 +22,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.ccm15.coordinator.CCM15Coordinator.async_test_connection",
+        "ccm15.CCM15Device.CCM15Device.async_test_connection",
         return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -53,7 +53,7 @@ async def test_form_invalid_host(
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.ccm15.coordinator.CCM15Coordinator.async_test_connection",
+        "ccm15.CCM15Device.CCM15Device.async_test_connection",
         return_value=False,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -75,7 +75,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.ccm15.coordinator.CCM15Coordinator.async_test_connection",
+        "ccm15.CCM15Device.CCM15Device.async_test_connection",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -96,7 +96,7 @@ async def test_form_unexpected_error(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.ccm15.coordinator.CCM15Coordinator.async_test_connection",
+        "ccm15.CCM15Device.CCM15Device.async_test_connection",
         side_effect=42,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -110,3 +110,22 @@ async def test_form_unexpected_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
+async def test_duplicate_host(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.config_entries._async_abort_entries_match",
+        side_effect=data_entry_flow.AbortFlow("already_configured"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+            },
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}

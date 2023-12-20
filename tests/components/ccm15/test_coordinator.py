@@ -1,5 +1,4 @@
 """Unit test for CCM15 coordinator component."""
-import unittest
 from unittest.mock import AsyncMock, patch
 
 from ccm15 import CCM15DeviceState, CCM15SlaveDevice
@@ -63,7 +62,7 @@ async def test_coordinator(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
     assert climate._ac_index == 0
     assert coordinator.data == data
     assert climate.unique_id == "1.1.1.1.0"
-    assert climate.name == "0"
+    assert climate.name is None
     assert climate.hvac_mode == HVACMode.OFF
     assert climate.current_temperature == 27
     assert climate.temperature_unit == UnitOfTemperature.CELSIUS
@@ -128,5 +127,3 @@ async def test_coordinator(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
     assert climate.target_temperature is None
     assert climate.fan_mode is None
     assert climate.swing_mode is None
-
-
