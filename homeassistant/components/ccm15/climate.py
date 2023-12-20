@@ -32,7 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     """Climate device for CCM15 coordinator."""
 
-    _attr_should_poll = True
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_has_entity_name = True
     _attr_target_temperature_step = PRECISION_WHOLE
@@ -50,6 +49,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.SWING_MODE
     )
+    _attr_name = None
 
     def __init__(
         self, ac_host: str, ac_index: int, coordinator: CCM15Coordinator
@@ -58,7 +58,6 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         super().__init__(coordinator)
         self._ac_host: str = ac_host
         self._ac_index: int = ac_index
-        self._attr_name = str(self._ac_index)
         self._attr_unique_id = f"{self._ac_host}.{self._ac_index}"
         self._attr_device_info = DeviceInfo(
             identifiers={
