@@ -42,6 +42,7 @@ class BlockSwitchDescription(BlockEntityDescription, SwitchEntityDescription):
     """Class to describe a BLOCK switch."""
 
 
+# This entity description is deprecated and will be removed in Home Assistant 2024.7.0.
 GAS_VALVE_SWITCH = BlockSwitchDescription(
     key="valve|valve",
     name="Valve",
@@ -145,7 +146,10 @@ def async_setup_rpc_entry(
 
 
 class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
-    """Entity that controls a Gas Valve on Block based Shelly devices."""
+    """Entity that controls a Gas Valve on Block based Shelly devices.
+
+    This class is deprecated and will be removed in Home Assistant 2024.7.0.
+    """
 
     entity_description: BlockSwitchDescription
 
@@ -179,7 +183,7 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
             self.hass,
             DOMAIN,
             "deprecated_valve_switch",
-            breaks_in_ha_version="2024.6.0",
+            breaks_in_ha_version="2024.7.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_valve_switche",
@@ -193,7 +197,7 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
             self.hass,
             DOMAIN,
             "deprecated_valve_switch",
-            breaks_in_ha_version="2024.6.0",
+            breaks_in_ha_version="2024.7.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_valve_switche",
@@ -212,7 +216,7 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
                 self.hass,
                 DOMAIN,
                 f"deprecated_valve_{self.entity_id}_{item}",
-                breaks_in_ha_version="2024.6.0",
+                breaks_in_ha_version="2024.7.0",
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_valve_switch_entity",
