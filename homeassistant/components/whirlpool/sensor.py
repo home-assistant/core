@@ -275,7 +275,7 @@ class WasherDryerTimeClass(RestoreSensor):
 
     async def async_update(self) -> None:
         """Update status of Whirlpool."""
-        await self._wd.fetch_forecast_data()
+        await self._wd.fetch_data()
 
     @callback
     def update_from_latest_data(self) -> None:
