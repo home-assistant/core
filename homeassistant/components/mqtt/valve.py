@@ -239,7 +239,7 @@ class MqttValve(MqttEntity, ValveEntity):
             state = STATE_CLOSED
         if state is None:
             _LOGGER.warning(
-                "Payload is received on topic '%s' not one of "
+                "Payload received on topic '%s' is not one of "
                 "[open, closed, opening, closing], got: %s",
                 msg.topic,
                 state_payload,
