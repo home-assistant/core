@@ -153,11 +153,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up all climate."""
     coordinator: CCM15Coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    entities = []
-    ac_index = 0
+
     ac_data: CCM15DeviceState = coordinator.data
-    for ac_index in ac_data.devices:
-        _LOGGER.debug("Creating new ac device at index '%s'", ac_index)
-        ac_device = CCM15Climate(coordinator.get_host(), ac_index, coordinator)
-        entities.append(ac_device)
+    entities = [
+        CCM15Climate(coordinator.get_host(), ac_index, coordinator)
+        for ac_index in ac_data.devices
+    ]
+    _LOGGER.debug("Creating new ac devices at indices '%s'", ac_data.devices)
     async_add_entities(entities, True)
