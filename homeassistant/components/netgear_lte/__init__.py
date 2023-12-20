@@ -16,7 +16,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -194,7 +194,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     modem = eternalegypt.Modem(hostname=host, websession=hass.data[DOMAIN].websession)
     modem_data = ModemData(hass, host, modem)
 
-    await _login(hass, entry, modem_data, password)
+    await _login(hass, modem_data, password)
+
+    async def _update(now):
+        """Periodic update."""
+        await modem_data.async_update()
+
+    update_unsub = async_track_time_interval(hass, _update, SCAN_INTERVAL)
+
+    def cleanup(event: Event | None = None) -> None:
+        """Clean up resources."""
+        update_unsub()
+        modem.logout()
+        if DOMAIN in hass.data:
+            del hass.data[DOMAIN].modem_data[modem_data.host]
+
+    entry.async_on_unload(cleanup)
+    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup))
 
     await async_setup_services(hass)
 
@@ -221,9 +237,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def _login(
-    hass: HomeAssistant, entry: ConfigEntry, modem_data: ModemData, password: str
-) -> None:
+async def _login(hass: HomeAssistant, modem_data: ModemData, password: str) -> None:
     """Log in and complete setup."""
     try:
         await modem_data.modem.login(password=password)
@@ -244,21 +258,6 @@ async def _login(
 
     await modem_data.async_update()
     hass.data[DOMAIN].modem_data[modem_data.host] = modem_data
-
-    async def _update(now):
-        """Periodic update."""
-        await modem_data.async_update()
-
-    update_unsub = async_track_time_interval(hass, _update, SCAN_INTERVAL)
-
-    async def cleanup(event):
-        """Clean up resources."""
-        update_unsub()
-        await modem_data.modem.logout()
-        if DOMAIN in hass.data:
-            del hass.data[DOMAIN].modem_data[modem_data.host]
-
-    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup))
 
 
 def _legacy_task(hass: HomeAssistant, entry: ConfigEntry) -> None:
