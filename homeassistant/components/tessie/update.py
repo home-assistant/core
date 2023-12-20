@@ -38,7 +38,7 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
     def installed_version(self) -> str:
         """Return the current app version."""
         # Discard build from version number
-        return self.get("vehicle_state_car_version").split(" ")[0]
+        return self.coordinator.data["vehicle_state_car_version"].split(" ")[0]
 
     @property
     def latest_version(self) -> str:
