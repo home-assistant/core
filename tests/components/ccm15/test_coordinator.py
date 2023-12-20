@@ -130,5 +130,3 @@ async def test_coordinator(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
     assert climate.swing_mode is None
 
 
-if __name__ == "__main__":
-    unittest.main()
