@@ -149,38 +149,41 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_HASS_CONFIG] = config
 
     if lte_config := config.get(DOMAIN):
-        for entry in lte_config:
-            result = await hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
-                )
-            )
-            if result.get("reason") == "cannot_connect":
-                async_create_issue(
-                    hass,
-                    DOMAIN,
-                    "import_failure",
-                    is_fixable=False,
-                    severity=IssueSeverity.ERROR,
-                    translation_key="import_failure",
-                )
-            else:
-                async_create_issue(
-                    hass,
-                    HOMEASSISTANT_DOMAIN,
-                    f"deprecated_yaml_{DOMAIN}",
-                    breaks_in_ha_version="2024.7.0",
-                    is_fixable=False,
-                    issue_domain=DOMAIN,
-                    severity=IssueSeverity.WARNING,
-                    translation_key="deprecated_yaml",
-                    translation_placeholders={
-                        "domain": DOMAIN,
-                        "integration_title": "Netgear LTE",
-                    },
-                )
+        await hass.async_create_task(import_yaml(hass, lte_config))
 
     return True
+
+
+async def import_yaml(hass: HomeAssistant, lte_config: ConfigType) -> None:
+    """Import yaml ir we can connect. Create appropriate issue registry entries."""
+    for entry in lte_config:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
+        )
+        if result.get("reason") == "cannot_connect":
+            async_create_issue(
+                hass,
+                DOMAIN,
+                "import_failure",
+                is_fixable=False,
+                severity=IssueSeverity.ERROR,
+                translation_key="import_failure",
+            )
+        else:
+            async_create_issue(
+                hass,
+                HOMEASSISTANT_DOMAIN,
+                f"deprecated_yaml_{DOMAIN}",
+                breaks_in_ha_version="2024.7.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_yaml",
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "integration_title": "Netgear LTE",
+                },
+            )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
