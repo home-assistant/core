@@ -46,6 +46,15 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "operational_status": {
+        "name": "Operational status",
+        "state": {
+          "off": "Locked out",
+          "on": "Operational"
+        }
+      }
+    },
     "number": {
       "brightness": {
         "name": "Status LED brightness"
