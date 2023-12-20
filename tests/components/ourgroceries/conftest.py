@@ -46,7 +46,7 @@ def mock_ourgroceries(items: list[dict]) -> AsyncMock:
     og = AsyncMock()
     og.login.return_value = True
     og.get_my_lists.return_value = {
-        "shoppingLists": [{"id": "test_list", "name": "Test List"}]
+        "shoppingLists": [{"id": "test_list", "name": "Test List", "versionId": "1"}]
     }
     og.get_list_items.return_value = items_to_shopping_list(items)
     return og

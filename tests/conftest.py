@@ -1131,7 +1131,7 @@ def mock_zeroconf() -> Generator[None, None, None]:
     with patch(
         "homeassistant.components.zeroconf.HaZeroconf", autospec=True
     ) as mock_zc, patch(
-        "homeassistant.components.zeroconf.HaAsyncServiceBrowser", autospec=True
+        "homeassistant.components.zeroconf.AsyncServiceBrowser", autospec=True
     ):
         zc = mock_zc.return_value
         # DNSCache has strong Cython type checks, and MagicMock does not work
@@ -1545,7 +1545,7 @@ async def mock_enable_bluetooth(
 @pytest.fixture(scope="session")
 def mock_bluetooth_adapters() -> Generator[None, None, None]:
     """Fixture to mock bluetooth adapters."""
-    with patch(
+    with patch("bluetooth_auto_recovery.recover_adapter"), patch(
         "bluetooth_adapters.systems.platform.system", return_value="Linux"
     ), patch("bluetooth_adapters.systems.linux.LinuxAdapters.refresh"), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
