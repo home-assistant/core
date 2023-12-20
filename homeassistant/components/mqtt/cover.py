@@ -380,7 +380,11 @@ class MqttCover(MqttEntity, CoverEntity):
                         else STATE_OPEN
                     )
                 else:
-                    state = STATE_CLOSED if self.state == STATE_CLOSING else STATE_OPEN
+                    state = (
+                        STATE_CLOSED
+                        if self.state in [STATE_CLOSED, STATE_CLOSING]
+                        else STATE_OPEN
+                    )
             elif payload == self._config[CONF_STATE_OPENING]:
                 state = STATE_OPENING
             elif payload == self._config[CONF_STATE_CLOSING]:

@@ -26,14 +26,14 @@ BOOST_MODE_DURATION_DELAY = 1
 OPERATING_MODE_DELAY = 3
 
 
-@dataclass
+@dataclass(frozen=True)
 class OverkizNumberDescriptionMixin:
     """Define an entity description mixin for number entities."""
 
     command: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class OverkizNumberDescription(NumberEntityDescription, OverkizNumberDescriptionMixin):
     """Class to describe an Overkiz number."""
 
