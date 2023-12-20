@@ -900,7 +900,11 @@ class StartStopTrait(_Trait):
 
 @register_trait
 class TemperatureControlTrait(_Trait):
-    """Trait for devices (other than thermostats) that support controlling temperature. Workaround for Temperature sensors.
+    """Trait for devices (other than thermostats) that support controlling temperature.
+
+    Control the target temperature of water heaters.
+    Offers a workaround for Temperature sensors by setting queryOnlyTemperatureControl
+    in the response.
 
     https://developers.google.com/assistant/smarthome/traits/temperaturecontrol
     """
@@ -915,11 +919,11 @@ class TemperatureControlTrait(_Trait):
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
         return (
-            domain == sensor.DOMAIN
-            and device_class == sensor.SensorDeviceClass.TEMPERATURE
-        ) or (
             domain == water_heater.DOMAIN
             and features & WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        ) or (
+            domain == sensor.DOMAIN
+            and device_class == sensor.SensorDeviceClass.TEMPERATURE
         )
 
     def sync_attributes(self):
@@ -986,6 +990,7 @@ class TemperatureControlTrait(_Trait):
                 )
             return response
 
+        # domain == sensor.DOMAIN
         current_temp = self.state.state
         if current_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             temp = round(
@@ -1005,29 +1010,28 @@ class TemperatureControlTrait(_Trait):
         domain = self.state.domain
         unit = self.hass.config.units.temperature_unit
 
-        if command == COMMAND_SET_TEMPERATURE:
-            if domain == water_heater.DOMAIN:
-                min_temp = self.state.attributes[water_heater.ATTR_MIN_TEMP]
-                max_temp = self.state.attributes[water_heater.ATTR_MAX_TEMP]
-                temp = TemperatureConverter.convert(
-                    params["temperature"], UnitOfTemperature.CELSIUS, unit
+        if domain == water_heater.DOMAIN and command == COMMAND_SET_TEMPERATURE:
+            min_temp = self.state.attributes[water_heater.ATTR_MIN_TEMP]
+            max_temp = self.state.attributes[water_heater.ATTR_MAX_TEMP]
+            temp = TemperatureConverter.convert(
+                params["temperature"], UnitOfTemperature.CELSIUS, unit
+            )
+            if unit == UnitOfTemperature.FAHRENHEIT:
+                temp = round(temp)
+            if temp < min_temp or temp > max_temp:
+                raise SmartHomeError(
+                    ERR_VALUE_OUT_OF_RANGE,
+                    f"Temperature should be between {min_temp} and {max_temp}",
                 )
-                if unit == UnitOfTemperature.FAHRENHEIT:
-                    temp = round(temp)
-                if temp < min_temp or temp > max_temp:
-                    raise SmartHomeError(
-                        ERR_VALUE_OUT_OF_RANGE,
-                        f"Temperature should be between {min_temp} and {max_temp}",
-                    )
 
-                await self.hass.services.async_call(
-                    water_heater.DOMAIN,
-                    water_heater.SERVICE_SET_TEMPERATURE,
-                    {ATTR_ENTITY_ID: self.state.entity_id, ATTR_TEMPERATURE: temp},
-                    blocking=not self.config.should_report_state,
-                    context=data.context,
-                )
-                return
+            await self.hass.services.async_call(
+                water_heater.DOMAIN,
+                water_heater.SERVICE_SET_TEMPERATURE,
+                {ATTR_ENTITY_ID: self.state.entity_id, ATTR_TEMPERATURE: temp},
+                blocking=not self.config.should_report_state,
+                context=data.context,
+            )
+            return
 
         raise SmartHomeError(ERR_NOT_SUPPORTED, f"Execute is not supported by {domain}")
 
