@@ -58,11 +58,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
             | ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.SWING_MODE
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique id."""
-        return f"{self._ac_host}.{self._ac_index}"
+        self._attr_unique_id = f"{self._ac_host}.{self._ac_index}"
 
     @property
     def current_temperature(self) -> int | None:
