@@ -66,12 +66,7 @@ from .mixins import (
     async_setup_entity_entry_helper,
     write_state_on_attr_change,
 )
-from .models import (
-    MqttCommandTemplate,
-    MqttValueTemplate,
-    ReceiveMessage,
-    ReceivePayloadType,
-)
+from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
 from .util import valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -230,7 +225,7 @@ class MqttValve(MqttEntity, ValveEntity):
 
     @callback
     def _process_binary_valve_update(
-        self, payload: ReceivePayloadType, state_payload: str
+        self, msg: ReceiveMessage, state_payload: str
     ) -> None:
         """Process an update for a valve that does not report the position."""
         state: str | None = None
@@ -244,18 +239,21 @@ class MqttValve(MqttEntity, ValveEntity):
             state = STATE_CLOSED
         if state is None:
             _LOGGER.warning(
-                "Payload is not one of [open, closed, opening, closing], got: %s",
-                payload,
+                "Payload is received on topic '%s' not one of "
+                "[open, closed, opening, closing], got: %s",
+                msg.topic,
+                state_payload,
             )
             return
         self._update_state(state)
 
     @callback
     def _process_position_valve_update(
-        self, payload: ReceivePayloadType, position_payload: str, state_payload: str
+        self, msg: ReceiveMessage, position_payload: str, state_payload: str
     ) -> None:
         """Process an update for a valve that reports the position."""
         state: str | None = None
+        position_set: bool = False
         if state_payload == self._config[CONF_STATE_OPENING]:
             state = STATE_OPENING
         elif state_payload == self._config[CONF_STATE_CLOSING]:
@@ -266,15 +264,23 @@ class MqttValve(MqttEntity, ValveEntity):
                     self._range, float(position_payload)
                 )
             except ValueError:
-                _LOGGER.warning("Payload '%s' is not numeric", position_payload)
-                return
-
-            self._attr_current_valve_position = min(max(percentage_payload, 0), 100)
-        if state is None:
+                _LOGGER.warning(
+                    "Ignoring payload '%s' received on topic '%s' which is not numeric",
+                    position_payload,
+                    msg.topic,
+                )
+            else:
+                self._attr_current_valve_position = min(max(percentage_payload, 0), 100)
+                position_set = True
+        if state_payload and state is None and not position_set:
             _LOGGER.warning(
-                "Payload is not one of [opening, closing], got: %s",
-                payload,
+                "Payload is received on topic '%s' not one of "
+                "[opening, closing], got: %s",
+                msg.topic,
+                state_payload,
             )
+            return
+        if state is None:
             return
         self._update_state(state)
 
@@ -315,10 +321,10 @@ class MqttValve(MqttEntity, ValveEntity):
 
             if self._config[CONF_REPORTS_POSITION]:
                 self._process_position_valve_update(
-                    payload, position_payload, state_payload
+                    msg, position_payload, state_payload
                 )
             else:
-                self._process_binary_valve_update(payload, state_payload)
+                self._process_binary_valve_update(msg, state_payload)
 
         if self._config.get(CONF_STATE_TOPIC):
             topics["state_topic"] = {
