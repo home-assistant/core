@@ -265,7 +265,7 @@ class MqttValve(MqttEntity, ValveEntity):
                 )
             except ValueError:
                 _LOGGER.warning(
-                    "Ignoring payload '%s' received on topic '%s' which is not numeric",
+                    "Ignoring non numeric payload '%s' received on topic '%s'",
                     position_payload,
                     msg.topic,
                 )
