@@ -155,7 +155,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def import_yaml(hass: HomeAssistant, lte_config: ConfigType) -> None:
-    """Import yaml ir we can connect. Create appropriate issue registry entries."""
+    """Import yaml if we can connect. Create appropriate issue registry entries."""
     for entry in lte_config:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
