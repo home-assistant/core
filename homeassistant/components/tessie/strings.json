@@ -145,6 +145,11 @@
       "vehicle_state_tpms_soft_warning_rr": {
         "name": "Tire pressure warning rear right"
       }
+    },
+    "update": {
+      "update": {
+        "name": "Software"
+      }
     }
   }
 }
