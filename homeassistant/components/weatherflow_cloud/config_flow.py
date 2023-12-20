@@ -39,7 +39,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Validate credentials and obtain station information."""
 
         session = async_create_clientsession(self.hass)
-        api = WeatherFlow(station_id=station_id, api_token=api_token, session=session)
+        api = WeatherFlow(station_id, api_token, session)
         station_info = await api.async_get_station()
         return station_info
 
