@@ -9,6 +9,7 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
+    PRECISION_WHOLE,
     SWING_OFF,
     SWING_ON,
     ClimateEntity,
@@ -42,7 +43,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_has_entity_name = True
         self._attr_name = f"{self._ac_index}"
-        self._attr_target_temperature_step = 1
+        self._attr_target_temperature_step = PRECISION_WHOLE
         self._attr_hvac_modes = [
             HVACMode.OFF,
             HVACMode.HEAT,
