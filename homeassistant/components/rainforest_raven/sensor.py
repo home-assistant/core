@@ -27,7 +27,7 @@ from .const import DOMAIN
 from .coordinator import RAVEnDataCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class RAVEnSensorEntityDescription(SensorEntityDescription):
     """A class that describes RAVEn sensor entities."""
 
