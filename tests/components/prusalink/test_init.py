@@ -62,7 +62,7 @@ async def test_failed_update(
         assert state.state == "unavailable"
 
 
-async def test_migration_1_2(
+async def test_migration_from_1_1_to_1_2(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test migrating from version 1 to 2."""
