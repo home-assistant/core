@@ -20,7 +20,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": "system"}
         )
         assert result["type"] == "create_entry"
-        assert result["title"] == "Cloud"
+        assert result["title"] == "Home Assistant Cloud"
         assert result["data"] == {}
         await hass.async_block_till_done()
 
