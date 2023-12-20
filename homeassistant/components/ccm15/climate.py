@@ -157,4 +157,4 @@ async def async_setup_entry(
         for ac_index in ac_data.devices
     ]
     _LOGGER.debug("Creating new ac devices at indices '%s'", ac_data.devices)
-    async_add_entities(entities, True)
+    async_add_entities(entities)
