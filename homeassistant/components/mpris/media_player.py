@@ -36,6 +36,7 @@ from .const import (
     LOGGER as _LOGGER,
 )
 from .helpers import get_remove_clones
+from .models import MPRISRuntimeState
 
 # Enums from mpris_pb2 are not currently properly typed.
 # This is a limitation of grpclib, which I hope goes
@@ -62,7 +63,7 @@ WAIT_BETWEEN_RECONNECTS: Final = 5
 def _get_player_id(
     entity: er.RegistryEntry,
 ) -> str:
-    return entity.unique_id.split("-", 1)[1]
+    return entity.unique_id.partition("-")[2]
 
 
 async def async_setup_entry(
@@ -71,16 +72,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up all the media players for the MPRIS integration."""
-    # Suppress circular import induced by merging media_player_entity_manager.py
-    # into media_player.py.  MPRISData refers to MPRISCoordinator
-    # and async_setup_entry refers to MPRISData.
-    from .models import MPRISData  # pylint: disable=import-outside-toplevel
-
-    mpris_data = cast(
-        MPRISData,
+    runtime_state = cast(
+        MPRISRuntimeState,
         hass.data[DOMAIN][config_entry.entry_id],
     )
-    mpris_client = mpris_data.client
+    mpris_client = runtime_state.client
     coordinator = MPRISCoordinator(
         hass,
         config_entry,
@@ -88,7 +84,7 @@ async def async_setup_entry(
         async_add_entities,
     )
 
-    async def _async_stop_coordinator(*unused_args: Any) -> None:
+    async def async_stop_coordinator(*unused_args: Any) -> None:
         """Stop the coordinator."""
         _LOGGER.debug("Stopping entity manager")
         await coordinator.stop()
@@ -99,7 +95,7 @@ async def async_setup_entry(
     # Register the stop of the coordinator through the MPRIS data
     # unloaders mechanism to run when the entry unloads or HA
     # shuts down, but before cutting the connection to the client.
-    mpris_data.unloaders.append(_async_stop_coordinator)
+    runtime_state.unloaders.append(async_stop_coordinator)
 
 
 class MPRISEntity(CoordinatorEntity["MPRISCoordinator"], MediaPlayerEntity):
@@ -117,7 +113,7 @@ class MPRISEntity(CoordinatorEntity["MPRISCoordinator"], MediaPlayerEntity):
         self,
         coordinator: MPRISCoordinator,
         context: str,
-        integration_id: str,
+        config_entry_unique_id: str,
     ) -> None:
         """Initialize the entity.
 
@@ -125,10 +121,10 @@ class MPRISEntity(CoordinatorEntity["MPRISCoordinator"], MediaPlayerEntity):
           coordinator: the coordinator handling this entity
           context: the name / unique identifier of the player,
                    also used as the coordinator context
-          integration_id: unique identifier of the integration
+          config_entry_unique_id: unique identifier of the config entry
         """
         super().__init__(coordinator, context=context)
-        self._integration_id = integration_id
+        self._config_entry_unique_id = config_entry_unique_id
         self._metadata: dict[str, Any] = {}
 
     def _debug(self, format_string: str, *args: Any) -> None:
@@ -291,7 +287,7 @@ class MPRISEntity(CoordinatorEntity["MPRISCoordinator"], MediaPlayerEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID of this entity."""
-        return self._integration_id + "-" + self.coordinator_context
+        return self._config_entry_unique_id + "-" + self.coordinator_context
 
     @property
     def name(self) -> str:
@@ -302,7 +298,7 @@ class MPRISEntity(CoordinatorEntity["MPRISCoordinator"], MediaPlayerEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device information associated with the entity."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self._integration_id)},
+            identifiers={(DOMAIN, self._config_entry_unique_id)},
             name=f"MPRIS agent at {self.coordinator.client.host}",
             manufacturer="Freedesktop",
         )
@@ -373,7 +369,7 @@ class MPRISCoordinator(
         dict[str, list[Union[mpris_pb2.MPRISPlayerUpdate, UNAVAILABLE]]]  # type: ignore[valid-type]
     ]
 ):
-    """The entity manager manages MPRIS media player entities.
+    """The coordinator manages MPRIS media player entities.
 
     This class is responsible for maintaining the known player entities
     in sync with the state as reported by the server, as well as keeping
@@ -398,7 +394,12 @@ class MPRISCoordinator(
           mpris_client: the MPRIS client endpoint object
           async_add_entities: callback to add entities async
         """
-        super().__init__(hass, _LOGGER, name="MPRIS")
+        name = config_entry.data.get("host", "MPRIS")
+        super().__init__(
+            hass,
+            _LOGGER.getChild(f"{name}-{id(self)}".replace(".", "_")),
+            name=name,
+        )
         self.data: dict[str, list[Union[mpris_pb2.MPRISPlayerUpdate, UNAVAILABLE]]] = {}  # type: ignore[valid-type]
         self.config_entry = config_entry
         self.async_add_entities = async_add_entities
@@ -419,52 +420,33 @@ class MPRISCoordinator(
     async def run(self) -> None:
         """Run the entity manager."""
         if self._started:
-            _LOGGER.debug("Thread already started")
+            self.logger.debug("Thread already started")
             return
         self._started = True
-        _LOGGER.debug("Streaming updates started")
-        seen_excs: dict[Any, bool] = {}
+        self.logger.debug("Streaming updates started")
+
         while not self._shutdown.done():
             try:
-                cycle_update_count = 0
-                try:
-                    async for _ in self._monitor_updates():
-                        cycle_update_count = cycle_update_count + 1
-                        seen_excs = {}
-                except Exception as exc:
-                    if self._shutdown.done():
-                        _LOGGER.debug("Ignoring %s since we are shut down", exc)
-                        await self._shutdown
-                        continue
-                    raise
+                async for _ in self._monitor_updates():
+                    pass
             except hassmpris_client.Unauthenticated:
-                _LOGGER.error(
-                    "We have been deauthorized after %s updates -- no further updates "
-                    "will occur until reauthentication",
-                    cycle_update_count,
+                # This is not a retryable error.  Signal HA to reauth.
+                self.logger.error(
+                    "We have been deauthorized -- no further updates "
+                    "will be seen until reauthentication is successful",
                 )
-                await self.stop()
                 self.config_entry.async_start_reauth(self.hass)
-            except hassmpris_client.ClientException as exc:
-                lg = _LOGGER.exception if type(exc) not in seen_excs else _LOGGER.debug
-                seen_excs[type(exc)] = True
-                lg(
-                    "We lost connectivity after %s updates (%s) -- reconnecting",
-                    cycle_update_count,
-                    exc,
-                )
-                await asyncio.sleep(WAIT_BETWEEN_RECONNECTS)
+                break
             except Exception as exc:  # pylint: disable=broad-exception-caught
-                lg = _LOGGER.exception if type(exc) not in seen_excs else _LOGGER.debug
-                seen_excs[type(exc)] = True
-                lg(
-                    "Unexpected exception after %s updates (%s) -- reconnecting",
-                    cycle_update_count,
-                    exc,
-                )
+                if self._shutdown.done():
+                    self.logger.debug("Ignoring %s since we are shut down", exc)
+                    await self._shutdown
+                    break
+                # Set update error and then retry to connect.
+                self.async_set_update_error(exc)
                 await asyncio.sleep(WAIT_BETWEEN_RECONNECTS)
         await self._shutdown
-        _LOGGER.debug("Streaming updates ended")
+        self.logger.debug("Streaming updates ended")
 
     async def stop(
         self,
@@ -474,10 +456,10 @@ class MPRISCoordinator(
         """Stop the loop."""
         try:
             if exception:
-                _LOGGER.debug("Exceptional stop: %s", exception)
+                self.logger.debug("Exceptional stop: %s", exception)
                 self._shutdown.set_exception(exception)
             else:
-                _LOGGER.debug("Normal stop")
+                self.logger.debug("Normal stop")
                 self._shutdown.set_result(True)
         except asyncio.InvalidStateError:
             pass
@@ -548,13 +530,13 @@ class MPRISCoordinator(
         discovery_data: mpris_pb2.MPRISUpdateReply,  # type: ignore[valid-type]
     ) -> None:
         """Handle a single player update."""
-        _LOGGER.debug("Handling update:")
+        self.logger.debug("Handling update:")
         for line in f"{discovery_data}".splitlines():
-            _LOGGER.debug("  %s", line)
+            self.logger.debug("  %s", line)
         player_id = discovery_data.player_id  # type: ignore[attr-defined]
 
         if player_id not in self.data:
-            _LOGGER.debug("Adding player %s", player_id)
+            self.logger.debug("Adding player %s", player_id)
             entity = MPRISEntity(
                 self,
                 player_id,
@@ -570,7 +552,7 @@ class MPRISCoordinator(
             and self._should_remove(player_id)
         ):
             for entry in self._player_registry_entries(player_id):
-                _LOGGER.debug("Removing player %s from registry", player_id)
+                self.logger.debug("Removing player %s from registry", player_id)
                 er.async_get(self.hass).async_remove(entry.entity_id)
                 del self.data[player_id]
 
@@ -598,13 +580,13 @@ class MPRISCoordinator(
             player_id = _get_player_id(entry)
             if self._should_remove(player_id):
                 if player_id not in self.data:
-                    _LOGGER.debug(
+                    self.logger.debug(
                         "Player %s from registry was never initializd, removing from registry",
                         player_id,
                     )
                     er.async_get(self.hass).async_remove(entry.entity_id)
                 elif not self.data[player_id]:
-                    _LOGGER.debug(
+                    self.logger.debug(
                         "Player %s from registry received no updates upon reconnect, removing from registry",
                         player_id,
                     )
@@ -612,7 +594,7 @@ class MPRISCoordinator(
                 continue
 
             if player_id not in self.data:
-                _LOGGER.debug(
+                self.logger.debug(
                     "Resuscitating player from registry %s and setting it to off",
                     player_id,
                 )
@@ -630,7 +612,7 @@ class MPRISCoordinator(
                     )
                 ]
             elif not self.data[player_id]:
-                _LOGGER.debug("Setting absent player %s to off", player_id)
+                self.logger.debug("Setting absent player %s to off", player_id)
                 # This player is now officially off.
                 self.data[player_id] = [
                     mpris_pb2.MPRISPlayerUpdate(

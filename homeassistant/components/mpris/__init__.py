@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .cert_data import CertStore
 from .const import CONF_HOST, CONF_MPRIS_PORT, DOMAIN, LOGGER as _LOGGER
-from .models import ConfigEntryData, MPRISData
+from .models import MPRISConfigEntryData, MPRISRuntimeState
 
 PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
 
@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "Authentication data is missing -- must reauth"
         ) from exc
 
-    entry_data = cast(ConfigEntryData, entry.data)
+    entry_data = cast(MPRISConfigEntryData, entry.data)
     clnt = hassmpris_client.AsyncMPRISClient(
         entry_data[CONF_HOST],
         entry_data[CONF_MPRIS_PORT],
@@ -51,10 +51,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(str(exc)) from exc
 
     hass.data.setdefault(DOMAIN, {})
-    mpris_data = hass.data[DOMAIN][entry.entry_id] = MPRISData(clnt, [])
+    runtime_state = hass.data[DOMAIN][entry.entry_id] = MPRISRuntimeState(clnt, [])
 
     async def on_unload(_: Event) -> None:
-        await _run_unloaders(mpris_data)
+        await async_run_unloaders(runtime_state)
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_unload)
@@ -64,7 +64,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _run_unloaders(mpris_data: MPRISData) -> None:
+async def async_run_unloaders(mpris_data: MPRISRuntimeState) -> None:
+    """Stop any entity coordinators and disconnect the client from the agent."""
     _LOGGER.debug("Running unloaders")
     for unloader in reversed(mpris_data.unloaders):
         await unloader()
@@ -77,13 +78,12 @@ async def _run_unloaders(mpris_data: MPRISData) -> None:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        mpris_data = cast(MPRISData, hass.data[DOMAIN].pop(entry.entry_id))
-        await _run_unloaders(mpris_data)
+        runtime_state = cast(MPRISRuntimeState, hass.data[DOMAIN].pop(entry.entry_id))
+        await async_run_unloaders(runtime_state)
     return unload_ok
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove a config entry."""
-    # This would be an error, and the type checker knows it.
-    assert entry.unique_id
+    assert entry.unique_id  # For the benefit of the type checker.
     await CertStore(hass, entry.unique_id).remove_cert_data()

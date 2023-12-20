@@ -21,7 +21,7 @@
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The MPRIS agent on this computer revoked our authorization.  Continue to the next step to reauthorize."
+        "description": "The MPRIS agent revoked our authorization.  Continue to the next step to reauthorize."
       },
       "confirm": {
         "title": "Verify identity of the agent",

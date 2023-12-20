@@ -38,7 +38,7 @@ from .const import (
     STEP_ZEROCONF_CONFIRM,
 )
 from .helpers import get_remove_clones
-from .models import ConfigEntryData
+from .models import MPRISConfigEntryData
 
 
 def _conf_schema_factory(defaults: dict[str, Any]) -> vol.Schema:
@@ -110,9 +110,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._cakes_client: hassmpris_client.AsyncCAKESClient | None = None
 
     @callback
-    def _get_data(self) -> ConfigEntryData:
+    def _get_data(self) -> MPRISConfigEntryData:
         return cast(
-            ConfigEntryData,
+            MPRISConfigEntryData,
             {
                 CONF_HOST: self._host,
                 CONF_CAKES_PORT: self._cakes_port,

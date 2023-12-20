@@ -9,17 +9,16 @@ import hassmpris_client
 
 
 @dataclass
-class MPRISData:
+class MPRISRuntimeState:
     """Data for the MPRIS integration."""
 
     client: hassmpris_client.AsyncMPRISClient
     unloaders: list[Callable[[], Coroutine[Any, Any, None]]]
 
 
-class ConfigEntryData(TypedDict):
-    """Configuration data stored in ConfigEntry."""
+class MPRISConfigEntryData(TypedDict):
+    """MPRIS configuration data stored in ConfigEntry."""
 
-    unique_id: str
     host: str
     cakes_port: int
     mpris_port: int
