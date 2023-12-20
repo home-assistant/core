@@ -65,6 +65,7 @@ DEFAULT_EXPOSED_DOMAINS = [
     "sensor",
     "switch",
     "vacuum",
+    "water_heater",
 ]
 
 # https://developers.google.com/assistant/smarthome/guides
