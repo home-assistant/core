@@ -25,14 +25,14 @@ from .coordinator import TrainData, TVDataUpdateCoordinator
 ATTR_PRODUCT_FILTER = "product_filter"
 
 
-@dataclass
+@dataclass(frozen=True)
 class TrafikverketRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[TrainData], StateType | datetime]
 
 
-@dataclass
+@dataclass(frozen=True)
 class TrafikverketSensorEntityDescription(
     SensorEntityDescription, TrafikverketRequiredKeysMixin
 ):

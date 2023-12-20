@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .entity import BasePrivateDeviceEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class PrivateDeviceSensorEntityDescriptionRequired:
     """Required domain specific fields for sensor entity."""
 
@@ -35,7 +35,7 @@ class PrivateDeviceSensorEntityDescriptionRequired:
     ]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PrivateDeviceSensorEntityDescription(
     SensorEntityDescription, PrivateDeviceSensorEntityDescriptionRequired
 ):

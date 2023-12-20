@@ -18,7 +18,7 @@ from .const import DOMAIN, LOGGER, WAN_STATUS
 from .entity import UpnpEntity, UpnpEntityDescription
 
 
-@dataclass
+@dataclass(frozen=True)
 class UpnpBinarySensorEntityDescription(
     UpnpEntityDescription, BinarySensorEntityDescription
 ):

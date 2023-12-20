@@ -32,14 +32,14 @@ def _is_connected_to_router(entity: DevoloBinarySensorEntity) -> bool:
     )
 
 
-@dataclass
+@dataclass(frozen=True)
 class DevoloBinarySensorRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_func: Callable[[DevoloBinarySensorEntity], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class DevoloBinarySensorEntityDescription(
     BinarySensorEntityDescription, DevoloBinarySensorRequiredKeysMixin
 ):
