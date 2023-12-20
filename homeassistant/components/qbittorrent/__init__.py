@@ -47,24 +47,6 @@ MIGRATION_NAME_TO_KEY = {
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up qBittorrent from a config entry."""
 
-    @callback
-    def update_unique_id(
-        entity_entry: er.RegistryEntry,
-    ) -> dict[str, Any] | None:
-        """Update unique ID of entity entry."""
-        if CONF_NAME not in config_entry.data:
-            return None
-        match = re.search(
-            f"{config_entry.data[CONF_HOST]}-{config_entry.data[CONF_NAME]} (?P<name>.+)",
-            entity_entry.unique_id,
-        )
-
-        if match and (key := MIGRATION_NAME_TO_KEY.get(match.group("name"))):
-            return {"new_unique_id": f"{config_entry.entry_id}-{key}"}
-        return None
-
-    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
-
     try:
         client = await hass.async_add_executor_job(
             setup_client,
