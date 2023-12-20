@@ -249,8 +249,8 @@
             "download_perc": 0,
             "expected_duration_sec": 2700,
             "install_perc": 1,
-            "status": "",
-            "version": " "
+            "status": "downloading_wifi_wait",
+            "version": "2023.44.30.4"
           },
           "speed_limit_mode": {
             "active": false,
