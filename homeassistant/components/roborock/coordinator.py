@@ -59,6 +59,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
 
         if mac := self.roborock_device_info.network_info.mac:
             self.device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, mac)}
+        # Maps from map flag to map name
         self.maps: dict[int, str] = {}
 
     async def verify_api(self) -> None:
