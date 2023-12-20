@@ -588,7 +588,11 @@ class Entity(
         # The check for self.platform guards against integrations not using an
         # EntityComponent and can be removed in HA Core 2024.1
         # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
-        if self.__class__.name.fget is Entity.name.fget and self.platform:  # type: ignore[attr-defined]
+        if (
+            type.__getattribute__(self.__class__, "name")
+            is type.__getattribute__(Entity, "name")
+            and self.platform
+        ):
             name = self._name_internal(
                 self._object_id_device_class_name,
                 self.platform.object_id_platform_translations,
