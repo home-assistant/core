@@ -81,6 +81,23 @@ from .state_report import AlexaDirective, AlexaResponse, async_enable_proactive_
 
 _LOGGER = logging.getLogger(__name__)
 DIRECTIVE_NOT_SUPPORTED = "Entity does not support directive"
+
+MIN_MAX_TEMP = {
+    climate.DOMAIN: {
+        "min_temp": climate.ATTR_MIN_TEMP,
+        "max_temp": climate.ATTR_MAX_TEMP,
+    },
+    water_heater.DOMAIN: {
+        "min_temp": water_heater.ATTR_MIN_TEMP,
+        "max_temp": water_heater.ATTR_MAX_TEMP,
+    },
+}
+
+SERVICE_SET_TEMPERATURE = {
+    climate.DOMAIN: climate.SERVICE_SET_TEMPERATURE,
+    water_heater.DOMAIN: water_heater.SERVICE_SET_TEMPERATURE,
+}
+
 HANDLERS: Registry[
     tuple[str, str],
     Callable[
@@ -805,7 +822,9 @@ async def async_api_set_target_temp(
 ) -> AlexaResponse:
     """Process a set target temperature request."""
     entity = directive.entity
-    min_temp = entity.attributes["min_temp"]
+    domain = entity.domain
+
+    min_temp = entity.attributes[MIN_MAX_TEMP[domain]["min_temp"]]
     max_temp = entity.attributes["max_temp"]
     unit = hass.config.units.temperature_unit
 
@@ -850,10 +869,7 @@ async def async_api_set_target_temp(
             }
         )
 
-    if entity.domain == water_heater.DOMAIN:
-        service = water_heater.SERVICE_SET_TEMPERATURE
-    else:
-        service = climate.SERVICE_SET_TEMPERATURE
+    service = SERVICE_SET_TEMPERATURE[domain]
 
     await hass.services.async_call(
         entity.domain,
@@ -873,12 +889,12 @@ async def async_api_adjust_target_temp(
     directive: AlexaDirective,
     context: ha.Context,
 ) -> AlexaResponse:
-    """Process an adjust target temperature request."""
+    """Process an adjust target temperature request for climates and water heaters."""
     data: dict[str, Any]
     entity = directive.entity
-    # Shared code for both climate and water heater devices
-    min_temp = entity.attributes["min_temp"]
-    max_temp = entity.attributes["max_temp"]
+    domain = entity.domain
+    min_temp = entity.attributes[MIN_MAX_TEMP[domain]["min_temp"]]
+    max_temp = entity.attributes[MIN_MAX_TEMP[domain]["max_temp"]]
     unit = hass.config.units.temperature_unit
 
     temp_delta = temperature_from_object(
@@ -939,10 +955,7 @@ async def async_api_adjust_target_temp(
             }
         )
 
-    if entity.domain == water_heater.DOMAIN:
-        service = water_heater.SERVICE_SET_TEMPERATURE
-    else:
-        service = climate.SERVICE_SET_TEMPERATURE
+    service = SERVICE_SET_TEMPERATURE[domain]
 
     await hass.services.async_call(
         entity.domain,
@@ -1192,7 +1205,7 @@ async def async_api_set_mode(
             msg = f"Entity '{entity.entity_id}' does not support Operation mode '{operation_mode}'"
             raise AlexaInvalidValueError(msg)
 
-    # Cover Position/
+    # Cover Position
     elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         position = mode.split(".")[1]
 

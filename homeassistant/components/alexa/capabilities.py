@@ -1185,7 +1185,7 @@ class AlexaThermostatController(AlexaCapability):
         ThermostatMode Values.
 
         ThermostatMode Value must be AUTO, COOL, HEAT, ECO, OFF, or CUSTOM.
-        Water heater devices do not return therostat modes.
+        Water heater devices do not return thermostat modes.
         """
         if self.entity.domain == water_heater.DOMAIN:
             return None
