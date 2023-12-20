@@ -1,5 +1,4 @@
 """Support for Roborock device base class."""
-
 from typing import Any
 
 from roborock.api import AttributeCache, RoborockClient
@@ -7,6 +6,7 @@ from roborock.cloud_api import RoborockMqttClient
 from roborock.command_cache import CacheableAttribute
 from roborock.containers import Consumable, Status
 from roborock.exceptions import RoborockException
+from roborock.roborock_message import RoborockDataProtocol
 from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.exceptions import HomeAssistantError
@@ -23,7 +23,10 @@ class RoborockEntity(Entity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, unique_id: str, device_info: DeviceInfo, api: RoborockClient
+        self,
+        unique_id: str,
+        device_info: DeviceInfo,
+        api: RoborockClient,
     ) -> None:
         """Initialize the coordinated Roborock Device."""
         self._attr_unique_id = unique_id
@@ -66,6 +69,7 @@ class RoborockCoordinatedEntity(
         self,
         unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
+        listener_request: list[RoborockDataProtocol] | None = None,
     ) -> None:
         """Initialize the coordinated Roborock Device."""
         RoborockEntity.__init__(
@@ -76,6 +80,23 @@ class RoborockCoordinatedEntity(
         )
         CoordinatorEntity.__init__(self, coordinator=coordinator)
         self._attr_unique_id = unique_id
+        self.listener_requests = (
+            listener_request if listener_request is not None else []
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Add listeners when the device is added to hass."""
+        await super().async_added_to_hass()
+        for listener_request in self.listener_requests:
+            self.api.add_listener(
+                listener_request, self._update_from_listener, cache=self.api.cache
+            )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove listeners when the device is removed from hass."""
+        for listener_request in self.listener_requests:
+            self.api.remove_listener(listener_request, self._update_from_listener)
+        await super().async_will_remove_from_hass()
 
     @property
     def _device_status(self) -> Status:
@@ -98,7 +119,7 @@ class RoborockCoordinatedEntity(
         await self.coordinator.async_refresh()
         return res
 
-    def _update_from_listener(self, value: Status | Consumable):
+    def _update_from_listener(self, value: Status | Consumable) -> None:
         """Update the status or consumable data from a listener and then write the new entity state."""
         if isinstance(value, Status):
             self.coordinator.roborock_device_info.props.status = value
