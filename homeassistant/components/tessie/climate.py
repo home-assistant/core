@@ -74,12 +74,12 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return self.get("climate_state_max_avail_temp", self._attr_min_temp)
+        return self.get("climate_state_max_avail_temp", self._attr_max_temp)
 
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        return self.get("climate_state_min_avail_temp", self._attr_max_temp)
+        return self.get("climate_state_min_avail_temp", self._attr_min_temp)
 
     @property
     def preset_mode(self) -> str | None:
