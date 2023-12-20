@@ -251,7 +251,6 @@ async def test_block_device_gas_valve(
     )
     registry = er.async_get(hass)
     await init_integration(hass, 1, MODEL_GAS)
-    entity_id = "switch.test_name_valve"
 
     entry = registry.async_get(entity_id)
     assert entry
