@@ -18,7 +18,7 @@
     },
     "legacy_templates_true": {
       "title": "The support for legacy templates is being removed",
-      "description": "Do the following steps:\n- Please adopt your configration to support template rendering to native python types\n- Remove the `legacy_templates` key from the `homeassistant` configuration in your configuration.yaml file\n- Restart Home Assistant to fix this issue."
+      "description": "Please do the following steps:\n- Adopt your configuration to support template rendering to native python types.\n- Remove the `legacy_templates` key from the `homeassistant` configuration in your configuration.yaml file.\n- Restart Home Assistant to fix this issue."
     },
     "python_version": {
       "title": "Support for Python {current_python_version} is being removed",
