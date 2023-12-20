@@ -242,7 +242,7 @@ async def async_test_em_rms_voltage(hass, cluster, entity_id):
 
     assert "rms_voltage_max" not in hass.states.get(entity_id).attributes
     await send_attributes_report(hass, cluster, {0: 1, 0x0507: 888, 10: 5000})
-    assert hass.states.get(entity_id).attributes["rms_voltage_max"] == "8.9"
+    assert hass.states.get(entity_id).attributes["rms_voltage_max"] == "8.88"
 
 
 async def async_test_powerconfiguration(hass, cluster, entity_id):
@@ -769,7 +769,7 @@ async def test_unsupported_attributes_sensor(
         (
             1,
             12320,
-            "1.23",
+            "1.232",
             UnitOfVolume.CUBIC_METERS,
         ),
         (
@@ -781,61 +781,61 @@ async def test_unsupported_attributes_sensor(
         (
             3,
             2340,
-            "0.23",
+            "0.234",
             f"100 {UnitOfVolume.CUBIC_FEET}",
         ),
         (
             3,
             2360,
-            "0.24",
+            "0.236",
             f"100 {UnitOfVolume.CUBIC_FEET}",
         ),
         (
             8,
             23660,
-            "2.37",
+            "2.3660",
             "kPa",
         ),
         (
             0,
             9366,
-            "0.937",
+            "0.9366",
             UnitOfEnergy.KILO_WATT_HOUR,
         ),
         (
             0,
             999,
-            "0.1",
+            "0.999",
             UnitOfEnergy.KILO_WATT_HOUR,
         ),
         (
             0,
             10091,
-            "1.009",
+            "1.0091",
             UnitOfEnergy.KILO_WATT_HOUR,
         ),
         (
             0,
             10099,
-            "1.01",
+            "1.0099",
             UnitOfEnergy.KILO_WATT_HOUR,
         ),
         (
             0,
             100999,
-            "10.1",
+            "10.999",
             UnitOfEnergy.KILO_WATT_HOUR,
         ),
         (
             0,
             100023,
-            "10.002",
+            "10.0023",
             UnitOfEnergy.KILO_WATT_HOUR,
         ),
         (
             0,
             102456,
-            "10.246",
+            "10.2456",
             UnitOfEnergy.KILO_WATT_HOUR,
         ),
     ),
