@@ -44,7 +44,7 @@ class TessieSeatHeaterSelectEntity(TessieEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the current selected option."""
-        return self._attr_options[self.native_value]
+        return self._attr_options[self._value]
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
