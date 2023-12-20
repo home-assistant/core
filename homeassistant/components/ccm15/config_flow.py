@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from ccm15 import CCM15Device
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -13,8 +14,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
-from .climate import CCM15Coordinator
-from .const import DOMAIN
+from .const import DEFAULT_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,8 +39,8 @@ async def validate_input(
         if existing_host == host:
             raise DuplicateEntry
 
-    hub = CCM15Coordinator(hass, host, data[CONF_PORT])
-    if not await hub.async_test_connection():
+    ccm15 = CCM15Device(host, data[CONF_PORT], DEFAULT_TIMEOUT)
+    if not await ccm15.async_test_connection():
         raise CannotConnect
 
     # Return info that you want to store in the config entry.
