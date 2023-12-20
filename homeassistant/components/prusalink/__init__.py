@@ -104,8 +104,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     },
                 )
                 # There is a check in the async_setup_entry to prevent the setup if minor_version < 2
-                # Currently we can't go out of a migration here without restart and returning here True
-                # with the setup check is a nice workaround
+                # Currently we can't reload the config entry
+                # if the migration returns False.
+                # Return True here to workaround that.
                 return True
 
             new_data[CONF_USERNAME] = username
