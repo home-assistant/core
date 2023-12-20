@@ -121,16 +121,16 @@ async def async_test_temperature(hass, cluster, entity_id):
 async def async_test_pressure(hass, cluster, entity_id):
     """Test pressure sensor."""
     await send_attributes_report(hass, cluster, {1: 1, 0: 1000, 2: 10000})
-    assert_state(hass, entity_id, "1000", UnitOfPressure.HPA)
+    assert_state(hass, entity_id, "1000.0", UnitOfPressure.HPA)
 
     await send_attributes_report(hass, cluster, {0: 1000, 20: -1, 16: 10000})
-    assert_state(hass, entity_id, "1000", UnitOfPressure.HPA)
+    assert_state(hass, entity_id, "1000.0", UnitOfPressure.HPA)
 
 
 async def async_test_illuminance(hass, cluster, entity_id):
     """Test illuminance sensor."""
     await send_attributes_report(hass, cluster, {1: 1, 0: 10, 2: 20})
-    assert_state(hass, entity_id, "1", LIGHT_LUX)
+    assert_state(hass, entity_id, "1.00207447533648", LIGHT_LUX)
 
 
 async def async_test_metering(hass, cluster, entity_id):
@@ -174,14 +174,14 @@ async def async_test_electrical_measurement(hass, cluster, entity_id):
     # update divisor cached value
     await send_attributes_report(hass, cluster, {"ac_power_divisor": 1})
     await send_attributes_report(hass, cluster, {0: 1, 1291: 100, 10: 1000})
-    assert_state(hass, entity_id, "100", UnitOfPower.WATT)
+    assert_state(hass, entity_id, "100.0", UnitOfPower.WATT)
 
     await send_attributes_report(hass, cluster, {0: 1, 1291: 99, 10: 1000})
-    assert_state(hass, entity_id, "99", UnitOfPower.WATT)
+    assert_state(hass, entity_id, "99.0", UnitOfPower.WATT)
 
     await send_attributes_report(hass, cluster, {"ac_power_divisor": 10})
     await send_attributes_report(hass, cluster, {0: 1, 1291: 1000, 10: 5000})
-    assert_state(hass, entity_id, "100", UnitOfPower.WATT)
+    assert_state(hass, entity_id, "100.0", UnitOfPower.WATT)
 
     await send_attributes_report(hass, cluster, {0: 1, 1291: 99, 10: 5000})
     assert_state(hass, entity_id, "9.9", UnitOfPower.WATT)
@@ -196,14 +196,14 @@ async def async_test_em_apparent_power(hass, cluster, entity_id):
     # update divisor cached value
     await send_attributes_report(hass, cluster, {"ac_power_divisor": 1})
     await send_attributes_report(hass, cluster, {0: 1, 0x050F: 100, 10: 1000})
-    assert_state(hass, entity_id, "100", UnitOfApparentPower.VOLT_AMPERE)
+    assert_state(hass, entity_id, "100.0", UnitOfApparentPower.VOLT_AMPERE)
 
     await send_attributes_report(hass, cluster, {0: 1, 0x050F: 99, 10: 1000})
-    assert_state(hass, entity_id, "99", UnitOfApparentPower.VOLT_AMPERE)
+    assert_state(hass, entity_id, "99.0", UnitOfApparentPower.VOLT_AMPERE)
 
     await send_attributes_report(hass, cluster, {"ac_power_divisor": 10})
     await send_attributes_report(hass, cluster, {0: 1, 0x050F: 1000, 10: 5000})
-    assert_state(hass, entity_id, "100", UnitOfApparentPower.VOLT_AMPERE)
+    assert_state(hass, entity_id, "100.0", UnitOfApparentPower.VOLT_AMPERE)
 
     await send_attributes_report(hass, cluster, {0: 1, 0x050F: 99, 10: 5000})
     assert_state(hass, entity_id, "9.9", UnitOfApparentPower.VOLT_AMPERE)
@@ -213,14 +213,14 @@ async def async_test_em_rms_current(hass, cluster, entity_id):
     """Test electrical measurement RMS Current sensor."""
 
     await send_attributes_report(hass, cluster, {0: 1, 0x0508: 1234, 10: 1000})
-    assert_state(hass, entity_id, "1.2", UnitOfElectricCurrent.AMPERE)
+    assert_state(hass, entity_id, "1.234", UnitOfElectricCurrent.AMPERE)
 
     await send_attributes_report(hass, cluster, {"ac_current_divisor": 10})
     await send_attributes_report(hass, cluster, {0: 1, 0x0508: 236, 10: 1000})
     assert_state(hass, entity_id, "23.6", UnitOfElectricCurrent.AMPERE)
 
     await send_attributes_report(hass, cluster, {0: 1, 0x0508: 1236, 10: 1000})
-    assert_state(hass, entity_id, "124", UnitOfElectricCurrent.AMPERE)
+    assert_state(hass, entity_id, "123.6", UnitOfElectricCurrent.AMPERE)
 
     assert "rms_current_max" not in hass.states.get(entity_id).attributes
     await send_attributes_report(hass, cluster, {0: 1, 0x050A: 88, 10: 5000})
@@ -231,14 +231,14 @@ async def async_test_em_rms_voltage(hass, cluster, entity_id):
     """Test electrical measurement RMS Voltage sensor."""
 
     await send_attributes_report(hass, cluster, {0: 1, 0x0505: 1234, 10: 1000})
-    assert_state(hass, entity_id, "123", UnitOfElectricPotential.VOLT)
+    assert_state(hass, entity_id, "123.4", UnitOfElectricPotential.VOLT)
 
     await send_attributes_report(hass, cluster, {0: 1, 0x0505: 234, 10: 1000})
     assert_state(hass, entity_id, "23.4", UnitOfElectricPotential.VOLT)
 
     await send_attributes_report(hass, cluster, {"ac_voltage_divisor": 100})
     await send_attributes_report(hass, cluster, {0: 1, 0x0505: 2236, 10: 1000})
-    assert_state(hass, entity_id, "22.4", UnitOfElectricPotential.VOLT)
+    assert_state(hass, entity_id, "22.36", UnitOfElectricPotential.VOLT)
 
     assert "rms_voltage_max" not in hass.states.get(entity_id).attributes
     await send_attributes_report(hass, cluster, {0: 1, 0x0507: 888, 10: 5000})
@@ -248,7 +248,7 @@ async def async_test_em_rms_voltage(hass, cluster, entity_id):
 async def async_test_powerconfiguration(hass, cluster, entity_id):
     """Test powerconfiguration/battery sensor."""
     await send_attributes_report(hass, cluster, {33: 98})
-    assert_state(hass, entity_id, "49", "%")
+    assert_state(hass, entity_id, "49.0", "%")
     assert hass.states.get(entity_id).attributes["battery_voltage"] == 2.9
     assert hass.states.get(entity_id).attributes["battery_quantity"] == 3
     assert hass.states.get(entity_id).attributes["battery_size"] == "AAA"
@@ -265,7 +265,7 @@ async def async_test_powerconfiguration2(hass, cluster, entity_id):
     assert_state(hass, entity_id, STATE_UNKNOWN, "%")
 
     await send_attributes_report(hass, cluster, {33: 98})
-    assert_state(hass, entity_id, "49", "%")
+    assert_state(hass, entity_id, "49.0", "%")
 
 
 async def async_test_device_temperature(hass, cluster, entity_id):
