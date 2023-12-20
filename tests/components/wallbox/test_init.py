@@ -45,6 +45,34 @@ async def test_wallbox_unload_entry_connection_error(
     assert entry.state == ConfigEntryState.NOT_LOADED
 
 
+async def test_wallbox_refresh_failed_connection_error_auth(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test Wallbox setup with connection error."""
+
+    await setup_integration(hass, entry)
+    assert entry.state == ConfigEntryState.LOADED
+
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get(
+            "https://user-api.wall-box.com/users/signin",
+            json=authorisation_response,
+            status_code=404,
+        )
+        mock_request.get(
+            "https://api.wall-box.com/chargers/status/12345",
+            json=test_response,
+            status_code=200,
+        )
+
+        wallbox = hass.data[DOMAIN][entry.entry_id]
+
+        await wallbox.async_refresh()
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.state == ConfigEntryState.NOT_LOADED
+
+
 async def test_wallbox_refresh_failed_invalid_auth(
     hass: HomeAssistant, entry: MockConfigEntry
 ) -> None:

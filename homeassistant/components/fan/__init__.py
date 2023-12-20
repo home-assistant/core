@@ -1,7 +1,6 @@
 """Provides functionality to interact with fans."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntFlag
 import functools as ft
@@ -18,11 +17,17 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
+)
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstantEnum,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
 )
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
@@ -52,10 +57,22 @@ class FanEntityFeature(IntFlag):
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
 # Please use the FanEntityFeature enum instead.
-SUPPORT_SET_SPEED = 1
-SUPPORT_OSCILLATE = 2
-SUPPORT_DIRECTION = 4
-SUPPORT_PRESET_MODE = 8
+_DEPRECATED_SUPPORT_SET_SPEED = DeprecatedConstantEnum(
+    FanEntityFeature.SET_SPEED, "2025.1"
+)
+_DEPRECATED_SUPPORT_OSCILLATE = DeprecatedConstantEnum(
+    FanEntityFeature.OSCILLATE, "2025.1"
+)
+_DEPRECATED_SUPPORT_DIRECTION = DeprecatedConstantEnum(
+    FanEntityFeature.DIRECTION, "2025.1"
+)
+_DEPRECATED_SUPPORT_PRESET_MODE = DeprecatedConstantEnum(
+    FanEntityFeature.PRESET_MODE, "2025.1"
+)
+
+# Both can be removed if no deprecated constant are in this module anymore
+__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = ft.partial(dir_with_deprecated_constants, module_globals=globals())
 
 SERVICE_INCREASE_SPEED = "increase_speed"
 SERVICE_DECREASE_SPEED = "decrease_speed"
@@ -77,8 +94,19 @@ ATTR_PRESET_MODES = "preset_modes"
 # mypy: disallow-any-generics
 
 
-class NotValidPresetModeError(ValueError):
-    """Exception class when the preset_mode in not in the preset_modes list."""
+class NotValidPresetModeError(ServiceValidationError):
+    """Raised when the preset_mode is not in the preset_modes list."""
+
+    def __init__(
+        self, *args: object, translation_placeholders: dict[str, str] | None = None
+    ) -> None:
+        """Initialize the exception."""
+        super().__init__(
+            *args,
+            translation_domain=DOMAIN,
+            translation_key="not_valid_preset_mode",
+            translation_placeholders=translation_placeholders,
+        )
 
 
 @bind_hass
@@ -107,7 +135,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ),
             vol.Optional(ATTR_PRESET_MODE): cv.string,
         },
-        "async_turn_on",
+        "async_handle_turn_on_service",
     )
     component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
     component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
@@ -156,7 +184,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SET_PRESET_MODE,
         {vol.Required(ATTR_PRESET_MODE): cv.string},
-        "async_set_preset_mode",
+        "async_handle_set_preset_mode_service",
         [FanEntityFeature.SET_SPEED, FanEntityFeature.PRESET_MODE],
     )
 
@@ -175,8 +203,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class FanEntityDescription(ToggleEntityDescription):
+class FanEntityDescription(ToggleEntityDescription, frozen_or_thawed=True):
     """A class that describes fan entities."""
 
 
@@ -237,17 +264,30 @@ class FanEntity(ToggleEntity):
         """Set new preset mode."""
         raise NotImplementedError()
 
+    @final
+    async def async_handle_set_preset_mode_service(self, preset_mode: str) -> None:
+        """Validate and set new preset mode."""
+        self._valid_preset_mode_or_raise(preset_mode)
+        await self.async_set_preset_mode(preset_mode)
+
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self.hass.async_add_executor_job(self.set_preset_mode, preset_mode)
 
+    @final
+    @callback
     def _valid_preset_mode_or_raise(self, preset_mode: str) -> None:
         """Raise NotValidPresetModeError on invalid preset_mode."""
         preset_modes = self.preset_modes
         if not preset_modes or preset_mode not in preset_modes:
+            preset_modes_str: str = ", ".join(preset_modes or [])
             raise NotValidPresetModeError(
                 f"The preset_mode {preset_mode} is not a valid preset_mode:"
-                f" {preset_modes}"
+                f" {preset_modes}",
+                translation_placeholders={
+                    "preset_mode": preset_mode,
+                    "preset_modes": preset_modes_str,
+                },
             )
 
     def set_direction(self, direction: str) -> None:
@@ -266,6 +306,18 @@ class FanEntity(ToggleEntity):
     ) -> None:
         """Turn on the fan."""
         raise NotImplementedError()
+
+    @final
+    async def async_handle_turn_on_service(
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Validate and turn on the fan."""
+        if preset_mode is not None:
+            self._valid_preset_mode_or_raise(preset_mode)
+        await self.async_turn_on(percentage, preset_mode, **kwargs)
 
     async def async_turn_on(
         self,

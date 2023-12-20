@@ -139,3 +139,5 @@ class UserMeta(NamedTuple):
 
     name: str | None
     is_active: bool
+    group: str | None = None
+    local_only: bool | None = None

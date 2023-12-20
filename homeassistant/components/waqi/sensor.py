@@ -153,7 +153,7 @@ async def async_setup_platform(
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class WAQIMixin:
     """Mixin for required keys."""
 
@@ -161,7 +161,7 @@ class WAQIMixin:
     value_fn: Callable[[WAQIAirQuality], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class WAQISensorEntityDescription(SensorEntityDescription, WAQIMixin):
     """Describes WAQI sensor entity."""
 
@@ -239,6 +239,14 @@ SENSORS: list[WAQISensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda aq: aq.extended_air_quality.pm25,
         available_fn=lambda aq: aq.extended_air_quality.pm25 is not None,
+    ),
+    WAQISensorEntityDescription(
+        key="neph",
+        translation_key="neph",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda aq: aq.extended_air_quality.nephelometry,
+        available_fn=lambda aq: aq.extended_air_quality.nephelometry is not None,
+        entity_registry_enabled_default=False,
     ),
     WAQISensorEntityDescription(
         key="dominant_pollutant",

@@ -44,6 +44,20 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      'friendly_name': 'de Jongweg, Utrecht Visbility using nephelometry',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.de_jongweg_utrecht_visbility_using_nephelometry',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---
+# name: test_sensor.11
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
       'device_class': 'enum',
       'friendly_name': 'de Jongweg, Utrecht Dominant pollutant',
       'options': list([

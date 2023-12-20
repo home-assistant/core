@@ -45,6 +45,7 @@ base_platforms: &base_platforms
   - homeassistant/components/switch/**
   - homeassistant/components/text/**
   - homeassistant/components/time/**
+  - homeassistant/components/todo/**
   - homeassistant/components/tts/**
   - homeassistant/components/update/**
   - homeassistant/components/vacuum/**
@@ -96,8 +97,8 @@ components: &components
   - homeassistant/components/persistent_notification/**
   - homeassistant/components/person/**
   - homeassistant/components/recorder/**
+  - homeassistant/components/recovery_mode/**
   - homeassistant/components/repairs/**
-  - homeassistant/components/safe_mode/**
   - homeassistant/components/script/**
   - homeassistant/components/shopping_list/**
   - homeassistant/components/ssdp/**

@@ -453,10 +453,9 @@ class DlnaDmrEntity(MediaPlayerEntity):
             for state_variable in state_variables:
                 # Force a state refresh when player begins or pauses playback
                 # to update the position info.
-                if (
-                    state_variable.name == "TransportState"
-                    and state_variable.value
-                    in (TransportState.PLAYING, TransportState.PAUSED_PLAYBACK)
+                if state_variable.name == "TransportState" and state_variable.value in (
+                    TransportState.PLAYING,
+                    TransportState.PAUSED_PLAYBACK,
                 ):
                     force_refresh = True
 

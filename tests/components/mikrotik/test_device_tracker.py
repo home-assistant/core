@@ -208,29 +208,30 @@ async def test_hub_wifiwave2(hass: HomeAssistant, mock_device_registry_devices) 
     assert device_4.attributes["host_name"] == "Device_4"
 
 
-async def test_restoring_devices(hass: HomeAssistant) -> None:
+async def test_restoring_devices(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test restoring existing device_tracker entities if not detected on startup."""
     config_entry = MockConfigEntry(
         domain=mikrotik.DOMAIN, data=MOCK_DATA, options=MOCK_OPTIONS
     )
     config_entry.add_to_hass(hass)
 
-    registry = er.async_get(hass)
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         device_tracker.DOMAIN,
         mikrotik.DOMAIN,
         "00:00:00:00:00:01",
         suggested_object_id="device_1",
         config_entry=config_entry,
     )
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         device_tracker.DOMAIN,
         mikrotik.DOMAIN,
         "00:00:00:00:00:02",
         suggested_object_id="device_2",
         config_entry=config_entry,
     )
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         device_tracker.DOMAIN,
         mikrotik.DOMAIN,
         "00:00:00:00:00:03",

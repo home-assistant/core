@@ -30,7 +30,7 @@ from .const import SIGNAL_DEVICE_ADD
 from .utils import get_breeze_remote_manager
 
 
-@dataclass
+@dataclass(frozen=True)
 class SwitcherThermostatButtonDescriptionMixin:
     """Mixin to describe a Switcher Thermostat Button entity."""
 
@@ -38,7 +38,7 @@ class SwitcherThermostatButtonDescriptionMixin:
     supported: Callable[[SwitcherBreezeRemote], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SwitcherThermostatButtonEntityDescription(
     ButtonEntityDescription, SwitcherThermostatButtonDescriptionMixin
 ):

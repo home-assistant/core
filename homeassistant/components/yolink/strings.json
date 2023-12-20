@@ -16,7 +16,10 @@
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -36,21 +39,11 @@
   },
   "entity": {
     "switch": {
-      "usb_ports": {
-        "name": "USB ports"
-      },
-      "plug_1": {
-        "name": "Plug 1"
-      },
-      "plug_2": {
-        "name": "Plug 2"
-      },
-      "plug_3": {
-        "name": "Plug 3"
-      },
-      "plug_4": {
-        "name": "Plug 4"
-      }
+      "usb_ports": { "name": "USB ports" },
+      "plug_1": { "name": "Plug 1" },
+      "plug_2": { "name": "Plug 2" },
+      "plug_3": { "name": "Plug 3" },
+      "plug_4": { "name": "Plug 4" }
     },
     "sensor": {
       "power_failure_alarm": {
@@ -63,18 +56,11 @@
       },
       "power_failure_alarm_mute": {
         "name": "Power failure alarm mute",
-        "state": {
-          "muted": "Muted",
-          "unmuted": "Unmuted"
-        }
+        "state": { "muted": "Muted", "unmuted": "Unmuted" }
       },
       "power_failure_alarm_volume": {
         "name": "Power failure alarm volume",
-        "state": {
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High"
-        }
+        "state": { "low": "Low", "medium": "Medium", "high": "High" }
       },
       "power_failure_alarm_beep": {
         "name": "Power failure alarm beep",

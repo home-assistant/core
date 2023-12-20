@@ -884,7 +884,9 @@ class HKDevice:
         self._config_changed_callbacks.add(callback_)
         return partial(self._remove_config_changed_callback, callback_)
 
-    async def get_characteristics(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
+    async def get_characteristics(
+        self, *args: Any, **kwargs: Any
+    ) -> dict[tuple[int, int], dict[str, Any]]:
         """Read latest state from homekit accessory."""
         return await self.pairing.get_characteristics(*args, **kwargs)
 
