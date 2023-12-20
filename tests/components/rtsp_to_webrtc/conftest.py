@@ -53,7 +53,7 @@ async def mock_camera(hass) -> AsyncGenerator[None, None]:
         return_value=STREAM_SOURCE,
     ), patch(
         "homeassistant.components.camera.Camera.supported_features",
-        return_value=camera.SUPPORT_STREAM,
+        return_value=camera.CameraEntityFeature.STREAM,
     ):
         yield
 
