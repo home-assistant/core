@@ -32,6 +32,25 @@ _LOGGER = logging.getLogger(__name__)
 class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     """Climate device for CCM15 coordinator."""
 
+    _attr_should_poll = True
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_has_entity_name = True
+    _attr_target_temperature_step = PRECISION_WHOLE
+    _attr_hvac_modes = [
+        HVACMode.OFF,
+        HVACMode.HEAT,
+        HVACMode.COOL,
+        HVACMode.DRY,
+        HVACMode.AUTO,
+    ]
+    _attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
+    _attr_swing_modes = [SWING_OFF, SWING_ON]
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.SWING_MODE
+    )
+
     def __init__(
         self, ac_host: str, ac_index: int, coordinator: CCM15Coordinator
     ) -> None:
@@ -39,25 +58,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         super().__init__(coordinator)
         self._ac_host: str = ac_host
         self._ac_index: int = ac_index
-        self._attr_should_poll = True
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
-        self._attr_has_entity_name = True
         self._attr_name = str(self._ac_index)
-        self._attr_target_temperature_step = PRECISION_WHOLE
-        self._attr_hvac_modes = [
-            HVACMode.OFF,
-            HVACMode.HEAT,
-            HVACMode.COOL,
-            HVACMode.DRY,
-            HVACMode.AUTO,
-        ]
-        self._attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
-        self._attr_swing_modes = [SWING_OFF, SWING_ON]
-        self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.FAN_MODE
-            | ClimateEntityFeature.SWING_MODE
-        )
         self._attr_unique_id = f"{self._ac_host}.{self._ac_index}"
 
     @property
