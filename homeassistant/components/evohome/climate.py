@@ -173,8 +173,8 @@ class EvoZone(EvoChild, EvoClimateEntity):
     def __init__(self, evo_broker: EvoBroker, evo_device: evo.Zone) -> None:
         """Initialize a Honeywell TCC Zone."""
 
-        self._evo_id = evo_device.zoneId
         super().__init__(evo_broker, evo_device)
+        self._evo_id = evo_device.zoneId
 
         if evo_device.modelType.startswith("VisionProWifi"):
             # this system does not have a distinct ID for the zone
@@ -353,8 +353,8 @@ class EvoController(EvoClimateEntity):
     def __init__(self, evo_broker: EvoBroker, evo_device: evo.ControlSystem) -> None:
         """Initialize a Honeywell TCC Controller/Location."""
 
-        self._evo_id = evo_device.systemId
         super().__init__(evo_broker, evo_device)
+        self._evo_id = evo_device.systemId
 
         self._attr_unique_id = evo_device.systemId
         self._attr_name = evo_device.location.name

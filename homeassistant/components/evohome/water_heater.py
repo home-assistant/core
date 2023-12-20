@@ -85,8 +85,8 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
     def __init__(self, evo_broker: EvoBroker, evo_device: evo.HotWater) -> None:
         """Initialize an evohome DHW controller."""
 
-        self._evo_id = evo_device.dhwId
         super().__init__(evo_broker, evo_device)
+        self._evo_id = evo_device.dhwId
 
         self._attr_unique_id = evo_device.dhwId
 
