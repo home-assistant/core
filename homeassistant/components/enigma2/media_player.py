@@ -24,25 +24,26 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import (
+    CONF_DEEP_STANDBY,
+    CONF_MAC_ADDRESS,
+    CONF_SOURCE_BOUQUET,
+    CONF_USE_CHANNEL_ICON,
+    DEFAULT_DEEP_STANDBY,
+    DEFAULT_MAC_ADDRESS,
+    DEFAULT_NAME,
+    DEFAULT_PASSWORD,
+    DEFAULT_PORT,
+    DEFAULT_SOURCE_BOUQUET,
+    DEFAULT_SSL,
+    DEFAULT_USE_CHANNEL_ICON,
+    DEFAULT_USERNAME,
+)
+
 ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
 ATTR_MEDIA_DESCRIPTION = "media_description"
 ATTR_MEDIA_END_TIME = "media_end_time"
 ATTR_MEDIA_START_TIME = "media_start_time"
-
-CONF_USE_CHANNEL_ICON = "use_channel_icon"
-CONF_DEEP_STANDBY = "deep_standby"
-CONF_MAC_ADDRESS = "mac_address"
-CONF_SOURCE_BOUQUET = "source_bouquet"
-
-DEFAULT_NAME = "Enigma2 Media Player"
-DEFAULT_PORT = 80
-DEFAULT_SSL = False
-DEFAULT_USE_CHANNEL_ICON = False
-DEFAULT_USERNAME = "root"
-DEFAULT_PASSWORD = "dreambox"
-DEFAULT_DEEP_STANDBY = False
-DEFAULT_MAC_ADDRESS = ""
-DEFAULT_SOURCE_BOUQUET = ""
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -115,6 +116,7 @@ class Enigma2Device(MediaPlayerEntity):
         | MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
+    _attr_volume_step = 5 / 100
 
     def __init__(self, name, device):
         """Initialize the Enigma2 device."""
@@ -184,14 +186,6 @@ class Enigma2Device(MediaPlayerEntity):
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self.e2_box.set_volume(int(volume * 100))
-
-    def volume_up(self) -> None:
-        """Volume up the media player."""
-        self.e2_box.set_volume(int(self.e2_box.volume * 100) + 5)
-
-    def volume_down(self) -> None:
-        """Volume down media player."""
-        self.e2_box.set_volume(int(self.e2_box.volume * 100) - 5)
 
     @property
     def volume_level(self):

@@ -26,7 +26,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import DOMAIN, UPDATE_TOPIC, AquaLogicProcessor
 
 
-@dataclass
+@dataclass(frozen=True)
 class AquaLogicSensorEntityDescription(SensorEntityDescription):
     """Describes AquaLogic sensor entity."""
 
