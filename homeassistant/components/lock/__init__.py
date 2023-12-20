@@ -1,7 +1,6 @@
 """Component to interface with locks that can be controlled remotely."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntFlag
 import functools as ft
@@ -31,6 +30,11 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA_BASE,
     make_entity_service_schema,
 )
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstantEnum,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
@@ -58,7 +62,11 @@ class LockEntityFeature(IntFlag):
 
 # The SUPPORT_OPEN constant is deprecated as of Home Assistant 2022.5.
 # Please use the LockEntityFeature enum instead.
-SUPPORT_OPEN = 1
+_DEPRECATED_SUPPORT_OPEN = DeprecatedConstantEnum(LockEntityFeature.OPEN, "2025.1")
+
+# Both can be removed if no deprecated constant are in this module anymore
+__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = ft.partial(dir_with_deprecated_constants, module_globals=globals())
 
 PROP_TO_ATTR = {"changed_by": ATTR_CHANGED_BY, "code_format": ATTR_CODE_FORMAT}
 
@@ -101,8 +109,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class LockEntityDescription(EntityDescription):
+class LockEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes lock entities."""
 
 

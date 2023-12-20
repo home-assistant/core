@@ -40,7 +40,7 @@ from .utils import get_device_entry_gen, get_release_url
 LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class RpcUpdateRequiredKeysMixin:
     """Class for RPC update required keys."""
 
@@ -48,7 +48,7 @@ class RpcUpdateRequiredKeysMixin:
     beta: bool
 
 
-@dataclass
+@dataclass(frozen=True)
 class RestUpdateRequiredKeysMixin:
     """Class for REST update required keys."""
 
@@ -56,14 +56,14 @@ class RestUpdateRequiredKeysMixin:
     beta: bool
 
 
-@dataclass
+@dataclass(frozen=True)
 class RpcUpdateDescription(
     RpcEntityDescription, UpdateEntityDescription, RpcUpdateRequiredKeysMixin
 ):
     """Class to describe a RPC update."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class RestUpdateDescription(
     RestEntityDescription, UpdateEntityDescription, RestUpdateRequiredKeysMixin
 ):
