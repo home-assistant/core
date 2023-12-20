@@ -7,12 +7,19 @@ from typing import Any, cast
 from aioshelly.block_device import Block
 from aioshelly.const import MODEL_2, MODEL_25, MODEL_GAS, RPC_GENERATIONS
 
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.script import scripts_with_entity
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import GAS_VALVE_OPEN_STATES, MODEL_WALL_DISPLAY
+from .const import DOMAIN, GAS_VALVE_OPEN_STATES, LOGGER, MODEL_WALL_DISPLAY
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .entity import (
     BlockEntityDescription,
@@ -168,13 +175,53 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Open valve."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "deprecated_valve_switch",
+            breaks_in_ha_version="2024.6.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_valve_switche",
+        )
         self.control_result = await self.set_state(go="open")
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Close valve."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "deprecated_valve_switch",
+            breaks_in_ha_version="2024.6.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_valve_switche",
+        )
         self.control_result = await self.set_state(go="close")
         self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Set up a listener when this entity is added to HA."""
+        await super().async_added_to_hass()
+
+        entity_automations = automations_with_entity(self.hass, self.entity_id)
+        entity_scripts = scripts_with_entity(self.hass, self.entity_id)
+        for item in entity_automations + entity_scripts:
+            LOGGER.warning(f"deprecated_valve_{self.entity_id}_{item}")
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"deprecated_valve_{self.entity_id}_{item}",
+                breaks_in_ha_version="2024.6.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_valve_switch_entity",
+                translation_placeholders={
+                    "entity": f"{SWITCH_DOMAIN}.{cast(str, self.name).lower().replace(' ', '_')}",
+                    "info": item,
+                },
+            )
 
     @callback
     def _update_callback(self) -> None:
