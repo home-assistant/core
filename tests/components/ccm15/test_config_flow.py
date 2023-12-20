@@ -110,5 +110,3 @@ async def test_form_unexpected_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
-if __name__ == "__main__":
-    unittest.main()
