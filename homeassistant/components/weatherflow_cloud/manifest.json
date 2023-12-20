@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/weatherflow_cloud",
   "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": ["pyweatherflow-forecast==1.0.1"],
+  "requirements": [],
   "ssdp": [],
   "zeroconf": []
 }
