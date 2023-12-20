@@ -293,10 +293,8 @@ def test_check_if_deprecated_constant(
     }
     filename = f"/home/paulus/{module_name.replace('.', '/')}.py"
 
-    # mock module for homeassistant/helpers/frame.py#get_integration_frame
-    sys.modules[module_name] = Mock(__file__=filename)
-
-    with patch(
+    # mock sys.modules for homeassistant/helpers/frame.py#get_integration_frame
+    with patch.dict(sys.modules, {module_name: Mock(__file__=filename)}), patch(
         "homeassistant.helpers.frame.extract_stack",
         return_value=[
             Mock(
