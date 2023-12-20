@@ -49,10 +49,6 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         """Get the current status of all AC devices."""
         return await self._ccm15.get_status_async()
 
-    async def async_test_connection(self):  # pragma: no cover
-        """Test the connection to the CCM15 device."""
-        return await self._ccm15.async_test_connection()
-
     async def async_set_state(self, ac_index: int, state: str, value: int) -> None:
         """Set new target states."""
         if await self._ccm15.async_set_state(ac_index, state, value):
