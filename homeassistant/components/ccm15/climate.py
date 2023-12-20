@@ -29,6 +29,23 @@ from .coordinator import CCM15Coordinator
 _LOGGER = logging.getLogger(__name__)
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up all climate."""
+    coordinator: CCM15Coordinator = hass.data[DOMAIN][config_entry.entry_id]
+
+    ac_data: CCM15DeviceState = coordinator.data
+    entities = [
+        CCM15Climate(coordinator.get_host(), ac_index, coordinator)
+        for ac_index in ac_data.devices
+    ]
+    _LOGGER.debug("Creating new ac devices at indices '%s'", ac_data.devices)
+    async_add_entities(entities)
+
+
 class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     """Climate device for CCM15 coordinator."""
 
@@ -140,20 +157,3 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     async def async_turn_on(self) -> None:
         """Turn on."""
         await self.async_set_hvac_mode(HVACMode.AUTO)
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up all climate."""
-    coordinator: CCM15Coordinator = hass.data[DOMAIN][config_entry.entry_id]
-
-    ac_data: CCM15DeviceState = coordinator.data
-    entities = [
-        CCM15Climate(coordinator.get_host(), ac_index, coordinator)
-        for ac_index in ac_data.devices
-    ]
-    _LOGGER.debug("Creating new ac devices at indices '%s'", ac_data.devices)
-    async_add_entities(entities)
