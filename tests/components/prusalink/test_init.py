@@ -6,6 +6,7 @@ from pyprusalink.types import InvalidAuth, PrusaLinkError
 import pytest
 
 from homeassistant.components.prusalink import DOMAIN
+from homeassistant.components.prusalink.config_flow import ConfigFlow
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -126,3 +127,20 @@ async def test_migration_from_1_1_to_1_2_outdated_firmware(
     assert entry.state == ConfigEntryState.LOADED
     assert entry.minor_version == 2
     assert (DOMAIN, "firmware_5_1_required") not in issue_registry.issues
+
+
+async def test_migration_fails_on_future_version(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test migrating fails on a version higher than the current one."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        version=ConfigFlow.VERSION + 1,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state == ConfigEntryState.MIGRATION_ERROR
