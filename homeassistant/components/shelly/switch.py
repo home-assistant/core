@@ -40,6 +40,7 @@ GAS_VALVE_SWITCH = BlockSwitchDescription(
     name="Valve",
     available=lambda block: block.valve not in ("failure", "checking"),
     removal_condition=lambda _, block: block.valve in ("not_connected", "unknown"),
+    entity_registry_enabled_default=False,
 )
 
 

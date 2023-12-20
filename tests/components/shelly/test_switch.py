@@ -238,6 +238,12 @@ async def test_block_device_gas_valve(
     hass: HomeAssistant, mock_block_device, monkeypatch
 ) -> None:
     """Test block device Shelly Gas with Valve addon."""
+    entity_id = register_entity(
+        hass,
+        SWITCH_DOMAIN,
+        "test_name_valve",
+        "valve_0-valve",
+    )
     registry = er.async_get(hass)
     await init_integration(hass, 1, MODEL_GAS)
     entity_id = "switch.test_name_valve"
