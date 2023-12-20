@@ -24,7 +24,9 @@ from homeassistant.core import HomeAssistant
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_coordinator(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_cmm15_data_isread_correctly(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test the coordinator."""
 
     # Create a dictionary of CCM15SlaveDevice objects
