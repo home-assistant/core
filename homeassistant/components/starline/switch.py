@@ -56,6 +56,12 @@ SWITCH_TYPES: tuple[StarlineSwitchEntityDescription, ...] = (
         icon_on="mdi:bullhorn-outline",
         icon_off="mdi:bullhorn-outline",
     ),
+    StarlineSwitchEntityDescription(
+        key="valet",
+        translation_key="service_mode",
+        icon_on="mdi:wrench-clock",
+        icon_off="mdi:car-wrench",
+    ),
 )
 
 
