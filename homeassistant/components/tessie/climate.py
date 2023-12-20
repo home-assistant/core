@@ -52,7 +52,7 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
         coordinator: TessieDataUpdateCoordinator,
     ) -> None:
         """Initialize the Climate entity."""
-        super().__init__(coordinator, "climate")
+        super().__init__(coordinator, "primary")
 
     @property
     def hvac_mode(self) -> HVACMode | None:
