@@ -58,7 +58,7 @@ from .coordinator import (
 from .entity import WithingsEntity
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WithingsMeasurementSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
@@ -236,7 +236,7 @@ MEASUREMENT_SENSORS: dict[
 }
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WithingsSleepSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
@@ -396,7 +396,7 @@ SLEEP_SENSORS = [
 ]
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WithingsActivitySensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
@@ -494,7 +494,7 @@ SLEEP_GOAL = "sleep"
 WEIGHT_GOAL = "weight"
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WithingsGoalsSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
@@ -531,7 +531,7 @@ GOALS_SENSORS: dict[str, WithingsGoalsSensorEntityDescription] = {
 }
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WithingsWorkoutSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 

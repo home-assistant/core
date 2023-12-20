@@ -239,7 +239,7 @@ aioelectricitymaps==0.1.5
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==21.0.0
+aioesphomeapi==21.0.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -469,7 +469,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.36.2
+async-upnp-client==0.38.0
 
 # homeassistant.components.keyboard_remote
 asyncinotify==4.0.2
@@ -478,7 +478,7 @@ asyncinotify==4.0.2
 asyncpysupla==0.0.5
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.3.7
+asyncsleepiq==1.4.0
 
 # homeassistant.components.aten_pe
 # atenpdu==0.3.2
@@ -535,7 +535,7 @@ bimmer-connected[china]==0.14.6
 bizkaibus==0.1.1
 
 # homeassistant.components.esphome
-bleak-esphome==0.3.0
+bleak-esphome==0.4.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.3.0
@@ -547,7 +547,7 @@ bleak==0.21.1
 blebox-uniapi==2.2.0
 
 # homeassistant.components.blink
-blinkpy==0.22.3
+blinkpy==0.22.4
 
 # homeassistant.components.bitcoin
 blockchain==1.4.4
@@ -566,7 +566,6 @@ bluetooth-adapters==0.16.2
 bluetooth-auto-recovery==1.2.3
 
 # homeassistant.components.bluetooth
-# homeassistant.components.esphome
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
@@ -690,7 +689,7 @@ denonavr==0.11.4
 devialet==1.4.3
 
 # homeassistant.components.devolo_home_control
-devolo-home-control-api==0.18.2
+devolo-home-control-api==0.18.3
 
 # homeassistant.components.devolo_home_network
 devolo-plc-api==1.4.1
@@ -864,7 +863,7 @@ fritzconnection[qr]==1.13.2
 gTTS==2.2.4
 
 # homeassistant.components.gardena_bluetooth
-gardena-bluetooth==1.4.0
+gardena-bluetooth==1.4.1
 
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.10
@@ -923,7 +922,7 @@ google-cloud-pubsub==2.13.11
 google-cloud-texttospeech==2.12.3
 
 # homeassistant.components.google_generative_ai_conversation
-google-generativeai==0.1.0
+google-generativeai==0.3.1
 
 # homeassistant.components.nest
 google-nest-sdm==3.0.3
@@ -933,6 +932,9 @@ googlemaps==2.5.1
 
 # homeassistant.components.slide
 goslide-api==0.5.1
+
+# homeassistant.components.tailwind
+gotailwind==0.2.2
 
 # homeassistant.components.govee_ble
 govee-ble==0.24.0
@@ -990,7 +992,7 @@ habitipy==0.2.0
 habluetooth==1.0.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.74.0
+hass-nabucasa==0.75.1
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1274,7 +1276,7 @@ moehlenhoff-alpha2==1.3.0
 mopeka-iot-ble==0.5.0
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.18
+motionblinds==0.6.19
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.14
@@ -1423,7 +1425,7 @@ openwrt-luci-rpc==1.1.16
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.0.41
+opower==0.1.0
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1629,13 +1631,13 @@ pyairnow==1.2.1
 pyairvisual==2023.08.1
 
 # homeassistant.components.asuswrt
-pyasuswrt==0.1.20
+pyasuswrt==0.1.21
 
 # homeassistant.components.atag
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==7.6.0
+pyatmo==8.0.1
 
 # homeassistant.components.apple_tv
 pyatv==0.14.3
@@ -2003,7 +2005,7 @@ pyprof2calltree==1.4.5
 pyprosegur==0.0.9
 
 # homeassistant.components.prusalink
-pyprusalink==1.1.0
+pyprusalink==2.0.0
 
 # homeassistant.components.ps4
 pyps4-2ndscreen==1.3.1
@@ -2216,7 +2218,7 @@ python-qbittorrent==0.4.3
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==0.36.2
+python-roborock==0.38.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -2357,7 +2359,7 @@ renault-api==0.2.1
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.8.3
+reolink-aio==0.8.4
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2559,13 +2561,13 @@ sunwatcher==0.2.1
 sunweg==2.0.1
 
 # homeassistant.components.surepetcare
-surepy==0.8.0
+surepy==0.9.0
 
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.1.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==1.2.1
+switchbot-api==1.3.0
 
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
@@ -2835,7 +2837,7 @@ zamg==0.3.3
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.129.0
+zeroconf==0.131.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
