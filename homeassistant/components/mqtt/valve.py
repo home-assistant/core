@@ -274,7 +274,7 @@ class MqttValve(MqttEntity, ValveEntity):
                 position_set = True
         if state_payload and state is None and not position_set:
             _LOGGER.warning(
-                "Payload is received on topic '%s' not one of "
+                "Payload received on topic '%s' is not one of "
                 "[opening, closing], got: %s",
                 msg.topic,
                 state_payload,
