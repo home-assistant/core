@@ -44,8 +44,7 @@ _RND: Final = SystemRandom()
 GET_IMAGE_TIMEOUT: Final = 10
 
 
-@dataclass
-class ImageEntityDescription(EntityDescription):
+class ImageEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes image entities."""
 
 

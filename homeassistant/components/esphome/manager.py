@@ -27,7 +27,12 @@ import voluptuous as vol
 
 from homeassistant.components import tag, zeroconf
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_ID, CONF_MODE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    CONF_MODE,
+    EVENT_HOMEASSISTANT_STOP,
+    EVENT_LOGGING_CHANGED,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -442,16 +447,10 @@ class ESPHomeManager:
                 entry, data={**entry.data, CONF_DEVICE_NAME: device_info.name}
             )
 
-        entry_data.device_info = device_info
-        assert cli.api_version is not None
-        entry_data.api_version = cli.api_version
-        entry_data.available = True
-        # Reset expected disconnect flag on successful reconnect
-        # as it will be flipped to False on unexpected disconnect.
-        #
-        # We use this to determine if a deep sleep device should
-        # be marked as unavailable or not.
-        entry_data.expected_disconnect = True
+        api_version = cli.api_version
+        assert api_version is not None, "API version must be set"
+        entry_data.async_on_connect(device_info, api_version)
+
         if device_info.name:
             reconnect_logic.name = device_info.name
 
@@ -467,10 +466,10 @@ class ESPHomeManager:
         setup_coros_with_disconnect_callbacks: list[
             Coroutine[Any, Any, CALLBACK_TYPE]
         ] = []
-        if device_info.bluetooth_proxy_feature_flags_compat(cli.api_version):
+        if device_info.bluetooth_proxy_feature_flags_compat(api_version):
             setup_coros_with_disconnect_callbacks.append(
                 async_connect_scanner(
-                    hass, entry, cli, entry_data, self.domain_data.bluetooth_cache
+                    hass, entry_data, cli, device_info, self.domain_data.bluetooth_cache
                 )
             )
 
@@ -502,7 +501,7 @@ class ESPHomeManager:
             entry_data.disconnect_callbacks.add(cancel_callback)
 
         hass.async_create_task(entry_data.async_save_to_store())
-        _async_check_firmware_version(hass, device_info, entry_data.api_version)
+        _async_check_firmware_version(hass, device_info, api_version)
         _async_check_using_api_password(hass, device_info, bool(self.password))
 
     async def on_disconnect(self, expected_disconnect: bool) -> None:
@@ -545,6 +544,11 @@ class ESPHomeManager:
         ):
             self.entry.async_start_reauth(self.hass)
 
+    @callback
+    def _async_handle_logging_changed(self, _event: Event) -> None:
+        """Handle when the logging level changes."""
+        self.cli.set_debug(_LOGGER.isEnabledFor(logging.DEBUG))
+
     async def async_start(self) -> None:
         """Start the esphome connection manager."""
         hass = self.hass
@@ -560,6 +564,11 @@ class ESPHomeManager:
         # <function EventBus.async_listen_once.<locals>.onetime_listener>"
         entry_data.cleanup_callbacks.append(
             hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.on_stop)
+        )
+        entry_data.cleanup_callbacks.append(
+            hass.bus.async_listen(
+                EVENT_LOGGING_CHANGED, self._async_handle_logging_changed
+            )
         )
 
         reconnect_logic = ReconnectLogic(

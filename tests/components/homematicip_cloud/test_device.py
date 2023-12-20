@@ -102,7 +102,7 @@ async def test_hmip_add_device(
     ), patch.object(reloaded_hap, "async_connect"), patch.object(
         reloaded_hap, "get_hap", return_value=mock_hap.home
     ), patch(
-        "homeassistant.components.homematicip_cloud.hap.asyncio.sleep"
+        "homeassistant.components.homematicip_cloud.hap.asyncio.sleep",
     ):
         mock_hap.home.fire_create_event(event_type=EventType.DEVICE_ADDED)
         await hass.async_block_till_done()

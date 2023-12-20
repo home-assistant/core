@@ -77,7 +77,7 @@ SENSOR_TYPES = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class NetgearSensorEntityDescription(SensorEntityDescription):
     """Class describing Netgear sensor entities."""
 

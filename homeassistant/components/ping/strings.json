@@ -7,6 +7,9 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "count": "Ping count"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the device you want to ping."
         }
       }
     },

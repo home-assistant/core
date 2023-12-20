@@ -24,24 +24,27 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkChannelCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(kw_only=True)
-class ReolinkSelectEntityDescription(SelectEntityDescription):
+@dataclass(frozen=True, kw_only=True)
+class ReolinkSelectEntityDescription(
+    SelectEntityDescription,
+    ReolinkChannelEntityDescription,
+):
     """A class that describes select entities."""
 
     get_options: list[str] | Callable[[Host, int], list[str]]
     method: Callable[[Host, int, str], Any]
-    supported: Callable[[Host, int], bool] = lambda api, ch: True
     value: Callable[[Host, int], str] | None = None
 
 
 SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="floodlight_mode",
+        cmd_key="GetWhiteLed",
         translation_key="floodlight_mode",
         icon="mdi:spotlight-beam",
         entity_category=EntityCategory.CONFIG,
@@ -52,6 +55,7 @@ SELECT_ENTITIES = (
     ),
     ReolinkSelectEntityDescription(
         key="day_night_mode",
+        cmd_key="GetIsp",
         translation_key="day_night_mode",
         icon="mdi:theme-light-dark",
         entity_category=EntityCategory.CONFIG,
@@ -70,6 +74,7 @@ SELECT_ENTITIES = (
     ),
     ReolinkSelectEntityDescription(
         key="auto_quick_reply_message",
+        cmd_key="GetAutoReply",
         translation_key="auto_quick_reply_message",
         icon="mdi:message-reply-text-outline",
         entity_category=EntityCategory.CONFIG,
@@ -82,6 +87,7 @@ SELECT_ENTITIES = (
     ),
     ReolinkSelectEntityDescription(
         key="auto_track_method",
+        cmd_key="GetAiCfg",
         translation_key="auto_track_method",
         icon="mdi:target-account",
         entity_category=EntityCategory.CONFIG,
@@ -92,6 +98,7 @@ SELECT_ENTITIES = (
     ),
     ReolinkSelectEntityDescription(
         key="status_led",
+        cmd_key="GetPowerLed",
         translation_key="status_led",
         icon="mdi:lightning-bolt-circle",
         entity_category=EntityCategory.CONFIG,
@@ -131,13 +138,9 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
         entity_description: ReolinkSelectEntityDescription,
     ) -> None:
         """Initialize Reolink select entity."""
-        super().__init__(reolink_data, channel)
         self.entity_description = entity_description
+        super().__init__(reolink_data, channel)
         self._log_error = True
-
-        self._attr_unique_id = (
-            f"{self._host.unique_id}_{channel}_{entity_description.key}"
-        )
 
         if callable(entity_description.get_options):
             self._attr_options = entity_description.get_options(self._host.api, channel)

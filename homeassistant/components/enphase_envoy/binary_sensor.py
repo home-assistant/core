@@ -22,14 +22,14 @@ from .coordinator import EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyEnchargeRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[EnvoyEncharge], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyEnchargeBinarySensorEntityDescription(
     BinarySensorEntityDescription, EnvoyEnchargeRequiredKeysMixin
 ):
@@ -53,14 +53,14 @@ ENCHARGE_SENSORS = (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyEnpowerRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[EnvoyEnpower], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyEnpowerBinarySensorEntityDescription(
     BinarySensorEntityDescription, EnvoyEnpowerRequiredKeysMixin
 ):
