@@ -24,7 +24,7 @@ from .models import PermRequired, ProtectSetableKeysMixin, T
 from .utils import async_dispatch_id as _ufpd
 
 
-@dataclass
+@dataclass(frozen=True)
 class ProtectTextEntityDescription(ProtectSetableKeysMixin[T], TextEntityDescription):
     """Describes UniFi Protect Text entity."""
 

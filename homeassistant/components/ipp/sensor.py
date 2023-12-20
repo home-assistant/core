@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LOCATION, PERCENTAGE, EntityCategory
@@ -36,14 +37,14 @@ from .coordinator import IPPDataUpdateCoordinator
 from .entity import IPPEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class IPPSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[Printer], StateType | datetime]
 
 
-@dataclass
+@dataclass(frozen=True)
 class IPPSensorEntityDescription(
     SensorEntityDescription, IPPSensorEntityDescriptionMixin
 ):
@@ -119,6 +120,7 @@ async def async_setup_entry(
                     name=marker.name,
                     icon="mdi:water",
                     native_unit_of_measurement=PERCENTAGE,
+                    state_class=SensorStateClass.MEASUREMENT,
                     attributes_fn=_get_marker_attributes_fn(
                         index,
                         lambda marker: {

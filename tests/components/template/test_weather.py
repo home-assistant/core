@@ -2,6 +2,7 @@
 from typing import Any
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.weather import (
     ATTR_FORECAST,
@@ -17,7 +18,8 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECAST,
+    LEGACY_SERVICE_GET_FORECAST,
+    SERVICE_GET_FORECASTS,
     Forecast,
 )
 from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -91,6 +93,13 @@ async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
         assert state.attributes.get(v_attr) == value
 
 
+@pytest.mark.parametrize(
+    ("service"),
+    [
+        SERVICE_GET_FORECASTS,
+        LEGACY_SERVICE_GET_FORECAST,
+    ],
+)
 @pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
@@ -112,7 +121,9 @@ async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_forecasts(hass: HomeAssistant, start_ha) -> None:
+async def test_forecasts(
+    hass: HomeAssistant, start_ha, snapshot: SnapshotAssertion, service: str
+) -> None:
     """Test forecast service."""
     for attr, _v_attr, value in [
         ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
@@ -158,53 +169,28 @@ async def test_forecasts(hass: HomeAssistant, start_ha) -> None:
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {"entity_id": "weather.forecast", "type": "daily"},
         blocking=True,
         return_response=True,
     )
-    assert response == {
-        "forecast": [
-            {
-                "condition": "cloudy",
-                "datetime": "2023-02-17T14:00:00+00:00",
-                "temperature": 14.2,
-            }
-        ]
-    }
+    assert response == snapshot
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {"entity_id": "weather.forecast", "type": "hourly"},
         blocking=True,
         return_response=True,
     )
-    assert response == {
-        "forecast": [
-            {
-                "condition": "cloudy",
-                "datetime": "2023-02-17T14:00:00+00:00",
-                "temperature": 14.2,
-            }
-        ]
-    }
+    assert response == snapshot
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {"entity_id": "weather.forecast", "type": "twice_daily"},
         blocking=True,
         return_response=True,
     )
-    assert response == {
-        "forecast": [
-            {
-                "condition": "fog",
-                "datetime": "2023-02-17T14:00:00+00:00",
-                "temperature": 14.2,
-                "is_daytime": True,
-            }
-        ]
-    }
+    assert response == snapshot
 
     hass.states.async_set(
         "weather.forecast",
@@ -226,22 +212,21 @@ async def test_forecasts(hass: HomeAssistant, start_ha) -> None:
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {"entity_id": "weather.forecast", "type": "daily"},
         blocking=True,
         return_response=True,
     )
-    assert response == {
-        "forecast": [
-            {
-                "condition": "cloudy",
-                "datetime": "2023-02-17T14:00:00+00:00",
-                "temperature": 16.9,
-            }
-        ]
-    }
+    assert response == snapshot
 
 
+@pytest.mark.parametrize(
+    ("service", "expected"),
+    [
+        (SERVICE_GET_FORECASTS, {"weather.forecast": {"forecast": []}}),
+        (LEGACY_SERVICE_GET_FORECAST, {"forecast": []}),
+    ],
+)
 @pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
@@ -263,7 +248,11 @@ async def test_forecasts(hass: HomeAssistant, start_ha) -> None:
     ],
 )
 async def test_forecast_invalid(
-    hass: HomeAssistant, start_ha, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    start_ha,
+    caplog: pytest.LogCaptureFixture,
+    service: str,
+    expected: dict[str, Any],
 ) -> None:
     """Test invalid forecasts."""
     for attr, _v_attr, value in [
@@ -299,23 +288,30 @@ async def test_forecast_invalid(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {"entity_id": "weather.forecast", "type": "daily"},
         blocking=True,
         return_response=True,
     )
-    assert response == {"forecast": []}
+    assert response == expected
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {"entity_id": "weather.forecast", "type": "hourly"},
         blocking=True,
         return_response=True,
     )
-    assert response == {"forecast": []}
+    assert response == expected
     assert "Only valid keys in Forecast are allowed" in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("service", "expected"),
+    [
+        (SERVICE_GET_FORECASTS, {"weather.forecast": {"forecast": []}}),
+        (LEGACY_SERVICE_GET_FORECAST, {"forecast": []}),
+    ],
+)
 @pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
@@ -336,7 +332,11 @@ async def test_forecast_invalid(
     ],
 )
 async def test_forecast_invalid_is_daytime_missing_in_twice_daily(
-    hass: HomeAssistant, start_ha, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    start_ha,
+    caplog: pytest.LogCaptureFixture,
+    service: str,
+    expected: dict[str, Any],
 ) -> None:
     """Test forecast service invalid when is_daytime missing in twice_daily forecast."""
     for attr, _v_attr, value in [
@@ -366,15 +366,22 @@ async def test_forecast_invalid_is_daytime_missing_in_twice_daily(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {"entity_id": "weather.forecast", "type": "twice_daily"},
         blocking=True,
         return_response=True,
     )
-    assert response == {"forecast": []}
+    assert response == expected
     assert "`is_daytime` is missing in twice_daily forecast" in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("service", "expected"),
+    [
+        (SERVICE_GET_FORECASTS, {"weather.forecast": {"forecast": []}}),
+        (LEGACY_SERVICE_GET_FORECAST, {"forecast": []}),
+    ],
+)
 @pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
@@ -395,7 +402,11 @@ async def test_forecast_invalid_is_daytime_missing_in_twice_daily(
     ],
 )
 async def test_forecast_invalid_datetime_missing(
-    hass: HomeAssistant, start_ha, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    start_ha,
+    caplog: pytest.LogCaptureFixture,
+    service: str,
+    expected: dict[str, Any],
 ) -> None:
     """Test forecast service invalid when datetime missing."""
     for attr, _v_attr, value in [
@@ -425,15 +436,22 @@ async def test_forecast_invalid_datetime_missing(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {"entity_id": "weather.forecast", "type": "twice_daily"},
         blocking=True,
         return_response=True,
     )
-    assert response == {"forecast": []}
+    assert response == expected
     assert "`datetime` is required in forecasts" in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("service"),
+    [
+        SERVICE_GET_FORECASTS,
+        LEGACY_SERVICE_GET_FORECAST,
+    ],
+)
 @pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
 @pytest.mark.parametrize(
     "config",
@@ -455,7 +473,7 @@ async def test_forecast_invalid_datetime_missing(
     ],
 )
 async def test_forecast_format_error(
-    hass: HomeAssistant, start_ha, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, start_ha, caplog: pytest.LogCaptureFixture, service: str
 ) -> None:
     """Test forecast service invalid on incorrect format."""
     for attr, _v_attr, value in [
@@ -491,7 +509,7 @@ async def test_forecast_format_error(
 
     await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {"entity_id": "weather.forecast", "type": "daily"},
         blocking=True,
         return_response=True,
@@ -499,7 +517,7 @@ async def test_forecast_format_error(
     assert "Forecasts is not a list, see Weather documentation" in caplog.text
     await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {"entity_id": "weather.forecast", "type": "hourly"},
         blocking=True,
         return_response=True,
@@ -662,6 +680,13 @@ async def test_trigger_action(
     assert state.context is context
 
 
+@pytest.mark.parametrize(
+    ("service"),
+    [
+        SERVICE_GET_FORECASTS,
+        LEGACY_SERVICE_GET_FORECAST,
+    ],
+)
 @pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
     "config",
@@ -712,8 +737,13 @@ async def test_trigger_action(
         },
     ],
 )
+@pytest.mark.freeze_time("2023-10-19 13:50:05")
 async def test_trigger_weather_services(
-    hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    start_ha,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    service: str,
 ) -> None:
     """Test trigger weather entity with services."""
     state = hass.states.get("weather.test")
@@ -776,7 +806,7 @@ async def test_trigger_weather_services(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {
             "entity_id": state.entity_id,
             "type": "daily",
@@ -784,21 +814,11 @@ async def test_trigger_weather_services(
         blocking=True,
         return_response=True,
     )
-    assert response == {
-        "forecast": [
-            {
-                "datetime": now,
-                "condition": "sunny",
-                "precipitation": 20.0,
-                "temperature": 20.0,
-                "templow": 15.0,
-            }
-        ],
-    }
+    assert response == snapshot
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {
             "entity_id": state.entity_id,
             "type": "hourly",
@@ -806,21 +826,11 @@ async def test_trigger_weather_services(
         blocking=True,
         return_response=True,
     )
-    assert response == {
-        "forecast": [
-            {
-                "datetime": now,
-                "condition": "sunny",
-                "precipitation": 20.0,
-                "temperature": 20.0,
-                "templow": 15.0,
-            }
-        ],
-    }
+    assert response == snapshot
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {
             "entity_id": state.entity_id,
             "type": "twice_daily",
@@ -828,23 +838,11 @@ async def test_trigger_weather_services(
         blocking=True,
         return_response=True,
     )
-    assert response == {
-        "forecast": [
-            {
-                "datetime": now,
-                "condition": "sunny",
-                "precipitation": 20.0,
-                "temperature": 20.0,
-                "templow": 15.0,
-                "is_daytime": True,
-            }
-        ],
-    }
+    assert response == snapshot
 
 
 async def test_restore_weather_save_state(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
+    hass: HomeAssistant, hass_storage: dict[str, Any], snapshot: SnapshotAssertion
 ) -> None:
     """Test Restore saved state for Weather trigger template."""
     assert await async_setup_component(
@@ -881,19 +879,7 @@ async def test_restore_weather_save_state(
     state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]
     assert state["entity_id"] == entity.entity_id
     extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
-    assert extra_data == {
-        "last_apparent_temperature": None,
-        "last_cloud_coverage": None,
-        "last_dew_point": None,
-        "last_humidity": "25.0",
-        "last_ozone": None,
-        "last_pressure": None,
-        "last_temperature": "15.0",
-        "last_visibility": None,
-        "last_wind_bearing": None,
-        "last_wind_gust_speed": None,
-        "last_wind_speed": None,
-    }
+    assert extra_data == snapshot
 
 
 SAVED_ATTRIBUTES_1 = {

@@ -3,20 +3,25 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
+from aiounifi.models.device import DeviceState
 from aiounifi.models.message import MessageKey
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     SCAN_INTERVAL,
     SensorDeviceClass,
+    SensorStateClass,
 )
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
+    DEVICE_STATES,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, EntityCategory
@@ -354,16 +359,28 @@ async def test_bandwidth_sensors(
 
     assert len(hass.states.async_all()) == 5
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
-    assert hass.states.get("sensor.wired_client_rx").state == "1234.0"
-    assert hass.states.get("sensor.wired_client_tx").state == "5678.0"
-    assert hass.states.get("sensor.wireless_client_rx").state == "2345.0"
-    assert hass.states.get("sensor.wireless_client_tx").state == "6789.0"
 
-    ent_reg = er.async_get(hass)
-    assert (
-        ent_reg.async_get("sensor.wired_client_rx").entity_category
-        is EntityCategory.DIAGNOSTIC
-    )
+    # Verify sensor attributes and state
+
+    wrx_sensor = hass.states.get("sensor.wired_client_rx")
+    assert wrx_sensor.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATA_RATE
+    assert wrx_sensor.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+    assert wrx_sensor.state == "1234.0"
+
+    wtx_sensor = hass.states.get("sensor.wired_client_tx")
+    assert wtx_sensor.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATA_RATE
+    assert wtx_sensor.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+    assert wtx_sensor.state == "5678.0"
+
+    wlrx_sensor = hass.states.get("sensor.wireless_client_rx")
+    assert wlrx_sensor.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATA_RATE
+    assert wlrx_sensor.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+    assert wlrx_sensor.state == "2345.0"
+
+    wltx_sensor = hass.states.get("sensor.wireless_client_tx")
+    assert wltx_sensor.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATA_RATE
+    assert wltx_sensor.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+    assert wltx_sensor.state == "6789.0"
 
     # Verify state update
 
@@ -415,6 +432,7 @@ async def test_bandwidth_sensors(
 async def test_uptime_sensors(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
     mock_unifi_websocket,
     entity_registry_enabled_by_default: None,
     initial_uptime,
@@ -436,13 +454,13 @@ async def test_uptime_sensors(
     }
 
     now = datetime(2021, 1, 1, 1, 1, 0, tzinfo=dt_util.UTC)
-    with patch("homeassistant.util.dt.now", return_value=now):
-        config_entry = await setup_unifi_integration(
-            hass,
-            aioclient_mock,
-            options=options,
-            clients_response=[uptime_client],
-        )
+    freezer.move_to(now)
+    config_entry = await setup_unifi_integration(
+        hass,
+        aioclient_mock,
+        options=options,
+        clients_response=[uptime_client],
+    )
 
     assert len(hass.states.async_all()) == 2
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
@@ -568,7 +586,7 @@ async def test_poe_port_switches(
 ) -> None:
     """Test the update_items function with some clients."""
     await setup_unifi_integration(hass, aioclient_mock, devices_response=[DEVICE_1])
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
     ent_reg = er.async_get(hass)
     ent_reg_entry = ent_reg.async_get("sensor.mock_name_port_1_poe_power")
@@ -791,8 +809,8 @@ async def test_outlet_power_readings(
     """Test the outlet power reporting on PDU devices."""
     await setup_unifi_integration(hass, aioclient_mock, devices_response=[PDU_DEVICE_1])
 
-    assert len(hass.states.async_all()) == 10
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
+    assert len(hass.states.async_all()) == 11
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 5
 
     ent_reg = er.async_get(hass)
     ent_reg_entry = ent_reg.async_get(f"sensor.{entity_id}")
@@ -840,7 +858,7 @@ async def test_device_uptime(
     now = datetime(2021, 1, 1, 1, 1, 0, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.now", return_value=now):
         await setup_unifi_integration(hass, aioclient_mock, devices_response=[device])
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
     assert hass.states.get("sensor.device_uptime").state == "2021-01-01T01:00:00+00:00"
 
     ent_reg = er.async_get(hass)
@@ -896,7 +914,7 @@ async def test_device_temperature(
     }
 
     await setup_unifi_integration(hass, aioclient_mock, devices_response=[device])
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
     assert hass.states.get("sensor.device_temperature").state == "30"
 
     ent_reg = er.async_get(hass)
@@ -909,3 +927,43 @@ async def test_device_temperature(
     device["general_temperature"] = 60
     mock_unifi_websocket(message=MessageKey.DEVICE, data=device)
     assert hass.states.get("sensor.device_temperature").state == "60"
+
+
+async def test_device_state(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_unifi_websocket
+) -> None:
+    """Verify that state sensors are working as expected."""
+    device = {
+        "board_rev": 3,
+        "device_id": "mock-id",
+        "general_temperature": 30,
+        "has_fan": True,
+        "has_temperature": True,
+        "fan_level": 0,
+        "ip": "10.0.1.1",
+        "last_seen": 1562600145,
+        "mac": "00:00:00:00:01:01",
+        "model": "US16P150",
+        "name": "Device",
+        "next_interval": 20,
+        "overheating": True,
+        "state": 1,
+        "type": "usw",
+        "upgradable": True,
+        "uptime": 60,
+        "version": "4.0.42.10433",
+    }
+
+    await setup_unifi_integration(hass, aioclient_mock, devices_response=[device])
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
+
+    ent_reg = er.async_get(hass)
+    assert (
+        ent_reg.async_get("sensor.device_state").entity_category
+        is EntityCategory.DIAGNOSTIC
+    )
+
+    for i in list(map(int, DeviceState)):
+        device["state"] = i
+        mock_unifi_websocket(message=MessageKey.DEVICE, data=device)
+        assert hass.states.get("sensor.device_state").state == DEVICE_STATES[i]

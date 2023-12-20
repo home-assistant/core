@@ -49,12 +49,12 @@ async def test_migrate_unique_ids(
     entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test successful migration of entity unique_ids."""
     mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
     mock_config_entry.add_to_hass(hass)
 
-    entity_registry = er.async_get(hass)
     entity: er.RegistryEntry = entity_registry.async_get_or_create(
         **entitydata,
         config_entry=mock_config_entry,
@@ -95,12 +95,11 @@ async def test_dont_migrate_unique_ids(
     entitydata: dict,
     old_unique_id: str,
     new_unique_id: str,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test successful migration of entity unique_ids."""
     mock_config_entry = MockConfigEntry(**FIXTURE_CONFIG_ENTRY)
     mock_config_entry.add_to_hass(hass)
-
-    entity_registry = er.async_get(hass)
 
     # create existing entry with new_unique_id
     existing_entity = entity_registry.async_get_or_create(

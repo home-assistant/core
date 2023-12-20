@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from contextlib import suppress
-import functools
 import logging
 from typing import Any
 
@@ -31,7 +30,7 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 from . import subscription
@@ -39,16 +38,30 @@ from .config import MQTT_BASE_SCHEMA
 from .const import (
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
+    CONF_PAYLOAD_CLOSE,
+    CONF_PAYLOAD_OPEN,
+    CONF_PAYLOAD_STOP,
+    CONF_POSITION_CLOSED,
+    CONF_POSITION_OPEN,
     CONF_QOS,
     CONF_RETAIN,
+    CONF_STATE_CLOSED,
+    CONF_STATE_CLOSING,
+    CONF_STATE_OPEN,
+    CONF_STATE_OPENING,
     CONF_STATE_TOPIC,
     DEFAULT_OPTIMISTIC,
+    DEFAULT_PAYLOAD_CLOSE,
+    DEFAULT_PAYLOAD_OPEN,
+    DEFAULT_POSITION_CLOSED,
+    DEFAULT_POSITION_OPEN,
+    DEFAULT_RETAIN,
 )
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
-    async_setup_entry_helper,
+    async_setup_entity_entry_helper,
     write_state_on_attr_change,
 )
 from .models import MqttCommandTemplate, MqttValueTemplate, ReceiveMessage
@@ -65,15 +78,6 @@ CONF_TILT_COMMAND_TEMPLATE = "tilt_command_template"
 CONF_TILT_STATUS_TOPIC = "tilt_status_topic"
 CONF_TILT_STATUS_TEMPLATE = "tilt_status_template"
 
-CONF_PAYLOAD_CLOSE = "payload_close"
-CONF_PAYLOAD_OPEN = "payload_open"
-CONF_PAYLOAD_STOP = "payload_stop"
-CONF_POSITION_CLOSED = "position_closed"
-CONF_POSITION_OPEN = "position_open"
-CONF_STATE_CLOSED = "state_closed"
-CONF_STATE_CLOSING = "state_closing"
-CONF_STATE_OPEN = "state_open"
-CONF_STATE_OPENING = "state_opening"
 CONF_STATE_STOPPED = "state_stopped"
 CONF_TILT_CLOSED_POSITION = "tilt_closed_value"
 CONF_TILT_MAX = "tilt_max"
@@ -85,13 +89,10 @@ TILT_PAYLOAD = "tilt"
 COVER_PAYLOAD = "cover"
 
 DEFAULT_NAME = "MQTT Cover"
-DEFAULT_PAYLOAD_CLOSE = "CLOSE"
-DEFAULT_PAYLOAD_OPEN = "OPEN"
-DEFAULT_PAYLOAD_STOP = "STOP"
-DEFAULT_POSITION_CLOSED = 0
-DEFAULT_POSITION_OPEN = 100
-DEFAULT_RETAIN = False
+
 DEFAULT_STATE_STOPPED = "stopped"
+DEFAULT_PAYLOAD_STOP = "STOP"
+
 DEFAULT_TILT_CLOSED_POSITION = 0
 DEFAULT_TILT_MAX = 100
 DEFAULT_TILT_MIN = 0
@@ -220,21 +221,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT cover through YAML and through MQTT discovery."""
-    setup = functools.partial(
-        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
+    await async_setup_entity_entry_helper(
+        hass,
+        config_entry,
+        MqttCover,
+        cover.DOMAIN,
+        async_add_entities,
+        DISCOVERY_SCHEMA,
+        PLATFORM_SCHEMA_MODERN,
     )
-    await async_setup_entry_helper(hass, cover.DOMAIN, setup, DISCOVERY_SCHEMA)
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    async_add_entities: AddEntitiesCallback,
-    config: ConfigType,
-    config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the MQTT Cover."""
-    async_add_entities([MqttCover(hass, config, config_entry, discovery_data)])
 
 
 class MqttCover(MqttEntity, CoverEntity):
@@ -387,7 +382,11 @@ class MqttCover(MqttEntity, CoverEntity):
                         else STATE_OPEN
                     )
                 else:
-                    state = STATE_CLOSED if self.state == STATE_CLOSING else STATE_OPEN
+                    state = (
+                        STATE_CLOSED
+                        if self.state in [STATE_CLOSED, STATE_CLOSING]
+                        else STATE_OPEN
+                    )
             elif payload == self._config[CONF_STATE_OPENING]:
                 state = STATE_OPENING
             elif payload == self._config[CONF_STATE_CLOSING]:

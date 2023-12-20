@@ -442,7 +442,7 @@ async def test_smart_strip_effects(hass: HomeAssistant) -> None:
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
-    assert ATTR_EFFECT not in state.attributes
+    assert state.attributes[ATTR_EFFECT] is None
 
     strip.is_off = True
     strip.is_on = False
@@ -451,7 +451,7 @@ async def test_smart_strip_effects(hass: HomeAssistant) -> None:
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
-    assert ATTR_EFFECT not in state.attributes
+    assert state.attributes[ATTR_EFFECT] is None
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -574,7 +574,7 @@ async def test_smart_strip_custom_random_effect(hass: HomeAssistant) -> None:
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
-    assert ATTR_EFFECT not in state.attributes
+    assert state.attributes[ATTR_EFFECT] is None
 
     await hass.services.async_call(
         LIGHT_DOMAIN,

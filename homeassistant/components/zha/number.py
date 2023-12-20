@@ -278,7 +278,7 @@ async def async_setup_entry(
 class ZhaNumber(ZhaEntity, NumberEntity):
     """Representation of a ZHA Number entity."""
 
-    _attr_name: str = "Number"
+    _attr_translation_key: str = "number"
 
     def __init__(
         self,
@@ -381,7 +381,7 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_native_step: float = 1.0
     _attr_multiplier: float = 1
-    _zcl_attribute: str
+    _attribute_name: str
 
     @classmethod
     def create_entity(
@@ -397,13 +397,13 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
         """
         cluster_handler = cluster_handlers[0]
         if (
-            cls._zcl_attribute in cluster_handler.cluster.unsupported_attributes
-            or cls._zcl_attribute not in cluster_handler.cluster.attributes_by_name
-            or cluster_handler.cluster.get(cls._zcl_attribute) is None
+            cls._attribute_name in cluster_handler.cluster.unsupported_attributes
+            or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
+            or cluster_handler.cluster.get(cls._attribute_name) is None
         ):
             _LOGGER.debug(
                 "%s is not supported - skipping %s entity creation",
-                cls._zcl_attribute,
+                cls._attribute_name,
                 cls.__name__,
             )
             return None
@@ -425,14 +425,14 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
     def native_value(self) -> float:
         """Return the current value."""
         return (
-            self._cluster_handler.cluster.get(self._zcl_attribute)
+            self._cluster_handler.cluster.get(self._attribute_name)
             * self._attr_multiplier
         )
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value from HA."""
         await self._cluster_handler.write_attributes_safe(
-            {self._zcl_attribute: int(value / self._attr_multiplier)}
+            {self._attribute_name: int(value / self._attr_multiplier)}
         )
         self.async_write_ha_state()
 
@@ -442,7 +442,7 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
         _LOGGER.debug("polling current state")
         if self._cluster_handler:
             value = await self._cluster_handler.get_attribute_value(
-                self._zcl_attribute, from_cache=False
+                self._attribute_name, from_cache=False
             )
             _LOGGER.debug("read value=%s", value)
 
@@ -458,8 +458,8 @@ class AqaraMotionDetectionInterval(ZHANumberConfigurationEntity):
     _unique_id_suffix = "detection_interval"
     _attr_native_min_value: float = 2
     _attr_native_max_value: float = 65535
-    _zcl_attribute: str = "detection_interval"
-    _attr_name = "Detection interval"
+    _attribute_name = "detection_interval"
+    _attr_translation_key: str = "detection_interval"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_LEVEL)
@@ -470,8 +470,8 @@ class OnOffTransitionTimeConfigurationEntity(ZHANumberConfigurationEntity):
     _unique_id_suffix = "on_off_transition_time"
     _attr_native_min_value: float = 0x0000
     _attr_native_max_value: float = 0xFFFF
-    _zcl_attribute: str = "on_off_transition_time"
-    _attr_name = "On/Off transition time"
+    _attribute_name = "on_off_transition_time"
+    _attr_translation_key: str = "on_off_transition_time"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_LEVEL)
@@ -482,8 +482,8 @@ class OnLevelConfigurationEntity(ZHANumberConfigurationEntity):
     _unique_id_suffix = "on_level"
     _attr_native_min_value: float = 0x00
     _attr_native_max_value: float = 0xFF
-    _zcl_attribute: str = "on_level"
-    _attr_name = "On level"
+    _attribute_name = "on_level"
+    _attr_translation_key: str = "on_level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_LEVEL)
@@ -494,8 +494,8 @@ class OnTransitionTimeConfigurationEntity(ZHANumberConfigurationEntity):
     _unique_id_suffix = "on_transition_time"
     _attr_native_min_value: float = 0x0000
     _attr_native_max_value: float = 0xFFFE
-    _zcl_attribute: str = "on_transition_time"
-    _attr_name = "On transition time"
+    _attribute_name = "on_transition_time"
+    _attr_translation_key: str = "on_transition_time"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_LEVEL)
@@ -506,8 +506,8 @@ class OffTransitionTimeConfigurationEntity(ZHANumberConfigurationEntity):
     _unique_id_suffix = "off_transition_time"
     _attr_native_min_value: float = 0x0000
     _attr_native_max_value: float = 0xFFFE
-    _zcl_attribute: str = "off_transition_time"
-    _attr_name = "Off transition time"
+    _attribute_name = "off_transition_time"
+    _attr_translation_key: str = "off_transition_time"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_LEVEL)
@@ -518,8 +518,8 @@ class DefaultMoveRateConfigurationEntity(ZHANumberConfigurationEntity):
     _unique_id_suffix = "default_move_rate"
     _attr_native_min_value: float = 0x00
     _attr_native_max_value: float = 0xFE
-    _zcl_attribute: str = "default_move_rate"
-    _attr_name = "Default move rate"
+    _attribute_name = "default_move_rate"
+    _attr_translation_key: str = "default_move_rate"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_LEVEL)
@@ -530,8 +530,8 @@ class StartUpCurrentLevelConfigurationEntity(ZHANumberConfigurationEntity):
     _unique_id_suffix = "start_up_current_level"
     _attr_native_min_value: float = 0x00
     _attr_native_max_value: float = 0xFF
-    _zcl_attribute: str = "start_up_current_level"
-    _attr_name = "Start-up current level"
+    _attribute_name = "start_up_current_level"
+    _attr_translation_key: str = "start_up_current_level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_COLOR)
@@ -542,8 +542,8 @@ class StartUpColorTemperatureConfigurationEntity(ZHANumberConfigurationEntity):
     _unique_id_suffix = "start_up_color_temperature"
     _attr_native_min_value: float = 153
     _attr_native_max_value: float = 500
-    _zcl_attribute: str = "start_up_color_temperature"
-    _attr_name = "Start-up color temperature"
+    _attribute_name = "start_up_color_temperature"
+    _attr_translation_key: str = "start_up_color_temperature"
 
     def __init__(
         self,
@@ -575,8 +575,8 @@ class TimerDurationMinutes(ZHANumberConfigurationEntity):
     _attr_native_min_value: float = 0x00
     _attr_native_max_value: float = 0x257
     _attr_native_unit_of_measurement: str | None = UNITS[72]
-    _zcl_attribute: str = "timer_duration"
-    _attr_name = "Timer duration"
+    _attribute_name = "timer_duration"
+    _attr_translation_key: str = "timer_duration"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="ikea_airpurifier")
@@ -590,8 +590,8 @@ class FilterLifeTime(ZHANumberConfigurationEntity):
     _attr_native_min_value: float = 0x00
     _attr_native_max_value: float = 0xFFFFFFFF
     _attr_native_unit_of_measurement: str | None = UNITS[72]
-    _zcl_attribute: str = "filter_life_time"
-    _attr_name = "Filter life time"
+    _attribute_name = "filter_life_time"
+    _attr_translation_key: str = "filter_life_time"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -606,8 +606,8 @@ class TiRouterTransmitPower(ZHANumberConfigurationEntity):
     _unique_id_suffix = "transmit_power"
     _attr_native_min_value: float = -20
     _attr_native_max_value: float = 20
-    _zcl_attribute: str = "transmit_power"
-    _attr_name = "Transmit power"
+    _attribute_name = "transmit_power"
+    _attr_translation_key: str = "transmit_power"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
@@ -620,8 +620,8 @@ class InovelliRemoteDimmingUpSpeed(ZHANumberConfigurationEntity):
     _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 126
-    _zcl_attribute: str = "dimming_speed_up_remote"
-    _attr_name: str = "Remote dimming up speed"
+    _attribute_name = "dimming_speed_up_remote"
+    _attr_translation_key: str = "dimming_speed_up_remote"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
@@ -629,13 +629,13 @@ class InovelliRemoteDimmingUpSpeed(ZHANumberConfigurationEntity):
 class InovelliButtonDelay(ZHANumberConfigurationEntity):
     """Inovelli button delay configuration entity."""
 
-    _unique_id_suffix = "dimming_speed_up_local"
+    _unique_id_suffix = "button_delay"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 9
-    _zcl_attribute: str = "button_delay"
-    _attr_name: str = "Button delay"
+    _attribute_name = "button_delay"
+    _attr_translation_key: str = "button_delay"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
@@ -648,8 +648,8 @@ class InovelliLocalDimmingUpSpeed(ZHANumberConfigurationEntity):
     _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 127
-    _zcl_attribute: str = "dimming_speed_up_local"
-    _attr_name: str = "Local dimming up speed"
+    _attribute_name = "dimming_speed_up_local"
+    _attr_translation_key: str = "dimming_speed_up_local"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
@@ -662,8 +662,8 @@ class InovelliLocalRampRateOffToOn(ZHANumberConfigurationEntity):
     _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 127
-    _zcl_attribute: str = "ramp_rate_off_to_on_local"
-    _attr_name: str = "Local ramp rate off to on"
+    _attribute_name = "ramp_rate_off_to_on_local"
+    _attr_translation_key: str = "ramp_rate_off_to_on_local"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
@@ -676,8 +676,8 @@ class InovelliRemoteDimmingSpeedOffToOn(ZHANumberConfigurationEntity):
     _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 127
-    _zcl_attribute: str = "ramp_rate_off_to_on_remote"
-    _attr_name: str = "Remote ramp rate off to on"
+    _attribute_name = "ramp_rate_off_to_on_remote"
+    _attr_translation_key: str = "ramp_rate_off_to_on_remote"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
@@ -690,8 +690,8 @@ class InovelliRemoteDimmingDownSpeed(ZHANumberConfigurationEntity):
     _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 127
-    _zcl_attribute: str = "dimming_speed_down_remote"
-    _attr_name: str = "Remote dimming down speed"
+    _attribute_name = "dimming_speed_down_remote"
+    _attr_translation_key: str = "dimming_speed_down_remote"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
@@ -704,8 +704,8 @@ class InovelliLocalDimmingDownSpeed(ZHANumberConfigurationEntity):
     _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 127
-    _zcl_attribute: str = "dimming_speed_down_local"
-    _attr_name: str = "Local dimming down speed"
+    _attribute_name = "dimming_speed_down_local"
+    _attr_translation_key: str = "dimming_speed_down_local"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
@@ -718,8 +718,8 @@ class InovelliLocalRampRateOnToOff(ZHANumberConfigurationEntity):
     _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 127
-    _zcl_attribute: str = "ramp_rate_on_to_off_local"
-    _attr_name: str = "Local ramp rate on to off"
+    _attribute_name = "ramp_rate_on_to_off_local"
+    _attr_translation_key: str = "ramp_rate_on_to_off_local"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
@@ -732,8 +732,8 @@ class InovelliRemoteDimmingSpeedOnToOff(ZHANumberConfigurationEntity):
     _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 127
-    _zcl_attribute: str = "ramp_rate_on_to_off_remote"
-    _attr_name: str = "Remote ramp rate on to off"
+    _attribute_name = "ramp_rate_on_to_off_remote"
+    _attr_translation_key: str = "ramp_rate_on_to_off_remote"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
@@ -746,8 +746,8 @@ class InovelliMinimumLoadDimmingLevel(ZHANumberConfigurationEntity):
     _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 1
     _attr_native_max_value: float = 254
-    _zcl_attribute: str = "minimum_level"
-    _attr_name: str = "Minimum load dimming level"
+    _attribute_name = "minimum_level"
+    _attr_translation_key: str = "minimum_level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
@@ -760,8 +760,8 @@ class InovelliMaximumLoadDimmingLevel(ZHANumberConfigurationEntity):
     _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 2
     _attr_native_max_value: float = 255
-    _zcl_attribute: str = "maximum_level"
-    _attr_name: str = "Maximum load dimming level"
+    _attribute_name = "maximum_level"
+    _attr_translation_key: str = "maximum_level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
@@ -774,8 +774,24 @@ class InovelliAutoShutoffTimer(ZHANumberConfigurationEntity):
     _attr_icon: str = ICONS[14]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 32767
-    _zcl_attribute: str = "auto_off_timer"
-    _attr_name: str = "Automatic switch shutoff timer"
+    _attribute_name = "auto_off_timer"
+    _attr_translation_key: str = "auto_off_timer"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_INOVELLI, models={"VZM35-SN"}
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class InovelliQuickStartTime(ZHANumberConfigurationEntity):
+    """Inovelli fan quick start time configuration entity."""
+
+    _unique_id_suffix = "quick_start_time"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[3]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 10
+    _attribute_name = "quick_start_time"
+    _attr_translation_key: str = "quick_start_time"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
@@ -788,8 +804,8 @@ class InovelliLoadLevelIndicatorTimeout(ZHANumberConfigurationEntity):
     _attr_icon: str = ICONS[14]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 11
-    _zcl_attribute: str = "load_level_indicator_timeout"
-    _attr_name: str = "Load level indicator timeout"
+    _attribute_name = "load_level_indicator_timeout"
+    _attr_translation_key: str = "load_level_indicator_timeout"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
@@ -802,8 +818,8 @@ class InovelliDefaultAllLEDOnColor(ZHANumberConfigurationEntity):
     _attr_icon: str = ICONS[15]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 255
-    _zcl_attribute: str = "led_color_when_on"
-    _attr_name: str = "Default all LED on color"
+    _attribute_name = "led_color_when_on"
+    _attr_translation_key: str = "led_color_when_on"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
@@ -816,8 +832,8 @@ class InovelliDefaultAllLEDOffColor(ZHANumberConfigurationEntity):
     _attr_icon: str = ICONS[15]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 255
-    _zcl_attribute: str = "led_color_when_off"
-    _attr_name: str = "Default all LED off color"
+    _attribute_name = "led_color_when_off"
+    _attr_translation_key: str = "led_color_when_off"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
@@ -830,8 +846,8 @@ class InovelliDefaultAllLEDOnIntensity(ZHANumberConfigurationEntity):
     _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 100
-    _zcl_attribute: str = "led_intensity_when_on"
-    _attr_name: str = "Default all LED on intensity"
+    _attribute_name = "led_intensity_when_on"
+    _attr_translation_key: str = "led_intensity_when_on"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
@@ -844,8 +860,8 @@ class InovelliDefaultAllLEDOffIntensity(ZHANumberConfigurationEntity):
     _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 100
-    _zcl_attribute: str = "led_intensity_when_off"
-    _attr_name: str = "Default all LED off intensity"
+    _attribute_name = "led_intensity_when_off"
+    _attr_translation_key: str = "led_intensity_when_off"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
@@ -858,8 +874,8 @@ class InovelliDoubleTapUpLevel(ZHANumberConfigurationEntity):
     _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 2
     _attr_native_max_value: float = 254
-    _zcl_attribute: str = "double_tap_up_level"
-    _attr_name: str = "Double tap up level"
+    _attribute_name = "double_tap_up_level"
+    _attr_translation_key: str = "double_tap_up_level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
@@ -872,8 +888,8 @@ class InovelliDoubleTapDownLevel(ZHANumberConfigurationEntity):
     _attr_icon: str = ICONS[16]
     _attr_native_min_value: float = 0
     _attr_native_max_value: float = 254
-    _zcl_attribute: str = "double_tap_down_level"
-    _attr_name: str = "Double tap down level"
+    _attribute_name = "double_tap_down_level"
+    _attr_translation_key: str = "double_tap_down_level"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -887,8 +903,9 @@ class AqaraPetFeederServingSize(ZHANumberConfigurationEntity):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_native_min_value: float = 1
     _attr_native_max_value: float = 10
-    _zcl_attribute: str = "serving_size"
-    _attr_name: str = "Serving to dispense"
+    _attribute_name = "serving_size"
+    _attr_translation_key: str = "serving_size"
+
     _attr_mode: NumberMode = NumberMode.BOX
     _attr_icon: str = "mdi:counter"
 
@@ -904,8 +921,9 @@ class AqaraPetFeederPortionWeight(ZHANumberConfigurationEntity):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_native_min_value: float = 1
     _attr_native_max_value: float = 100
-    _zcl_attribute: str = "portion_weight"
-    _attr_name: str = "Portion weight"
+    _attribute_name = "portion_weight"
+    _attr_translation_key: str = "portion_weight"
+
     _attr_mode: NumberMode = NumberMode.BOX
     _attr_native_unit_of_measurement: str = UnitOfMass.GRAMS
     _attr_icon: str = "mdi:weight-gram"
@@ -923,8 +941,9 @@ class AqaraThermostatAwayTemp(ZHANumberConfigurationEntity):
     _attr_native_min_value: float = 5
     _attr_native_max_value: float = 30
     _attr_multiplier: float = 0.01
-    _zcl_attribute: str = "away_preset_temperature"
-    _attr_name: str = "Away preset temperature"
+    _attribute_name = "away_preset_temperature"
+    _attr_translation_key: str = "away_preset_temperature"
+
     _attr_mode: NumberMode = NumberMode.SLIDER
     _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
     _attr_icon: str = ICONS[0]

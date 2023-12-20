@@ -26,14 +26,14 @@ from .models import DomainData
 _T = TypeVar("_T")
 
 
-@dataclass
+@dataclass(frozen=True)
 class SFRBoxBinarySensorMixin(Generic[_T]):
     """Mixin for SFR Box sensors."""
 
     value_fn: Callable[[_T], bool | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SFRBoxBinarySensorEntityDescription(
     BinarySensorEntityDescription, SFRBoxBinarySensorMixin[_T]
 ):

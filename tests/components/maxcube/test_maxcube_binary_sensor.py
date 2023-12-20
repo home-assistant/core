@@ -23,10 +23,12 @@ BATTERY_ENTITY_ID = f"{ENTITY_ID}_battery"
 
 
 async def test_window_shuttler(
-    hass: HomeAssistant, cube: MaxCube, windowshutter: MaxWindowShutter
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    cube: MaxCube,
+    windowshutter: MaxWindowShutter,
 ) -> None:
     """Test a successful setup with a shuttler device."""
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_is_registered(ENTITY_ID)
     entity = entity_registry.async_get(ENTITY_ID)
     assert entity.unique_id == "AABBCCDD03"
@@ -47,10 +49,12 @@ async def test_window_shuttler(
 
 
 async def test_window_shuttler_battery(
-    hass: HomeAssistant, cube: MaxCube, windowshutter: MaxWindowShutter
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    cube: MaxCube,
+    windowshutter: MaxWindowShutter,
 ) -> None:
     """Test battery binary_state with a shuttler device."""
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_is_registered(BATTERY_ENTITY_ID)
     entity = entity_registry.async_get(BATTERY_ENTITY_ID)
     assert entity.unique_id == "AABBCCDD03_battery"
