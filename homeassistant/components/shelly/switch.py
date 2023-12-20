@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import DOMAIN, GAS_VALVE_OPEN_STATES, LOGGER, MODEL_WALL_DISPLAY
+from .const import DOMAIN, GAS_VALVE_OPEN_STATES, MODEL_WALL_DISPLAY
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .entity import (
     BlockEntityDescription,
@@ -208,7 +208,6 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
         entity_automations = automations_with_entity(self.hass, self.entity_id)
         entity_scripts = scripts_with_entity(self.hass, self.entity_id)
         for item in entity_automations + entity_scripts:
-            LOGGER.warning(f"deprecated_valve_{self.entity_id}_{item}")
             async_create_issue(
                 self.hass,
                 DOMAIN,
