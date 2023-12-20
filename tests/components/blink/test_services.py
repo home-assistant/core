@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_PIN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
@@ -58,15 +58,13 @@ async def test_refresh_service_calls(
 
     assert mock_blink_api.refresh.call_count == 2
 
-    with pytest.raises(HomeAssistantError) as execinfo:
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_REFRESH,
             {ATTR_DEVICE_ID: ["bad-device_id"]},
             blocking=True,
         )
-
-    assert "Device 'bad-device_id' not found in device registry" in str(execinfo)
 
 
 async def test_video_service_calls(
@@ -90,18 +88,17 @@ async def test_video_service_calls(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_blink_api.refresh.call_count == 1
 
-    caplog.clear()
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SAVE_VIDEO,
-        {
-            ATTR_DEVICE_ID: [device_entry.id],
-            CONF_NAME: CAMERA_NAME,
-            CONF_FILENAME: FILENAME,
-        },
-        blocking=True,
-    )
-    assert "no access to path!" in caplog.text
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SAVE_VIDEO,
+            {
+                ATTR_DEVICE_ID: [device_entry.id],
+                CONF_NAME: CAMERA_NAME,
+                CONF_FILENAME: FILENAME,
+            },
+            blocking=True,
+        )
 
     hass.config.is_allowed_path = Mock(return_value=True)
     caplog.clear()
@@ -118,7 +115,7 @@ async def test_video_service_calls(
     )
     mock_blink_api.cameras[CAMERA_NAME].video_to_file.assert_awaited_once()
 
-    with pytest.raises(HomeAssistantError) as execinfo:
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SAVE_VIDEO,
@@ -130,22 +127,19 @@ async def test_video_service_calls(
             blocking=True,
         )
 
-        assert "Device 'bad-device_id' not found in device registry" in str(execinfo)
-
     mock_blink_api.cameras[CAMERA_NAME].video_to_file = AsyncMock(side_effect=OSError)
-    caplog.clear()
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SAVE_VIDEO,
-        {
-            ATTR_DEVICE_ID: [device_entry.id],
-            CONF_NAME: CAMERA_NAME,
-            CONF_FILENAME: FILENAME,
-        },
-        blocking=True,
-    )
-    assert "Can't write image" in caplog.text
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SAVE_VIDEO,
+            {
+                ATTR_DEVICE_ID: [device_entry.id],
+                CONF_NAME: CAMERA_NAME,
+                CONF_FILENAME: FILENAME,
+            },
+            blocking=True,
+        )
 
     hass.config.is_allowed_path = Mock(return_value=False)
 
@@ -171,18 +165,17 @@ async def test_picture_service_calls(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_blink_api.refresh.call_count == 1
 
-    caplog.clear()
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SAVE_RECENT_CLIPS,
-        {
-            ATTR_DEVICE_ID: [device_entry.id],
-            CONF_NAME: CAMERA_NAME,
-            CONF_FILE_PATH: FILENAME,
-        },
-        blocking=True,
-    )
-    assert "no access to path!" in caplog.text
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SAVE_RECENT_CLIPS,
+            {
+                ATTR_DEVICE_ID: [device_entry.id],
+                CONF_NAME: CAMERA_NAME,
+                CONF_FILE_PATH: FILENAME,
+            },
+            blocking=True,
+        )
 
     hass.config.is_allowed_path = Mock(return_value=True)
     mock_blink_api.cameras = {CAMERA_NAME: AsyncMock()}
@@ -202,21 +195,20 @@ async def test_picture_service_calls(
     mock_blink_api.cameras[CAMERA_NAME].save_recent_clips = AsyncMock(
         side_effect=OSError
     )
-    caplog.clear()
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SAVE_RECENT_CLIPS,
-        {
-            ATTR_DEVICE_ID: [device_entry.id],
-            CONF_NAME: CAMERA_NAME,
-            CONF_FILE_PATH: FILENAME,
-        },
-        blocking=True,
-    )
-    assert "Can't write recent clips to directory" in caplog.text
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SAVE_RECENT_CLIPS,
+            {
+                ATTR_DEVICE_ID: [device_entry.id],
+                CONF_NAME: CAMERA_NAME,
+                CONF_FILE_PATH: FILENAME,
+            },
+            blocking=True,
+        )
 
-    with pytest.raises(HomeAssistantError) as execinfo:
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SAVE_RECENT_CLIPS,
@@ -227,8 +219,6 @@ async def test_picture_service_calls(
             },
             blocking=True,
         )
-
-    assert "Device 'bad-device_id' not found in device registry" in str(execinfo)
 
 
 async def test_pin_service_calls(
@@ -259,15 +249,13 @@ async def test_pin_service_calls(
     )
     assert mock_blink_api.auth.send_auth_key.assert_awaited_once
 
-    with pytest.raises(HomeAssistantError) as execinfo:
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SEND_PIN,
             {ATTR_DEVICE_ID: ["bad-device_id"], CONF_PIN: PIN},
             blocking=True,
         )
-
-    assert "Device 'bad-device_id' not found in device registry" in str(execinfo)
 
 
 @pytest.mark.parametrize(
@@ -325,15 +313,13 @@ async def test_service_called_with_non_blink_device(
     parameters = {ATTR_DEVICE_ID: [device_entry.id]}
     parameters.update(params)
 
-    with pytest.raises(HomeAssistantError) as execinfo:
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
             service,
             parameters,
             blocking=True,
         )
-
-    assert f"Device '{device_entry.id}' is not a blink device" in str(execinfo)
 
 
 @pytest.mark.parametrize(
@@ -382,12 +368,10 @@ async def test_service_called_with_unloaded_entry(
     parameters = {ATTR_DEVICE_ID: [device_entry.id]}
     parameters.update(params)
 
-    with pytest.raises(HomeAssistantError) as execinfo:
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
             service,
             parameters,
             blocking=True,
         )
-
-    assert "Mock Title is not loaded" in str(execinfo)

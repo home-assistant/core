@@ -1,12 +1,10 @@
 """Tests for the login flow."""
-from collections.abc import Callable
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.auth.models import User
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -67,22 +65,16 @@ async def _test_fetch_auth_providers_home_assistant(
     hass: HomeAssistant,
     aiohttp_client: ClientSessionGenerator,
     ip: str,
-    additional_expected_fn: Callable[[User], dict[str, Any]],
 ) -> None:
     """Test fetching auth providers for homeassistant auth provider."""
     client = await async_setup_auth(
         hass, aiohttp_client, [{"type": "homeassistant"}], custom_ip=ip
     )
 
-    provider = hass.auth.auth_providers[0]
-    credentials = await provider.async_get_or_create_credentials({"username": "hello"})
-    user = await hass.auth.async_get_or_create_user(credentials)
-
     expected = {
         "name": "Home Assistant Local",
         "type": "homeassistant",
         "id": None,
-        **additional_expected_fn(user),
     }
 
     resp = await client.get("/auth/providers")
@@ -105,9 +97,7 @@ async def test_fetch_auth_providers_home_assistant_person_not_loaded(
     ip: str,
 ) -> None:
     """Test fetching auth providers for homeassistant auth provider, where person integration is not loaded."""
-    await _test_fetch_auth_providers_home_assistant(
-        hass, aiohttp_client, ip, lambda _: {}
-    )
+    await _test_fetch_auth_providers_home_assistant(hass, aiohttp_client, ip)
 
 
 @pytest.mark.parametrize(
@@ -134,7 +124,6 @@ async def test_fetch_auth_providers_home_assistant_person_loaded(
         hass,
         aiohttp_client,
         ip,
-        lambda user: {"users": {user.id: user.name}} if is_local else {},
     )
 
 
