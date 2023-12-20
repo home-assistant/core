@@ -28,7 +28,6 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             hass,
             _LOGGER,
             name=host,
-            update_method=self._async_update_data,
             update_interval=datetime.timedelta(seconds=DEFAULT_INTERVAL),
         )
         self._ccm15 = CCM15Device(host, port, DEFAULT_TIMEOUT)
