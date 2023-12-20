@@ -121,7 +121,6 @@ class Sensor(ZhaEntity, SensorEntity):
     _attribute_name: int | str | None = None
     _divisor: int = 1
     _multiplier: int | float = 1
-    _attr_suggested_display_precision: int = 1
 
     def __init__(
         self,
@@ -228,7 +227,7 @@ class Battery(Sensor):
     def formatter(value: int) -> int | float | None:
         """Return the state of the entity."""
         # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
-        if not isinstance(value, numbers.Number) or value == -1 or value == 255:
+        if not isinstance(value, numbers.Number) or value == -1:
             return None
         return value / 2
 
