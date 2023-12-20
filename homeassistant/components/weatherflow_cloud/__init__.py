@@ -18,7 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass=hass,
         config_entry=entry,
     )
-    await data_coordinator._async_update_data()  # pylint: disable=protected-access
+    await data_coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data_coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
