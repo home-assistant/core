@@ -92,7 +92,7 @@
         "name": "Windows"
       },
       "charge_state_charge_port_door_open": {
-        "name": "Charge Port Door"
+        "name": "Charge port door"
       }
     },
     "binary_sensor": {
