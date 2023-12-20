@@ -75,10 +75,10 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 # Right now this should never be called if the cloud api is the primary api,
                 # but in the future if it is, a new else should be added.
 
-    async def release(self) -> None:
+    def release(self) -> None:
         """Disconnect from API."""
-        await self.api.async_disconnect()
-        await self.cloud_api.async_disconnect()
+        self.api.release()
+        self.cloud_api.release()
 
     async def _update_device_prop(self) -> None:
         """Update device properties."""

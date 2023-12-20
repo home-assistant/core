@@ -74,6 +74,11 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
             return EntityCategory.DIAGNOSTIC
         return None
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Release cloud api when removed from Hass as no other entities use it."""
+        await super().async_will_remove_from_hass()
+        self.cloud_api.release()
+
     @property
     def is_selected(self) -> bool:
         """Return if this map is the currently selected map."""

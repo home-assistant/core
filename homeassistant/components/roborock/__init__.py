@@ -141,14 +141,9 @@ async def setup_device(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle removal of an entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        await asyncio.gather(
-            *(
-                coordinator.release()
-                for coordinator in hass.data[DOMAIN][entry.entry_id].values()
-            )
-        )
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        for coordinator in hass.data[DOMAIN][entry.entry_id].values():
+            coordinator.release()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
