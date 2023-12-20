@@ -121,7 +121,6 @@ class Sensor(ZhaEntity, SensorEntity):
     _attribute_name: int | str | None = None
     _divisor: int = 1
     _multiplier: int | float = 1
-    _attr_suggested_display_precision: int = 1
 
     def __init__(
         self,
