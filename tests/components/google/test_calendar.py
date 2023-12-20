@@ -586,7 +586,7 @@ async def test_future_event_update_behavior(
 ) -> None:
     """Test an future event that becomes active."""
     now = dt_util.now()
-    one_hour_from_now = now + datetime.timedelta(minutes=55)
+    one_hour_from_now = now + datetime.timedelta(minutes=60)
     end_event = one_hour_from_now + datetime.timedelta(minutes=90)
     event = {
         **TEST_EVENT,
@@ -602,7 +602,7 @@ async def test_future_event_update_behavior(
     assert state.state == STATE_OFF
 
     # Advance time until event has started
-    now += datetime.timedelta(minutes=55)
+    now += datetime.timedelta(minutes=60)
     freezer.move_to(now)
     async_fire_time_changed(hass, now)
     await hass.async_block_till_done()
