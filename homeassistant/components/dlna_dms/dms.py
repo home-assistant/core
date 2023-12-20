@@ -124,7 +124,7 @@ class ActionError(DlnaDmsDeviceError):
 
 
 def catch_request_errors(
-    func: Callable[[_DlnaDmsDeviceMethod, str], Coroutine[Any, Any, _R]]
+    func: Callable[[_DlnaDmsDeviceMethod, str], Coroutine[Any, Any, _R]],
 ) -> Callable[[_DlnaDmsDeviceMethod, str], Coroutine[Any, Any, _R]]:
     """Catch UpnpError errors."""
 
