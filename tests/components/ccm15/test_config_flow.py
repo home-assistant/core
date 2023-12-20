@@ -65,6 +65,7 @@ async def test_form_invalid_host(
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
     assert len(mock_setup_entry.mock_calls) == 0
 
 
