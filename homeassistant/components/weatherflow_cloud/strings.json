@@ -5,8 +5,8 @@
         "description": "Set up a WeatherFlow Forecast Station",
         "title": "WeatherFlow Forecast",
         "data": {
-          "station_id": "Station Id",
-          "api_token": "Personal Api Token"
+          "station_id": "Station id",
+          "api_token": "Personal api token"
         }
       }
     },
