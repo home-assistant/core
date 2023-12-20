@@ -22,6 +22,7 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     """DROP device object."""
 
     _drop_api: DropAPI | None = None
+    _unsubscribe_callback: Callable[[], None] | None = attr.ib()
 
     def __init__(self, hass: HomeAssistant, unique_id: str) -> None:
         """Initialize the device."""
@@ -29,9 +30,7 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         if TYPE_CHECKING:
             assert self.config_entry is not None
         self._drop_api = DropAPI()
-        self._unsubscribe_callback: Callable[[], None] = attr.ib()
         hass.async_create_task(self.subscribe_mqtt(hass))
-        self.config_entry.async_on_unload(self._unsubscribe_callback)
 
     async def subscribe_mqtt(self, hass: HomeAssistant) -> None:
         """Subscribe to the data topic."""
@@ -56,6 +55,7 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             self.config_entry.data[CONF_DEVICE_TYPE],
             self.config_entry.data[CONF_DATA_TOPIC],
         )
+        self.config_entry.async_on_unload(self._unsubscribe_callback)
 
     # Device properties
     @property

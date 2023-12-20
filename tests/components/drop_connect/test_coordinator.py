@@ -1,6 +1,7 @@
 """Test DROP coordinator."""
 from homeassistant.components.drop_connect.const import DOMAIN
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -52,10 +53,12 @@ async def test_unload(
     await hass.config_entries.async_unload(config_entry_hub.entry_id)
     await hass.async_block_till_done()
 
+    assert config_entry_hub.state is ConfigEntryState.NOT_LOADED
+
     # Verify sensor is unavailable
     current_flow_sensor = hass.states.get(current_flow_sensor_name)
     assert current_flow_sensor
-    assert current_flow_sensor.state == "unavailable"
+    assert current_flow_sensor.state == STATE_UNAVAILABLE
 
 
 async def test_no_mqtt(hass: HomeAssistant, config_entry_hub) -> None:
