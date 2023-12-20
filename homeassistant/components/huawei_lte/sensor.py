@@ -111,7 +111,7 @@ class HuaweiSensorGroup:
     exclude: re.Pattern[str] | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class HuaweiSensorEntityDescription(SensorEntityDescription):
     """Class describing Huawei LTE sensor entities."""
 

@@ -410,14 +410,14 @@ class PairedSensorEntity(GuardianEntity):
         self._attr_unique_id = f"{paired_sensor_uid}_{description.key}"
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValveControllerEntityDescriptionMixin:
     """Define an entity description mixin for valve controller entities."""
 
     api_category: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValveControllerEntityDescription(
     EntityDescription, ValveControllerEntityDescriptionMixin
 ):

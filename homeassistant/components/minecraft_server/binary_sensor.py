@@ -19,7 +19,7 @@ ICON_STATUS = "mdi:lan"
 KEY_STATUS = "status"
 
 
-@dataclass
+@dataclass(frozen=True)
 class MinecraftServerBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class describing Minecraft Server binary sensor entities."""
 
