@@ -2561,7 +2561,7 @@ sunwatcher==0.2.1
 sunweg==2.0.1
 
 # homeassistant.components.surepetcare
-surepy==0.8.0
+surepy==0.9.0
 
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.1.0
@@ -2837,7 +2837,7 @@ zamg==0.3.3
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.130.0
+zeroconf==0.131.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
