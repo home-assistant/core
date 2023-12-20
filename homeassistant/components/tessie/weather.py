@@ -101,6 +101,7 @@ class TessieWeatherEntity(CoordinatorEntity, WeatherEntity):
     _attr_native_precipitation_unit = UnitOfPressure.HPA
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
     _attr_native_visibility_unit = UnitOfLength.METERS
+    _attr_translation_key = "weather"
 
     def __init__(
         self,
@@ -112,7 +113,6 @@ class TessieWeatherEntity(CoordinatorEntity, WeatherEntity):
 
         car_type = vehiclecoordinator.data["vehicle_config_car_type"]
 
-        self._attr_translation_key = "weather"
         self._attr_unique_id = f"{vehiclecoordinator.vin}-weather"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, vehiclecoordinator.vin)},
