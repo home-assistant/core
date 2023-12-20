@@ -60,6 +60,15 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         self._ac_index: int = ac_index
         self._attr_name = str(self._ac_index)
         self._attr_unique_id = f"{self._ac_host}.{self._ac_index}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, f"{self._ac_host}.{self._ac_index}"),
+            },
+            name=self._attr_name,
+            manufacturer="Midea",
+            model="CCM15",
+        )
 
     @property
     def current_temperature(self) -> int | None:
@@ -102,19 +111,6 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
             _LOGGER.debug("is_swing_on[%s]=%s", self._ac_index, data.is_swing_on)
             return SWING_ON if data.is_swing_on else SWING_OFF
         return None
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, f"{self._ac_host}.{self._ac_index}"),
-            },
-            name=self._attr_name,
-            manufacturer="Midea",
-            model="CCM15",
-        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
