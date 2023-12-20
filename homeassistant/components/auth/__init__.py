@@ -605,6 +605,7 @@ async def websocket_delete_refresh_token(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "auth/delete_all_refresh_tokens",
+        vol.Optional("token_type"): cv.string,
     }
 )
 @websocket_api.ws_require_user()
@@ -614,8 +615,10 @@ async def websocket_delete_all_refresh_tokens(
 ) -> None:
     """Handle delete all refresh tokens request."""
     tasks = []
-    current_refresh_token: RefreshToken
+    current_refresh_token: RefreshToken | None = None
     for token in connection.user.refresh_tokens.values():
+        if "token_type" in msg and msg["token_type"] != token.token_type:
+            continue
         if token.id == connection.refresh_token_id:
             # Skip the current refresh token as it has revoke_callback,
             # which cancels/closes the connection.
@@ -643,7 +646,10 @@ async def websocket_delete_all_refresh_tokens(
     else:
         connection.send_result(msg["id"], {})
 
-    hass.async_create_task(hass.auth.async_remove_refresh_token(current_refresh_token))
+    if current_refresh_token:
+        hass.async_create_task(
+            hass.auth.async_remove_refresh_token(current_refresh_token)
+        )
 
 
 @websocket_api.websocket_command(
