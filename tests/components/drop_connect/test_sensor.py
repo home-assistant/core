@@ -1,22 +1,30 @@
 """Test DROP sensor entities."""
 from homeassistant.components.drop_connect.const import DOMAIN
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import (
     TEST_DATA_FILTER,
+    TEST_DATA_FILTER_RESET,
     TEST_DATA_FILTER_TOPIC,
     TEST_DATA_HUB,
+    TEST_DATA_HUB_RESET,
     TEST_DATA_HUB_TOPIC,
     TEST_DATA_LEAK,
+    TEST_DATA_LEAK_RESET,
     TEST_DATA_LEAK_TOPIC,
     TEST_DATA_PROTECTION_VALVE,
+    TEST_DATA_PROTECTION_VALVE_RESET,
     TEST_DATA_PROTECTION_VALVE_TOPIC,
     TEST_DATA_PUMP_CONTROLLER,
+    TEST_DATA_PUMP_CONTROLLER_RESET,
     TEST_DATA_PUMP_CONTROLLER_TOPIC,
     TEST_DATA_RO_FILTER,
+    TEST_DATA_RO_FILTER_RESET,
     TEST_DATA_RO_FILTER_TOPIC,
     TEST_DATA_SOFTENER,
+    TEST_DATA_SOFTENER_RESET,
     TEST_DATA_SOFTENER_TOPIC,
 )
 
@@ -32,45 +40,56 @@ async def test_sensors_hub(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
+    current_flow_sensor_name = "sensor.hub_drop_1_c0ffee_water_flow_rate"
+    hass.states.async_set(current_flow_sensor_name, STATE_UNKNOWN)
+    peak_flow_sensor_name = "sensor.hub_drop_1_c0ffee_peak_water_flow_rate_today"
+    hass.states.async_set(peak_flow_sensor_name, STATE_UNKNOWN)
+    used_today_sensor_name = "sensor.hub_drop_1_c0ffee_total_water_used_today"
+    hass.states.async_set(used_today_sensor_name, STATE_UNKNOWN)
+    average_usage_sensor_name = "sensor.hub_drop_1_c0ffee_average_daily_water_usage"
+    hass.states.async_set(average_usage_sensor_name, STATE_UNKNOWN)
+    psi_sensor_name = "sensor.hub_drop_1_c0ffee_current_water_pressure"
+    hass.states.async_set(psi_sensor_name, STATE_UNKNOWN)
+    psi_high_sensor_name = "sensor.hub_drop_1_c0ffee_high_water_pressure_today"
+    hass.states.async_set(psi_high_sensor_name, STATE_UNKNOWN)
+    psi_low_sensor_name = "sensor.hub_drop_1_c0ffee_low_water_pressure_today"
+    hass.states.async_set(psi_low_sensor_name, STATE_UNKNOWN)
+    battery_sensor_name = "sensor.hub_drop_1_c0ffee_battery"
+    hass.states.async_set(battery_sensor_name, STATE_UNKNOWN)
+
+    async_fire_mqtt_message(hass, TEST_DATA_HUB_TOPIC, TEST_DATA_HUB_RESET)
+    await hass.async_block_till_done()
     async_fire_mqtt_message(hass, TEST_DATA_HUB_TOPIC, TEST_DATA_HUB)
     await hass.async_block_till_done()
 
-    current_flow_sensor_name = "sensor.hub_drop_1_c0ffee_water_flow_rate"
     current_flow_sensor = hass.states.get(current_flow_sensor_name)
     assert current_flow_sensor
     assert round(float(current_flow_sensor.state), 1) == 5.8
 
-    peak_flow_sensor_name = "sensor.hub_drop_1_c0ffee_peak_water_flow_rate_today"
     peak_flow_sensor = hass.states.get(peak_flow_sensor_name)
     assert peak_flow_sensor
     assert round(float(peak_flow_sensor.state), 1) == 13.8
 
-    used_today_sensor_name = "sensor.hub_drop_1_c0ffee_total_water_used_today"
     used_today_sensor = hass.states.get(used_today_sensor_name)
     assert used_today_sensor
     assert round(float(used_today_sensor.state), 1) == 881.1  # liters
 
-    average_usage_sensor_name = "sensor.hub_drop_1_c0ffee_average_daily_water_usage"
     average_usage_sensor = hass.states.get(average_usage_sensor_name)
     assert average_usage_sensor
     assert round(float(average_usage_sensor.state), 1) == 287.7  # liters
 
-    psi_sensor_name = "sensor.hub_drop_1_c0ffee_current_water_pressure"
     psi_sensor = hass.states.get(psi_sensor_name)
     assert psi_sensor
     assert round(float(psi_sensor.state), 1) == 428.9  # centibars
 
-    psi_high_sensor_name = "sensor.hub_drop_1_c0ffee_high_water_pressure_today"
     psi_high_sensor = hass.states.get(psi_high_sensor_name)
     assert psi_high_sensor
     assert round(float(psi_high_sensor.state), 1) == 427.5  # centibars
 
-    psi_low_sensor_name = "sensor.hub_drop_1_c0ffee_low_water_pressure_today"
     psi_low_sensor = hass.states.get(psi_low_sensor_name)
     assert psi_low_sensor
     assert round(float(psi_low_sensor.state), 1) == 420.6  # centibars
 
-    battery_sensor_name = "sensor.hub_drop_1_c0ffee_battery"
     battery_sensor = hass.states.get(battery_sensor_name)
     assert battery_sensor
     assert round(float(battery_sensor.state), 1) == 50
@@ -84,15 +103,20 @@ async def test_sensors_leak(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
+    battery_sensor_name = "sensor.leak_detector_battery"
+    hass.states.async_set(battery_sensor_name, STATE_UNKNOWN)
+    temp_sensor_name = "sensor.leak_detector_temperature"
+    hass.states.async_set(temp_sensor_name, STATE_UNKNOWN)
+
+    async_fire_mqtt_message(hass, TEST_DATA_LEAK_TOPIC, TEST_DATA_LEAK_RESET)
+    await hass.async_block_till_done()
     async_fire_mqtt_message(hass, TEST_DATA_LEAK_TOPIC, TEST_DATA_LEAK)
     await hass.async_block_till_done()
 
-    battery_sensor_name = "sensor.leak_detector_battery"
     battery_sensor = hass.states.get(battery_sensor_name)
     assert battery_sensor
     assert round(float(battery_sensor.state), 1) == 100.0
 
-    temp_sensor_name = "sensor.leak_detector_temperature"
     temp_sensor = hass.states.get(temp_sensor_name)
     assert temp_sensor
     assert round(float(temp_sensor.state), 1) == 20.1  # C
@@ -106,25 +130,32 @@ async def test_sensors_softener(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
+    battery_sensor_name = "sensor.softener_battery"
+    hass.states.async_set(battery_sensor_name, STATE_UNKNOWN)
+    current_flow_sensor_name = "sensor.softener_water_flow_rate"
+    hass.states.async_set(current_flow_sensor_name, STATE_UNKNOWN)
+    psi_sensor_name = "sensor.softener_current_water_pressure"
+    hass.states.async_set(psi_sensor_name, STATE_UNKNOWN)
+    capacity_sensor_name = "sensor.softener_capacity_remaining"
+    hass.states.async_set(capacity_sensor_name, STATE_UNKNOWN)
+
+    async_fire_mqtt_message(hass, TEST_DATA_SOFTENER_TOPIC, TEST_DATA_SOFTENER_RESET)
+    await hass.async_block_till_done()
     async_fire_mqtt_message(hass, TEST_DATA_SOFTENER_TOPIC, TEST_DATA_SOFTENER)
     await hass.async_block_till_done()
 
-    battery_sensor_name = "sensor.softener_battery"
     battery_sensor = hass.states.get(battery_sensor_name)
     assert battery_sensor
     assert round(float(battery_sensor.state), 1) == 20.0
 
-    current_flow_sensor_name = "sensor.softener_water_flow_rate"
     current_flow_sensor = hass.states.get(current_flow_sensor_name)
     assert current_flow_sensor
     assert round(float(current_flow_sensor.state), 1) == 5.0
 
-    psi_sensor_name = "sensor.softener_current_water_pressure"
     psi_sensor = hass.states.get(psi_sensor_name)
     assert psi_sensor
     assert round(float(psi_sensor.state), 1) == 6894.1  # centibars
 
-    capacity_sensor_name = "sensor.softener_capacity_remaining"
     capacity_sensor = hass.states.get(capacity_sensor_name)
     assert capacity_sensor
     assert round(float(capacity_sensor.state), 1) == 3785.4  # liters
@@ -138,20 +169,26 @@ async def test_sensors_filter(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
+    battery_sensor_name = "sensor.filter_battery"
+    hass.states.async_set(battery_sensor_name, STATE_UNKNOWN)
+    current_flow_sensor_name = "sensor.filter_water_flow_rate"
+    hass.states.async_set(current_flow_sensor_name, STATE_UNKNOWN)
+    psi_sensor_name = "sensor.filter_current_water_pressure"
+    hass.states.async_set(psi_sensor_name, STATE_UNKNOWN)
+
+    async_fire_mqtt_message(hass, TEST_DATA_FILTER_TOPIC, TEST_DATA_FILTER_RESET)
+    await hass.async_block_till_done()
     async_fire_mqtt_message(hass, TEST_DATA_FILTER_TOPIC, TEST_DATA_FILTER)
     await hass.async_block_till_done()
 
-    battery_sensor_name = "sensor.filter_battery"
     battery_sensor = hass.states.get(battery_sensor_name)
     assert battery_sensor
     assert round(float(battery_sensor.state), 1) == 12.0
 
-    current_flow_sensor_name = "sensor.filter_water_flow_rate"
     current_flow_sensor = hass.states.get(current_flow_sensor_name)
     assert current_flow_sensor
     assert round(float(current_flow_sensor.state), 1) == 19.8
 
-    psi_sensor_name = "sensor.filter_current_water_pressure"
     psi_sensor = hass.states.get(psi_sensor_name)
     assert psi_sensor
     assert round(float(psi_sensor.state), 1) == 6894.1  # centibars
@@ -165,27 +202,36 @@ async def test_sensors_protection_valve(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
+    battery_sensor_name = "sensor.protection_valve_battery"
+    hass.states.async_set(battery_sensor_name, STATE_UNKNOWN)
+    current_flow_sensor_name = "sensor.protection_valve_water_flow_rate"
+    hass.states.async_set(current_flow_sensor_name, STATE_UNKNOWN)
+    psi_sensor_name = "sensor.protection_valve_current_water_pressure"
+    hass.states.async_set(psi_sensor_name, STATE_UNKNOWN)
+    temp_sensor_name = "sensor.protection_valve_temperature"
+    hass.states.async_set(temp_sensor_name, STATE_UNKNOWN)
+
+    async_fire_mqtt_message(
+        hass, TEST_DATA_PROTECTION_VALVE_TOPIC, TEST_DATA_PROTECTION_VALVE_RESET
+    )
+    await hass.async_block_till_done()
     async_fire_mqtt_message(
         hass, TEST_DATA_PROTECTION_VALVE_TOPIC, TEST_DATA_PROTECTION_VALVE
     )
     await hass.async_block_till_done()
 
-    battery_sensor_name = "sensor.protection_valve_battery"
     battery_sensor = hass.states.get(battery_sensor_name)
     assert battery_sensor
     assert round(float(battery_sensor.state), 1) == 0
 
-    current_flow_sensor_name = "sensor.protection_valve_water_flow_rate"
     current_flow_sensor = hass.states.get(current_flow_sensor_name)
     assert current_flow_sensor
     assert round(float(current_flow_sensor.state), 1) == 7.1
 
-    psi_sensor_name = "sensor.protection_valve_current_water_pressure"
     psi_sensor = hass.states.get(psi_sensor_name)
     assert psi_sensor
     assert round(float(psi_sensor.state), 1) == 422.6  # centibars
 
-    temp_sensor_name = "sensor.protection_valve_temperature"
     temp_sensor = hass.states.get(temp_sensor_name)
     assert temp_sensor
     assert round(float(temp_sensor.state), 1) == 21.4  # C
@@ -199,22 +245,30 @@ async def test_sensors_pump_controller(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
+    current_flow_sensor_name = "sensor.pump_controller_water_flow_rate"
+    hass.states.async_set(current_flow_sensor_name, STATE_UNKNOWN)
+    psi_sensor_name = "sensor.pump_controller_current_water_pressure"
+    hass.states.async_set(psi_sensor_name, STATE_UNKNOWN)
+    temp_sensor_name = "sensor.pump_controller_temperature"
+    hass.states.async_set(temp_sensor_name, STATE_UNKNOWN)
+
+    async_fire_mqtt_message(
+        hass, TEST_DATA_PUMP_CONTROLLER_TOPIC, TEST_DATA_PUMP_CONTROLLER_RESET
+    )
+    await hass.async_block_till_done()
     async_fire_mqtt_message(
         hass, TEST_DATA_PUMP_CONTROLLER_TOPIC, TEST_DATA_PUMP_CONTROLLER
     )
     await hass.async_block_till_done()
 
-    current_flow_sensor_name = "sensor.pump_controller_water_flow_rate"
     current_flow_sensor = hass.states.get(current_flow_sensor_name)
     assert current_flow_sensor
     assert round(float(current_flow_sensor.state), 1) == 2.2
 
-    psi_sensor_name = "sensor.pump_controller_current_water_pressure"
     psi_sensor = hass.states.get(psi_sensor_name)
     assert psi_sensor
     assert round(float(psi_sensor.state), 1) == 428.9  # centibars
 
-    temp_sensor_name = "sensor.pump_controller_temperature"
     temp_sensor = hass.states.get(temp_sensor_name)
     assert temp_sensor
     assert round(float(temp_sensor.state), 1) == 20.4  # C
@@ -228,30 +282,38 @@ async def test_sensors_ro_filter(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
+    tds_in_sensor_name = "sensor.ro_filter_inlet_tds"
+    hass.states.async_set(tds_in_sensor_name, STATE_UNKNOWN)
+    tds_out_sensor_name = "sensor.ro_filter_outlet_tds"
+    hass.states.async_set(tds_out_sensor_name, STATE_UNKNOWN)
+    cart1_sensor_name = "sensor.ro_filter_cartridge_1_life_remaining"
+    hass.states.async_set(cart1_sensor_name, STATE_UNKNOWN)
+    cart2_sensor_name = "sensor.ro_filter_cartridge_2_life_remaining"
+    hass.states.async_set(cart2_sensor_name, STATE_UNKNOWN)
+    cart3_sensor_name = "sensor.ro_filter_cartridge_3_life_remaining"
+    hass.states.async_set(cart3_sensor_name, STATE_UNKNOWN)
+
+    async_fire_mqtt_message(hass, TEST_DATA_RO_FILTER_TOPIC, TEST_DATA_RO_FILTER_RESET)
+    await hass.async_block_till_done()
     async_fire_mqtt_message(hass, TEST_DATA_RO_FILTER_TOPIC, TEST_DATA_RO_FILTER)
     await hass.async_block_till_done()
 
-    tds_in_sensor_name = "sensor.ro_filter_inlet_tds"
     tds_in_sensor = hass.states.get(tds_in_sensor_name)
     assert tds_in_sensor
     assert round(float(tds_in_sensor.state), 1) == 164
 
-    tds_out_sensor_name = "sensor.ro_filter_outlet_tds"
     tds_out_sensor = hass.states.get(tds_out_sensor_name)
     assert tds_out_sensor
     assert round(float(tds_out_sensor.state), 1) == 9
 
-    cart1_sensor_name = "sensor.ro_filter_cartridge_1_life_remaining"
     cart1_sensor = hass.states.get(cart1_sensor_name)
     assert cart1_sensor
     assert round(float(cart1_sensor.state), 1) == 59
 
-    cart2_sensor_name = "sensor.ro_filter_cartridge_2_life_remaining"
     cart2_sensor = hass.states.get(cart2_sensor_name)
     assert cart2_sensor
     assert round(float(cart2_sensor.state), 1) == 80
 
-    cart3_sensor_name = "sensor.ro_filter_cartridge_3_life_remaining"
     cart3_sensor = hass.states.get(cart3_sensor_name)
     assert cart3_sensor
     assert round(float(cart3_sensor.state), 1) == 59
