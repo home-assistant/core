@@ -57,7 +57,6 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.loader import DHCPMatcher, async_get_dhcp
-from homeassistant.util.async_ import run_callback_threadsafe
 
 from .const import DOMAIN
 
@@ -145,13 +144,9 @@ class WatcherBase(ABC):
 
     def process_client(self, ip_address: str, hostname: str, mac_address: str) -> None:
         """Process a client."""
-        return run_callback_threadsafe(
-            self.hass.loop,
-            self.async_process_client,
-            ip_address,
-            hostname,
-            mac_address,
-        ).result()
+        self.hass.loop.call_soon_threadsafe(
+            self.async_process_client, ip_address, hostname, mac_address
+        )
 
     @callback
     def async_process_client(
