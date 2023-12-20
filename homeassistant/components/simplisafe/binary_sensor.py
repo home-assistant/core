@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime
 import os
-import pathlib
 
 from simplipy.device import DeviceTypes, DeviceV3
 from simplipy.device.sensor.v3 import SensorV3
@@ -13,18 +12,25 @@ from simplipy.system.v3 import SystemV3
 from simplipy.util.dt import utc_from_timestamp
 from simplipy.websocket import EVENT_CAMERA_MOTION_DETECTED, WebsocketEvent
 
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import (
+    EntityCategory,
+    ATTR_ENTITY_ID
+)
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers.template import Template
 
 from . import SimpliSafe, SimpliSafeEntity
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, MotionEntityFeature
 
 DEFAULT_IMAGE_WIDTH = 720
 
@@ -67,6 +73,29 @@ OUTDOOR_CAMERA_SENSOR_TYPES = {
     DeviceTypes.OUTDOOR_CAMERA: BinarySensorDeviceClass.MOTION,
 }
 
+# Outdoor camera media capture services
+ATTR_FILENAME = "filename"
+ATTR_WIDTH = "width"
+
+SERVICE_OUTDOOR_CAMERA_SAVE_LATEST_SNAPSHOT = "save_latest_snapshot"
+SERVICE_OUTDOOR_CAMERA_SAVE_LATEST_CLIP = "save_latest_clip"
+
+SERVICE_OC_SNAPSHOT_SCHEMA = cv.make_entity_service_schema(
+    {
+        vol.Optional(ATTR_WIDTH, default=720): vol.Coerce(int),
+        vol.Required(ATTR_FILENAME): cv.template,
+    }
+)
+SERVICE_OC_CLIP_SCHEMA = cv.make_entity_service_schema(
+    {
+        vol.Required(ATTR_FILENAME): cv.template
+    }
+)
+
+SERVICES = (
+    SERVICE_OUTDOOR_CAMERA_SAVE_LATEST_SNAPSHOT,
+    SERVICE_OUTDOOR_CAMERA_SAVE_LATEST_CLIP
+)
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -94,15 +123,15 @@ async def async_setup_entry(
                     )
                 )
             if sensor.type in OUTDOOR_CAMERA_SENSOR_TYPES:
-                sensors.append(
-                    OutdoorCameraSensor(
-                        hass,
-                        simplisafe,
-                        system,
-                        sensor,
-                        OUTDOOR_CAMERA_SENSOR_TYPES[sensor.type],
-                    )
+                oc = OutdoorCameraSensor(
+                    hass,
+                    simplisafe,
+                    system,
+                    sensor,
+                    OUTDOOR_CAMERA_SENSOR_TYPES[sensor.type],
                 )
+                oc.async_setup()
+                sensors.append(oc)
             if sensor.type in SUPPORTED_BATTERY_SENSOR_TYPES:
                 sensors.append(BatteryBinarySensor(simplisafe, system, sensor))
 
@@ -161,18 +190,10 @@ class OutdoorCameraSensor(SimpliSafeEntity, BinarySensorEntity):
     The Simplisafe Outdoor camera is a motion based device that captures an image and
     a short video clip when motion is detected.  When motion is detected, an event is
     sent over the Simplisafe websocket, consumed by the Simplisafe class and forwarded to
-    this entity.  We then save clips and videos (mp4) into the local file system using this
-    structure:
+    this entity.  We then obtain the motion snapshot (jpg) and motion clip (mp4) urls.
 
-    /config/www/simplisafe/{outdoor_camera_name}/
-      latest_snapshot.jpg
-      latest_clip.mp4
-      clips/
-        YYYYMMDDHHmmss.mp4
-        ...
-
-    You can use a Gallery Card (https://github.com/TarheelGrad1998/gallery-card) pointed at
-    the clips/ directory, and use the latest_* files in automations if you want.
+    There are services, save_latest_snaphot and save_latest_clip, that you can use in automations
+    to save the latest motion image and/or clip into the file system.
     """
 
     # Properties
@@ -196,22 +217,80 @@ class OutdoorCameraSensor(SimpliSafeEntity, BinarySensorEntity):
             additional_websocket_events=[EVENT_CAMERA_MOTION_DETECTED],
         )
 
+        self.hass = hass
         self._attr_device_class = device_class
         # self._attr_unique_id = f"{super().unique_id}-motion-camera"
         self._device: SensorV3
         self._attr_is_on = False
-
-        # make the directories for storing media
-        self.storage = pathlib.Path(
-            os.path.join(
-                hass.config.path("www"),
-                DOMAIN,
-                sensor.name.lower().replace(" ", "_"),
-            )
+        self._attr_supported_features = (
+            MotionEntityFeature.MOTION_MEDIA
         )
-        self.storage.mkdir(parents=True, exist_ok=True)
-        clips = pathlib.Path(os.path.join(self.storage, "clips"))
-        clips.mkdir(parents=True, exist_ok=True)
+
+    @callback
+    def async_unload(self) -> None:
+        """Release resources."""
+        for service in SERVICES:
+            self.hass.services.async_remove(DOMAIN, service)
+
+    @callback
+    def async_setup(self) -> None:
+        """Register the Outdoor Camera hass service calls."""
+
+        def _write_image(to_file: str, image_data: bytes) -> None:
+            """Executor helper to write image."""
+            os.makedirs(os.path.dirname(to_file), exist_ok=True)
+            with open(to_file, "wb") as img_file:
+                img_file.write(image_data)
+
+        async def save_snapshot_handler(call: ServiceCall) -> None:
+            if self._attr_image_url is None:
+                return
+
+            width = call.data.get(ATTR_WIDTH)
+            filename: Template = call.data.get(ATTR_FILENAME)
+            filename.hass = self.hass
+            snapshot_file = filename.async_render(variables={ATTR_ENTITY_ID: self})
+
+            snapshot = await self._async_get_image_content(self._attr_image_url, width)
+            if snapshot is None:
+                return
+
+            try:
+                await self.hass.async_add_executor_job(_write_image, snapshot_file, snapshot)
+            except OSError as err:
+                LOGGER.error("Can't write image to file: %s", err)
+
+
+        async def save_clip_handler(call: ServiceCall) -> None:
+            if self._attr_clip_url is None:
+                return
+
+            filename: Template = call.data.get(ATTR_FILENAME)
+            filename.hass = self.hass
+            clip_file = filename.async_render(variables={ATTR_ENTITY_ID: self})
+
+            clip = await self._async_get_media_content(self._attr_clip_url)
+            if clip is None:
+                return
+
+            try:
+                await self.hass.async_add_executor_job(_write_image, clip_file, clip)
+            except OSError as err:
+                LOGGER.error("Can't write image to file: %s", err)
+
+        self.hass.services.async_register(
+            DOMAIN,
+            SERVICE_OUTDOOR_CAMERA_SAVE_LATEST_SNAPSHOT,
+            save_snapshot_handler,
+            schema=SERVICE_OC_SNAPSHOT_SCHEMA
+        )
+
+        self.hass.services.async_register(
+            DOMAIN,
+            SERVICE_OUTDOOR_CAMERA_SAVE_LATEST_CLIP,
+            save_clip_handler,
+            schema=SERVICE_OC_CLIP_SCHEMA
+        )
 
     @callback
     def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
@@ -222,16 +301,18 @@ class OutdoorCameraSensor(SimpliSafeEntity, BinarySensorEntity):
             return
 
         LOGGER.debug(
-            "Outdoor Camera %s received a websocket event: %s",
+            "Outdoor Camera %s received a websocket event: %s, at %s",
             self._device.serial,
             event,
+            datetime.now()
         )
 
+        self._attr_is_on = True
         self.hass.async_create_task(
-            self._async_update_camera_media_with_timeline(event.timestamp)
+            self._async_update_media_urls_with_timeline(event.timestamp)
         )
 
-    async def _async_update_camera_media_with_timeline(
+    async def _async_update_media_urls_with_timeline(
         self, ws_timestamp: datetime
     ) -> None:
         """Obtain media URLs by fetching timeline from Simplisafe API."""
@@ -251,6 +332,8 @@ class OutdoorCameraSensor(SimpliSafeEntity, BinarySensorEntity):
                     ws_timestamp,
                 )
                 LOGGER.debug("Here are the events fetched: %s", events)
+                self._attr_is_on = False
+                self.async_write_ha_state()
                 return
 
             ev = my_events[0]
@@ -262,6 +345,8 @@ class OutdoorCameraSensor(SimpliSafeEntity, BinarySensorEntity):
                     self._device.serial,
                 )
                 LOGGER.warning("Here are the events fetched: %s", events)
+                self._attr_is_on = False
+                self.async_write_ha_state()
                 return
 
             urls = ev["video"][vid]["_links"]
@@ -272,18 +357,15 @@ class OutdoorCameraSensor(SimpliSafeEntity, BinarySensorEntity):
             if timestamp != self._attr_image_last_updated:
                 self._attr_image_url = imageUrl
                 self._attr_clip_url = clipUrl
-                self._attr_is_on = True
                 self._attr_image_last_updated = timestamp
-                self.async_write_ha_state()
-                await self._async_update_camera_media()
+
+            self._attr_is_on = False
+            self.async_write_ha_state()
 
         except SimplipyError as err:
-            LOGGER.error("Error while fetching most recent image: %s", err)
-
-    async def _async_update_camera_media(self):
-        await self._async_get_and_store_media()
-        self._attr_is_on = False
-        self.async_write_ha_state()
+            self._attr_is_on = False
+            self.async_write_ha_state()
+            LOGGER.error("Error while fetching Simplisafe event timeline: %s", err)
 
     async def _async_get_media_content(self, url: str) -> bytes | None:
         """Get a media file from a URL.
@@ -332,55 +414,3 @@ class OutdoorCameraSensor(SimpliSafeEntity, BinarySensorEntity):
         return await self._async_get_media_content(
             url.replace("{&width}", "&width=" + str(width))
         )
-
-    async def _save_media_file(
-        self, hass: HomeAssistant, filename: str, content: bytes
-    ) -> None:
-        if content is None:
-            return
-
-        def save_file() -> None:
-            with open(filename, "wb") as fh:
-                fh.write(content)
-
-        try:
-            await hass.async_add_executor_job(save_file)
-        except OSError as err:
-            LOGGER.error("Can't write %s: %s", filename, err)
-
-    async def _async_get_and_store_media(
-        self, width: int | None = DEFAULT_IMAGE_WIDTH, height: int | None = None
-    ) -> bytes | None:
-        local_timestamp = dt_util.as_local(self._attr_image_last_updated)
-        datestr = local_timestamp.strftime("%Y%m%d%H%M%S")
-        start = datetime.now()
-
-        if self._attr_image_url is not None:
-            image_data = await self._async_get_image_content(
-                self._attr_image_url, width
-            )
-
-            await self._save_media_file(
-                self.hass, os.path.join(self.storage, "latest_snapshot.jpg"), image_data
-            )
-
-        if self._attr_clip_url is not None:
-            clip_data = await self._async_get_media_content(self._attr_clip_url)
-
-            await self._save_media_file(
-                self.hass, os.path.join(self.storage, "latest_clip.mp4"), clip_data
-            )
-
-            await self._save_media_file(
-                self.hass,
-                os.path.join(self.storage, "clips", datestr + ".mp4"),
-                clip_data,
-            )
-
-            delta = datetime.now() - start
-
-        LOGGER.debug(
-            "Outdoor Camera media fetch and save took %s seconds", delta.seconds
-        )
-
-        return None

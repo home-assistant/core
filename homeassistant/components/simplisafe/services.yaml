@@ -98,3 +98,35 @@ set_system_properties:
             - "medium"
             - "high"
             - "off"
+save_latest_snapshot:
+  target:
+    entity:
+      integration: simplisafe
+      domain: binary_sensor
+  fields:
+    width:
+      description: Width of image in pixels
+      example: 720
+      default: 720
+      selector:
+        number:
+          min: 240
+          max: 1080
+    filename:
+      description: Name of file to save
+      required: true
+      example: "/tmp/snapshot_{{ now().strftime('%Y%m%d%H%M%S') }}.jpg"
+      selector:
+        text:
+save_latest_clip:
+  target:
+    entity:
+      integration: simplisafe
+      domain: binary_sensor
+  fields:
+    filename:
+      description: Name of file to save
+      required: true
+      example: "/tmp/clip_{{ now().strftime('%Y%m%d%H%M%S') }}.mp4"
+      selector:
+        text:
