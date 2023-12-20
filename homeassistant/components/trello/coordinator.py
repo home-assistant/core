@@ -16,7 +16,6 @@ from .const import LOGGER, Board, List
 class TrelloDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Board]]):
     """Data update coordinator for the Trello integration."""
 
-    config_entry: ConfigEntry
 
     def __init__(
         self, hass: HomeAssistant, trello_client: TrelloClient, board_ids: list[str]
