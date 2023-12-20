@@ -147,6 +147,33 @@ async def test_google_actions_sync_fails(
         assert mock_request_sync.call_count == 1
 
 
+async def test_login_view_missing_stt_entity(
+    hass: HomeAssistant,
+    setup_cloud: None,
+    entity_registry: er.EntityRegistry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test logging in when the cloud stt entity is missing."""
+    # Make sure that the cloud stt entity does not exist.
+    entity_registry.async_remove("stt.home_assistant_cloud")
+    await hass.async_block_till_done()
+
+    cloud_client = await hass_client()
+
+    # We assume the user needs to login again for some reason.
+    with patch(
+        "homeassistant.components.cloud.assist_pipeline.async_create_default_pipeline",
+    ) as create_pipeline_mock:
+        req = await cloud_client.post(
+            "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
+        )
+
+    assert req.status == HTTPStatus.OK
+    result = await req.json()
+    assert result == {"success": True, "cloud_pipeline": None}
+    create_pipeline_mock.assert_not_awaited()
+
+
 @pytest.mark.parametrize("pipeline_data", [PIPELINE_DATA, PIPELINE_DATA_LEGACY])
 async def test_login_view_existing_pipeline(
     hass: HomeAssistant,
