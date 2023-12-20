@@ -42,16 +42,19 @@ async def async_setup_entry(
     """Set up the Tessie Weather platform from a config entry."""
     coordinators = hass.data[DOMAIN][entry.entry_id]
 
-    weathercoordinators = (
+    # Create a weather coordinator for each vehicle
+    weathercoordinators = [
         TessieWeatherDataCoordinator(hass, coordinator.api_key, coordinator.vin)
         for coordinator in coordinators
-    )
+    ]
 
+    # Do first refresh to ensure we have data
     tasks = (
         weathercoordinator.async_refresh() for weathercoordinator in weathercoordinators
     )
     await asyncio.gather(*tasks)
 
+    # Add Weather entities with both coordinators
     async_add_entities(
         TessieWeatherEntity(coordinator, weathercoordinator)
         for coordinator, weathercoordinator in zip(coordinators, weathercoordinators)
@@ -97,6 +100,7 @@ class TessieWeatherDataCoordinator(DataUpdateCoordinator):
 class TessieWeatherEntity(CoordinatorEntity, WeatherEntity):
     """Base class for Tessie weathers entities."""
 
+    _attr_has_entity_name = True
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_precipitation_unit = UnitOfPressure.HPA
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
