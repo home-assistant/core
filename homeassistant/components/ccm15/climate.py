@@ -100,14 +100,14 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     @property
     def target_temperature(self) -> int | None:
         """Return target temperature."""
-        if data := self.coordinator.get_ac_data(self._ac_index):
+        if data := self.data:
             return data.temperature_setpoint
         return None
 
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac mode."""
-        if data := self.coordinator.get_ac_data(self._ac_index):
+        if data := self.data:
             mode = data.ac_mode
             return CONST_CMD_STATE_MAP[mode]
         return None
@@ -115,7 +115,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return fan mode."""
-        if data := self.coordinator.get_ac_data(self._ac_index):
+        if data := self.data:
             mode = data.fan_mode
             return CONST_CMD_FAN_MAP[mode]
         return None
@@ -123,14 +123,14 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     @property
     def swing_mode(self) -> str | None:
         """Return swing mode."""
-        if data := self.coordinator.get_ac_data(self._ac_index):
+        if data := self.data:
             return SWING_ON if data.is_swing_on else SWING_OFF
         return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
-        if data := self.coordinator.get_ac_data(self._ac_index):
+        if data := self.data:
             return {"error_code": data.error_code}
         return {}
 
