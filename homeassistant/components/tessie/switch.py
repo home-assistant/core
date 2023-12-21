@@ -43,31 +43,31 @@ class TessieSwitchEntityDescription(SwitchEntityDescription):
 
 DESCRIPTIONS: tuple[TessieSwitchEntityDescription, ...] = (
     TessieSwitchEntityDescription(
-        key="charge_state-charge_enable_request",
+        key="charge_state_charge_enable_request",
         on_func=start_charging,
         off_func=stop_charging,
         icon="mdi:ev-station",
     ),
     TessieSwitchEntityDescription(
-        key="climate_state-defrost_mode",
+        key="climate_state_defrost_mode",
         on_func=start_defrost,
         off_func=stop_defrost,
         icon="mdi:snowflake",
     ),
     TessieSwitchEntityDescription(
-        key="vehicle_state-sentry_mode",
+        key="vehicle_state_sentry_mode",
         on_func=enable_sentry_mode,
         off_func=disable_sentry_mode,
         icon="mdi:shield-car",
     ),
     TessieSwitchEntityDescription(
-        key="vehicle_state-valet_mode",
+        key="vehicle_state_valet_mode",
         on_func=enable_valet_mode,
         off_func=disable_valet_mode,
         icon="mdi:car-key",
     ),
     TessieSwitchEntityDescription(
-        key="climate_state-steering_wheel_heater",
+        key="climate_state_steering_wheel_heater",
         on_func=start_steering_wheel_heater,
         off_func=stop_steering_wheel_heater,
         icon="mdi:steering",
