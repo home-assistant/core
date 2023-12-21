@@ -183,7 +183,7 @@
         },
         "data_description": {
           "discovery": "Option to enable MQTT automatic discovery.",
-          "discovery_prefix": "The prefix of configuration topics the MQTT integration `will` subscribe to.",
+          "discovery_prefix": "The prefix of configuration topics the MQTT integration will subscribe to.",
           "birth_enable": "When set, Home Assistant will publish an online message to your MQTT broker when MQTT is ready.",
           "birth_topic": "The MQTT topic where Home Assistant will publish a `birth` message.",
           "birth_payload": "The `birth` message that is published when MQTT is ready and connected.",
