@@ -115,7 +115,7 @@ def mock_insert_schedule_response(
 
 @pytest.fixture(name="get_events")
 def get_events_fixture(
-    hass_client: Callable[..., Awaitable[ClientSession]]
+    hass_client: Callable[..., Awaitable[ClientSession]],
 ) -> GetEventsFn:
     """Fetch calendar events from the HTTP API."""
 

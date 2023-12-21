@@ -2582,7 +2582,7 @@ def test_deprecated_constants(
     constant_name: str,
     replacement: Any,
 ) -> None:
-    """Test deprecated binary sensor device classes."""
+    """Test deprecated automation constants."""
     import_and_test_deprecated_constant(
         caplog, automation, constant_name, replacement.__name__, replacement, "2025.1"
     )

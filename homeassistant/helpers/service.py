@@ -998,7 +998,7 @@ def verify_domain_control(
     """Ensure permission to access any entity under domain in service call."""
 
     def decorator(
-        service_handler: Callable[[ServiceCall], Any]
+        service_handler: Callable[[ServiceCall], Any],
     ) -> Callable[[ServiceCall], Any]:
         """Decorate."""
         if not asyncio.iscoroutinefunction(service_handler):
