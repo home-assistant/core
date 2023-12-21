@@ -25,40 +25,6 @@
     "reboot_gateway": {
       "name": "Reboot gateway",
       "description": "Reboots the KLF200 gateway."
-    },
-    "set_cover_position": {
-      "name": "Set position",
-      "description": "Move to specific position all or specified cover.",
-      "fields": {
-        "position": {
-          "name": "Position",
-          "description": "Desired position of the cover."
-        },
-        "velocity": {
-          "name": "Velocity",
-          "description": "Desired velocity percentage of the movement."
-        }
-      }
-    },
-    "open_cover": {
-      "name": "Open",
-      "description": "Open all or specified cover.",
-      "fields": {
-        "velocity": {
-          "name": "Velocity",
-          "description": "Desired velocity percentage of the movement."
-        }
-      }
-    },
-    "close_cover": {
-      "name": "Close",
-      "description": "Close all or specified cover.",
-      "fields": {
-        "velocity": {
-          "name": "Velocity",
-          "description": "Desired velocity percentage of the movement."
-        }
-      }
     }
   }
 }
