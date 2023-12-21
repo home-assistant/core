@@ -24,6 +24,7 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
     """Tessie Updates entity."""
 
     _attr_supported_features = UpdateEntityFeature.PROGRESS
+    _attr_has_entity_name = False
 
     def __init__(
         self,

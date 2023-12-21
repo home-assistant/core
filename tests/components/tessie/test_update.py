@@ -14,4 +14,4 @@ async def test_updates(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_all("update")) == 1
 
-    assert hass.states.get("update.test_software").state == STATE_ON
+    assert hass.states.get("update.tessie_vinvinvin_update").state == STATE_ON

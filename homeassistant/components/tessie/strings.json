@@ -161,11 +161,6 @@
         "name": "Tire pressure warning rear right"
       }
     },
-    "update": {
-      "update": {
-        "name": "Software"
-      }
-    },
     "switch": {
       "charge_state_charge_enable_request": {
         "name": "Charge"
