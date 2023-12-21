@@ -66,7 +66,7 @@
           "protocol": "The MQTT protocol your broker operates at. For example 3.1.1.",
           "set_ca_cert": "Select `Auto` for automatic CA validation, or `Custom` and click `next` to set a custom CA certificate, to allow validating your MQTT brokers certificate.",
           "set_client_cert": "Enable and click `next` to set a client certifificate and private key to authenticate against your MQTT broker.",
-          "transport": "The transport to be usef for the connection to your MQTT broker.",
+          "transport": "The transport to be used for the connection to your MQTT broker.",
           "ws_headers": "The WebSocket headers to pass through the WebSocket based connection to your MQTT broker.",
           "ws_path": "The WebSocket path to be used for the connection to your MQTT broker."
         }
