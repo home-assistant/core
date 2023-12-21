@@ -64,7 +64,7 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
         except ClientResponseError as e:
             raise HomeAssistantError from e
 
-    def set(self, *args):
+    def set(self, *args: Any):
         """Set a value in coordinator data."""
         for key, value in args:
             self.coordinator.data[key] = value
