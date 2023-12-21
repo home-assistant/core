@@ -290,11 +290,6 @@ class NotionEntity(CoordinatorEntity[DataUpdateCoordinator[NotionData]]):
         """Initialize the entity."""
         super().__init__(coordinator)
 
-        if bridge := self._async_get_bridge(bridge_id):
-            bridge_hardware_id = bridge.hardware_id
-        else:
-            bridge_hardware_id = ""
-
         sensor = self.coordinator.data.sensors[sensor_id]
 
         self._attr_device_info = DeviceInfo(
@@ -303,8 +298,10 @@ class NotionEntity(CoordinatorEntity[DataUpdateCoordinator[NotionData]]):
             model=str(sensor.hardware_revision),
             name=str(sensor.name).capitalize(),
             sw_version=sensor.firmware_version,
-            via_device=(DOMAIN, bridge_hardware_id),
         )
+
+        if bridge := self._async_get_bridge(bridge_id):
+            self._attr_device_info["via_device"] = (DOMAIN, bridge.hardware_id)
 
         self._attr_extra_state_attributes = {}
         self._attr_unique_id = listener_id
