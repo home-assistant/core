@@ -7,7 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant import config_entries
 from homeassistant.components.fastdotcom.const import DEFAULT_NAME, DOMAIN
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, STATE_UNKNOWN
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -69,8 +69,19 @@ async def test_delayed_speedtest_during_startup(
     ), patch.object(hass, "state", CoreState.starting):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+
+    assert config_entry.state == config_entries.ConfigEntryState.LOADED
+    state = hass.states.get("sensor.fast_com_download")
+    assert state is not None
+    # Assert state is unknown as coordinator is not allowed to start and fetch data yet
+    assert state.state == STATE_UNKNOWN
+
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.fast_com_download")
+    assert state is not None
+    assert state.state == "0"
 
     assert config_entry.state == config_entries.ConfigEntryState.LOADED
 
