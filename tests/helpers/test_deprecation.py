@@ -293,10 +293,8 @@ def test_check_if_deprecated_constant(
     }
     filename = f"/home/paulus/{module_name.replace('.', '/')}.py"
 
-    # mock module for homeassistant/helpers/frame.py#get_integration_frame
-    sys.modules[module_name] = Mock(__file__=filename)
-
-    with patch(
+    # mock sys.modules for homeassistant/helpers/frame.py#get_integration_frame
+    with patch.dict(sys.modules, {module_name: Mock(__file__=filename)}), patch(
         "homeassistant.helpers.frame.extract_stack",
         return_value=[
             Mock(
@@ -327,7 +325,7 @@ def test_check_if_deprecated_constant(
 
 
 def test_test_check_if_deprecated_constant_invalid(
-    caplog: pytest.LogCaptureFixture
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test check_if_deprecated_constant will raise an attribute error and create an log entry on an invalid deprecation type."""
     module_name = "homeassistant.components.hue.light"
