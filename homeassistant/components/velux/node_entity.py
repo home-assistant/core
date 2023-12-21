@@ -29,7 +29,7 @@ class VeluxNodeEntity(Entity):
     def unique_id(self) -> str:
         """Return the unique ID of this entity."""
         # Some devices from other vendors does not provide a serial_number
-        # Node_if is used instead, which is unique within velux component
+        # Node_id is used instead, which is unique within velux component
         if self.node.serial_number is None:
             unique_id = str(self.node.node_id)
         else:
