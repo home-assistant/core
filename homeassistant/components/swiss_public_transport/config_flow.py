@@ -56,6 +56,7 @@ class SwissPublicTransportConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except OpendataTransportError:
                 errors["base"] = "bad_config"
             except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unknown error")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(

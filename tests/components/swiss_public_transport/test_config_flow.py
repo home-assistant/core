@@ -65,35 +65,6 @@ async def test_flow_user_init_data_success(hass: HomeAssistant) -> None:
         (IndexError(), "unknown"),
     ],
 )
-async def test_flow_user_init_data_cannot_connect_error(
-    hass: HomeAssistant, raise_error, text_error
-) -> None:
-    """Test cannot_connect errors."""
-    with patch(
-        "homeassistant.components.swiss_public_transport.config_flow.OpendataTransport.async_get_data",
-        autospec=True,
-        side_effect=raise_error,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN, context={"source": "user"}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=MOCK_DATA_STEP,
-        )
-
-        assert result["type"] == "form"
-        assert result["errors"]["base"] == text_error
-
-
-@pytest.mark.parametrize(
-    ("raise_error", "text_error"),
-    [
-        (OpendataTransportConnectionError(), "cannot_connect"),
-        (OpendataTransportError(), "bad_config"),
-        (IndexError(), "unknown"),
-    ],
-)
 async def test_flow_user_init_data_unknown_error_and_recover(
     hass: HomeAssistant, raise_error, text_error
 ) -> None:
