@@ -686,7 +686,7 @@ demetriek==0.4.0
 denonavr==0.11.4
 
 # homeassistant.components.devialet
-devialet==1.4.3
+devialet==1.4.4
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.18.3
@@ -2287,7 +2287,7 @@ pyvesync==2.1.10
 pyvizio==0.1.61
 
 # homeassistant.components.velux
-pyvlx==0.2.20
+pyvlx==0.2.21
 
 # homeassistant.components.volumio
 pyvolumio==0.1.5
@@ -2368,7 +2368,7 @@ rfk101py==0.0.1
 rflink==0.0.65
 
 # homeassistant.components.ring
-ring-doorbell[listen]==0.8.3
+ring-doorbell[listen]==0.8.5
 
 # homeassistant.components.fleetgo
 ritassist==0.9.2

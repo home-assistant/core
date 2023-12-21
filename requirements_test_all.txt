@@ -561,7 +561,7 @@ demetriek==0.4.0
 denonavr==0.11.4
 
 # homeassistant.components.devialet
-devialet==1.4.3
+devialet==1.4.4
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.18.3
@@ -1780,7 +1780,7 @@ reolink-aio==0.8.4
 rflink==0.0.65
 
 # homeassistant.components.ring
-ring-doorbell[listen]==0.8.3
+ring-doorbell[listen]==0.8.5
 
 # homeassistant.components.roku
 rokuecp==0.18.1
