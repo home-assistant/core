@@ -5,14 +5,12 @@
   "config_flow": true,
   "dhcp": [
     {
-      "hostname": "linknlink_*"
-    },
-    {
-      "registered_devices": true
+      "hostname": "linknlink_*",
+      "macaddress": "E04B41*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/linknlink",
   "iot_class": "local_polling",
   "loggers": ["linknlink"],
-  "requirements": ["linknlink==0.1.9"]
+  "requirements": ["linknlink==0.2.0"]
 }

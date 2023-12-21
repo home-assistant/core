@@ -1,10 +1,8 @@
 """Config flow for linknlink devices."""
-from collections.abc import Mapping
 import errno
 from functools import partial
 import logging
 import socket
-from typing import Any
 
 import linknlink as llk
 from linknlink.exceptions import (
@@ -20,7 +18,7 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CO
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import config_validation as cv
 
-from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DEVICE_TYPES, DOMAIN
+from .const import DEFAULT_TIMEOUT, DEVICE_TYPES, DOMAIN
 from .helpers import format_mac
 
 _LOGGER = logging.getLogger(__name__)
@@ -201,7 +199,7 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Guide the user to unlock the device manually.
 
         We are unable to authenticate because the device is locked.
-        The user needs to open the Broadlink app and unlock the device.
+        The user needs to open the LinknLink app and unlock the device.
         """
         device = self.device
 
@@ -299,20 +297,3 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="finish", data_schema=vol.Schema(data_schema), errors=errors
         )
-
-    async def async_step_import(self, import_info):
-        """Handle a flow initiated by configuration file."""
-        self._async_abort_entries_match({CONF_HOST: import_info[CONF_HOST]})
-        return await self.async_step_user(import_info)
-
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
-        """Reauthenticate to the device."""
-        device = llk.gendevice(
-            entry_data[CONF_TYPE],
-            (entry_data[CONF_HOST], DEFAULT_PORT),
-            bytes.fromhex(entry_data[CONF_MAC]),
-            name=entry_data[CONF_NAME],
-        )
-        device.timeout = entry_data[CONF_TIMEOUT]
-        await self.async_set_device(device)
-        return await self.async_step_reset()

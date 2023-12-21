@@ -929,7 +929,7 @@ life360==6.0.0
 linear-garage-door==0.2.7
 
 # homeassistant.components.linknlink
-linknlink==0.1.9
+linknlink==0.2.0
 
 # homeassistant.components.logi_circle
 logi-circle==0.2.3

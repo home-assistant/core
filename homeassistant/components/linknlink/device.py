@@ -106,7 +106,6 @@ class LinknLinkDevice:
         )
         api.timeout = config.data[CONF_TIMEOUT]
         self.api = api
-
         try:
             self.fw_version = await self.hass.async_add_executor_job(
                 self._get_firmware_version
@@ -117,6 +116,7 @@ class LinknLinkDevice:
             return False
 
         except (NetworkTimeoutError, OSError) as err:
+            _LOGGER.error("Failed to connect to the device [%s]: %s", api.host[0], err)
             raise ConfigEntryNotReady from err
 
         except LinknLinkException as err:

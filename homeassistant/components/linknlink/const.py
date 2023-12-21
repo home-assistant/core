@@ -5,6 +5,7 @@ DOMAIN = "linknlink"
 
 DOMAINS_AND_TYPES = {
     Platform.SENSOR: {"EHUB", "EMOTION", "ETHS"},
+    Platform.BINARY_SENSOR: {"EHUB", "EMOTION"},
 }
 DEVICE_TYPES = set.union(*DOMAINS_AND_TYPES.values())
 

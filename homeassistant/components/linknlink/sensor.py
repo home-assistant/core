@@ -28,10 +28,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
-        key="pir_detected",
-        device_class=SensorDeviceClass.ENUM,
-    ),
 )
 
 

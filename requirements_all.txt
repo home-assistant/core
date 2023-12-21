@@ -1187,7 +1187,7 @@ limitlessled==1.1.3
 linear-garage-door==0.2.7
 
 # homeassistant.components.linknlink
-linknlink==0.1.9
+linknlink==0.2.0
 
 # homeassistant.components.linode
 linode-api==4.1.9b1

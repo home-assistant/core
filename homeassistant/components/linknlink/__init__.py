@@ -2,13 +2,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 from .device import LinknLinkDevice
 from .heartbeat import LinknLinkHeartbeat
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -28,7 +32,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     device = LinknLinkDevice(hass, entry)
     if not await device.async_setup():
-        return False
+        _LOGGER.error(
+            "Unable to setup linknlink device - config=%s", device.config.data
+        )
+        raise ConfigEntryNotReady
     if data.heartbeat is None:
         data.heartbeat = LinknLinkHeartbeat(hass)
         hass.async_create_task(data.heartbeat.async_setup())

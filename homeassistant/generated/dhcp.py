@@ -288,10 +288,7 @@ DHCP: list[dict[str, str | bool]] = [
     {
         "domain": "linknlink",
         "hostname": "linknlink_*",
-    },
-    {
-        "domain": "linknlink",
-        "registered_devices": True,
+        "macaddress": "E04B41*",
     },
     {
         "domain": "litterrobot",
