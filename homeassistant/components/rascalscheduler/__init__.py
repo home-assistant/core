@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Sequence
 import threading
+from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.rascalscheduler import (
@@ -31,7 +33,7 @@ def setup_rascal_scheduler_entity(hass: HomeAssistant) -> None:
     """Set up RASC scheduler entity."""
     LOGGER.info("Setup rascal entity")
     hass.data[DOMAIN] = RascalSchedulerEntity(hass)
-    # hass.bus.async_listen(RASC_RESPONSE, hass.data[DOMAIN].event_listener)
+    hass.bus.async_listen(RASC_RESPONSE, hass.data[DOMAIN].event_listener)
 
 
 def create_x_ready_queue(hass: HomeAssistant, entity_id: str) -> None:
@@ -52,9 +54,148 @@ def create_x_ready_queue(hass: HomeAssistant, entity_id: str) -> None:
 #         LOGGER.warning("Unable to delete unknown queue %s", entity_id)
 
 
-def rascal_scheduler(hass: HomeAssistant) -> RascalSchedulerEntity:
+def get_rascal_scheduler(hass: HomeAssistant) -> RascalSchedulerEntity:
     """Get rascal scheduler."""
     return hass.data[DOMAIN]
+
+
+def dag_operator(
+    hass: HomeAssistant,
+    routine_id: str,
+    action_script: Sequence[dict[str, Any]],
+) -> RoutineEntity:
+    """Convert the script to the dag."""
+    next_parents: list[ActionEntity] = []
+    entities: dict[str, ActionEntity] = {}
+    config: dict[str, Any] = {}
+
+    # configuration for each node
+    config["step"] = -1
+    config["routine_id"] = routine_id
+    config["hass"] = hass
+
+    for _, script in enumerate(action_script):
+        if (
+            "parallel" not in script
+            and "sequence" not in script
+            and "service" not in script
+        ):
+            # print("[dsf_outside]")
+            # print("next_parents: ")
+            # for entity in next_parents:
+            #     print(entity.action_id)
+
+            config["step"] = config["step"] + 1
+            action_id = config["routine_id"] + str(config["step"])
+
+            entities[action_id] = ActionEntity(
+                hass=hass,
+                action=script,
+                action_id=action_id,
+                action_state=None,
+                routine_id=config["routine_id"],
+            )
+
+            for entity in next_parents:
+                entities[action_id].parents.append(entity)
+
+            for entity in next_parents:
+                entity.children.append(entities[action_id])
+
+            next_parents.clear()
+            next_parents.append(entities[action_id])
+
+        else:
+            leaf_nodes = dfs(script, config, next_parents, entities)
+            next_parents.clear()
+            next_parents = leaf_nodes
+
+    # print("\n")
+    # for key, value in entities.items():
+    #     print("------- aciton_id:", key, "------------")
+    #     print(value.action)
+    #     print("parent: ")
+    #     for entity in value.parents:
+    #         print(entity.action_id, ",")
+
+    #     print("children: ")
+    #     for entity in value.children:
+    #         print(entity.action_id, ",")
+
+    RoutineEntity.set_counter(routine_id, 0)
+    return RoutineEntity(routine_id, entities)
+
+
+def dfs(
+    script: dict[str, Any],
+    config: dict[str, Any],
+    parents: list[ActionEntity],
+    entities: dict[str, Any],
+) -> list[ActionEntity]:
+    """Convert the script to the dag using dsf."""
+
+    next_parents = []
+    # print("script:", script)
+    if "parallel" in script:
+        for item in list(script.values())[0]:
+            # print("[parallel dsf]")
+            # print("parents:")
+            # for entity in parents:
+            #     print(entity.action_id)
+            # print("next_parents: ")
+            # for entity in next_parents:
+            #     print(entity.action_id)
+            # print("\n")
+
+            leaf_entities = dfs(item, config, parents, entities)
+
+            for entity in leaf_entities:
+                next_parents.append(entity)
+
+    elif "sequence" in script:
+        next_parents = parents
+        for item in list(script.values())[0]:
+            # print("[sequence dsf]")
+            # print("root:")
+            # for entity in parents:
+            #     print(entity.action_id)
+            # print("next_parents: ")
+            # for entity in next_parents:
+            #     print(entity.action_id)
+            # print("\n")
+
+            leaf_entities = dfs(item, config, next_parents, entities)
+            next_parents = leaf_entities
+
+    else:
+        # print("[general]")
+        config["step"] = config["step"] + 1
+        action_id = config["routine_id"] + str(config["step"])
+
+        # print("action_id:", action_id)
+        # print("action: ", script)
+        # print("parents: ")
+        # for entity in parents:
+        #     print(entity.action_id, ",")
+        # print("\n")
+
+        entities[action_id] = ActionEntity(
+            hass=config["hass"],
+            action=script,
+            action_id=action_id,
+            action_state=None,
+            routine_id=config["routine_id"],
+        )
+
+        for entity in parents:
+            entities[action_id].parents.append(entity)
+
+        for entity in parents:
+            entity.children.append(entities[action_id])
+
+        next_parents.append(entities[action_id])
+
+    return next_parents
 
 
 class BaseActiveRoutines:
@@ -142,12 +283,12 @@ class RascalSchedulerEntity(BaseActiveRoutines, BaseReadyQueues):
 
         def condition_check() -> bool:
             if action_entity.children:
-                print("parents: ", action_entity.children[0].parents)  # noqa: T201
+                # print("parents: ", action_entity.children[0].parents)  # noqa: T201
                 if action_entity.children[0].parents:
                     for p in action_entity.children[0].parents:
-                        print(  # noqa: T201
-                            "parent: ", p.action, " state: ", p.action_state
-                        )
+                        # print(  # noqa: T201
+                        #     "parent: ", p.action, " state: ", p.action_state
+                        # )
                         if p.action_state != RASC_COMPLETE:
                             return False
 
@@ -221,6 +362,5 @@ class RascalSchedulerEntity(BaseActiveRoutines, BaseReadyQueues):
         """Run action."""
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-
         loop.run_until_complete(action_entity.attach_triggered())
         loop.close()

@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from collections.abc import Iterator, MutableMapping, MutableSequence
+import json
+import time
 from typing import Any, TypeVar
 
 from homeassistant.components.device_automation import action as device_action
@@ -18,14 +20,45 @@ CONFIG_ACTION_ID = "action_id"
 CONFIG_ENTITY_ID = "entity_id"
 CONFIG_ACTION_ENTITY = "action_entity"
 
-
 RASC_SCHEDULED = "scheduled"
 RASC_START = "start"
 RASC_COMPLETE = "complete"
 RASC_RESPONSE = "rasc_response"
 
 
-class RoutineEntity:
+class BaseRoutineEntity:
+    """A class of base routine entity."""
+
+    counters: dict[str, int] = {}
+    routine_start_times: dict[str, float] = {}
+
+    @classmethod
+    def add_counter(cls, routine_id: str) -> None:
+        """Increment counter by 1."""
+        cls.counters[routine_id] = cls.counters[routine_id] + 1
+
+    @classmethod
+    def get_counter(cls, routine_id: str) -> int:
+        """Return counter based on the routine_id."""
+        return cls.counters[routine_id]
+
+    @classmethod
+    def set_counter(cls, routine_id: str, counter: int) -> None:
+        """Set the counter."""
+        cls.counters[routine_id] = counter
+
+    @classmethod
+    def get_start_time(cls, routine_id: str) -> float:
+        """Return the start time based on the routine_id."""
+        return cls.routine_start_times[routine_id]
+
+    @classmethod
+    def set_start_time(cls, routine_id: str, st: float) -> None:
+        """Set the start time."""
+        cls.routine_start_times[routine_id] = st
+
+
+class RoutineEntity(BaseRoutineEntity):
     """A class that describes routine entities for Rascal Scheduler."""
 
     def __init__(
@@ -34,8 +67,90 @@ class RoutineEntity:
         actions: dict[str, ActionEntity],
     ) -> None:
         """Initialize a routine entity."""
+
         self.routine_id = routine_id
+        self._instance_id: str
         self.actions = actions
+        self._start_time: float
+        self._timeout: int = 3
+
+    @property
+    def instance_id(self) -> str:
+        """Get instante_id."""
+        return self._instance_id
+
+    @property
+    def timeout(self) -> float:
+        """Get timeout."""
+        return self._timeout
+
+    def set_variables(self, var: dict[str, Any]) -> None:
+        """Set variables to all the action entities."""
+        for entity in self.actions.values():
+            entity.variables = var
+
+    def set_context(self, ctx: Context | None) -> None:
+        """Set context to all the action entities."""
+        for entity in self.actions.values():
+            entity.context = ctx
+
+    def duplicate(self) -> RoutineEntity:
+        """Duplicate the routine entity."""
+        routine_entity = {}
+
+        for action_id, entity in self.actions.items():
+            routine_entity[action_id] = ActionEntity(
+                hass=entity.hass,
+                action=entity.action,
+                action_id=entity.action_id,
+                action_state=None,
+                routine_id=entity.routine_id,
+            )
+
+        for action_id, entity in self.actions.items():
+            for parent in entity.parents:
+                routine_entity[action_id].parents.append(
+                    routine_entity[parent.action_id]
+                )
+
+            for child in entity.children:
+                routine_entity[action_id].children.append(
+                    routine_entity[child.action_id]
+                )
+
+        RoutineEntity.add_counter(self.routine_id)
+        RoutineEntity.set_start_time(self.routine_id, time.time())
+        self._instance_id = str(RoutineEntity.get_counter(self.routine_id))
+        self._start_time = time.time()
+
+        return RoutineEntity(self.routine_id, routine_entity)
+
+    def output(self) -> None:
+        """Print the routine information."""
+        actions = []
+        for action_id, entity in self.actions.items():
+            parents = []
+            children = []
+
+            for parent in entity.parents:
+                parents.append(parent.action_id)
+
+            for child in entity.children:
+                children.append(child.action_id)
+
+            entity_json = {
+                "action_id": action_id,
+                "action": entity.action,
+                "state": entity.action_state,
+                "parents": parents,
+                "children": children,
+            }
+
+            actions.append(entity_json)
+
+        out = {"routine_id": self.routine_id, "actions": actions}
+
+        print(json.dumps(out, indent=2))  # noqa: T201
 
 
 class ActionEntity:
@@ -48,12 +163,9 @@ class ActionEntity:
         action_id: str,
         action_state: str | None,
         routine_id: str | None,
-        variables: dict[str, Any],
-        context: Context | None,
-        parents: list[ActionEntity],
     ) -> None:
         """Initialize a routine entity."""
-        self._hass = hass
+        self.hass = hass
         self.action = action
         self.action_id = action_id
 
@@ -62,15 +174,11 @@ class ActionEntity:
         else:
             self.action_state = action_state
 
-        if parents:
-            self.parents = parents
-        else:
-            self.parents = []
-
+        self.parents: list[ActionEntity] = []
         self.children: list[ActionEntity] = []
         self.routine_id = routine_id
-        self.variables = variables
-        self.context = context
+        self.variables: dict[str, Any]
+        self.context: Context | None
 
     async def attach_triggered(self) -> None:
         """Trigger the function."""
@@ -87,9 +195,8 @@ class ActionEntity:
 
     async def _async_device_step(self) -> None:
         """Execute device automation."""
-        # print("device automation")
         await device_action.async_call_action_from_config(
-            self._hass, self.action, self.variables, self.context
+            self.hass, self.action, self.variables, self.context
         )
 
 

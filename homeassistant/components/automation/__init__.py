@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 import logging
+import time
 from typing import Any, Protocol, cast
 
 import voluptuous as vol
@@ -14,6 +15,8 @@ from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.components.rascalscheduler import (
     RoutineEntity,
+    dag_operator,
+    get_rascal_scheduler,
     setup_rascal_scheduler_entity,
 )
 from homeassistant.const import (
@@ -449,7 +452,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self._blueprint_inputs = blueprint_inputs
         self._trace_config = trace_config
         self._attr_unique_id = automation_id
-        self.routine: RoutineEntity | None = None
+        self.routine: RoutineEntity
 
     @property
     def name(self) -> str:
@@ -659,13 +662,30 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             # Make a new empty script stack; automations are allowed
             # to recursively trigger themselves
             script_stack_cv.set([])
-            # routine_id, routine_entity = dag_operator(
-            #     self.hass,
-            #     str(self._attr_unique_id),
-            #     self.action_script.sequence,
-            #     variables,
-            #     trigger_context,
-            # )
+            rascal = get_rascal_scheduler(self.hass)
+            counter = RoutineEntity.get_counter(self.routine.routine_id)
+
+            if counter == 0:
+                routine_entity = self.routine.duplicate()
+                routine_entity.set_variables(variables)
+                routine_entity.set_context(trigger_context)
+                rascal.start_routine(routine_entity)
+            else:
+                if counter > 1:
+                    return
+
+                now = time.time()
+                lastest_routine_st = RoutineEntity.get_start_time(
+                    self.routine.routine_id
+                )
+                timeout = 3000
+
+                if (now - lastest_routine_st) * 1000 > timeout:
+                    routine_entity = self.routine.duplicate()
+                    routine_entity.set_variables(variables)
+                    routine_entity.set_context(trigger_context)
+                    rascal.start_routine(routine_entity)
+
             # component: EntityComponent[BaseScriptEntity] = self.hass.data['script']
             # print("action: ", self.action_script.sequence, " \nvariables: ", variables, " \ntrigger: ", trigger_context)
             # script = component.get_entity('script.1702482535051')
@@ -689,42 +709,6 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             #     assistant_settings = exposed_entity.assistants
 
             # print(async_get_entity_settings())
-            # routine_id, routine_entity =
-
-            # for item in routine_entity.actions.values():
-
-            #     if len(item.parents) != 0 and len(item.children)!=0:
-            #         print(
-            #             "routine_id:", item.routine_id,
-            #             "action_id:", item.action_id,
-            #             "action:", item.action,
-            #             "parents:", item.parents[0].action_id,
-            #             "children:", item.children[0].action_id
-            #         )
-            #     elif len(item.children)!=0:
-            #         print(
-            #             "routine_id:", item.routine_id,
-            #             "action_id:", item.action_id,
-            #             "action:", item.action,
-            #             "parents:", item.parents,
-            #             "children:", item.children[0].action_id
-            #         )
-            #     elif len(item.parents)!=0:
-            #         print(
-            #             "routine_id:", item.routine_id,
-            #             "action_id:", item.action_id,
-            #             "action:", item.action,
-            #             "parents:", item.parents[0].action_id,
-            #             "children:", item.children
-            #         )
-            #     else:
-            #         print(
-            #             "routine_id:", item.routine_id,
-            #             "action_id:", item.action_id,
-            #             "action:", item.action,
-            #             "parents:", item.parents,
-            #             "children:", item.children
-            #         )
 
             # rascal = rascal_scheduler(self.hass)
             # rascal.start_routine(routine_entity)
@@ -964,6 +948,16 @@ async def _create_automation_entities(
             automation_config.raw_blueprint_inputs,
             config_block[CONF_TRACE],
         )
+
+        routine_entity = dag_operator(
+            hass,
+            str(automation_id),
+            action_script.sequence,
+        )
+        # routine_entity.output()
+
+        entity.routine = routine_entity
+
         entities.append(entity)
 
     return entities
