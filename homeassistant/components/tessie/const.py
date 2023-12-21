@@ -27,3 +27,12 @@ class TessieSeatHeaterOptions(StrEnum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
+
+
+class TessieClimateKeeper(StrEnum):
+    """Tessie Climate Keeper Modes."""
+
+    OFF = "off"
+    ON = "on"
+    DOG = "dog"
+    CAMP = "camp"

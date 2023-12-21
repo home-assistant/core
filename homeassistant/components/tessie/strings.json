@@ -22,6 +22,21 @@
     }
   },
   "entity": {
+    "climate": {
+      "primary": {
+        "name": "[%key:component::climate::title%]",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "off": "Normal",
+              "on": "Keep mode",
+              "dog": "Dog mode",
+              "camp": "Camp mode"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "charge_state_usable_battery_level": {
         "name": "Battery level"
