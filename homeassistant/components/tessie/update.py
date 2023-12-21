@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, TessieUpdateStatus
 from .coordinator import TessieDataUpdateCoordinator
 from .entity import TessieEntity
 
@@ -33,6 +33,11 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
         super().__init__(coordinator, "update")
 
     @property
+    def auto_update(self) -> bool:
+        """Return whether the entity is scheduled to updated."""
+        return self.get("vehicle_state_software_update_status") == TessieUpdateStatus.SCHEDULED
+
+    @property
     def installed_version(self) -> str:
         """Return the current app version."""
         # Discard build from version number
@@ -41,14 +46,14 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
     @property
     def latest_version(self) -> str | None:
         """Return the latest version."""
-        # The API returns a single space when no update is available
-        if len(version := self.get("vehicle_state_software_update_version")) > 4:
-            return version
+        # Dont show an update when its not in a state that can be actioned
+        if self.get("vehicle_state_software_update_status") in [TessieUpdateStatus.AVAILABLE, TessieUpdateStatus.SCHEDULED, TessieUpdateStatus.INSTALLING]:
+            return self.get("vehicle_state_software_update_version")
         return None
 
     @property
     def in_progress(self) -> bool | int | None:
         """Update installation progress."""
-        if self.get("vehicle_state_software_update_status"):
+        if self.get("vehicle_state_software_update_status") == TessieUpdateStatus.INSTALLING:
             return self.get("vehicle_state_software_update_install_perc")
         return None
