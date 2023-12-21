@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     config_entry.async_on_unload(
         await mqtt.async_subscribe(
-            hass, config_entry.data[CONF_DATA_TOPIC], mqtt_callback, 0
+            hass, config_entry.data[CONF_DATA_TOPIC], mqtt_callback
         )
     )
     _LOGGER.debug(
