@@ -160,7 +160,7 @@ def adb_decorator(
     """
 
     def _adb_decorator(
-        func: _FuncType[_ADBDeviceT, _P, _R]
+        func: _FuncType[_ADBDeviceT, _P, _R],
     ) -> _ReturnFuncType[_ADBDeviceT, _P, _R]:
         """Wrap the provided ADB method and catch exceptions."""
 

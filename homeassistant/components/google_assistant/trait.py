@@ -29,6 +29,7 @@ from homeassistant.components import (
     sensor,
     switch,
     vacuum,
+    water_heater,
 )
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.components.camera import CameraEntityFeature
@@ -40,6 +41,7 @@ from homeassistant.components.light import LightEntityFeature
 from homeassistant.components.lock import STATE_JAMMED, STATE_UNLOCKING
 from homeassistant.components.media_player import MediaPlayerEntityFeature, MediaType
 from homeassistant.components.vacuum import VacuumEntityFeature
+from homeassistant.components.water_heater import WaterHeaterEntityFeature
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_BATTERY_LEVEL,
@@ -139,6 +141,7 @@ COMMAND_PAUSEUNPAUSE = f"{PREFIX_COMMANDS}PauseUnpause"
 COMMAND_BRIGHTNESS_ABSOLUTE = f"{PREFIX_COMMANDS}BrightnessAbsolute"
 COMMAND_COLOR_ABSOLUTE = f"{PREFIX_COMMANDS}ColorAbsolute"
 COMMAND_ACTIVATE_SCENE = f"{PREFIX_COMMANDS}ActivateScene"
+COMMAND_SET_TEMPERATURE = f"{PREFIX_COMMANDS}SetTemperature"
 COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT = (
     f"{PREFIX_COMMANDS}ThermostatTemperatureSetpoint"
 )
@@ -417,6 +420,9 @@ class OnOffTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
+        if domain == water_heater.DOMAIN and features & WaterHeaterEntityFeature.ON_OFF:
+            return True
+
         return domain in (
             group.DOMAIN,
             input_boolean.DOMAIN,
@@ -894,38 +900,97 @@ class StartStopTrait(_Trait):
 
 @register_trait
 class TemperatureControlTrait(_Trait):
-    """Trait for devices (other than thermostats) that support controlling temperature. Workaround for Temperature sensors.
+    """Trait for devices (other than thermostats) that support controlling temperature.
+
+    Control the target temperature of water heaters.
+    Offers a workaround for Temperature sensors by setting queryOnlyTemperatureControl
+    in the response.
 
     https://developers.google.com/assistant/smarthome/traits/temperaturecontrol
     """
 
     name = TRAIT_TEMPERATURE_CONTROL
 
+    commands = [
+        COMMAND_SET_TEMPERATURE,
+    ]
+
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
         return (
+            domain == water_heater.DOMAIN
+            and features & WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        ) or (
             domain == sensor.DOMAIN
             and device_class == sensor.SensorDeviceClass.TEMPERATURE
         )
 
     def sync_attributes(self):
         """Return temperature attributes for a sync request."""
-        return {
-            "temperatureUnitForUX": _google_temp_unit(
-                self.hass.config.units.temperature_unit
-            ),
-            "queryOnlyTemperatureControl": True,
-            "temperatureRange": {
+        response = {}
+        domain = self.state.domain
+        attrs = self.state.attributes
+        unit = self.hass.config.units.temperature_unit
+        response["temperatureUnitForUX"] = _google_temp_unit(unit)
+
+        if domain == water_heater.DOMAIN:
+            min_temp = round(
+                TemperatureConverter.convert(
+                    float(attrs[water_heater.ATTR_MIN_TEMP]),
+                    unit,
+                    UnitOfTemperature.CELSIUS,
+                )
+            )
+            max_temp = round(
+                TemperatureConverter.convert(
+                    float(attrs[water_heater.ATTR_MAX_TEMP]),
+                    unit,
+                    UnitOfTemperature.CELSIUS,
+                )
+            )
+            response["temperatureRange"] = {
+                "minThresholdCelsius": min_temp,
+                "maxThresholdCelsius": max_temp,
+            }
+        else:
+            response["queryOnlyTemperatureControl"] = True
+            response["temperatureRange"] = {
                 "minThresholdCelsius": -100,
                 "maxThresholdCelsius": 100,
-            },
-        }
+            }
+
+        return response
 
     def query_attributes(self):
         """Return temperature states."""
         response = {}
+        domain = self.state.domain
         unit = self.hass.config.units.temperature_unit
+        if domain == water_heater.DOMAIN:
+            target_temp = self.state.attributes[water_heater.ATTR_TEMPERATURE]
+            current_temp = self.state.attributes[water_heater.ATTR_CURRENT_TEMPERATURE]
+            if target_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+                response["temperatureSetpointCelsius"] = round(
+                    TemperatureConverter.convert(
+                        float(target_temp),
+                        unit,
+                        UnitOfTemperature.CELSIUS,
+                    ),
+                    1,
+                )
+            if current_temp is not None:
+                response["temperatureAmbientCelsius"] = round(
+                    TemperatureConverter.convert(
+                        float(current_temp),
+                        unit,
+                        UnitOfTemperature.CELSIUS,
+                    ),
+                    1,
+                )
+            return response
+
+        # domain == sensor.DOMAIN
         current_temp = self.state.state
         if current_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             temp = round(
@@ -940,8 +1005,35 @@ class TemperatureControlTrait(_Trait):
         return response
 
     async def execute(self, command, data, params, challenge):
-        """Unsupported."""
-        raise SmartHomeError(ERR_NOT_SUPPORTED, "Execute is not supported by sensor")
+        """Execute a temperature point or mode command."""
+        # All sent in temperatures are always in Celsius
+        domain = self.state.domain
+        unit = self.hass.config.units.temperature_unit
+
+        if domain == water_heater.DOMAIN and command == COMMAND_SET_TEMPERATURE:
+            min_temp = self.state.attributes[water_heater.ATTR_MIN_TEMP]
+            max_temp = self.state.attributes[water_heater.ATTR_MAX_TEMP]
+            temp = TemperatureConverter.convert(
+                params["temperature"], UnitOfTemperature.CELSIUS, unit
+            )
+            if unit == UnitOfTemperature.FAHRENHEIT:
+                temp = round(temp)
+            if temp < min_temp or temp > max_temp:
+                raise SmartHomeError(
+                    ERR_VALUE_OUT_OF_RANGE,
+                    f"Temperature should be between {min_temp} and {max_temp}",
+                )
+
+            await self.hass.services.async_call(
+                water_heater.DOMAIN,
+                water_heater.SERVICE_SET_TEMPERATURE,
+                {ATTR_ENTITY_ID: self.state.entity_id, ATTR_TEMPERATURE: temp},
+                blocking=not self.config.should_report_state,
+                context=data.context,
+            )
+            return
+
+        raise SmartHomeError(ERR_NOT_SUPPORTED, f"Execute is not supported by {domain}")
 
 
 @register_trait
@@ -1696,6 +1788,12 @@ class ModesTrait(_Trait):
         if domain == light.DOMAIN and features & LightEntityFeature.EFFECT:
             return True
 
+        if (
+            domain == water_heater.DOMAIN
+            and features & WaterHeaterEntityFeature.OPERATION_MODE
+        ):
+            return True
+
         if domain != media_player.DOMAIN:
             return False
 
@@ -1736,6 +1834,7 @@ class ModesTrait(_Trait):
             (select.DOMAIN, select.ATTR_OPTIONS, "option"),
             (humidifier.DOMAIN, humidifier.ATTR_AVAILABLE_MODES, "mode"),
             (light.DOMAIN, light.ATTR_EFFECT_LIST, "effect"),
+            (water_heater.DOMAIN, water_heater.ATTR_OPERATION_LIST, "operation mode"),
         ):
             if self.state.domain != domain:
                 continue
@@ -1769,6 +1868,11 @@ class ModesTrait(_Trait):
         elif self.state.domain == humidifier.DOMAIN:
             if ATTR_MODE in attrs:
                 mode_settings["mode"] = attrs.get(ATTR_MODE)
+        elif self.state.domain == water_heater.DOMAIN:
+            if water_heater.ATTR_OPERATION_MODE in attrs:
+                mode_settings["operation mode"] = attrs.get(
+                    water_heater.ATTR_OPERATION_MODE
+                )
         elif self.state.domain == light.DOMAIN and (
             effect := attrs.get(light.ATTR_EFFECT)
         ):
@@ -1833,6 +1937,20 @@ class ModesTrait(_Trait):
                 humidifier.SERVICE_SET_MODE,
                 {
                     ATTR_MODE: requested_mode,
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                },
+                blocking=not self.config.should_report_state,
+                context=data.context,
+            )
+            return
+
+        if self.state.domain == water_heater.DOMAIN:
+            requested_mode = settings["operation mode"]
+            await self.hass.services.async_call(
+                water_heater.DOMAIN,
+                water_heater.SERVICE_SET_OPERATION_MODE,
+                {
+                    water_heater.ATTR_OPERATION_MODE: requested_mode,
                     ATTR_ENTITY_ID: self.state.entity_id,
                 },
                 blocking=not self.config.should_report_state,
