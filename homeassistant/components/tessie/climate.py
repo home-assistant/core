@@ -47,7 +47,7 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
     )
     _attr_preset_modes: list = [
         TessieClimateModes.OFF,
-        TessieClimateModes.KEEP,
+        TessieClimateModes.ON,
         TessieClimateModes.DOG,
         TessieClimateModes.CAMP,
     ]
