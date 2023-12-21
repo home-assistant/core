@@ -98,10 +98,10 @@ class TessieChargePortEntity(TessieEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open windows."""
-        if await self.run(open_unlock_charge_port):
-            self.set((self.key, True))
+        await self.run(open_unlock_charge_port)
+        self.set((self.key, True))
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close windows."""
-        if await self.run(close_charge_port):
-            self.set((self.key, False))
+        await self.run(close_charge_port)
+        self.set((self.key, False))

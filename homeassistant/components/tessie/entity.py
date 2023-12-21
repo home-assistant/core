@@ -55,7 +55,7 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
     async def run(self, func: Callable, **kargs: Any):
         """Run a tessie_api function and handle exceptions."""
         try:
-            response = await func(
+            await func(
                 session=self.coordinator.session,
                 vin=self.vin,
                 api_key=self.coordinator.api_key,
@@ -63,7 +63,6 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
             )
         except ClientResponseError as e:
             raise HomeAssistantError from e
-        return response.get("result") is True
 
     def set(self, *args):
         """Set a value in coordinator data."""
