@@ -23,9 +23,6 @@
   },
   "entity": {
     "device_tracker": {
-      "location": {
-        "name": "Location"
-      },
       "route": {
         "name": "Route"
       }

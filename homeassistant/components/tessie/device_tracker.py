@@ -48,6 +48,7 @@ class TessieDeviceTrackerEntity(TessieEntity, TrackerEntity):
 class TessieDeviceTrackerLocationEntity(TessieDeviceTrackerEntity):
     """Vehicle Location Device Tracker Class."""
 
+    _attr_name = None
     key = "location"
 
     @property
