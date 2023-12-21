@@ -118,11 +118,17 @@ class SwissPublicTransportSensor(SensorEntity):
         self._opendata = opendata
         self._attr_name = name
         self._remaining_time: timedelta | None = None
+        self._connected = False
 
     @property
     def native_value(self) -> str:
         """Return the state of the sensor."""
         return self._opendata.connections[0]["departure"]
+
+    @property
+    def available(self) -> bool:
+        """Return the available of the sensor."""
+        return self._connected
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
@@ -156,4 +162,11 @@ class SwissPublicTransportSensor(SensorEntity):
             if not self._remaining_time or self._remaining_time.total_seconds() < 0:
                 await self._opendata.async_get_data()
         except OpendataTransportError:
-            _LOGGER.error("Unable to retrieve data from transport.opendata.ch")
+            self._connected = False
+            _LOGGER.warning(
+                "Unable to connect and retrieve data from transport.opendata.ch"
+            )
+        else:
+            if not self._connected:
+                self._connected = True
+                _LOGGER.info("Connection established with transport.opendata.ch")
