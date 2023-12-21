@@ -184,7 +184,7 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
             DOMAIN,
             "deprecated_valve_switch",
             breaks_in_ha_version="2024.7.0",
-            is_fixable=False,
+            is_fixable=True,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_valve_switch",
         )
@@ -198,7 +198,7 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
             DOMAIN,
             "deprecated_valve_switch",
             breaks_in_ha_version="2024.7.0",
-            is_fixable=False,
+            is_fixable=True,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_valve_switche",
         )
@@ -217,7 +217,7 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
                 DOMAIN,
                 f"deprecated_valve_{self.entity_id}_{item}",
                 breaks_in_ha_version="2024.7.0",
-                is_fixable=False,
+                is_fixable=True,
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_valve_switch_entity",
                 translation_placeholders={
