@@ -36,24 +36,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            self._async_abort_entries_match(user_input)
+            ccm15 = CCM15Device(
+                user_input[CONF_HOST], user_input[CONF_PORT], DEFAULT_TIMEOUT
+            )
             try:
-                self._async_abort_entries_match(user_input)
-                ccm15 = CCM15Device(
-                    user_input[CONF_HOST], user_input[CONF_PORT], DEFAULT_TIMEOUT
-                )
                 if not await ccm15.async_test_connection():
-                    raise CannotConnect
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
+                    errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                info = {
-                    CONF_HOST: user_input[CONF_HOST],
-                    CONF_PORT: user_input[CONF_PORT],
-                }
-                return self.async_create_entry(title=info[CONF_HOST], data=user_input)
+                return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
