@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.ccm15.config_flow import CannotConnect
 from homeassistant.components.ccm15.const import DOMAIN
 from homeassistant.config_entries import data_entry_flow
 from homeassistant.core import HomeAssistant
@@ -76,8 +75,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "ccm15.CCM15Device.CCM15Device.async_test_connection",
-        side_effect=CannotConnect,
+        "ccm15.CCM15Device.CCM15Device.async_test_connection", return_value=False
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -128,5 +126,5 @@ async def test_duplicate_host(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
