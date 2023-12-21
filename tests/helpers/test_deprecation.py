@@ -366,7 +366,7 @@ def test_check_if_deprecated_constant_integration_not_found(
     assert (
         module_name,
         logging.WARNING,
-        f"TEST_CONSTANT wis a deprecated constant{extra_msg}",
+        f"TEST_CONSTANT is a deprecated constant{extra_msg}",
     ) not in caplog.record_tuples
 
 
