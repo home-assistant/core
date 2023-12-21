@@ -341,7 +341,12 @@ class CachedProperties(type):
                 if (attr_name) not in cls.__dict__:
                     continue
                 if hasattr(cls, attr_name):
-                    setattr(cls, "__attr_" + property_name, getattr(cls, attr_name))
+                    private_attr_name = "__attr_" + property_name
+                    attr = getattr(cls, attr_name)
+                    setattr(cls, private_attr_name, attr)
+                    if isinstance(attr, dataclasses.Field):
+                        annotations: dict[str, str] = cls.__dict__["__annotations__"]
+                        annotations[private_attr_name] = annotations.pop(attr_name)
                 setattr(
                     cls,
                     attr_name,
