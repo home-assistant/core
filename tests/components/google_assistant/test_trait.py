@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta
 from unittest.mock import ANY, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import (
@@ -76,7 +77,7 @@ from homeassistant.core import (
     HomeAssistant,
     State,
 )
-from homeassistant.util import color
+from homeassistant.util import color, dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import BASIC_CONFIG, MockConfig
@@ -3389,7 +3390,9 @@ async def test_humidity_setting_sensor_data(
     assert err.value.code == const.ERR_NOT_SUPPORTED
 
 
-async def test_transport_control(hass: HomeAssistant) -> None:
+async def test_transport_control(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test the TransportControlTrait."""
     assert helpers.get_google_type(media_player.DOMAIN, None) is not None
 
@@ -3398,7 +3401,7 @@ async def test_transport_control(hass: HomeAssistant) -> None:
             media_player.DOMAIN, feature, None, None
         )
 
-    now = datetime(2020, 1, 1)
+    now = datetime(2020, 1, 1, tzinfo=dt_util.UTC)
 
     trt = trait.TransportControlTrait(
         hass,
@@ -3429,13 +3432,13 @@ async def test_transport_control(hass: HomeAssistant) -> None:
     )
 
     # Patch to avoid time ticking over during the command failing the test
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        await trt.execute(
-            trait.COMMAND_MEDIA_SEEK_RELATIVE,
-            BASIC_DATA,
-            {"relativePositionMs": 10000},
-            {},
-        )
+    freezer.move_to(now)
+    await trt.execute(
+        trait.COMMAND_MEDIA_SEEK_RELATIVE,
+        BASIC_DATA,
+        {"relativePositionMs": 10000},
+        {},
+    )
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: "media_player.bla",
