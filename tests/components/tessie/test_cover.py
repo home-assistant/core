@@ -22,7 +22,7 @@ async def test_window(hass: HomeAssistant) -> None:
 
     await setup_platform(hass)
 
-    entity_id = "cover.test_windows"
+    entity_id = "cover.test_vent_windows"
     assert hass.states.get(entity_id).state == STATE_CLOSED
 
     # Test open windows
