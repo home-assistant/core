@@ -62,23 +62,23 @@ class TessieWindowEntity(TessieEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open windows."""
-        if await self.run(vent_windows):
-            self.set(
-                ("vehicle_state_fd_window", 1),
-                ("vehicle_state_fp_window", 1),
-                ("vehicle_state_rd_window", 1),
-                ("vehicle_state_rp_window", 1),
-            )
+        await self.run(vent_windows)
+        self.set(
+            ("vehicle_state_fd_window", 1),
+            ("vehicle_state_fp_window", 1),
+            ("vehicle_state_rd_window", 1),
+            ("vehicle_state_rp_window", 1),
+        )
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close windows."""
-        if await self.run(close_windows):
-            self.set(
-                ("vehicle_state_fd_window", 0),
-                ("vehicle_state_fp_window", 0),
-                ("vehicle_state_rd_window", 0),
-                ("vehicle_state_rp_window", 0),
-            )
+        await self.run(close_windows)
+        self.set(
+            ("vehicle_state_fd_window", 0),
+            ("vehicle_state_fp_window", 0),
+            ("vehicle_state_rd_window", 0),
+            ("vehicle_state_rp_window", 0),
+        )
 
 
 class TessieChargePortEntity(TessieEntity, CoverEntity):
