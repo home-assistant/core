@@ -161,6 +161,7 @@ def _print_deprecation_warning(
         description,
         verb,
         breaks_in_ha_version,
+        log_when_no_integration_is_found=True,
     )
 
 
@@ -171,6 +172,8 @@ def _print_deprecation_warning_internal(
     description: str,
     verb: str,
     breaks_in_ha_version: str | None,
+    *,
+    log_when_no_integration_is_found: bool,
 ) -> None:
     logger = logging.getLogger(module_name)
     if breaks_in_ha_version:
@@ -180,13 +183,14 @@ def _print_deprecation_warning_internal(
     try:
         integration_frame = get_integration_frame()
     except MissingIntegrationFrame:
-        logger.warning(
-            "%s is a deprecated %s%s. Use %s instead",
-            obj_name,
-            description,
-            breaks_in,
-            replacement,
-        )
+        if log_when_no_integration_is_found:
+            logger.warning(
+                "%s is a deprecated %s%s. Use %s instead",
+                obj_name,
+                description,
+                breaks_in,
+                replacement,
+            )
     else:
         if integration_frame.custom_integration:
             hass: HomeAssistant | None = None
@@ -280,6 +284,7 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
         "constant",
         "used",
         breaks_in_ha_version,
+        log_when_no_integration_is_found=False,
     )
     return value
 
