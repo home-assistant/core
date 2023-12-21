@@ -37,7 +37,7 @@ async def setup_fronius_integration(
 
 
 def _load_and_patch_fixture(
-    override_data: dict[str, list[tuple[list[str], Any]]]
+    override_data: dict[str, list[tuple[list[str], Any]]],
 ) -> Callable[[str, str | None], str]:
     """Return a fixture loader that patches values at nested keys for a given filename."""
 
