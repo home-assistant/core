@@ -161,6 +161,7 @@ def _print_deprecation_warning(
         description,
         verb,
         breaks_in_ha_version,
+        log_when_no_integration_is_found=True,
     )
 
 
@@ -172,7 +173,7 @@ def _print_deprecation_warning_internal(
     verb: str,
     breaks_in_ha_version: str | None,
     *,
-    log_when_no_integration_is_found: bool = True,
+    log_when_no_integration_is_found: bool,
 ) -> None:
     logger = logging.getLogger(module_name)
     if breaks_in_ha_version:
