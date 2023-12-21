@@ -262,7 +262,7 @@ class CalculatedState:
 
 
 class CachedProperties(type):
-    """Metaclass which invalidates cached entity propertis on write to _attr_."""
+    """Metaclass which invalidates cached entity properties on write to _attr_."""
 
     def __new__(
         mcs,  # noqa: N804  ruff bug, ruff does not understand this is a metaclass
@@ -331,18 +331,19 @@ class CachedProperties(type):
             setattr(cls, attr_name, make_property(property_name))
 
         cached_properties: set[str] = namespace["_CachedProperties__cached_properties"]
-        for property_name in cached_properties:
-            move_attr(cls, property_name)
-
-        for parent in cls.__mro__[:0:-1]:
+        moved: set[str] = set()
+        for parent in cls.__mro__:
             if not hasattr(parent, "_CachedProperties__cached_properties"):
                 continue
             cached_properties = getattr(parent, "_CachedProperties__cached_properties")
             for property_name in cached_properties:
+                if property_name in moved:
+                    continue
                 attr_name = "_attr_" + property_name
                 if (attr_name) not in cls.__dict__:
                     continue
                 move_attr(cls, property_name)
+                moved.add(property_name)
 
 
 class ABCCachedProperties(CachedProperties, ABCMeta):

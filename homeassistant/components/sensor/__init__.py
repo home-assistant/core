@@ -186,7 +186,19 @@ def _numeric_state_expected(
     return device_class is not None
 
 
-class SensorEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "device_class",
+    "last_reset",
+    "native_unit_of_measurement",
+    "native_value",
+    "options",
+    "state_class",
+    "suggested_display_precision",
+    "suggested_unit_of_measurement",
+}
+
+
+class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for sensor entities."""
 
     _entity_component_unrecorded_attributes = frozenset({ATTR_OPTIONS})
@@ -428,7 +440,7 @@ class SensorEntity(Entity):
 
         return None
 
-    @property
+    @cached_property
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
         return self._attr_native_value
