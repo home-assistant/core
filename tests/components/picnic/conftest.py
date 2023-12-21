@@ -58,7 +58,7 @@ async def init_integration(
 
 @pytest.fixture
 async def get_items(
-    hass_ws_client: WebSocketGenerator
+    hass_ws_client: WebSocketGenerator,
 ) -> Callable[[], Awaitable[dict[str, str]]]:
     """Fixture to fetch items from the todo websocket."""
 

@@ -117,7 +117,7 @@ _P = ParamSpec("_P")
 
 
 def raise_on_request_error(
-    func: Callable[Concatenate[_T, _P], Awaitable[None]]
+    func: Callable[Concatenate[_T, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
     """Define a decorator to raise on a request error."""
 
