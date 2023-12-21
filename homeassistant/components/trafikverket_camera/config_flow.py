@@ -104,7 +104,7 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors, cameras = await self.validate_input(api_key, location)
 
             if not errors and cameras:
-                if len(cameras) > 0:
+                if len(cameras) > 1:
                     self.cameras = cameras
                     self.api_key = api_key
                     return await self.async_step_multiple_cameras()
