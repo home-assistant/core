@@ -29,7 +29,6 @@ class DROPEntity(CoordinatorEntity[DROPDeviceDataUpdateCoordinator]):
         """Init DROP entity."""
         super().__init__(coordinator)
         if TYPE_CHECKING:
-            assert coordinator.config_entry is not None
             assert coordinator.config_entry.unique_id is not None
         unique_id = coordinator.config_entry.unique_id
         self._attr_unique_id = f"{unique_id}_{entity_type}"
