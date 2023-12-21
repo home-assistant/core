@@ -116,7 +116,9 @@ _P = ParamSpec("_P")
 
 
 def _handle_cloud_errors(
-    handler: Callable[Concatenate[_HassViewT, web.Request, _P], Awaitable[web.Response]]
+    handler: Callable[
+        Concatenate[_HassViewT, web.Request, _P], Awaitable[web.Response]
+    ],
 ) -> Callable[
     Concatenate[_HassViewT, web.Request, _P], Coroutine[Any, Any, web.Response]
 ]:
