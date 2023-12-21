@@ -67,6 +67,18 @@ async def test_form_invalid_host(
     assert result2["errors"] == {"base": "cannot_connect"}
     assert len(mock_setup_entry.mock_calls) == 0
 
+    with patch(
+        "ccm15.CCM15Device.CCM15Device.async_test_connection", return_value=True
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.0.0.1",
+            },
+        )
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
