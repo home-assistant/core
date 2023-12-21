@@ -24,7 +24,6 @@ from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -233,9 +232,7 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
 
     def process_faces(self, faces: list[FaceInformation], total: int) -> None:
         """Send event with detected faces and store data."""
-        run_callback_threadsafe(
-            self.hass.loop, self.async_process_faces, faces, total
-        ).result()
+        self.hass.loop.call_soon_threadsafe(self.async_process_faces, faces, total)
 
     @callback
     def async_process_faces(self, faces: list[FaceInformation], total: int) -> None:
