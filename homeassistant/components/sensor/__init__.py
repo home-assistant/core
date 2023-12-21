@@ -7,14 +7,19 @@ from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
+from functools import partial
 import logging
 from math import ceil, floor, isfinite, log10
-from typing import Any, Final, Self, cast, final
+from typing import TYPE_CHECKING, Any, Final, Self, cast, final
 
 from typing_extensions import override
 
 from homeassistant.config_entries import ConfigEntry
 
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 # pylint: disable-next=hass-deprecated-import
 from homeassistant.const import (  # noqa: F401
     ATTR_UNIT_OF_MEASUREMENT,
@@ -57,6 +62,10 @@ from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
+from homeassistant.helpers.deprecation import (
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
@@ -66,6 +75,9 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
 from .const import (  # noqa: F401
+    _DEPRECATED_STATE_CLASS_MEASUREMENT,
+    _DEPRECATED_STATE_CLASS_TOTAL,
+    _DEPRECATED_STATE_CLASS_TOTAL_INCREASING,
     ATTR_LAST_RESET,
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
@@ -76,9 +88,6 @@ from .const import (  # noqa: F401
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     NON_NUMERIC_DEVICE_CLASSES,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
     STATE_CLASSES,
     STATE_CLASSES_SCHEMA,
     UNIT_CONVERTERS,
@@ -109,6 +118,12 @@ __all__ = [
     "SensorExtraStoredData",
     "SensorStateClass",
 ]
+
+# As we import deprecated constants from the const module, we need to add these two functions
+# otherwise this module will be logged for using deprecated constants and not the custom component
+# Both can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 # mypy: disallow-any-generics
 
@@ -291,7 +306,7 @@ class SensorEntity(Entity):
         """
         return self.device_class not in (None, SensorDeviceClass.ENUM)
 
-    @property
+    @cached_property
     @override
     def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this entity."""
@@ -312,7 +327,7 @@ class SensorEntity(Entity):
             self.suggested_display_precision,
         )
 
-    @property
+    @cached_property
     def options(self) -> list[str] | None:
         """Return a set of possible options."""
         if hasattr(self, "_attr_options"):
@@ -321,7 +336,7 @@ class SensorEntity(Entity):
             return self.entity_description.options
         return None
 
-    @property
+    @cached_property
     def state_class(self) -> SensorStateClass | str | None:
         """Return the state class of this entity, if any."""
         if hasattr(self, "_attr_state_class"):
@@ -418,7 +433,7 @@ class SensorEntity(Entity):
         """Return the value reported by the sensor."""
         return self._attr_native_value
 
-    @property
+    @cached_property
     def suggested_display_precision(self) -> int | None:
         """Return the suggested number of decimal digits for display."""
         if hasattr(self, "_attr_suggested_display_precision"):
@@ -427,7 +442,7 @@ class SensorEntity(Entity):
             return self.entity_description.suggested_display_precision
         return None
 
-    @property
+    @cached_property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor, if any."""
         if hasattr(self, "_attr_native_unit_of_measurement"):
@@ -436,7 +451,7 @@ class SensorEntity(Entity):
             return self.entity_description.native_unit_of_measurement
         return None
 
-    @property
+    @cached_property
     def suggested_unit_of_measurement(self) -> str | None:
         """Return the unit which should be used for the sensor's state.
 
