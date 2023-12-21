@@ -10,6 +10,7 @@ from typing import Any
 from pyvlx import Position, PyVLX
 from pyvlx.api.get_limitation import GetLimitation
 from pyvlx.exception import PyVLXException
+from pyvlx.node import Node
 from pyvlx.opening_device import (
     Awning,
     Blind,
@@ -161,22 +162,16 @@ class VeluxCover(VeluxNodeEntity, CoverEntity):
         """Return if the cover is opening or not."""
         return self.node.is_closing
 
-    @callback
-    def async_register_callbacks(self) -> None:
-        """Register callbacks to update hass after device was changed."""
-
-        async def after_update_callback(device) -> None:
-            """Call after device was updated."""
-            self.async_write_ha_state()
-            if self.node.is_moving():
-                if not self.is_looping_while_moving:
-                    self.is_looping_while_moving = True
-                    while self.node.is_moving():
-                        await asyncio.sleep(1)
-                        self.async_write_ha_state()
-                    self.is_looping_while_moving = False
-
-        self.node.register_device_updated_cb(after_update_callback)
+    async def after_update_callback(self, node: Node) -> None:
+        """Call after device was updated."""
+        self.async_write_ha_state()
+        if self.node.is_moving():
+            if not self.is_looping_while_moving:
+                self.is_looping_while_moving = True
+                while self.node.is_moving():
+                    await asyncio.sleep(1)
+                    self.async_write_ha_state()
+                self.is_looping_while_moving = False
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
@@ -222,6 +217,7 @@ class VeluxWindow(VeluxCover):
     def __init__(self, hass: HomeAssistant, node: Window) -> None:
         """Initialize Velux window."""
         super().__init__(node)
+        self.node: Window = node
         self._attr_device_class = CoverDeviceClass.WINDOW
         self._hass: HomeAssistant = hass
         self._extra_attr_limitation_min: int | None = None
@@ -235,11 +231,11 @@ class VeluxWindow(VeluxCover):
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
 
-    async def async_init(self):
+    async def async_init(self) -> None:
         """Async initialize."""
         return await self.coordinator.async_config_entry_first_refresh()
 
-    async def async_update_limitation(self):
+    async def async_update_limitation(self) -> None:
         """Get the updated status of the cover (limitations only)."""
         try:
             limitation: GetLimitation = await self.node.get_limitation()
@@ -303,7 +299,7 @@ class VeluxDualRollerShutter(VeluxCover):
             return "#" + str(self.node.node_id)
         # Name for double cover which is handled in one node within pyvlx,
         # but represented by 3 covers in HA (upper, lower, dual)
-        if self.subtype is not None:
+        if self.subtype:
             return self.node.name + "_" + self.subtype
         return self.node.name
 

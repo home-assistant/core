@@ -2,7 +2,6 @@
 
 from pyvlx import Node
 
-from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -18,19 +17,13 @@ class VeluxNodeEntity(Entity):
         """Initialize the Velux device."""
         self.node: Node = node
 
-    @callback
-    def async_register_callbacks(self):
-        """Register callbacks to update hass after device was changed."""
+    async def after_update_callback(self, node: Node) -> None:
+        """Call after device was updated."""
+        self.async_write_ha_state()
 
-        async def after_update_callback(device):
-            """Call after device was updated."""
-            self.async_write_ha_state()
-
-        self.node.register_device_updated_cb(after_update_callback)
-
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Store register state change callback."""
-        self.async_register_callbacks()
+        self.node.register_device_updated_cb(self.after_update_callback)
 
     @property
     def unique_id(self) -> str:
