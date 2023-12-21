@@ -224,6 +224,18 @@
       },
       "vehicle_state_tpms_soft_warning_rr": {
         "name": "Tire pressure warning rear right"
+      },
+      "vehicle_state_fd_window": {
+        "name": "Front driver window"
+      },
+      "vehicle_state_fp_window": {
+        "name": "Front passenger window"
+      },
+      "vehicle_state_rd_window": {
+        "name": "Rear driver window"
+      },
+      "vehicle_state_rp_window": {
+        "name": "Rear passenger window"
       }
     },
     "switch": {
