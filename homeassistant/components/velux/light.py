@@ -39,11 +39,8 @@ class VeluxLight(VeluxNodeEntity, LightEntity):
         """Initialize the Velux light."""
         self.node: Light = node
         super().__init__(node)
-
-    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-    _attr_color_mode = ColorMode.BRIGHTNESS
-
-    node: LighteningDevice
+        self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+        self._attr_color_mode = ColorMode.BRIGHTNESS
 
     @property
     def brightness(self) -> int:
