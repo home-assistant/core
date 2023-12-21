@@ -38,7 +38,7 @@ async def async_connect_scanner(
     return partial(
         _async_unload,
         [
-            async_register_scanner(hass, scanner, scanner.connectable),
+            async_register_scanner(hass, scanner),
             scanner.async_setup(),
         ],
     )
