@@ -246,11 +246,11 @@
           "service_mode": false,
           "service_mode_plus": false,
           "software_update": {
-            "download_perc": 0,
+            "download_perc": 100,
             "expected_duration_sec": 2700,
-            "install_perc": 1,
-            "status": "",
-            "version": " "
+            "install_perc": 10,
+            "status": "installing",
+            "version": "2023.44.30.4"
           },
           "speed_limit_mode": {
             "active": false,
