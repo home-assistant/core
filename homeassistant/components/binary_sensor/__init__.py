@@ -20,6 +20,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
     check_if_deprecated_constant,
+    dir_with_deprecated_constants,
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
@@ -211,7 +212,9 @@ _DEPRECATED_DEVICE_CLASS_WINDOW = DeprecatedConstantEnum(
     BinarySensorDeviceClass.WINDOW, "2025.1"
 )
 
+# Both can be removed if no deprecated constant are in this module anymore
 __getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 # mypy: disallow-any-generics
 

@@ -41,15 +41,6 @@ class TailwindDoorCoverEntity(TailwindDoorEntity, CoverEntity):
     _attr_name = None
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
-    def __init__(
-        self,
-        coordinator: TailwindDataUpdateCoordinator,
-        door_id: str,
-    ) -> None:
-        """Initiate Tailwind button entity."""
-        super().__init__(coordinator, door_id)
-        self._attr_unique_id = f"{coordinator.data.device_id}-{door_id}"
-
     @property
     def is_closed(self) -> bool:
         """Return if the cover is closed or not."""

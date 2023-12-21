@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -13,9 +14,15 @@ class TailwindEntity(CoordinatorEntity[TailwindDataUpdateCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: TailwindDataUpdateCoordinator) -> None:
+    def __init__(
+        self,
+        coordinator: TailwindDataUpdateCoordinator,
+        entity_description: EntityDescription,
+    ) -> None:
         """Initialize an Tailwind entity."""
         super().__init__(coordinator)
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{coordinator.data.device_id}-{entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data.device_id)},
             connections={(CONNECTION_NETWORK_MAC, coordinator.data.mac_address)},
@@ -35,11 +42,22 @@ class TailwindDoorEntity(CoordinatorEntity[TailwindDataUpdateCoordinator]):
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: TailwindDataUpdateCoordinator, door_id: str
+        self,
+        coordinator: TailwindDataUpdateCoordinator,
+        door_id: str,
+        entity_description: EntityDescription | None = None,
     ) -> None:
         """Initialize an Tailwind door entity."""
-        self.door_id = door_id
         super().__init__(coordinator)
+        self.door_id = door_id
+
+        self._attr_unique_id = f"{coordinator.data.device_id}-{door_id}"
+        if entity_description:
+            self.entity_description = entity_description
+            self._attr_unique_id = (
+                f"{coordinator.data.device_id}-{door_id}-{entity_description.key}"
+            )
+
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{coordinator.data.device_id}-{door_id}")},
             via_device=(DOMAIN, coordinator.data.device_id),
