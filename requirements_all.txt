@@ -263,7 +263,7 @@ aiohomekit==3.1.0
 aiohttp-fast-url-dispatcher==0.3.0
 
 # homeassistant.components.http
-aiohttp-zlib-ng==0.1.1
+aiohttp-zlib-ng==0.1.2
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
