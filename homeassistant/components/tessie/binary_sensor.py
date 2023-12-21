@@ -14,12 +14,12 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, TessieStatus
 from .coordinator import TessieDataUpdateCoordinator
 from .entity import TessieEntity
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class TessieBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Tessie binary sensor entity."""
 
@@ -27,6 +27,11 @@ class TessieBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 
 DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
+    TessieBinarySensorEntityDescription(
+        key="state",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        is_on=lambda x: x == TessieStatus.ONLINE,
+    ),
     TessieBinarySensorEntityDescription(
         key="charge_state_battery_heater_on",
         device_class=BinarySensorDeviceClass.HEAT,

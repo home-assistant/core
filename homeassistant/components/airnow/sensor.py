@@ -51,7 +51,7 @@ ATTR_LEVEL = "level"
 ATTR_STATION = "reporting_station"
 
 
-@dataclass
+@dataclass(frozen=True)
 class AirNowEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -59,7 +59,7 @@ class AirNowEntityDescriptionMixin:
     extra_state_attributes_fn: Callable[[Any], dict[str, str]] | None
 
 
-@dataclass
+@dataclass(frozen=True)
 class AirNowEntityDescription(SensorEntityDescription, AirNowEntityDescriptionMixin):
     """Describes Airnow sensor entity."""
 

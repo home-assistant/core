@@ -39,19 +39,19 @@ from .utils import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class BlockBinarySensorDescription(
     BlockEntityDescription, BinarySensorEntityDescription
 ):
     """Class to describe a BLOCK binary sensor."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class RpcBinarySensorDescription(RpcEntityDescription, BinarySensorEntityDescription):
     """Class to describe a RPC binary sensor."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class RestBinarySensorDescription(RestEntityDescription, BinarySensorEntityDescription):
     """Class to describe a REST binary sensor."""
 

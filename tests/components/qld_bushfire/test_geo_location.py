@@ -2,6 +2,8 @@
 import datetime
 from unittest.mock import MagicMock, call, patch
 
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.components.qld_bushfire.geo_location import (
@@ -70,7 +72,7 @@ def _generate_mock_feed_entry(
     return feed_entry
 
 
-async def test_setup(hass: HomeAssistant) -> None:
+async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """Test the general setup of the platform."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -88,11 +90,10 @@ async def test_setup(hass: HomeAssistant) -> None:
     mock_entry_3 = _generate_mock_feed_entry("3456", "Title 3", 25.5, (38.2, -3.2))
     mock_entry_4 = _generate_mock_feed_entry("4567", "Title 4", 12.5, (38.3, -3.3))
 
-    # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "georss_qld_bushfire_alert_client.QldBushfireAlertFeed"
-    ) as mock_feed:
+    freezer.move_to(utcnow)
+
+    with patch("georss_qld_bushfire_alert_client.QldBushfireAlertFeed") as mock_feed:
         mock_feed.return_value.update.return_value = (
             "OK",
             [mock_entry_1, mock_entry_2, mock_entry_3],
