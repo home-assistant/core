@@ -489,7 +489,7 @@ class DHCPWatcher(WatcherBase):
 
 
 def _dhcp_options_as_dict(
-    dhcp_options: Iterable[tuple[str, int | bytes | None]]
+    dhcp_options: Iterable[tuple[str, int | bytes | None]],
 ) -> dict[str, str | int | bytes | None]:
     """Extract data from packet options as a dict."""
     return {option[0]: option[1] for option in dhcp_options if len(option) >= 2}

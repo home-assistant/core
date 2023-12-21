@@ -22,14 +22,14 @@ from .coordinator import FullyKioskDataUpdateCoordinator
 from .entity import FullyKioskEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class FullyButtonEntityDescriptionMixin:
     """Mixin to describe a Fully Kiosk Browser button entity."""
 
     press_action: Callable[[FullyKiosk], Any]
 
 
-@dataclass
+@dataclass(frozen=True)
 class FullyButtonEntityDescription(
     ButtonEntityDescription, FullyButtonEntityDescriptionMixin
 ):

@@ -37,14 +37,14 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class AirQEntityDescriptionMixin:
     """Class for keys required by AirQ entity."""
 
     value: Callable[[dict], float | int | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class AirQEntityDescription(SensorEntityDescription, AirQEntityDescriptionMixin):
     """Describes AirQ sensor entity."""
 

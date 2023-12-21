@@ -23,7 +23,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, SERVICE_ID
 
 
-@dataclass
+@dataclass(frozen=True)
 class SensorValueEntityDescription(SensorEntityDescription):
     """Class describing Aussie Broadband sensor entities."""
 

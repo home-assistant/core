@@ -200,6 +200,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     """Representation of a Bluesound Player."""
 
     _attr_media_content_type = MediaType.MUSIC
+    _attr_volume_step = 0.01
 
     def __init__(self, hass, host, port=None, name=None, init_callback=None):
         """Initialize the media player."""
@@ -1026,20 +1027,6 @@ class BluesoundPlayer(MediaPlayerEntity):
         url = f"Play?url={media_id}"
 
         return await self.send_bluesound_command(url)
-
-    async def async_volume_up(self) -> None:
-        """Volume up the media player."""
-        current_vol = self.volume_level
-        if not current_vol or current_vol >= 1:
-            return
-        return await self.async_set_volume_level(current_vol + 0.01)
-
-    async def async_volume_down(self) -> None:
-        """Volume down the media player."""
-        current_vol = self.volume_level
-        if not current_vol or current_vol <= 0:
-            return
-        return await self.async_set_volume_level(current_vol - 0.01)
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Send volume_up command to media player."""
