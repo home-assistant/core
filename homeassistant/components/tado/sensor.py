@@ -35,14 +35,14 @@ from .entity import TadoHomeEntity, TadoZoneEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class TadoSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     state_fn: Callable[[Any], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class TadoSensorEntityDescription(
     SensorEntityDescription, TadoSensorEntityDescriptionMixin
 ):

@@ -53,7 +53,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def needs_session(
-    func: Callable[Concatenate[_PlexMediaPlayerT, _P], _R]
+    func: Callable[Concatenate[_PlexMediaPlayerT, _P], _R],
 ) -> Callable[Concatenate[_PlexMediaPlayerT, _P], _R | None]:
     """Ensure session is available for certain attributes."""
 

@@ -1,5 +1,6 @@
 """Constants for the cloud component."""
 DOMAIN = "cloud"
+DATA_PLATFORMS_SETUP = "cloud_platforms_setup"
 REQUEST_TIMEOUT = 10
 
 PREF_ENABLE_ALEXA = "alexa_enabled"
@@ -64,3 +65,5 @@ MODE_DEV = "development"
 MODE_PROD = "production"
 
 DISPATCHER_REMOTE_UPDATE = "cloud_remote_update"
+
+STT_ENTITY_UNIQUE_ID = "cloud-speech-to-text"

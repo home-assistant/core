@@ -20,7 +20,7 @@ from zeroconf import (
     IPVersion,
     ServiceStateChange,
 )
-from zeroconf.asyncio import AsyncServiceInfo
+from zeroconf.asyncio import AsyncServiceBrowser, AsyncServiceInfo
 
 from homeassistant import config_entries
 from homeassistant.components import network
@@ -39,7 +39,7 @@ from homeassistant.loader import (
 )
 from homeassistant.setup import async_when_setup_or_start
 
-from .models import HaAsyncServiceBrowser, HaAsyncZeroconf, HaZeroconf
+from .models import HaAsyncZeroconf, HaZeroconf
 from .usage import install_multiple_zeroconf_catcher
 
 _LOGGER = logging.getLogger(__name__)
@@ -227,7 +227,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         zeroconf_types,
         homekit_model_lookup,
         homekit_model_matchers,
-        ipv6,
     )
     await discovery.async_setup()
 
@@ -249,7 +248,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 def _build_homekit_model_lookups(
-    homekit_models: dict[str, HomeKitDiscoveredIntegration]
+    homekit_models: dict[str, HomeKitDiscoveredIntegration],
 ) -> tuple[
     dict[str, HomeKitDiscoveredIntegration],
     dict[re.Pattern, HomeKitDiscoveredIntegration],
@@ -369,7 +368,6 @@ class ZeroconfDiscovery:
         zeroconf_types: dict[str, list[dict[str, str | dict[str, str]]]],
         homekit_model_lookups: dict[str, HomeKitDiscoveredIntegration],
         homekit_model_matchers: dict[re.Pattern, HomeKitDiscoveredIntegration],
-        ipv6: bool,
     ) -> None:
         """Init discovery."""
         self.hass = hass
@@ -377,10 +375,7 @@ class ZeroconfDiscovery:
         self.zeroconf_types = zeroconf_types
         self.homekit_model_lookups = homekit_model_lookups
         self.homekit_model_matchers = homekit_model_matchers
-
-        self.ipv6 = ipv6
-
-        self.async_service_browser: HaAsyncServiceBrowser | None = None
+        self.async_service_browser: AsyncServiceBrowser | None = None
 
     async def async_setup(self) -> None:
         """Start discovery."""
@@ -392,8 +387,8 @@ class ZeroconfDiscovery:
             if hk_type not in self.zeroconf_types:
                 types.append(hk_type)
         _LOGGER.debug("Starting Zeroconf browser for: %s", types)
-        self.async_service_browser = HaAsyncServiceBrowser(
-            self.ipv6, self.zeroconf, types, handlers=[self.async_service_update]
+        self.async_service_browser = AsyncServiceBrowser(
+            self.zeroconf, types, handlers=[self.async_service_update]
         )
 
     async def async_stop(self) -> None:
