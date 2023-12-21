@@ -117,7 +117,7 @@ async def test_image_caching(
     assert respx.calls.call_count == 1
 
     # advance time by 150ms
-    freezer.tick(timedelta(0, 0.150))
+    freezer.tick(timedelta(seconds=0.150))
 
     resp = await client.get("/api/camera_proxy/camera.config_test")
     assert resp.status == HTTPStatus.OK
@@ -128,7 +128,7 @@ async def test_image_caching(
     assert respx.calls.call_count == 1
 
     # advance time by another 150ms
-    freezer.tick(timedelta(0, 0.150))
+    freezer.tick(timedelta(seconds=0.150))
 
     resp = await client.get("/api/camera_proxy/camera.config_test")
     assert resp.status == HTTPStatus.OK
