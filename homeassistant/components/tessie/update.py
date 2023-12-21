@@ -43,6 +43,7 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
     @property
     def latest_version(self) -> str | None:
         """Return the latest version."""
+        # The API returns a single space when no update is available
         if len(version := self.get("vehicle_state_software_update_version")) > 4:
             return version
         return None
