@@ -93,22 +93,22 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
 
     async def async_turn_on(self) -> None:
         """Set the climate state to on."""
-        if await self.run(start_climate_preconditioning):
-            self.set(("climate_state_is_climate_on", True))
+        await self.run(start_climate_preconditioning)
+        self.set(("climate_state_is_climate_on", True))
 
     async def async_turn_off(self) -> None:
         """Set the climate state to off."""
-        if await self.run(stop_climate):
-            self.set(
-                ("climate_state_is_climate_on", False),
-                ("climate_state_climate_keeper_mode", "off"),
-            )
+        await self.run(stop_climate)
+        self.set(
+            ("climate_state_is_climate_on", False),
+            ("climate_state_climate_keeper_mode", "off"),
+        )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the climate temperature."""
         temp = kwargs[ATTR_TEMPERATURE]
-        if await self.run(set_temperature, temperature=temp):
-            self.set(("climate_state_driver_temp_setting", temp))
+        await self.run(set_temperature, temperature=temp)
+        self.set(("climate_state_driver_temp_setting", temp))
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the climate mode and state."""
@@ -119,16 +119,16 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the climate preset mode."""
-        if await self.run(
+        await self.run(
             set_climate_keeper_mode, mode=self._attr_preset_modes.index(preset_mode)
-        ):
-            self.set(
-                (
-                    "climate_state_climate_keeper_mode",
-                    preset_mode,
-                ),
-                (
-                    "climate_state_is_climate_on",
-                    preset_mode != self._attr_preset_modes[0],
-                ),
-            )
+        )
+        self.set(
+            (
+                "climate_state_climate_keeper_mode",
+                preset_mode,
+            ),
+            (
+                "climate_state_is_climate_on",
+                preset_mode != self._attr_preset_modes[0],
+            ),
+        )
