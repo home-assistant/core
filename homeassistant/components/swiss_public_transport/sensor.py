@@ -19,26 +19,22 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from .const import (
-    ATTR_DELAY,
-    ATTR_DEPARTURE_TIME1,
-    ATTR_DEPARTURE_TIME2,
-    ATTR_DURATION,
-    ATTR_PLATFORM,
-    ATTR_REMAINING_TIME,
-    ATTR_START,
-    ATTR_TARGET,
-    ATTR_TRAIN_NUMBER,
-    ATTR_TRANSFERS,
-    CONF_DESTINATION,
-    CONF_START,
-    DEFAULT_NAME,
-    DOMAIN,
-)
+from .const import CONF_DESTINATION, CONF_START, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=90)
+
+ATTR_DEPARTURE_TIME1 = "next_departure"
+ATTR_DEPARTURE_TIME2 = "next_on_departure"
+ATTR_DURATION = "duration"
+ATTR_PLATFORM = "platform"
+ATTR_REMAINING_TIME = "remaining_time"
+ATTR_START = "start"
+ATTR_TARGET = "destination"
+ATTR_TRAIN_NUMBER = "train_number"
+ATTR_TRANSFERS = "transfers"
+ATTR_DELAY = "delay"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -59,7 +55,7 @@ async def async_setup_entry(
 
     start = config_entry.data[CONF_START]
     destination = config_entry.data[CONF_DESTINATION]
-    name = config_entry.data.get(CONF_NAME, f"{start} {destination}")
+    name = config_entry.title
 
     async_add_entities(
         [SwissPublicTransportSensor(opendata, start, destination, name)],

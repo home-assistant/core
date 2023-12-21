@@ -23,7 +23,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
-    """Set up platform from a ConfigEntry."""
+    """Set up Swiss public transport from a config entry."""
     config = entry.data
 
     start = config[CONF_START]
