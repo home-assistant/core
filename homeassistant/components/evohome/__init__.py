@@ -4,7 +4,7 @@ Such systems include evohome, Round Thermostat, and others.
 """
 from __future__ import annotations
 
-from collections.abc import Coroutine
+from collections.abc import Awaitable
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
@@ -470,14 +470,16 @@ class EvoBroker:
         await self._store.async_save(app_storage)
 
     async def call_client_api(
-        self, api_function: Coroutine, update_state: bool = True
-    ) -> Any:
+        self,
+        api_function: Awaitable[dict[str, Any] | None],
+        update_state: bool = True,
+    ) -> dict[str, Any] | None:
         """Call a client API and update the broker state if required."""
         try:
             result = await api_function
         except evo.RequestFailed as err:
             _handle_exception(err)
-            return
+            return None
 
         if update_state:  # wait a moment for system to quiesce before updating state
             async_call_later(self.hass, 1, self._update_v2_api_state)
@@ -723,7 +725,7 @@ class EvoChild(EvoDevice):
 
         assert isinstance(self._evo_device, evo.HotWater | evo.Zone)  # mypy check
 
-        self._schedule = await self._evo_broker.call_client_api(
+        self._schedule = await self._evo_broker.call_client_api(  # type: ignore[assignment]
             self._evo_device.get_schedule(), update_state=False
         )
 
