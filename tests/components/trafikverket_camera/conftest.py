@@ -40,7 +40,7 @@ async def load_integration_from_entry(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.trafikverket_camera.coordinator.TrafikverketCamera.async_get_cameras",
+        "homeassistant.components.trafikverket_camera.coordinator.TrafikverketCamera.async_get_camera",
         return_value=get_camera,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
