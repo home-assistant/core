@@ -26,7 +26,7 @@ from .entity import (
 from .utils import get_device_entry_gen
 
 
-@dataclass(frozen=True)
+@dataclass(kw_only=True, frozen=True)
 class BlockValveDescription(BlockEntityDescription, ValveEntityDescription):
     """Class to describe a BLOCK valve."""
 
@@ -46,7 +46,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up valves for device."""
     if get_device_entry_gen(config_entry) in BLOCK_GENERATIONS:
-        return async_setup_block_entry(hass, config_entry, async_add_entities)
+        async_setup_block_entry(hass, config_entry, async_add_entities)
 
 
 @callback

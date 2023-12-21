@@ -186,7 +186,7 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
             breaks_in_ha_version="2024.7.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
-            translation_key="deprecated_valve_switche",
+            translation_key="deprecated_valve_switch",
         )
         self.control_result = await self.set_state(go="open")
         self.async_write_ha_state()
