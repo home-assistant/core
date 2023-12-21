@@ -24,29 +24,28 @@ def async_register_services(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     async def handle_speaker_hub_play_call(service_call: ServiceCall) -> None:
         """Handle Speaker Hub audio play call."""
-        if service_call.service == SERVICE_PLAY_ON_SPEAKER_HUB:
-            service_data = service_call.data
-            device_registry = dr.async_get(hass)
-            device_entry = device_registry.async_get(service_data[ATTR_TARGET_DEVICE])
-            if device_entry is not None:
-                home_store = hass.data[DOMAIN][entry.entry_id]
-                if home_store is not None:
-                    for identifier in device_entry.identifiers:
-                        if (
-                            device_coordinator := home_store.device_coordinators.get(
-                                identifier[1]
-                            )
-                        ) is not None:
-                            play_request = ClientRequest(
-                                "playAudio",
-                                {
-                                    ATTR_TONE: service_data[ATTR_TONE],
-                                    ATTR_TEXT_MESSAGE: service_data[ATTR_TEXT_MESSAGE],
-                                    ATTR_VOLUME: service_data[ATTR_VOLUME],
-                                    ATTR_REPEAT: service_data[ATTR_REPEAT],
-                                },
-                            )
-                            await device_coordinator.device.call_device(play_request)
+        service_data = service_call.data
+        device_registry = dr.async_get(hass)
+        device_entry = device_registry.async_get(service_data[ATTR_TARGET_DEVICE])
+        if device_entry is not None:
+            home_store = hass.data[DOMAIN][entry.entry_id]
+            if home_store is not None:
+                for identifier in device_entry.identifiers:
+                    if (
+                        device_coordinator := home_store.device_coordinators.get(
+                            identifier[1]
+                        )
+                    ) is not None:
+                        play_request = ClientRequest(
+                            "playAudio",
+                            {
+                                ATTR_TONE: service_data[ATTR_TONE],
+                                ATTR_TEXT_MESSAGE: service_data[ATTR_TEXT_MESSAGE],
+                                ATTR_VOLUME: service_data[ATTR_VOLUME],
+                                ATTR_REPEAT: service_data[ATTR_REPEAT],
+                            },
+                        )
+                        await device_coordinator.device.call_device(play_request)
 
     hass.services.async_register(
         domain=DOMAIN,
