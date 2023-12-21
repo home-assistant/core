@@ -55,7 +55,7 @@ class HistoryStats:
         self._previous_run_before_start = False
         self._entity_states = set(entity_states)
         self._duration = duration
-        self._min_state_duration = min_state_duration
+        self._min_state_duration = min_state_duration.total_seconds()
         self._start = start
         self._end = end
 
@@ -83,7 +83,6 @@ class HistoryStats:
         previous_period_end_timestamp = floored_timestamp(previous_period_end)
         utc_now = dt_util.utcnow()
         now_timestamp = floored_timestamp(utc_now)
-        min_state_timestamp = self._min_state_duration.total_seconds()
 
         if current_period_start_timestamp > now_timestamp:
             # History cannot tell the future
@@ -137,7 +136,6 @@ class HistoryStats:
             now_timestamp,
             current_period_start_timestamp,
             current_period_end_timestamp,
-            min_state_timestamp,
         )
         self._state = HistoryStatsState(seconds_matched, match_count, self._period)
         return self._state
@@ -175,11 +173,7 @@ class HistoryStats:
         ).get(self.entity_id, [])
 
     def _async_compute_seconds_and_changes(
-        self,
-        now_timestamp: float,
-        start_timestamp: float,
-        end_timestamp: float,
-        min_state_timestamp: float,
+        self, now_timestamp: float, start_timestamp: float, end_timestamp: float
     ) -> tuple[float, int]:
         """Compute the seconds matched and changes from the history list and first state."""
         # state_changes_during_period is called with include_start_time_state=True
@@ -202,7 +196,7 @@ class HistoryStats:
                 history_state_duration = (
                     state_change_timestamp - last_state_change_timestamp
                 )
-                if abs(history_state_duration) >= min_state_timestamp:
+                if abs(history_state_duration) >= self._min_state_duration:
                     elapsed += history_state_duration
                 else:
                     match_count -= 1
@@ -216,7 +210,7 @@ class HistoryStats:
         if previous_state_matches:
             measure_end = min(end_timestamp, now_timestamp)
             last_state_duration = measure_end - last_state_change_timestamp
-            if abs(last_state_duration) >= min_state_timestamp:
+            if abs(last_state_duration) >= self._min_state_duration:
                 elapsed += last_state_duration
             else:
                 match_count -= 1
