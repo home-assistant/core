@@ -247,7 +247,7 @@ class EnturPublicTransportSensor(SensorEntity):
             return
 
         for i, call in enumerate(calls[2:]):
-            key_name = f"departure_#{i + 3}"
+            key_name = f"departure_{i + 3}"
             self._attributes[key_name] = (
                 f"{'' if bool(call.is_realtime) else 'ca. '}"
                 f"{call.expected_departure_time.strftime('%H:%M')} {call.front_display}"
