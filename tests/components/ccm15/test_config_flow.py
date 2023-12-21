@@ -87,6 +87,18 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with patch(
+        "ccm15.CCM15Device.CCM15Device.async_test_connection", return_value=True
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.0.0.1",
+            },
+        )
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+
 
 async def test_form_unexpected_error(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
@@ -107,6 +119,18 @@ async def test_form_unexpected_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    with patch(
+        "ccm15.CCM15Device.CCM15Device.async_test_connection", return_value=True
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.0.0.1",
+            },
+        )
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
 
 
 async def test_duplicate_host(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
