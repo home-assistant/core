@@ -37,6 +37,32 @@ from .util import cleanup_excluded_entity
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True)
+class ScreenLogicCircuitSwitchDescription(
+    SwitchEntityDescription, ScreenLogicPushEntityDescription
+):
+    """Describes a ScreenLogic switch entity."""
+
+
+@dataclass(frozen=True)
+class ScreenLogicSCGSwitchDescription(
+    SwitchEntityDescription, ScreenLogicEntityDescription
+):
+    """Describes a ScreenLogic switch entity."""
+
+
+SUPPORTED_SCG_SWITCHES = [
+    ScreenLogicSCGSwitchDescription(
+        data_root=(DEVICE.SCG,),
+        key=VALUE.SUPER_CHLORINATE,
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        enabled_lambda=lambda equipment_flags: EQUIPMENT_FLAG.INTELLICHEM
+        not in equipment_flags,
+    ),
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -71,33 +97,18 @@ async def async_setup_entry(
                 ),
             )
         )
-    super_chlor_data_root = (DEVICE.SCG,)
-    super_chlor_key = VALUE.SUPER_CHLORINATE
-    super_chlor_data_path = (*super_chlor_data_root, super_chlor_key)
-    if EQUIPMENT_FLAG.CHLORINATOR not in gateway.equipment_flags:
-        cleanup_excluded_entity(coordinator, DOMAIN, super_chlor_data_path)
-    else:
-        entities.append(
-            ScreenLogicSCGSwitchEntity(
-                coordinator,
-                ScreenLogicSCGSwitchDescription(
-                    data_root=super_chlor_data_root,
-                    key=super_chlor_key,
-                    device_class=SwitchDeviceClass.SWITCH,
-                    entity_category=EntityCategory.CONFIG,
-                    enabled_lambda=lambda equipment_flags: EQUIPMENT_FLAG.INTELLICHEM
-                    not in equipment_flags,
-                ),
-            )
+
+    scg_switch_description: ScreenLogicSCGSwitchDescription
+    for scg_switch_description in SUPPORTED_SCG_SWITCHES:
+        scg_switch_data_path = (
+            *scg_switch_description.data_root,
+            scg_switch_description.key,
         )
+        if EQUIPMENT_FLAG.CHLORINATOR not in gateway.equipment_flags:
+            cleanup_excluded_entity(coordinator, DOMAIN, scg_switch_data_path)
+        else:
+            entities.append(ScreenLogicSCGSwitch(coordinator, scg_switch_description))
     async_add_entities(entities)
-
-
-@dataclass(frozen=True)
-class ScreenLogicCircuitSwitchDescription(
-    SwitchEntityDescription, ScreenLogicPushEntityDescription
-):
-    """Describes a ScreenLogic switch entity."""
 
 
 class ScreenLogicCircuitSwitch(
@@ -108,15 +119,8 @@ class ScreenLogicCircuitSwitch(
     entity_description: ScreenLogicCircuitSwitchDescription
 
 
-@dataclass(frozen=True)
-class ScreenLogicSCGSwitchDescription(
-    SwitchEntityDescription, ScreenLogicEntityDescription
-):
-    """Describes a ScreenLogic switch entity."""
-
-
-class ScreenLogicSCGSwitchEntity(ScreenLogicCircuitEntity, SwitchEntity):
-    """Class for ScreenLogic super chlorination switch."""
+class ScreenLogicSCGSwitch(ScreenLogicCircuitEntity, SwitchEntity):
+    """Class for ScreenLogic SCG switch."""
 
     entity_description: ScreenLogicSCGSwitchDescription
 
@@ -134,9 +138,7 @@ class ScreenLogicSCGSwitchEntity(ScreenLogicCircuitEntity, SwitchEntity):
 
     async def _async_set_state(self, state: ON_OFF) -> None:
         try:
-            await self.gateway.async_set_scg_config(
-                **{VALUE.SUPER_CHLORINATE: state.value}
-            )
+            await self.gateway.async_set_scg_config(**{self._data_key: state.value})
         except (ScreenLogicCommunicationError, ScreenLogicError) as sle:
             raise HomeAssistantError(
                 f"Failed to set_scg_config {self._data_key} {state.value}: {sle.msg}"
