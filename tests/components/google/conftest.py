@@ -260,7 +260,7 @@ def mock_events_list(
 
 @pytest.fixture
 def mock_events_list_items(
-    mock_events_list: Callable[[dict[str, Any]], None]
+    mock_events_list: Callable[[dict[str, Any]], None],
 ) -> Callable[[list[dict[str, Any]]], None]:
     """Fixture to construct an API response containing event items."""
 

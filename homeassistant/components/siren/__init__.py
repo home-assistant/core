@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from functools import partial
 import logging
 from typing import Any, TypedDict, cast, final
 
@@ -15,21 +16,25 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
+from homeassistant.helpers.deprecation import (
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (  # noqa: F401
+    _DEPRECATED_SUPPORT_DURATION,
+    _DEPRECATED_SUPPORT_TONES,
+    _DEPRECATED_SUPPORT_TURN_OFF,
+    _DEPRECATED_SUPPORT_TURN_ON,
+    _DEPRECATED_SUPPORT_VOLUME_SET,
     ATTR_AVAILABLE_TONES,
     ATTR_DURATION,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
     DOMAIN,
-    SUPPORT_DURATION,
-    SUPPORT_TONES,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_SET,
     SirenEntityFeature,
 )
 
@@ -42,6 +47,12 @@ TURN_ON_SCHEMA = {
     vol.Optional(ATTR_DURATION): cv.positive_int,
     vol.Optional(ATTR_VOLUME_LEVEL): cv.small_float,
 }
+
+# As we import deprecated constants from the const module, we need to add these two functions
+# otherwise this module will be logged for using deprecated constants and not the custom component
+# Both can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 
 class SirenTurnOnServiceParameters(TypedDict, total=False):

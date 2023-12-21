@@ -103,6 +103,7 @@
         'sensor',
         'switch',
         'vacuum',
+        'water_heater',
       ]),
       'project_id': '1234',
       'report_state': False,
