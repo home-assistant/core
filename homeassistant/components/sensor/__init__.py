@@ -357,7 +357,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return self.entity_description.state_class
         return None
 
-    @property
+    @cached_property
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
         if hasattr(self, "_attr_last_reset"):
