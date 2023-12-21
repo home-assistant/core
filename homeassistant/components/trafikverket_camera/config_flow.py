@@ -147,7 +147,7 @@ class TVCameraConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         camera_choices = [
             SelectOptionDict(
                 value=f"{camera_info.camera_id}",
-                label=f"{camera_info.camera_name} {camera_info.location}",
+                label=f"{camera_info.camera_id} - {camera_info.camera_name} - {camera_info.location}",
             )
             for camera_info in self.cameras
         ]
