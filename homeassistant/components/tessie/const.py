@@ -36,3 +36,13 @@ class TessieClimateKeeper(StrEnum):
     ON = "on"
     DOG = "dog"
     CAMP = "camp"
+
+
+class TessieUpdateStatus(StrEnum):
+    """Tessie Update Statuses."""
+
+    AVAILABLE = "available"
+    DOWNLOADING = "downloading"
+    INSTALLING = "installing"
+    WIFI_WAIT = "downloading_wifi_wait"
+    SCHEDULED = "scheduled"
