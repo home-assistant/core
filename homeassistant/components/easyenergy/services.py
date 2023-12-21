@@ -14,6 +14,7 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
@@ -30,9 +31,9 @@ ENERGY_USAGE_SERVICE_NAME: Final = "get_energy_usage_prices"
 ENERGY_RETURN_SERVICE_NAME: Final = "get_energy_return_prices"
 SERVICE_SCHEMA: Final = vol.Schema(
     {
+        vol.Required(ATTR_INCL_VAT): bool,
         vol.Optional(ATTR_START): str,
         vol.Optional(ATTR_END): str,
-        vol.Required(ATTR_INCL_VAT, default=True): bool,
     }
 )
 
@@ -54,6 +55,7 @@ def __get_date(date_input: str | None) -> date | datetime:
         return value
 
     raise ServiceValidationError(
+        "Invalid datetime provided.",
         translation_domain=DOMAIN,
         translation_key="invalid_date",
         translation_placeholders={
@@ -109,7 +111,8 @@ async def __get_prices(
     return __serialize_prices(data.timestamp_return_prices)
 
 
-async def async_setup_services(
+@callback
+def async_setup_services(
     hass: HomeAssistant,
     coordinator: EasyEnergyDataUpdateCoordinator,
 ) -> None:

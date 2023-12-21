@@ -18,7 +18,7 @@ from .coordinator import FullyKioskDataUpdateCoordinator
 from .entity import FullyKioskEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class FullySwitchEntityDescriptionMixin:
     """Fully Kiosk Browser switch entity description mixin."""
 
@@ -29,7 +29,7 @@ class FullySwitchEntityDescriptionMixin:
     mqtt_off_event: str | None
 
 
-@dataclass
+@dataclass(frozen=True)
 class FullySwitchEntityDescription(
     SwitchEntityDescription, FullySwitchEntityDescriptionMixin
 ):

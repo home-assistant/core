@@ -24,7 +24,7 @@ from .entity import EnvoyBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyEnpowerRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -33,14 +33,14 @@ class EnvoyEnpowerRequiredKeysMixin:
     turn_off_fn: Callable[[Envoy], Coroutine[Any, Any, dict[str, Any]]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyEnpowerSwitchEntityDescription(
     SwitchEntityDescription, EnvoyEnpowerRequiredKeysMixin
 ):
     """Describes an Envoy Enpower switch entity."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyDryContactRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -49,14 +49,14 @@ class EnvoyDryContactRequiredKeysMixin:
     turn_off_fn: Callable[[Envoy, str], Coroutine[Any, Any, dict[str, Any]]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyDryContactSwitchEntityDescription(
     SwitchEntityDescription, EnvoyDryContactRequiredKeysMixin
 ):
     """Describes an Envoy Enpower dry contact switch entity."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyStorageSettingsRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -65,7 +65,7 @@ class EnvoyStorageSettingsRequiredKeysMixin:
     turn_off_fn: Callable[[Envoy], Awaitable[dict[str, Any]]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnvoyStorageSettingsSwitchEntityDescription(
     SwitchEntityDescription, EnvoyStorageSettingsRequiredKeysMixin
 ):

@@ -973,7 +973,7 @@ async def _mqtt_mock_entry(
     mock_mqtt_instance = None
 
     async def _setup_mqtt_entry(
-        setup_entry: Callable[[HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]]
+        setup_entry: Callable[[HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]],
     ) -> MagicMock:
         """Set up the MQTT config entry."""
         assert await setup_entry(hass, entry)
@@ -1131,7 +1131,7 @@ def mock_zeroconf() -> Generator[None, None, None]:
     with patch(
         "homeassistant.components.zeroconf.HaZeroconf", autospec=True
     ) as mock_zc, patch(
-        "homeassistant.components.zeroconf.HaAsyncServiceBrowser", autospec=True
+        "homeassistant.components.zeroconf.AsyncServiceBrowser", autospec=True
     ):
         zc = mock_zc.return_value
         # DNSCache has strong Cython type checks, and MagicMock does not work

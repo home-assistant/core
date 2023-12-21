@@ -2,6 +2,7 @@
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+import voluptuous as vol
 
 from homeassistant.components.easyenergy.const import DOMAIN
 from homeassistant.components.easyenergy.services import (
@@ -25,15 +26,16 @@ async def test_has_services(
 
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
-    "service", [GAS_SERVICE_NAME, ENERGY_USAGE_SERVICE_NAME, ENERGY_RETURN_SERVICE_NAME]
+    "service",
+    [
+        GAS_SERVICE_NAME,
+        ENERGY_USAGE_SERVICE_NAME,
+        ENERGY_RETURN_SERVICE_NAME,
+    ],
 )
-@pytest.mark.parametrize("incl_vat", [{"incl_vat": False}, {"incl_vat": True}, {}])
-@pytest.mark.parametrize(
-    "start", [{"start": "2023-01-01 00:00:00"}, {"start": "incorrect date"}, {}]
-)
-@pytest.mark.parametrize(
-    "end", [{"end": "2023-01-01 00:00:00"}, {"end": "incorrect date"}, {}]
-)
+@pytest.mark.parametrize("incl_vat", [{"incl_vat": False}, {"incl_vat": True}])
+@pytest.mark.parametrize("start", [{"start": "2023-01-01 00:00:00"}, {}])
+@pytest.mark.parametrize("end", [{"end": "2023-01-01 00:00:00"}, {}])
 async def test_service(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -42,18 +44,63 @@ async def test_service(
     start: dict[str, str],
     end: dict[str, str],
 ) -> None:
-    """Test the easyEnergy Service."""
+    """Test the EnergyZero Service."""
 
     data = incl_vat | start | end
 
-    try:
-        response = await hass.services.async_call(
+    assert snapshot == await hass.services.async_call(
+        DOMAIN,
+        service,
+        data,
+        blocking=True,
+        return_response=True,
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    "service",
+    [
+        GAS_SERVICE_NAME,
+        ENERGY_USAGE_SERVICE_NAME,
+        ENERGY_RETURN_SERVICE_NAME,
+    ],
+)
+@pytest.mark.parametrize(
+    ("service_data", "error", "error_message"),
+    [
+        ({}, vol.er.Error, "required key not provided .+"),
+        (
+            {"incl_vat": "incorrect vat"},
+            vol.er.Error,
+            "expected bool for dictionary value .+",
+        ),
+        (
+            {"incl_vat": True, "start": "incorrect date"},
+            ServiceValidationError,
+            "Invalid datetime provided.",
+        ),
+        (
+            {"incl_vat": True, "end": "incorrect date"},
+            ServiceValidationError,
+            "Invalid datetime provided.",
+        ),
+    ],
+)
+async def test_service_validation(
+    hass: HomeAssistant,
+    service: str,
+    service_data: dict[str, str | bool],
+    error: type[Exception],
+    error_message: str,
+) -> None:
+    """Test the easyEnergy Service."""
+
+    with pytest.raises(error, match=error_message):
+        await hass.services.async_call(
             DOMAIN,
             service,
-            data,
+            service_data,
             blocking=True,
             return_response=True,
         )
-        assert response == snapshot
-    except ServiceValidationError as e:
-        assert e == snapshot
