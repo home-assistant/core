@@ -29,14 +29,14 @@ SENSOR_TYPE_DOWNLOAD_SPEED = "download_speed"
 SENSOR_TYPE_UPLOAD_SPEED = "upload_speed"
 
 
-@dataclass
+@dataclass(frozen=True)
 class QBittorrentMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[dict[str, Any]], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class QBittorrentSensorEntityDescription(SensorEntityDescription, QBittorrentMixin):
     """Describes QBittorrent sensor entity."""
 

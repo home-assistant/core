@@ -11,31 +11,29 @@ from typing import Any
 import ring_doorbell
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform, __version__
+from homeassistant.const import APPLICATION_NAME, CONF_TOKEN, __version__
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.async_ import run_callback_threadsafe
 
+from .const import (
+    DEVICES_SCAN_INTERVAL,
+    DOMAIN,
+    HEALTH_SCAN_INTERVAL,
+    HISTORY_SCAN_INTERVAL,
+    NOTIFICATIONS_SCAN_INTERVAL,
+    PLATFORMS,
+    RING_API,
+    RING_DEVICES,
+    RING_DEVICES_COORDINATOR,
+    RING_HEALTH_COORDINATOR,
+    RING_HISTORY_COORDINATOR,
+    RING_NOTIFICATIONS_COORDINATOR,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Data provided by Ring.com"
-
-NOTIFICATION_ID = "ring_notification"
-NOTIFICATION_TITLE = "Ring Setup"
-
-DOMAIN = "ring"
-DEFAULT_ENTITY_NAMESPACE = "ring"
-
-PLATFORMS = [
-    Platform.BINARY_SENSOR,
-    Platform.LIGHT,
-    Platform.SENSOR,
-    Platform.SWITCH,
-    Platform.CAMERA,
-    Platform.SIREN,
-]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -48,12 +46,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             partial(
                 hass.config_entries.async_update_entry,
                 entry,
-                data={**entry.data, "token": token},
+                data={**entry.data, CONF_TOKEN: token},
             ),
         ).result()
 
     auth = ring_doorbell.Auth(
-        f"HomeAssistant/{__version__}", entry.data["token"], token_updater
+        f"{APPLICATION_NAME}/{__version__}", entry.data[CONF_TOKEN], token_updater
     )
     ring = ring_doorbell.Ring(auth)
 
@@ -64,34 +62,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryAuthFailed(err) from err
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "api": ring,
-        "devices": ring.devices(),
-        "device_data": GlobalDataUpdater(
-            hass, "device", entry, ring, "update_devices", timedelta(minutes=1)
+        RING_API: ring,
+        RING_DEVICES: ring.devices(),
+        RING_DEVICES_COORDINATOR: GlobalDataUpdater(
+            hass, "device", entry, ring, "update_devices", DEVICES_SCAN_INTERVAL
         ),
-        "dings_data": GlobalDataUpdater(
+        RING_NOTIFICATIONS_COORDINATOR: GlobalDataUpdater(
             hass,
             "active dings",
             entry,
             ring,
             "update_dings",
-            timedelta(seconds=5),
+            NOTIFICATIONS_SCAN_INTERVAL,
         ),
-        "history_data": DeviceDataUpdater(
+        RING_HISTORY_COORDINATOR: DeviceDataUpdater(
             hass,
             "history",
             entry,
             ring,
             lambda device: device.history(limit=10),
-            timedelta(minutes=1),
+            HISTORY_SCAN_INTERVAL,
         ),
-        "health_data": DeviceDataUpdater(
+        RING_HEALTH_COORDINATOR: DeviceDataUpdater(
             hass,
             "health",
             entry,
             ring,
             lambda device: device.update_health_data(),
-            timedelta(minutes=1),
+            HEALTH_SCAN_INTERVAL,
         ),
     }
 

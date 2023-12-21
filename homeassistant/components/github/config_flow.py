@@ -15,6 +15,7 @@ from aiogithubapi.const import OAUTH_USER_LOGIN
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import (
@@ -23,14 +24,7 @@ from homeassistant.helpers.aiohttp_client import (
 )
 import homeassistant.helpers.config_validation as cv
 
-from .const import (
-    CLIENT_ID,
-    CONF_ACCESS_TOKEN,
-    CONF_REPOSITORIES,
-    DEFAULT_REPOSITORIES,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CLIENT_ID, CONF_REPOSITORIES, DEFAULT_REPOSITORIES, DOMAIN, LOGGER
 
 
 async def get_repositories(hass: HomeAssistant, access_token: str) -> list[str]:

@@ -38,10 +38,24 @@ from .config import MQTT_BASE_SCHEMA
 from .const import (
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
+    CONF_PAYLOAD_CLOSE,
+    CONF_PAYLOAD_OPEN,
+    CONF_PAYLOAD_STOP,
+    CONF_POSITION_CLOSED,
+    CONF_POSITION_OPEN,
     CONF_QOS,
     CONF_RETAIN,
+    CONF_STATE_CLOSED,
+    CONF_STATE_CLOSING,
+    CONF_STATE_OPEN,
+    CONF_STATE_OPENING,
     CONF_STATE_TOPIC,
     DEFAULT_OPTIMISTIC,
+    DEFAULT_PAYLOAD_CLOSE,
+    DEFAULT_PAYLOAD_OPEN,
+    DEFAULT_POSITION_CLOSED,
+    DEFAULT_POSITION_OPEN,
+    DEFAULT_RETAIN,
 )
 from .debug_info import log_messages
 from .mixins import (
@@ -64,15 +78,6 @@ CONF_TILT_COMMAND_TEMPLATE = "tilt_command_template"
 CONF_TILT_STATUS_TOPIC = "tilt_status_topic"
 CONF_TILT_STATUS_TEMPLATE = "tilt_status_template"
 
-CONF_PAYLOAD_CLOSE = "payload_close"
-CONF_PAYLOAD_OPEN = "payload_open"
-CONF_PAYLOAD_STOP = "payload_stop"
-CONF_POSITION_CLOSED = "position_closed"
-CONF_POSITION_OPEN = "position_open"
-CONF_STATE_CLOSED = "state_closed"
-CONF_STATE_CLOSING = "state_closing"
-CONF_STATE_OPEN = "state_open"
-CONF_STATE_OPENING = "state_opening"
 CONF_STATE_STOPPED = "state_stopped"
 CONF_TILT_CLOSED_POSITION = "tilt_closed_value"
 CONF_TILT_MAX = "tilt_max"
@@ -84,13 +89,10 @@ TILT_PAYLOAD = "tilt"
 COVER_PAYLOAD = "cover"
 
 DEFAULT_NAME = "MQTT Cover"
-DEFAULT_PAYLOAD_CLOSE = "CLOSE"
-DEFAULT_PAYLOAD_OPEN = "OPEN"
-DEFAULT_PAYLOAD_STOP = "STOP"
-DEFAULT_POSITION_CLOSED = 0
-DEFAULT_POSITION_OPEN = 100
-DEFAULT_RETAIN = False
+
 DEFAULT_STATE_STOPPED = "stopped"
+DEFAULT_PAYLOAD_STOP = "STOP"
+
 DEFAULT_TILT_CLOSED_POSITION = 0
 DEFAULT_TILT_MAX = 100
 DEFAULT_TILT_MIN = 0
@@ -380,7 +382,11 @@ class MqttCover(MqttEntity, CoverEntity):
                         else STATE_OPEN
                     )
                 else:
-                    state = STATE_CLOSED if self.state == STATE_CLOSING else STATE_OPEN
+                    state = (
+                        STATE_CLOSED
+                        if self.state in [STATE_CLOSED, STATE_CLOSING]
+                        else STATE_OPEN
+                    )
             elif payload == self._config[CONF_STATE_OPENING]:
                 state = STATE_OPENING
             elif payload == self._config[CONF_STATE_CLOSING]:

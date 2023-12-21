@@ -1,31 +1,38 @@
 """The Overkiz (by Somfy) integration."""
 from __future__ import annotations
 
-import asyncio
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import cast
 
 from aiohttp import ClientError
 from pyoverkiz.client import OverkizClient
 from pyoverkiz.const import SUPPORTED_SERVERS
-from pyoverkiz.enums import OverkizState, UIClass, UIWidget
+from pyoverkiz.enums import APIType, OverkizState, UIClass, UIWidget
 from pyoverkiz.exceptions import (
     BadCredentialsException,
     MaintenanceException,
     NotSuchTokenException,
     TooManyRequestsException,
 )
-from pyoverkiz.models import Device, Scenario, Setup
+from pyoverkiz.models import Device, OverkizServer, Scenario
+from pyoverkiz.utils import generate_local_server
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import (
+    CONF_API_TYPE,
     CONF_HUB,
     DOMAIN,
     LOGGER,
@@ -48,27 +55,39 @@ class HomeAssistantOverkizData:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Overkiz from a config entry."""
-    username = entry.data[CONF_USERNAME]
-    password = entry.data[CONF_PASSWORD]
-    server = SUPPORTED_SERVERS[entry.data[CONF_HUB]]
+    client: OverkizClient | None = None
+    api_type = entry.data.get(CONF_API_TYPE, APIType.CLOUD)
 
-    # To allow users with multiple accounts/hubs, we create a new session so they have separate cookies
-    session = async_create_clientsession(hass)
-    client = OverkizClient(
-        username=username, password=password, session=session, server=server
-    )
+    # Local API
+    if api_type == APIType.LOCAL:
+        client = create_local_client(
+            hass,
+            host=entry.data[CONF_HOST],
+            token=entry.data[CONF_TOKEN],
+            verify_ssl=entry.data[CONF_VERIFY_SSL],
+        )
+
+    # Overkiz Cloud API
+    else:
+        client = create_cloud_client(
+            hass,
+            username=entry.data[CONF_USERNAME],
+            password=entry.data[CONF_PASSWORD],
+            server=SUPPORTED_SERVERS[entry.data[CONF_HUB]],
+        )
 
     await _async_migrate_entries(hass, entry)
 
     try:
         await client.login()
+        setup = await client.get_setup()
 
-        setup, scenarios = await asyncio.gather(
-            *[
-                client.get_setup(),
-                client.get_scenarios(),
-            ]
-        )
+        # Local API does expose scenarios, but they are not functional.
+        # Tracked in https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode/issues/21
+        if api_type == APIType.CLOUD:
+            scenarios = await client.get_scenarios()
+        else:
+            scenarios = []
     except (BadCredentialsException, NotSuchTokenException) as exception:
         raise ConfigEntryAuthFailed("Invalid authentication") from exception
     except TooManyRequestsException as exception:
@@ -77,9 +96,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady("Failed to connect") from exception
     except MaintenanceException as exception:
         raise ConfigEntryNotReady("Server is down for maintenance") from exception
-
-    setup = cast(Setup, setup)
-    scenarios = cast(list[Scenario], scenarios)
 
     coordinator = OverkizDataUpdateCoordinator(
         hass,
@@ -211,3 +227,31 @@ async def _async_migrate_entries(
     await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
 
     return True
+
+
+def create_local_client(
+    hass: HomeAssistant, host: str, token: str, verify_ssl: bool
+) -> OverkizClient:
+    """Create Overkiz local client."""
+    session = async_create_clientsession(hass, verify_ssl=verify_ssl)
+
+    return OverkizClient(
+        username="",
+        password="",
+        token=token,
+        session=session,
+        server=generate_local_server(host=host),
+        verify_ssl=verify_ssl,
+    )
+
+
+def create_cloud_client(
+    hass: HomeAssistant, username: str, password: str, server: OverkizServer
+) -> OverkizClient:
+    """Create Overkiz cloud client."""
+    # To allow users with multiple accounts/hubs, we create a new session so they have separate cookies
+    session = async_create_clientsession(hass)
+
+    return OverkizClient(
+        username=username, password=password, session=session, server=server
+    )

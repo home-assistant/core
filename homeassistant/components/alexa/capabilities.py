@@ -19,6 +19,7 @@ from homeassistant.components import (
     number,
     timer,
     vacuum,
+    water_heater,
 )
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
@@ -435,7 +436,8 @@ class AlexaPowerController(AlexaCapability):
             is_on = self.entity.state == vacuum.STATE_CLEANING
         elif self.entity.domain == timer.DOMAIN:
             is_on = self.entity.state != STATE_IDLE
-
+        elif self.entity.domain == water_heater.DOMAIN:
+            is_on = self.entity.state not in (STATE_OFF, STATE_UNKNOWN)
         else:
             is_on = self.entity.state != STATE_OFF
 
@@ -857,16 +859,18 @@ class AlexaInputController(AlexaCapability):
 
     def inputs(self) -> list[dict[str, str]] | None:
         """Return the list of valid supported inputs."""
-        source_list: list[str] = self.entity.attributes.get(
+        source_list: list[Any] = self.entity.attributes.get(
             media_player.ATTR_INPUT_SOURCE_LIST, []
         )
         return AlexaInputController.get_valid_inputs(source_list)
 
     @staticmethod
-    def get_valid_inputs(source_list: list[str]) -> list[dict[str, str]]:
+    def get_valid_inputs(source_list: list[Any]) -> list[dict[str, str]]:
         """Return list of supported inputs."""
         input_list: list[dict[str, str]] = []
         for source in source_list:
+            if not isinstance(source, str):
+                continue
             formatted_source = (
                 source.lower().replace("-", "").replace("_", "").replace(" ", "")
             )
@@ -936,6 +940,9 @@ class AlexaTemperatureSensor(AlexaCapability):
         if self.entity.domain == climate.DOMAIN:
             unit = self.hass.config.units.temperature_unit
             temp = self.entity.attributes.get(climate.ATTR_CURRENT_TEMPERATURE)
+        elif self.entity.domain == water_heater.DOMAIN:
+            unit = self.hass.config.units.temperature_unit
+            temp = self.entity.attributes.get(water_heater.ATTR_CURRENT_TEMPERATURE)
 
         if temp is None or temp in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return None
@@ -1106,6 +1113,8 @@ class AlexaThermostatController(AlexaCapability):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & climate.ClimateEntityFeature.TARGET_TEMPERATURE:
             properties.append({"name": "targetSetpoint"})
+        if supported & water_heater.WaterHeaterEntityFeature.TARGET_TEMPERATURE:
+            properties.append({"name": "targetSetpoint"})
         if supported & climate.ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
             properties.append({"name": "lowerSetpoint"})
             properties.append({"name": "upperSetpoint"})
@@ -1125,6 +1134,8 @@ class AlexaThermostatController(AlexaCapability):
             return None
 
         if name == "thermostatMode":
+            if self.entity.domain == water_heater.DOMAIN:
+                return None
             preset = self.entity.attributes.get(climate.ATTR_PRESET_MODE)
 
             mode: dict[str, str] | str | None
@@ -1174,9 +1185,13 @@ class AlexaThermostatController(AlexaCapability):
         ThermostatMode Values.
 
         ThermostatMode Value must be AUTO, COOL, HEAT, ECO, OFF, or CUSTOM.
+        Water heater devices do not return thermostat modes.
         """
+        if self.entity.domain == water_heater.DOMAIN:
+            return None
+
         supported_modes: list[str] = []
-        hvac_modes = self.entity.attributes[climate.ATTR_HVAC_MODES]
+        hvac_modes = self.entity.attributes.get(climate.ATTR_HVAC_MODES, [])
         for mode in hvac_modes:
             if thermostat_mode := API_THERMOSTAT_MODES.get(mode):
                 supported_modes.append(thermostat_mode)
@@ -1406,6 +1421,16 @@ class AlexaModeController(AlexaCapability):
             if mode in self.entity.attributes.get(humidifier.ATTR_AVAILABLE_MODES, []):
                 return f"{humidifier.ATTR_MODE}.{mode}"
 
+        # Water heater operation mode
+        if self.instance == f"{water_heater.DOMAIN}.{water_heater.ATTR_OPERATION_MODE}":
+            operation_mode = self.entity.attributes.get(
+                water_heater.ATTR_OPERATION_MODE, None
+            )
+            if operation_mode in self.entity.attributes.get(
+                water_heater.ATTR_OPERATION_LIST, []
+            ):
+                return f"{water_heater.ATTR_OPERATION_MODE}.{operation_mode}"
+
         # Cover Position
         if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
             # Return state instead of position when using ModeController.
@@ -1473,6 +1498,26 @@ class AlexaModeController(AlexaCapability):
             if len(modes) == 1:
                 self._resource.add_mode(
                     f"{humidifier.ATTR_MODE}.{PRESET_MODE_NA}", [PRESET_MODE_NA]
+                )
+            return self._resource.serialize_capability_resources()
+
+        # Water heater operation modes
+        if self.instance == f"{water_heater.DOMAIN}.{water_heater.ATTR_OPERATION_MODE}":
+            self._resource = AlexaModeResource([AlexaGlobalCatalog.SETTING_MODE], False)
+            operation_modes = self.entity.attributes.get(
+                water_heater.ATTR_OPERATION_LIST, []
+            )
+            for operation_mode in operation_modes:
+                self._resource.add_mode(
+                    f"{water_heater.ATTR_OPERATION_MODE}.{operation_mode}",
+                    [operation_mode],
+                )
+            # Devices with a single mode completely break Alexa discovery,
+            # add a fake preset (see issue #53832).
+            if len(operation_modes) == 1:
+                self._resource.add_mode(
+                    f"{water_heater.ATTR_OPERATION_MODE}.{PRESET_MODE_NA}",
+                    [PRESET_MODE_NA],
                 )
             return self._resource.serialize_capability_resources()
 

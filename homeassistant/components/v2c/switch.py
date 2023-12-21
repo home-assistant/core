@@ -21,7 +21,7 @@ from .entity import V2CBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class V2CRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -30,7 +30,7 @@ class V2CRequiredKeysMixin:
     turn_off_fn: Callable[[Trydan], Coroutine[Any, Any, Any]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class V2CSwitchEntityDescription(SwitchEntityDescription, V2CRequiredKeysMixin):
     """Describes a V2C EVSE switch entity."""
 
