@@ -53,7 +53,7 @@ class AzureDataExplorerClient:
             ingestion_mapping_reference="ha_json_mapping",
         )
 
-        # Create cLients for ingesting and querying data
+        # Create cLient for ingesting and querying data
         kcsb = KustoConnectionStringBuilder.with_aad_application_key_authentication(
             self._cluster_ingest_uri,
             self._client_id,
