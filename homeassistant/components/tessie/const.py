@@ -24,6 +24,6 @@ class TessieClimateModes(StrEnum):
     """Tessie status."""
 
     OFF = "off"
-    KEEP = "keep"
+    ON = "on"
     DOG = "dog"
     CAMP = "camp"
