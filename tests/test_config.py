@@ -1999,6 +1999,10 @@ async def test_core_config_schema_legacy_template(
         issue = issue_registry.async_get_issue("homeassistant", issue_id)
         assert issue if issue_id == expected_issue else not issue
 
+    await config_util.async_process_ha_core_config(hass, {})
+    for issue_id in {"legacy_templates_true", "legacy_templates_false"}:
+        assert not issue_registry.async_get_issue("homeassistant", issue_id)
+
 
 async def test_core_store_no_country(
     hass: HomeAssistant, hass_storage: dict[str, Any]
