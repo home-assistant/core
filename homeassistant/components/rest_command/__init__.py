@@ -172,7 +172,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         _LOGGER.error("Response of `%s` has invalid JSON", request_url)
                         raise HomeAssistantError from err
 
-                    except (LookupError, UnicodeDecodeError) as err:
+                    except UnicodeDecodeError as err:
                         _LOGGER.error(
                             "Response of `%s` could not be interpreted as text",
                             request_url,
