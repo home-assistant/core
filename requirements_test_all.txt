@@ -750,6 +750,9 @@ gotailwind==0.2.2
 # homeassistant.components.govee_ble
 govee-ble==0.24.0
 
+# homeassistant.components.gpsd
+gps3==0.33.3
+
 # homeassistant.components.gree
 greeclimate==1.4.1
 

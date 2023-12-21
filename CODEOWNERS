@@ -489,6 +489,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/govee_ble/ @bdraco @PierreAronnax
 /tests/components/govee_ble/ @bdraco @PierreAronnax
 /homeassistant/components/gpsd/ @fabaff
+/tests/components/gpsd/ @fabaff
 /homeassistant/components/gree/ @cmroche
 /tests/components/gree/ @cmroche
 /homeassistant/components/greeneye_monitor/ @jkeljo
