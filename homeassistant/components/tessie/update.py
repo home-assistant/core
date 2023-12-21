@@ -48,4 +48,6 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
     @property
     def in_progress(self) -> bool | int | None:
         """Update installation progress."""
-        return self.get("vehicle_state_software_update_install_perc")
+        if self.get("vehicle_state_software_update_status"):
+            return self.get("vehicle_state_software_update_install_perc")
+        return None
