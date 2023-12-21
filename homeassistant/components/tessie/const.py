@@ -20,8 +20,8 @@ class TessieStatus(StrEnum):
     ONLINE = "online"
 
 
-class TessieClimateModes(StrEnum):
-    """Tessie status."""
+class TessieClimateKeeper(StrEnum):
+    """Tessie Climate Keeper Modes."""
 
     OFF = "off"
     ON = "on"
