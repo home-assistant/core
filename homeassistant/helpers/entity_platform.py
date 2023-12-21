@@ -31,7 +31,6 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.generated import languages
 from homeassistant.setup import async_start_setup
-from homeassistant.util.async_ import run_callback_threadsafe
 
 from . import (
     config_validation as cv,
@@ -429,12 +428,11 @@ class EntityPlatform:
         self, new_entities: Iterable[Entity], update_before_add: bool = False
     ) -> None:
         """Schedule adding entities for a single platform, synchronously."""
-        run_callback_threadsafe(
-            self.hass.loop,
+        self.hass.loop.call_soon_threadsafe(
             self._async_schedule_add_entities,
             list(new_entities),
             update_before_add,
-        ).result()
+        )
 
     @callback
     def _async_schedule_add_entities(
