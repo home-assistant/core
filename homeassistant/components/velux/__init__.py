@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -72,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     # Register velux services
-    async def async_reboot_gateway(service_call):
+    async def async_reboot_gateway(service_call: ServiceCall) -> None:
         await pyvlx.reboot_gateway()
 
     hass.services.async_register(DOMAIN, "reboot_gateway", async_reboot_gateway)
