@@ -33,11 +33,6 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
         super().__init__(coordinator, "update")
 
     @property
-    def auto_update(self) -> bool:
-        """Return whether the entity is scheduled to updated."""
-        return self.get("vehicle_state_software_update_status") == TessieUpdateStatus.SCHEDULED
-
-    @property
     def installed_version(self) -> str:
         """Return the current app version."""
         # Discard build from version number
@@ -47,13 +42,22 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
     def latest_version(self) -> str | None:
         """Return the latest version."""
         # Dont show an update when its not in a state that can be actioned
-        if self.get("vehicle_state_software_update_status") in [TessieUpdateStatus.AVAILABLE, TessieUpdateStatus.SCHEDULED, TessieUpdateStatus.INSTALLING]:
+        if self.get("vehicle_state_software_update_status") in (
+            TessieUpdateStatus.AVAILABLE,
+            TessieUpdateStatus.SCHEDULED,
+            TessieUpdateStatus.INSTALLING,
+            TessieUpdateStatus.DOWNLOADING,
+            TessieUpdateStatus.WIFI_WAIT,
+        ):
             return self.get("vehicle_state_software_update_version")
         return None
 
     @property
     def in_progress(self) -> bool | int | None:
         """Update installation progress."""
-        if self.get("vehicle_state_software_update_status") == TessieUpdateStatus.INSTALLING:
+        if (
+            self.get("vehicle_state_software_update_status")
+            == TessieUpdateStatus.INSTALLING
+        ):
             return self.get("vehicle_state_software_update_install_perc")
         return None
