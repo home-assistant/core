@@ -1449,9 +1449,6 @@ omit =
     homeassistant/components/velbus/sensor.py
     homeassistant/components/velbus/select.py
     homeassistant/components/velbus/switch.py
-    homeassistant/components/velux/__init__.py
-    homeassistant/components/velux/cover.py
-    homeassistant/components/velux/light.py
     homeassistant/components/venstar/__init__.py
     homeassistant/components/venstar/binary_sensor.py
     homeassistant/components/venstar/climate.py
