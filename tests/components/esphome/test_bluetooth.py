@@ -3,7 +3,7 @@
 from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant
 
-from ..conftest import MockESPHomeDevice
+from .conftest import MockESPHomeDevice
 
 
 async def test_bluetooth_connect_with_raw_adv(

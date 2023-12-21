@@ -320,7 +320,7 @@ async def mock_bluetooth_entry(
     """Set up an ESPHome entry with bluetooth."""
 
     async def _mock_bluetooth_entry(
-        bluetooth_proxy_feature_flags: BluetoothProxyFeature
+        bluetooth_proxy_feature_flags: BluetoothProxyFeature,
     ) -> MockESPHomeDevice:
         return await _mock_generic_device_entry(
             hass,
@@ -348,7 +348,7 @@ async def mock_bluetooth_entry_with_raw_adv(mock_bluetooth_entry) -> MockESPHome
 
 @pytest.fixture
 async def mock_bluetooth_entry_with_legacy_adv(
-    mock_bluetooth_entry
+    mock_bluetooth_entry,
 ) -> MockESPHomeDevice:
     """Set up an ESPHome entry with bluetooth with legacy advertisements."""
     return await mock_bluetooth_entry(

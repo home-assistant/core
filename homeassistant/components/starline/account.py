@@ -136,6 +136,7 @@ class StarlineAccount:
             model=device.typename,
             name=device.name,
             sw_version=device.fw_version,
+            configuration_url="https://starline-online.ru/",
         )
 
     @staticmethod

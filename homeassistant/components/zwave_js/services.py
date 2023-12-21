@@ -49,7 +49,7 @@ T = TypeVar("T", ZwaveNode, Endpoint)
 
 
 def parameter_name_does_not_need_bitmask(
-    val: dict[str, int | str | list[str]]
+    val: dict[str, int | str | list[str]],
 ) -> dict[str, int | str | list[str]]:
     """Validate that if a parameter name is provided, bitmask is not as well."""
     if (
