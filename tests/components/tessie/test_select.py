@@ -7,6 +7,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
+from homeassistant.components.tessie.const import TessieSeatHeaterOptions
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -34,13 +35,13 @@ async def test_select(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_OPTION: "low"},
+            {ATTR_ENTITY_ID: [entity_id], ATTR_OPTION: TessieSeatHeaterOptions.LOW},
             blocking=True,
         )
         mock_set.assert_called_once()
         assert mock_set.call_args[1]["seat"] == "front_left"
         assert mock_set.call_args[1]["level"] == 1
-        assert hass.states.get(entity_id).state == "low"
+        assert hass.states.get(entity_id).state == TessieSeatHeaterOptions.LOW
 
 
 async def test_errors(hass: HomeAssistant) -> None:
@@ -57,7 +58,7 @@ async def test_errors(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_OPTION: "low"},
+            {ATTR_ENTITY_ID: [entity_id], ATTR_OPTION: TessieSeatHeaterOptions.LOW},
             blocking=True,
         )
         mock_set.assert_called_once()
