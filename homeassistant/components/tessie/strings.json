@@ -110,6 +110,71 @@
         "name": "Charge port door"
       }
     },
+    "select": {
+      "climate_state_seat_heater_left": {
+        "name": "Seat heater left",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
+      "climate_state_seat_heater_right": {
+        "name": "Seat heater right",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+        }
+      },
+      "climate_state_seat_heater_rear_left": {
+        "name": "Seat heater rear left",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+        }
+      },
+      "climate_state_seat_heater_rear_center": {
+        "name": "Seat heater rear center",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+        }
+      },
+      "climate_state_seat_heater_rear_right": {
+        "name": "Seat heater rear right",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+        }
+      },
+      "climate_state_seat_heater_third_row_left": {
+        "name": "Seat heater third row left",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+        }
+      },
+      "climate_state_seat_heater_third_row_right": {
+        "name": "Seat heater third row right",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+        }
+      }
+    },
     "binary_sensor": {
       "state": {
         "name": "Status"
