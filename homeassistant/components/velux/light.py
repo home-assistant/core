@@ -1,36 +1,44 @@
 """Support for Velux lights."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
-from pyvlx import Intensity, LighteningDevice
+from pyvlx import Intensity, PyVLX
+from pyvlx.lightening_device import Light
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_VELUX, VeluxEntity
+from .const import DOMAIN
+from .node_entity import VeluxNodeEntity
 
+_LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up light(s) for Velux platform."""
-    async_add_entities(
-        VeluxLight(node)
-        for node in hass.data[DATA_VELUX].pyvlx.nodes
-        if isinstance(node, LighteningDevice)
-    )
+    entities = []
+    pyvlx: PyVLX = hass.data[DOMAIN][entry.entry_id]
+    for node in pyvlx.nodes:
+        if isinstance(node, Light):
+            _LOGGER.debug("Light will be added: %s", node.name)
+            entities.append(VeluxLight(node))
+    async_add_entities(entities)
 
 
-class VeluxLight(VeluxEntity, LightEntity):
+class VeluxLight(VeluxNodeEntity, LightEntity):
     """Representation of a Velux light."""
+
+    def __init__(self, node: Light) -> None:
+        """Initialize the Velux light."""
+        self.node: Light = node
+        super().__init__(node)
 
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_color_mode = ColorMode.BRIGHTNESS
@@ -38,12 +46,12 @@ class VeluxLight(VeluxEntity, LightEntity):
     node: LighteningDevice
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the current brightness."""
         return int((100 - self.node.intensity.intensity_percent) * 255 / 100)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if light is on."""
         return not self.node.intensity.off and self.node.intensity.known
 

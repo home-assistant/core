@@ -1,9 +1,18 @@
 {
   "domain": "velux",
   "name": "Velux",
-  "codeowners": ["@Julius2342"],
+  "codeowners": ["@Julius2342", "@pawlizio"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/velux",
+  "integration_type": "hub",
   "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/Julius2342/pyvlx/issues",
   "loggers": ["pyvlx"],
-  "requirements": ["pyvlx==0.2.21"]
+  "requirements": ["pyvlx==0.2.21"],
+  "zeroconf": [
+    {
+      "type": "_http._tcp.local.",
+      "name": "velux_klf_lan*"
+    }
+  ]
 }
