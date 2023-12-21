@@ -6,12 +6,10 @@ from typing import TYPE_CHECKING
 
 from dropmqttapi.mqttapi import DropAPI
 
-from homeassistant.components import mqtt
-from homeassistant.components.mqtt import ReceiveMessage
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_DATA_TOPIC, CONF_DEVICE_TYPE, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,32 +25,6 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         if TYPE_CHECKING:
             assert self.config_entry is not None
         self._drop_api = DropAPI()
-
-    async def subscribe_mqtt(self, hass: HomeAssistant) -> None:
-        """Subscribe to the data topic."""
-        if TYPE_CHECKING:
-            assert self.config_entry is not None
-
-        @callback
-        def mqtt_callback(msg: ReceiveMessage) -> None:
-            """Pass MQTT payload to DROP API parser."""
-            if self._drop_api is not None:
-                if self._drop_api.parse_drop_message(
-                    msg.topic, msg.payload, msg.qos, msg.retain
-                ):
-                    self.async_set_updated_data(None)
-
-        self.config_entry.async_on_unload(
-            await mqtt.async_subscribe(
-                hass, self.config_entry.data[CONF_DATA_TOPIC], mqtt_callback, 0
-            )
-        )
-        _LOGGER.debug(
-            "Entry %s (%s) subscribed to %s",
-            self.config_entry.unique_id,
-            self.config_entry.data[CONF_DEVICE_TYPE],
-            self.config_entry.data[CONF_DATA_TOPIC],
-        )
 
     # Device properties
     @property

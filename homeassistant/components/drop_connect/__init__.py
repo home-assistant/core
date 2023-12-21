@@ -5,11 +5,12 @@ import logging
 from typing import TYPE_CHECKING
 
 from homeassistant.components import mqtt
+from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
-from .const import DOMAIN
+from .const import CONF_DATA_TOPIC, CONF_DEVICE_TYPE, DOMAIN
 from .coordinator import DROPDeviceDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,9 +28,31 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     if TYPE_CHECKING:
         assert config_entry.unique_id is not None
-    device_coordinator = DROPDeviceDataUpdateCoordinator(hass, config_entry.unique_id)
-    await device_coordinator.subscribe_mqtt(hass)
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = device_coordinator
+    drop_data_coordinator = DROPDeviceDataUpdateCoordinator(
+        hass, config_entry.unique_id
+    )
+
+    @callback
+    def mqtt_callback(msg: ReceiveMessage) -> None:
+        """Pass MQTT payload to DROP API parser."""
+        if drop_data_coordinator.drop_api.parse_drop_message(
+            msg.topic, msg.payload, msg.qos, msg.retain
+        ):
+            drop_data_coordinator.async_set_updated_data(None)
+
+    config_entry.async_on_unload(
+        await mqtt.async_subscribe(
+            hass, config_entry.data[CONF_DATA_TOPIC], mqtt_callback, 0
+        )
+    )
+    _LOGGER.debug(
+        "Entry %s (%s) subscribed to %s",
+        config_entry.unique_id,
+        config_entry.data[CONF_DEVICE_TYPE],
+        config_entry.data[CONF_DATA_TOPIC],
+    )
+
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = drop_data_coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
 
