@@ -72,6 +72,7 @@ def mock_config_entry(hass) -> MockConfigEntry:
             CONF_NOISE_PSK: "12345678123456781234567812345678",
             CONF_DEVICE_NAME: "test",
         },
+        # ESPHome unique ids are lower case
         unique_id="11:22:33:44:55:aa",
     )
     config_entry.add_to_hass(hass)
@@ -96,7 +97,8 @@ def mock_device_info() -> DeviceInfo:
         uses_password=False,
         name="test",
         legacy_bluetooth_proxy_version=0,
-        mac_address="11:22:33:44:55:aa",
+        # ESPHome mac addresses are UPPER case
+        mac_address="11:22:33:44:55:AA",
         esphome_version="1.0.0",
     )
 
@@ -230,7 +232,7 @@ async def _mock_generic_device_entry(
         "name": "test",
         "friendly_name": "Test",
         "esphome_version": "1.0.0",
-        "mac_address": "11:22:33:44:55:aa",
+        "mac_address": "11:22:33:44:55:AA",
     }
     device_info = DeviceInfo(**(default_device_info | mock_device_info))
 
@@ -320,7 +322,7 @@ async def mock_bluetooth_entry(
     """Set up an ESPHome entry with bluetooth."""
 
     async def _mock_bluetooth_entry(
-        bluetooth_proxy_feature_flags: BluetoothProxyFeature
+        bluetooth_proxy_feature_flags: BluetoothProxyFeature,
     ) -> MockESPHomeDevice:
         return await _mock_generic_device_entry(
             hass,
@@ -348,7 +350,7 @@ async def mock_bluetooth_entry_with_raw_adv(mock_bluetooth_entry) -> MockESPHome
 
 @pytest.fixture
 async def mock_bluetooth_entry_with_legacy_adv(
-    mock_bluetooth_entry
+    mock_bluetooth_entry,
 ) -> MockESPHomeDevice:
     """Set up an ESPHome entry with bluetooth with legacy advertisements."""
     return await mock_bluetooth_entry(

@@ -248,7 +248,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 def _build_homekit_model_lookups(
-    homekit_models: dict[str, HomeKitDiscoveredIntegration]
+    homekit_models: dict[str, HomeKitDiscoveredIntegration],
 ) -> tuple[
     dict[str, HomeKitDiscoveredIntegration],
     dict[re.Pattern, HomeKitDiscoveredIntegration],
