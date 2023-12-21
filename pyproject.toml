@@ -36,7 +36,7 @@ dependencies    = [
     "ciso8601==2.3.0",
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
-    "httpx==0.25.0",
+    "httpx==0.26.0",
     "home-assistant-bluetooth==1.11.0",
     "ifaddr==0.2.0",
     "Jinja2==3.1.2",
