@@ -10,14 +10,9 @@ import pytest
 import respx
 
 
-@pytest.fixture
-def bmw_fixture(
-    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
-) -> Generator[respx.MockRouter, None, None]:
-    """Patch MyBMW login API calls."""
-
-    # we use the library's mock router to mock the API calls, but only with a subset of vehicles
-    router = MyBMWMockRouter(
+def bmw_router() -> MyBMWMockRouter:
+    """Create a mock router with specified vehicles."""
+    return MyBMWMockRouter(
         vehicles_to_load=[
             "WBA00000000DEMO01",
             "WBA00000000DEMO02",
@@ -27,6 +22,16 @@ def bmw_fixture(
         states=ALL_STATES,
         charging_settings=ALL_CHARGING_SETTINGS,
     )
+
+
+@pytest.fixture
+def bmw_fixture(
+    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> Generator[respx.MockRouter, None, None]:
+    """Patch MyBMW login API calls."""
+
+    # we use the library's mock router to mock the API calls, but only with a subset of vehicles
+    router = bmw_router()
 
     # we don't want to wait when triggering a remote service
     monkeypatch.setattr(
