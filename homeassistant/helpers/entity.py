@@ -262,7 +262,7 @@ class CalculatedState:
 
 
 class CachedProperties(type):
-    """Metaclass which invalidates cached entity properties on write to _attr_."""
+    """Metaclass which invalidates cached entity propertis on write to _attr_."""
 
     def __new__(
         mcs,  # noqa: N804  ruff bug, ruff does not understand this is a metaclass
@@ -323,7 +323,7 @@ class CachedProperties(type):
         def move_attr(cls: CachedProperties, property_name: str) -> None:
             attr_name = "_attr_" + property_name
             private_attr_name = "__attr_" + property_name
-            if hasattr(cls, attr_name):
+            if attr_name in cls.__dict__:
                 setattr(cls, private_attr_name, getattr(cls, attr_name))
                 annotations = cls.__annotations__
                 if attr_name in annotations:
@@ -331,19 +331,25 @@ class CachedProperties(type):
             setattr(cls, attr_name, make_property(property_name))
 
         cached_properties: set[str] = namespace["_CachedProperties__cached_properties"]
-        moved: set[str] = set()
-        for parent in cls.__mro__:
-            if not hasattr(parent, "_CachedProperties__cached_properties"):
+        moved_attrs: set[str] = set()
+        for property_name in cached_properties:
+            if property_name in moved_attrs:
+                continue
+            move_attr(cls, property_name)
+            moved_attrs.add(property_name)
+
+        for parent in cls.__mro__[:0:-1]:
+            if "_CachedProperties__cached_properties" not in parent.__dict__:
                 continue
             cached_properties = getattr(parent, "_CachedProperties__cached_properties")
             for property_name in cached_properties:
-                if property_name in moved:
+                if property_name in moved_attrs:
                     continue
                 attr_name = "_attr_" + property_name
                 if (attr_name) not in cls.__dict__:
                     continue
                 move_attr(cls, property_name)
-                moved.add(property_name)
+                moved_attrs.add(property_name)
 
 
 class ABCCachedProperties(CachedProperties, ABCMeta):
