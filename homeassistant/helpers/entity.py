@@ -285,6 +285,18 @@ class CachedProperties(type):
     ) -> None:
         """Wrap _attr_ for cached properties in property objects."""
 
+        def deleter(name: str) -> Callable[[Any], None]:
+            private_attribute_name = "__attr_" + name
+
+            def _deleter(o: Any) -> None:
+                for attr in (name, private_attribute_name):
+                    try:  # noqa: SIM105  suppress is much slower
+                        delattr(o, attr)
+                    except AttributeError:
+                        pass
+
+            return _deleter
+
         def getter(name: str) -> Callable[[Any], Any]:
             private_attribute_name = "__attr_" + name
 
@@ -313,7 +325,11 @@ class CachedProperties(type):
             setattr(
                 cls,
                 attr_name,
-                property(fget=getter(property_name), fset=setter(property_name)),
+                property(
+                    fget=getter(property_name),
+                    fset=setter(property_name),
+                    fdel=deleter(property_name),
+                ),
             )
 
         for parent in cls.__mro__[:0:-1]:
@@ -329,7 +345,11 @@ class CachedProperties(type):
                 setattr(
                     cls,
                     attr_name,
-                    property(fget=getter(property_name), fset=setter(property_name)),
+                    property(
+                        fget=getter(property_name),
+                        fset=setter(property_name),
+                        fdel=deleter(property_name),
+                    ),
                 )
 
 
