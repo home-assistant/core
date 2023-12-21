@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, TessieSeatHeaterOptions
 from .entity import TessieEntity
 
 SEAT_HEATERS = {
@@ -39,7 +39,12 @@ async def async_setup_entry(
 class TessieSeatHeaterSelectEntity(TessieEntity, SelectEntity):
     """Select entity for current charge."""
 
-    _attr_options = ["off", "low", "medium", "high"]
+    _attr_options = [
+        TessieSeatHeaterOptions.OFF,
+        TessieSeatHeaterOptions.LOW,
+        TessieSeatHeaterOptions.MEDIUM,
+        TessieSeatHeaterOptions.HIGH,
+    ]
 
     @property
     def current_option(self) -> str | None:
