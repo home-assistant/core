@@ -61,4 +61,4 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
             == TessieUpdateStatus.INSTALLING
         ):
             return self.get("vehicle_state_software_update_install_perc")
-        return None
+        return False
