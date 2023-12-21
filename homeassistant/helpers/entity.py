@@ -317,20 +317,22 @@ class CachedProperties(type):
 
             return _setter
 
+        def make_property(name: str) -> property:
+            return property(fget=getter(name), fset=setter(name), fdel=deleter(name))
+
+        def move_attr(cls: CachedProperties, property_name: str) -> None:
+            attr_name = "_attr_" + property_name
+            private_attr_name = "__attr_" + property_name
+            if hasattr(cls, attr_name):
+                setattr(cls, private_attr_name, getattr(cls, attr_name))
+                annotations = cls.__annotations__
+                if attr_name in annotations:
+                    annotations[private_attr_name] = annotations.pop(attr_name)
+            setattr(cls, attr_name, make_property(property_name))
+
         cached_properties: set[str] = namespace["_CachedProperties__cached_properties"]
         for property_name in cached_properties:
-            attr_name = "_attr_" + property_name
-            if hasattr(cls, attr_name):
-                setattr(cls, "__attr_" + property_name, getattr(cls, attr_name))
-            setattr(
-                cls,
-                attr_name,
-                property(
-                    fget=getter(property_name),
-                    fset=setter(property_name),
-                    fdel=deleter(property_name),
-                ),
-            )
+            move_attr(cls, property_name)
 
         for parent in cls.__mro__[:0:-1]:
             if not hasattr(parent, "_CachedProperties__cached_properties"):
@@ -340,22 +342,7 @@ class CachedProperties(type):
                 attr_name = "_attr_" + property_name
                 if (attr_name) not in cls.__dict__:
                     continue
-                if hasattr(cls, attr_name):
-                    private_attr_name = "__attr_" + property_name
-                    attr = getattr(cls, attr_name)
-                    setattr(cls, private_attr_name, attr)
-                    if isinstance(attr, dataclasses.Field):
-                        annotations: dict[str, str] = cls.__dict__["__annotations__"]
-                        annotations[private_attr_name] = annotations.pop(attr_name)
-                setattr(
-                    cls,
-                    attr_name,
-                    property(
-                        fget=getter(property_name),
-                        fset=setter(property_name),
-                        fdel=deleter(property_name),
-                    ),
-                )
+                move_attr(cls, property_name)
 
 
 class ABCCachedProperties(CachedProperties, ABCMeta):
