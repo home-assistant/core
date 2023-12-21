@@ -86,9 +86,14 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         )
 
     @property
+    def data(self) -> CCM15DeviceState | None:
+        """Return device data."""
+        return self.coordinator.get_ac_data(self._ac_index)
+
+    @property
     def current_temperature(self) -> int | None:
         """Return current temperature."""
-        if data := self.coordinator.get_ac_data(self._ac_index):
+        if data := self.data:
             return data.temperature
         return None
 
