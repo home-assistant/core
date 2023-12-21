@@ -104,7 +104,7 @@
     },
     "cover": {
       "windows": {
-        "name": "Windows"
+        "name": "Vent windows"
       },
       "charge_state_charge_port_door_open": {
         "name": "Charge port door"
