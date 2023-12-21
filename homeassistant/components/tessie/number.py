@@ -152,4 +152,4 @@ class TessieSpeedLimitModeNumberEntity(TessieEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.run(set_speed_limit, mph=value)
-        self.set(("vehicle_state_speed_limit_mode_current_limit_mph", value))
+        self.set((self.key, value))
