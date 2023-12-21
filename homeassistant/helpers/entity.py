@@ -328,7 +328,7 @@ class CachedProperties(type):
                 annotations = cls.__annotations__
                 if attr_name in annotations:
                     annotations[private_attr_name] = annotations.pop(attr_name)
-            type.__setattr__(cls, attr_name, make_property(property_name))
+            setattr(cls, attr_name, make_property(property_name))
 
         cached_properties: set[str] = namespace["_CachedProperties__cached_properties"]
         moved_attrs: set[str] = set()
