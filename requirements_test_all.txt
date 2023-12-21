@@ -1655,6 +1655,9 @@ python-miio==0.5.12
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
 
+# homeassistant.components.swiss_public_transport
+python-opendata-transport==0.3.0
+
 # homeassistant.components.opensky
 python-opensky==1.0.0
 
