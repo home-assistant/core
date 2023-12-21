@@ -154,7 +154,7 @@ async def test_sensors_softener(
 
     psi_sensor = hass.states.get(psi_sensor_name)
     assert psi_sensor
-    assert round(float(psi_sensor.state), 1) == 6894.1  # centibars
+    assert round(float(psi_sensor.state), 1) == 348.2  # centibars
 
     capacity_sensor = hass.states.get(capacity_sensor_name)
     assert capacity_sensor
@@ -191,7 +191,7 @@ async def test_sensors_filter(
 
     psi_sensor = hass.states.get(psi_sensor_name)
     assert psi_sensor
-    assert round(float(psi_sensor.state), 1) == 6894.1  # centibars
+    assert round(float(psi_sensor.state), 1) == 263.4  # centibars
 
 
 async def test_sensors_protection_valve(
