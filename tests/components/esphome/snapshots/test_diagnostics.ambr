@@ -25,3 +25,75 @@
     'dashboard': 'mock-slug',
   })
 # ---
+# name: test_diagnostics_with_bluetooth
+  dict({
+    'bluetooth': dict({
+      'available': True,
+      'connections_free': 0,
+      'connections_limit': 0,
+      'scanner': dict({
+        'connectable': True,
+        'discovered_device_timestamps': dict({
+        }),
+        'discovered_devices_and_advertisement_data': list([
+        ]),
+        'last_detection': 72067.183155875,
+        'monotonic_time': 72067.191439083,
+        'name': 'test (11:22:33:44:55:AA)',
+        'scanning': True,
+        'source': '11:22:33:44:55:AA',
+        'start_time': 72067.183155875,
+        'time_since_last_device_detection': dict({
+        }),
+        'type': 'ESPHomeScanner',
+      }),
+    }),
+    'config': dict({
+      'data': dict({
+        'device_name': 'test',
+        'host': 'test.local',
+        'password': '',
+        'port': 6053,
+      }),
+      'disabled_by': None,
+      'domain': 'esphome',
+      'entry_id': '0df774f954bd1c9ba7e770c06f4ef220',
+      'minor_version': 1,
+      'options': dict({
+        'allow_service_calls': False,
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Mock Title',
+      'unique_id': '11:22:33:44:55:aa',
+      'version': 1,
+    }),
+    'storage_data': dict({
+      'api_version': dict({
+        'major': 99,
+        'minor': 99,
+      }),
+      'device_info': dict({
+        'bluetooth_proxy_feature_flags': 63,
+        'compilation_time': '',
+        'esphome_version': '1.0.0',
+        'friendly_name': 'Test',
+        'has_deep_sleep': False,
+        'legacy_bluetooth_proxy_version': 0,
+        'mac_address': '**REDACTED**',
+        'manufacturer': '',
+        'model': '',
+        'name': 'test',
+        'project_name': '',
+        'project_version': '',
+        'suggested_area': '',
+        'uses_password': False,
+        'voice_assistant_version': 0,
+        'webserver_port': 0,
+      }),
+      'services': list([
+      ]),
+    }),
+  })
+# ---
