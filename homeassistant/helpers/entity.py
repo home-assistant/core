@@ -339,7 +339,7 @@ class CachedProperties(type):
             moved_attrs.add(property_name)
 
         for parent in cls.__mro__[:0:-1]:
-            if not hasattr(parent, "_CachedProperties__cached_properties"):
+            if "_CachedProperties__cached_properties" not in parent.__dict__:
                 continue
             cached_properties = getattr(parent, "_CachedProperties__cached_properties")
             for property_name in cached_properties:
