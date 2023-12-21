@@ -1,11 +1,11 @@
 """The tests for generic camera component."""
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 from http import HTTPStatus
 from unittest.mock import patch
 
 import aiohttp
-from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import httpx
 import pytest
 import respx
@@ -75,7 +75,10 @@ async def test_fetching_url(
 
 @respx.mock
 async def test_image_caching(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, fakeimgbytes_png
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
+    fakeimgbytes_png,
 ) -> None:
     """Test that the image is cached and not fetched more often than the framerate indicates."""
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
@@ -100,50 +103,48 @@ async def test_image_caching(
 
     client = await hass_client()
 
-    initial_time = datetime.now()
-    with freeze_time(initial_time) as frozen_datetime:
-        resp = await client.get("/api/camera_proxy/camera.config_test")
-        assert resp.status == HTTPStatus.OK
-        body = await resp.read()
-        assert body == fakeimgbytes_png
+    resp = await client.get("/api/camera_proxy/camera.config_test")
+    assert resp.status == HTTPStatus.OK
+    body = await resp.read()
+    assert body == fakeimgbytes_png
 
-        resp = await client.get("/api/camera_proxy/camera.config_test")
-        assert resp.status == HTTPStatus.OK
-        body = await resp.read()
-        assert body == fakeimgbytes_png
+    resp = await client.get("/api/camera_proxy/camera.config_test")
+    assert resp.status == HTTPStatus.OK
+    body = await resp.read()
+    assert body == fakeimgbytes_png
 
-        # time is frozen, image should have come from cache
-        assert respx.calls.call_count == 1
+    # time is frozen, image should have come from cache
+    assert respx.calls.call_count == 1
 
-        # advance time by 100ms
-        frozen_datetime.move_to(initial_time + timedelta(0, 0.1))
+    # advance time by 150ms
+    freezer.tick(timedelta(0, 0.150))
 
-        resp = await client.get("/api/camera_proxy/camera.config_test")
-        assert resp.status == HTTPStatus.OK
-        body = await resp.read()
-        assert body == fakeimgbytes_png
+    resp = await client.get("/api/camera_proxy/camera.config_test")
+    assert resp.status == HTTPStatus.OK
+    body = await resp.read()
+    assert body == fakeimgbytes_png
 
-        # Only 100ms have passed, image should still have come from cache
-        assert respx.calls.call_count == 1
+    # Only 150ms have passed, image should still have come from cache
+    assert respx.calls.call_count == 1
 
-        # advance time by another 100ms
-        frozen_datetime.move_to(initial_time + timedelta(0, 0.2))
+    # advance time by another 150ms
+    freezer.tick(timedelta(0, 0.150))
 
-        resp = await client.get("/api/camera_proxy/camera.config_test")
-        assert resp.status == HTTPStatus.OK
-        body = await resp.read()
-        assert body == fakeimgbytes_png
+    resp = await client.get("/api/camera_proxy/camera.config_test")
+    assert resp.status == HTTPStatus.OK
+    body = await resp.read()
+    assert body == fakeimgbytes_png
 
-        # 200ms have passed, now we should have fetched a new image
-        assert respx.calls.call_count == 2
+    # 300ms have passed, now we should have fetched a new image
+    assert respx.calls.call_count == 2
 
-        resp = await client.get("/api/camera_proxy/camera.config_test")
-        assert resp.status == HTTPStatus.OK
-        body = await resp.read()
-        assert body == fakeimgbytes_png
+    resp = await client.get("/api/camera_proxy/camera.config_test")
+    assert resp.status == HTTPStatus.OK
+    body = await resp.read()
+    assert body == fakeimgbytes_png
 
-        # Still only 200ms have passed, should have returned the cached image
-        assert respx.calls.call_count == 2
+    # Still only 300ms have passed, should have returned the cached image
+    assert respx.calls.call_count == 2
 
 
 @respx.mock
