@@ -30,14 +30,14 @@ from .coordinator import RensonCoordinator
 from .entity import RensonEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class RensonBinarySensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     field: FieldEnum
 
 
-@dataclass
+@dataclass(frozen=True)
 class RensonBinarySensorEntityDescription(
     BinarySensorEntityDescription, RensonBinarySensorEntityDescriptionMixin
 ):

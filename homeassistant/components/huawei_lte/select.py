@@ -26,14 +26,14 @@ from .const import DOMAIN, KEY_NET_NET_MODE
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class HuaweiSelectEntityMixin:
     """Mixin for Huawei LTE select entities, to ensure required fields are set."""
 
     setter_fn: Callable[[str], None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class HuaweiSelectEntityDescription(SelectEntityDescription, HuaweiSelectEntityMixin):
     """Class describing Huawei LTE select entities."""
 

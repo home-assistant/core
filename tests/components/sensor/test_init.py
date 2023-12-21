@@ -4,10 +4,12 @@ from __future__ import annotations
 from collections.abc import Generator
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from types import ModuleType
 from typing import Any
 
 import pytest
 
+from homeassistant.components import sensor
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import (
     DEVICE_CLASS_STATE_CLASSES,
@@ -50,6 +52,7 @@ from tests.common import (
     MockModule,
     MockPlatform,
     async_mock_restore_state_shutdown_restart,
+    import_and_test_deprecated_constant_enum,
     mock_config_flow,
     mock_integration,
     mock_platform,
@@ -2424,7 +2427,7 @@ async def test_name(hass: HomeAssistant) -> None:
         config_entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
-        """Set up test stt platform via config entry."""
+        """Set up test sensor platform via config entry."""
         async_add_entities([entity1, entity2, entity3, entity4])
 
     mock_platform(
@@ -2519,3 +2522,16 @@ async def test_entity_category_config_raises_error(
     )
 
     assert not hass.states.get("sensor.test")
+
+
+@pytest.mark.parametrize(("enum"), list(sensor.SensorStateClass))
+@pytest.mark.parametrize(("module"), [sensor, sensor.const])
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: sensor.SensorStateClass,
+    module: ModuleType,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, module, enum, "STATE_CLASS_", "2025.1"
+    )
