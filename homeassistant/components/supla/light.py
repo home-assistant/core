@@ -124,7 +124,7 @@ class SuplaRGBLightingEntity(SuplaEntity, LightEntity):
         )
         (red, green, blue) = rgb_update_color
         # Color is set as the hex string of the form "0xRRGGBB"
-        color = "0x" + color_util.color_rgb_to_hex(red, green, blue)
+        color = f"0x{color_util.color_rgb_to_hex(red, green, blue)}"
         await self.async_action("SET_RGBW_PARAMETERS", color=color)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
