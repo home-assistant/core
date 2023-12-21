@@ -102,9 +102,9 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         """Return the current operating mode (Auto, On, or Off)."""
         if self._evo_device.mode == EVO_FOLLOW:
             return STATE_AUTO
-        if self._evo_device.state is None:
+        if (device_state := self._evo_device.state) is None:
             return None
-        return EVO_STATE_TO_HA[self._evo_device.state]
+        return EVO_STATE_TO_HA[device_state]
 
     @property
     def is_away_mode_on(self) -> bool | None:
