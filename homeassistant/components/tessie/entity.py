@@ -47,10 +47,6 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
         """Return value from coordinator data."""
         return self.coordinator.data[self.key]
 
-    def get(self, key: str | None = None, default: Any | None = None) -> Any:
-        """Return a specific value from coordinator data."""
-        return self.coordinator.data.get(key or self.key, default)
-
     async def run(
         self, func: Callable[..., Awaitable[dict[str, bool]]], **kargs: Any
     ) -> None:

@@ -41,7 +41,6 @@ async def test_switches(hass: HomeAssistant) -> None:
             blocking=True,
         )
         mock_run.assert_called_once()
-
         mock_run.reset_mock()
 
         # Test Switch Off

@@ -113,7 +113,9 @@ class TessieSwitchEntity(TessieEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Switch."""
         await self.run(self.entity_description.on_func)
+        self.set((self.entity_description.key, True))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Switch."""
         await self.run(self.entity_description.off_func)
+        self.set((self.entity_description.key, False))
