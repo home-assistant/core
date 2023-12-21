@@ -41,9 +41,11 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
         return self.coordinator.data["vehicle_state_car_version"].split(" ")[0]
 
     @property
-    def latest_version(self) -> str:
+    def latest_version(self) -> str | None:
         """Return the latest version."""
-        return self.get("vehicle_state_software_update_version")
+        if len(version := self.get("vehicle_state_software_update_version")) > 4:
+            return version
+        return None
 
     @property
     def in_progress(self) -> bool | int | None:
