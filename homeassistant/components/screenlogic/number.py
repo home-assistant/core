@@ -51,18 +51,24 @@ SUPPORTED_SCG_NUMBERS = [
         data_root=(DEVICE.SCG, GROUP.CONFIGURATION),
         key=VALUE.POOL_SETPOINT,
         entity_category=EntityCategory.CONFIG,
+        enabled_lambda=lambda equipment_flags: EQUIPMENT_FLAG.INTELLICHEM
+        not in equipment_flags,
     ),
     ScreenLogicNumberDescription(
         set_value_name="async_set_scg_config",
         data_root=(DEVICE.SCG, GROUP.CONFIGURATION),
         key=VALUE.SPA_SETPOINT,
         entity_category=EntityCategory.CONFIG,
+        enabled_lambda=lambda equipment_flags: EQUIPMENT_FLAG.INTELLICHEM
+        not in equipment_flags,
     ),
     ScreenLogicNumberDescription(
         set_value_name="async_set_scg_config",
         data_root=(DEVICE.SCG, GROUP.CONFIGURATION),
         key=VALUE.SUPER_CHLOR_TIMER,
         entity_category=EntityCategory.CONFIG,
+        enabled_lambda=lambda equipment_flags: EQUIPMENT_FLAG.INTELLICHEM
+        not in equipment_flags,
     ),
 ]
 
@@ -105,6 +111,10 @@ class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
     ) -> None:
         """Initialize a ScreenLogic number entity."""
         super().__init__(coordinator, entity_description)
+        if entity_description.enabled_lambda:
+            self._attr_entity_registry_enabled_default = (
+                entity_description.enabled_lambda(coordinator.gateway.equipment_flags)
+            )
         if not asyncio.iscoroutinefunction(
             func := getattr(self.gateway, entity_description.set_value_name)
         ):

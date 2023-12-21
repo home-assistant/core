@@ -85,6 +85,8 @@ async def async_setup_entry(
                     key=super_chlor_key,
                     device_class=SwitchDeviceClass.SWITCH,
                     entity_category=EntityCategory.CONFIG,
+                    enabled_lambda=lambda equipment_flags: EQUIPMENT_FLAG.INTELLICHEM
+                    not in equipment_flags,
                 ),
             )
         )
@@ -117,6 +119,18 @@ class ScreenLogicSCGSwitchEntity(ScreenLogicCircuitEntity, SwitchEntity):
     """Class for ScreenLogic super chlorination switch."""
 
     entity_description: ScreenLogicSCGSwitchDescription
+
+    def __init__(
+        self,
+        coordinator: ScreenlogicDataUpdateCoordinator,
+        entity_description: ScreenLogicSCGSwitchDescription,
+    ) -> None:
+        """Initialize of the entity."""
+        super().__init__(coordinator, entity_description)
+        if entity_description.enabled_lambda:
+            self._attr_entity_registry_enabled_default = (
+                entity_description.enabled_lambda(coordinator.gateway.equipment_flags)
+            )
 
     async def _async_set_state(self, state: ON_OFF) -> None:
         try:
