@@ -23,6 +23,16 @@
   },
   "entity": {
     "device_tracker": {
+      "location": {
+        "state_attributes": {
+          "heading": {
+            "name": "Heading"
+          },
+          "speed": {
+            "name": "Speed"
+          }
+        }
+      },
       "route": {
         "name": "Route"
       }
