@@ -16,6 +16,7 @@ from homeassistant.components.climate import (
     SERVICE_TURN_ON,
     HVACMode,
 )
+from homeassistant.components.tessie.const import TessieClimateModes
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -83,7 +84,7 @@ async def test_climate(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_PRESET_MODE: "on"},
+            {ATTR_ENTITY_ID: [entity_id], ATTR_PRESET_MODE: TessieClimateModes.ON},
             blocking=True,
         )
         mock_set.assert_called_once()

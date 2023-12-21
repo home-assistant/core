@@ -18,3 +18,12 @@ class TessieStatus(StrEnum):
 
     ASLEEP = "asleep"
     ONLINE = "online"
+
+
+class TessieClimateModes(StrEnum):
+    """Tessie status."""
+
+    OFF = "off"
+    KEEP = "keep"
+    DOG = "dog"
+    CAMP = "camp"

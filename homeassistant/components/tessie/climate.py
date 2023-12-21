@@ -20,7 +20,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, TessieClimateModes
 from .coordinator import TessieDataUpdateCoordinator
 from .entity import TessieEntity
 
@@ -45,7 +45,12 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
-    _attr_preset_modes: list = ["off", "on", "dog", "camp"]
+    _attr_preset_modes: list = [
+        TessieClimateModes.OFF,
+        TessieClimateModes.KEEP,
+        TessieClimateModes.DOG,
+        TessieClimateModes.CAMP,
+    ]
 
     def __init__(
         self,
