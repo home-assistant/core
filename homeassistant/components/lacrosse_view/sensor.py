@@ -97,7 +97,7 @@ SENSOR_DESCRIPTIONS = {
         key="Rain",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
-        native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
         device_class=SensorDeviceClass.PRECIPITATION,
     ),
     "WindHeading": LaCrosseSensorEntityDescription(
@@ -130,7 +130,7 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
     ),
     "WindChill": LaCrosseSensorEntityDescription(
         key="WindChill",
@@ -138,7 +138,7 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
     ),
 }
 
