@@ -2,7 +2,6 @@
 
 import asyncio
 import datetime
-import logging
 from typing import Any, cast
 
 from homeassistant.components.todo import (
@@ -19,8 +18,6 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import TodoistCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -49,7 +46,6 @@ def _task_api_data(item: TodoItem) -> dict[str, Any]:
             item_data["due_date"] = due.isoformat()
     else:
         item_data["due_string"] = "no date"
-    _LOGGER.debug("item=%s", item_data)
     return item_data
 
 
