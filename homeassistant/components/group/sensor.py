@@ -154,7 +154,7 @@ def async_create_preview_sensor(
 
 
 def calc_min(
-    sensor_values: list[tuple[str, float, State]]
+    sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float | None]:
     """Calculate min value."""
     val: float | None = None
@@ -170,7 +170,7 @@ def calc_min(
 
 
 def calc_max(
-    sensor_values: list[tuple[str, float, State]]
+    sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float | None]:
     """Calculate max value."""
     val: float | None = None
@@ -186,7 +186,7 @@ def calc_max(
 
 
 def calc_mean(
-    sensor_values: list[tuple[str, float, State]]
+    sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float | None]:
     """Calculate mean value."""
     result = (sensor_value for _, sensor_value, _ in sensor_values)
@@ -196,7 +196,7 @@ def calc_mean(
 
 
 def calc_median(
-    sensor_values: list[tuple[str, float, State]]
+    sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float | None]:
     """Calculate median value."""
     result = (sensor_value for _, sensor_value, _ in sensor_values)
@@ -206,7 +206,7 @@ def calc_median(
 
 
 def calc_last(
-    sensor_values: list[tuple[str, float, State]]
+    sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float | None]:
     """Calculate last value."""
     last_updated: datetime | None = None
@@ -223,7 +223,7 @@ def calc_last(
 
 
 def calc_range(
-    sensor_values: list[tuple[str, float, State]]
+    sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float]:
     """Calculate range value."""
     max_result = max((sensor_value for _, sensor_value, _ in sensor_values))
@@ -234,7 +234,7 @@ def calc_range(
 
 
 def calc_sum(
-    sensor_values: list[tuple[str, float, State]]
+    sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float]:
     """Calculate a sum of values."""
     result = 0.0
@@ -245,7 +245,7 @@ def calc_sum(
 
 
 def calc_product(
-    sensor_values: list[tuple[str, float, State]]
+    sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float]:
     """Calculate a product of values."""
     result = 1.0
