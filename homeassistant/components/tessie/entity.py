@@ -1,7 +1,6 @@
 """Tessie parent entity class."""
 
-
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from aiohttp import ClientResponseError
@@ -48,7 +47,9 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
         """Return value from coordinator data."""
         return self.coordinator.data[self.key]
 
-    async def run(self, func: Callable, **kargs: Any) -> None:
+    async def run(
+        self, func: Callable[..., Awaitable[dict[str, bool]]], **kargs: Any
+    ) -> None:
         """Run a tessie_api function and handle exceptions."""
         try:
             await func(
@@ -60,7 +61,7 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
         except ClientResponseError as e:
             raise HomeAssistantError from e
 
-    def set(self, *args: Any):
+    def set(self, *args: Any) -> None:
         """Set a value in coordinator data."""
         for key, value in args:
             self.coordinator.data[key] = value
