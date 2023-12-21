@@ -61,7 +61,7 @@ async def async_setup_entry(
         for description in ENTITY_DESCRIPTIONS
     ]
 
-    async_add_entities(entities)
+    async_add_entities(entities, True)
 
 
 class RensonTime(RensonEntity, TimeEntity):
@@ -79,10 +79,6 @@ class RensonTime(RensonEntity, TimeEntity):
         super().__init__(description.key, api, coordinator)
 
         self.entity_description = description
-        self._attr_native_value = datetime.strptime(
-            "00:00:00",
-            "%H:%M:%S",
-        ).time()
 
     @callback
     def _handle_coordinator_update(self) -> None:
