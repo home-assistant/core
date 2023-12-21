@@ -43,7 +43,7 @@ async def async_connect_scanner(
     )
     scanner = ShellyBLEScanner(source, entry.title, connector, False)
     unload_callbacks = [
-        async_register_scanner(hass, scanner, False),
+        async_register_scanner(hass, scanner),
         scanner.async_setup(),
         coordinator.async_subscribe_events(scanner.async_on_event),
     ]
