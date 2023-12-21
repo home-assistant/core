@@ -1937,13 +1937,20 @@ class ServiceRegistry:
             Coroutine[Any, Any, ServiceResponse] | ServiceResponse | None,
         ],
         schema: vol.Schema | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Register a service.
 
         Schema is called to coerce and validate the service data.
         """
         run_callback_threadsafe(
-            self._hass.loop, self.async_register, domain, service, service_func, schema
+            self._hass.loop,
+            self.async_register,
+            domain,
+            service,
+            service_func,
+            schema,
+            supports_response,
         ).result()
 
     @callback
