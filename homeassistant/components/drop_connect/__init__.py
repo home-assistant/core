@@ -27,9 +27,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     if TYPE_CHECKING:
         assert config_entry.unique_id is not None
-    hass.data.setdefault(DOMAIN, {})[
-        config_entry.entry_id
-    ] = DROPDeviceDataUpdateCoordinator(hass, config_entry.unique_id)
+    device_coordinator = DROPDeviceDataUpdateCoordinator(hass, config_entry.unique_id)
+    await device_coordinator.subscribe_mqtt(hass)
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = device_coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
 
