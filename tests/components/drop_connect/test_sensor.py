@@ -92,7 +92,7 @@ async def test_sensors_hub(
 
     battery_sensor = hass.states.get(battery_sensor_name)
     assert battery_sensor
-    assert round(float(battery_sensor.state), 1) == 50
+    assert int(battery_sensor.state) == 50
 
 
 async def test_sensors_leak(
@@ -115,7 +115,7 @@ async def test_sensors_leak(
 
     battery_sensor = hass.states.get(battery_sensor_name)
     assert battery_sensor
-    assert round(float(battery_sensor.state), 1) == 100.0
+    assert int(battery_sensor.state) == 100
 
     temp_sensor = hass.states.get(temp_sensor_name)
     assert temp_sensor
@@ -146,7 +146,7 @@ async def test_sensors_softener(
 
     battery_sensor = hass.states.get(battery_sensor_name)
     assert battery_sensor
-    assert round(float(battery_sensor.state), 1) == 20.0
+    assert int(battery_sensor.state) == 20
 
     current_flow_sensor = hass.states.get(current_flow_sensor_name)
     assert current_flow_sensor
@@ -222,7 +222,7 @@ async def test_sensors_protection_valve(
 
     battery_sensor = hass.states.get(battery_sensor_name)
     assert battery_sensor
-    assert round(float(battery_sensor.state), 1) == 0
+    assert int(battery_sensor.state) == 0
 
     current_flow_sensor = hass.states.get(current_flow_sensor_name)
     assert current_flow_sensor
@@ -300,20 +300,20 @@ async def test_sensors_ro_filter(
 
     tds_in_sensor = hass.states.get(tds_in_sensor_name)
     assert tds_in_sensor
-    assert round(float(tds_in_sensor.state), 1) == 164
+    assert int(tds_in_sensor.state) == 164
 
     tds_out_sensor = hass.states.get(tds_out_sensor_name)
     assert tds_out_sensor
-    assert round(float(tds_out_sensor.state), 1) == 9
+    assert int(tds_out_sensor.state) == 9
 
     cart1_sensor = hass.states.get(cart1_sensor_name)
     assert cart1_sensor
-    assert round(float(cart1_sensor.state), 1) == 59
+    assert int(cart1_sensor.state) == 59
 
     cart2_sensor = hass.states.get(cart2_sensor_name)
     assert cart2_sensor
-    assert round(float(cart2_sensor.state), 1) == 80
+    assert int(cart2_sensor.state) == 80
 
     cart3_sensor = hass.states.get(cart3_sensor_name)
     assert cart3_sensor
-    assert round(float(cart3_sensor.state), 1) == 59
+    assert int(cart3_sensor.state) == 59
