@@ -64,11 +64,11 @@
           "client_key": "The private key file that belongs to your client certificate.",
           "tls_insecure": "Option to ignore validation of your MQTT broker's certificate.",
           "protocol": "The MQTT protocol your broker operates at. For example 3.1.1.",
-          "set_ca_cert": "Select `Auto` for automatic CA validation or `Custom` and click `next` to set a custom CA certificate to allow validating your MQTT brokers certificate.",
-          "set_client_cert": "Enable and click `next` to set a client certifificate and private ket to authenticate against your MQTT broker.",
-          "transport": "The transport to use for the connextion to your MQTT broker.",
+          "set_ca_cert": "Select `Auto` for automatic CA validation, or `Custom` and click `next` to set a custom CA certificate, to allow validating your MQTT brokers certificate.",
+          "set_client_cert": "Enable and click `next` to set a client certifificate and private key to authenticate against your MQTT broker.",
+          "transport": "The transport to be used for the connection to your MQTT broker.",
           "ws_headers": "The WebSocket headers to pass through the WebSocket based connection to your MQTT broker.",
-          "ws_path": "The WebSocket path to use for the connection to your MQTT broker."
+          "ws_path": "The WebSocket path to be used for the connection to your MQTT broker."
         }
       },
       "hassio_confirm": {
@@ -183,17 +183,17 @@
         },
         "data_description": {
           "discovery": "Option to enable MQTT automatic discovery.",
-          "discovery_prefix": "The prefix of configuration topics the MQTT interation will subscribe to.",
+          "discovery_prefix": "The prefix of configuration topics the MQTT integration will subscribe to.",
           "birth_enable": "When set, Home Assistant will publish an online message to your MQTT broker when MQTT is ready.",
-          "birth_topic": "The MQTT topic where Home Assistant will publish a birth message.",
-          "birth_payload": "The birth message that is published when MQTT is ready and connected.",
-          "birth_qos": "The quality of service of the birth message that is published when MQTT is ready and connected",
-          "birth_retain": "When set, Home Assistant will retain the birth message published to your MQTT broker.",
-          "will_enable": "When set, Home Assistant will ask your broker to publish a will message when MQTT is stopped or looses the connection to your broker.",
-          "will_topic": "The MQTT topic your MQTT broker will publish a will message to.",
-          "will_payload": "The message your MQTT broker will publish when the connection is lost.",
-          "will_qos": "The quality of service of the will message that is published by your MQTT broker.",
-          "will_retain": "When set, your MQTT broker will retain the will message."
+          "birth_topic": "The MQTT topic where Home Assistant will publish a `birth` message.",
+          "birth_payload": "The `birth` message that is published when MQTT is ready and connected.",
+          "birth_qos": "The quality of service of the `birth` message that is published when MQTT is ready and connected",
+          "birth_retain": "When set, Home Assistant will retain the `birth` message published to your MQTT broker.",
+          "will_enable": "When set, Home Assistant will ask your broker to publish a `will` message when MQTT is stopped or when it looses the connection to your broker.",
+          "will_topic": "The MQTT topic your MQTT broker will publish a `will` message to.",
+          "will_payload": "The message your MQTT broker `will` publish when the MQTT integration is stopped or when the connection is lost.",
+          "will_qos": "The quality of service of the `will` message that is published by your MQTT broker.",
+          "will_retain": "When set, your MQTT broker will retain the `will` message."
         }
       }
     },

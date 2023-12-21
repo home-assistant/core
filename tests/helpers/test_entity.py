@@ -31,7 +31,6 @@ from tests.common import (
     MockEntityPlatform,
     MockModule,
     MockPlatform,
-    get_test_home_assistant,
     mock_integration,
     mock_registry,
 )
@@ -58,6 +57,17 @@ def test_generate_entity_id_given_keys() -> None:
             "test.{}", "overwrite hidden true", current_ids=["test.another_entity"]
         )
         == "test.overwrite_hidden_true"
+    )
+
+
+async def test_generate_entity_id_given_hass(hass: HomeAssistant) -> None:
+    """Test generating an entity id given hass object."""
+    hass.states.async_set("test.overwrite_hidden_true", "test")
+
+    fmt = "test.{}"
+    assert (
+        entity.generate_entity_id(fmt, "overwrite hidden true", hass=hass)
+        == "test.overwrite_hidden_true_2"
     )
 
 
@@ -95,40 +105,19 @@ async def test_async_update_support(hass: HomeAssistant) -> None:
     assert len(async_update) == 1
 
 
-class TestHelpersEntity:
-    """Test homeassistant.helpers.entity module."""
+async def test_device_class(hass: HomeAssistant) -> None:
+    """Test device class attribute."""
+    ent = entity.Entity()
+    ent.entity_id = "test.overwrite_hidden_true"
+    ent.hass = hass
+    ent.async_write_ha_state()
+    state = hass.states.get(ent.entity_id)
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
 
-    def setup_method(self, method):
-        """Set up things to be run when tests are started."""
-        self.entity = entity.Entity()
-        self.entity.entity_id = "test.overwrite_hidden_true"
-        self.hass = self.entity.hass = get_test_home_assistant()
-        self.entity.schedule_update_ha_state()
-        self.hass.block_till_done()
-
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    def test_generate_entity_id_given_hass(self):
-        """Test generating an entity id given hass object."""
-        fmt = "test.{}"
-        assert (
-            entity.generate_entity_id(fmt, "overwrite hidden true", hass=self.hass)
-            == "test.overwrite_hidden_true_2"
-        )
-
-    def test_device_class(self):
-        """Test device class attribute."""
-        state = self.hass.states.get(self.entity.entity_id)
-        assert state.attributes.get(ATTR_DEVICE_CLASS) is None
-        with patch(
-            "homeassistant.helpers.entity.Entity.device_class", new="test_class"
-        ):
-            self.entity.schedule_update_ha_state()
-            self.hass.block_till_done()
-        state = self.hass.states.get(self.entity.entity_id)
-        assert state.attributes.get(ATTR_DEVICE_CLASS) == "test_class"
+    ent._attr_device_class = "test_class"
+    ent.async_write_ha_state()
+    state = hass.states.get(ent.entity_id)
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == "test_class"
 
 
 async def test_warn_slow_update(
