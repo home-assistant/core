@@ -54,5 +54,5 @@ class TessieSeatHeaterSelectEntity(TessieEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         level = self._attr_options.index(option)
-        if await self.run(set_seat_heat, seat=SEAT_HEATERS[self.key], level=level):
-            self.set((self.key, level))
+        await self.run(set_seat_heat, seat=SEAT_HEATERS[self.key], level=level)
+        self.set((self.key, level))
