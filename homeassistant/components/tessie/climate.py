@@ -16,7 +16,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -37,7 +37,7 @@ async def async_setup_entry(
 class TessieClimateEntity(TessieEntity, ClimateEntity):
     """Vehicle Location Climate Class."""
 
-    _attr_precision = 0.5
+    _attr_precision = PRECISION_HALVES
     _attr_min_temp = 15
     _attr_max_temp = 28
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
