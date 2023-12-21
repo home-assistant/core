@@ -2,7 +2,7 @@
 
 aiodiscover==1.6.0
 aiohttp-fast-url-dispatcher==0.3.0
-aiohttp-zlib-ng==0.1.1
+aiohttp-zlib-ng==0.1.2
 aiohttp==3.9.1
 aiohttp_cors==0.7.0
 astral==2.2
