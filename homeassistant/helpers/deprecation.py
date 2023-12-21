@@ -237,6 +237,9 @@ class DeprecatedConstantEnum(NamedTuple):
     breaks_in_ha_version: str | None
 
 
+_PREFIX_DEPRECATED = "_DEPRECATED_"
+
+
 def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> Any:
     """Check if the not found name is a deprecated constant.
 
@@ -245,7 +248,7 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
     """
     module_name = module_globals.get("__name__")
     logger = logging.getLogger(module_name)
-    if (deprecated_const := module_globals.get(f"_DEPRECATED_{name}")) is None:
+    if (deprecated_const := module_globals.get(_PREFIX_DEPRECATED + name)) is None:
         raise AttributeError(f"Module {module_name!r} has no attribute {name!r}")
     if isinstance(deprecated_const, DeprecatedConstant):
         value = deprecated_const.value
@@ -259,7 +262,7 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
         breaks_in_ha_version = deprecated_const.breaks_in_ha_version
     else:
         msg = (
-            f"Value of _DEPRECATED_{name!r} is an instance of {type(deprecated_const)} "
+            f"Value of {_PREFIX_DEPRECATED}{name!r} is an instance of {type(deprecated_const)} "
             "but an instance of DeprecatedConstant or DeprecatedConstantEnum is required"
         )
 
@@ -279,3 +282,12 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
         breaks_in_ha_version,
     )
     return value
+
+
+def dir_with_deprecated_constants(module_globals: dict[str, Any]) -> list[str]:
+    """Return dir() with deprecated constants."""
+    return list(module_globals) + [
+        name.removeprefix(_PREFIX_DEPRECATED)
+        for name in module_globals
+        if name.startswith(_PREFIX_DEPRECATED)
+    ]

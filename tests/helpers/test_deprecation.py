@@ -1,6 +1,7 @@
 """Test deprecation helpers."""
 import logging
 import sys
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -13,6 +14,7 @@ from homeassistant.helpers.deprecation import (
     deprecated_class,
     deprecated_function,
     deprecated_substitute,
+    dir_with_deprecated_constants,
     get_deprecated,
 )
 
@@ -291,10 +293,8 @@ def test_check_if_deprecated_constant(
     }
     filename = f"/home/paulus/{module_name.replace('.', '/')}.py"
 
-    # mock module for homeassistant/helpers/frame.py#get_integration_frame
-    sys.modules[module_name] = Mock(__file__=filename)
-
-    with patch(
+    # mock sys.modules for homeassistant/helpers/frame.py#get_integration_frame
+    with patch.dict(sys.modules, {module_name: Mock(__file__=filename)}), patch(
         "homeassistant.helpers.frame.extract_stack",
         return_value=[
             Mock(
@@ -325,7 +325,7 @@ def test_check_if_deprecated_constant(
 
 
 def test_test_check_if_deprecated_constant_invalid(
-    caplog: pytest.LogCaptureFixture
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test check_if_deprecated_constant will raise an attribute error and create an log entry on an invalid deprecation type."""
     module_name = "homeassistant.components.hue.light"
@@ -341,3 +341,21 @@ def test_test_check_if_deprecated_constant_invalid(
         check_if_deprecated_constant(name, module_globals)
 
     assert (module_name, logging.DEBUG, excepted_msg) in caplog.record_tuples
+
+
+@pytest.mark.parametrize(
+    ("module_global", "expected"),
+    [
+        ({"CONSTANT": 1}, ["CONSTANT"]),
+        ({"_DEPRECATED_CONSTANT": 1}, ["_DEPRECATED_CONSTANT", "CONSTANT"]),
+        (
+            {"_DEPRECATED_CONSTANT": 1, "SOMETHING": 2},
+            ["_DEPRECATED_CONSTANT", "SOMETHING", "CONSTANT"],
+        ),
+    ],
+)
+def test_dir_with_deprecated_constants(
+    module_global: dict[str, Any], expected: list[str]
+) -> None:
+    """Test dir() with deprecated constants."""
+    assert dir_with_deprecated_constants(module_global) == expected
