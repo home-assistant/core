@@ -317,13 +317,25 @@ class MqttValve(MqttEntity, ValveEntity):
 
             with suppress(*JSON_DECODE_EXCEPTIONS):
                 payload_dict = json_loads(payload)
-                # A string is not a valid JSON object. Receiving a valid JSON object
-                # overrides assuming `payload` as state value
-                state_payload = None
-            if isinstance(payload_dict, dict) and "position" in payload_dict:
-                position_payload = payload_dict["position"]
-            if isinstance(payload_dict, dict) and "state" in payload_dict:
-                state_payload = payload_dict["state"]
+                if isinstance(payload_dict, dict):
+                    if self.reports_position and "position" not in payload_dict:
+                        _LOGGER.warning(
+                            "Missing required `position` attribute in json payload "
+                            "on topic '%s', got: %s",
+                            msg.topic,
+                            payload,
+                        )
+                        return
+                    if not self.reports_position and "state" not in payload_dict:
+                        _LOGGER.warning(
+                            "Missing required `state` attribute in json payload "
+                            " on topic '%s', got: %s",
+                            msg.topic,
+                            payload,
+                        )
+                        return
+                    position_payload = payload_dict.get("position")
+                    state_payload = payload_dict.get("state")
 
             if self._config[CONF_REPORTS_POSITION]:
                 self._process_position_valve_update(

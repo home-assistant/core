@@ -344,6 +344,61 @@ async def test_opening_closing_state_is_reset(
 
 
 @pytest.mark.parametrize(
+    ("hass_config", "message", "err_message"),
+    [
+        (
+            {
+                mqtt.DOMAIN: {
+                    valve.DOMAIN: {
+                        "name": "test",
+                        "state_topic": "state-topic",
+                        "command_topic": "command-topic",
+                        "reports_position": False,
+                    }
+                }
+            },
+            '{"position": 0}',
+            "Missing required `state` attribute in json payload",
+        ),
+        (
+            {
+                mqtt.DOMAIN: {
+                    valve.DOMAIN: {
+                        "name": "test",
+                        "state_topic": "state-topic",
+                        "command_topic": "command-topic",
+                        "reports_position": True,
+                    }
+                }
+            },
+            '{"state": "opening"}',
+            "Missing required `position` attribute in json payload",
+        ),
+    ],
+)
+async def test_invalid_state_updates(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    message: str,
+    err_message: str,
+) -> None:
+    """Test the controlling state via topic through position.
+
+    Test  a `opening` or `closing` state update is reset correctly after sequential updates.
+    """
+    await mqtt_mock_entry()
+
+    state = hass.states.get("valve.test")
+    assert state.state == STATE_UNKNOWN
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    async_fire_mqtt_message(hass, "state-topic", message)
+    state = hass.states.get("valve.test")
+    assert err_message in caplog.text
+
+
+@pytest.mark.parametrize(
     "hass_config",
     [
         {
