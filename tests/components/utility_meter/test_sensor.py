@@ -296,7 +296,7 @@ async def test_state_always_available(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
     now = dt_util.utcnow() + timedelta(seconds=10)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
+    with freeze_time(now):
         hass.states.async_set(
             entity_id,
             3,
