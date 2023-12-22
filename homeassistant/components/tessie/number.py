@@ -54,7 +54,7 @@ DESCRIPTIONS: tuple[TessieNumberEntityDescription, ...] = (
     TessieNumberEntityDescription(
         key="charge_state_charge_limit_soc",
         native_step=PRECISION_WHOLE,
-        native_min_value=0,
+        native_min_value=50,
         native_max_value=100,
         native_unit_of_measurement=PERCENTAGE,
         device_class=NumberDeviceClass.BATTERY,
