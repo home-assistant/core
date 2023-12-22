@@ -360,8 +360,8 @@ class CachedProperties(type):
             If the class being created has an _attr class attribute, move it, and its
             annotations, to the __attr attribute.
             """
-            attr_name = f"_attr_{name}"
-            private_attr_name = f"__attr_{name}"
+            attr_name = f"_attr_{property_name}"
+            private_attr_name = f"__attr_{property_name}"
             # Check if an _attr_ class attribute exits and move it to __attr_. We check
             # __dict__ here because we don't care about _attr_ class attributes in parents.
             if attr_name in cls.__dict__:
@@ -387,7 +387,7 @@ class CachedProperties(type):
             for property_name in cached_properties:
                 if property_name in seen_props:
                     continue
-                attr_name = f"_attr_{name}"
+                attr_name = f"_attr_{property_name}"
                 # Check if an _attr_ class attribute exits. We check __dict__ here because
                 # we don't care about _attr_ class attributes in parents.
                 if (attr_name) not in cls.__dict__:
