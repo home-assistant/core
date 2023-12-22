@@ -264,9 +264,14 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
             f"{deprecated_const.enum.__class__.__name__}.{deprecated_const.enum.name}"
         )
         breaks_in_ha_version = deprecated_const.breaks_in_ha_version
+    elif isinstance(deprecated_const, tuple) and len(deprecated_const) == 3:
+        # Use DeprecatedConstant instead, where possible... Used to avoid import cycles.
+        value = deprecated_const[0]
+        replacement = deprecated_const[1]
+        breaks_in_ha_version = deprecated_const[2]
     else:
         msg = (
-            f"Value of {_PREFIX_DEPRECATED}{name!r} is an instance of {type(deprecated_const)} "
+            f"Value of {_PREFIX_DEPRECATED}{name} is an instance of {type(deprecated_const)} "
             "but an instance of DeprecatedConstant or DeprecatedConstantEnum is required"
         )
 
