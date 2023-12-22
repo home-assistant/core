@@ -17,6 +17,7 @@ from homeassistant.helpers.deprecation import (
     dir_with_deprecated_constants,
     get_deprecated,
 )
+from homeassistant.helpers.frame import MissingIntegrationFrame
 
 from tests.common import MockModule, mock_integration
 
@@ -293,10 +294,8 @@ def test_check_if_deprecated_constant(
     }
     filename = f"/home/paulus/{module_name.replace('.', '/')}.py"
 
-    # mock module for homeassistant/helpers/frame.py#get_integration_frame
-    sys.modules[module_name] = Mock(__file__=filename)
-
-    with patch(
+    # mock sys.modules for homeassistant/helpers/frame.py#get_integration_frame
+    with patch.dict(sys.modules, {module_name: Mock(__file__=filename)}), patch(
         "homeassistant.helpers.frame.extract_stack",
         return_value=[
             Mock(
@@ -326,8 +325,53 @@ def test_check_if_deprecated_constant(
     ) in caplog.record_tuples
 
 
+@pytest.mark.parametrize(
+    ("deprecated_constant", "extra_msg"),
+    [
+        (
+            DeprecatedConstant("value", "NEW_CONSTANT", None),
+            ". Use NEW_CONSTANT instead",
+        ),
+        (
+            DeprecatedConstant(1, "NEW_CONSTANT", "2099.1"),
+            " which will be removed in HA Core 2099.1. Use NEW_CONSTANT instead",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("module_name"),
+    [
+        "homeassistant.components.hue.light",  # builtin integration
+        "config.custom_components.hue.light",  # custom component integration
+    ],
+)
+def test_check_if_deprecated_constant_integration_not_found(
+    caplog: pytest.LogCaptureFixture,
+    deprecated_constant: DeprecatedConstant | DeprecatedConstantEnum,
+    extra_msg: str,
+    module_name: str,
+) -> None:
+    """Test check_if_deprecated_constant."""
+    module_globals = {
+        "__name__": module_name,
+        "_DEPRECATED_TEST_CONSTANT": deprecated_constant,
+    }
+
+    with patch(
+        "homeassistant.helpers.frame.extract_stack", side_effect=MissingIntegrationFrame
+    ):
+        value = check_if_deprecated_constant("TEST_CONSTANT", module_globals)
+        assert value == deprecated_constant.value
+
+    assert (
+        module_name,
+        logging.WARNING,
+        f"TEST_CONSTANT is a deprecated constant{extra_msg}",
+    ) not in caplog.record_tuples
+
+
 def test_test_check_if_deprecated_constant_invalid(
-    caplog: pytest.LogCaptureFixture
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test check_if_deprecated_constant will raise an attribute error and create an log entry on an invalid deprecation type."""
     module_name = "homeassistant.components.hue.light"

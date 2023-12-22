@@ -18,3 +18,31 @@ class TessieStatus(StrEnum):
 
     ASLEEP = "asleep"
     ONLINE = "online"
+
+
+class TessieSeatHeaterOptions(StrEnum):
+    """Tessie seat heater options."""
+
+    OFF = "off"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+
+class TessieClimateKeeper(StrEnum):
+    """Tessie Climate Keeper Modes."""
+
+    OFF = "off"
+    ON = "on"
+    DOG = "dog"
+    CAMP = "camp"
+
+
+class TessieUpdateStatus(StrEnum):
+    """Tessie Update Statuses."""
+
+    AVAILABLE = "available"
+    DOWNLOADING = "downloading"
+    INSTALLING = "installing"
+    WIFI_WAIT = "downloading_wifi_wait"
+    SCHEDULED = "scheduled"

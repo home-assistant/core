@@ -245,6 +245,7 @@ async def test_state_via_state_topic_with_position_template(
 @pytest.mark.parametrize(
     ("message", "asserted_state", "valve_position"),
     [
+        ("invalid", STATE_UNKNOWN, None),
         ("0", STATE_CLOSED, 0),
         ("opening", STATE_OPENING, None),
         ("50", STATE_OPEN, 50),
