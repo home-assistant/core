@@ -1,7 +1,6 @@
 """The qbittorrent component."""
 import logging
 import re
-from typing import Any
 
 from qbittorrent.client import LoginRequired
 from requests.exceptions import RequestException
@@ -15,33 +14,32 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
 )
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    SERVICE_GET_TORRENTS,
+    STATE_ATTR_TORRENT_INFO,
+    FILTER,
+)
 from .coordinator import QBittorrentDataCoordinator
-from .helpers import setup_client
+from .helpers import (
+    setup_client,
+    seconds_to_hhmmss,
+    format_unix_timestamp,
+    format_progress,
+    format_torrents,
+    format_torrent,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
-
-MIGRATION_NAME_TO_KEY = {
-    # Sensors
-    "Download Speed": "download",
-    "Upload Speed": "upload",
-    "Status": "status",
-    "Active Torrents": "active_torrents",
-    "Inactive Torrents": "inactive_torrents",
-    "Paused Torrents": "paused_torrents",
-    "Total Torrents": "total_torrents",
-    "Seeding Torrents": "seeding_torrents",
-    "Started Torrents": "started_torrents",
-}
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -67,6 +65,21 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    async def handle_get_torrents(service_call: ServiceCall):
+        coordinator: QBittorrentDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+        items = await coordinator.get_torrents(service_call.data[FILTER])
+        info = format_torrents(items)
+        return {
+            STATE_ATTR_TORRENT_INFO: info,
+        }
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_TORRENTS,
+        handle_get_torrents,
+        supports_response=SupportsResponse.ONLY
+    )
 
     return True
 

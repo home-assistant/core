@@ -34,22 +34,47 @@ from .coordinator import QBittorrentDataCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-SPEED_SENSORS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(key="download", translation_key="download_speed", name="Download Speed"),
-    SensorEntityDescription(key="upload", translation_key="upload_speed", name="Upload Speed"),
-)
 
-STATUS_SENSORS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(key="status", translation_key="current_status", name="Status"),
-)
+# @dataclass(frozen=True, kw_only=True)
+@dataclass(kw_only=True)
+class QBittorrentSensorEntityDescription(SensorEntityDescription):
+    """Entity description class for qBittorent sensors."""
 
-TORRENT_SENSORS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(key="active_torrents", translation_key="active_torrents", name="Active Torrents"),
-    SensorEntityDescription(key="inactive_torrents", translation_key="inactive_torrents", name="Inactive Torrents"),
-    SensorEntityDescription(key="paused_torrents", translation_key="paused_torrents", name="Paused Torrents"),
-    SensorEntityDescription(key="total_torrents", translation_key="total_torrents", name="Total Torrents"),
-    SensorEntityDescription(key="seeding_torrents", translation_key="seeding_torrents", name="Seeding Torrents"),
-    SensorEntityDescription(key="started_torrents", translation_key="started_torrents", name="Started Torrents"),
+    val_func: Callable[[QBittorrentDataCoordinator], StateType]
+    extra_state_attr_func: Callable[[Any], dict[str, str]] | None = None
+
+
+SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
+    QBittorrentSensorEntityDescription(
+        key="download",
+        translation_key="download_speed",
+        name="Download Speed",
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_display_precision=2,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        val_func=lambda coordinator: float(coordinator.data["server_state"]["dl_info_speed"]),
+    ),
+    QBittorrentSensorEntityDescription(
+        key="upload",
+        translation_key="upload_speed",
+        name="Upload Speed",
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_display_precision=2,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
+        val_func=lambda coordinator: float(coordinator.data["server_state"]["up_info_speed"]),
+    ),
+    QBittorrentSensorEntityDescription(
+        key="status", 
+        translation_key="current_status", 
+        name="Status",
+        device_class=SensorDeviceClass.ENUM,
+        options=[STATE_IDLE, STATE_UP_DOWN, STATE_SEEDING, STATE_DOWNLOADING],
+        val_func=lambda coordinator: get_state(
+            coordinator.data["server_state"]["up_info_speed"], coordinator.data["server_state"]["dl_info_speed"]
+        ),
+    ),
 )
 
 
@@ -64,22 +89,9 @@ async def async_setup_entry(
         config_entry.entry_id
     ]
 
-    entities: list[QBittorrentSensor] = []
-
-    entities = [
-        QBittorrentSpeedSensor(coordinator, description)
-        for description in SPEED_SENSORS
-    ]
-    entities += [
-        QBittorrentStatusSensor(coordinator, description)
-        for description in STATUS_SENSORS
-    ]
-    entities += [
-        QBittorrentTorrentsSensor(coordinator, description)
-        for description in TORRENT_SENSORS
-    ]
-
-    async_add_entities(entities)
+    async_add_entities(
+        QBittorrentSensor(coordinator, description) for description in SENSOR_TYPES
+    )
 
 
 class QBittorrentSensor(
@@ -106,122 +118,25 @@ class QBittorrentSensor(
             manufacturer="QBittorrent",
         )
 
-
-class QBittorrentSpeedSensor(QBittorrentSensor):
-    """Representation of a qBittorrent speed sensor."""
-
-    _attr_device_class = SensorDeviceClass.DATA_RATE
-    _attr_native_unit_of_measurement = UnitOfDataRate.BYTES_PER_SECOND
-    _attr_suggested_display_precision = 2
-    _attr_suggested_unit_of_measurement = UnitOfDataRate.MEGABYTES_PER_SECOND
+    @property
+    def native_value(self) -> StateType:
+        """Return the value of the sensor."""
+        return self.entity_description.val_func(self.coordinator)
 
     @property
-    def native_value(self) -> float:
-        """Return the speed of the sensor."""
-        data = self.coordinator.data
-        return (
-            float(data["server_state"]["dl_info_speed"])
-            if self.entity_description.key == "download"
-            else float(data["server_state"]["up_info_speed"])
-        )
-    
-    
-class QBittorrentStatusSensor(QBittorrentSensor):
-    """Representation of a qBittorrent status sensor."""
-
-    _attr_device_class = SensorDeviceClass.ENUM
-    _attr_options = [STATE_IDLE, STATE_UP_DOWN, STATE_SEEDING, STATE_DOWNLOADING]
-
-    @property
-    def native_value(self) -> str:
-        """Return the value of the status sensor."""
-        download = self.coordinator.data["server_state"]["dl_info_speed"]
-        upload = self.coordinator.data["server_state"]["up_info_speed"]
-        if upload > 0 and download > 0:
-            return STATE_UP_DOWN
-        if upload > 0 and download == 0:
-            return STATE_SEEDING
-        if upload == 0 and download > 0:
-            return STATE_DOWNLOADING
-        return STATE_IDLE
-
-
-class QBittorrentTorrentsSensor(QBittorrentSensor):
-    """Representation of a qBittorrent torrents sensor."""
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity, if any."""
-        return "Torrents"
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes, if any."""
-        info = format_torrents(
-            getattr(self.coordinator, self.entity_description.key)
-        )
-        return {
-            STATE_ATTR_TORRENT_INFO: info,
-        }
-
-    @property
-    def native_value(self) -> int:
-        """Return the count of the sensor."""
-        torrents = format_torrents(
-            getattr(self.coordinator, self.entity_description.key)
-        )
-        return len(torrents)
+        if attr_func := self.entity_description.extra_state_attr_func:
+            return attr_func(self.coordinator)
+        return None
 
 
-def seconds_to_hhmmss(seconds):
-    """Convert seconds to HH:MM:SS format."""
-    if seconds == 8640000:
-        return 'None'
-    else:
-        minutes, seconds = divmod(seconds, 60)
-        hours, minutes = divmod(minutes, 60)
-        return "{:02}:{:02}:{:02}".format(int(hours), int(minutes), int(seconds))
-
-
-def format_unix_timestamp(timestamp):
-    """Format a UNIX timestamp to a human-readable date."""
-    dt_object = datetime.utcfromtimestamp(timestamp).replace(tzinfo=timezone.utc)
-    formatted_date = dt_object.strftime("%Y-%m-%dT%H:%M:%S%z")
-    return formatted_date
-
-
-def format_progress(torrent):
-    """Format the progress of a torrent."""
-    progress = torrent["progress"]
-    progress = float(progress) * 100
-    progress = '{:.2f}'.format(progress)
-
-    return progress
-
-
-def format_speed(speed):
-    """Return a bytes/s measurement as a human readable string."""
-    kb_spd = float(speed) / 1024
-    return round(kb_spd, 2 if kb_spd < 0.1 else 1)
-
-
-def format_torrents(torrents: dict[str, Any]):
-    """Format a list of torrents."""
-    value = {}
-    for torrent in torrents:
-        value[torrent["name"]] = format_torrent(torrent)
-
-    return value
-
-
-def format_torrent(torrent):
-    """Format a single torrent."""
-    value = {}
-    value['id'] = torrent["hash"]
-    value['added_date'] = format_unix_timestamp(torrent["added_on"])
-    value['percent_done'] = format_progress(torrent)
-    value['status'] = torrent["state"]
-    value['eta'] = seconds_to_hhmmss(torrent["eta"])
-    value['ratio'] = '{:.2f}'.format(float(torrent["ratio"]))
-
-    return value
+def get_state(upload: int, download: int) -> str:
+    """Get current download/upload state."""
+    if upload > 0 and download > 0:
+        return STATE_UP_DOWN
+    if upload > 0 and download == 0:
+        return STATE_SEEDING
+    if upload == 0 and download > 0:
+        return STATE_DOWNLOADING
+    return STATE_IDLE
