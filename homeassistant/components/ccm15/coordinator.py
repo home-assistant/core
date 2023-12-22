@@ -55,11 +55,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
 
     def get_ac_data(self, ac_index: int) -> CCM15SlaveDevice | None:
         """Get ac data from the ac_index."""
-        if ac_index < 0 or ac_index >= len(self.data.devices):
-            # Network latency may return an empty or incomplete array
-            return None
-        data = self.data.devices[ac_index]
-        return data
+        return self.data.devices[ac_index]
 
     async def async_set_hvac_mode(self, ac_index, hvac_mode: HVACMode) -> None:
         """Set the hvac mode."""
