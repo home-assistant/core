@@ -24,6 +24,7 @@
   "entity": {
     "device_tracker": {
       "location": {
+        "name": "Location",
         "state_attributes": {
           "heading": {
             "name": "Heading"
@@ -50,6 +51,11 @@
             }
           }
         }
+      }
+    },
+    "lock": {
+      "vehicle_state_locked": {
+        "name": "[%key:component::lock::title%]"
       }
     },
     "sensor": {
