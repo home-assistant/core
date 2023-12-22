@@ -21,5 +21,15 @@
     "abort": {
       "config_errors": "Errors Found in Configuration"
     }
+  },
+  "issues": {
+    "import_issue_cannot_connect": {
+      "title": "The lutron YAML configuration import cannot connect to server",
+      "description": "Configuring lutron using YAML is being removed but there was an connection error importing your YAML configuration.\n\nMake sure your home assistant can reach the main repeater. In case the main repeater is down, try again later."
+    },
+    "import_issue_yaml_failed": {
+      "title": "The lutron YAML configuration import request failed due to a bad config",
+      "description": "Configuring lutron using YAML is being removed but there was a bad config imported in your YAML configuration.\n\nSetup will proceed with required configuration."
+    }
   }
 }

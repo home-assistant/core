@@ -718,6 +718,7 @@ build.json @home-assistant/supervisor
 /tests/components/luftdaten/ @fabaff @frenck
 /homeassistant/components/lupusec/ @majuss
 /homeassistant/components/lutron/ @cdheiser
+/tests/components/lutron/ @cdheiser
 /homeassistant/components/lutron_caseta/ @swails @bdraco @danaues
 /tests/components/lutron_caseta/ @swails @bdraco @danaues
 /homeassistant/components/lyric/ @timmo001
