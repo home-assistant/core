@@ -65,11 +65,11 @@ async def setup_platform(hass: HomeAssistant, side_effect=None):
 
 @contextmanager
 def patch_description(
-    key: str, attr: str, descriptions: tuple[EntityDescription]
+    descriptions: tuple[EntityDescription], key: str, attr: str
 ) -> AsyncMock:
     """Patch a description."""
     to_patch = next(filter(lambda x: x.key == key, descriptions))
-    original = to_patch.func
+    original = getattr(to_patch, attr)
     mock = AsyncMock()
     object.__setattr__(to_patch, attr, mock)
     yield mock

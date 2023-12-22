@@ -34,7 +34,7 @@ async def test_numbers(hass: HomeAssistant) -> None:
 
     # Test number set value functions
     with patch_description(
-        "charge_state_charge_current_request", "func", DESCRIPTIONS
+        DESCRIPTIONS, "charge_state_charge_current_request", "func"
     ) as mock_set_charging_amps:
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -46,7 +46,7 @@ async def test_numbers(hass: HomeAssistant) -> None:
         mock_set_charging_amps.assert_called_once()
 
     with patch_description(
-        "charge_state_charge_limit_soc", "func", DESCRIPTIONS
+        DESCRIPTIONS, "charge_state_charge_limit_soc", "func"
     ) as mock_set_charge_limit:
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -58,7 +58,7 @@ async def test_numbers(hass: HomeAssistant) -> None:
         mock_set_charge_limit.assert_called_once()
 
     with patch_description(
-        "vehicle_state_speed_limit_mode_current_limit_mph", "func", DESCRIPTIONS
+        DESCRIPTIONS, "vehicle_state_speed_limit_mode_current_limit_mph", "func"
     ) as mock_set_speed_limit:
         await hass.services.async_call(
             NUMBER_DOMAIN,

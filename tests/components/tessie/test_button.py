@@ -14,7 +14,7 @@ async def test_buttons(hass: HomeAssistant) -> None:
     await setup_platform(hass)
 
     # Test wake button
-    with patch_description("wake", "func", DESCRIPTIONS) as mock_wake:
+    with patch_description(DESCRIPTIONS, "wake", "func") as mock_wake:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
