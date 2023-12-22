@@ -222,7 +222,7 @@
             "now_playing_artist": "",
             "now_playing_duration": 0,
             "now_playing_elapsed": 0,
-            "now_playing_source": "Spotify",
+            "now_playing_source": "",
             "now_playing_station": "",
             "now_playing_title": ""
           },
