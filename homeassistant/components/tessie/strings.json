@@ -241,6 +241,14 @@
         "name": "Tire pressure warning rear right"
       }
     },
+    "button": {
+      "wake": { "name": "Wake" },
+      "flash_lights": { "name": "Flash lights" },
+      "honk": { "name": "Honk horn" },
+      "trigger_homelink": { "name": "Homelink" },
+      "enable_keyless_driving": { "name": "Keyless driving" },
+      "boombox": { "name": "Play fart" }
+    },
     "switch": {
       "charge_state_charge_enable_request": {
         "name": "Charge"
