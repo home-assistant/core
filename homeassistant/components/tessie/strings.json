@@ -58,6 +58,11 @@
         "name": "[%key:component::lock::title%]"
       }
     },
+    "media_player": {
+      "media": {
+        "name": "[%key:component::media_player::title%]"
+      }
+    },
     "sensor": {
       "charge_state_usable_battery_level": {
         "name": "Battery level"
