@@ -162,11 +162,11 @@ class SwissPublicTransportSensor(SensorEntity):
             if not self._remaining_time or self._remaining_time.total_seconds() < 0:
                 await self._opendata.async_get_data()
         except OpendataTransportError:
-            self._connected = False
+            self._attr_available = False
             _LOGGER.warning(
                 "Unable to connect and retrieve data from transport.opendata.ch"
             )
         else:
-            if not self._connected:
-                self._connected = True
+            if not self._attr_available:
+                self._attr_available = True
                 _LOGGER.info("Connection established with transport.opendata.ch")
