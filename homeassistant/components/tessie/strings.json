@@ -22,6 +22,21 @@
     }
   },
   "entity": {
+    "device_tracker": {
+      "location": {
+        "state_attributes": {
+          "heading": {
+            "name": "Heading"
+          },
+          "speed": {
+            "name": "Speed"
+          }
+        }
+      },
+      "route": {
+        "name": "Route"
+      }
+    },
     "climate": {
       "primary": {
         "name": "[%key:component::climate::title%]",
