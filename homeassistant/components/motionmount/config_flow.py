@@ -130,8 +130,9 @@ class MotionMountFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: host, CONF_PORT: port}
             )
+        else:
+            await self._async_handle_discovery_without_unique_id()
 
-        await self._async_handle_discovery_without_unique_id()
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(
