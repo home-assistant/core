@@ -356,7 +356,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._server = self._reauth_entry.data[CONF_HUB]
         self._api_type = self._reauth_entry.data.get(CONF_API_TYPE, APIType.CLOUD)
 
-        if self._reauth_entry.data[CONF_API_TYPE] == APIType.LOCAL:
+        if self._api_type == APIType.LOCAL:
             self._host = self._reauth_entry.data[CONF_HOST]
 
         return await self.async_step_user(dict(entry_data))
