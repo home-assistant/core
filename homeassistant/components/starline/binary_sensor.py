@@ -19,7 +19,6 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="hbrake",
         translation_key="hand_brake",
-        entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:car-brake-parking",
     ),
     BinarySensorEntityDescription(
