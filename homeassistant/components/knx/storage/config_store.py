@@ -1,7 +1,7 @@
 """KNX entity configuration store."""
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, TypedDict
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION: Final = 1
-STORAGE_KEY: Final = f"{DOMAIN}/entity_store.json"
+STORAGE_KEY: Final = f"{DOMAIN}/config_store.json"
 
 KNXPlatformStoreModel = dict[str, dict[str, Any]]  # unique_id: configuration
 KNXEntityStoreModel = dict[
@@ -26,19 +26,25 @@ KNXEntityStoreModel = dict[
 ]  # platform: KNXPlatformStoreModel
 
 
-class KNXEntityStore:
-    """Manage KNX entity store data."""
+class KNXConfigStoreModel(TypedDict):
+    """Represent KNX configuration store data."""
+
+    entities: KNXEntityStoreModel
+
+
+class KNXConfigStore:
+    """Manage KNX config store data."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         entry: ConfigEntry,
     ) -> None:
-        """Initialize project data."""
+        """Initialize config store."""
         self.hass = hass
-        self._store = Store[KNXEntityStoreModel](hass, STORAGE_VERSION, STORAGE_KEY)
+        self._store = Store[KNXConfigStoreModel](hass, STORAGE_VERSION, STORAGE_KEY)
+        self.data = KNXConfigStoreModel(entities={})
 
-        self.data: KNXEntityStoreModel = {}
         # entities and async_add_entity are filled by platform setups
         self.entities: dict[str, KnxEntity] = {}  # unique_id as key
         self.async_add_entity: dict[
@@ -46,23 +52,24 @@ class KNXEntityStore:
         ] = {}
 
     async def load_data(self) -> None:
-        """Load project data from storage."""
-        self.data = await self._store.async_load() or {}
-        _LOGGER.debug(
-            "Loaded KNX entity data for %s entity platforms from storage",
-            len(self.data),
-        )
+        """Load config store data from storage."""
+        if data := await self._store.async_load():
+            self.data = KNXConfigStoreModel(**data)
+            _LOGGER.debug(
+                "Loaded KNX config data from storage. %s entity platforms",
+                len(self.data["entities"]),
+            )
 
     async def create_entitiy(self, platform: Platform, data: dict[str, Any]) -> None:
         """Create a new entity."""
         if platform not in self.async_add_entity:
-            raise EntityStoreException(f"Entity platform not ready: {platform}")
+            raise ConfigStoreException(f"Entity platform not ready: {platform}")
         unique_id = f"knx_es_{random_uuid_hex()}"
-        if unique_id in self.data.setdefault(platform, {}):
-            raise EntityStoreException("Unique id already used.")
+        if unique_id in self.data["entities"].setdefault(platform, {}):
+            raise ConfigStoreException("Unique id already used.")
         self.async_add_entity[platform](unique_id, data)
         # store data after entity was added to be sure config didn't raise exceptions
-        self.data[platform][unique_id] = data
+        self.data["entities"][platform][unique_id] = data
         await self._store.async_save(self.data)
 
     @callback
@@ -70,39 +77,42 @@ class KNXEntityStore:
         """Return KNX entity configuration."""
         entity_registry = er.async_get(self.hass)
         if (entry := entity_registry.async_get(entity_id)) is None:
-            raise EntityStoreException(f"Entity not found: {entity_id}")
+            raise ConfigStoreException(f"Entity not found: {entity_id}")
         try:
             return {
                 "platform": entry.domain,
                 "unique_id": entry.unique_id,
-                "data": self.data[entry.domain][entry.unique_id],
+                "data": self.data["entities"][entry.domain][entry.unique_id],
             }
         except KeyError as err:
-            raise EntityStoreException(f"Entity data not found: {entity_id}") from err
+            raise ConfigStoreException(f"Entity data not found: {entity_id}") from err
 
     async def update_entity(
         self, platform: Platform, unique_id: str, data: dict[str, Any]
     ) -> None:
         """Update an existing entity."""
         if platform not in self.async_add_entity:
-            raise EntityStoreException(f"Entity platform not ready: {platform}")
-        if platform not in self.data or unique_id not in self.data[platform]:
-            raise EntityStoreException(f"Entity not found in {platform}: {unique_id}")
+            raise ConfigStoreException(f"Entity platform not ready: {platform}")
+        if (
+            platform not in self.data["entities"]
+            or unique_id not in self.data["entities"][platform]
+        ):
+            raise ConfigStoreException(f"Entity not found in {platform}: {unique_id}")
         await self.entities.pop(unique_id).async_remove()
         self.async_add_entity[platform](unique_id, data)
         # store data after entity is added to make sure config doesn't raise exceptions
-        self.data[platform][unique_id] = data
+        self.data["entities"][platform][unique_id] = data
         await self._store.async_save(self.data)
 
     async def delete_entity(self, entity_id: str) -> None:
         """Delete an existing entity."""
         entity_registry = er.async_get(self.hass)
         if (entry := entity_registry.async_get(entity_id)) is None:
-            raise EntityStoreException(f"Entity not found: {entity_id}")
+            raise ConfigStoreException(f"Entity not found: {entity_id}")
         try:
-            del self.data[entry.domain][entry.unique_id]
+            del self.data["entities"][entry.domain][entry.unique_id]
         except KeyError as err:
-            raise EntityStoreException(
+            raise ConfigStoreException(
                 f"Entity not found in {entry.domain}: {entry.unique_id}"
             ) from err
         try:
@@ -121,5 +131,5 @@ class KNXEntityStore:
         ]
 
 
-class EntityStoreException(Exception):
-    """KNX entity store exception."""
+class ConfigStoreException(Exception):
+    """KNX config store exception."""

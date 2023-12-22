@@ -45,7 +45,7 @@ async def async_setup_entry(
             for entity_config in yaml_config
         )
     ui_config: dict[str, ConfigType] | None
-    if ui_config := knx_module.entity_store.data.get(Platform.SWITCH):
+    if ui_config := knx_module.config_store.data["entities"].get(Platform.SWITCH):
         async_add_entities(
             KnxUiSwitch(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -56,7 +56,7 @@ async def async_setup_entry(
         """Add KNX entity at runtime."""
         async_add_entities([KnxUiSwitch(knx_module, unique_id, config)])
 
-    knx_module.entity_store.async_add_entity[Platform.SWITCH] = add_new_ui_switch
+    knx_module.config_store.async_add_entity[Platform.SWITCH] = add_new_ui_switch
 
 
 class _KnxSwitch(KnxEntity, SwitchEntity, RestoreEntity):
@@ -131,4 +131,4 @@ class KnxUiSwitch(_KnxSwitch):
             self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_info)})
             self._attr_has_entity_name = True
 
-        knx_module.entity_store.entities[unique_id] = self
+        knx_module.config_store.entities[unique_id] = self

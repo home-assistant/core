@@ -16,8 +16,8 @@ from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.uuid import random_uuid_hex
 
 from .const import DOMAIN
-from .helpers.entity_store import EntityStoreException
-from .helpers.entity_store_schema import (
+from .storage.config_store import ConfigStoreException
+from .storage.entity_store_schema import (
     CREATE_ENTITY_BASE_SCHEMA,
     ENTITY_STORE_DATA_SCHEMA,
     UPDATE_ENTITY_BASE_SCHEMA,
@@ -251,8 +251,8 @@ async def ws_create_entity(
     """Create entity in entity store and load it."""
     knx: KNXModule = hass.data[DOMAIN]
     try:
-        await knx.entity_store.create_entitiy(msg["platform"], msg["data"])
-    except EntityStoreException as err:
+        await knx.config_store.create_entitiy(msg["platform"], msg["data"])
+    except ConfigStoreException as err:
         connection.send_error(
             msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
         )
@@ -281,10 +281,10 @@ async def ws_update_entity(
     """Update entity in entity store and reload it."""
     knx: KNXModule = hass.data[DOMAIN]
     try:
-        await knx.entity_store.update_entity(
+        await knx.config_store.update_entity(
             msg["platform"], msg["unique_id"], msg["data"]
         )
-    except EntityStoreException as err:
+    except ConfigStoreException as err:
         connection.send_error(
             msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
         )
@@ -308,8 +308,8 @@ async def ws_delete_entity(
     """Delete entity from entity store and remove it."""
     knx: KNXModule = hass.data[DOMAIN]
     try:
-        await knx.entity_store.delete_entity(msg["entity_id"])
-    except EntityStoreException as err:
+        await knx.config_store.delete_entity(msg["entity_id"])
+    except ConfigStoreException as err:
         connection.send_error(
             msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
         )
@@ -332,7 +332,7 @@ def ws_get_entity_entries(
     """Get entities configured from entity store."""
     knx: KNXModule = hass.data[DOMAIN]
     entity_entries = [
-        entry.extended_dict for entry in knx.entity_store.get_entity_entries()
+        entry.extended_dict for entry in knx.config_store.get_entity_entries()
     ]
     connection.send_result(msg["id"], entity_entries)
 
@@ -353,7 +353,7 @@ def ws_get_entity_config(
     """Get entity configuration from entity store."""
     knx: KNXModule = hass.data[DOMAIN]
     try:
-        config = knx.entity_store.get_entity_config(msg["entity_id"])
+        config = knx.config_store.get_entity_config(msg["entity_id"])
     except KeyError:
         connection.send_error(
             msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, "Entity not found."
