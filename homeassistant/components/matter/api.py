@@ -97,7 +97,9 @@ async def websocket_commission(
     matter: MatterAdapter,
 ) -> None:
     """Add a device to the network and commission the device."""
-    await matter.matter_client.commission_with_code(msg["code"])
+    await matter.matter_client.commission_with_code(
+        msg["code"], network_only=msg.get("network_only", True)
+    )
     connection.send_result(msg[ID])
 
 
@@ -118,7 +120,9 @@ async def websocket_commission_on_network(
     matter: MatterAdapter,
 ) -> None:
     """Commission a device already on the network."""
-    await matter.matter_client.commission_on_network(msg["pin"])
+    await matter.matter_client.commission_on_network(
+        msg["pin"], ip_addr=msg.get("ip", None)
+    )
     connection.send_result(msg[ID])
 
 
