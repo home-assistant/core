@@ -328,7 +328,7 @@ class NotionEntity(CoordinatorEntity[DataUpdateCoordinator[NotionData]]):
     def _async_get_bridge(self, bridge_id: int) -> Bridge | None:
         """Get a bridge by ID (if it exists)."""
         if (bridge := self.coordinator.data.bridges.get(bridge_id)) is None:
-            LOGGER.info("Entity references a non-existent bridge ID: %s", bridge_id)
+            LOGGER.debug("Entity references a non-existent bridge ID: %s", bridge_id)
             return None
         return bridge
 
