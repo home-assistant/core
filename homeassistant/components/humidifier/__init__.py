@@ -5,7 +5,7 @@ from datetime import timedelta
 from enum import StrEnum
 from functools import partial
 import logging
-from typing import Any, final
+from typing import TYPE_CHECKING, Any, final
 
 import voluptuous as vol
 
@@ -53,6 +53,12 @@ from .const import (  # noqa: F401
     HumidifierAction,
     HumidifierEntityFeature,
 )
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,7 +146,20 @@ class HumidifierEntityDescription(ToggleEntityDescription, frozen_or_thawed=True
     device_class: HumidifierDeviceClass | None = None
 
 
-class HumidifierEntity(ToggleEntity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "device_class",
+    "action",
+    "current_humidity",
+    "target_humidity",
+    "mode",
+    "available_modes",
+    "min_humidity",
+    "max_humidity",
+    "supported_features",
+}
+
+
+class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for humidifier entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
@@ -171,7 +190,7 @@ class HumidifierEntity(ToggleEntity):
 
         return data
 
-    @property
+    @cached_property
     def device_class(self) -> HumidifierDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -200,22 +219,22 @@ class HumidifierEntity(ToggleEntity):
 
         return data
 
-    @property
+    @cached_property
     def action(self) -> HumidifierAction | None:
         """Return the current action."""
         return self._attr_action
 
-    @property
+    @cached_property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self._attr_current_humidity
 
-    @property
+    @cached_property
     def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
         return self._attr_target_humidity
 
-    @property
+    @cached_property
     def mode(self) -> str | None:
         """Return the current mode, e.g., home, auto, baby.
 
@@ -223,7 +242,7 @@ class HumidifierEntity(ToggleEntity):
         """
         return self._attr_mode
 
-    @property
+    @cached_property
     def available_modes(self) -> list[str] | None:
         """Return a list of available modes.
 
@@ -247,17 +266,17 @@ class HumidifierEntity(ToggleEntity):
         """Set new mode."""
         await self.hass.async_add_executor_job(self.set_mode, mode)
 
-    @property
+    @cached_property
     def min_humidity(self) -> int:
         """Return the minimum humidity."""
         return self._attr_min_humidity
 
-    @property
+    @cached_property
     def max_humidity(self) -> int:
         """Return the maximum humidity."""
         return self._attr_max_humidity
 
-    @property
+    @cached_property
     def supported_features(self) -> HumidifierEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
