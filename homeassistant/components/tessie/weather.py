@@ -1,8 +1,6 @@
 """Weather platform for Tessie integration."""
 from __future__ import annotations
 
-import asyncio
-
 from homeassistant.components.weather import WeatherEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -24,24 +22,12 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Tessie Weather platform from a config entry."""
-    coordinators = hass.data[DOMAIN][entry.entry_id]
-
-    # Create a weather coordinator for each vehicle
-    weathercoordinators = [
-        TessieWeatherDataCoordinator(hass, coordinator.api_key, coordinator.vin)
-        for coordinator in coordinators
-    ]
-
-    # Do first refresh to ensure we have data
-    tasks = (
-        weathercoordinator.async_refresh() for weathercoordinator in weathercoordinators
-    )
-    await asyncio.gather(*tasks)
+    data = hass.data[DOMAIN][entry.entry_id]
 
     # Add Weather entities with both coordinators
     async_add_entities(
-        TessieWeatherEntity(coordinator, weathercoordinator)
-        for coordinator, weathercoordinator in zip(coordinators, weathercoordinators)
+        TessieWeatherEntity(coordinators.vehicle, coordinators.weather)
+        for coordinators in data
     )
 
 

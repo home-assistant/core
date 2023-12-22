@@ -117,13 +117,13 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Tessie binary sensor platform from a config entry."""
-    coordinators = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        TessieBinarySensorEntity(coordinator, description)
-        for coordinator in coordinators
+        TessieBinarySensorEntity(coordinators.vehicle, description)
+        for coordinators in data
         for description in DESCRIPTIONS
-        if description.key in coordinator.data
+        if description.key in coordinators.vehicle.data
     )
 
 

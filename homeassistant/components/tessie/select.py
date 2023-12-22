@@ -26,13 +26,13 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Tessie select platform from a config entry."""
-    coordinators = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        TessieSeatHeaterSelectEntity(coordinator, key)
-        for coordinator in coordinators
+        TessieSeatHeaterSelectEntity(coordinators.vehicle, key)
+        for coordinators in data
         for key in SEAT_HEATERS
-        if key in coordinator.data
+        if key in coordinators.vehicle.data
     )
 
 

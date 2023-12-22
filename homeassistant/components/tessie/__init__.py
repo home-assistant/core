@@ -1,4 +1,5 @@
 """Tessie integration."""
+import asyncio
 from http import HTTPStatus
 import logging
 
@@ -12,7 +13,8 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .coordinator import TessieDataUpdateCoordinator
+from .coordinator import TessieDataUpdateCoordinator, TessieWeatherDataCoordinator
+from .models import TessieCoordinators
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -51,18 +53,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ClientError as e:
         raise ConfigEntryNotReady from e
 
-    coordinators = [
-        TessieDataUpdateCoordinator(
-            hass,
-            api_key=api_key,
-            vin=vehicle["vin"],
-            data=vehicle["last_state"],
+    data = [
+        TessieCoordinators(
+            vehicle=TessieDataUpdateCoordinator(
+                hass,
+                api_key=api_key,
+                vin=vehicle["vin"],
+                data=vehicle["last_state"],
+            ),
+            weather=TessieWeatherDataCoordinator(
+                hass, api_key=api_key, vin=vehicle["vin"]
+            ),
         )
         for vehicle in vehicles["results"]
         if vehicle["last_state"] is not None
     ]
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
+    # Get data for weather coordinators
+    tasks = (
+        coordinators.weather.async_config_entry_first_refresh() for coordinators in data
+    )
+    await asyncio.gather(*tasks)
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

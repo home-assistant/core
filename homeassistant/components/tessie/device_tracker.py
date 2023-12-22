@@ -17,15 +17,15 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Tessie device tracker platform from a config entry."""
-    coordinators = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        klass(coordinator)
+        klass(coordinators.vehicle)
         for klass in (
             TessieDeviceTrackerLocationEntity,
             TessieDeviceTrackerRouteEntity,
         )
-        for coordinator in coordinators
+        for coordinators in data
     )
 
 
