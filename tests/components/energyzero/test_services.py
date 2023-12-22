@@ -6,11 +6,14 @@ import voluptuous as vol
 
 from homeassistant.components.energyzero.const import DOMAIN
 from homeassistant.components.energyzero.services import (
+    ATTR_CONFIG_ENTRY,
     ENERGY_SERVICE_NAME,
     GAS_SERVICE_NAME,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -29,6 +32,7 @@ async def test_has_services(
 @pytest.mark.parametrize("end", [{"end": "2023-01-01 00:00:00"}, {}])
 async def test_service(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     service: str,
     incl_vat: dict[str, bool],
@@ -36,8 +40,9 @@ async def test_service(
     end: dict[str, str],
 ) -> None:
     """Test the EnergyZero Service."""
+    entry = {ATTR_CONFIG_ENTRY: mock_config_entry.entry_id}
 
-    data = incl_vat | start | end
+    data = entry | incl_vat | start | end
 
     assert snapshot == await hass.services.async_call(
         DOMAIN,
@@ -51,20 +56,24 @@ async def test_service(
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize("service", [GAS_SERVICE_NAME, ENERGY_SERVICE_NAME])
 @pytest.mark.parametrize(
-    ("service_data", "error", "error_message"),
+    ("include_mock_entry", "service_data", "error", "error_message"),
     [
-        ({}, vol.er.Error, "required key not provided .+"),
+        (False, {}, vol.er.Error, "required key not provided .+"),
+        (True, {}, vol.er.Error, "required key not provided .+"),
         (
+            True,
             {"incl_vat": "incorrect vat"},
             vol.er.Error,
             "expected bool for dictionary value .+",
         ),
         (
+            True,
             {"incl_vat": True, "start": "incorrect date"},
             ServiceValidationError,
             "Invalid datetime provided.",
         ),
         (
+            True,
             {"incl_vat": True, "end": "incorrect date"},
             ServiceValidationError,
             "Invalid datetime provided.",
@@ -73,12 +82,17 @@ async def test_service(
 )
 async def test_service_validation(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    include_mock_entry: bool,
     service: str,
     service_data: dict[str, str],
     error: type[Exception],
     error_message: str,
 ) -> None:
     """Test the EnergyZero Service validation."""
+
+    if include_mock_entry:
+        service_data = service_data | {ATTR_CONFIG_ENTRY: mock_config_entry.entry_id}
 
     with pytest.raises(error, match=error_message):
         await hass.services.async_call(
