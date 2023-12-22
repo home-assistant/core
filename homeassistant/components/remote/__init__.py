@@ -25,6 +25,11 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA_BASE,
     make_entity_service_schema,
 )
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstantEnum,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -70,9 +75,20 @@ class RemoteEntityFeature(IntFlag):
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
 # Please use the RemoteEntityFeature enum instead.
-SUPPORT_LEARN_COMMAND = 1
-SUPPORT_DELETE_COMMAND = 2
-SUPPORT_ACTIVITY = 4
+_DEPRECATED_SUPPORT_LEARN_COMMAND = DeprecatedConstantEnum(
+    RemoteEntityFeature.LEARN_COMMAND, "2025.1"
+)
+_DEPRECATED_SUPPORT_DELETE_COMMAND = DeprecatedConstantEnum(
+    RemoteEntityFeature.DELETE_COMMAND, "2025.1"
+)
+_DEPRECATED_SUPPORT_ACTIVITY = DeprecatedConstantEnum(
+    RemoteEntityFeature.ACTIVITY, "2025.1"
+)
+
+
+# Both can be removed if no deprecated constant are in this module anymore
+__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = ft.partial(dir_with_deprecated_constants, module_globals=globals())
 
 REMOTE_SERVICE_ACTIVITY_SCHEMA = make_entity_service_schema(
     {vol.Optional(ATTR_ACTIVITY): cv.string}

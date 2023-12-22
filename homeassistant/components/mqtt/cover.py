@@ -32,16 +32,34 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
+from homeassistant.util.percentage import (
+    percentage_to_ranged_value,
+    ranged_value_to_percentage,
+)
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
 from .const import (
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
+    CONF_PAYLOAD_CLOSE,
+    CONF_PAYLOAD_OPEN,
+    CONF_PAYLOAD_STOP,
+    CONF_POSITION_CLOSED,
+    CONF_POSITION_OPEN,
     CONF_QOS,
     CONF_RETAIN,
+    CONF_STATE_CLOSED,
+    CONF_STATE_CLOSING,
+    CONF_STATE_OPEN,
+    CONF_STATE_OPENING,
     CONF_STATE_TOPIC,
     DEFAULT_OPTIMISTIC,
+    DEFAULT_PAYLOAD_CLOSE,
+    DEFAULT_PAYLOAD_OPEN,
+    DEFAULT_POSITION_CLOSED,
+    DEFAULT_POSITION_OPEN,
+    DEFAULT_RETAIN,
 )
 from .debug_info import log_messages
 from .mixins import (
@@ -64,15 +82,6 @@ CONF_TILT_COMMAND_TEMPLATE = "tilt_command_template"
 CONF_TILT_STATUS_TOPIC = "tilt_status_topic"
 CONF_TILT_STATUS_TEMPLATE = "tilt_status_template"
 
-CONF_PAYLOAD_CLOSE = "payload_close"
-CONF_PAYLOAD_OPEN = "payload_open"
-CONF_PAYLOAD_STOP = "payload_stop"
-CONF_POSITION_CLOSED = "position_closed"
-CONF_POSITION_OPEN = "position_open"
-CONF_STATE_CLOSED = "state_closed"
-CONF_STATE_CLOSING = "state_closing"
-CONF_STATE_OPEN = "state_open"
-CONF_STATE_OPENING = "state_opening"
 CONF_STATE_STOPPED = "state_stopped"
 CONF_TILT_CLOSED_POSITION = "tilt_closed_value"
 CONF_TILT_MAX = "tilt_max"
@@ -84,13 +93,10 @@ TILT_PAYLOAD = "tilt"
 COVER_PAYLOAD = "cover"
 
 DEFAULT_NAME = "MQTT Cover"
-DEFAULT_PAYLOAD_CLOSE = "CLOSE"
-DEFAULT_PAYLOAD_OPEN = "OPEN"
-DEFAULT_PAYLOAD_STOP = "STOP"
-DEFAULT_POSITION_CLOSED = 0
-DEFAULT_POSITION_OPEN = 100
-DEFAULT_RETAIN = False
+
 DEFAULT_STATE_STOPPED = "stopped"
+DEFAULT_PAYLOAD_STOP = "STOP"
+
 DEFAULT_TILT_CLOSED_POSITION = 0
 DEFAULT_TILT_MAX = 100
 DEFAULT_TILT_MIN = 0
@@ -239,6 +245,10 @@ class MqttCover(MqttEntity, CoverEntity):
     _entity_id_format: str = cover.ENTITY_ID_FORMAT
     _optimistic: bool
     _tilt_optimistic: bool
+    _tilt_closed_percentage: int
+    _tilt_open_percentage: int
+    _pos_range: tuple[int, int]
+    _tilt_range: tuple[int, int]
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -246,6 +256,15 @@ class MqttCover(MqttEntity, CoverEntity):
         return DISCOVERY_SCHEMA
 
     def _setup_from_config(self, config: ConfigType) -> None:
+        """Set up cover from config."""
+        self._pos_range = (config[CONF_POSITION_CLOSED] + 1, config[CONF_POSITION_OPEN])
+        self._tilt_range = (config[CONF_TILT_MIN] + 1, config[CONF_TILT_MAX])
+        self._tilt_closed_percentage = ranged_value_to_percentage(
+            self._tilt_range, config[CONF_TILT_CLOSED_POSITION]
+        )
+        self._tilt_open_percentage = ranged_value_to_percentage(
+            self._tilt_range, config[CONF_TILT_OPEN_POSITION]
+        )
         no_position = (
             config.get(CONF_SET_POSITION_TOPIC) is None
             and config.get(CONF_GET_POSITION_TOPIC) is None
@@ -284,23 +303,22 @@ class MqttCover(MqttEntity, CoverEntity):
         )
 
         template_config_attributes = {
-            "position_open": self._config[CONF_POSITION_OPEN],
-            "position_closed": self._config[CONF_POSITION_CLOSED],
-            "tilt_min": self._config[CONF_TILT_MIN],
-            "tilt_max": self._config[CONF_TILT_MAX],
+            "position_open": config[CONF_POSITION_OPEN],
+            "position_closed": config[CONF_POSITION_CLOSED],
+            "tilt_min": config[CONF_TILT_MIN],
+            "tilt_max": config[CONF_TILT_MAX],
         }
 
         self._value_template = MqttValueTemplate(
-            self._config.get(CONF_VALUE_TEMPLATE),
-            entity=self,
+            config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
 
         self._set_position_template = MqttCommandTemplate(
-            self._config.get(CONF_SET_POSITION_TEMPLATE), entity=self
+            config.get(CONF_SET_POSITION_TEMPLATE), entity=self
         ).async_render
 
         self._get_position_template = MqttValueTemplate(
-            self._config.get(CONF_GET_POSITION_TEMPLATE),
+            config.get(CONF_GET_POSITION_TEMPLATE),
             entity=self,
             config_attributes=template_config_attributes,
         ).async_render_with_possible_json_value
@@ -443,19 +461,17 @@ class MqttCover(MqttEntity, CoverEntity):
                 payload = payload_dict["position"]
 
             try:
-                percentage_payload = self.find_percentage_in_range(
-                    float(payload), COVER_PAYLOAD
+                percentage_payload = ranged_value_to_percentage(
+                    self._pos_range, float(payload)
                 )
             except ValueError:
                 _LOGGER.warning("Payload '%s' is not numeric", payload)
                 return
 
-            self._attr_current_cover_position = percentage_payload
+            self._attr_current_cover_position = min(100, max(0, percentage_payload))
             if self._config.get(CONF_STATE_TOPIC) is None:
                 self._update_state(
-                    STATE_CLOSED
-                    if percentage_payload == DEFAULT_POSITION_CLOSED
-                    else STATE_OPEN
+                    STATE_CLOSED if self.current_cover_position == 0 else STATE_OPEN
                 )
 
         if self._config.get(CONF_GET_POSITION_TOPIC):
@@ -506,9 +522,7 @@ class MqttCover(MqttEntity, CoverEntity):
             # Optimistically assume that cover has changed state.
             self._update_state(STATE_OPEN)
             if self._config.get(CONF_GET_POSITION_TOPIC):
-                self._attr_current_cover_position = self.find_percentage_in_range(
-                    self._config[CONF_POSITION_OPEN], COVER_PAYLOAD
-                )
+                self._attr_current_cover_position = 100
             self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -527,9 +541,7 @@ class MqttCover(MqttEntity, CoverEntity):
             # Optimistically assume that cover has changed state.
             self._update_state(STATE_CLOSED)
             if self._config.get(CONF_GET_POSITION_TOPIC):
-                self._attr_current_cover_position = self.find_percentage_in_range(
-                    self._config[CONF_POSITION_CLOSED], COVER_PAYLOAD
-                )
+                self._attr_current_cover_position = 0
             self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
@@ -565,9 +577,7 @@ class MqttCover(MqttEntity, CoverEntity):
             self._config[CONF_ENCODING],
         )
         if self._tilt_optimistic:
-            self._attr_current_cover_tilt_position = self.find_percentage_in_range(
-                float(self._config[CONF_TILT_OPEN_POSITION])
-            )
+            self._attr_current_cover_tilt_position = self._tilt_open_percentage
             self.async_write_ha_state()
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
@@ -592,58 +602,60 @@ class MqttCover(MqttEntity, CoverEntity):
             self._config[CONF_ENCODING],
         )
         if self._tilt_optimistic:
-            self._attr_current_cover_tilt_position = self.find_percentage_in_range(
-                float(self._config[CONF_TILT_CLOSED_POSITION])
-            )
+            self._attr_current_cover_tilt_position = self._tilt_closed_percentage
             self.async_write_ha_state()
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        tilt = kwargs[ATTR_TILT_POSITION]
-        percentage_tilt = tilt
-        tilt = self.find_in_range_from_percent(tilt)
+        tilt_percentage = kwargs[ATTR_TILT_POSITION]
+        tilt_ranged = round(
+            percentage_to_ranged_value(self._tilt_range, tilt_percentage)
+        )
         # Handover the tilt after calculated from percent would make it more
         # consistent with receiving templates
         variables = {
-            "tilt_position": percentage_tilt,
+            "tilt_position": tilt_percentage,
             "entity_id": self.entity_id,
             "position_open": self._config.get(CONF_POSITION_OPEN),
             "position_closed": self._config.get(CONF_POSITION_CLOSED),
             "tilt_min": self._config.get(CONF_TILT_MIN),
             "tilt_max": self._config.get(CONF_TILT_MAX),
         }
-        tilt = self._set_tilt_template(tilt, variables=variables)
+        tilt_rendered = self._set_tilt_template(tilt_ranged, variables=variables)
 
         await self.async_publish(
             self._config[CONF_TILT_COMMAND_TOPIC],
-            tilt,
+            tilt_rendered,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
             self._config[CONF_ENCODING],
         )
         if self._tilt_optimistic:
             _LOGGER.debug("Set tilt value optimistic")
-            self._attr_current_cover_tilt_position = percentage_tilt
+            self._attr_current_cover_tilt_position = tilt_percentage
             self.async_write_ha_state()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position = kwargs[ATTR_POSITION]
-        percentage_position = position
-        position = self.find_in_range_from_percent(position, COVER_PAYLOAD)
+        position_percentage = kwargs[ATTR_POSITION]
+        position_ranged = round(
+            percentage_to_ranged_value(self._pos_range, position_percentage)
+        )
         variables = {
-            "position": percentage_position,
+            "position": position_percentage,
             "entity_id": self.entity_id,
             "position_open": self._config[CONF_POSITION_OPEN],
             "position_closed": self._config[CONF_POSITION_CLOSED],
             "tilt_min": self._config[CONF_TILT_MIN],
             "tilt_max": self._config[CONF_TILT_MAX],
         }
-        position = self._set_position_template(position, variables=variables)
+        position_rendered = self._set_position_template(
+            position_ranged, variables=variables
+        )
 
         await self.async_publish(
             self._config[CONF_SET_POSITION_TOPIC],
-            position,
+            position_rendered,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
             self._config[CONF_ENCODING],
@@ -651,87 +663,37 @@ class MqttCover(MqttEntity, CoverEntity):
         if self._optimistic:
             self._update_state(
                 STATE_CLOSED
-                if percentage_position == self._config[CONF_POSITION_CLOSED]
+                if position_percentage <= self._config[CONF_POSITION_CLOSED]
                 else STATE_OPEN
             )
-            self._attr_current_cover_position = percentage_position
+            self._attr_current_cover_position = position_percentage
             self.async_write_ha_state()
 
     async def async_toggle_tilt(self, **kwargs: Any) -> None:
         """Toggle the entity."""
-        if self.is_tilt_closed():
+        if (
+            self.current_cover_tilt_position is not None
+            and self.current_cover_tilt_position <= self._tilt_closed_percentage
+        ):
             await self.async_open_cover_tilt(**kwargs)
         else:
             await self.async_close_cover_tilt(**kwargs)
-
-    def is_tilt_closed(self) -> bool:
-        """Return if the cover is tilted closed."""
-        return self._attr_current_cover_tilt_position == self.find_percentage_in_range(
-            float(self._config[CONF_TILT_CLOSED_POSITION])
-        )
-
-    def find_percentage_in_range(
-        self, position: float, range_type: str = TILT_PAYLOAD
-    ) -> int:
-        """Find the 0-100% value within the specified range."""
-        # the range of motion as defined by the min max values
-        if range_type == COVER_PAYLOAD:
-            max_range: int = self._config[CONF_POSITION_OPEN]
-            min_range: int = self._config[CONF_POSITION_CLOSED]
-        else:
-            max_range = self._config[CONF_TILT_MAX]
-            min_range = self._config[CONF_TILT_MIN]
-        current_range = max_range - min_range
-        # offset to be zero based
-        offset_position = position - min_range
-        position_percentage = round(float(offset_position) / current_range * 100.0)
-
-        max_percent = 100
-        min_percent = 0
-        position_percentage = min(max(position_percentage, min_percent), max_percent)
-
-        return position_percentage
-
-    def find_in_range_from_percent(
-        self, percentage: float, range_type: str = TILT_PAYLOAD
-    ) -> int:
-        """Find the adjusted value for 0-100% within the specified range.
-
-        if the range is 80-180 and the percentage is 90
-        this method would determine the value to send on the topic
-        by offsetting the max and min, getting the percentage value and
-        returning the offset
-        """
-        if range_type == COVER_PAYLOAD:
-            max_range: int = self._config[CONF_POSITION_OPEN]
-            min_range: int = self._config[CONF_POSITION_CLOSED]
-        else:
-            max_range = self._config[CONF_TILT_MAX]
-            min_range = self._config[CONF_TILT_MIN]
-        offset = min_range
-        current_range = max_range - min_range
-        position = round(current_range * (percentage / 100.0))
-        position += offset
-
-        return position
 
     @callback
     def tilt_payload_received(self, _payload: Any) -> None:
         """Set the tilt value."""
 
         try:
-            payload = int(round(float(_payload)))
+            payload = round(float(_payload))
         except ValueError:
             _LOGGER.warning("Payload '%s' is not numeric", _payload)
             return
 
         if (
-            self._config[CONF_TILT_MIN] <= int(payload) <= self._config[CONF_TILT_MAX]
-            or self._config[CONF_TILT_MAX]
-            <= int(payload)
-            <= self._config[CONF_TILT_MIN]
+            self._config[CONF_TILT_MIN] <= payload <= self._config[CONF_TILT_MAX]
+            or self._config[CONF_TILT_MAX] <= payload <= self._config[CONF_TILT_MIN]
         ):
-            level = self.find_percentage_in_range(payload)
+            level = ranged_value_to_percentage(self._tilt_range, payload)
             self._attr_current_cover_tilt_position = level
         else:
             _LOGGER.warning(

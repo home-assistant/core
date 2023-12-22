@@ -62,6 +62,7 @@ homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
 homeassistant.components.analytics.*
 homeassistant.components.android_ip_webcam.*
+homeassistant.components.androidtv_remote.*
 homeassistant.components.anova.*
 homeassistant.components.anthemav.*
 homeassistant.components.apcupsd.*
@@ -125,6 +126,7 @@ homeassistant.components.energy.*
 homeassistant.components.esphome.*
 homeassistant.components.event.*
 homeassistant.components.evil_genius_labs.*
+homeassistant.components.evohome.*
 homeassistant.components.faa_delays.*
 homeassistant.components.fan.*
 homeassistant.components.fastdotcom.*
@@ -236,6 +238,7 @@ homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
 homeassistant.components.moon.*
 homeassistant.components.mopeka.*
+homeassistant.components.motionmount.*
 homeassistant.components.mqtt.*
 homeassistant.components.mysensors.*
 homeassistant.components.nam.*
@@ -334,6 +337,7 @@ homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*
 homeassistant.components.tag.*
 homeassistant.components.tailscale.*
+homeassistant.components.tailwind.*
 homeassistant.components.tami4.*
 homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
@@ -364,6 +368,7 @@ homeassistant.components.uptimerobot.*
 homeassistant.components.usb.*
 homeassistant.components.vacuum.*
 homeassistant.components.vallox.*
+homeassistant.components.valve.*
 homeassistant.components.velbus.*
 homeassistant.components.vlc_telnet.*
 homeassistant.components.wake_on_lan.*

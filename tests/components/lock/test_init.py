@@ -5,6 +5,7 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components import lock
 from homeassistant.components.lock import (
     ATTR_CODE,
     CONF_DEFAULT_CODE,
@@ -24,6 +25,8 @@ import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .conftest import MockLock
+
+from tests.common import import_and_test_deprecated_constant_enum
 
 
 async def help_test_async_lock_service(
@@ -353,3 +356,12 @@ async def test_lock_with_illegal_default_code(
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_UNLOCK
         )
+
+
+@pytest.mark.parametrize(("enum"), list(LockEntityFeature))
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: LockEntityFeature,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(caplog, lock, enum, "SUPPORT_", "2025.1")
