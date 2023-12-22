@@ -51,14 +51,14 @@ from .const import (
 _DataT = TypeVar("_DataT", bound=Rain | Forecast | CurrentPhenomenons)
 
 
-@dataclass
+@dataclass(frozen=True)
 class MeteoFranceRequiredKeysMixin:
     """Mixin for required keys."""
 
     data_path: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class MeteoFranceSensorEntityDescription(
     SensorEntityDescription, MeteoFranceRequiredKeysMixin
 ):

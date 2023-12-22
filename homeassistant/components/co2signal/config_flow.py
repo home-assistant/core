@@ -10,7 +10,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_COUNTRY_CODE,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+)
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -20,7 +25,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_COUNTRY_CODE, DOMAIN
+from .const import DOMAIN
 from .helpers import fetch_latest_carbon_intensity
 from .util import get_extra_name
 

@@ -45,6 +45,7 @@ def _class_fields(cls: type, kw_only: bool) -> list[tuple[str, Any, Any]]:
 
 @dataclass_transform(
     field_specifiers=(dataclasses.field, dataclasses.Field),
+    frozen_default=True,  # Set to allow setting frozen in child classes
     kw_only_default=True,  # Set to allow setting kw_only in child classes
 )
 class FrozenOrThawed(type):
@@ -117,4 +118,5 @@ class FrozenOrThawed(type):
                 return object.__new__(cls)
             return cls._dataclass(*_args, **kwargs)
 
+        cls.__init__ = cls._dataclass.__init__  # type: ignore[misc]
         cls.__new__ = __new__  # type: ignore[method-assign]

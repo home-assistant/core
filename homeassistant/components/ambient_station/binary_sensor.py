@@ -63,14 +63,14 @@ TYPE_RELAY8 = "relay8"
 TYPE_RELAY9 = "relay9"
 
 
-@dataclass
+@dataclass(frozen=True)
 class AmbientBinarySensorDescriptionMixin:
     """Define an entity description mixin for binary sensors."""
 
     on_state: Literal[0, 1]
 
 
-@dataclass
+@dataclass(frozen=True)
 class AmbientBinarySensorDescription(
     BinarySensorEntityDescription, AmbientBinarySensorDescriptionMixin
 ):

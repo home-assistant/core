@@ -43,6 +43,7 @@ from homeassistant.helpers.collection import (
 )
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import (
     dt as dt_util,
     language as language_util,
@@ -115,6 +116,7 @@ async def _async_resolve_default_pipeline_settings(
     hass: HomeAssistant,
     stt_engine_id: str | None,
     tts_engine_id: str | None,
+    pipeline_name: str,
 ) -> dict[str, str | None]:
     """Resolve settings for a default pipeline.
 
@@ -123,7 +125,6 @@ async def _async_resolve_default_pipeline_settings(
     """
     conversation_language = "en"
     pipeline_language = "en"
-    pipeline_name = "Home Assistant"
     stt_engine = None
     stt_language = None
     tts_engine = None
@@ -195,9 +196,6 @@ async def _async_resolve_default_pipeline_settings(
             )
             tts_engine_id = None
 
-    if stt_engine_id == "cloud" and tts_engine_id == "cloud":
-        pipeline_name = "Home Assistant Cloud"
-
     return {
         "conversation_engine": conversation.HOME_ASSISTANT_AGENT,
         "conversation_language": conversation_language,
@@ -221,12 +219,17 @@ async def _async_create_default_pipeline(
     The default pipeline will use the homeassistant conversation agent and the
     default stt / tts engines.
     """
-    pipeline_settings = await _async_resolve_default_pipeline_settings(hass, None, None)
+    pipeline_settings = await _async_resolve_default_pipeline_settings(
+        hass, stt_engine_id=None, tts_engine_id=None, pipeline_name="Home Assistant"
+    )
     return await pipeline_store.async_create_item(pipeline_settings)
 
 
 async def async_create_default_pipeline(
-    hass: HomeAssistant, stt_engine_id: str, tts_engine_id: str
+    hass: HomeAssistant,
+    stt_engine_id: str,
+    tts_engine_id: str,
+    pipeline_name: str,
 ) -> Pipeline | None:
     """Create a pipeline with default settings.
 
@@ -236,7 +239,7 @@ async def async_create_default_pipeline(
     pipeline_data: PipelineData = hass.data[DOMAIN]
     pipeline_store = pipeline_data.pipeline_store
     pipeline_settings = await _async_resolve_default_pipeline_settings(
-        hass, stt_engine_id, tts_engine_id
+        hass, stt_engine_id, tts_engine_id, pipeline_name=pipeline_name
     )
     if (
         pipeline_settings["stt_engine"] != stt_engine_id
@@ -272,6 +275,48 @@ def async_get_pipelines(hass: HomeAssistant) -> Iterable[Pipeline]:
     pipeline_data: PipelineData = hass.data[DOMAIN]
 
     return pipeline_data.pipeline_store.data.values()
+
+
+async def async_update_pipeline(
+    hass: HomeAssistant,
+    pipeline: Pipeline,
+    *,
+    conversation_engine: str | UndefinedType = UNDEFINED,
+    conversation_language: str | UndefinedType = UNDEFINED,
+    language: str | UndefinedType = UNDEFINED,
+    name: str | UndefinedType = UNDEFINED,
+    stt_engine: str | None | UndefinedType = UNDEFINED,
+    stt_language: str | None | UndefinedType = UNDEFINED,
+    tts_engine: str | None | UndefinedType = UNDEFINED,
+    tts_language: str | None | UndefinedType = UNDEFINED,
+    tts_voice: str | None | UndefinedType = UNDEFINED,
+    wake_word_entity: str | None | UndefinedType = UNDEFINED,
+    wake_word_id: str | None | UndefinedType = UNDEFINED,
+) -> None:
+    """Update a pipeline."""
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+
+    updates: dict[str, Any] = pipeline.to_json()
+    updates.pop("id")
+    # Refactor this once we bump to Python 3.12
+    # and have https://peps.python.org/pep-0692/
+    for key, val in (
+        ("conversation_engine", conversation_engine),
+        ("conversation_language", conversation_language),
+        ("language", language),
+        ("name", name),
+        ("stt_engine", stt_engine),
+        ("stt_language", stt_language),
+        ("tts_engine", tts_engine),
+        ("tts_language", tts_language),
+        ("tts_voice", tts_voice),
+        ("wake_word_entity", wake_word_entity),
+        ("wake_word_id", wake_word_id),
+    ):
+        if val is not UNDEFINED:
+            updates[key] = val
+
+    await pipeline_data.pipeline_store.async_update_item(pipeline.id, updates)
 
 
 class PipelineEventType(StrEnum):

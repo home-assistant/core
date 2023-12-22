@@ -14,7 +14,16 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DOMAIN
 from .coordinator import TessieDataUpdateCoordinator
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.DEVICE_TRACKER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.UPDATE,
+]
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -17,7 +17,7 @@ from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoborockButtonDescriptionMixin:
     """Define an entity description mixin for button entities."""
 
@@ -25,7 +25,7 @@ class RoborockButtonDescriptionMixin:
     param: list | dict | None
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoborockButtonDescription(
     ButtonEntityDescription, RoborockButtonDescriptionMixin
 ):
