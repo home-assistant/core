@@ -4,6 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final, cast
 
+from aioshelly.const import RPC_GENERATIONS
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -37,19 +39,19 @@ from .utils import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class BlockBinarySensorDescription(
     BlockEntityDescription, BinarySensorEntityDescription
 ):
     """Class to describe a BLOCK binary sensor."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class RpcBinarySensorDescription(RpcEntityDescription, BinarySensorEntityDescription):
     """Class to describe a RPC binary sensor."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class RestBinarySensorDescription(RestEntityDescription, BinarySensorEntityDescription):
     """Class to describe a REST binary sensor."""
 
@@ -224,7 +226,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for device."""
-    if get_device_entry_gen(config_entry) == 2:
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
         if config_entry.data[CONF_SLEEP_PERIOD]:
             async_setup_entry_rpc(
                 hass,

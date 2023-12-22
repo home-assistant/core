@@ -20,7 +20,7 @@ from . import TailscaleEntity
 from .const import DOMAIN
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class TailscaleBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes a Tailscale binary sensor entity."""
 

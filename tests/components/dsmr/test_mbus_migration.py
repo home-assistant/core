@@ -29,7 +29,6 @@ async def test_migrate_gas_to_mbus(
         data={
             "port": "/dev/ttyUSB0",
             "dsmr_version": "5B",
-            "precision": 4,
             "serial_id": "1234",
             "serial_id_gas": "37464C4F32313139303333373331",
         },
@@ -126,7 +125,6 @@ async def test_migrate_gas_to_mbus_exists(
         data={
             "port": "/dev/ttyUSB0",
             "dsmr_version": "5B",
-            "precision": 4,
             "serial_id": "1234",
             "serial_id_gas": "37464C4F32313139303333373331",
         },
