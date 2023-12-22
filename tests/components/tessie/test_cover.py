@@ -18,7 +18,7 @@ from .common import ERROR_UNKNOWN, TEST_RESPONSE, setup_platform
 
 
 async def test_window(hass: HomeAssistant) -> None:
-    """Tests that the cover entity is correct."""
+    """Tests that the window cover entity is correct."""
 
     await setup_platform(hass)
 
@@ -55,14 +55,14 @@ async def test_window(hass: HomeAssistant) -> None:
 
 
 async def test_charge_port(hass: HomeAssistant) -> None:
-    """Tests that the cover entity is correct."""
+    """Tests that the charge port cover entity is correct."""
 
     await setup_platform(hass)
 
     entity_id = "cover.test_charge_port_door"
     assert hass.states.get(entity_id).state == STATE_OPEN
 
-    # Test close windows
+    # Test close charge port
     with patch(
         "homeassistant.components.tessie.cover.close_charge_port",
         return_value=TEST_RESPONSE,
@@ -76,7 +76,7 @@ async def test_charge_port(hass: HomeAssistant) -> None:
         mock_set.assert_called_once()
     assert hass.states.get(entity_id).state == STATE_CLOSED
 
-    # Test open windows
+    # Test open charge port
     with patch(
         "homeassistant.components.tessie.cover.open_unlock_charge_port",
         return_value=TEST_RESPONSE,
@@ -92,7 +92,7 @@ async def test_charge_port(hass: HomeAssistant) -> None:
 
 
 async def test_errors(hass: HomeAssistant) -> None:
-    """Tests unknown error is handled."""
+    """Tests errors are handled."""
 
     await setup_platform(hass)
     entity_id = "cover.test_charge_port_door"
