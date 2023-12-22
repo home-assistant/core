@@ -809,6 +809,8 @@ build.json @home-assistant/supervisor
 /tests/components/motion_blinds/ @starkillerOG
 /homeassistant/components/motioneye/ @dermotduffy
 /tests/components/motioneye/ @dermotduffy
+/homeassistant/components/motionmount/ @RJPoelstra
+/tests/components/motionmount/ @RJPoelstra
 /homeassistant/components/mqtt/ @emontnemery @jbouwh
 /tests/components/mqtt/ @emontnemery @jbouwh
 /homeassistant/components/msteams/ @peroyvind
@@ -1054,6 +1056,8 @@ build.json @home-assistant/supervisor
 /tests/components/recorder/ @home-assistant/core
 /homeassistant/components/recovery_mode/ @home-assistant/core
 /tests/components/recovery_mode/ @home-assistant/core
+/homeassistant/components/refoss/ @ashionky
+/tests/components/refoss/ @ashionky
 /homeassistant/components/rejseplanen/ @DarkFox
 /homeassistant/components/remote/ @home-assistant/core
 /tests/components/remote/ @home-assistant/core
@@ -1262,7 +1266,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/surepetcare/ @benleb @danielhiversen
 /tests/components/surepetcare/ @benleb @danielhiversen
 /homeassistant/components/swiss_hydrological_data/ @fabaff
-/homeassistant/components/swiss_public_transport/ @fabaff
+/homeassistant/components/swiss_public_transport/ @fabaff @miaucl
+/tests/components/swiss_public_transport/ @fabaff @miaucl
 /homeassistant/components/switch/ @home-assistant/core
 /tests/components/switch/ @home-assistant/core
 /homeassistant/components/switch_as_x/ @home-assistant/core

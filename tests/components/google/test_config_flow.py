@@ -9,6 +9,7 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 from aiohttp.client_exceptions import ClientError
+from freezegun import freeze_time
 from oauth2client.client import (
     DeviceFlowInfo,
     FlowExchangeError,
@@ -130,7 +131,7 @@ async def primary_calendar(
 
 async def fire_alarm(hass, point_in_time):
     """Fire an alarm and wait for callbacks to run."""
-    with patch("homeassistant.util.dt.utcnow", return_value=point_in_time):
+    with freeze_time(point_in_time):
         async_fire_time_changed(hass, point_in_time)
         await hass.async_block_till_done()
 

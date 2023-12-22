@@ -26,7 +26,7 @@ dependencies    = [
     "aiohttp==3.9.1",
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-url-dispatcher==0.3.0",
-    "aiohttp-zlib-ng==0.1.1",
+    "aiohttp-zlib-ng==0.1.2",
     "astral==2.2",
     "attrs==23.1.0",
     "atomicwrites-homeassistant==1.4.1",
@@ -36,7 +36,7 @@ dependencies    = [
     "ciso8601==2.3.0",
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
-    "httpx==0.25.0",
+    "httpx==0.26.0",
     "home-assistant-bluetooth==1.11.0",
     "ifaddr==0.2.0",
     "Jinja2==3.1.2",
@@ -582,7 +582,6 @@ select = [
     "G", # flake8-logging-format
     "I",  # isort
     "ICN001", # import concentions; {name} should be imported as {asname}
-    "ISC001", # Implicitly concatenated string literals on one line
     "N804", # First argument of a class method should be named cls
     "N805", # First argument of a method should be named self
     "N815", # Variable {name} in class scope should not be mixedCase
@@ -658,6 +657,21 @@ ignore = [
     # Ignored due to performance: https://github.com/charliermarsh/ruff/issues/2923
     "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
 
+    # May conflict with the formatter, https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
+    "W191",
+    "E111",
+    "E114",
+    "E117",
+    "D206",
+    "D300",
+    "Q000",
+    "Q001",
+    "Q002",
+    "Q003",
+    "COM812",
+    "COM819",
+    "ISC001",
+    "ISC002",
 ]
 
 [tool.ruff.flake8-import-conventions.extend-aliases]
