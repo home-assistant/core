@@ -74,14 +74,8 @@
       "value": "EasyTouch2 8"
     },
     "equipment": {
-      "flags": 98360,
-      "list": [
-        "INTELLIBRITE",
-        "INTELLIFLO_0",
-        "INTELLIFLO_1",
-        "INTELLICHEM",
-        "HYBRID_HEATER"
-      ]
+      "flags": 60,
+      "list": ["CHLORINATOR", "INTELLIBRITE", "INTELLIFLO_0", "INTELLIFLO_1"]
     },
     "sensor": {
       "state": {
@@ -89,10 +83,6 @@
         "value": 1,
         "device_type": "enum",
         "enum_options": ["Unknown", "Ready", "Sync", "Service"]
-      },
-      "freeze_mode": {
-        "name": "Freeze Mode",
-        "value": 0
       },
       "pool_delay": {
         "name": "Pool Delay",
@@ -111,12 +101,6 @@
         "value": 69,
         "unit": "\u00b0F",
         "device_type": "temperature",
-        "state_type": "measurement"
-      },
-      "ph": {
-        "name": "pH",
-        "value": 7.61,
-        "unit": "pH",
         "state_type": "measurement"
       },
       "orp": {
@@ -417,12 +401,6 @@
         "state_type": "measurement"
       },
       "unknown_at_offset_16": 0,
-      "gpm_now": {
-        "name": "Pool Low Pump GPM Now",
-        "value": 0,
-        "unit": "gpm",
-        "state_type": "measurement"
-      },
       "unknown_at_offset_24": 255,
       "preset": {
         "0": {
@@ -651,35 +629,35 @@
     "sensor": {
       "ph_now": {
         "name": "pH Now",
-        "value": 7.67,
+        "value": 0.0,
         "unit": "pH",
         "state_type": "measurement"
       },
       "orp_now": {
         "name": "ORP Now",
-        "value": 799,
+        "value": 0,
         "unit": "mV",
         "state_type": "measurement"
       },
       "ph_supply_level": {
         "name": "pH Supply Level",
-        "value": 6,
+        "value": 0,
         "state_type": "measurement"
       },
       "orp_supply_level": {
         "name": "ORP Supply Level",
-        "value": 7,
+        "value": 0,
         "state_type": "measurement"
       },
       "saturation": {
         "name": "Saturation Index",
-        "value": -0.01,
+        "value": 0.0,
         "unit": "lsi",
         "state_type": "measurement"
       },
       "ph_probe_water_temp": {
         "name": "pH Probe Water Temperature",
-        "value": 69,
+        "value": 0,
         "unit": "°F",
         "device_type": "temperature",
         "state_type": "measurement"
@@ -688,88 +666,88 @@
     "configuration": {
       "ph_setpoint": {
         "name": "pH Setpoint",
-        "value": 7.6,
+        "value": 0.0,
         "unit": "pH",
-        "max_setpoint": 7.6,
-        "min_setpoint": 7.2
+        "min_setpoint": 7.2,
+        "max_setpoint": 7.6
       },
       "orp_setpoint": {
         "name": "ORP Setpoint",
-        "value": 720,
+        "value": 0,
         "unit": "mV",
-        "max_setpoint": 800,
-        "min_setpoint": 400
+        "min_setpoint": 400,
+        "max_setpoint": 800
       },
       "calcium_hardness": {
         "name": "Calcium Hardness",
-        "value": 800,
+        "value": 0,
         "unit": "ppm",
-        "max_setpoint": 800,
-        "min_setpoint": 25
+        "min_setpoint": 25,
+        "max_setpoint": 800
       },
       "cya": {
         "name": "Cyanuric Acid",
-        "value": 45,
+        "value": 0,
         "unit": "ppm",
-        "max_setpoint": 201,
-        "min_setpoint": 0
+        "min_setpoint": 0,
+        "max_setpoint": 201
       },
       "total_alkalinity": {
         "name": "Total Alkalinity",
-        "value": 45,
+        "value": 0,
         "unit": "ppm",
-        "max_setpoint": 800,
-        "min_setpoint": 25
+        "min_setpoint": 25,
+        "max_setpoint": 800
       },
       "salt_tds_ppm": {
         "name": "Salt/TDS",
-        "value": 1000,
+        "value": 0,
         "unit": "ppm",
-        "max_setpoint": 6500,
-        "min_setpoint": 500
+        "min_setpoint": 500,
+        "max_setpoint": 6500
       },
       "probe_is_celsius": 0,
-      "flags": 32
+      "flags": 0
     },
     "dose_status": {
       "ph_last_dose_time": {
         "name": "Last pH Dose Time",
-        "value": 30,
+        "value": 0,
         "unit": "sec",
         "device_type": "duration",
         "state_type": "total_increasing"
       },
       "orp_last_dose_time": {
         "name": "Last ORP Dose Time",
-        "value": 4,
+        "value": 0,
         "unit": "sec",
         "device_type": "duration",
         "state_type": "total_increasing"
       },
       "ph_last_dose_volume": {
         "name": "Last pH Dose Volume",
-        "value": 52,
+        "value": 0,
         "unit": "mL",
         "device_type": "volume",
         "state_type": "total_increasing"
       },
       "orp_last_dose_volume": {
         "name": "Last ORP Dose Volume",
-        "value": 8,
+        "value": 0,
         "unit": "mL",
         "device_type": "volume",
         "state_type": "total_increasing"
       },
-      "flags": 149,
+      "flags": 0,
       "ph_dosing_state": {
         "name": "pH Dosing State",
-        "value": 1,
+        "value": 0,
         "device_type": "enum",
         "enum_options": ["Dosing", "Mixing", "Monitoring"]
       },
       "orp_dosing_state": {
         "name": "ORP Dosing State",
-        "value": 2,
+        "value": 0,
         "device_type": "enum",
         "enum_options": ["Dosing", "Mixing", "Monitoring"]
       }
@@ -834,9 +812,9 @@
     },
     "firmware": {
       "name": "IntelliChem Firmware",
-      "value": "1.060",
-      "major": 1,
-      "minor": 60
+      "value": "0.000",
+      "major": 0,
+      "minor": 0
     },
     "water_balance": {
       "flags": 0,
@@ -856,7 +834,7 @@
     "unknown_at_offset_46": 0
   },
   "scg": {
-    "scg_present": 0,
+    "scg_present": 1,
     "sensor": {
       "state": {
         "name": "Chlorinator",
@@ -864,7 +842,7 @@
       },
       "salt_ppm": {
         "name": "Chlorinator Salt",
-        "value": 0,
+        "value": 3600,
         "unit": "ppm",
         "state_type": "measurement"
       }
@@ -872,25 +850,16 @@
     "configuration": {
       "pool_setpoint": {
         "name": "Pool Chlorinator Setpoint",
-        "value": 51,
+        "value": 50,
         "unit": "%",
         "min_setpoint": 0,
         "max_setpoint": 100,
         "step": 5,
         "body_type": 0
       },
-      "spa_setpoint": {
-        "name": "Spa Chlorinator Setpoint",
-        "value": 0,
-        "unit": "%",
-        "min_setpoint": 0,
-        "max_setpoint": 100,
-        "step": 5,
-        "body_type": 1
-      },
       "super_chlor_timer": {
         "name": "Super Chlorination Timer",
-        "value": 0,
+        "value": 8,
         "unit": "hr",
         "min_setpoint": 1,
         "max_setpoint": 72,

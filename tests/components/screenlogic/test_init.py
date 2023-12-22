@@ -9,13 +9,14 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.screenlogic import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import slugify
 
 from . import (
     DATA_MIN_MIGRATION,
-    DATA_MISSING_VALUES_CHEM_CHLOR,
+    DATA_MISSING_VALUES_CHLOR,
     GATEWAY_DISCOVERY_IMPORT_PATH,
     MOCK_ADAPTER_MAC,
     MOCK_ADAPTER_NAME,
@@ -250,7 +251,7 @@ async def test_platform_setup(
 ) -> None:
     """Test setup for platforms that define expected data."""
     stub_connect = lambda *args, **kwargs: stub_async_connect(
-        DATA_MISSING_VALUES_CHEM_CHLOR, *args, **kwargs
+        DATA_MISSING_VALUES_CHLOR, *args, **kwargs
     )
 
     device_prefix = slugify(MOCK_ADAPTER_NAME)
@@ -259,6 +260,7 @@ async def test_platform_setup(
         f"{BINARY_SENSOR_DOMAIN}.{device_prefix}_active_alert",
         f"{SENSOR_DOMAIN}.{device_prefix}_air_temperature",
         f"{NUMBER_DOMAIN}.{device_prefix}_pool_chlorinator_setpoint",
+        f"{SWITCH_DOMAIN}.{device_prefix}_super_chlorinate",
     ]
 
     mock_config_entry.add_to_hass(hass)

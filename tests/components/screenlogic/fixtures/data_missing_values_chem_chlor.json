@@ -142,6 +142,14 @@
         "value": 0,
         "device_type": "alarm"
       }
+    },
+    "date_time": {
+      "timestamp": 1700489169.0,
+      "timestamp_host": 1700517812.0,
+      "auto_dst": {
+        "name": "Automatic Daylight Saving Time",
+        "value": 1
+      }
     }
   },
   "circuit": {
@@ -844,6 +852,10 @@
         "step": 1
       }
     },
-    "flags": 0
+    "flags": 0,
+    "super_chlorinate": {
+      "name": "Super Chlorinate",
+      "value": 0
+    }
   }
 }

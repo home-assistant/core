@@ -50,6 +50,9 @@ DATA_MIN_ENTITY_CLEANUP = num_key_string_to_int(
 DATA_MISSING_VALUES_CHEM_CHLOR = num_key_string_to_int(
     load_json_object_fixture("screenlogic/data_missing_values_chem_chlor.json")
 )
+DATA_MISSING_VALUES_CHLOR = num_key_string_to_int(
+    load_json_object_fixture("screenlogic/data_missing_values_chlor.json")
+)
 
 
 async def stub_async_connect(
