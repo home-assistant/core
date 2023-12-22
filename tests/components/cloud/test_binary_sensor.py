@@ -6,6 +6,7 @@ from hass_nabucasa.const import DISPATCH_REMOTE_CONNECT, DISPATCH_REMOTE_DISCONN
 import pytest
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 
 
@@ -16,7 +17,11 @@ def mock_wait_until() -> Generator[None, None, None]:
         yield
 
 
-async def test_remote_connection_sensor(hass: HomeAssistant, cloud: MagicMock) -> None:
+async def test_remote_connection_sensor(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    entity_registry: EntityRegistry,
+) -> None:
     """Test the remote connection sensor."""
     entity_id = "binary_sensor.remote_ui"
     cloud.remote.certificate = None
@@ -49,3 +54,15 @@ async def test_remote_connection_sensor(hass: HomeAssistant, cloud: MagicMock) -
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "on"
+
+    # Test that a state is not set if the entity is removed.
+    entity_registry.async_remove(entity_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id) is None
+
+    cloud.remote.is_connected = False
+    cloud.client.dispatcher_message(DISPATCH_REMOTE_DISCONNECT)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id) is None
