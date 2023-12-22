@@ -1,9 +1,12 @@
 """Support for transport.opendata.ch."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
+from typing import Any
 
+from opendata_transport import OpendataTransport
 from opendata_transport.exceptions import OpendataTransportError
 import voluptuous as vol
 
@@ -53,13 +56,11 @@ async def async_setup_entry(
     """Set up the sensor from a config entry created in the integrations UI."""
     opendata = hass.data[DOMAIN][config_entry.entry_id]
 
-    start = config_entry.data[CONF_START]
-    destination = config_entry.data[CONF_DESTINATION]
     name = config_entry.title
 
     async_add_entities(
-        [SwissPublicTransportSensor(opendata, start, destination, name)],
-        update_before_add=True,
+        [SwissPublicTransportSensor(opendata, name)],
+        True,
     )
 
 
@@ -112,37 +113,28 @@ class SwissPublicTransportSensor(SensorEntity):
     _attr_attribution = "Data provided by transport.opendata.ch"
     _attr_icon = "mdi:bus"
 
-    def __init__(self, opendata, start, destination, name):
+    def __init__(self, opendata: OpendataTransport, name: str) -> None:
         """Initialize the sensor."""
         self._opendata = opendata
-        self._name = name
-        self._from = start
-        self._to = destination
-        self._remaining_time = None
+        self._attr_name = name
+        self._remaining_time: timedelta | None = None
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
+    def native_value(self) -> str:
         """Return the state of the sensor."""
-        return (
-            self._opendata.connections[0]["departure"]
-            if self._opendata is not None
-            else None
-        )
+        return self._opendata.connections[0]["departure"]
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes."""
-        if self._opendata is None:
-            return
-
-        self._remaining_time = dt_util.parse_datetime(
+        departure_time = dt_util.parse_datetime(
             self._opendata.connections[0]["departure"]
-        ) - dt_util.as_local(dt_util.utcnow())
+        )
+        if departure_time:
+            remaining_time = departure_time - dt_util.as_local(dt_util.utcnow())
+        else:
+            remaining_time = None
+        self._remaining_time = remaining_time
 
         return {
             ATTR_TRAIN_NUMBER: self._opendata.connections[0]["number"],
