@@ -29,14 +29,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
 
-    # add lat and lon to entry data if not present
-    if not config_entry.data:
-        data = {
-            CONF_LATITUDE: hass.config.latitude,
-            CONF_LONGITUDE: hass.config.longitude,
-        }
-        hass.config_entries.async_update_entry(config_entry, data=data)
-
     coordinator = IslamicPrayerDataUpdateCoordinator(hass)
     await coordinator.async_config_entry_first_refresh()
 
@@ -47,6 +39,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    if config_entry.minor_version == 2:
+        return True
+    config_entry.minor_version = 2
+    data = {
+        CONF_LATITUDE: hass.config.latitude,
+        CONF_LONGITUDE: hass.config.longitude,
+    }
+    return hass.config_entries.async_update_entry(config_entry, data=data)
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:

@@ -62,6 +62,7 @@ class IslamicPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle the Islamic Prayer config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
