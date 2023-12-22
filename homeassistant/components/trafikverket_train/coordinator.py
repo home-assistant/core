@@ -39,6 +39,8 @@ class TrainData:
     other_info: str | None
     deviation: str | None
     product_filter: str | None
+    departure_time_next: datetime | None
+    departure_time_next_next: datetime | None
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,7 +61,7 @@ def _get_as_joined(information: list[str] | None) -> str | None:
     return None
 
 
-class TVDataUpdateCoordinator(DataUpdateCoordinator[list[TrainData]]):
+class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
     """A Trafikverket Data Update Coordinator."""
 
     def __init__(
@@ -86,7 +88,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[list[TrainData]]):
         self._weekdays: list[str] = entry.data[CONF_WEEKDAY]
         self._filter_product = filter_product
 
-    async def _async_update_data(self) -> list[TrainData]:
+    async def _async_update_data(self) -> TrainData:
         """Fetch data from Trafikverket."""
 
         when = dt_util.now()
@@ -122,53 +124,37 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[list[TrainData]]):
                 f"Train departure {when} encountered a problem: {error}"
             ) from error
 
-        return_states: list[TrainData] = []
-        if state:
-            departure_time = state.advertised_time_at_location
-            if state.estimated_time_at_location:
-                departure_time = state.estimated_time_at_location
-            elif state.time_at_location:
-                departure_time = state.time_at_location
-
-            delay_time = state.get_delay_time()
-
-            return_states.append(
-                TrainData(
-                    departure_time=_get_as_utc(departure_time),
-                    departure_state=state.get_state().value,
-                    cancelled=state.canceled,
-                    delayed_time=delay_time.seconds if delay_time else None,
-                    planned_time=_get_as_utc(state.advertised_time_at_location),
-                    estimated_time=_get_as_utc(state.estimated_time_at_location),
-                    actual_time=_get_as_utc(state.time_at_location),
-                    other_info=_get_as_joined(state.other_information),
-                    deviation=_get_as_joined(state.deviations),
-                    product_filter=self._filter_product,
-                )
+        depart_next = None
+        depart_next_next = None
+        if not state and states and len(states) > 0:
+            state = states[0]
+            depart_next = states[1].advertised_time_at_location if states[1] else None
+            depart_next_next = (
+                states[2].advertised_time_at_location if states[2] else None
             )
-        if states:
-            for state in states:
-                departure_time = state.advertised_time_at_location
-                if state.estimated_time_at_location:
-                    departure_time = state.estimated_time_at_location
-                elif state.time_at_location:
-                    departure_time = state.time_at_location
 
-                delay_time = state.get_delay_time()
+        if not state:
+            raise UpdateFailed("Could not find any departures")
 
-                return_states.append(
-                    TrainData(
-                        departure_time=_get_as_utc(departure_time),
-                        departure_state=state.get_state().value,
-                        cancelled=state.canceled,
-                        delayed_time=delay_time.seconds if delay_time else None,
-                        planned_time=_get_as_utc(state.advertised_time_at_location),
-                        estimated_time=_get_as_utc(state.estimated_time_at_location),
-                        actual_time=_get_as_utc(state.time_at_location),
-                        other_info=_get_as_joined(state.other_information),
-                        deviation=_get_as_joined(state.deviations),
-                        product_filter=self._filter_product,
-                    )
-                )
+        departure_time = state.advertised_time_at_location
+        if state.estimated_time_at_location:
+            departure_time = state.estimated_time_at_location
+        elif state.time_at_location:
+            departure_time = state.time_at_location
 
-        return return_states
+        delay_time = state.get_delay_time()
+
+        return TrainData(
+            departure_time=_get_as_utc(departure_time),
+            departure_state=state.get_state().value,
+            cancelled=state.canceled,
+            delayed_time=delay_time.seconds if delay_time else None,
+            planned_time=_get_as_utc(state.advertised_time_at_location),
+            estimated_time=_get_as_utc(state.estimated_time_at_location),
+            actual_time=_get_as_utc(state.time_at_location),
+            other_info=_get_as_joined(state.other_information),
+            deviation=_get_as_joined(state.deviations),
+            product_filter=self._filter_product,
+            departure_time_next=_get_as_utc(depart_next),
+            departure_time_next_next=_get_as_utc(depart_next_next),
+        )
