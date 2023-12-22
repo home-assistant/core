@@ -61,12 +61,18 @@ class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
     @property
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
-        return self.get("vehicle_state_media_info_now_playing_duration", 0) / 1000
+        duration = self.get("vehicle_state_media_info_now_playing_duration")
+        if duration:
+            return duration / 1000
+        return None
 
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        return self.get("vehicle_state_media_info_now_playing_elapsed", 0) / 1000
+        position = self.get("vehicle_state_media_info_now_playing_elapsed")
+        if position:
+            return position / 1000
+        return None
 
     @property
     def media_title(self) -> str | None:

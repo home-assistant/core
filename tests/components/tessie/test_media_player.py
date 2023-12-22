@@ -14,4 +14,4 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_all("media_player")) == 1
 
-    assert hass.states.get("media_player.test").state == MediaPlayerState.IDLE
+    assert hass.states.get("media_player.test").state == MediaPlayerState.PLAYING
