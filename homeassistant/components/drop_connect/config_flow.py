@@ -25,17 +25,12 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-KEY_DEVICE_TYPE = "devType"
-KEY_DEVICE_DESCRIPTION = "devDesc"
-KEY_DEVICE_NAME = "name"
-
 
 class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle DROP config flow."""
 
     VERSION = 1
 
-    _topic = DISCOVERY_TOPIC
     _drop_discovery: DropDiscovery | None = None
 
     async def async_step_mqtt(self, discovery_info: MqttServiceInfo) -> FlowResult:
