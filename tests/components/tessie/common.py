@@ -1,7 +1,8 @@
 """Tessie common helpers for tests."""
 
+from contextlib import contextmanager
 from http import HTTPStatus
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from aiohttp.client import RequestInfo
@@ -9,6 +10,7 @@ from aiohttp.client import RequestInfo
 from homeassistant.components.tessie.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityDescription
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -54,3 +56,16 @@ async def setup_platform(hass: HomeAssistant, side_effect=None):
         await hass.async_block_till_done()
 
     return mock_entry
+
+
+@contextmanager
+def patch_description(
+    key: str, attr: str, descriptions: tuple[EntityDescription]
+) -> AsyncMock:
+    """Patch a description."""
+    to_patch = next(filter(lambda x: x.key == key, descriptions))
+    original = to_patch.func
+    mock = AsyncMock()
+    object.__setattr__(to_patch, attr, mock)
+    yield mock
+    object.__setattr__(to_patch, attr, original)
