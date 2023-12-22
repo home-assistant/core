@@ -224,33 +224,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             int(discovery_info.port or DEF_MPRIS_PORT),
         )
 
-        # Do not proceed if the device is already configured by hand
-        # or by zeroconf.
-        # User may have already added the agent by hostname manually,
-        # so we don't want to show this to the user again since the
-        # discovery is yielding a machine already added.
-        # There is a corner case we are not dealing with here, and that
-        # corner case is when the zeroconf hostname / port data has changed,
-        # indicating that the machine has changed networking, or the user
-        # of the agent machine has logged after someone else logged in
-        # (under such circumstance, the agent may decide to allocate
-        # different CAKES and MPRIS ports).
-        # Ideally, in this situation, we would detect that the agent is
-        # the same (by using some signed message in the zeroconf properties,
-        # or enforcing that the certificate fingerprint in the zeroconf
-        # properties is the same as the one we know about, which would
-        # require us to use the fingerprint as the unique ID, which is OK),
-        # then proceed to update the hostname, CAKES and MPRIS ports of any
-        # existing config entry, and reload the config entry in question.
-        # This is a corner case to be dealt with in the future rather than
-        # now, since it would require a mechanism for the integration to
-        # trust that the networking information change announced by the
-        # agent is in fact legitimate and corresponds to the existing
-        # config entry's certificate.  In the future, the zeroconf
-        # announcement will send a signed message that this integration
-        # can verify using the relevant certificate.
+        # Revalidate the machine's connection information.
         await self.async_set_unique_id(self._regen_unique_id())
         self._abort_if_unique_id_configured()
+        # In the future, we will revalidate the agent by using certificate
+        # fingerprints.  That will be a more robust way to identify if the
+        # IP address, TCP ports or or host name of a previously-registered
+        # machine have changed (if the cert is the same, the machine is
+        # the same).
+        # The zeroconf step will also verify that the certificate presented
+        # by the server corresponds to the known fingerprint, to prevent
+        # spoofers from just copying the fingerprint and fraudulently
+        # announcing themselves on the network.  If this validation succeeds
+        # the zeroconf_confirm step can be completely skipped, improving the
+        # user experience to complete seamlessness.
 
         return await self.async_step_zeroconf_confirm()
 
