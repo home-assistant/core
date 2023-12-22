@@ -214,3 +214,18 @@
     'state': '2023-05-01T11:00:00+00:00',
   })
 # ---
+# name: test_sensor_update_auth_failure
+  FlowResultSnapshot({
+    'context': dict({
+      'entry_id': '1',
+      'source': 'reauth',
+      'title_placeholders': dict({
+        'name': 'Mock Title',
+      }),
+      'unique_id': "stockholmc-uppsalac--['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']",
+    }),
+    'flow_id': <ANY>,
+    'handler': 'trafikverket_train',
+    'step_id': 'reauth_confirm',
+  })
+# ---
