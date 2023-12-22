@@ -28,8 +28,8 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
 ]
 LOGGER = logging.getLogger(__name__)
-TIMEOUT = 20.0
-DISCONNECT_DELAY = 5
+TIMEOUT = 360.0
+DISCONNECT_DELAY = 600
 
 
 def get_connection(hass: HomeAssistant, address: str) -> CachedConnection:
