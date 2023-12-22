@@ -36,7 +36,7 @@ class TessieNumberEntityDescription(NumberEntityDescription):
     native_min_value: float
     native_max_value: float
     min_key: str | None = None
-    max_key: str | None = None
+    max_key: str
 
 
 DESCRIPTIONS: tuple[TessieNumberEntityDescription, ...] = (
