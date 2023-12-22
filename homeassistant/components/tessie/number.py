@@ -1,9 +1,17 @@
 """Number platform for Tessie integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
 from tessie_api import set_charge_limit, set_charging_amps, set_speed_limit
 
-from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberEntityDescription,
+    NumberMode,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
@@ -19,6 +27,58 @@ from .coordinator import TessieDataUpdateCoordinator
 from .entity import TessieEntity
 
 
+@dataclass(frozen=True, kw_only=True)
+class TessieNumberEntityDescription(NumberEntityDescription):
+    """Describes Tessie Number entity."""
+
+    func: Callable
+    argument: str
+    native_min_value: float
+    native_max_value: float
+    min_key: str | None = None
+    max_key: str | None = None
+
+
+DESCRIPTIONS: tuple[TessieNumberEntityDescription, ...] = (
+    TessieNumberEntityDescription(
+        key="charge_state_charge_current_request",
+        native_step=PRECISION_WHOLE,
+        native_min_value=0,
+        native_max_value=32,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=NumberDeviceClass.CURRENT,
+        max_key="charge_state_charge_current_request_max",
+        func=set_charging_amps,
+        argument="amps",
+    ),
+    TessieNumberEntityDescription(
+        key="charge_state_charge_limit_soc",
+        native_step=PRECISION_WHOLE,
+        native_min_value=0,
+        native_max_value=100,
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=NumberDeviceClass.BATTERY,
+        min_key="charge_state_charge_limit_soc_min",
+        max_key="charge_state_charge_limit_soc_max",
+        func=set_charge_limit,
+        argument="percent",
+    ),
+    TessieNumberEntityDescription(
+        key="vehicle_state_speed_limit_mode_current_limit_mph",
+        native_step=PRECISION_WHOLE,
+        native_min_value=50,
+        native_max_value=120,
+        native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
+        device_class=NumberDeviceClass.SPEED,
+        mode=NumberMode.BOX,
+        min_key="vehicle_state_speed_limit_mode_min_limit_mph",
+        max_key="vehicle_state_speed_limit_mode_max_limit_mph",
+        func=set_speed_limit,
+        argument="mph",
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -26,65 +86,26 @@ async def async_setup_entry(
     coordinators = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        EntityClass(coordinator)
-        for EntityClass in (
-            TessieChargeLimitSocNumberEntity,
-            TessieSpeedLimitModeNumberEntity,
-            TessieCurrentChargeNumberEntity,
-        )
+        TessieNumberEntity(coordinator, description)
         for coordinator in coordinators
+        for description in DESCRIPTIONS
+        if description.key in coordinator.data
     )
 
 
-class TessieCurrentChargeNumberEntity(TessieEntity, NumberEntity):
+class TessieNumberEntity(TessieEntity, NumberEntity):
     """Number entity for current charge."""
 
-    _attr_native_step = PRECISION_WHOLE
-    _attr_native_min_value = 0
-    _attr_native_max_value = 32
-    _attr_native_unit_of_measurement = UnitOfElectricCurrent.AMPERE
-    _attr_device_class = NumberDeviceClass.CURRENT
+    entity_description: TessieNumberEntityDescription
 
     def __init__(
         self,
         coordinator: TessieDataUpdateCoordinator,
+        description: TessieNumberEntityDescription,
     ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, "charge_state_charge_current_request")
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the value reported by the number."""
-        return self._value
-
-    @property
-    def native_max_value(self) -> float:
-        """Return the maximum value."""
-        return self.get(
-            "charge_state_charge_current_request_max", self._attr_native_max_value
-        )
-
-    async def async_set_native_value(self, value: float) -> None:
-        """Set new value."""
-        await self.run(set_charging_amps, amps=value)
-        self.set((self.key, value))
-
-
-class TessieChargeLimitSocNumberEntity(TessieEntity, NumberEntity):
-    """Number entity for charge limit soc."""
-
-    _attr_native_step = PRECISION_WHOLE
-    _attr_native_min_value = 0
-    _attr_native_max_value = 100
-    _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_device_class = NumberDeviceClass.BATTERY
-
-    def __init__(
-        self,
-        coordinator: TessieDataUpdateCoordinator,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, "charge_state_charge_limit_soc")
+        """Initialize the Number entity."""
+        super().__init__(coordinator, description.key)
+        self.entity_description = description
 
     @property
     def native_value(self) -> float | None:
@@ -94,62 +115,23 @@ class TessieChargeLimitSocNumberEntity(TessieEntity, NumberEntity):
     @property
     def native_min_value(self) -> float:
         """Return the minimum value."""
-        return self.get(
-            "charge_state_charge_limit_soc_min", self._attr_native_min_value
-        )
+        if self.entity_description.min_key:
+            return self.get(
+                self.entity_description.min_key,
+                self.entity_description.native_min_value,
+            )
+        return self.entity_description.native_min_value
 
     @property
     def native_max_value(self) -> float:
         """Return the maximum value."""
         return self.get(
-            "charge_state_charge_limit_soc_max", self._attr_native_max_value
+            self.entity_description.max_key, self.entity_description.native_max_value
         )
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        await self.run(set_charge_limit, percent=value)
-        self.set((self.key, value))
-
-
-class TessieSpeedLimitModeNumberEntity(TessieEntity, NumberEntity):
-    """Number entity for speed limit mode."""
-
-    _attr_native_step = PRECISION_WHOLE
-    _attr_native_min_value = 50
-    _attr_native_max_value = 120
-    _attr_native_unit_of_measurement = UnitOfSpeed.MILES_PER_HOUR
-    _attr_device_class = NumberDeviceClass.SPEED
-    _attr_mode = NumberMode.BOX
-
-    def __init__(
-        self,
-        coordinator: TessieDataUpdateCoordinator,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(
-            coordinator, "vehicle_state_speed_limit_mode_current_limit_mph"
+        await self.run(
+            self.entity_description.func, **{self.entity_description.argument: value}
         )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the value reported by the number."""
-        return self._value
-
-    @property
-    def native_min_value(self) -> float:
-        """Return the minimum value."""
-        return self.get(
-            "vehicle_state_speed_limit_mode_min_limit_mph", self._attr_native_min_value
-        )
-
-    @property
-    def native_max_value(self) -> float:
-        """Return the maximum value."""
-        return self.get(
-            "vehicle_state_speed_limit_mode_max_limit_mph", self._attr_native_max_value
-        )
-
-    async def async_set_native_value(self, value: float) -> None:
-        """Set new value."""
-        await self.run(set_speed_limit, mph=value)
         self.set((self.key, value))
