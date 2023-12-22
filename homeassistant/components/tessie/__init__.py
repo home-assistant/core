@@ -17,6 +17,7 @@ from .coordinator import TessieDataUpdateCoordinator
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.MEDIA_PLAYER,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
