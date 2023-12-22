@@ -196,7 +196,7 @@ async def test_flow_fails_departures(
     with patch(
         "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
     ), patch(
-        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_next_train_stop",
+        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_next_train_stops",
         side_effect=side_effect(),
     ), patch(
         "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
