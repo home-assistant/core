@@ -41,24 +41,20 @@ class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
         coordinator: TessieDataUpdateCoordinator,
     ) -> None:
         """Initialize the media player entity."""
-        super().__init__(coordinator, "vehicle_state_media_info_media_playback_status")
+        super().__init__(coordinator, "media")
 
     @property
     def state(self) -> MediaPlayerState | None:
         """State of the player."""
-        return STATES.get(self._value, None)
+        return STATES.get(
+            self.get("vehicle_state_media_info_media_playback_status"),
+            MediaPlayerState.OFF,
+        )
 
     @property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         return self.get("vehicle_state_media_info_audio_volume") / self.get(
-            "vehicle_state_media_info_audio_volume_max"
-        )
-
-    @property
-    def volume_step(self) -> float:
-        """Return the step to be used by the volume_up and volume_down services."""
-        return self.get("vehicle_state_media_info_audio_increment") / self.get(
             "vehicle_state_media_info_audio_volume_max"
         )
 
