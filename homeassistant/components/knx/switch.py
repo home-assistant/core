@@ -117,17 +117,17 @@ class KnxUiSwitch(_KnxSwitch):
         super().__init__(
             device=XknxSwitch(
                 knx_module.xknx,
-                name=config[CONF_NAME],
+                name=config["entity"][CONF_NAME],
                 group_address=config["switch_address"],
                 group_address_state=config["switch_state_address"],
                 respond_to_read=config[CONF_RESPOND_TO_READ],
                 invert=config["invert"],
             )
         )
-        self._attr_entity_category = config[CONF_ENTITY_CATEGORY]
-        self._attr_device_class = config[CONF_DEVICE_CLASS]
+        self._attr_entity_category = config["entity"][CONF_ENTITY_CATEGORY]
+        self._attr_device_class = config["entity"][CONF_DEVICE_CLASS]
         self._attr_unique_id = unique_id
-        if device_info := config.get("device_info"):
+        if device_info := config["entity"].get("device_info"):
             self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_info)})
             self._attr_has_entity_name = True
 

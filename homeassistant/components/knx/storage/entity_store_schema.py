@@ -3,6 +3,7 @@ import voluptuous as vol
 
 from homeassistant.components.switch import (
     DEVICE_CLASSES_SCHEMA as SWITCH_DEVICE_CLASSES_SCHEMA,
+    SwitchDeviceClass,
 )
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
@@ -21,21 +22,29 @@ BASE_ENTITY_SCHEMA = vol.Schema(
         vol.Optional("entity_category", default=None): vol.Any(
             ENTITY_CATEGORIES_SCHEMA, vol.SetTo(None)
         ),
-        vol.Optional("sync_state", default=True): sync_state_validator,
+        vol.Optional("device_class", default=None): vol.Maybe(
+            str
+        ),  # overwrite in platform schema
     }
 )
 
-SWITCH_SCHEMA = BASE_ENTITY_SCHEMA.extend(
+SWITCH_SCHEMA = vol.Schema(
     {
-        vol.Optional("device_class", default=None): vol.Maybe(
-            SWITCH_DEVICE_CLASSES_SCHEMA
+        vol.Required("entity"): BASE_ENTITY_SCHEMA.extend(
+            {
+                vol.Optional("device_class", default=None): vol.Maybe(
+                    SWITCH_DEVICE_CLASSES_SCHEMA
+                ),
+            }
         ),
         vol.Optional("invert", default=False): bool,
         vol.Required("switch_address"): ga_list_validator,
         vol.Required("switch_state_address"): ga_list_validator_optional,
         vol.Optional("respond_to_read", default=False): bool,
+        vol.Optional("sync_state", default=True): sync_state_validator,
     }
 )
+SWITCH_SCHEMA_OPTIONS = {"entity": {"device_class": list(SwitchDeviceClass)}}
 
 ENTITY_STORE_DATA_SCHEMA = vol.All(
     vol.Schema(
@@ -57,10 +66,14 @@ ENTITY_STORE_DATA_SCHEMA = vol.All(
 
 CREATE_ENTITY_BASE_SCHEMA = {
     vol.Required("platform"): str,
-    vol.Required("data"): dict,  # validated by ENTITY_STORE_DATA_SCHEMA
+    vol.Required("data"): dict,  # validated by ENTITY_STORE_DATA_SCHEMA with vol.All()
 }
 
 UPDATE_ENTITY_BASE_SCHEMA = {
     vol.Required("unique_id"): str,
     **CREATE_ENTITY_BASE_SCHEMA,
+}
+
+SCHEMA_OPTIONS: dict[str, dict] = {
+    Platform.SWITCH: SWITCH_SCHEMA_OPTIONS,
 }
