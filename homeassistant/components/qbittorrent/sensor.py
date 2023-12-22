@@ -45,6 +45,16 @@ class QBittorrentSensorEntityDescription(SensorEntityDescription):
 
 SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
     QBittorrentSensorEntityDescription(
+        key="status", 
+        translation_key="current_status", 
+        name="Status",
+        device_class=SensorDeviceClass.ENUM,
+        options=[STATE_IDLE, STATE_UP_DOWN, STATE_SEEDING, STATE_DOWNLOADING],
+        val_func=lambda coordinator: get_state(
+            coordinator.data["server_state"]["up_info_speed"], coordinator.data["server_state"]["dl_info_speed"]
+        ),
+    ),
+    QBittorrentSensorEntityDescription(
         key="download",
         translation_key="download_speed",
         name="Download Speed",
@@ -63,16 +73,6 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
         val_func=lambda coordinator: float(coordinator.data["server_state"]["up_info_speed"]),
-    ),
-    QBittorrentSensorEntityDescription(
-        key="status", 
-        translation_key="current_status", 
-        name="Status",
-        device_class=SensorDeviceClass.ENUM,
-        options=[STATE_IDLE, STATE_UP_DOWN, STATE_SEEDING, STATE_DOWNLOADING],
-        val_func=lambda coordinator: get_state(
-            coordinator.data["server_state"]["up_info_speed"], coordinator.data["server_state"]["dl_info_speed"]
-        ),
     ),
 )
 
