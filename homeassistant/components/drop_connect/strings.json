@@ -25,6 +25,13 @@
       "cart1": { "name": "Cartridge 1 life remaining" },
       "cart2": { "name": "Cartridge 2 life remaining" },
       "cart3": { "name": "Cartridge 3 life remaining" }
+    },
+    "binary_sensor": {
+      "leak": { "name": "Leak detected" },
+      "pending_notification": { "name": "Notification unread" },
+      "reserve_in_use": { "name": "Reserve capacity in use" },
+      "salt": { "name": "Salt low" },
+      "pump": { "name": "Pump status" }
     }
   }
 }
