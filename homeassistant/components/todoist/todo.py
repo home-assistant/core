@@ -45,6 +45,8 @@ def _task_api_data(item: TodoItem) -> dict[str, Any]:
         else:
             item_data["due_date"] = due.isoformat()
     else:
+        # Special flag "no date" clears the due date/datetime.
+        # See https://developer.todoist.com/rest/v2/#update-a-task for more.
         item_data["due_string"] = "no date"
     return item_data
 
