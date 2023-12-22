@@ -33,7 +33,6 @@ async def _setup_legacy_component(hass: HomeAssistant, params: dict[str, Any]) -
     await hass.async_block_till_done()
 
 
-@pytest.mark.usefixtures("config_entry")
 async def _setup_component(
     hass: HomeAssistant, config_entry: MockConfigEntry, params: dict[str, Any]
 ) -> None:
