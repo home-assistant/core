@@ -262,7 +262,19 @@ class CalculatedState:
 
 
 class CachedProperties(type):
-    """Metaclass which invalidates cached entity propertis on write to _attr_."""
+    """Metaclass which invalidates cached entity propertis on write to _attr_.
+
+    A class which has CachedProperties can optionally have a list of cached
+    properties, passed as cached_properties, which must be a set of strings.
+    - Each item in the cached_property set must be the name of a method decorated
+      with @cached_property
+    - For each item in the cached_property set, a property function with the
+      same name, prefixed with _attr_, will be created
+    - The property _attr_-property functions allow setting, getting and deleting
+      data, which will be stored in an attribute prefixed with __attr_
+    - The _attr_-property setter will invalidate the @cached_property by calling
+      delattr on it
+    """
 
     def __new__(
         mcs,  # noqa: N804  ruff bug, ruff does not understand this is a metaclass
@@ -272,7 +284,10 @@ class CachedProperties(type):
         cached_properties: set[str] | None = None,
         **kwargs: Any,
     ) -> Any:
-        """Pop cached_properties and store it in the namespace."""
+        """Start creating a new CachedProperties.
+
+        Pop cached_properties and store it in the namespace.
+        """
         namespace["_CachedProperties__cached_properties"] = cached_properties or set()
         return super().__new__(mcs, name, bases, namespace)
 
@@ -283,12 +298,22 @@ class CachedProperties(type):
         namespace: dict[Any, Any],
         **kwargs: Any,
     ) -> None:
-        """Wrap _attr_ for cached properties in property objects."""
+        """Finish creating a new CachedProperties.
+
+        Wrap _attr_ for cached properties in property objects.
+        """
 
         def deleter(name: str) -> Callable[[Any], None]:
+            """Create a deleter for an _attr_ property."""
             private_attribute_name = "__attr_" + name
 
             def _deleter(o: Any) -> None:
+                """Delete an _attr_ property.
+
+                Does two things:
+                - Delete the __attr_ attribute
+                - Invalidate the cache of the cached property
+                """
                 for attr in (name, private_attribute_name):
                     try:  # noqa: SIM105  suppress is much slower
                         delattr(o, attr)
@@ -298,17 +323,25 @@ class CachedProperties(type):
             return _deleter
 
         def getter(name: str) -> Callable[[Any], Any]:
+            """Create a getter for an _attr_ property."""
             private_attribute_name = "__attr_" + name
 
             def _getter(o: Any) -> Any:
+                """Get an _attr_ property from the backing __attr attribute."""
                 return getattr(o, private_attribute_name)
 
             return _getter
 
         def setter(name: str) -> Callable[[Any, Any], None]:
+            """Create a setter for an _attr_ property."""
             private_attribute_name = "__attr_" + name
 
             def _setter(o: Any, val: Any) -> None:
+                """Set an _attr_ property to the backing __attr attribute.
+
+                Also invalidates the corresponding cached_property by calling
+                delattr on it.
+                """
                 setattr(o, private_attribute_name, val)
                 try:  # noqa: SIM105  suppress is much slower
                     delattr(o, name)
@@ -318,38 +351,49 @@ class CachedProperties(type):
             return _setter
 
         def make_property(name: str) -> property:
+            """Help create a property object."""
             return property(fget=getter(name), fset=setter(name), fdel=deleter(name))
 
-        def move_attr(cls: CachedProperties, property_name: str) -> None:
+        def wrap_attr(cls: CachedProperties, property_name: str) -> None:
+            """Wrap a cached property's corresponding _attr in a property.
+
+            If the class being created has an _attr class attribute, move it, and its
+            annotations, to the __attr attribute.
+            """
             attr_name = "_attr_" + property_name
             private_attr_name = "__attr_" + property_name
+            # Check if an _attr_ class attribute exits and move it to __attr_. We check
+            # __dict__ here because we don't care about _attr_ class attributes in parents.
             if attr_name in cls.__dict__:
                 setattr(cls, private_attr_name, getattr(cls, attr_name))
                 annotations = cls.__annotations__
                 if attr_name in annotations:
                     annotations[private_attr_name] = annotations.pop(attr_name)
+            # Create the _attr_ property
             setattr(cls, attr_name, make_property(property_name))
 
         cached_properties: set[str] = namespace["_CachedProperties__cached_properties"]
-        moved_attrs: set[str] = set()
+        seen_props: set[str] = set()  # Keep track of properties which have been handled
         for property_name in cached_properties:
-            if property_name in moved_attrs:
-                continue
-            move_attr(cls, property_name)
-            moved_attrs.add(property_name)
+            wrap_attr(cls, property_name)
+            seen_props.add(property_name)
 
+        # Look for cached properties of parent classes where this class has
+        # corresponding _attr_ class attributes and re-wrap them.
         for parent in cls.__mro__[:0:-1]:
             if "_CachedProperties__cached_properties" not in parent.__dict__:
                 continue
             cached_properties = getattr(parent, "_CachedProperties__cached_properties")
             for property_name in cached_properties:
-                if property_name in moved_attrs:
+                if property_name in seen_props:
                     continue
                 attr_name = "_attr_" + property_name
+                # Check if an _attr_ class attribute exits. We check __dict__ here because
+                # we don't care about _attr_ class attributes in parents.
                 if (attr_name) not in cls.__dict__:
                     continue
-                move_attr(cls, property_name)
-                moved_attrs.add(property_name)
+                wrap_attr(cls, property_name)
+                seen_props.add(property_name)
 
 
 class ABCCachedProperties(CachedProperties, ABCMeta):
