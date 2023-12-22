@@ -11,7 +11,7 @@ STATES = TEST_STATE_OF_ALL_VEHICLES["results"][0]["last_state"]
 
 
 async def test_device_tracker(hass: HomeAssistant) -> None:
-    """Tests that the device trackers are correct."""
+    """Tests that the device tracker entities are correct."""
 
     assert len(hass.states.async_all(DEVICE_TRACKER_DOMAIN)) == 0
 

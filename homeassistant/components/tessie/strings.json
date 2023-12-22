@@ -117,6 +117,14 @@
         "name": "Passenger temperature setting"
       }
     },
+    "cover": {
+      "windows": {
+        "name": "Vent windows"
+      },
+      "charge_state_charge_port_door_open": {
+        "name": "Charge port door"
+      }
+    },
     "select": {
       "climate_state_seat_heater_left": {
         "name": "Seat heater left",
@@ -240,6 +248,14 @@
       "vehicle_state_tpms_soft_warning_rr": {
         "name": "Tire pressure warning rear right"
       }
+    },
+    "button": {
+      "wake": { "name": "Wake" },
+      "flash_lights": { "name": "Flash lights" },
+      "honk": { "name": "Honk horn" },
+      "trigger_homelink": { "name": "Homelink" },
+      "enable_keyless_driving": { "name": "Keyless driving" },
+      "boombox": { "name": "Play fart" }
     },
     "switch": {
       "charge_state_charge_enable_request": {
