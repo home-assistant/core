@@ -31,6 +31,7 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
@@ -270,6 +271,25 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     storage_dir = Path(hass.config.path(STORAGE_DIR))
     knxkeys_filename = entry.data.get(CONF_KNX_KNXKEY_FILENAME)
     await hass.async_add_executor_job(remove_files, storage_dir, knxkeys_filename)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    knx_module: KNXModule = hass.data[DOMAIN]
+    if not device_entry.identifiers.isdisjoint(
+        knx_module.interface_device.device_info["identifiers"]
+    ):
+        # can not remove interface device
+        return False
+    entity_registry = er.async_get(hass)
+    enitites = er.async_entries_for_device(
+        entity_registry, device_entry.id, include_disabled_entities=True
+    )
+    for entity in enitites:
+        await knx_module.entity_store.delete_entity(entity.entity_id)
+    return True
 
 
 class KNXModule:

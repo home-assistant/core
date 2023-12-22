@@ -19,6 +19,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
@@ -126,5 +127,8 @@ class KnxUiSwitch(_KnxSwitch):
         self._attr_entity_category = config[CONF_ENTITY_CATEGORY]
         self._attr_device_class = config[CONF_DEVICE_CLASS]
         self._attr_unique_id = unique_id
-        # TODO: self._attr_device_info =
+        if device_info := config.get("device_info"):
+            self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_info)})
+            self._attr_has_entity_name = True
+
         knx_module.entity_store.entities[unique_id] = self
