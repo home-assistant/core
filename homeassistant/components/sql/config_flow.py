@@ -86,7 +86,7 @@ def validate_sql_select(value: str) -> str | None:
     query_type = sqlparse.parse(value)[0].get_type().upper()
     _LOGGER.debug("The SQL query is of type %s", query_type)
     if not query_type == "SELECT":
-        raise ValueError("query_no_read_only")
+        raise TypeError
     return value
 
 
@@ -161,12 +161,11 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders = {"column": column}
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
+            except TypeError:
+                errors["query"] = "query_no_read_only"
             except ValueError as err:
                 _LOGGER.debug("Invalid query: %s", err)
-                if str(err) == "query_no_read_only":
-                    errors["query"] = "query_no_read_only"
-                else:
-                    errors["query"] = "query_invalid"
+                errors["query"] = "query_invalid"
 
             options = {
                 CONF_QUERY: query,
@@ -226,12 +225,11 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 description_placeholders = {"column": column}
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
+            except TypeError:
+                errors["query"] = "query_no_read_only"
             except ValueError as err:
                 _LOGGER.debug("Invalid query: %s", err)
-                if str(err) == "query_no_read_only":
-                    errors["query"] = "query_no_read_only"
-                else:
-                    errors["query"] = "query_invalid"
+                errors["query"] = "query_invalid"
             else:
                 recorder_db = get_instance(self.hass).db_url
                 _LOGGER.debug(

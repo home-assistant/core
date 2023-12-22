@@ -59,6 +59,20 @@ async def test_invalid_query(hass: HomeAssistant) -> None:
         validate_sql_select("DROP TABLE *")
 
 
+async def test_query_no_read_only(hass: HomeAssistant) -> None:
+    """Test query no read only."""
+    with pytest.raises(vol.Invalid):
+        validate_sql_select("UPDATE states SET state = 999999 WHERE state_id = 11125")
+
+
+async def test_query_no_read_only_cte(hass: HomeAssistant) -> None:
+    """Test query no read only CTE."""
+    with pytest.raises(vol.Invalid):
+        validate_sql_select(
+            "UPDATE states s JOIN (WITH test AS(SELECT state_id, state AS value, metadata_id FROM states WHERE metadata_id = 10 LIMIT 1) SELECT * FROM test) subquery ON s.state_id = subquery.state_id SET state = 999999"
+        )
+
+
 async def test_remove_configured_db_url_if_not_needed_when_not_needed(
     recorder_mock: Recorder,
     hass: HomeAssistant,
