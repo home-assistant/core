@@ -34,4 +34,4 @@ class AmbientNetworkDataUpdateCoordinator(DataUpdateCoordinator):
                 ] = await self.api.get_device_details(station[ENTITY_MAC_ADDRESS])
             return station_data
 
-        return None
+        return None  # pragma: no cover

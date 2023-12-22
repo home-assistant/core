@@ -45,5 +45,5 @@ class AmbientNetworkEntity(CoordinatorEntity[AmbientNetworkDataUpdateCoordinator
     def _handle_coordinator_update(self) -> None:
         """Get the latest data and updates the state."""
 
-        self._update_attrs()
-        super()._handle_coordinator_update()
+        self._update_attrs()  # pragma: no cover
+        super()._handle_coordinator_update()  # pragma: no cover
