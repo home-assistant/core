@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, cast
 
@@ -65,16 +64,12 @@ TYPE_WINDSPEEDMPH = "windspeedmph"
 TYPE_YEARLYRAININ = "yearlyrainin"
 
 
-@dataclass(slots=True)
-class AmbientNetworkSensorEntityDescription(SensorEntityDescription):
-    """An extended class that describes Home Assistant entities.
-
-    Add a reducer and display_precision field to make the following sensor
-    descriptions more readable.
-    """
+class AmbientNetworkSensorEntityDescription(
+    SensorEntityDescription, frozen_or_thawed=True
+):
+    """An extended class that adds a reducer field."""
 
     reducer: Callable[[list[Any]], Any] | None = Reducers.mean
-    display_precision: int = 1
 
 
 SENSOR_DESCRIPTIONS = (
@@ -83,14 +78,14 @@ SENSOR_DESCRIPTIONS = (
         translation_key="pm25_aqi",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
-        display_precision=0,
+        suggested_display_precision=0,
         reducer=Reducers.mean,
     ),
     AmbientNetworkSensorEntityDescription(
         key=TYPE_AQI_PM25_24H,
         translation_key="pm25_aqi_24h_average",
         device_class=SensorDeviceClass.AQI,
-        display_precision=0,
+        suggested_display_precision=0,
         reducer=Reducers.mean,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -99,7 +94,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfPressure.INHG,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
-        display_precision=2,
+        suggested_display_precision=2,
         reducer=Reducers.mean,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -108,7 +103,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfPressure.INHG,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
-        display_precision=2,
+        suggested_display_precision=2,
         reducer=Reducers.mean,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -116,7 +111,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
-        display_precision=2,
+        suggested_display_precision=2,
         reducer=Reducers.mean,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -125,7 +120,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        display_precision=2,
+        suggested_display_precision=2,
         reducer=Reducers.mean,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -134,7 +129,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        display_precision=1,
+        suggested_display_precision=1,
         reducer=Reducers.mean,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -143,7 +138,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        display_precision=1,
+        suggested_display_precision=1,
         reducer=Reducers.mean,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -151,7 +146,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfVolumetricFlux.INCHES_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
-        display_precision=2,
+        suggested_display_precision=2,
         reducer=Reducers.mean,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -159,7 +154,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        display_precision=1,
+        suggested_display_precision=1,
         reducer=Reducers.mean,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -175,7 +170,7 @@ SENSOR_DESCRIPTIONS = (
         icon="mdi:lightning-bolt",
         native_unit_of_measurement="strikes",
         state_class=SensorStateClass.TOTAL,
-        display_precision=0,
+        suggested_display_precision=0,
         reducer=Reducers.max,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -184,7 +179,7 @@ SENSOR_DESCRIPTIONS = (
         icon="mdi:lightning-bolt",
         native_unit_of_measurement="strikes",
         state_class=SensorStateClass.TOTAL,
-        display_precision=0,
+        suggested_display_precision=0,
         reducer=Reducers.max,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -193,7 +188,7 @@ SENSOR_DESCRIPTIONS = (
         icon="mdi:lightning-bolt",
         native_unit_of_measurement=UnitOfLength.MILES,
         state_class=SensorStateClass.MEASUREMENT,
-        display_precision=2,
+        suggested_display_precision=2,
         reducer=Reducers.mean,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -202,7 +197,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
-        display_precision=1,
+        suggested_display_precision=1,
         reducer=Reducers.max,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -211,7 +206,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.TOTAL,
-        display_precision=2,
+        suggested_display_precision=2,
         reducer=Reducers.mean,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -219,7 +214,7 @@ SENSOR_DESCRIPTIONS = (
         translation_key="pm25_24h_average",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
-        display_precision=1,
+        suggested_display_precision=1,
         reducer=Reducers.mean,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -227,7 +222,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
-        display_precision=1,
+        suggested_display_precision=1,
         reducer=Reducers.mean,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -235,7 +230,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         device_class=SensorDeviceClass.IRRADIANCE,
         state_class=SensorStateClass.MEASUREMENT,
-        display_precision=1,
+        suggested_display_precision=1,
         reducer=Reducers.mean,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -243,7 +238,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        display_precision=1,
+        suggested_display_precision=1,
         reducer=Reducers.mean,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -251,7 +246,7 @@ SENSOR_DESCRIPTIONS = (
         translation_key="uv_index",
         native_unit_of_measurement="Index",
         state_class=SensorStateClass.MEASUREMENT,
-        display_precision=1,
+        suggested_display_precision=1,
         reducer=Reducers.mean,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -260,7 +255,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.TOTAL,
-        display_precision=2,
+        suggested_display_precision=2,
         reducer=Reducers.mean,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -268,7 +263,7 @@ SENSOR_DESCRIPTIONS = (
         translation_key="wind_direction",
         icon="mdi:weather-windy",
         native_unit_of_measurement=DEGREE,
-        display_precision=0,
+        suggested_display_precision=0,
         reducer=Reducers.mean,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -277,7 +272,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
-        display_precision=1,
+        suggested_display_precision=1,
         reducer=Reducers.max,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -285,7 +280,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
-        display_precision=1,
+        suggested_display_precision=1,
         reducer=Reducers.mean,
     ),
     AmbientNetworkSensorEntityDescription(
@@ -294,7 +289,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        display_precision=2,
+        suggested_display_precision=2,
         reducer=Reducers.mean,
     ),
 )
@@ -356,7 +351,7 @@ class AmbientNetworkSensor(AmbientNetworkEntity, SensorEntity):
         # Override the entity_id to make them cleaner (otherwise Homeassistant
         # will name them _precipitation_1, _precipitation_2, etc.)
         self.entity_id = f"sensor.{self._device_id.lower()}_{description.key}"
-        self._attr_suggested_display_precision = description.display_precision
+        self._attr_suggested_display_precision = description.suggested_display_precision
 
     def _calc_attrs(self, key: str) -> Any:
         """Calculate sensor attributes."""
@@ -375,7 +370,7 @@ class AmbientNetworkSensor(AmbientNetworkEntity, SensorEntity):
                 AmbientNetworkSensorEntityDescription, self.entity_description
             ).reducer
             if reducer is None:
-                return None
+                return None  # pragma: no cover
             value = reducer(values)
             # Treatments for special units.
             if self.device_class == SensorDeviceClass.TIMESTAMP:
@@ -412,11 +407,11 @@ class AmbientNetworkSensor(AmbientNetworkEntity, SensorEntity):
         """
 
         if "lastData" not in station_data:
-            return None
+            return None  # pragma: no cover
 
         last_data = station_data["lastData"]
         if "created_at" not in last_data:
-            return None
+            return None  # pragma: no cover
 
         # Eliminate data that has been generated more than an hour ago. The station is
         # probably offline.
@@ -424,7 +419,7 @@ class AmbientNetworkSensor(AmbientNetworkEntity, SensorEntity):
         if int(created_at / 1000) < int(
             (datetime.now() - timedelta(hours=1)).timestamp()
         ):
-            return None
+            return None  # pragma: no cover
 
         if sensor_key not in last_data:
             return None
