@@ -1393,9 +1393,6 @@ omit =
     homeassistant/components/tradfri/light.py
     homeassistant/components/tradfri/sensor.py
     homeassistant/components/tradfri/switch.py
-    homeassistant/components/trafikverket_train/__init__.py
-    homeassistant/components/trafikverket_train/coordinator.py
-    homeassistant/components/trafikverket_train/util.py
     homeassistant/components/trafikverket_weatherstation/__init__.py
     homeassistant/components/trafikverket_weatherstation/coordinator.py
     homeassistant/components/trafikverket_weatherstation/sensor.py
