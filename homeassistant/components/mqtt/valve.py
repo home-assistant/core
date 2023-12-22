@@ -270,6 +270,11 @@ class MqttValve(MqttEntity, ValveEntity):
                     msg.topic,
                 )
             else:
+                if state is None:
+                    if percentage_payload == 0:
+                        state = STATE_CLOSED
+                    elif percentage_payload == 100:
+                        state = STATE_OPEN
                 self._attr_current_valve_position = min(max(percentage_payload, 0), 100)
                 position_set = True
         if state_payload and state is None and not position_set:
@@ -301,10 +306,10 @@ class MqttValve(MqttEntity, ValveEntity):
         )
         def state_message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT state messages."""
-            payload_dict: Any = None
-            position_payload: Any = None
-            state_payload: Any = None
             payload = self._value_template(msg.payload)
+            payload_dict: Any = None
+            position_payload: Any = payload
+            state_payload: Any = payload
 
             if not payload:
                 _LOGGER.debug("Ignoring empty state message from '%s'", msg.topic)
@@ -312,12 +317,13 @@ class MqttValve(MqttEntity, ValveEntity):
 
             with suppress(*JSON_DECODE_EXCEPTIONS):
                 payload_dict = json_loads(payload)
+                # A string is not a valid JSON object. Receiving a valid JSON object
+                # overrides assuming `payload` as state value
+                state_payload = None
             if isinstance(payload_dict, dict) and "position" in payload_dict:
                 position_payload = payload_dict["position"]
             if isinstance(payload_dict, dict) and "state" in payload_dict:
                 state_payload = payload_dict["state"]
-            state_payload = payload if state_payload is None else state_payload
-            position_payload = payload if position_payload is None else position_payload
 
             if self._config[CONF_REPORTS_POSITION]:
                 self._process_position_valve_update(
