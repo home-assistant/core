@@ -421,6 +421,7 @@ omit =
     homeassistant/components/fortios/device_tracker.py
     homeassistant/components/foscam/__init__.py
     homeassistant/components/foscam/camera.py
+    homeassistant/components/foscam/coordinator.py
     homeassistant/components/foursquare/*
     homeassistant/components/free_mobile/notify.py
     homeassistant/components/freebox/camera.py
@@ -757,6 +758,9 @@ omit =
     homeassistant/components/motion_blinds/cover.py
     homeassistant/components/motion_blinds/entity.py
     homeassistant/components/motion_blinds/sensor.py
+    homeassistant/components/motionmount/__init__.py
+    homeassistant/components/motionmount/entity.py
+    homeassistant/components/motionmount/number.py
     homeassistant/components/mpd/media_player.py
     homeassistant/components/mqtt_room/sensor.py
     homeassistant/components/msteams/notify.py
@@ -1032,6 +1036,12 @@ omit =
     homeassistant/components/recorder/repack.py
     homeassistant/components/recswitch/switch.py
     homeassistant/components/reddit/sensor.py
+    homeassistant/components/refoss/__init__.py
+    homeassistant/components/refoss/bridge.py
+    homeassistant/components/refoss/coordinator.py
+    homeassistant/components/refoss/entity.py
+    homeassistant/components/refoss/switch.py
+    homeassistant/components/refoss/util.py
     homeassistant/components/rejseplanen/sensor.py
     homeassistant/components/remember_the_milk/__init__.py
     homeassistant/components/remote_rpi_gpio/*
@@ -1243,6 +1253,7 @@ omit =
     homeassistant/components/surepetcare/entity.py
     homeassistant/components/surepetcare/sensor.py
     homeassistant/components/swiss_hydrological_data/sensor.py
+    homeassistant/components/swiss_public_transport/__init__.py
     homeassistant/components/swiss_public_transport/sensor.py
     homeassistant/components/swisscom/device_tracker.py
     homeassistant/components/switchbee/__init__.py
@@ -1383,10 +1394,6 @@ omit =
     homeassistant/components/tradfri/light.py
     homeassistant/components/tradfri/sensor.py
     homeassistant/components/tradfri/switch.py
-    homeassistant/components/trafikverket_train/__init__.py
-    homeassistant/components/trafikverket_train/coordinator.py
-    homeassistant/components/trafikverket_train/sensor.py
-    homeassistant/components/trafikverket_train/util.py
     homeassistant/components/trafikverket_weatherstation/__init__.py
     homeassistant/components/trafikverket_weatherstation/coordinator.py
     homeassistant/components/trafikverket_weatherstation/sensor.py
