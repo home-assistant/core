@@ -418,8 +418,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/forked_daapd/ @uvjustin
 /tests/components/forked_daapd/ @uvjustin
 /homeassistant/components/fortios/ @kimfrellsen
-/homeassistant/components/foscam/ @skgsergio
-/tests/components/foscam/ @skgsergio
+/homeassistant/components/foscam/ @skgsergio @krmarien
+/tests/components/foscam/ @skgsergio @krmarien
 /homeassistant/components/freebox/ @hacf-fr @Quentame
 /tests/components/freebox/ @hacf-fr @Quentame
 /homeassistant/components/freedompro/ @stefano055415
