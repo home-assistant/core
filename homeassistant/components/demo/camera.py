@@ -28,7 +28,7 @@ class DemoCamera(Camera):
 
     _attr_is_streaming = True
     _attr_motion_detection_enabled = False
-    _attr_supported_features = CameraEntityFeature.ON_OFF
+    _attr_supported_features = CameraEntityFeature.ON_OFF | CameraEntityFeature.STREAM
 
     def __init__(self, name: str, content_type: str) -> None:
         """Initialize demo camera component."""
