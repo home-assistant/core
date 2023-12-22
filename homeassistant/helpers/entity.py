@@ -262,7 +262,7 @@ class CalculatedState:
 
 
 class CachedProperties(type):
-    """Metaclass which invalidates cached entity propertis on write to _attr_.
+    """Metaclass which invalidates cached entity properties on write to _attr_.
 
     A class which has CachedProperties can optionally have a list of cached
     properties, passed as cached_properties, which must be a set of strings.
@@ -428,7 +428,6 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
 class Entity(
     metaclass=ABCCachedProperties, cached_properties=CACHED_PROPERTIES_WITH_ATTR_
 ):
-    # class Entity(ABC):
     """An abstract class for Home Assistant entities."""
 
     # SAFE TO OVERWRITE
