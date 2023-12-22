@@ -32,7 +32,7 @@ class TessieNumberEntityDescription(NumberEntityDescription):
     """Describes Tessie Number entity."""
 
     func: Callable
-    argument: str
+    arg: str
     native_min_value: float
     native_max_value: float
     min_key: str | None = None
@@ -49,7 +49,7 @@ DESCRIPTIONS: tuple[TessieNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.CURRENT,
         max_key="charge_state_charge_current_request_max",
         func=set_charging_amps,
-        argument="amps",
+        arg="amps",
     ),
     TessieNumberEntityDescription(
         key="charge_state_charge_limit_soc",
@@ -61,7 +61,7 @@ DESCRIPTIONS: tuple[TessieNumberEntityDescription, ...] = (
         min_key="charge_state_charge_limit_soc_min",
         max_key="charge_state_charge_limit_soc_max",
         func=set_charge_limit,
-        argument="percent",
+        arg="percent",
     ),
     TessieNumberEntityDescription(
         key="vehicle_state_speed_limit_mode_current_limit_mph",
@@ -74,7 +74,7 @@ DESCRIPTIONS: tuple[TessieNumberEntityDescription, ...] = (
         min_key="vehicle_state_speed_limit_mode_min_limit_mph",
         max_key="vehicle_state_speed_limit_mode_max_limit_mph",
         func=set_speed_limit,
-        argument="mph",
+        arg="mph",
     ),
 )
 
@@ -132,6 +132,6 @@ class TessieNumberEntity(TessieEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.run(
-            self.entity_description.func, **{self.entity_description.argument: value}
+            self.entity_description.func, **{self.entity_description.arg: value}
         )
         self.set((self.key, value))
