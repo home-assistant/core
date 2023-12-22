@@ -1253,6 +1253,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "drop_connect": {
+      "name": "DROP",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "dsmr": {
       "name": "DSMR Slimme Meter",
       "integration_type": "hub",
