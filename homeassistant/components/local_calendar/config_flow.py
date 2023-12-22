@@ -7,8 +7,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.util import slugify
 
-from .const import CONF_CALENDAR_NAME, DOMAIN
+from .const import CONF_CALENDAR_NAME, CONF_STORAGE_KEY, DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -31,6 +32,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
+        key = slugify(user_input[CONF_CALENDAR_NAME])
+        self._async_abort_entries_match({CONF_STORAGE_KEY: key})
+        user_input[CONF_STORAGE_KEY] = key
         return self.async_create_entry(
             title=user_input[CONF_CALENDAR_NAME], data=user_input
         )

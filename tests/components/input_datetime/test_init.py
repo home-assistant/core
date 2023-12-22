@@ -423,11 +423,13 @@ async def test_input_datetime_context(
 
 
 async def test_reload(
-    hass: HomeAssistant, hass_admin_user: MockUser, hass_read_only_user: MockUser
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
 ) -> None:
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
-    ent_reg = er.async_get(hass)
 
     assert await async_setup_component(
         hass,
@@ -451,9 +453,9 @@ async def test_reload(
     assert state_2 is None
     assert state_3 is not None
     assert dt_obj.strftime(FORMAT_DATE) == state_1.state
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "dt1") == f"{DOMAIN}.dt1"
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "dt2") is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "dt3") == f"{DOMAIN}.dt3"
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "dt1") == f"{DOMAIN}.dt1"
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "dt2") is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "dt3") == f"{DOMAIN}.dt3"
 
     with patch(
         "homeassistant.config.load_yaml_config_file",
@@ -493,9 +495,9 @@ async def test_reload(
         datetime.date.today(), DEFAULT_TIME
     ).strftime(FORMAT_DATETIME)
 
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "dt1") == f"{DOMAIN}.dt1"
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "dt2") == f"{DOMAIN}.dt2"
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "dt3") is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "dt1") == f"{DOMAIN}.dt1"
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "dt2") == f"{DOMAIN}.dt2"
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, "dt3") is None
 
 
 async def test_load_from_storage(hass: HomeAssistant, storage_setup) -> None:
@@ -553,18 +555,22 @@ async def test_ws_list(
 
 
 async def test_ws_delete(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup,
 ) -> None:
     """Test WS delete cleans up entity registry."""
     assert await storage_setup()
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.datetime_from_storage"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is not None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) == input_entity_id
+    assert (
+        entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) == input_entity_id
+    )
 
     client = await hass_ws_client(hass)
 
@@ -576,11 +582,14 @@ async def test_ws_delete(
 
     state = hass.states.get(input_entity_id)
     assert state is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
 
 async def test_update(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup,
 ) -> None:
     """Test updating min/max updates the state."""
 
@@ -588,12 +597,13 @@ async def test_update(
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.datetime_from_storage"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state.attributes[ATTR_FRIENDLY_NAME] == "datetime from storage"
     assert state.state == INITIAL_DATETIME
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) == input_entity_id
+    assert (
+        entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) == input_entity_id
+    )
 
     client = await hass_ws_client(hass)
 
@@ -621,18 +631,20 @@ async def test_update(
 
 
 async def test_ws_create(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup,
 ) -> None:
     """Test create WS."""
     assert await storage_setup(items=[])
 
     input_id = "new_datetime"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is None
-    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
+    assert entity_registry.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
 
     client = await hass_ws_client(hass)
 

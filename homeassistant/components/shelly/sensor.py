@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Final, cast
 
 from aioshelly.block_device import Block
+from aioshelly.const import RPC_GENERATIONS
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -54,17 +55,17 @@ from .entity import (
 from .utils import get_device_entry_gen, get_device_uptime
 
 
-@dataclass
+@dataclass(frozen=True)
 class BlockSensorDescription(BlockEntityDescription, SensorEntityDescription):
     """Class to describe a BLOCK sensor."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class RpcSensorDescription(RpcEntityDescription, SensorEntityDescription):
     """Class to describe a RPC sensor."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class RestSensorDescription(RestEntityDescription, SensorEntityDescription):
     """Class to describe a REST sensor."""
 
@@ -925,7 +926,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for device."""
-    if get_device_entry_gen(config_entry) == 2:
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
         if config_entry.data[CONF_SLEEP_PERIOD]:
             async_setup_entry_rpc(
                 hass,

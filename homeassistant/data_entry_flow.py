@@ -46,6 +46,15 @@ RESULT_TYPE_MENU = "menu"
 # Event that is fired when a flow is progressed via external or progress source.
 EVENT_DATA_ENTRY_FLOW_PROGRESSED = "data_entry_flow_progressed"
 
+FLOW_NOT_COMPLETE_STEPS = {
+    FlowResultType.FORM,
+    FlowResultType.EXTERNAL_STEP,
+    FlowResultType.EXTERNAL_STEP_DONE,
+    FlowResultType.SHOW_PROGRESS,
+    FlowResultType.SHOW_PROGRESS_DONE,
+    FlowResultType.MENU,
+}
+
 
 @dataclass(slots=True)
 class BaseServiceInfo:
@@ -94,6 +103,7 @@ class FlowResult(TypedDict, total=False):
     handler: Required[str]
     last_step: bool | None
     menu_options: list[str] | dict[str, str]
+    minor_version: int
     options: Mapping[str, Any]
     preview: str | None
     progress_action: str
@@ -406,14 +416,7 @@ class FlowManager(abc.ABC):
                 error_if_core=False,
             )
 
-        if result["type"] in (
-            FlowResultType.FORM,
-            FlowResultType.EXTERNAL_STEP,
-            FlowResultType.EXTERNAL_STEP_DONE,
-            FlowResultType.SHOW_PROGRESS,
-            FlowResultType.SHOW_PROGRESS_DONE,
-            FlowResultType.MENU,
-        ):
+        if result["type"] in FLOW_NOT_COMPLETE_STEPS:
             self._raise_if_step_does_not_exist(flow, result["step_id"])
             flow.cur_step = result
             return result
@@ -470,6 +473,7 @@ class FlowHandler:
 
     # Set by developer
     VERSION = 1
+    MINOR_VERSION = 1
 
     @property
     def source(self) -> str | None:
@@ -549,6 +553,7 @@ class FlowHandler:
         """Finish flow."""
         flow_result = FlowResult(
             version=self.VERSION,
+            minor_version=self.MINOR_VERSION,
             type=FlowResultType.CREATE_ENTRY,
             flow_id=self.flow_id,
             handler=self.handler,

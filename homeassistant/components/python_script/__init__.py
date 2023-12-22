@@ -27,7 +27,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import raise_if_invalid_filename
 import homeassistant.util.dt as dt_util
-from homeassistant.util.yaml.loader import load_yaml
+from homeassistant.util.yaml.loader import load_yaml_dict
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,7 +120,7 @@ def discover_scripts(hass):
     # Load user-provided service descriptions from python_scripts/services.yaml
     services_yaml = os.path.join(path, "services.yaml")
     if os.path.exists(services_yaml):
-        services_dict = load_yaml(services_yaml)
+        services_dict = load_yaml_dict(services_yaml)
     else:
         services_dict = {}
 

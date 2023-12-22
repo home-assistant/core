@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 import voluptuous as vol
 
+from homeassistant.components import water_heater
 from homeassistant.components.water_heater import (
     SET_TEMPERATURE_SCHEMA,
     WaterHeaterEntity,
@@ -13,7 +14,7 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import async_mock_service
+from tests.common import async_mock_service, import_and_test_deprecated_constant_enum
 
 
 async def test_set_temp_schema_no_req(
@@ -96,3 +97,21 @@ async def test_sync_turn_off(hass: HomeAssistant) -> None:
     await water_heater.async_turn_off()
 
     assert water_heater.async_turn_off.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("enum"),
+    [
+        WaterHeaterEntityFeature.TARGET_TEMPERATURE,
+        WaterHeaterEntityFeature.OPERATION_MODE,
+        WaterHeaterEntityFeature.AWAY_MODE,
+    ],
+)
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: WaterHeaterEntityFeature,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, water_heater, enum, "SUPPORT_", "2025.1"
+    )

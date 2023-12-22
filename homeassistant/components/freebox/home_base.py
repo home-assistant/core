@@ -131,13 +131,14 @@ class FreeboxHomeEntity(Entity):
     def get_value(self, ep_type: str, name: str):
         """Get the value."""
         node = next(
-            filter(
-                lambda x: (x["name"] == name and x["ep_type"] == ep_type),
-                self._node["show_endpoints"],
+            (
+                endpoint
+                for endpoint in self._node["show_endpoints"]
+                if endpoint["name"] == name and endpoint["ep_type"] == ep_type
             ),
             None,
         )
-        if not node:
+        if node is None:
             _LOGGER.warning(
                 "The Freebox Home device has no node value for: %s/%s", ep_type, name
             )

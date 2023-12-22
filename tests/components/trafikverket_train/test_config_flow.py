@@ -6,7 +6,6 @@ from unittest.mock import patch
 import pytest
 from pytrafikverket.exceptions import (
     InvalidAuthentication,
-    MultipleTrainAnnouncementFound,
     MultipleTrainStationsFound,
     NoTrainAnnouncementFound,
     NoTrainStationFound,
@@ -178,10 +177,6 @@ async def test_flow_fails(
             "no_trains",
         ),
         (
-            MultipleTrainAnnouncementFound,
-            "multiple_trains",
-        ),
-        (
             UnknownError,
             "cannot_connect",
         ),
@@ -201,7 +196,7 @@ async def test_flow_fails_departures(
     with patch(
         "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
     ), patch(
-        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_next_train_stop",
+        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_next_train_stops",
         side_effect=side_effect(),
     ), patch(
         "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_stop",
@@ -370,10 +365,6 @@ async def test_reauth_flow_error(
         (
             NoTrainAnnouncementFound,
             "no_trains",
-        ),
-        (
-            MultipleTrainAnnouncementFound,
-            "multiple_trains",
         ),
         (
             UnknownError,

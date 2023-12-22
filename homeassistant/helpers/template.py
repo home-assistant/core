@@ -5,8 +5,8 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
-from collections.abc import Callable, Collection, Generator, Iterable, MutableMapping
-from contextlib import contextmanager, suppress
+from collections.abc import Callable, Collection, Generator, Iterable
+from contextlib import AbstractContextManager, suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
 from functools import cache, lru_cache, partial, wraps
@@ -20,7 +20,7 @@ import re
 import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
-from types import CodeType
+from types import CodeType, TracebackType
 from typing import (
     Any,
     Concatenate,
@@ -40,7 +40,7 @@ from jinja2 import pass_context, pass_environment, pass_eval_context
 from jinja2.runtime import AsyncLoopContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
-from lru import LRU  # pylint: disable=no-name-in-module
+from lru import LRU
 import orjson
 import voluptuous as vol
 
@@ -147,10 +147,8 @@ EVAL_CACHE_SIZE = 512
 
 MAX_CUSTOM_TEMPLATE_SIZE = 5 * 1024 * 1024
 
-CACHED_TEMPLATE_LRU: MutableMapping[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
-CACHED_TEMPLATE_NO_COLLECT_LRU: MutableMapping[State, TemplateState] = LRU(
-    CACHED_TEMPLATE_STATES
-)
+CACHED_TEMPLATE_LRU: LRU[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
+CACHED_TEMPLATE_NO_COLLECT_LRU: LRU[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
 ENTITY_COUNT_GROWTH_FACTOR = 1.2
 
 ORJSON_PASSTHROUGH_OPTIONS = (
@@ -187,9 +185,9 @@ def async_setup(hass: HomeAssistant) -> bool:
         )
         for lru in (CACHED_TEMPLATE_LRU, CACHED_TEMPLATE_NO_COLLECT_LRU):
             # There is no typing for LRU
-            current_size = lru.get_size()  # type: ignore[attr-defined]
+            current_size = lru.get_size()
             if new_size > current_size:
-                lru.set_size(new_size)  # type: ignore[attr-defined]
+                lru.set_size(new_size)
 
     from .event import (  # pylint: disable=import-outside-toplevel
         async_track_time_interval,
@@ -504,7 +502,8 @@ class Template:
 
     def ensure_valid(self) -> None:
         """Return if template is valid."""
-        with set_template(self.template, "compiling"):
+        with _template_context_manager as cm:
+            cm.set_template(self.template, "compiling")
             if self.is_static or self._compiled_code is not None:
                 return
 
@@ -2124,6 +2123,10 @@ def to_json(
 
     option = (
         ORJSON_PASSTHROUGH_OPTIONS
+        # OPT_NON_STR_KEYS is added as a workaround to
+        # ensure subclasses of str are allowed as dict keys
+        # See: https://github.com/ijl/orjson/issues/445
+        | orjson.OPT_NON_STR_KEYS
         | (orjson.OPT_INDENT_2 if pretty_print else 0)
         | (orjson.OPT_SORT_KEYS if sort_keys else 0)
     )
@@ -2213,21 +2216,32 @@ def iif(
     return if_false
 
 
-@contextmanager
-def set_template(template_str: str, action: str) -> Generator:
-    """Store template being parsed or rendered in a Contextvar to aid error handling."""
-    template_cv.set((template_str, action))
-    try:
-        yield
-    finally:
+class TemplateContextManager(AbstractContextManager):
+    """Context manager to store template being parsed or rendered in a ContextVar."""
+
+    def set_template(self, template_str: str, action: str) -> None:
+        """Store template being parsed or rendered in a Contextvar to aid error handling."""
+        template_cv.set((template_str, action))
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        """Raise any exception triggered within the runtime context."""
         template_cv.set(None)
+
+
+_template_context_manager = TemplateContextManager()
 
 
 def _render_with_context(
     template_str: str, template: jinja2.Template, **kwargs: Any
 ) -> str:
     """Store template being rendered in a ContextVar to aid error handling."""
-    with set_template(template_str, "rendering"):
+    with _template_context_manager as cm:
+        cm.set_template(template_str, "rendering")
         return template.render(**kwargs)
 
 
@@ -2555,7 +2569,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["expand"] = hassfunction(expand)
         self.filters["expand"] = self.globals["expand"]
         self.globals["closest"] = hassfunction(closest)
-        self.filters["closest"] = hassfunction(closest_filter)  # type: ignore[arg-type]
+        self.filters["closest"] = hassfunction(closest_filter)
         self.globals["distance"] = hassfunction(distance)
         self.globals["is_hidden_entity"] = hassfunction(is_hidden_entity)
         self.tests["is_hidden_entity"] = hassfunction(
@@ -2596,7 +2610,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         return super().is_safe_attribute(obj, attr, value)
 
     @overload
-    def compile(  # type: ignore[misc]
+    def compile(  # type: ignore[overload-overlap]
         self,
         source: str | jinja2.nodes.Template,
         name: str | None = None,

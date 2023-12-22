@@ -49,7 +49,7 @@ def create_char_switch_service(accessory):
     on_char.value = False
 
 
-async def test_switch_change_outlet_state(hass: HomeAssistant, utcnow) -> None:
+async def test_switch_change_outlet_state(hass: HomeAssistant) -> None:
     """Test that we can turn a HomeKit outlet on and off again."""
     helper = await setup_test_component(hass, create_switch_service)
 
@@ -74,7 +74,7 @@ async def test_switch_change_outlet_state(hass: HomeAssistant, utcnow) -> None:
     )
 
 
-async def test_switch_read_outlet_state(hass: HomeAssistant, utcnow) -> None:
+async def test_switch_read_outlet_state(hass: HomeAssistant) -> None:
     """Test that we can read the state of a HomeKit outlet accessory."""
     helper = await setup_test_component(hass, create_switch_service)
 
@@ -107,7 +107,7 @@ async def test_switch_read_outlet_state(hass: HomeAssistant, utcnow) -> None:
     assert switch_1.attributes["outlet_in_use"] is True
 
 
-async def test_valve_change_active_state(hass: HomeAssistant, utcnow) -> None:
+async def test_valve_change_active_state(hass: HomeAssistant) -> None:
     """Test that we can turn a valve on and off again."""
     helper = await setup_test_component(hass, create_valve_service)
 
@@ -132,7 +132,7 @@ async def test_valve_change_active_state(hass: HomeAssistant, utcnow) -> None:
     )
 
 
-async def test_valve_read_state(hass: HomeAssistant, utcnow) -> None:
+async def test_valve_read_state(hass: HomeAssistant) -> None:
     """Test that we can read the state of a valve accessory."""
     helper = await setup_test_component(hass, create_valve_service)
 
@@ -165,7 +165,7 @@ async def test_valve_read_state(hass: HomeAssistant, utcnow) -> None:
     assert switch_1.attributes["in_use"] is False
 
 
-async def test_char_switch_change_state(hass: HomeAssistant, utcnow) -> None:
+async def test_char_switch_change_state(hass: HomeAssistant) -> None:
     """Test that we can turn a characteristic on and off again."""
     helper = await setup_test_component(
         hass, create_char_switch_service, suffix="pairing_mode"
@@ -198,7 +198,7 @@ async def test_char_switch_change_state(hass: HomeAssistant, utcnow) -> None:
     )
 
 
-async def test_char_switch_read_state(hass: HomeAssistant, utcnow) -> None:
+async def test_char_switch_read_state(hass: HomeAssistant) -> None:
     """Test that we can read the state of a HomeKit characteristic switch."""
     helper = await setup_test_component(
         hass, create_char_switch_service, suffix="pairing_mode"
@@ -219,9 +219,10 @@ async def test_char_switch_read_state(hass: HomeAssistant, utcnow) -> None:
     assert switch_1.state == "off"
 
 
-async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
+async def test_migrate_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test a we can migrate a switch unique id."""
-    entity_registry = er.async_get(hass)
     aid = get_next_aid()
     switch_entry = entity_registry.async_get_or_create(
         "switch",

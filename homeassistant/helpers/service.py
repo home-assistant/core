@@ -28,6 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     Context,
+    EntityServiceResponse,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -41,7 +42,7 @@ from homeassistant.exceptions import (
     UnknownUser,
 )
 from homeassistant.loader import Integration, async_get_integrations, bind_hass
-from homeassistant.util.yaml import load_yaml
+from homeassistant.util.yaml import load_yaml_dict
 from homeassistant.util.yaml.loader import JSON_TYPE
 
 from . import (
@@ -541,16 +542,20 @@ def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_T
     try:
         return cast(
             JSON_TYPE,
-            _SERVICES_SCHEMA(load_yaml(str(integration.file_path / "services.yaml"))),
+            _SERVICES_SCHEMA(
+                load_yaml_dict(str(integration.file_path / "services.yaml"))
+            ),
         )
     except FileNotFoundError:
         _LOGGER.warning(
             "Unable to find services.yaml for the %s integration", integration.domain
         )
         return {}
-    except (HomeAssistantError, vol.Invalid):
+    except (HomeAssistantError, vol.Invalid) as ex:
         _LOGGER.warning(
-            "Unable to parse services.yaml for the %s integration", integration.domain
+            "Unable to parse services.yaml for the %s integration: %s",
+            integration.domain,
+            ex,
         )
         return {}
 
@@ -790,7 +795,7 @@ async def entity_service_call(
     func: str | Callable[..., Coroutine[Any, Any, ServiceResponse]],
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
-) -> ServiceResponse | None:
+) -> EntityServiceResponse | None:
     """Handle an entity service call.
 
     Calls all platforms simultaneously.
@@ -870,10 +875,9 @@ async def entity_service_call(
         return None
 
     if len(entities) == 1:
-        # Single entity case avoids creating tasks and allows returning
-        # ServiceResponse
+        # Single entity case avoids creating task
         entity = entities[0]
-        response_data = await _handle_entity_call(
+        single_response = await _handle_entity_call(
             hass, entity, func, data, call.context
         )
         if entity.should_poll:
@@ -881,27 +885,25 @@ async def entity_service_call(
             # Set context again so it's there when we update
             entity.async_set_context(call.context)
             await entity.async_update_ha_state(True)
-        return response_data if return_response else None
+        return {entity.entity_id: single_response} if return_response else None
 
-    if return_response:
-        raise HomeAssistantError(
-            "Service call requested response data but matched more than one entity"
-        )
-
-    done, pending = await asyncio.wait(
-        [
-            asyncio.create_task(
-                entity.async_request_call(
-                    _handle_entity_call(hass, entity, func, data, call.context)
-                )
+    # Use asyncio.gather here to ensure the returned results
+    # are in the same order as the entities list
+    results: list[ServiceResponse | BaseException] = await asyncio.gather(
+        *[
+            entity.async_request_call(
+                _handle_entity_call(hass, entity, func, data, call.context)
             )
             for entity in entities
-        ]
+        ],
+        return_exceptions=True,
     )
-    assert not pending
 
-    for task in done:
-        task.result()  # pop exception if have
+    response_data: EntityServiceResponse = {}
+    for entity, result in zip(entities, results):
+        if isinstance(result, BaseException):
+            raise result from None
+        response_data[entity.entity_id] = result
 
     tasks: list[asyncio.Task[None]] = []
 
@@ -920,7 +922,7 @@ async def entity_service_call(
         for future in done:
             future.result()  # pop exception if have
 
-    return None
+    return response_data if return_response and response_data else None
 
 
 async def _handle_entity_call(
@@ -943,7 +945,7 @@ async def _handle_entity_call(
 
     # Guard because callback functions do not return a task when passed to
     # async_run_job.
-    result: ServiceResponse | None = None
+    result: ServiceResponse = None
     if task is not None:
         result = await task
 
@@ -996,7 +998,7 @@ def verify_domain_control(
     """Ensure permission to access any entity under domain in service call."""
 
     def decorator(
-        service_handler: Callable[[ServiceCall], Any]
+        service_handler: Callable[[ServiceCall], Any],
     ) -> Callable[[ServiceCall], Any]:
         """Decorate."""
         if not asyncio.iscoroutinefunction(service_handler):

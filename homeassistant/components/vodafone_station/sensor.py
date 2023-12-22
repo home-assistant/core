@@ -24,17 +24,17 @@ from .coordinator import VodafoneStationRouter
 NOT_AVAILABLE: list = ["", "N/A", "0.0.0.0"]
 
 
-@dataclass
+@dataclass(frozen=True)
 class VodafoneStationBaseEntityDescription:
     """Vodafone Station entity base description."""
 
-    value: Callable[
-        [Any, Any], Any
-    ] = lambda coordinator, key: coordinator.data.sensors[key]
+    value: Callable[[Any, Any], Any] = (
+        lambda coordinator, key: coordinator.data.sensors[key]
+    )
     is_suitable: Callable[[dict], bool] = lambda val: True
 
 
-@dataclass
+@dataclass(frozen=True)
 class VodafoneStationEntityDescription(
     VodafoneStationBaseEntityDescription, SensorEntityDescription
 ):

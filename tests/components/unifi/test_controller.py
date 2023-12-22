@@ -168,6 +168,11 @@ def mock_default_unifi_requests(
         headers={"content-type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.get(
+        f"https://{host}:1234/v2/api/site/{site_id}/trafficroutes",
+        json=[{}],
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+    aioclient_mock.get(
         f"https://{host}:1234/v2/api/site/{site_id}/trafficrules",
         json=[{}],
         headers={"content-type": CONTENT_TYPE_JSON},
@@ -460,6 +465,7 @@ async def test_get_unifi_controller_verify_ssl_false(hass: HomeAssistant) -> Non
         (aiounifi.RequestError, CannotConnect),
         (aiounifi.ResponseError, CannotConnect),
         (aiounifi.Unauthorized, AuthenticationRequired),
+        (aiounifi.Forbidden, AuthenticationRequired),
         (aiounifi.LoginRequired, AuthenticationRequired),
         (aiounifi.AiounifiException, AuthenticationRequired),
     ],

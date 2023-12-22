@@ -576,14 +576,16 @@ async def test_light_rgb_color(
     assert events[-1].data[ATTR_VALUE] == "set color at (145, 75)"
 
 
-async def test_light_restore(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_light_restore(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
+) -> None:
     """Test setting up an entity from state in the event registry."""
     hass.state = CoreState.not_running
 
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create("light", "hue", "1234", suggested_object_id="simple")
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
+        "light", "hue", "1234", suggested_object_id="simple"
+    )
+    entity_registry.async_get_or_create(
         "light",
         "hue",
         "9012",

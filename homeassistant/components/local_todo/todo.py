@@ -7,9 +7,9 @@ from typing import Any
 
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
+from ical.exceptions import CalendarParseError
 from ical.store import TodoStore
 from ical.todo import Todo, TodoStatus
-from pydantic import ValidationError
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -63,9 +63,11 @@ def _todo_dict_factory(obj: Iterable[tuple[str, Any]]) -> dict[str, str]:
     """Convert TodoItem dataclass items to dictionary of attributes for ical consumption."""
     result: dict[str, str] = {}
     for name, value in obj:
+        if value is None:
+            continue
         if name == "status":
             result[name] = ICS_TODO_STATUS_MAP_INV[value]
-        elif value is not None:
+        else:
             result[name] = value
     return result
 
@@ -74,7 +76,7 @@ def _convert_item(item: TodoItem) -> Todo:
     """Convert a HomeAssistant TodoItem to an ical Todo."""
     try:
         return Todo(**dataclasses.asdict(item, dict_factory=_todo_dict_factory))
-    except ValidationError as err:
+    except CalendarParseError as err:
         _LOGGER.debug("Error parsing todo input fields: %s (%s)", item, err)
         raise HomeAssistantError("Error parsing todo input fields") from err
 
@@ -88,6 +90,9 @@ class LocalTodoListEntity(TodoListEntity):
         | TodoListEntityFeature.DELETE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.MOVE_TODO_ITEM
+        | TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
+        | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
+        | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
     _attr_should_poll = False
 
@@ -113,6 +118,8 @@ class LocalTodoListEntity(TodoListEntity):
                 status=ICS_TODO_STATUS_MAP.get(
                     item.status or TodoStatus.NEEDS_ACTION, TodoItemStatus.NEEDS_ACTION
                 ),
+                due=item.due,
+                description=item.description,
             )
             for item in self._calendar.todos
         ]

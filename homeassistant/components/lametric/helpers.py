@@ -19,7 +19,7 @@ _P = ParamSpec("_P")
 
 
 def lametric_exception_handler(
-    func: Callable[Concatenate[_LaMetricEntityT, _P], Coroutine[Any, Any, Any]]
+    func: Callable[Concatenate[_LaMetricEntityT, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_LaMetricEntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate LaMetric calls to handle LaMetric exceptions.
 
