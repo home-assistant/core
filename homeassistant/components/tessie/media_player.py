@@ -54,47 +54,48 @@ class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
     @property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        return self.get("vehicle_state_media_info_audio_volume") / self.get(
-            "vehicle_state_media_info_audio_volume_max"
+        return self.get("vehicle_state_media_info_audio_volume", 0) / self.get(
+            "vehicle_state_media_info_audio_volume_max", 10.333333
         )
 
     @property
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
         duration = self.get("vehicle_state_media_info_now_playing_duration")
-        if duration:
-            return duration / 1000
-        return None
+        return duration / 1000 if duration else None
 
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
         position = self.get("vehicle_state_media_info_now_playing_elapsed")
-        if position:
-            return position / 1000
-        return None
+        return position / 1000 if position else None
 
     @property
     def media_title(self) -> str | None:
         """Title of current playing media."""
-        return self.get("vehicle_state_media_info_now_playing_title")
+        title = self.get("vehicle_state_media_info_now_playing_title")
+        return title if title else None
 
     @property
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
-        return self.get("vehicle_state_media_info_now_playing_artist")
+        artist = self.get("vehicle_state_media_info_now_playing_artist")
+        return artist if artist else None
 
     @property
     def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
-        return self.get("vehicle_state_media_info_now_playing_album")
+        album = self.get("vehicle_state_media_info_now_playing_album")
+        return album if album else None
 
     @property
     def media_playlist(self) -> str | None:
         """Title of Playlist currently playing."""
-        return self.get("vehicle_state_media_info_now_playing_station")
+        playlist = self.get("vehicle_state_media_info_now_playing_station")
+        return playlist if playlist else None
 
     @property
     def source(self) -> str | None:
         """Name of the current input source."""
-        return self.get("vehicle_state_media_info_now_playing_source")
+        source = self.get("vehicle_state_media_info_now_playing_source")
+        return source if source else None
