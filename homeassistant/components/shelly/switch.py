@@ -14,6 +14,7 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
+from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -187,6 +188,10 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
             is_fixable=True,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_valve_switch",
+            translation_placeholders={
+                "entity": f"{VALVE_DOMAIN}.{cast(str, self.name).lower().replace(' ', '_')}",
+                "service": f"{VALVE_DOMAIN}.open_valve",
+            },
         )
         self.control_result = await self.set_state(go="open")
         self.async_write_ha_state()
@@ -201,6 +206,10 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
             is_fixable=True,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_valve_switche",
+            translation_placeholders={
+                "entity": f"{VALVE_DOMAIN}.{cast(str, self.name).lower().replace(' ', '_')}",
+                "service": f"{VALVE_DOMAIN}.close_valve",
+            },
         )
         self.control_result = await self.set_state(go="close")
         self.async_write_ha_state()

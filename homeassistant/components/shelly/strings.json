@@ -163,7 +163,7 @@
     },
     "deprecated_valve_switch": {
       "title": "The switch entity for Shelly Gas Valve is deprecated",
-      "description": "The switch entity for Shelly Gas Valve is deprecated, a valve entity is available and should be used going forward."
+      "description": "The switch entity for Shelly Gas Valve is deprecated. A valve entity {entity} is available and should be used going forward. For this new valve entity you need to use {service} service."
     },
     "deprecated_valve_switch_entity": {
       "title": "Deprecated switch entity for Shelly Gas Valve detected in {info}",
