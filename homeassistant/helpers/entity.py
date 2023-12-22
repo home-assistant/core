@@ -313,12 +313,16 @@ class CachedProperties(type):
                 Does two things:
                 - Delete the __attr_ attribute
                 - Invalidate the cache of the cached property
+
+                Raises AttributeError if the __attr_ attribute does not exist
                 """
-                for attr in (name, private_attr_name):
-                    try:  # noqa: SIM105  suppress is much slower
-                        delattr(o, attr)
-                    except AttributeError:
-                        pass
+                # Invalidate the cache of the cached property
+                try:  # noqa: SIM105  suppress is much slower
+                    delattr(o, name)
+                except AttributeError:
+                    pass
+                # Delete the __attr_ attribute
+                delattr(o, private_attr_name)
 
             return _deleter
 

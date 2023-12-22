@@ -1941,6 +1941,34 @@ async def test_cached_entity_properties(
     assert getattr(ent1, property) == values[1]
     assert getattr(ent2, property) == default_value
 
+    # Test delete
+    delattr(ent1, f"_attr_{property}")
+    assert getattr(ent1, property) == default_value
+    assert getattr(ent2, property) == default_value
+
+
+async def test_cached_entity_property_delete_attr(hass: HomeAssistant) -> None:
+    """Test deleting an _attr corresponding to a cached property."""
+    property = "has_entity_name"
+
+    ent = entity.Entity()
+    assert not hasattr(ent, f"_attr_{property}")
+    with pytest.raises(AttributeError):
+        delattr(ent, f"_attr_{property}")
+    assert getattr(ent, property) is False
+
+    with pytest.raises(AttributeError):
+        delattr(ent, f"_attr_{property}")
+    assert not hasattr(ent, f"_attr_{property}")
+    assert getattr(ent, property) is False
+
+    setattr(ent, f"_attr_{property}", True)
+    assert getattr(ent, property) is True
+
+    delattr(ent, f"_attr_{property}")
+    assert not hasattr(ent, f"_attr_{property}")
+    assert getattr(ent, property) is False
+
 
 async def test_cached_entity_property_class_attribute(hass: HomeAssistant) -> None:
     """Test entity properties on class level work in derived classes."""
