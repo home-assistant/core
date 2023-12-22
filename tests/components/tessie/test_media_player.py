@@ -19,7 +19,7 @@ MEDIA_INFO = TEST_STATE_OF_ALL_VEHICLES["results"][0]["last_state"]["vehicle_sta
 
 
 async def test_sensors(hass: HomeAssistant) -> None:
-    """Tests that the sensors are correct."""
+    """Tests that the media player entity is correct."""
 
     assert len(hass.states.async_all("media_player")) == 0
 
