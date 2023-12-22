@@ -15,8 +15,9 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import selector
 from homeassistant.util import dt as dt_util
 
@@ -82,19 +83,33 @@ def __serialize_prices(prices: Electricity | Gas) -> ServiceResponse:
     }
 
 
-async def __get_coordinator(
+def __get_coordinator(
     hass: HomeAssistant, call: ServiceCall
 ) -> EnergyZeroDataUpdateCoordinator:
+    """Get the coordinator from the entry."""
     entry_id: str = call.data[ATTR_CONFIG_ENTRY]
     entry: ConfigEntry | None = hass.config_entries.async_get_entry(entry_id)
 
     if not entry:
-        raise HomeAssistantError(f"Invalid config entry: {entry_id}")
+        raise ServiceValidationError(
+            f"Invalid config entry: {entry_id}",
+            translation_domain=DOMAIN,
+            translation_key="invalid_config_entry",
+            translation_placeholders={
+                "config_entry": entry_id,
+            },
+        )
     if entry.state != ConfigEntryState.LOADED:
-        raise HomeAssistantError(f"{entry.title} is not loaded")
-    if not (energyzero_domain_data := hass.data[DOMAIN].get(entry_id)):
-        raise HomeAssistantError(f"Config entry not loaded: {entry_id}")
-    return energyzero_domain_data
+        raise ServiceValidationError(
+            f"{entry.title} is not loaded",
+            translation_domain=DOMAIN,
+            translation_key="unloaded_config_entry",
+            translation_placeholders={
+                "config_entry": entry.title,
+            },
+        )
+
+    return hass.data[DOMAIN].get(entry_id)
 
 
 async def __get_prices(
@@ -103,7 +118,7 @@ async def __get_prices(
     hass: HomeAssistant,
     price_type: PriceType,
 ) -> ServiceResponse:
-    coordinator = await __get_coordinator(hass, call)
+    coordinator = __get_coordinator(hass, call)
 
     start = __get_date(call.data.get(ATTR_START))
     end = __get_date(call.data.get(ATTR_END))
@@ -131,7 +146,8 @@ async def __get_prices(
     return __serialize_prices(data)
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up EnergyZero services."""
 
     hass.services.async_register(

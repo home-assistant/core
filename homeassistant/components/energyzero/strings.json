@@ -12,6 +12,12 @@
   "exceptions": {
     "invalid_date": {
       "message": "Invalid date provided. Got {date}"
+    },
+    "invalid_config_entry": {
+      "message": "Invalid config entry provided. Got {config_entry}"
+    },
+    "unloaded_config_entry": {
+      "message": "Invalid config entry provided. {config_entry} is not loaded."
     }
   },
   "entity": {

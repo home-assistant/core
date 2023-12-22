@@ -53,52 +53,83 @@ async def test_service(
     )
 
 
+@pytest.fixture
+def config_entry_data(
+    mock_config_entry: MockConfigEntry, request: pytest.FixtureRequest
+) -> dict[str, str]:
+    """Fixture for the config entry."""
+    if "config_entry" in request.param and request.param["config_entry"] is True:
+        return {"config_entry": mock_config_entry.entry_id}
+
+    return request.param
+
+
 @pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize("service", [GAS_SERVICE_NAME, ENERGY_SERVICE_NAME])
 @pytest.mark.parametrize(
-    ("include_mock_entry", "service_data", "error", "error_message"),
+    ("config_entry_data", "service_data", "error", "error_message"),
     [
-        (False, {}, vol.er.Error, "required key not provided .+"),
-        (True, {}, vol.er.Error, "required key not provided .+"),
+        ({}, {}, vol.er.Error, "required key not provided .+"),
         (
-            True,
+            {"config_entry": True},
+            {},
+            vol.er.Error,
+            "required key not provided .+",
+        ),
+        (
+            {},
+            {"incl_vat": True},
+            vol.er.Error,
+            "required key not provided .+",
+        ),
+        (
+            {"config_entry": True},
             {"incl_vat": "incorrect vat"},
             vol.er.Error,
             "expected bool for dictionary value .+",
         ),
         (
-            True,
-            {"incl_vat": True, "start": "incorrect date"},
+            {"config_entry": "incorrect entry"},
+            {"incl_vat": True},
+            ServiceValidationError,
+            "Invalid config entry.+",
+        ),
+        (
+            {"config_entry": True},
+            {
+                "incl_vat": True,
+                "start": "incorrect date",
+            },
             ServiceValidationError,
             "Invalid datetime provided.",
         ),
         (
-            True,
-            {"incl_vat": True, "end": "incorrect date"},
+            {"config_entry": True},
+            {
+                "incl_vat": True,
+                "end": "incorrect date",
+            },
             ServiceValidationError,
             "Invalid datetime provided.",
         ),
     ],
+    indirect=["config_entry_data"],
 )
 async def test_service_validation(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    include_mock_entry: bool,
     service: str,
+    config_entry_data: dict[str, str],
     service_data: dict[str, str],
     error: type[Exception],
     error_message: str,
 ) -> None:
     """Test the EnergyZero Service validation."""
 
-    if include_mock_entry:
-        service_data = service_data | {ATTR_CONFIG_ENTRY: mock_config_entry.entry_id}
-
     with pytest.raises(error, match=error_message):
         await hass.services.async_call(
             DOMAIN,
             service,
-            service_data,
+            config_entry_data | service_data,
             blocking=True,
             return_response=True,
         )
