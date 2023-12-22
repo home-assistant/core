@@ -56,10 +56,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
     def get_ac_data(self, ac_index: int) -> CCM15SlaveDevice | None:
         """Get ac data from the ac_index."""
         if ac_index < 0 or ac_index >= len(self.data.devices):
-            # Index is out of bounds or not an integer
-            _LOGGER.warning(
-                "Data is not available for AC id %s.%s", self._host, ac_index
-            )
+            # Network latency may return an empty or incomplete array
             return None
         data = self.data.devices[ac_index]
         return data
