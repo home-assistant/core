@@ -78,7 +78,7 @@ async def test_commission_on_network(
     )
 
     await ws_client.send_json(
-        {ID: 2, TYPE: "matter/commission_on_network", "pin": 1234, "ip": "1.2.3.4"}
+        {ID: 2, TYPE: "matter/commission_on_network", "pin": 1234, "ip_addr": "1.2.3.4"}
     )
     msg = await ws_client.receive_json()
 

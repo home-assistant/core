@@ -109,7 +109,7 @@ async def websocket_commission(
     {
         vol.Required(TYPE): "matter/commission_on_network",
         vol.Required("pin"): int,
-        vol.Optional("ip"): str,
+        vol.Optional("ip_addr"): str,
     }
 )
 @websocket_api.async_response
@@ -123,7 +123,7 @@ async def websocket_commission_on_network(
 ) -> None:
     """Commission a device already on the network."""
     await matter.matter_client.commission_on_network(
-        msg["pin"], ip_addr=msg.get("ip", None)
+        msg["pin"], ip_addr=msg.get("ip_addr", None)
     )
     connection.send_result(msg[ID])
 
