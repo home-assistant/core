@@ -33,6 +33,9 @@ from .coordinator import QBittorrentDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+SENSOR_TYPE_CURRENT_STATUS = "current_status"
+SENSOR_TYPE_DOWNLOAD_SPEED = "download_speed"
+SENSOR_TYPE_UPLOAD_SPEED = "upload_speed"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -45,7 +48,7 @@ class QBittorrentSensorEntityDescription(SensorEntityDescription):
 
 SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
     QBittorrentSensorEntityDescription(
-        key="status", 
+        key=SENSOR_TYPE_CURRENT_STATUS,
         translation_key="current_status", 
         name="Status",
         device_class=SensorDeviceClass.ENUM,
@@ -55,9 +58,10 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         ),
     ),
     QBittorrentSensorEntityDescription(
-        key="download",
+        key=SENSOR_TYPE_DOWNLOAD_SPEED,
         translation_key="download_speed",
         name="Download Speed",
+        icon="mdi:cloud-download",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         suggested_display_precision=2,
@@ -65,9 +69,10 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         val_func=lambda coordinator: float(coordinator.data["server_state"]["dl_info_speed"]),
     ),
     QBittorrentSensorEntityDescription(
-        key="upload",
+        key=SENSOR_TYPE_UPLOAD_SPEED,
         translation_key="upload_speed",
         name="Upload Speed",
+        icon="mdi:cloud-upload",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         suggested_display_precision=2,
