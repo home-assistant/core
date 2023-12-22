@@ -51,10 +51,10 @@ async def test_sensors(hass: HomeAssistant, mock_get_state) -> None:
     assert ATTR_MEDIA_TITLE not in state.attributes
     assert ATTR_MEDIA_ARTIST not in state.attributes
     assert ATTR_MEDIA_ALBUM_NAME not in state.attributes
-    assert state.attributes[ATTR_INPUT_SOURCE] == MEDIA_INFO_1["now_playing_source"]
+    assert ATTR_INPUT_SOURCE not in state.attributes
     assert ATTR_MEDIA_PLAYLIST not in state.attributes
     assert ATTR_MEDIA_DURATION not in state.attributes
-    assert state.attributes[ATTR_MEDIA_POSITION] == 0.0
+    assert ATTR_MEDIA_POSITION not in state.attributes
 
     # Trigger coordinator refresh since it has a different fixture.
 
