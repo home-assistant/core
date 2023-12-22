@@ -85,6 +85,7 @@ def async_handle_failed_command(
     {
         vol.Required(TYPE): "matter/commission",
         vol.Required("code"): str,
+        vol.Optional("network_only"): bool,
     }
 )
 @websocket_api.async_response
@@ -108,6 +109,7 @@ async def websocket_commission(
     {
         vol.Required(TYPE): "matter/commission_on_network",
         vol.Required("pin"): int,
+        vol.Optional("ip"): str,
     }
 )
 @websocket_api.async_response
