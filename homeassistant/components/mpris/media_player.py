@@ -12,7 +12,6 @@ from hassmpris.proto import mpris_pb2
 import hassmpris_client
 
 from homeassistant.components.media_player import (
-    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -101,7 +100,6 @@ async def async_setup_entry(
 class MPRISEntity(CoordinatorEntity["MPRISCoordinator"], MediaPlayerEntity):
     """Represents an MPRIS media player entity."""
 
-    _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_supported_features = SUPPORTED_MINIMAL
     _attr_playback_rate: float = 1.0
     _attr_has_entity_name = True
