@@ -496,7 +496,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
 }
 
 
-class MediaPlayerEntity(Entity):
+class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """ABC for media player entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
