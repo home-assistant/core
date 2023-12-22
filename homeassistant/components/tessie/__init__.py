@@ -19,6 +19,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.DEVICE_TRACKER,
+    Platform.LOCK,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
