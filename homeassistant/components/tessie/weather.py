@@ -26,8 +26,8 @@ async def async_setup_entry(
 
     # Add Weather entities with both coordinators
     async_add_entities(
-        TessieWeatherEntity(coordinators.vehicle, coordinators.weather)
-        for coordinators in data
+        TessieWeatherEntity(vehicle.state_coordinator, vehicle.weather_coordinator)
+        for vehicle in data
     )
 
 

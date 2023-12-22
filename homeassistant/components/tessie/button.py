@@ -59,8 +59,8 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        TessieButtonEntity(coordinators.vehicle, description)
-        for coordinators in data
+        TessieButtonEntity(vehicle.state_coordinator, description)
+        for vehicle in data
         for description in DESCRIPTIONS
     )
 

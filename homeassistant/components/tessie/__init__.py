@@ -14,7 +14,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 from .coordinator import TessieDataUpdateCoordinator, TessieWeatherDataCoordinator
-from .models import TessieCoordinators
+from .models import TessieVehicle
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -54,14 +54,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from e
 
     data = [
-        TessieCoordinators(
-            vehicle=TessieDataUpdateCoordinator(
+        TessieVehicle(
+            state_coordinator=TessieDataUpdateCoordinator(
                 hass,
                 api_key=api_key,
                 vin=vehicle["vin"],
                 data=vehicle["last_state"],
             ),
-            weather=TessieWeatherDataCoordinator(
+            weather_coordinator=TessieWeatherDataCoordinator(
                 hass, api_key=api_key, vin=vehicle["vin"]
             ),
         )
@@ -71,7 +71,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Get data for weather coordinators
     tasks = (
-        coordinators.weather.async_config_entry_first_refresh() for coordinators in data
+        vehicle.weather_coordinator.async_config_entry_first_refresh()
+        for vehicle in data
     )
     await asyncio.gather(*tasks)
 

@@ -31,12 +31,12 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        Entity(coordinators.vehicle)
+        Entity(vehicle.state_coordinator)
         for Entity in (
             TessieWindowEntity,
             TessieChargePortEntity,
         )
-        for coordinators in data
+        for vehicle in data
     )
 
 

@@ -7,8 +7,8 @@ from .coordinator import TessieDataUpdateCoordinator, TessieWeatherDataCoordinat
 
 
 @dataclass
-class TessieCoordinators:
+class TessieVehicle:
     """Data for the Tessie integration."""
 
-    vehicle: TessieDataUpdateCoordinator
-    weather: TessieWeatherDataCoordinator
+    state_coordinator: TessieDataUpdateCoordinator
+    weather_coordinator: TessieWeatherDataCoordinator

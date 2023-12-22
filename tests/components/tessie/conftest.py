@@ -8,7 +8,7 @@ import pytest
 from .common import TEST_STATE_OF_ALL_VEHICLES, TEST_VEHICLE_STATE_ONLINE, TEST_WEATHER
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_get_state():
     """Mock get_state function."""
     with patch(
@@ -18,7 +18,7 @@ def mock_get_state():
         yield mock_get_state
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_get_state_of_all_vehicles():
     """Mock get_state_of_all_vehicles function."""
     with patch(
@@ -28,7 +28,7 @@ def mock_get_state_of_all_vehicles():
         yield mock_get_state_of_all_vehicles
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_get_weather():
     """Mock get_weather function."""
     with patch(

@@ -79,7 +79,7 @@ async def test_coordinator_connection(hass: HomeAssistant, mock_get_state) -> No
 
 
 async def test_weather_coordinator_clienterror(
-    hass: HomeAssistant, mock_get_state, mock_get_weather
+    hass: HomeAssistant, mock_get_weather
 ) -> None:
     """Tests that the weather coordinator handles client errors."""
 
@@ -90,9 +90,7 @@ async def test_weather_coordinator_clienterror(
     assert hass.states.get("weather.test").state == STATE_UNAVAILABLE
 
 
-async def test_weather_coordinator_auth(
-    hass: HomeAssistant, mock_get_state, mock_get_weather
-) -> None:
+async def test_weather_coordinator_auth(hass: HomeAssistant, mock_get_weather) -> None:
     """Tests that the weather coordinator handles auth errors."""
 
     mock_get_weather.side_effect = ERROR_AUTH

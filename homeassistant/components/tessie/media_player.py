@@ -27,7 +27,7 @@ async def async_setup_entry(
     """Set up the Tessie Media platform from a config entry."""
     data = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(TessieMediaEntity(coordinators.vehicle) for coordinators in data)
+    async_add_entities(TessieMediaEntity(vehicle.state_coordinator) for vehicle in data)
 
 
 class TessieMediaEntity(TessieEntity, MediaPlayerEntity):

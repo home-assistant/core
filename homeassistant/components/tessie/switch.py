@@ -82,10 +82,10 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            TessieSwitchEntity(coordinators.vehicle, description)
-            for coordinators in data
+            TessieSwitchEntity(vehicle.state_coordinator, description)
+            for vehicle in data
             for description in DESCRIPTIONS
-            if description.key in coordinators.vehicle.data
+            if description.key in vehicle.state_coordinator.data
         ]
     )
 

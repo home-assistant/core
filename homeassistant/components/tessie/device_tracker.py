@@ -20,12 +20,12 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        klass(coordinators.vehicle)
+        klass(vehicle.state_coordinator)
         for klass in (
             TessieDeviceTrackerLocationEntity,
             TessieDeviceTrackerRouteEntity,
         )
-        for coordinators in data
+        for vehicle in data
     )
 
 

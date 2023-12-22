@@ -120,10 +120,10 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        TessieBinarySensorEntity(coordinators.vehicle, description)
-        for coordinators in data
+        TessieBinarySensorEntity(vehicle.state_coordinator, description)
+        for vehicle in data
         for description in DESCRIPTIONS
-        if description.key in coordinators.vehicle.data
+        if description.key in vehicle.state_coordinator.data
     )
 
 

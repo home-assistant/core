@@ -29,10 +29,10 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        TessieSeatHeaterSelectEntity(coordinators.vehicle, key)
-        for coordinators in data
+        TessieSeatHeaterSelectEntity(vehicle.state_coordinator, key)
+        for vehicle in data
         for key in SEAT_HEATERS
-        if key in coordinators.vehicle.data
+        if key in vehicle.state_coordinator.data
     )
 
 

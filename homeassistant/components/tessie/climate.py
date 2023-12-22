@@ -32,7 +32,7 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        TessieClimateEntity(coordinators.vehicle) for coordinators in data
+        TessieClimateEntity(vehicle.state_coordinator) for vehicle in data
     )
 
 
