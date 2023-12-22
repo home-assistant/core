@@ -51,6 +51,9 @@ class LutronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # In a future version we can get more specific with the HTTP code
                 _LOGGER.debug("Exception Type: %s", type(ex).__name__)
                 errors["base"] = "connect_error"
+            except Exception as ex:  # pylint: disable=broad-except
+                _LOGGER.debug("Exception Type: %s", type(ex).__name__)
+                errors["base"] = "config_errors"
             else:
                 guid = main_repeater.guid
                 if len(guid) > 10:
@@ -96,14 +99,14 @@ class LutronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             """Validate input data and return any error."""
             try:
                 main_repeater.load_xml_db()
-            except HTTPError as ex:
+            except Exception as ex:  # pylint: disable=broad-except
                 return str(ex)
 
             return None
 
         try:
             await self.hass.async_add_executor_job(_load_db)
-        except HTTPError as ex:
+        except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.error("Unable to import configuration.yaml configuration: %s", ex)
             _LOGGER.error(
                 "You will now be directed to enter the configuration"
