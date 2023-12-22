@@ -367,6 +367,7 @@ class ConfigEntry:
 
         # Reason why config entry is in a failed state
         _setter(self, "reason", None)
+        _setter(self, "reason_translation", None)
 
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup: Callable[[], Any] | None = None
@@ -490,7 +491,7 @@ class ConfigEntry:
 
         # Only store setup result as state if it was not forwarded.
         if domain_is_integration := self.domain == integration.domain:
-            self._async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
+            self._async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None, None)
 
         if self.supports_unload is None:
             self.supports_unload = await support_entry_unload(hass, self.domain)
@@ -509,7 +510,7 @@ class ConfigEntry:
             )
             if domain_is_integration:
                 self._async_set_state(
-                    hass, ConfigEntryState.SETUP_ERROR, "Import error"
+                    hass, ConfigEntryState.SETUP_ERROR, "Import error", None
                 )
             return
 
@@ -527,13 +528,15 @@ class ConfigEntry:
                     err,
                 )
                 self._async_set_state(
-                    hass, ConfigEntryState.SETUP_ERROR, "Import error"
+                    hass, ConfigEntryState.SETUP_ERROR, "Import error", None
                 )
                 return
 
             # Perform migration
             if not await self.async_migrate(hass):
-                self._async_set_state(hass, ConfigEntryState.MIGRATION_ERROR, None)
+                self._async_set_state(
+                    hass, ConfigEntryState.MIGRATION_ERROR, None, None
+                )
                 return
 
             setup_phase = SetupPhases.CONFIG_ENTRY_SETUP
@@ -541,6 +544,7 @@ class ConfigEntry:
             setup_phase = SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP
 
         error_reason = None
+        error_reason_translation = None
 
         try:
             with async_start_setup(
@@ -555,6 +559,10 @@ class ConfigEntry:
                 result = False
         except ConfigEntryError as exc:
             error_reason = str(exc) or "Unknown fatal config entry error"
+            error_reason_translation = {
+                "translation_key": exc.translation_key,
+                "translation_placeholders": exc.translation_placeholders,
+            }
             _LOGGER.exception(
                 "Error setting up entry %s for %s: %s",
                 self.title,
@@ -567,6 +575,10 @@ class ConfigEntry:
             message = str(exc)
             auth_base_message = "could not authenticate"
             error_reason = message or auth_base_message
+            error_reason_translation = {
+                "translation_key": exc.translation_key,
+                "translation_placeholders": exc.translation_placeholders,
+            }
             auth_message = (
                 f"{auth_base_message}: {message}" if message else auth_base_message
             )
@@ -581,7 +593,16 @@ class ConfigEntry:
             result = False
         except ConfigEntryNotReady as exc:
             message = str(exc)
-            self._async_set_state(hass, ConfigEntryState.SETUP_RETRY, message or None)
+            error_reason_translation = {
+                "translation_key": exc.translation_key,
+                "translation_placeholders": exc.translation_placeholders,
+            }
+            self._async_set_state(
+                hass,
+                ConfigEntryState.SETUP_RETRY,
+                message or None,
+                error_reason_translation,
+            )
             wait_time = 2 ** min(self._tries, 4) * 5 + (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
             )
@@ -640,9 +661,14 @@ class ConfigEntry:
         self.async_cancel_retry_setup()
 
         if result:
-            self._async_set_state(hass, ConfigEntryState.LOADED, None)
+            self._async_set_state(hass, ConfigEntryState.LOADED, None, None)
         else:
-            self._async_set_state(hass, ConfigEntryState.SETUP_ERROR, error_reason)
+            self._async_set_state(
+                hass,
+                ConfigEntryState.SETUP_ERROR,
+                error_reason,
+                error_reason_translation,
+            )
 
     @callback
     def _async_setup_again(self, hass: HomeAssistant, *_: Any) -> None:
@@ -681,7 +707,7 @@ class ConfigEntry:
         Returns if unload is possible and was successful.
         """
         if self.source == SOURCE_IGNORE:
-            self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
+            self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None, None)
             return True
 
         if self.state == ConfigEntryState.NOT_LOADED:
@@ -695,7 +721,7 @@ class ConfigEntry:
                 # that was uninstalled, or an integration
                 # that has been renamed without removing the config
                 # entry.
-                self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
+                self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None, None)
                 return True
 
         component = await integration.async_get_component()
@@ -706,7 +732,7 @@ class ConfigEntry:
 
             if self.state is not ConfigEntryState.LOADED:
                 self.async_cancel_retry_setup()
-                self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
+                self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None, None)
                 return True
 
         supports_unload = hasattr(component, "async_unload_entry")
@@ -714,7 +740,7 @@ class ConfigEntry:
         if not supports_unload:
             if integration.domain == self.domain:
                 self._async_set_state(
-                    hass, ConfigEntryState.FAILED_UNLOAD, "Unload not supported"
+                    hass, ConfigEntryState.FAILED_UNLOAD, "Unload not supported", None
                 )
             return False
 
@@ -725,7 +751,7 @@ class ConfigEntry:
 
             # Only adjust state if we unloaded the component
             if result and integration.domain == self.domain:
-                self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
+                self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None, None)
 
             await self._async_process_on_unload(hass)
 
@@ -736,7 +762,10 @@ class ConfigEntry:
             )
             if integration.domain == self.domain:
                 self._async_set_state(
-                    hass, ConfigEntryState.FAILED_UNLOAD, str(exc) or "Unknown error"
+                    hass,
+                    ConfigEntryState.FAILED_UNLOAD,
+                    str(exc) or "Unknown error",
+                    None,
                 )
             return False
 
@@ -769,7 +798,11 @@ class ConfigEntry:
 
     @callback
     def _async_set_state(
-        self, hass: HomeAssistant, state: ConfigEntryState, reason: str | None
+        self,
+        hass: HomeAssistant,
+        state: ConfigEntryState,
+        reason: str | None,
+        error_reason_translation: dict[str, str | dict[str, str] | None] | None,
     ) -> None:
         """Set the state of the config entry."""
         if state not in NO_RESET_TRIES_STATES:
@@ -777,6 +810,7 @@ class ConfigEntry:
         _setter = object.__setattr__
         _setter(self, "state", state)
         _setter(self, "reason", reason)
+        _setter(self, "reason_translation", error_reason_translation)
         self.clear_cache()
         async_dispatcher_send(
             hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.UPDATED, self
