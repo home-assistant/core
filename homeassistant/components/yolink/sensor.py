@@ -48,14 +48,14 @@ from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class YoLinkSensorEntityDescriptionMixin:
     """Mixin for device type."""
 
     exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
 
 
-@dataclass
+@dataclass(frozen=True)
 class YoLinkSensorEntityDescription(
     YoLinkSensorEntityDescriptionMixin, SensorEntityDescription
 ):
@@ -261,3 +261,8 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
             return
         self._attr_native_value = attr_val
         self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return true is device is available."""
+        return super().available and self.coordinator.dev_online

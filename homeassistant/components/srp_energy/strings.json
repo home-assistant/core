@@ -17,7 +17,14 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "energy_usage": {
+        "name": "Energy usage"
+      }
     }
   }
 }

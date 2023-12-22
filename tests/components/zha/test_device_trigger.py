@@ -4,6 +4,7 @@ import time
 from unittest.mock import patch
 
 import pytest
+from zigpy.application import ControllerApplication
 import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
 
@@ -408,7 +409,7 @@ async def test_validate_trigger_config_missing_info(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     zigpy_device_mock,
-    mock_zigpy_connect,
+    mock_zigpy_connect: ControllerApplication,
     zha_device_joined,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -461,7 +462,7 @@ async def test_validate_trigger_config_unloaded_bad_info(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     zigpy_device_mock,
-    mock_zigpy_connect,
+    mock_zigpy_connect: ControllerApplication,
     zha_device_joined,
     caplog: pytest.LogCaptureFixture,
 ) -> None:

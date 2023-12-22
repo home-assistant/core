@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntFlag
 import functools as ft
@@ -28,6 +27,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
+)
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstantEnum,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
@@ -66,9 +70,19 @@ class WaterHeaterEntityFeature(IntFlag):
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
 # Please use the WaterHeaterEntityFeature enum instead.
-SUPPORT_TARGET_TEMPERATURE = 1
-SUPPORT_OPERATION_MODE = 2
-SUPPORT_AWAY_MODE = 4
+_DEPRECATED_SUPPORT_TARGET_TEMPERATURE = DeprecatedConstantEnum(
+    WaterHeaterEntityFeature.TARGET_TEMPERATURE, "2025.1"
+)
+_DEPRECATED_SUPPORT_OPERATION_MODE = DeprecatedConstantEnum(
+    WaterHeaterEntityFeature.OPERATION_MODE, "2025.1"
+)
+_DEPRECATED_SUPPORT_AWAY_MODE = DeprecatedConstantEnum(
+    WaterHeaterEntityFeature.AWAY_MODE, "2025.1"
+)
+
+# Both can be removed if no deprecated constant are in this module anymore
+__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = ft.partial(dir_with_deprecated_constants, module_globals=globals())
 
 ATTR_MAX_TEMP = "max_temp"
 ATTR_MIN_TEMP = "min_temp"
@@ -156,13 +170,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class WaterHeaterEntityEntityDescription(EntityDescription):
+class WaterHeaterEntityEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes water heater entities."""
 
 
 class WaterHeaterEntity(Entity):
     """Base class for water heater entities."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {ATTR_OPERATION_LIST, ATTR_MIN_TEMP, ATTR_MAX_TEMP}
+    )
 
     entity_description: WaterHeaterEntityEntityDescription
     _attr_current_operation: str | None = None

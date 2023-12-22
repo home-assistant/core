@@ -1,4 +1,4 @@
-"""Constants and mock for the twkinly component tests."""
+"""Constants and mock for the twinkly component tests."""
 
 
 from aiohttp.client_exceptions import ClientConnectionError
@@ -33,7 +33,6 @@ class ClientMock:
             "uuid": self.id,
             "device_name": TEST_NAME,
             "product_code": TEST_MODEL,
-            "sw_version": self.version,
         }
 
     @property

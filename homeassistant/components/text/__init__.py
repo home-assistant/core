@@ -98,8 +98,7 @@ class TextMode(StrEnum):
     TEXT = "text"
 
 
-@dataclass
-class TextEntityDescription(EntityDescription):
+class TextEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes text entities."""
 
     native_min: int = 0
@@ -110,6 +109,10 @@ class TextEntityDescription(EntityDescription):
 
 class TextEntity(Entity):
     """Representation of a Text entity."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {ATTR_MAX, ATTR_MIN, ATTR_MODE, ATTR_PATTERN}
+    )
 
     entity_description: TextEntityDescription
     _attr_mode: TextMode

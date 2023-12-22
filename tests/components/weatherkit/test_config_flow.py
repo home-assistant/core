@@ -126,3 +126,54 @@ async def test_form_unsupported_location(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    ("input_header"),
+    [
+        "-----BEGIN PRIVATE KEY-----\n",
+        "",
+        "  \n\n-----BEGIN PRIVATE KEY-----\n",
+        "—---BEGIN PRIVATE KEY-----\n",
+    ],
+    ids=["Correct header", "No header", "Leading characters", "Em dash in header"],
+)
+@pytest.mark.parametrize(
+    ("input_footer"),
+    [
+        "\n-----END PRIVATE KEY-----",
+        "",
+        "\n-----END PRIVATE KEY-----\n\n  ",
+        "\n—---END PRIVATE KEY-----",
+    ],
+    ids=["Correct footer", "No footer", "Trailing characters", "Em dash in footer"],
+)
+async def test_auto_fix_key_input(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    input_header: str,
+    input_footer: str,
+) -> None:
+    """Test that we fix common user errors in key input."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.weatherkit.WeatherKitApiClient.get_availability",
+        return_value=[DataSetType.CURRENT_WEATHER],
+    ):
+        user_input = EXAMPLE_USER_INPUT.copy()
+        user_input[CONF_KEY_PEM] = f"{input_header}whateverkey{input_footer}"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+
+    assert result["data"][CONF_KEY_PEM] == EXAMPLE_CONFIG_DATA[CONF_KEY_PEM]
+    assert len(mock_setup_entry.mock_calls) == 1

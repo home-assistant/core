@@ -5,8 +5,8 @@ from enum import StrEnum
 from typing import Final
 
 APPLICATION_NAME: Final = "HomeAssistant"
-MAJOR_VERSION: Final = 2023
-MINOR_VERSION: Final = 10
+MAJOR_VERSION: Final = 2024
+MINOR_VERSION: Final = 1
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -55,8 +55,10 @@ class Platform(StrEnum):
     SWITCH = "switch"
     TEXT = "text"
     TIME = "time"
+    TODO = "todo"
     TTS = "tts"
     VACUUM = "vacuum"
+    VALVE = "valve"
     UPDATE = "update"
     WAKE_WORD = "wake_word"
     WATER_HEATER = "water_heater"
@@ -128,6 +130,7 @@ CONF_CONTINUE_ON_ERROR: Final = "continue_on_error"
 CONF_CONTINUE_ON_TIMEOUT: Final = "continue_on_timeout"
 CONF_COUNT: Final = "count"
 CONF_COUNTRY: Final = "country"
+CONF_COUNTRY_CODE: Final = "country_code"
 CONF_COVERS: Final = "covers"
 CONF_CURRENCY: Final = "currency"
 CONF_CUSTOMIZE: Final = "customize"
@@ -288,10 +291,18 @@ EVENT_HOMEASSISTANT_STARTED: Final = "homeassistant_started"
 EVENT_HOMEASSISTANT_STOP: Final = "homeassistant_stop"
 EVENT_HOMEASSISTANT_FINAL_WRITE: Final = "homeassistant_final_write"
 EVENT_LOGBOOK_ENTRY: Final = "logbook_entry"
+EVENT_LOGGING_CHANGED: Final = "logging_changed"
 EVENT_SERVICE_REGISTERED: Final = "service_registered"
 EVENT_SERVICE_REMOVED: Final = "service_removed"
 EVENT_STATE_CHANGED: Final = "state_changed"
 EVENT_THEMES_UPDATED: Final = "themes_updated"
+EVENT_PANELS_UPDATED: Final = "panels_updated"
+EVENT_LOVELACE_UPDATED: Final = "lovelace_updated"
+EVENT_RECORDER_5MIN_STATISTICS_GENERATED: Final = "recorder_5min_statistics_generated"
+EVENT_RECORDER_HOURLY_STATISTICS_GENERATED: Final = (
+    "recorder_hourly_statistics_generated"
+)
+EVENT_SHOPPING_LIST_UPDATED: Final = "shopping_list_updated"
 
 # #### DEVICE CLASSES ####
 # DEVICE_CLASS_* below are deprecated as of 2021.12
@@ -1050,9 +1061,6 @@ COMPRESSED_STATE_LAST_CHANGED = "lc"
 COMPRESSED_STATE_LAST_UPDATED = "lu"
 
 # #### SERVICES ####
-SERVICE_HOMEASSISTANT_STOP: Final = "stop"
-SERVICE_HOMEASSISTANT_RESTART: Final = "restart"
-
 SERVICE_TURN_ON: Final = "turn_on"
 SERVICE_TURN_OFF: Final = "turn_off"
 SERVICE_TOGGLE: Final = "toggle"
@@ -1097,6 +1105,11 @@ SERVICE_SET_COVER_TILT_POSITION: Final = "set_cover_tilt_position"
 SERVICE_STOP_COVER: Final = "stop_cover"
 SERVICE_STOP_COVER_TILT: Final = "stop_cover_tilt"
 SERVICE_TOGGLE_COVER_TILT: Final = "toggle_cover_tilt"
+
+SERVICE_CLOSE_VALVE: Final = "close_valve"
+SERVICE_OPEN_VALVE: Final = "open_valve"
+SERVICE_SET_VALVE_POSITION: Final = "set_valve_position"
+SERVICE_STOP_VALVE: Final = "stop_valve"
 
 SERVICE_SELECT_OPTION: Final = "select_option"
 

@@ -1,4 +1,14 @@
 """Functools backports from standard lib."""
+
+# This file contains parts of Python's module wrapper
+# for the _functools C module
+# to allow utilities written in Python to be added
+# to the functools module.
+# Written by Nick Coghlan <ncoghlan at gmail.com>,
+# Raymond Hettinger <python at rcn.com>,
+# and Łukasz Langa <lukasz at langa.pl>.
+# Copyright © 2001-2023 Python Software Foundation; All Rights Reserved
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -68,4 +78,4 @@ class cached_property(Generic[_T]):
             raise TypeError(msg) from None
         return val
 
-    __class_getitem__ = classmethod(GenericAlias)
+    __class_getitem__ = classmethod(GenericAlias)  # type: ignore[var-annotated]

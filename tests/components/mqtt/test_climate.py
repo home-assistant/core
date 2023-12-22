@@ -58,6 +58,7 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_skipped_async_ha_write_state,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -137,9 +138,8 @@ async def test_preset_none_in_preset_modes(
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test the preset mode payload reset configuration."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
-    assert "Invalid config for [mqtt]: not a valid value" in caplog.text
+    assert await mqtt_mock_entry()
+    assert "preset_modes must not include preset mode 'none'" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -2447,11 +2447,11 @@ async def test_publishing_with_custom_encoding(
 @pytest.mark.parametrize(
     ("hass_config", "valid"),
     [
-        (
+        (  # test_valid_humidity_min_max
             {
                 mqtt.DOMAIN: {
                     climate.DOMAIN: {
-                        "name": "test_valid_humidity_min_max",
+                        "name": "test",
                         "min_humidity": 20,
                         "max_humidity": 80,
                     },
@@ -2459,11 +2459,11 @@ async def test_publishing_with_custom_encoding(
             },
             True,
         ),
-        (
+        (  # test_invalid_humidity_min_max_1
             {
                 mqtt.DOMAIN: {
                     climate.DOMAIN: {
-                        "name": "test_invalid_humidity_min_max_1",
+                        "name": "test",
                         "min_humidity": 0,
                         "max_humidity": 101,
                     },
@@ -2471,11 +2471,11 @@ async def test_publishing_with_custom_encoding(
             },
             False,
         ),
-        (
+        (  # test_invalid_humidity_min_max_2
             {
                 mqtt.DOMAIN: {
                     climate.DOMAIN: {
-                        "name": "test_invalid_humidity_min_max_2",
+                        "name": "test",
                         "max_humidity": 20,
                         "min_humidity": 40,
                     },
@@ -2483,11 +2483,11 @@ async def test_publishing_with_custom_encoding(
             },
             False,
         ),
-        (
+        (  # test_valid_humidity_state
             {
                 mqtt.DOMAIN: {
                     climate.DOMAIN: {
-                        "name": "test_valid_humidity_state",
+                        "name": "test",
                         "target_humidity_state_topic": "humidity-state",
                         "target_humidity_command_topic": "humidity-command",
                     },
@@ -2495,11 +2495,11 @@ async def test_publishing_with_custom_encoding(
             },
             True,
         ),
-        (
+        (  # test_invalid_humidity_state
             {
                 mqtt.DOMAIN: {
                     climate.DOMAIN: {
-                        "name": "test_invalid_humidity_state",
+                        "name": "test",
                         "target_humidity_state_topic": "humidity-state",
                     },
                 }
@@ -2514,11 +2514,9 @@ async def test_humidity_configuration_validity(
     valid: bool,
 ) -> None:
     """Test the validity of humidity configurations."""
-    if valid:
-        await mqtt_mock_entry()
-        return
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    assert await mqtt_mock_entry()
+    state = hass.states.get("climate.test")
+    assert (state is not None) == valid
 
 
 async def test_reloadable(
@@ -2555,3 +2553,60 @@ async def test_unload_entry(
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry, domain, config
     )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            climate.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "availability_topic": "availability-topic",
+                    "json_attributes_topic": "json-attributes-topic",
+                    "action_topic": "action-topic",
+                    "fan_mode_state_topic": "fan-mode-state-topic",
+                    "mode_state_topic": "mode-state-topic",
+                    "current_humidity_topic": "current-humidity-topic",
+                    "current_temperature_topic": "current-temperature-topic",
+                    "preset_mode_state_topic": "preset-mode-state-topic",
+                    "preset_modes": ["eco", "away"],
+                    "swing_mode_state_topic": "swing-mode-state-topic",
+                    "target_humidity_state_topic": "target-humidity-state-topic",
+                    "temperature_high_state_topic": "temperature-high-state-topic",
+                    "temperature_low_state_topic": "temperature-low-state-topic",
+                    "temperature_state_topic": "temperature-state-topic",
+                },
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("topic", "payload1", "payload2"),
+    [
+        ("availability-topic", "online", "offline"),
+        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
+        ("action-topic", "cooling", "heating"),
+        ("fan-mode-state-topic", "low", "medium"),
+        ("mode-state-topic", "cool", "heat"),
+        ("current-humidity-topic", "45", "46"),
+        ("current-temperature-topic", "18.0", "18.1"),
+        ("preset-mode-state-topic", "eco", "away"),
+        ("swing-mode-state-topic", "on", "off"),
+        ("target-humidity-state-topic", "45", "50"),
+        ("temperature-state-topic", "18", "19"),
+        ("temperature-low-state-topic", "18", "19"),
+        ("temperature-high-state-topic", "18", "19"),
+    ],
+)
+async def test_skipped_async_ha_write_state(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    topic: str,
+    payload1: str,
+    payload2: str,
+) -> None:
+    """Test a write state command is only called when there is change."""
+    await mqtt_mock_entry()
+    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)

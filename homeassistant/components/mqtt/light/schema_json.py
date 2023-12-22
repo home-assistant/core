@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from contextlib import suppress
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
@@ -32,7 +32,6 @@ from homeassistant.components.light import (
     filter_supported_color_modes,
     valid_supported_color_modes,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_BRIGHTNESS,
     CONF_COLOR_TEMP,
@@ -44,12 +43,11 @@ from homeassistant.const import (
     CONF_XY,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.color as color_util
 from homeassistant.util.json import json_loads_object
 
@@ -63,9 +61,9 @@ from ..const import (
     CONF_STATE_TOPIC,
 )
 from ..debug_info import log_messages
-from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
+from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, write_state_on_attr_change
 from ..models import ReceiveMessage
-from ..util import get_mqtt_data, valid_subscribe_topic
+from ..util import valid_subscribe_topic
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import (
     CONF_BRIGHTNESS_SCALE,
@@ -166,17 +164,6 @@ PLATFORM_SCHEMA_MODERN_JSON = vol.All(
 )
 
 
-async def async_setup_entity_json(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None,
-) -> None:
-    """Set up a MQTT JSON Light."""
-    async_add_entities([MqttLightJson(hass, config, config_entry, discovery_data)])
-
-
 class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT JSON light."""
 
@@ -184,20 +171,10 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
+    _fixed_color_mode: ColorMode | str | None = None
     _flash_times: dict[str, int | None]
     _topic: dict[str, str | None]
     _optimistic: bool
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        discovery_data: DiscoveryInfoType | None,
-    ) -> None:
-        """Initialize MQTT JSON light."""
-        self._fixed_color_mode: ColorMode | str | None = None
-        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
     def config_schema() -> vol.Schema:
@@ -347,6 +324,21 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(
+            self,
+            {
+                "_attr_brightness",
+                "_attr_color_temp",
+                "_attr_effect",
+                "_attr_hs_color",
+                "_attr_is_on",
+                "_attr_rgb_color",
+                "_attr_rgbw_color",
+                "_attr_rgbww_color",
+                "_attr_xy_color",
+                "color_mode",
+            },
+        )
         def state_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             values = json_loads_object(msg.payload)
@@ -375,10 +367,10 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             if brightness_supported(self.supported_color_modes):
                 try:
                     if brightness := values["brightness"]:
-                        self._attr_brightness = int(
-                            brightness  # type: ignore[operator]
-                            / float(self._config[CONF_BRIGHTNESS_SCALE])
-                            * 255
+                        if TYPE_CHECKING:
+                            assert isinstance(brightness, float)
+                        self._attr_brightness = color_util.value_to_brightness(
+                            (1, self._config[CONF_BRIGHTNESS_SCALE]), brightness
                         )
                     else:
                         _LOGGER.debug(
@@ -414,12 +406,13 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                         values["color_temp"],
                         self.entity_id,
                     )
+                # Allow to switch back to color_temp
+                if "color" not in values:
+                    self._attr_hs_color = None
 
             if self.supported_features and LightEntityFeature.EFFECT:
                 with suppress(KeyError):
                     self._attr_effect = cast(str, values["effect"])
-
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if self._topic[CONF_STATE_TOPIC] is not None:
             self._sub_state = subscription.async_prepare_subscribe_topics(
@@ -601,13 +594,12 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         self._set_flash_and_transition(message, **kwargs)
 
         if ATTR_BRIGHTNESS in kwargs and self._config[CONF_BRIGHTNESS]:
-            brightness_normalized = kwargs[ATTR_BRIGHTNESS] / DEFAULT_BRIGHTNESS_SCALE
-            brightness_scale = self._config[CONF_BRIGHTNESS_SCALE]
-            device_brightness = min(
-                round(brightness_normalized * brightness_scale), brightness_scale
+            device_brightness = color_util.brightness_to_value(
+                (1, self._config[CONF_BRIGHTNESS_SCALE]),
+                kwargs[ATTR_BRIGHTNESS],
             )
             # Make sure the brightness is not rounded down to 0
-            device_brightness = max(device_brightness, 1)
+            device_brightness = max(round(device_brightness), 1)
             message["brightness"] = device_brightness
 
             if self._optimistic:

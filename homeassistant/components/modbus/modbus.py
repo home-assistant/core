@@ -261,7 +261,7 @@ class ModbusHub:
         """Initialize the Modbus hub."""
 
         if CONF_CLOSE_COMM_ON_ERROR in client_config:
-            async_create_issue(  # pragma: no cover
+            async_create_issue(
                 hass,
                 DOMAIN,
                 "deprecated_close_comm_config",
@@ -276,7 +276,25 @@ class ModbusHub:
                 },
             )
             _LOGGER.warning(
-                "`close_comm_on_error`: is deprecated and will be remove in version 2024.4"
+                "`close_comm_on_error`: is deprecated and will be removed in version 2024.4"
+            )
+        if CONF_RETRY_ON_EMPTY in client_config:
+            async_create_issue(
+                hass,
+                DOMAIN,
+                "deprecated_retry_on_empty",
+                breaks_in_ha_version="2024.4.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_retry_on_empty",
+                translation_placeholders={
+                    "config_key": "retry_on_empty",
+                    "integration": DOMAIN,
+                    "url": "https://www.home-assistant.io/integrations/modbus",
+                },
+            )
+            _LOGGER.warning(
+                "`retry_on_empty`: is deprecated and will be removed in version 2024.4"
             )
         # generic configuration
         self._client: ModbusBaseClient | None = None
@@ -298,7 +316,7 @@ class ModbusHub:
             "port": client_config[CONF_PORT],
             "timeout": client_config[CONF_TIMEOUT],
             "retries": client_config[CONF_RETRIES],
-            "retry_on_empty": client_config[CONF_RETRY_ON_EMPTY],
+            "retry_on_empty": True,
         }
         if self._config_type == SERIAL:
             # serial configuration
@@ -417,10 +435,24 @@ class ModbusHub:
         try:
             result: ModbusResponse = entry.func(address, value, **kwargs)
         except ModbusException as exception_error:
-            self._log_error(str(exception_error))
+            error = (
+                f"Error: device: {slave} address: {address} -> {str(exception_error)}"
+            )
+            self._log_error(error)
+            return None
+        if not result:
+            error = (
+                f"Error: device: {slave} address: {address} -> pymodbus returned None"
+            )
+            self._log_error(error)
             return None
         if not hasattr(result, entry.attr):
-            self._log_error(str(result))
+            error = f"Error: device: {slave} address: {address} -> {str(result)}"
+            self._log_error(error)
+            return None
+        if result.isError():
+            error = f"Error: device: {slave} address: {address} -> pymodbus returned isError True"
+            self._log_error(error)
             return None
         self._in_error = False
         return result

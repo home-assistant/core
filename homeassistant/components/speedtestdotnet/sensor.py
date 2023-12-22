@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -32,7 +33,7 @@ from .const import (
 from .coordinator import SpeedTestDataCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class SpeedtestSensorEntityDescription(SensorEntityDescription):
     """Class describing Speedtest sensor entities."""
 
@@ -45,12 +46,14 @@ SENSOR_TYPES: tuple[SpeedtestSensorEntityDescription, ...] = (
         translation_key="ping",
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DURATION,
     ),
     SpeedtestSensorEntityDescription(
         key="download",
         translation_key="download",
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DATA_RATE,
         value=lambda value: round(value / 10**6, 2),
     ),
     SpeedtestSensorEntityDescription(
@@ -58,6 +61,7 @@ SENSOR_TYPES: tuple[SpeedtestSensorEntityDescription, ...] = (
         translation_key="upload",
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DATA_RATE,
         value=lambda value: round(value / 10**6, 2),
     ),
 )

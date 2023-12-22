@@ -5,7 +5,6 @@ import asyncio
 import collections
 from collections.abc import Callable
 from contextlib import suppress
-from dataclasses import dataclass
 import datetime as dt
 from enum import StrEnum
 import functools as ft
@@ -27,6 +26,7 @@ from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.websocket_api import ERR_NOT_SUPPORTED, ERR_UNKNOWN_ERROR
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
+    ATTR_ENTITY_PICTURE,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -448,15 +448,26 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class MediaPlayerEntityDescription(EntityDescription):
+class MediaPlayerEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes media player entities."""
 
     device_class: MediaPlayerDeviceClass | None = None
+    volume_step: float | None = None
 
 
 class MediaPlayerEntity(Entity):
     """ABC for media player entities."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {
+            ATTR_ENTITY_PICTURE_LOCAL,
+            ATTR_ENTITY_PICTURE,
+            ATTR_INPUT_SOURCE_LIST,
+            ATTR_MEDIA_POSITION_UPDATED_AT,
+            ATTR_MEDIA_POSITION,
+            ATTR_SOUND_MODE_LIST,
+        }
+    )
 
     entity_description: MediaPlayerEntityDescription
     _access_token: str | None = None
@@ -493,6 +504,7 @@ class MediaPlayerEntity(Entity):
     _attr_state: MediaPlayerState | None = None
     _attr_supported_features: MediaPlayerEntityFeature = MediaPlayerEntityFeature(0)
     _attr_volume_level: float | None = None
+    _attr_volume_step: float
 
     # Implement these for your media player
     @property
@@ -520,6 +532,18 @@ class MediaPlayerEntity(Entity):
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         return self._attr_volume_level
+
+    @property
+    def volume_step(self) -> float:
+        """Return the step to be used by the volume_up and volume_down services."""
+        if hasattr(self, "_attr_volume_step"):
+            return self._attr_volume_step
+        if (
+            hasattr(self, "entity_description")
+            and (volume_step := self.entity_description.volume_step) is not None
+        ):
+            return volume_step
+        return 0.1
 
     @property
     def is_volume_muted(self) -> bool | None:
@@ -944,7 +968,9 @@ class MediaPlayerEntity(Entity):
             and self.volume_level < 1
             and self.supported_features & MediaPlayerEntityFeature.VOLUME_SET
         ):
-            await self.async_set_volume_level(min(1, self.volume_level + 0.1))
+            await self.async_set_volume_level(
+                min(1, self.volume_level + self.volume_step)
+            )
 
     async def async_volume_down(self) -> None:
         """Turn volume down for media player.
@@ -960,7 +986,9 @@ class MediaPlayerEntity(Entity):
             and self.volume_level > 0
             and self.supported_features & MediaPlayerEntityFeature.VOLUME_SET
         ):
-            await self.async_set_volume_level(max(0, self.volume_level - 0.1))
+            await self.async_set_volume_level(
+                max(0, self.volume_level - self.volume_step)
+            )
 
     async def async_media_play_pause(self) -> None:
         """Play or pause the media player."""
@@ -1125,8 +1153,7 @@ class MediaPlayerImageView(HomeAssistantView):
     extra_urls = [
         # Need to modify the default regex for media_content_id as it may
         # include arbitrary characters including '/','{', or '}'
-        url
-        + "/browse_media/{media_content_type}/{media_content_id:.+}",
+        url + "/browse_media/{media_content_type}/{media_content_id:.+}",
     ]
 
     def __init__(self, component: EntityComponent[MediaPlayerEntity]) -> None:

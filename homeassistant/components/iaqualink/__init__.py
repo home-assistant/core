@@ -185,7 +185,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 def refresh_system(
-    func: Callable[Concatenate[_AqualinkEntityT, _P], Awaitable[Any]]
+    func: Callable[Concatenate[_AqualinkEntityT, _P], Awaitable[Any]],
 ) -> Callable[Concatenate[_AqualinkEntityT, _P], Coroutine[Any, Any, None]]:
     """Force update all entities after state change."""
 
