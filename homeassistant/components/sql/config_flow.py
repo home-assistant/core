@@ -9,6 +9,7 @@ from sqlalchemy.engine import Result
 from sqlalchemy.exc import NoSuchColumnError, SQLAlchemyError
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 import sqlparse
+from sqlparse.exceptions import SQLParseError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -86,7 +87,7 @@ def validate_sql_select(value: str) -> str | None:
     query_type = sqlparse.parse(value)[0].get_type().upper()
     _LOGGER.debug("The SQL query is of type %s", query_type)
     if not query_type == "SELECT":
-        raise TypeError
+        raise SQLParseError
     return value
 
 
@@ -161,7 +162,7 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders = {"column": column}
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
-            except TypeError:
+            except SQLParseError:
                 errors["query"] = "query_no_read_only"
             except ValueError as err:
                 _LOGGER.debug("Invalid query: %s", err)
@@ -225,7 +226,7 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 description_placeholders = {"column": column}
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
-            except TypeError:
+            except SQLParseError:
                 errors["query"] = "query_no_read_only"
             except ValueError as err:
                 _LOGGER.debug("Invalid query: %s", err)
