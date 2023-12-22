@@ -758,7 +758,6 @@ omit =
     homeassistant/components/motion_blinds/entity.py
     homeassistant/components/motion_blinds/sensor.py
     homeassistant/components/motionmount/__init__.py
-    homeassistant/components/motionmount/coordinator.py
     homeassistant/components/motionmount/entity.py
     homeassistant/components/motionmount/number.py
     homeassistant/components/mpd/media_player.py
