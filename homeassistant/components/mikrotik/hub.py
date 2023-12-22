@@ -235,14 +235,11 @@ class MikrotikData:
             # we still have to raise CannotConnect to fail the update.
             raise CannotConnect from api_error
         except librouteros.exceptions.ProtocolError as api_error:
+            emsg = "Mikrotik %s failed to retrieve data. cmd=[%s] Error: %s"
             if discover and "no such command prefix" in str(api_error):
+                _LOGGER.debug(emsg, self._host, cmd, api_error)
                 return []
-            _LOGGER.warning(
-                "Mikrotik %s failed to retrieve data. cmd=[%s] Error: %s",
-                self._host,
-                cmd,
-                api_error,
-            )
+            _LOGGER.warning(emsg, self._host, cmd, api_error)
             return []
 
 
