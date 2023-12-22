@@ -410,7 +410,7 @@ async def async_setup_entry(
     )
 
 
-class MqttTemperatureControlEntity(MqttEntity, ABC):
+class MqttTemperatureControlEntity(MqttEntity, ClimateEntity, ABC):
     """Helper entity class to control temperature.
 
     MqttTemperatureControlEntity supports shared methods for
