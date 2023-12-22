@@ -305,7 +305,7 @@ class CachedProperties(type):
 
         def deleter(name: str) -> Callable[[Any], None]:
             """Create a deleter for an _attr_ property."""
-            private_attribute_name = "__attr_" + name
+            private_attr_name = f"__attr_{name}"
 
             def _deleter(o: Any) -> None:
                 """Delete an _attr_ property.
@@ -314,7 +314,7 @@ class CachedProperties(type):
                 - Delete the __attr_ attribute
                 - Invalidate the cache of the cached property
                 """
-                for attr in (name, private_attribute_name):
+                for attr in (name, private_attr_name):
                     try:  # noqa: SIM105  suppress is much slower
                         delattr(o, attr)
                     except AttributeError:
@@ -324,17 +324,17 @@ class CachedProperties(type):
 
         def getter(name: str) -> Callable[[Any], Any]:
             """Create a getter for an _attr_ property."""
-            private_attribute_name = "__attr_" + name
+            private_attr_name = f"__attr_{name}"
 
             def _getter(o: Any) -> Any:
                 """Get an _attr_ property from the backing __attr attribute."""
-                return getattr(o, private_attribute_name)
+                return getattr(o, private_attr_name)
 
             return _getter
 
         def setter(name: str) -> Callable[[Any, Any], None]:
             """Create a setter for an _attr_ property."""
-            private_attribute_name = "__attr_" + name
+            private_attr_name = f"__attr_{name}"
 
             def _setter(o: Any, val: Any) -> None:
                 """Set an _attr_ property to the backing __attr attribute.
@@ -342,7 +342,7 @@ class CachedProperties(type):
                 Also invalidates the corresponding cached_property by calling
                 delattr on it.
                 """
-                setattr(o, private_attribute_name, val)
+                setattr(o, private_attr_name, val)
                 try:  # noqa: SIM105  suppress is much slower
                     delattr(o, name)
                 except AttributeError:
@@ -360,8 +360,8 @@ class CachedProperties(type):
             If the class being created has an _attr class attribute, move it, and its
             annotations, to the __attr attribute.
             """
-            attr_name = "_attr_" + property_name
-            private_attr_name = "__attr_" + property_name
+            attr_name = f"_attr_{name}"
+            private_attr_name = f"__attr_{name}"
             # Check if an _attr_ class attribute exits and move it to __attr_. We check
             # __dict__ here because we don't care about _attr_ class attributes in parents.
             if attr_name in cls.__dict__:
@@ -387,7 +387,7 @@ class CachedProperties(type):
             for property_name in cached_properties:
                 if property_name in seen_props:
                     continue
-                attr_name = "_attr_" + property_name
+                attr_name = f"_attr_{name}"
                 # Check if an _attr_ class attribute exits. We check __dict__ here because
                 # we don't care about _attr_ class attributes in parents.
                 if (attr_name) not in cls.__dict__:
@@ -648,12 +648,15 @@ class Entity(
     @property
     def suggested_object_id(self) -> str | None:
         """Return input for object id."""
-        # The check for self.platform guards against integrations not using an
-        # EntityComponent and can be removed in HA Core 2024.1
-        # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
         if (
+            # Check our class has overridden the name property from Entity
+            # We need to use type.__getattribute__ to retrieve the underlying
+            # property or cached_property object instead of the property's
+            # value.
             type.__getattribute__(self.__class__, "name")
             is type.__getattribute__(Entity, "name")
+            # The check for self.platform guards against integrations not using an
+            # EntityComponent and can be removed in HA Core 2024.1
             and self.platform
         ):
             name = self._name_internal(
