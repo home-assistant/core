@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN
 
@@ -100,9 +101,36 @@ class LutronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 main_repeater.load_xml_db()
             except Exception as ex:  # pylint: disable=broad-except
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"connection_failed_{DOMAIN}",
+                    is_fixable=False,
+                    issue_domain=DOMAIN,
+                    severity=IssueSeverity.ERROR,
+                    translation_key="import_issue_cannot_connect",
+                    translation_placeholders={
+                        "domain": DOMAIN,
+                        "integration_title": "Lutron",
+                    },
+                )
                 return str(ex)
 
             return None
+
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Lutron",
+            },
+        )
 
         try:
             await self.hass.async_add_executor_job(_load_db)
@@ -112,6 +140,19 @@ class LutronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "You will now be directed to enter the configuration"
                 "Please remember to remove the yaml from "
                 "your configuration.yaml as it is no longer valid"
+            )
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"connection_failed_{DOMAIN}",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=IssueSeverity.ERROR,
+                translation_key="import_issue_yaml_failed",
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "integration_title": "Lutron",
+                },
             )
             return await self.async_step_user(import_config)
 
