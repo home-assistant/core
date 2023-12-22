@@ -304,6 +304,7 @@ FLOWS = {
         "mopeka",
         "motion_blinds",
         "motioneye",
+        "motionmount",
         "mqtt",
         "mullvad",
         "mutesync",
