@@ -4746,6 +4746,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "refoss": {
+      "name": "Refoss",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "rejseplanen": {
       "name": "Rejseplanen",
       "integration_type": "hub",
