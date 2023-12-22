@@ -176,20 +176,6 @@ DISCOVERY_SCHEMA = vol.All(
     _DISCOVERY_SCHEMA_BASE,
 )
 
-# Support for CONF_POWER_STATE_TOPIC and CONF_POWER_STATE_TEMPLATE
-# was removed in HA Core 2023.8
-CONF_POWER_STATE_TEMPLATE = "power_state_template"
-CONF_POWER_STATE_TOPIC = "power_state_topic"
-CONF_PRESET_MODE_STATE_TOPIC = "preset_mode_state_topic"
-CONF_PRESET_MODE_COMMAND_TOPIC = "preset_mode_command_topic"
-CONF_PRESET_MODE_VALUE_TEMPLATE = "preset_mode_value_template"
-CONF_PRESET_MODE_COMMAND_TEMPLATE = "preset_mode_command_template"
-CONF_PRESET_MODES_LIST = "preset_modes"
-CONF_SWING_MODE_COMMAND_TEMPLATE = "swing_mode_command_template"
-CONF_SWING_MODE_COMMAND_TOPIC = "swing_mode_command_topic"
-CONF_SWING_MODE_LIST = "swing_modes"
-CONF_SWING_MODE_STATE_TEMPLATE = "swing_mode_state_template"
-CONF_SWING_MODE_STATE_TOPIC = "swing_mode_state_topic"
 CONF_TEMP_HIGH_COMMAND_TEMPLATE = "temperature_high_command_template"
 CONF_TEMP_HIGH_COMMAND_TOPIC = "temperature_high_command_topic"
 CONF_TEMP_HIGH_STATE_TEMPLATE = "temperature_high_state_template"
@@ -198,7 +184,6 @@ CONF_TEMP_LOW_COMMAND_TEMPLATE = "temperature_low_command_template"
 CONF_TEMP_LOW_COMMAND_TOPIC = "temperature_low_command_topic"
 CONF_TEMP_LOW_STATE_TEMPLATE = "temperature_low_state_template"
 CONF_TEMP_LOW_STATE_TOPIC = "temperature_low_state_topic"
-CONF_TEMP_STEP = "temp_step"
 
 
 async def async_setup_entry(
