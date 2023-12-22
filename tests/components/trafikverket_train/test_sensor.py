@@ -20,6 +20,7 @@ async def test_sensor_next(
     entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
     get_trains_next: list[TrainStop],
+    get_train_stop: TrainStop,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Trafikverket Train sensor."""
@@ -37,6 +38,9 @@ async def test_sensor_next(
     with patch(
         "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_next_train_stops",
         return_value=get_trains_next,
+    ), patch(
+        "homeassistant.components.trafikverket_train.coordinator.TrafikverketTrain.async_get_train_stop",
+        return_value=get_train_stop,
     ):
         freezer.tick(timedelta(minutes=6))
         async_fire_time_changed(hass)
