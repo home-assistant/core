@@ -57,12 +57,16 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Set up the Lutron component."""
     if DOMAIN in base_config:
-        lutron_configs = base_config[DOMAIN]
+        _LOGGER.warning(
+            "Your Lutron configuration has been imported into the UI; "
+            "please remove it from configuration.yaml as support for it "
+            "will be removed in a future release"
+        )
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": config_entries.SOURCE_IMPORT},
-                data=lutron_configs,
+                data=base_config[DOMAIN],
             )
         )
 
@@ -138,11 +142,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Clean up resources and entities associated with the integration."""
-    if entry.entry_id in hass.data[DOMAIN]:
-        device = hass.data[DOMAIN].pop(entry.entry_id)
-        await device.cleanup()  # Perform cleanup operations
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
 
-    return True
+    return unload_ok
 
 
 class LutronDevice(Entity):

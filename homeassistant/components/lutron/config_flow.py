@@ -23,6 +23,11 @@ class LutronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None) -> FlowResult:
         """First step in the config flow."""
+
+        # Check if a configuration entry with the same unique ID already exists
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
         errors = {}
 
         if user_input is not None:
@@ -42,26 +47,17 @@ class LutronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.hass.async_add_executor_job(_load_db)
-                guid = main_repeater.guid
-            except UnknownConnectError:
-                errors["base"] = "config_errors"
             except HTTPError as ex:
                 # In a future version we can get more specific with the HTTP code
                 _LOGGER.debug("Exception Type: %s", type(ex).__name__)
                 errors["base"] = "connect_error"
-
-            if not errors:
+            else:
+                guid = main_repeater.guid
                 if len(guid) > 10:
                     _LOGGER.info("Main Repeater GUID: %s", main_repeater.guid)
                 else:
                     errors["base"] = "missing_guid"
 
-            # Check if a configuration entry with the same unique ID already exists
-            if not errors:
-                if self._async_current_entries():
-                    return self.async_abort(reason="single_instance_allowed")
-
-            if not errors:
                 await self.async_set_unique_id(guid)
                 self._abort_if_unique_id_configured()
 
@@ -72,18 +68,61 @@ class LutronConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    vol.Required(CONF_USERNAME, default="lutron"): str,
+                    vol.Required(CONF_PASSWORD, default="integration"): str,
                     vol.Required(CONF_HOST): str,
                 }
             ),
             errors=errors,
         )
 
-    async def async_step_import(self, user_input) -> FlowResult:
-        """Handle import."""
-        return await self.async_step_user(user_input)
+    async def async_step_import(self, import_config) -> FlowResult:
+        """Attempt to import the existing configuration.
 
+        We will try to validate any legacy yaml first
+        If that works then we create the entry from that data and save
+        the user the work to create the new entry.
+        If that fails, then we prompt the user to supply the data.
+        """
 
-class UnknownConnectError(Exception):
-    """Catch unknown connection error."""
+        errors = {}
+        main_repeater = Lutron(
+            import_config[CONF_HOST],
+            import_config[CONF_USERNAME],
+            import_config[CONF_PASSWORD],
+        )
+
+        def _load_db(self, config: dict[str, str]) -> str | None:
+            """Validate input data and return any error."""
+            try:
+                main_repeater.load_xml_db()
+            except HTTPError as ex:
+                return str(ex)
+
+            return None
+
+        try:
+            await self.hass.async_add_executor_job(_load_db)
+        except HTTPError as ex:
+            _LOGGER.error("Unable to import configuration.yaml configuration: %s", ex)
+            _LOGGER.error(
+                "You will now be directed to enter the configuration"
+                "Please remember to remove the yaml from "
+                "your configuration.yaml as it is no longer valid"
+            )
+            return await self.async_step_user(import_config)
+
+        guid = main_repeater.guid
+
+        if len(guid) > 10:
+            _LOGGER.info("Main Repeater GUID: %s", main_repeater.guid)
+        else:
+            errors["base"] = "missing_guid"
+            return self.async_abort(
+                reason="missing_guid",
+                description_placeholders={"error": errors["base"]},
+            )
+
+        await self.async_set_unique_id(guid)
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(title="Lutron", data=import_config)
