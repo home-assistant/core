@@ -68,8 +68,9 @@ class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        if position := self.get("vehicle_state_media_info_now_playing_elapsed"):
-            return position / 1000
+        # Return media position only when a media duration is > 0
+        if self.get("vehicle_state_media_info_now_playing_duration"):
+            return self.get("vehicle_state_media_info_now_playing_elapsed") / 1000
         return None
 
     @property
