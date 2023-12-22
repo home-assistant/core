@@ -421,6 +421,7 @@ omit =
     homeassistant/components/fortios/device_tracker.py
     homeassistant/components/foscam/__init__.py
     homeassistant/components/foscam/camera.py
+    homeassistant/components/foscam/coordinator.py
     homeassistant/components/foursquare/*
     homeassistant/components/free_mobile/notify.py
     homeassistant/components/freebox/camera.py
