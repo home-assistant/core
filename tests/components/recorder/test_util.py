@@ -883,7 +883,7 @@ def test_build_mysqldb_conv() -> None:
 
 @patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
 def test_execute_stmt_lambda_element(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test executing with execute_stmt_lambda_element."""
     hass = hass_recorder()

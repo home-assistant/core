@@ -6,7 +6,7 @@
 aiohttp==3.9.1
 aiohttp_cors==0.7.0
 aiohttp-fast-url-dispatcher==0.3.0
-aiohttp-zlib-ng==0.1.1
+aiohttp-zlib-ng==0.1.2
 astral==2.2
 attrs==23.1.0
 atomicwrites-homeassistant==1.4.1
@@ -14,7 +14,7 @@ awesomeversion==23.11.0
 bcrypt==4.0.1
 certifi>=2021.5.30
 ciso8601==2.3.0
-httpx==0.25.0
+httpx==0.26.0
 home-assistant-bluetooth==1.11.0
 ifaddr==0.2.0
 Jinja2==3.1.2

@@ -218,7 +218,7 @@ aioelectricitymaps==0.1.5
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==21.0.0
+aioesphomeapi==21.0.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -239,7 +239,7 @@ aiohomekit==3.1.0
 aiohttp-fast-url-dispatcher==0.3.0
 
 # homeassistant.components.http
-aiohttp-zlib-ng==0.1.1
+aiohttp-zlib-ng==0.1.2
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -421,7 +421,7 @@ arcam-fmj==1.4.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.36.2
+async-upnp-client==0.38.0
 
 # homeassistant.components.sleepiq
 asyncsleepiq==1.4.0
@@ -448,7 +448,7 @@ base36==0.1.1
 beautifulsoup4==4.12.2
 
 # homeassistant.components.zha
-bellows==0.37.3
+bellows==0.37.4
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.14.6
@@ -466,7 +466,7 @@ bleak==0.21.1
 blebox-uniapi==2.2.0
 
 # homeassistant.components.blink
-blinkpy==0.22.3
+blinkpy==0.22.4
 
 # homeassistant.components.bluemaestro
 bluemaestro-ble==0.2.3
@@ -481,7 +481,7 @@ bluetooth-auto-recovery==1.2.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.18.0
+bluetooth-data-tools==1.19.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -506,6 +506,9 @@ bthome-ble==3.3.1
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
+
+# homeassistant.components.dhcp
+cached_ipaddress==0.3.0
 
 # homeassistant.components.caldav
 caldav==1.3.8
@@ -561,10 +564,10 @@ demetriek==0.4.0
 denonavr==0.11.4
 
 # homeassistant.components.devialet
-devialet==1.4.3
+devialet==1.4.5
 
 # homeassistant.components.devolo_home_control
-devolo-home-control-api==0.18.2
+devolo-home-control-api==0.18.3
 
 # homeassistant.components.devolo_home_network
 devolo-plc-api==1.4.1
@@ -745,7 +748,7 @@ google-nest-sdm==3.0.3
 googlemaps==2.5.1
 
 # homeassistant.components.tailwind
-gotailwind==0.2.1
+gotailwind==0.2.2
 
 # homeassistant.components.govee_ble
 govee-ble==0.24.0
@@ -788,10 +791,10 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==1.0.0
+habluetooth==2.0.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.74.0
+hass-nabucasa==0.75.1
 
 # homeassistant.components.conversation
 hassil==1.5.1
@@ -928,7 +931,7 @@ librouteros==3.2.0
 libsoundtouch==0.8
 
 # homeassistant.components.life360
-life360==6.0.0
+life360==6.0.1
 
 # homeassistant.components.linear_garage_door
 linear-garage-door==0.2.7
@@ -1253,7 +1256,7 @@ pyasuswrt==0.1.21
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==8.0.0
+pyatmo==8.0.1
 
 # homeassistant.components.apple_tv
 pyatv==0.14.3
@@ -1313,7 +1316,7 @@ pyeconet==0.1.22
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.14.3
+pyenphase==1.15.2
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1525,7 +1528,7 @@ pyprof2calltree==1.4.5
 pyprosegur==0.0.9
 
 # homeassistant.components.prusalink
-pyprusalink==1.1.0
+pyprusalink==2.0.0
 
 # homeassistant.components.ps4
 pyps4-2ndscreen==1.3.1
@@ -1651,6 +1654,9 @@ python-miio==0.5.12
 
 # homeassistant.components.mystrom
 python-mystrom==2.2.0
+
+# homeassistant.components.swiss_public_transport
+python-opendata-transport==0.4.0
 
 # homeassistant.components.opensky
 python-opensky==1.0.0
@@ -1780,7 +1786,7 @@ reolink-aio==0.8.4
 rflink==0.0.65
 
 # homeassistant.components.ring
-ring-doorbell[listen]==0.8.3
+ring-doorbell[listen]==0.8.5
 
 # homeassistant.components.roku
 rokuecp==0.18.1
@@ -1922,13 +1928,13 @@ subarulink==0.7.9
 sunwatcher==0.2.1
 
 # homeassistant.components.sunweg
-sunweg==2.0.1
+sunweg==2.0.3
 
 # homeassistant.components.surepetcare
-surepy==0.8.0
+surepy==0.9.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==1.2.1
+switchbot-api==1.3.0
 
 # homeassistant.components.system_bridge
 systembridgeconnector==3.10.0
@@ -2135,16 +2141,16 @@ yt-dlp==2023.11.16
 zamg==0.3.3
 
 # homeassistant.components.zeroconf
-zeroconf==0.130.0
+zeroconf==0.131.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.107
+zha-quirks==0.0.108
 
 # homeassistant.components.zha
-zigpy-deconz==0.22.2
+zigpy-deconz==0.22.3
 
 # homeassistant.components.zha
 zigpy-xbee==0.20.1
@@ -2153,10 +2159,10 @@ zigpy-xbee==0.20.1
 zigpy-zigate==0.12.0
 
 # homeassistant.components.zha
-zigpy-znp==0.12.0
+zigpy-znp==0.12.1
 
 # homeassistant.components.zha
-zigpy==0.60.1
+zigpy==0.60.2
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.54.0
