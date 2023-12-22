@@ -1056,6 +1056,8 @@ build.json @home-assistant/supervisor
 /tests/components/recorder/ @home-assistant/core
 /homeassistant/components/recovery_mode/ @home-assistant/core
 /tests/components/recovery_mode/ @home-assistant/core
+/homeassistant/components/refoss/ @ashionky
+/tests/components/refoss/ @ashionky
 /homeassistant/components/rejseplanen/ @DarkFox
 /homeassistant/components/remote/ @home-assistant/core
 /tests/components/remote/ @home-assistant/core
