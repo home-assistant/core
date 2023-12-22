@@ -14,7 +14,7 @@ from .common import TEST_VEHICLE_STATE_ONLINE, setup_platform
 
 
 async def test_locks(hass: HomeAssistant) -> None:
-    """Tests that the sensors are correct."""
+    """Tests that the lock entity is correct."""
 
     assert len(hass.states.async_all("lock")) == 0
 
