@@ -4,12 +4,13 @@ from collections.abc import Generator
 import json
 from unittest.mock import MagicMock, patch
 
+from lmcloud.const import LaMarzoccoModel
 import pytest
 
 from homeassistant.components.lamarzocco.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from . import MACHINE_NAME, USER_INPUT
+from . import USER_INPUT
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -20,13 +21,13 @@ def mock_bluetooth(enable_bluetooth):
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry(mock_lamarzocco: MagicMock) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         title="My LaMarzocco",
         domain=DOMAIN,
         data=USER_INPUT,
-        unique_id="GS01234",
+        unique_id=mock_lamarzocco.serial_number,
     )
 
 
@@ -43,9 +44,33 @@ async def init_integration(
     return mock_config_entry
 
 
-@pytest.fixture
-def mock_lamarzocco() -> Generator[MagicMock, None, None]:
+@pytest.fixture(
+    params=[
+        LaMarzoccoModel.GS3_AV,
+        LaMarzoccoModel.GS3_MP,
+        LaMarzoccoModel.LINEA_MICRA,
+        LaMarzoccoModel.LINEA_MINI,
+    ]
+)
+def mock_lamarzocco(
+    request: pytest.FixtureRequest,
+) -> Generator[MagicMock, None, None]:
     """Return a mocked LM client."""
+    model_name = request.param
+
+    if model_name == LaMarzoccoModel.GS3_AV:
+        serial_number = "GS01234"
+        true_model_name = "GS3 AV"
+    elif model_name == LaMarzoccoModel.GS3_MP:
+        serial_number = "GS01234"
+        true_model_name = "GS3 MP"
+    elif model_name == LaMarzoccoModel.LINEA_MICRA:
+        serial_number = "MR01234"
+        true_model_name = "Linea Micra"
+    elif model_name == LaMarzoccoModel.LINEA_MINI:
+        serial_number = "LM01234"
+        true_model_name = "Linea Mini"
+
     with patch(
         "homeassistant.components.lamarzocco.coordinator.LaMarzoccoClient",
         autospec=True,
@@ -56,14 +81,14 @@ def mock_lamarzocco() -> Generator[MagicMock, None, None]:
         lamarzocco = lamarzocco_mock.return_value
 
         lamarzocco.machine_info = {
-            "machine_name": MACHINE_NAME,
-            "serial_number": "GS01234",
+            "machine_name": serial_number,
+            "serial_number": serial_number,
         }
 
-        lamarzocco.model_name = "GS3 AV"
-        lamarzocco.true_model_name = "GS3 AV"
-        lamarzocco.machine_name = MACHINE_NAME
-        lamarzocco.serial_number = "GS01234"
+        lamarzocco.model_name = model_name
+        lamarzocco.true_model_name = true_model_name
+        lamarzocco.machine_name = serial_number
+        lamarzocco.serial_number = serial_number
 
         lamarzocco.firmware_version = "1.1"
         lamarzocco.latest_firmware_version = "1.1"
@@ -71,7 +96,6 @@ def mock_lamarzocco() -> Generator[MagicMock, None, None]:
         lamarzocco.latest_gateway_version = "v3.1-rc4"
 
         lamarzocco.connect.return_value = None
-        lamarzocco.update_machine_status.return_value = None
         lamarzocco.websocket_connect.return_value = None
         lamarzocco.update_local_machine_status.return_value = None
 
@@ -82,7 +106,7 @@ def mock_lamarzocco() -> Generator[MagicMock, None, None]:
         lamarzocco.statistics = json.loads(load_fixture("statistics.json", DOMAIN))
 
         lamarzocco.get_all_machines.return_value = [
-            ("GS01234", "GS3 AV"),
+            (serial_number, model_name),
         ]
         lamarzocco.check_local_connection.return_value = True
         yield lamarzocco

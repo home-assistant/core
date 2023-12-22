@@ -5,20 +5,18 @@ from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.lamarzocco.const import DOMAIN
+from homeassistant.components.lamarzocco.const import CONF_MACHINE, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
-    DISCOVERED_INFO,
     HOST_SELECTION,
-    LM_SERVICE_INFO,
     LOGIN_INFO,
-    MACHINE_DATA,
-    MACHINE_SELECTION,
     USER_INPUT,
     WRONG_LOGIN_INFO,
+    get_bluetooth_service_info,
 )
 
 from tests.common import MockConfigEntry
@@ -44,14 +42,21 @@ async def test_form(hass: HomeAssistant, mock_lamarzocco: MagicMock) -> None:
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
-        MACHINE_SELECTION,
+        {
+            CONF_HOST: "192.168.1.1",
+            CONF_MACHINE: mock_lamarzocco.serial_number,
+        },
     )
     await hass.async_block_till_done()
 
     assert result3["type"] == FlowResultType.CREATE_ENTRY
 
-    assert result3["title"] == "GS01234"
-    assert result3["data"] == USER_INPUT | MACHINE_DATA
+    assert result3["title"] == mock_lamarzocco.serial_number
+    assert result3["data"] == {
+        **USER_INPUT,
+        CONF_HOST: "192.168.1.1",
+        CONF_MACHINE: mock_lamarzocco.serial_number,
+    }
 
     assert len(mock_lamarzocco.check_local_connection.mock_calls) == 1
 
@@ -81,7 +86,10 @@ async def test_form_abort_already_configured(
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
-        MACHINE_SELECTION,
+        {
+            CONF_HOST: "192.168.1.1",
+            CONF_MACHINE: mock_lamarzocco.serial_number,
+        },
     )
     await hass.async_block_till_done()
 
@@ -132,7 +140,10 @@ async def test_form_invalid_host(
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
-        MACHINE_SELECTION,
+        {
+            CONF_HOST: "192.168.1.1",
+            CONF_MACHINE: mock_lamarzocco.serial_number,
+        },
     )
     await hass.async_block_till_done()
 
@@ -176,10 +187,11 @@ async def test_bluetooth_discovery(
     hass: HomeAssistant, mock_lamarzocco: MagicMock
 ) -> None:
     """Test bluetooth discovery."""
+    service_info = get_bluetooth_service_info(
+        mock_lamarzocco.model_name, mock_lamarzocco.serial_number
+    )
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=LM_SERVICE_INFO,
+        DOMAIN, context={"source": config_entries.SOURCE_BLUETOOTH}, data=service_info
     )
 
     assert result["type"] == FlowResultType.FORM
@@ -201,8 +213,14 @@ async def test_bluetooth_discovery(
 
     assert result3["type"] == FlowResultType.CREATE_ENTRY
 
-    assert result3["title"] == "GS01234"
-    assert result3["data"] == USER_INPUT | MACHINE_DATA | DISCOVERED_INFO
+    assert result3["title"] == mock_lamarzocco.serial_number
+    assert result3["data"] == {
+        **USER_INPUT,
+        CONF_HOST: "192.168.1.1",
+        CONF_MACHINE: mock_lamarzocco.serial_number,
+        CONF_NAME: service_info.name,
+        CONF_MAC: "aa:bb:cc:dd:ee:ff",
+    }
 
     assert len(mock_lamarzocco.check_local_connection.mock_calls) == 1
 
@@ -214,7 +232,9 @@ async def test_bluetooth_discovery_errors(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=LM_SERVICE_INFO,
+        data=get_bluetooth_service_info(
+            mock_lamarzocco.model_name, mock_lamarzocco.serial_number
+        ),
     )
 
     assert result["type"] == FlowResultType.FORM
@@ -229,7 +249,9 @@ async def test_bluetooth_discovery_errors(
     assert result2["errors"] == {"base": "machine_not_found"}
     assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1
 
-    mock_lamarzocco.get_all_machines.return_value = [("GS01234", "GS3 AV")]
+    mock_lamarzocco.get_all_machines.return_value = [
+        (mock_lamarzocco.serial_number, mock_lamarzocco.model_name)
+    ]
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         USER_INPUT,

@@ -3,6 +3,8 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
+from lmcloud.const import LaMarzoccoModel
+
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
@@ -10,13 +12,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LaMarzoccoEntity
+from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
 from .lm_client import LaMarzoccoClient
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class LaMarzoccoSwitchEntityDescription(
     SwitchEntityDescription,
+    LaMarzoccoEntityDescription,
 ):
     """Description of an La Marzocco Switch."""
 
@@ -47,6 +50,11 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         control_fn=lambda client, state: client.set_prebrew(state),
         is_on_fn=lambda client: client.current_status["enable_prebrewing"],
         entity_category=EntityCategory.CONFIG,
+        supported_models=(
+            LaMarzoccoModel.GS3_AV,
+            LaMarzoccoModel.LINEA_MINI,
+            LaMarzoccoModel.LINEA_MICRA,
+        ),
     ),
     LaMarzoccoSwitchEntityDescription(
         key="preinfusion",
@@ -55,6 +63,11 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         control_fn=lambda client, state: client.set_preinfusion(state),
         is_on_fn=lambda client: client.current_status["enable_preinfusion"],
         entity_category=EntityCategory.CONFIG,
+        supported_models=(
+            LaMarzoccoModel.GS3_AV,
+            LaMarzoccoModel.LINEA_MINI,
+            LaMarzoccoModel.LINEA_MICRA,
+        ),
     ),
     LaMarzoccoSwitchEntityDescription(
         key="steam_boiler_enable",
@@ -75,7 +88,9 @@ async def async_setup_entry(
 
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
-        LaMarzoccoSwitchEntity(coordinator, description) for description in ENTITIES
+        LaMarzoccoSwitchEntity(coordinator, description)
+        for description in ENTITIES
+        if coordinator.data.model_name in description.supported_models
     )
 
 

@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+from lmcloud.const import LaMarzoccoModel
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -10,17 +12,29 @@ from .const import DOMAIN
 from .coordinator import LmApiCoordinator
 
 
+@dataclass(frozen=True, kw_only=True)
+class LaMarzoccoEntityDescription(EntityDescription):
+    """Description for all LM entities."""
+
+    supported_models: tuple[LaMarzoccoModel, ...] = (
+        LaMarzoccoModel.GS3_AV,
+        LaMarzoccoModel.GS3_MP,
+        LaMarzoccoModel.LINEA_MICRA,
+        LaMarzoccoModel.LINEA_MINI,
+    )
+
+
 @dataclass
 class LaMarzoccoEntity(CoordinatorEntity[LmApiCoordinator]):
     """Common elements for all entities."""
 
-    entity_description: EntityDescription
+    entity_description: LaMarzoccoEntityDescription
     _attr_has_entity_name: bool = True
 
     def __init__(
         self,
         coordinator: LmApiCoordinator,
-        entity_description: EntityDescription,
+        entity_description: LaMarzoccoEntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
