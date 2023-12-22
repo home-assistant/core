@@ -291,7 +291,7 @@ aioopenexchangerates==0.4.0
 aiopegelonline==0.0.6
 
 # homeassistant.components.acmeda
-aiopulse==0.4.3
+aiopulse==0.4.4
 
 # homeassistant.components.purpleair
 aiopurpleair==2022.12.1
