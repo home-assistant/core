@@ -15,6 +15,7 @@ from homeassistant.components.rabbitair.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.device_registry import format_mac
 
 TEST_HOST = "1.1.1.1"
 TEST_NAME = "abcdef1234_123456789012345678"
@@ -22,7 +23,7 @@ TEST_TOKEN = "0123456789abcdef0123456789abcdef"
 TEST_MAC = "01:23:45:67:89:AB"
 TEST_FIRMWARE = "2.3.17"
 TEST_HARDWARE = "1.0.0.4"
-TEST_UNIQUE_ID = TEST_MAC
+TEST_UNIQUE_ID = format_mac(TEST_MAC)
 TEST_TITLE = "Rabbit Air"
 
 ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
