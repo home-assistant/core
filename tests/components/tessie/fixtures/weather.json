@@ -1,0 +1,14 @@
+{
+  "location": "Earth",
+  "condition": "Rain",
+  "temperature": 23.01,
+  "feels_like": 23.53,
+  "humidity": 83,
+  "visibility": 10000,
+  "pressure": 1010,
+  "sunrise": 1703184453,
+  "sunset": 1703234517,
+  "cloudiness": 100,
+  "wind_speed": 0.45,
+  "wind_direction": 165
+}

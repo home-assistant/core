@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from .common import TEST_STATE_OF_ALL_VEHICLES, TEST_VEHICLE_STATE_ONLINE
+from .common import TEST_STATE_OF_ALL_VEHICLES, TEST_VEHICLE_STATE_ONLINE, TEST_WEATHER
 
 
 @pytest.fixture
@@ -26,3 +26,13 @@ def mock_get_state_of_all_vehicles():
         return_value=TEST_STATE_OF_ALL_VEHICLES,
     ) as mock_get_state_of_all_vehicles:
         yield mock_get_state_of_all_vehicles
+
+
+@pytest.fixture
+def mock_get_weather():
+    """Mock get_weather function."""
+    with patch(
+        "homeassistant.components.tessie.coordinator.get_weather",
+        return_value=TEST_WEATHER,
+    ) as mock_get_weather:
+        yield mock_get_weather

@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
-from tessie_api import get_state
+from tessie_api import get_state, get_weather
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -16,6 +16,7 @@ from .const import TessieStatus
 
 # This matches the update interval Tessie performs server side
 TESSIE_SYNC_INTERVAL = 10
+TESSIE_WEATHER_SYNC_INTERVAL = 300
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,3 +81,39 @@ class TessieDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             else:
                 result[key] = value
         return result
+
+
+class TessieWeatherDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Data Update Coordinator for Weather."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        api_key: str,
+        vin: str,
+    ) -> None:
+        """Initialize Tessie Weather Data Update Coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name="Tessie Weather",
+            update_interval=timedelta(seconds=TESSIE_WEATHER_SYNC_INTERVAL),
+        )
+        self.api_key = api_key
+        self.vin = vin
+        self.session = async_get_clientsession(hass)
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Update weather data using Tessie API."""
+
+        try:
+            return await get_weather(
+                session=self.session,
+                api_key=self.api_key,
+                vin=self.vin,
+            )
+        except ClientResponseError as e:
+            if e.status == HTTPStatus.UNAUTHORIZED:
+                # Auth Token is no longer valid
+                raise ConfigEntryAuthFailed from e
+            raise e
