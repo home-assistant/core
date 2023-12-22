@@ -272,17 +272,8 @@
     "command_failed": {
       "message": "Error while calling {command}."
     },
-    "home_data_fail": {
-      "message": "Failed getting Roborock home data."
-    },
-    "invalid_credentials": {
-      "message": "Invalid credentials."
-    },
     "map_failure": {
       "message": "Something went wrong creating the map."
-    },
-    "no_coordinators": {
-      "message": "No devices were able to successfully setup."
     }
   }
 }

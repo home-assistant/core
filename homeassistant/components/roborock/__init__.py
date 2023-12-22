@@ -35,17 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         home_data = await api_client.get_home_data(user_data)
     except RoborockInvalidCredentials as err:
-        raise ConfigEntryAuthFailed(
-            "Invalid credentials.",
-            translation_domain=DOMAIN,
-            translation_key="invalid_credentials",
-        ) from err
+        raise ConfigEntryAuthFailed("Invalid credentials.") from err
     except RoborockException as err:
-        raise ConfigEntryNotReady(
-            "Failed getting Roborock home data.",
-            translation_domain=DOMAIN,
-            translation_key="home_data_fail",
-        ) from err
+        raise ConfigEntryNotReady("Failed getting Roborock home data.") from err
     _LOGGER.debug("Got home data %s", home_data)
     device_map: dict[str, HomeDataDevice] = {
         device.duid: device for device in home_data.devices + home_data.received_devices
@@ -65,11 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if isinstance(coord, RoborockDataUpdateCoordinator)
     ]
     if len(valid_coordinators) == 0:
-        raise ConfigEntryNotReady(
-            "No devices were able to successfully setup.",
-            translation_domain=DOMAIN,
-            translation_key="no_coordinators",
-        )
+        raise ConfigEntryNotReady("No devices were able to successfully setup.")
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         coordinator.roborock_device_info.device.duid: coordinator
         for coordinator in valid_coordinators
