@@ -52,7 +52,7 @@ class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
         )
 
     @property
-    def volume_level(self) -> float | None:
+    def volume_level(self) -> float:
         """Volume level of the media player (0..1)."""
         return self.get("vehicle_state_media_info_audio_volume", 0) / self.get(
             "vehicle_state_media_info_audio_volume_max", 10.333333
