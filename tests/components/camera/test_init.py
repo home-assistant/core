@@ -56,10 +56,7 @@ async def mock_stream_source_fixture():
     with patch(
         "homeassistant.components.camera.Camera.stream_source",
         return_value=STREAM_SOURCE,
-    ) as mock_stream_source, patch(
-        "homeassistant.components.camera.Camera.supported_features",
-        return_value=camera.CameraEntityFeature.STREAM,
-    ):
+    ) as mock_stream_source:
         yield mock_stream_source
 
 
@@ -69,10 +66,7 @@ async def mock_hls_stream_source_fixture():
     with patch(
         "homeassistant.components.camera.Camera.stream_source",
         return_value=HLS_STREAM_SOURCE,
-    ) as mock_hls_stream_source, patch(
-        "homeassistant.components.camera.Camera.supported_features",
-        return_value=camera.CameraEntityFeature.STREAM,
-    ):
+    ) as mock_hls_stream_source:
         yield mock_hls_stream_source
 
 
@@ -937,14 +931,10 @@ async def test_use_stream_for_stills(
         mock_stream_source.assert_not_called()
         assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
         # Test when the integration does not provide a stream_source should fail
-        with patch(
-            "homeassistant.components.demo.camera.DemoCamera.supported_features",
-            return_value=camera.SUPPORT_STREAM,
-        ):
-            resp = await client.get("/api/camera_proxy/camera.demo_camera")
-            await hass.async_block_till_done()
-            mock_stream_source.assert_called_once()
-            assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+        resp = await client.get("/api/camera_proxy/camera.demo_camera")
+        await hass.async_block_till_done()
+        mock_stream_source.assert_called_once()
+        assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
