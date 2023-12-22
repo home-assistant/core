@@ -229,6 +229,7 @@ COVER_VALVE_SET_POSITION_FEATURE = {
     valve.DOMAIN: ValveEntityFeature.SET_POSITION,
 }
 
+COVER_VALVE_DOMAINS = {cover.DOMAIN, valve.DOMAIN}
 
 FRIENDLY_DOMAIN = {cover.DOMAIN: "Cover", valve.DOMAIN: "Valve"}
 
@@ -862,7 +863,7 @@ class StartStopTrait(_Trait):
                 & VacuumEntityFeature.PAUSE
                 != 0
             }
-        if domain in {cover.DOMAIN, valve.DOMAIN}:
+        if domain in COVER_VALVE_DOMAINS:
             return {}
 
     def query_attributes(self):
@@ -886,7 +887,7 @@ class StartStopTrait(_Trait):
         domain = self.state.domain
         if domain == vacuum.DOMAIN:
             return await self._execute_vacuum(command, data, params, challenge)
-        if domain in {cover.DOMAIN, valve.DOMAIN}:
+        if domain in COVER_VALVE_DOMAINS:
             return await self._execute_cover_or_valve(command, data, params, challenge)
 
     async def _execute_vacuum(self, command, data, params, challenge):
@@ -2145,7 +2146,7 @@ class OpenCloseTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        if domain in {cover.DOMAIN, valve.DOMAIN}:
+        if domain in COVER_VALVE_DOMAINS:
             return True
 
         return domain == binary_sensor.DOMAIN and device_class in (
@@ -2209,7 +2210,7 @@ class OpenCloseTrait(_Trait):
         if self.state.attributes.get(ATTR_ASSUMED_STATE):
             return response
 
-        if domain in {cover.DOMAIN, valve.DOMAIN}:
+        if domain in COVER_VALVE_DOMAINS:
             if self.state.state == STATE_UNKNOWN:
                 raise SmartHomeError(
                     ERR_NOT_SUPPORTED, "Querying state is not supported"
@@ -2237,7 +2238,7 @@ class OpenCloseTrait(_Trait):
         domain = self.state.domain
         features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        if domain in {cover.DOMAIN, valve.DOMAIN}:
+        if domain in COVER_VALVE_DOMAINS:
             svc_params = {ATTR_ENTITY_ID: self.state.entity_id}
             should_verify = False
             if command == COMMAND_OPENCLOSE_RELATIVE:
