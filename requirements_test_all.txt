@@ -1424,7 +1424,7 @@ pylaunches==1.4.0
 pylibrespot-java==0.1.1
 
 # homeassistant.components.litejet
-pylitejet==0.6.0
+pylitejet==0.6.2
 
 # homeassistant.components.litterrobot
 pylitterbot==2023.4.9

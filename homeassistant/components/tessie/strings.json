@@ -117,6 +117,14 @@
         "name": "Passenger temperature setting"
       }
     },
+    "cover": {
+      "windows": {
+        "name": "Vent windows"
+      },
+      "charge_state_charge_port_door_open": {
+        "name": "Charge port door"
+      }
+    },
     "select": {
       "climate_state_seat_heater_left": {
         "name": "Seat heater left",
