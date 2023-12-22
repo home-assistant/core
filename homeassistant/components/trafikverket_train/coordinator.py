@@ -126,7 +126,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
 
         depart_next = None
         depart_next_next = None
-        if not state and states and len(states) > 0:
+        if not state and states:
             state = states[0]
             depart_next = (
                 states[1].advertised_time_at_location if len(states) > 1 else None
