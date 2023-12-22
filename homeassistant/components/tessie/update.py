@@ -42,7 +42,6 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
     @property
     def latest_version(self) -> str | None:
         """Return the latest version."""
-        # Dont show an update when its not in a state that can be actioned
         if self.get("vehicle_state_software_update_status") in (
             TessieUpdateStatus.AVAILABLE,
             TessieUpdateStatus.SCHEDULED,

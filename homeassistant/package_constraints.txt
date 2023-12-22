@@ -2,7 +2,7 @@
 
 aiodiscover==1.6.0
 aiohttp-fast-url-dispatcher==0.3.0
-aiohttp-zlib-ng==0.1.1
+aiohttp-zlib-ng==0.1.2
 aiohttp==3.9.1
 aiohttp_cors==0.7.0
 astral==2.2
@@ -16,6 +16,7 @@ bleak==0.21.1
 bluetooth-adapters==0.16.2
 bluetooth-auto-recovery==1.2.3
 bluetooth-data-tools==1.19.0
+cached_ipaddress==0.3.0
 certifi>=2021.5.30
 ciso8601==2.3.0
 cryptography==41.0.7
@@ -29,7 +30,7 @@ hassil==1.5.1
 home-assistant-bluetooth==1.11.0
 home-assistant-frontend==20231208.2
 home-assistant-intents==2023.12.05
-httpx==0.25.0
+httpx==0.26.0
 ifaddr==0.2.0
 janus==1.0.0
 Jinja2==3.1.2
@@ -110,7 +111,7 @@ regex==2021.8.28
 # requirements so we can directly link HA versions to these library versions.
 anyio==4.1.0
 h11==0.14.0
-httpcore==0.18.0
+httpcore==1.0.2
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation

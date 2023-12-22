@@ -157,6 +157,8 @@ build.json @home-assistant/supervisor
 /tests/components/blebox/ @bbx-a @riokuu
 /homeassistant/components/blink/ @fronzbot @mkmer
 /tests/components/blink/ @fronzbot @mkmer
+/homeassistant/components/blue_current/ @Floris272 @gleeuwen
+/tests/components/blue_current/ @Floris272 @gleeuwen
 /homeassistant/components/bluemaestro/ @bdraco
 /tests/components/bluemaestro/ @bdraco
 /homeassistant/components/blueprint/ @home-assistant/core
@@ -299,6 +301,8 @@ build.json @home-assistant/supervisor
 /tests/components/dormakaba_dkey/ @emontnemery
 /homeassistant/components/dremel_3d_printer/ @tkdrob
 /tests/components/dremel_3d_printer/ @tkdrob
+/homeassistant/components/drop_connect/ @ChandlerSystems @pfrazer
+/tests/components/drop_connect/ @ChandlerSystems @pfrazer
 /homeassistant/components/dsmr/ @Robbie1221 @frenck
 /tests/components/dsmr/ @Robbie1221 @frenck
 /homeassistant/components/dsmr_reader/ @depl0y @glodenox
@@ -416,8 +420,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/forked_daapd/ @uvjustin
 /tests/components/forked_daapd/ @uvjustin
 /homeassistant/components/fortios/ @kimfrellsen
-/homeassistant/components/foscam/ @skgsergio
-/tests/components/foscam/ @skgsergio
+/homeassistant/components/foscam/ @skgsergio @krmarien
+/tests/components/foscam/ @skgsergio @krmarien
 /homeassistant/components/freebox/ @hacf-fr @Quentame
 /tests/components/freebox/ @hacf-fr @Quentame
 /homeassistant/components/freedompro/ @stefano055415
@@ -811,6 +815,8 @@ build.json @home-assistant/supervisor
 /tests/components/motion_blinds/ @starkillerOG
 /homeassistant/components/motioneye/ @dermotduffy
 /tests/components/motioneye/ @dermotduffy
+/homeassistant/components/motionmount/ @RJPoelstra
+/tests/components/motionmount/ @RJPoelstra
 /homeassistant/components/mqtt/ @emontnemery @jbouwh
 /tests/components/mqtt/ @emontnemery @jbouwh
 /homeassistant/components/msteams/ @peroyvind
@@ -1056,6 +1062,8 @@ build.json @home-assistant/supervisor
 /tests/components/recorder/ @home-assistant/core
 /homeassistant/components/recovery_mode/ @home-assistant/core
 /tests/components/recovery_mode/ @home-assistant/core
+/homeassistant/components/refoss/ @ashionky
+/tests/components/refoss/ @ashionky
 /homeassistant/components/rejseplanen/ @DarkFox
 /homeassistant/components/remote/ @home-assistant/core
 /tests/components/remote/ @home-assistant/core
@@ -1264,7 +1272,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/surepetcare/ @benleb @danielhiversen
 /tests/components/surepetcare/ @benleb @danielhiversen
 /homeassistant/components/swiss_hydrological_data/ @fabaff
-/homeassistant/components/swiss_public_transport/ @fabaff
+/homeassistant/components/swiss_public_transport/ @fabaff @miaucl
+/tests/components/swiss_public_transport/ @fabaff @miaucl
 /homeassistant/components/switch/ @home-assistant/core
 /tests/components/switch/ @home-assistant/core
 /homeassistant/components/switch_as_x/ @home-assistant/core
