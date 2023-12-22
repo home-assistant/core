@@ -81,6 +81,7 @@ homeassistant.components.bayesian.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bitcoin.*
 homeassistant.components.blockchain.*
+homeassistant.components.blue_current.*
 homeassistant.components.bluetooth.*
 homeassistant.components.bluetooth_tracker.*
 homeassistant.components.bmw_connected_drive.*

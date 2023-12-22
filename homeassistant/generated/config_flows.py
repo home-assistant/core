@@ -66,6 +66,7 @@ FLOWS = {
         "balboa",
         "blebox",
         "blink",
+        "blue_current",
         "bluemaestro",
         "bluetooth",
         "bmw_connected_drive",
