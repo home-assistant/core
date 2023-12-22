@@ -26,20 +26,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     status_coordinator = AOSmithStatusCoordinator(hass, client)
     await status_coordinator.async_config_entry_first_refresh()
 
+    energy_coordinator = AOSmithEnergyCoordinator(
+        hass, client, list(status_coordinator.data.keys())
+    )
+    await energy_coordinator.async_config_entry_first_refresh()
+
     device_details_list = [
         build_device_details(device) for device in status_coordinator.data.values()
     ]
 
-    energy_coordinator = AOSmithEnergyCoordinator(
-        hass, client, [device.junction_id for device in device_details_list]
-    )
-    await energy_coordinator.async_config_entry_first_refresh()
-
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = AOSmithData(
-        device_details_list=device_details_list,
-        client=client,
-        status_coordinator=status_coordinator,
-        energy_coordinator=energy_coordinator,
+        device_details_list,
+        client,
+        status_coordinator,
+        energy_coordinator,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
