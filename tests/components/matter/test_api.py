@@ -32,7 +32,7 @@ async def test_commission(
     msg = await ws_client.receive_json()
 
     assert msg["success"]
-    matter_client.commission_with_code.assert_called_once_with("12345678")
+    matter_client.commission_with_code.assert_called_once_with("12345678", True)
 
     matter_client.commission_with_code.reset_mock()
     matter_client.commission_with_code.side_effect = InvalidCommand(
@@ -50,7 +50,7 @@ async def test_commission(
 
     assert not msg["success"]
     assert msg["error"]["code"] == "9"
-    matter_client.commission_with_code.assert_called_once_with("12345678")
+    matter_client.commission_with_code.assert_called_once_with("12345678", True)
 
 
 # This tests needs to be adjusted to remove lingering tasks
@@ -74,7 +74,7 @@ async def test_commission_on_network(
     msg = await ws_client.receive_json()
 
     assert msg["success"]
-    matter_client.commission_on_network.assert_called_once_with(1234)
+    matter_client.commission_on_network.assert_called_once_with(1234, None)
 
     matter_client.commission_on_network.reset_mock()
     matter_client.commission_on_network.side_effect = NodeCommissionFailed(
@@ -92,7 +92,7 @@ async def test_commission_on_network(
 
     assert not msg["success"]
     assert msg["error"]["code"] == "1"
-    matter_client.commission_on_network.assert_called_once_with(1234)
+    matter_client.commission_on_network.assert_called_once_with(1234, None)
 
 
 # This tests needs to be adjusted to remove lingering tasks
