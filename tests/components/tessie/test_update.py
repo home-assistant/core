@@ -13,7 +13,7 @@ from .common import setup_platform
 
 
 async def test_updates(hass: HomeAssistant) -> None:
-    """Tests that the updates are correct."""
+    """Tests that update entity is correct."""
 
     assert len(hass.states.async_all("update")) == 0
 

@@ -9,7 +9,7 @@ from .common import patch_description, setup_platform
 
 
 async def test_buttons(hass: HomeAssistant) -> None:
-    """Tests that the buttons are correct."""
+    """Tests that the button entities are correct."""
 
     await setup_platform(hass)
 
