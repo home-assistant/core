@@ -22,6 +22,7 @@ PLATFORMS = [
     Platform.DEVICE_TRACKER,
     Platform.LOCK,
     Platform.MEDIA_PLAYER,
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
