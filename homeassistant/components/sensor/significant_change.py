@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.significant_change import (
     check_absolute_change,
     check_percentage_change,
+    check_valid_float,
 )
 
 from . import SensorDeviceClass
@@ -63,23 +64,20 @@ def async_check_significant_change(
         absolute_change = 1.0
         percentage_change = 2.0
 
-    try:
+    if not check_valid_float(new_state):
         # New state is invalid, don't report it
-        new_state_f = float(new_state)
-    except ValueError:
         return False
 
-    try:
+    if not check_valid_float(old_state):
         # Old state was invalid, we should report again
-        old_state_f = float(old_state)
-    except ValueError:
         return True
 
     if absolute_change is not None and percentage_change is not None:
         return _absolute_and_relative_change(
-            old_state_f, new_state_f, absolute_change, percentage_change
+            float(old_state), float(new_state), absolute_change, percentage_change
         )
     if absolute_change is not None:
-        return check_absolute_change(old_state_f, new_state_f, absolute_change)
-
+        return check_absolute_change(
+            float(old_state), float(new_state), absolute_change
+        )
     return None

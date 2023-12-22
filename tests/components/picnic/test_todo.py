@@ -7,6 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.todo import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from .conftest import ENTITY_ID
 
@@ -115,7 +116,7 @@ async def test_create_todo_list_item_not_found(
     mock_picnic_api.search = Mock()
     mock_picnic_api.search.return_value = [{"items": []}]
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
             "add_item",

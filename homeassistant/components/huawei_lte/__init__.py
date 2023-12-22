@@ -35,6 +35,7 @@ from homeassistant.const import (
     CONF_RECIPIENT,
     CONF_URL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
@@ -89,7 +90,7 @@ from .const import (
     SERVICE_SUSPEND_INTEGRATION,
     UPDATE_SIGNAL,
 )
-from .utils import get_device_macs
+from .utils import get_device_macs, non_verifying_requests_session
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -134,6 +135,7 @@ PLATFORMS = [
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.SELECT,
 ]
 
 
@@ -306,10 +308,11 @@ class Router:
         """Log out router session."""
         try:
             self.client.user.logout()
-        except ResponseErrorNotSupportedException:
-            _LOGGER.debug("Logout not supported by device", exc_info=True)
-        except ResponseErrorLoginRequiredException:
-            _LOGGER.debug("Logout not supported when not logged in", exc_info=True)
+        except (
+            ResponseErrorLoginRequiredException,
+            ResponseErrorNotSupportedException,
+        ):
+            pass  # Ok, normal, nothing to do
         except Exception:  # pylint: disable=broad-except
             _LOGGER.warning("Logout error", exc_info=True)
 
@@ -335,16 +338,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     def _connect() -> Connection:
         """Set up a connection."""
+        kwargs: dict[str, Any] = {
+            "timeout": CONNECTION_TIMEOUT,
+        }
+        if url.startswith("https://") and not entry.data.get(CONF_VERIFY_SSL):
+            kwargs["requests_session"] = non_verifying_requests_session(url)
         if entry.options.get(CONF_UNAUTHENTICATED_MODE):
             _LOGGER.debug("Connecting in unauthenticated mode, reduced feature set")
-            connection = Connection(url, timeout=CONNECTION_TIMEOUT)
+            connection = Connection(url, **kwargs)
         else:
             _LOGGER.debug("Connecting in authenticated mode, full feature set")
             username = entry.data.get(CONF_USERNAME) or ""
             password = entry.data.get(CONF_PASSWORD) or ""
-            connection = Connection(
-                url, username=username, password=password, timeout=CONNECTION_TIMEOUT
-            )
+            connection = Connection(url, username=username, password=password, **kwargs)
         return connection
 
     try:
@@ -610,16 +616,17 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     return True
 
 
-@dataclass
 class HuaweiLteBaseEntity(Entity):
     """Huawei LTE entity base class."""
 
-    router: Router
-
-    _available: bool = field(default=True, init=False)
-    _unsub_handlers: list[Callable] = field(default_factory=list, init=False)
-    _attr_has_entity_name: bool = field(default=True, init=False)
+    _available = True
+    _attr_has_entity_name = True
     _attr_should_poll = False
+
+    def __init__(self, router: Router) -> None:
+        """Initialize."""
+        self.router = router
+        self._unsub_handlers: list[Callable] = []
 
     @property
     def _device_unique_id(self) -> str:

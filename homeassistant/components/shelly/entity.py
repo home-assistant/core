@@ -266,7 +266,7 @@ def async_setup_entry_rest(
     )
 
 
-@dataclass
+@dataclass(frozen=True)
 class BlockEntityDescription(EntityDescription):
     """Class to describe a BLOCK entity."""
 
@@ -283,14 +283,14 @@ class BlockEntityDescription(EntityDescription):
     extra_state_attributes: Callable[[Block], dict | None] | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class RpcEntityRequiredKeysMixin:
     """Class for RPC entity required keys."""
 
     sub_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class RpcEntityDescription(EntityDescription, RpcEntityRequiredKeysMixin):
     """Class to describe a RPC entity."""
 
@@ -306,7 +306,7 @@ class RpcEntityDescription(EntityDescription, RpcEntityRequiredKeysMixin):
     supported: Callable = lambda _: False
 
 
-@dataclass
+@dataclass(frozen=True)
 class RestEntityDescription(EntityDescription):
     """Class to describe a REST entity."""
 

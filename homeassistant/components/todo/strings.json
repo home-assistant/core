@@ -23,6 +23,18 @@
         "item": {
           "name": "Item name",
           "description": "The name that represents the to-do item."
+        },
+        "due_date": {
+          "name": "Due date",
+          "description": "The date the to-do item is expected to be completed."
+        },
+        "due_datetime": {
+          "name": "Due date and time",
+          "description": "The date and time the to-do item is expected to be completed."
+        },
+        "description": {
+          "name": "Description",
+          "description": "A more complete description of the to-do item than provided by the item name."
         }
       }
     },
@@ -41,6 +53,18 @@
         "status": {
           "name": "Set status",
           "description": "A status or confirmation of the to-do item."
+        },
+        "due_date": {
+          "name": "Due date",
+          "description": "The date the to-do item is expected to be completed."
+        },
+        "due_datetime": {
+          "name": "Due date and time",
+          "description": "The date and time the to-do item is expected to be completed."
+        },
+        "description": {
+          "name": "Description",
+          "description": "A more complete description of the to-do item than provided by the item name."
         }
       }
     },

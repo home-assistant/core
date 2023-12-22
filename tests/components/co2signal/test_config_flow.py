@@ -10,8 +10,11 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.co2signal import DOMAIN, config_flow
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("electricity_maps")
@@ -186,3 +189,40 @@ async def test_form_error_handling(
     assert result["data"] == {
         "api_key": "api_key",
     }
+
+
+async def test_reauth(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    electricity_maps: AsyncMock,
+) -> None:
+    """Test reauth flow."""
+    config_entry.add_to_hass(hass)
+
+    init_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": config_entry.entry_id,
+        },
+        data=None,
+    )
+
+    assert init_result["type"] == FlowResultType.FORM
+    assert init_result["step_id"] == "reauth"
+
+    with patch(
+        "homeassistant.components.co2signal.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        configure_result = await hass.config_entries.flow.async_configure(
+            init_result["flow_id"],
+            {
+                CONF_API_KEY: "api_key2",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert configure_result["type"] == FlowResultType.ABORT
+    assert configure_result["reason"] == "reauth_successful"
+    assert len(mock_setup_entry.mock_calls) == 1

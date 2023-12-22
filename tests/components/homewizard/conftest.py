@@ -1,6 +1,5 @@
 """Fixtures for HomeWizard integration tests."""
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homewizard_energy.errors import NotFoundError
@@ -11,7 +10,7 @@ from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, get_fixture_path, load_fixture
+from tests.common import MockConfigEntry, get_fixture_path, load_json_object_fixture
 
 
 @pytest.fixture
@@ -35,22 +34,22 @@ def mock_homewizardenergy(
         client = homewizard.return_value
 
         client.device.return_value = Device.from_dict(
-            json.loads(load_fixture(f"{device_fixture}/device.json", DOMAIN))
+            load_json_object_fixture(f"{device_fixture}/device.json", DOMAIN)
         )
         client.data.return_value = Data.from_dict(
-            json.loads(load_fixture(f"{device_fixture}/data.json", DOMAIN))
+            load_json_object_fixture(f"{device_fixture}/data.json", DOMAIN)
         )
 
         if get_fixture_path(f"{device_fixture}/state.json", DOMAIN).exists():
             client.state.return_value = State.from_dict(
-                json.loads(load_fixture(f"{device_fixture}/state.json", DOMAIN))
+                load_json_object_fixture(f"{device_fixture}/state.json", DOMAIN)
             )
         else:
             client.state.side_effect = NotFoundError
 
         if get_fixture_path(f"{device_fixture}/system.json", DOMAIN).exists():
             client.system.return_value = System.from_dict(
-                json.loads(load_fixture(f"{device_fixture}/system.json", DOMAIN))
+                load_json_object_fixture(f"{device_fixture}/system.json", DOMAIN)
             )
         else:
             client.system.side_effect = NotFoundError

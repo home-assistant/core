@@ -247,15 +247,15 @@ class MqttValueTemplate:
                         payload, variables=values
                     )
                 )
-            except Exception as ex:
+            except Exception as exc:
                 _LOGGER.error(
                     "%s: %s rendering template for entity '%s', template: '%s'",
-                    type(ex).__name__,
-                    ex,
+                    type(exc).__name__,
+                    exc,
                     self._entity.entity_id if self._entity else "n/a",
                     self._value_template.template,
                 )
-                raise ex
+                raise exc
             return rendered_payload
 
         _LOGGER.debug(

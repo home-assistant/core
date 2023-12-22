@@ -56,7 +56,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScreenLogicSwitchDescription(
     SwitchEntityDescription, ScreenLogicPushEntityDescription
 ):

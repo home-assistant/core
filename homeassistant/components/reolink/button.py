@@ -27,30 +27,37 @@ from homeassistant.helpers.entity_platform import (
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkChannelCoordinatorEntity, ReolinkHostCoordinatorEntity
+from .entity import (
+    ReolinkChannelCoordinatorEntity,
+    ReolinkChannelEntityDescription,
+    ReolinkHostCoordinatorEntity,
+    ReolinkHostEntityDescription,
+)
 
 ATTR_SPEED = "speed"
 SUPPORT_PTZ_SPEED = CameraEntityFeature.STREAM
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ReolinkButtonEntityDescription(
     ButtonEntityDescription,
+    ReolinkChannelEntityDescription,
 ):
     """A class that describes button entities for a camera channel."""
 
     enabled_default: Callable[[Host, int], bool] | None = None
     method: Callable[[Host, int], Any]
-    supported: Callable[[Host, int], bool] = lambda api, ch: True
     ptz_cmd: str | None = None
 
 
-@dataclass(kw_only=True)
-class ReolinkHostButtonEntityDescription(ButtonEntityDescription):
+@dataclass(frozen=True, kw_only=True)
+class ReolinkHostButtonEntityDescription(
+    ButtonEntityDescription,
+    ReolinkHostEntityDescription,
+):
     """A class that describes button entities for the host."""
 
     method: Callable[[Host], Any]
-    supported: Callable[[Host], bool] = lambda api: True
 
 
 BUTTON_ENTITIES = (
@@ -195,12 +202,9 @@ class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
         entity_description: ReolinkButtonEntityDescription,
     ) -> None:
         """Initialize Reolink button entity."""
-        super().__init__(reolink_data, channel)
         self.entity_description = entity_description
+        super().__init__(reolink_data, channel)
 
-        self._attr_unique_id = (
-            f"{self._host.unique_id}_{channel}_{entity_description.key}"
-        )
         if entity_description.enabled_default is not None:
             self._attr_entity_registry_enabled_default = (
                 entity_description.enabled_default(self._host.api, self._channel)
@@ -241,10 +245,8 @@ class ReolinkHostButtonEntity(ReolinkHostCoordinatorEntity, ButtonEntity):
         entity_description: ReolinkHostButtonEntityDescription,
     ) -> None:
         """Initialize Reolink button entity."""
-        super().__init__(reolink_data)
         self.entity_description = entity_description
-
-        self._attr_unique_id = f"{self._host.unique_id}_{entity_description.key}"
+        super().__init__(reolink_data)
 
     async def async_press(self) -> None:
         """Execute the button action."""

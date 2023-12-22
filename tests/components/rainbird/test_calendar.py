@@ -115,7 +115,7 @@ def mock_insert_schedule_response(
 
 @pytest.fixture(name="get_events")
 def get_events_fixture(
-    hass_client: Callable[..., Awaitable[ClientSession]]
+    hass_client: Callable[..., Awaitable[ClientSession]],
 ) -> GetEventsFn:
     """Fetch calendar events from the HTTP API."""
 
@@ -232,7 +232,8 @@ async def test_calendar_not_supported_by_device(
 
 
 @pytest.mark.parametrize(
-    "mock_insert_schedule_response", [([None])]  # Disable success responses
+    "mock_insert_schedule_response",
+    [([None])],  # Disable success responses
 )
 async def test_no_schedule(
     hass: HomeAssistant,
