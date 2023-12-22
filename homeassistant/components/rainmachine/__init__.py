@@ -48,6 +48,7 @@ from .const import (
     DATA_RESTRICTIONS_CURRENT,
     DATA_RESTRICTIONS_UNIVERSAL,
     DATA_ZONES,
+    DEFAULT_ZONE_RUN,
     DOMAIN,
     LOGGER,
 )
@@ -249,6 +250,11 @@ async def async_setup_entry(  # noqa: C901
         }
     if CONF_USE_APP_RUN_TIMES not in entry.options:
         entry_updates["options"] = {**entry.options, CONF_USE_APP_RUN_TIMES: False}
+    if CONF_DEFAULT_ZONE_RUN_TIME not in entry.options:
+        entry_updates["options"] = {
+            **entry.options,
+            CONF_DEFAULT_ZONE_RUN_TIME: DEFAULT_ZONE_RUN,
+        }
     if entry_updates:
         hass.config_entries.async_update_entry(entry, **entry_updates)
 
