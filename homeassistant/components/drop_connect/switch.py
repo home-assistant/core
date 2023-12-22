@@ -101,30 +101,27 @@ class DROPSwitch(DROPEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
-        if self.entity_description.value_fn(self.coordinator) == 1:
+        switch_value: int | None = self.entity_description.value_fn(self.coordinator)
+        if switch_value == 1:
             return True
-        if self.entity_description.value_fn(self.coordinator) == 0:
+        if switch_value == 0:
             return False
         return None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         await self.entity_description.set_fn(self.coordinator, 1)
-        self._attr_is_on = True
-        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         await self.entity_description.set_fn(self.coordinator, 0)
-        self._attr_is_on = False
-        self.async_write_ha_state()
 
     @property
     def icon(self) -> str:
         """Return the icon to use for dynamic states."""
         _icon = self.entity_description.icon or ""
         if self.entity_description.key in (WATER_SWITCH, BYPASS_SWITCH):
-            if self._attr_is_on:
+            if self.is_on:
                 _icon = "mdi:valve-open"
             else:
                 _icon = "mdi:valve-closed"
