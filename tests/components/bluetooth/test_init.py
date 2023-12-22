@@ -2816,7 +2816,7 @@ async def test_scanner_count_connectable(
 ) -> None:
     """Test getting the connectable scanner count."""
     scanner = FakeScanner("any", "any")
-    cancel = bluetooth.async_register_scanner(hass, scanner, False)
+    cancel = bluetooth.async_register_scanner(hass, scanner)
     assert bluetooth.async_scanner_count(hass, connectable=True) == 1
     cancel()
 
@@ -2824,7 +2824,7 @@ async def test_scanner_count_connectable(
 async def test_scanner_count(hass: HomeAssistant, enable_bluetooth: None) -> None:
     """Test getting the connectable and non-connectable scanner count."""
     scanner = FakeScanner("any", "any")
-    cancel = bluetooth.async_register_scanner(hass, scanner, False)
+    cancel = bluetooth.async_register_scanner(hass, scanner)
     assert bluetooth.async_scanner_count(hass, connectable=False) == 2
     cancel()
 
