@@ -932,7 +932,7 @@ async def test_use_stream_for_stills(
         return_value=True,
     ):
         # First test when the integration does not support stream should fail
-        resp = await client.get("/api/camera_proxy/camera.demo_camera")
+        resp = await client.get("/api/camera_proxy/camera.demo_camera_without_stream")
         await hass.async_block_till_done()
         mock_stream_source.assert_not_called()
         assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
@@ -952,9 +952,6 @@ async def test_use_stream_for_stills(
     ) as mock_stream_source, patch(
         "homeassistant.components.camera.create_stream"
     ) as mock_create_stream, patch(
-        "homeassistant.components.demo.camera.DemoCamera.supported_features",
-        return_value=camera.SUPPORT_STREAM,
-    ), patch(
         "homeassistant.components.demo.camera.DemoCamera.use_stream_for_stills",
         return_value=True,
     ):
