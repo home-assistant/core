@@ -1,6 +1,8 @@
 """The islamic_prayer_times component."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -12,6 +14,8 @@ from .coordinator import IslamicPrayerDataUpdateCoordinator
 PLATFORMS = [Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -43,14 +47,30 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    if config_entry.minor_version == 2:
-        return True
-    config_entry.minor_version = 2
-    data = {
-        CONF_LATITUDE: hass.config.latitude,
-        CONF_LONGITUDE: hass.config.longitude,
-    }
-    return hass.config_entries.async_update_entry(config_entry, data=data)
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+    if config_entry.version == 1:
+        new = {**config_entry.data}
+        if config_entry.minor_version < 2:
+            lat = hass.config.latitude
+            lon = hass.config.longitude
+            new = {
+                CONF_LATITUDE: lat,
+                CONF_LONGITUDE: lon,
+            }
+            unique_id = f"{lat}-{lon}"
+        config_entry.version = 1
+        config_entry.minor_version = 2
+        hass.config_entries.async_update_entry(
+            config_entry, data=new, unique_id=unique_id
+        )
+
+    _LOGGER.debug("Migration to version %s successful", config_entry.version)
+
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:

@@ -37,12 +37,14 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Islamic Prayer client."""
-        self.event_unsub: CALLBACK_TYPE | None = None
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
         )
+        self.latitude = self.config_entry.data[CONF_LATITUDE]
+        self.longitude = self.config_entry.data[CONF_LONGITUDE]
+        self.event_unsub: CALLBACK_TYPE | None = None
 
     @property
     def calc_method(self) -> str:
@@ -71,8 +73,8 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
     def get_new_prayer_times(self) -> dict[str, Any]:
         """Fetch prayer times for today."""
         calc = PrayerTimesCalculator(
-            latitude=self.config_entry.data[CONF_LATITUDE],
-            longitude=self.config_entry.data[CONF_LONGITUDE],
+            latitude=self.latitude,
+            longitude=self.longitude,
             calculation_method=self.calc_method,
             latitudeAdjustmentMethod=self.lat_adj_method,
             midnightMode=self.midnight_mode,
