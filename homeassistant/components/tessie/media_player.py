@@ -61,48 +61,48 @@ class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
     @property
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
-        duration = self.get("vehicle_state_media_info_now_playing_duration")
-        # Return None if duration is 0
-        return duration / 1000 if duration else None
+        if duration := self.get("vehicle_state_media_info_now_playing_duration"):
+            return duration / 1000
+        return None
 
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        if (position := self.get("vehicle_state_media_info_now_playing_elapsed")) is not None:
+        if position := self.get("vehicle_state_media_info_now_playing_elapsed"):
             return position / 1000
         return None
 
     @property
     def media_title(self) -> str | None:
         """Title of current playing media."""
-        title = self.get("vehicle_state_media_info_now_playing_title")
-        # Return None if title is an empty string
-        return title if title else None
+        if title := self.get("vehicle_state_media_info_now_playing_title"):
+            return title
+        return None
 
     @property
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
-        artist = self.get("vehicle_state_media_info_now_playing_artist")
-        # Return None if artist is an empty string
-        return artist if artist else None
+        if artist := self.get("vehicle_state_media_info_now_playing_artist"):
+            return artist
+        return None
 
     @property
     def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
-        album = self.get("vehicle_state_media_info_now_playing_album")
-        # Return None if album is an empty string
-        return album if album else None
+        if album := self.get("vehicle_state_media_info_now_playing_album"):
+            return album
+        return None
 
     @property
     def media_playlist(self) -> str | None:
         """Title of Playlist currently playing."""
-        playlist = self.get("vehicle_state_media_info_now_playing_station")
-        # Return None if playlist is an empty string
-        return playlist if playlist else None
+        if playlist := self.get("vehicle_state_media_info_now_playing_station"):
+            return playlist
+        return None
 
     @property
     def source(self) -> str | None:
         """Name of the current input source."""
-        source = self.get("vehicle_state_media_info_now_playing_source")
-        # Return None if source is an empty string
-        return source if source else None
+        if source := self.get("vehicle_state_media_info_now_playing_source"):
+            return source
+        return None

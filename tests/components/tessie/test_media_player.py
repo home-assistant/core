@@ -1,4 +1,7 @@
 """Test the Tessie media player platform."""
+
+from datetime import timedelta
+
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ALBUM_NAME,
@@ -7,18 +10,30 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_PLAYLIST,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_TITLE,
+    ATTR_MEDIA_VOLUME_LEVEL,
     MediaPlayerState,
 )
+from homeassistant.components.tessie.coordinator import TESSIE_SYNC_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.util.dt import utcnow
 
-from .common import TEST_STATE_OF_ALL_VEHICLES, setup_platform
+from .common import (
+    TEST_STATE_OF_ALL_VEHICLES,
+    TEST_VEHICLE_STATE_ONLINE,
+    setup_platform,
+)
 
-MEDIA_INFO = TEST_STATE_OF_ALL_VEHICLES["results"][0]["last_state"]["vehicle_state"][
+from tests.common import async_fire_time_changed
+
+WAIT = timedelta(seconds=TESSIE_SYNC_INTERVAL)
+
+MEDIA_INFO_1 = TEST_STATE_OF_ALL_VEHICLES["results"][0]["last_state"]["vehicle_state"][
     "media_info"
 ]
+MEDIA_INFO_2 = TEST_VEHICLE_STATE_ONLINE["vehicle_state"]["media_info"]
 
 
-async def test_sensors(hass: HomeAssistant) -> None:
+async def test_sensors(hass: HomeAssistant, mock_get_state) -> None:
     """Tests that the media player entity is correct."""
 
     assert len(hass.states.async_all("media_player")) == 0
@@ -28,18 +43,40 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all("media_player")) == 1
 
     state = hass.states.get("media_player.test")
+    assert state.state == MediaPlayerState.IDLE
+    assert (
+        state.attributes[ATTR_MEDIA_VOLUME_LEVEL]
+        == MEDIA_INFO_1["audio_volume"] / MEDIA_INFO_1["audio_volume_max"]
+    )
+    assert ATTR_MEDIA_TITLE not in state.attributes
+    assert ATTR_MEDIA_ARTIST not in state.attributes
+    assert ATTR_MEDIA_ALBUM_NAME not in state.attributes
+    assert state.attributes[ATTR_INPUT_SOURCE] == MEDIA_INFO_1["now_playing_source"]
+    assert ATTR_MEDIA_PLAYLIST not in state.attributes
+    assert ATTR_MEDIA_DURATION not in state.attributes
+    assert state.attributes[ATTR_MEDIA_POSITION] == 0.0
+
+    # Trigger coordinator refresh since it has a different fixture.
+
+    async_fire_time_changed(hass, utcnow() + WAIT)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.test")
     assert state.state == MediaPlayerState.PLAYING
-    assert state.attributes["volume_level"] == 2.3333 / 10.333333
-    assert state.attributes[ATTR_MEDIA_TITLE] == MEDIA_INFO["now_playing_title"]
-    assert state.attributes[ATTR_MEDIA_ARTIST] == MEDIA_INFO["now_playing_artist"]
-    assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == MEDIA_INFO["now_playing_album"]
-    assert state.attributes[ATTR_INPUT_SOURCE] == MEDIA_INFO["now_playing_source"]
-    assert state.attributes[ATTR_MEDIA_PLAYLIST] == MEDIA_INFO["now_playing_station"]
+    assert (
+        state.attributes[ATTR_MEDIA_VOLUME_LEVEL]
+        == MEDIA_INFO_2["audio_volume"] / MEDIA_INFO_2["audio_volume_max"]
+    )
+    assert state.attributes[ATTR_MEDIA_TITLE] == MEDIA_INFO_2["now_playing_title"]
+    assert state.attributes[ATTR_MEDIA_ARTIST] == MEDIA_INFO_2["now_playing_artist"]
+    assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == MEDIA_INFO_2["now_playing_album"]
+    assert state.attributes[ATTR_INPUT_SOURCE] == MEDIA_INFO_2["now_playing_source"]
+    assert state.attributes[ATTR_MEDIA_PLAYLIST] == MEDIA_INFO_2["now_playing_station"]
     assert (
         state.attributes[ATTR_MEDIA_DURATION]
-        == MEDIA_INFO["now_playing_duration"] / 1000
+        == MEDIA_INFO_2["now_playing_duration"] / 1000
     )
     assert (
         state.attributes[ATTR_MEDIA_POSITION]
-        == MEDIA_INFO["now_playing_elapsed"] / 1000
+        == MEDIA_INFO_2["now_playing_elapsed"] / 1000
     )
