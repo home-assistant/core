@@ -295,6 +295,11 @@
       "vehicle_state_speed_limit_mode_current_limit_mph": {
         "name": "Speed limit"
       }
+    },
+    "update": {
+      "update": {
+        "name": "[%key:component::update::title%]"
+      }
     }
   }
 }
