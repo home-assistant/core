@@ -1,8 +1,6 @@
 """Tests for the devolo Home Control integration."""
-from collections.abc import Awaitable, Callable
 from unittest.mock import patch
 
-from aiohttp import ClientWebSocketResponse
 from devolo_home_control_api.exceptions.gateway import GatewayOfflineError
 import pytest
 
@@ -15,6 +13,8 @@ from homeassistant.setup import async_setup_component
 
 from . import configure_integration
 from .mocks import HomeControlMock, HomeControlMockBinarySensor
+
+from tests.typing import WebSocketGenerator
 
 
 async def test_setup_entry(hass: HomeAssistant, mock_zeroconf: None) -> None:
@@ -64,8 +64,9 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
 async def test_remove_device(
     hass: HomeAssistant,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
-):
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test removing a device."""
     assert await async_setup_component(hass, "config", {})
     entry = configure_integration(hass)
@@ -77,7 +78,6 @@ async def test_remove_device(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        device_registry = dr.async_get(hass)
         device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "Test")})
         assert device_entry
 

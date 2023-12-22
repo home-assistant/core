@@ -28,17 +28,17 @@ def get_state(data: dict[str, float], key: str) -> str | float:
     download = data[DATA_KEYS[1]] - data[DATA_KEYS[3]]
     if key == CURRENT_STATUS:
         if upload > 0 and download > 0:
-            return "Up/Down"
+            return "seeding_and_downloading"
         if upload > 0 and download == 0:
-            return "Seeding"
+            return "seeding"
         if upload == 0 and download > 0:
-            return "Downloading"
+            return "downloading"
         return STATE_IDLE
     kb_spd = float(upload if key == UPLOAD_SPEED else download) / 1024
     return round(kb_spd, 2 if kb_spd < 0.1 else 1)
 
 
-@dataclass
+@dataclass(frozen=True)
 class DelugeSensorEntityDescription(SensorEntityDescription):
     """Class to describe a Deluge sensor."""
 
@@ -48,12 +48,14 @@ class DelugeSensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: tuple[DelugeSensorEntityDescription, ...] = (
     DelugeSensorEntityDescription(
         key=CURRENT_STATUS,
-        name="Status",
+        translation_key="status",
         value=lambda data: get_state(data, CURRENT_STATUS),
+        device_class=SensorDeviceClass.ENUM,
+        options=["seeding_and_downloading", "seeding", "downloading", "idle"],
     ),
     DelugeSensorEntityDescription(
         key=DOWNLOAD_SPEED,
-        name="Down speed",
+        translation_key="download_speed",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,
@@ -61,7 +63,7 @@ SENSOR_TYPES: tuple[DelugeSensorEntityDescription, ...] = (
     ),
     DelugeSensorEntityDescription(
         key=UPLOAD_SPEED,
-        name="Up speed",
+        translation_key="upload_speed",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         state_class=SensorStateClass.MEASUREMENT,

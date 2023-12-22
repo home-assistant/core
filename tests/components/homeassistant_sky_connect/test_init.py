@@ -24,6 +24,13 @@ CONFIG_ENTRY_DATA = {
 }
 
 
+@pytest.fixture(autouse=True)
+def disable_usb_probing() -> Generator[None, None, None]:
+    """Disallow touching of system USB devices during unit tests."""
+    with patch("homeassistant.components.usb.comports", return_value=[]):
+        yield
+
+
 @pytest.fixture
 def mock_zha_config_flow_setup() -> Generator[None, None, None]:
     """Mock the radio connection and probing of the ZHA config flow."""
@@ -38,7 +45,7 @@ def mock_zha_config_flow_setup() -> Generator[None, None, None]:
     with patch(
         "bellows.zigbee.application.ControllerApplication.probe", side_effect=mock_probe
     ), patch(
-        "homeassistant.components.zha.radio_manager.ZhaRadioManager._connect_zigpy_app",
+        "homeassistant.components.zha.radio_manager.ZhaRadioManager.connect_zigpy_app",
         return_value=mock_connect_app,
     ):
         yield
@@ -140,7 +147,7 @@ async def test_setup_zha(
     assert config_entry.data == {
         "device": {
             "baudrate": 115200,
-            "flow_control": "software",
+            "flow_control": None,
             "path": CONFIG_ENTRY_DATA["device"],
         },
         "radio_type": "ezsp",
@@ -172,7 +179,7 @@ async def test_setup_zha_multipan(
     ) as mock_is_plugged_in, patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
     ), patch(
-        "homeassistant.components.homeassistant_sky_connect.is_hassio",
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -193,14 +200,14 @@ async def test_setup_zha_multipan(
     config_entry = hass.config_entries.async_entries("zha")[0]
     assert config_entry.data == {
         "device": {
-            "baudrate": 57600,  # ZHA default
-            "flow_control": "software",  # ZHA default
+            "baudrate": 115200,
+            "flow_control": None,
             "path": "socket://core-silabs-multiprotocol:9999",
         },
         "radio_type": "ezsp",
     }
     assert config_entry.options == {}
-    assert config_entry.title == "SkyConnect Multi-PAN"
+    assert config_entry.title == "SkyConnect Multiprotocol"
 
 
 async def test_setup_zha_multipan_other_device(
@@ -226,7 +233,7 @@ async def test_setup_zha_multipan_other_device(
     ) as mock_is_plugged_in, patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
     ), patch(
-        "homeassistant.components.homeassistant_sky_connect.is_hassio",
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -248,7 +255,7 @@ async def test_setup_zha_multipan_other_device(
     assert config_entry.data == {
         "device": {
             "baudrate": 115200,
-            "flow_control": "software",
+            "flow_control": None,
             "path": CONFIG_ENTRY_DATA["device"],
         },
         "radio_type": "ezsp",
@@ -304,7 +311,7 @@ async def test_setup_entry_addon_info_fails(
     ), patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
     ), patch(
-        "homeassistant.components.homeassistant_sky_connect.is_hassio",
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
@@ -333,7 +340,7 @@ async def test_setup_entry_addon_not_running(
     ), patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
     ), patch(
-        "homeassistant.components.homeassistant_sky_connect.is_hassio",
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.is_hassio",
         side_effect=Mock(return_value=True),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)

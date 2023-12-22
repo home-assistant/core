@@ -20,9 +20,12 @@ from samsungtvws.exceptions import ResponseError
 from samsungtvws.remote import ChannelEmitCommand
 
 from homeassistant.components.samsungtv.const import WEBSOCKET_SSL_PORT
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.util.dt as dt_util
 
 from .const import SAMPLE_DEVICE_INFO_UE48JU6400, SAMPLE_DEVICE_INFO_WIFI
+
+from tests.common import async_mock_service
 
 
 @pytest.fixture
@@ -42,9 +45,9 @@ async def silent_ssdp_scanner(hass):
     ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
         "homeassistant.components.ssdp.Scanner.async_scan"
     ), patch(
-        "homeassistant.components.ssdp.Server._async_start_upnp_servers"
+        "homeassistant.components.ssdp.Server._async_start_upnp_servers",
     ), patch(
-        "homeassistant.components.ssdp.Server._async_stop_upnp_servers"
+        "homeassistant.components.ssdp.Server._async_stop_upnp_servers",
     ):
         yield
 
@@ -230,7 +233,7 @@ def remotews_fixture() -> Mock:
     remotews.app_list_data = None
 
     async def _start_listening(
-        ws_event_callback: Callable[[str, Any], Awaitable[None] | None] | None = None
+        ws_event_callback: Callable[[str, Any], Awaitable[None] | None] | None = None,
     ):
         remotews.ws_event_callback = ws_event_callback
 
@@ -269,7 +272,7 @@ def remoteencws_fixture() -> Mock:
     remoteencws.__aexit__ = AsyncMock()
 
     def _start_listening(
-        ws_event_callback: Callable[[str, Any], Awaitable[None] | None] | None = None
+        ws_event_callback: Callable[[str, Any], Awaitable[None] | None] | None = None,
     ):
         remoteencws.ws_event_callback = ws_event_callback
 
@@ -287,15 +290,6 @@ def remoteencws_fixture() -> Mock:
         yield remoteencws
 
 
-@pytest.fixture(name="delay")
-def delay_fixture() -> Mock:
-    """Patch the delay script function."""
-    with patch(
-        "homeassistant.components.samsungtv.media_player.Script.async_run"
-    ) as delay:
-        yield delay
-
-
 @pytest.fixture
 def mock_now() -> datetime:
     """Fixture for dtutil.now."""
@@ -307,3 +301,9 @@ def mac_address_fixture() -> Mock:
     """Patch getmac.get_mac_address."""
     with patch("getmac.get_mac_address", return_value=None) as mac:
         yield mac
+
+
+@pytest.fixture
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
+    """Track calls to a mock service."""
+    return async_mock_service(hass, "test", "automation")

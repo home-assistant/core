@@ -7,6 +7,9 @@ import statistics
 from typing import Any
 from unittest.mock import patch
 
+from freezegun import freeze_time
+import pytest
+
 from homeassistant import config as hass_config
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.sensor import (
@@ -19,6 +22,7 @@ from homeassistant.components.statistics.sensor import StatisticsSensor
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    DEGREE,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -380,16 +384,9 @@ async def test_sampling_size_1(hass: HomeAssistant) -> None:
 async def test_age_limit_expiry(hass: HomeAssistant) -> None:
     """Test that values are removed with given max age."""
     now = dt_util.utcnow()
-    mock_data = {
-        "return_time": datetime(now.year + 1, 8, 2, 12, 23, tzinfo=dt_util.UTC)
-    }
+    current_time = datetime(now.year + 1, 8, 2, 12, 23, tzinfo=dt_util.UTC)
 
-    def mock_now():
-        return mock_data["return_time"]
-
-    with patch(
-        "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
-    ):
+    with freeze_time(current_time) as freezer:
         assert await async_setup_component(
             hass,
             "sensor",
@@ -409,8 +406,9 @@ async def test_age_limit_expiry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         for value in VALUES_NUMERIC:
-            mock_data["return_time"] += timedelta(minutes=1)
-            async_fire_time_changed(hass, mock_data["return_time"])
+            current_time += timedelta(minutes=1)
+            freezer.move_to(current_time)
+            async_fire_time_changed(hass, current_time)
             hass.states.async_set(
                 "sensor.test_monitored",
                 str(value),
@@ -429,8 +427,9 @@ async def test_age_limit_expiry(hass: HomeAssistant) -> None:
 
         # Values expire over time. Only two are left
 
-        mock_data["return_time"] += timedelta(minutes=3)
-        async_fire_time_changed(hass, mock_data["return_time"])
+        current_time += timedelta(minutes=3)
+        freezer.move_to(current_time)
+        async_fire_time_changed(hass, current_time)
         await hass.async_block_till_done()
 
         state = hass.states.get("sensor.test")
@@ -442,8 +441,9 @@ async def test_age_limit_expiry(hass: HomeAssistant) -> None:
 
         # Values expire over time. Only one is left
 
-        mock_data["return_time"] += timedelta(minutes=1)
-        async_fire_time_changed(hass, mock_data["return_time"])
+        current_time += timedelta(minutes=1)
+        freezer.move_to(current_time)
+        async_fire_time_changed(hass, current_time)
         await hass.async_block_till_done()
 
         state = hass.states.get("sensor.test")
@@ -455,8 +455,9 @@ async def test_age_limit_expiry(hass: HomeAssistant) -> None:
 
         # Values expire over time. Buffer is empty
 
-        mock_data["return_time"] += timedelta(minutes=1)
-        async_fire_time_changed(hass, mock_data["return_time"])
+        current_time += timedelta(minutes=1)
+        freezer.move_to(current_time)
+        async_fire_time_changed(hass, current_time)
         await hass.async_block_till_done()
 
         state = hass.states.get("sensor.test")
@@ -785,12 +786,8 @@ async def test_unitless_source_sensor(hass: HomeAssistant) -> None:
 async def test_state_characteristics(hass: HomeAssistant) -> None:
     """Test configured state characteristic for value and unit."""
     now = dt_util.utcnow()
+    current_time = datetime(now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC)
     start_datetime = datetime(now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC)
-    mock_data = {"return_time": start_datetime}
-
-    def mock_now():
-        return mock_data["return_time"]
-
     characteristics: Sequence[dict[str, Any]] = (
         {
             "source_sensor_domain": "sensor",
@@ -922,6 +919,14 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
             "value_0": STATE_UNKNOWN,
             "value_1": float(VALUES_NUMERIC[-1]),
             "value_9": float(round(sum(VALUES_NUMERIC) / len(VALUES_NUMERIC), 2)),
+            "unit": "°C",
+        },
+        {
+            "source_sensor_domain": "sensor",
+            "name": "mean_circular",
+            "value_0": STATE_UNKNOWN,
+            "value_1": float(VALUES_NUMERIC[-1]),
+            "value_9": 10.76,
             "unit": "°C",
         },
         {
@@ -1119,9 +1124,7 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
             }
         )
 
-    with patch(
-        "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
-    ):
+    with freeze_time(current_time) as freezer:
         assert await async_setup_component(
             hass,
             "sensor",
@@ -1132,8 +1135,9 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
         # With all values in buffer
 
         for i in range(len(VALUES_NUMERIC)):
-            mock_data["return_time"] += timedelta(minutes=1)
-            async_fire_time_changed(hass, mock_data["return_time"])
+            current_time += timedelta(minutes=1)
+            freezer.move_to(current_time)
+            async_fire_time_changed(hass, current_time)
             hass.states.async_set(
                 "sensor.test_monitored",
                 str(VALUES_NUMERIC[i]),
@@ -1167,8 +1171,9 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
 
         # With single value in buffer
 
-        mock_data["return_time"] += timedelta(minutes=8)
-        async_fire_time_changed(hass, mock_data["return_time"])
+        current_time += timedelta(minutes=8)
+        freezer.move_to(current_time)
+        async_fire_time_changed(hass, current_time)
         await hass.async_block_till_done()
 
         for characteristic in characteristics:
@@ -1189,8 +1194,9 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
 
         # With empty buffer
 
-        mock_data["return_time"] += timedelta(minutes=1)
-        async_fire_time_changed(hass, mock_data["return_time"])
+        current_time += timedelta(minutes=1)
+        freezer.move_to(current_time)
+        async_fire_time_changed(hass, current_time)
         await hass.async_block_till_done()
 
         for characteristic in characteristics:
@@ -1208,6 +1214,43 @@ async def test_state_characteristics(hass: HomeAssistant) -> None:
                 "(buffer empty) - "
                 f"assert {state.state} == {str(characteristic['value_0'])}"
             )
+
+
+async def test_state_characteristic_mean_circular(hass: HomeAssistant) -> None:
+    """Test the mean_circular state characteristic using angle data."""
+    values_angular = [0, 10, 90.5, 180, 269.5, 350]
+
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "statistics",
+                    "name": "test_sensor_mean_circular",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "mean_circular",
+                    "sampling_size": 6,
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    for angle in values_angular:
+        hass.states.async_set(
+            "sensor.test_monitored",
+            str(angle),
+            {ATTR_UNIT_OF_MEASUREMENT: DEGREE},
+        )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sensor_mean_circular")
+    assert state is not None
+    assert state.state == "0.0", (
+        "value mismatch for characteristic 'sensor/mean_circular' - "
+        f"assert {state.state} == 0.0"
+    )
 
 
 async def test_invalid_state_characteristic(hass: HomeAssistant) -> None:
@@ -1290,17 +1333,14 @@ async def test_initialize_from_database(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.CELSIUS
 
 
+@pytest.mark.freeze_time(
+    datetime(dt_util.utcnow().year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC)
+)
 async def test_initialize_from_database_with_maxage(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test initializing the statistics from the database."""
-    now = dt_util.utcnow()
-    mock_data = {
-        "return_time": datetime(now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC)
-    }
-
-    def mock_now():
-        return mock_data["return_time"]
+    current_time = dt_util.utcnow()
 
     # Testing correct retrieval from recorder, thus we do not
     # want purging to occur within the class itself.
@@ -1311,9 +1351,9 @@ async def test_initialize_from_database_with_maxage(
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)
 
-    with patch(
-        "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
-    ), patch.object(StatisticsSensor, "_purge_old_states", mock_purge):
+    with freeze_time(current_time) as freezer, patch.object(
+        StatisticsSensor, "_purge_old_states", mock_purge
+    ):
         for value in VALUES_NUMERIC:
             hass.states.async_set(
                 "sensor.test_monitored",
@@ -1321,7 +1361,9 @@ async def test_initialize_from_database_with_maxage(
                 {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
             )
             await hass.async_block_till_done()
-            mock_data["return_time"] += timedelta(hours=1)
+            current_time += timedelta(hours=1)
+            freezer.move_to(current_time)
+
         await async_wait_recording_done(hass)
         # create the statistics component, get filled from database
         assert await async_setup_component(
@@ -1347,7 +1389,7 @@ async def test_initialize_from_database_with_maxage(
     assert state.attributes.get("age_coverage_ratio") == round(2 / 3, 2)
     # The max_age timestamp should be 1 hour before what we have right
     # now in mock_data['return_time'].
-    assert mock_data["return_time"] == datetime.strptime(
+    assert current_time == datetime.strptime(
         state.state, "%Y-%m-%dT%H:%M:%S%z"
     ) + timedelta(hours=1)
 

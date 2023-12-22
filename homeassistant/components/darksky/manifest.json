@@ -1,9 +1,0 @@
-{
-  "domain": "darksky",
-  "name": "Dark Sky",
-  "codeowners": ["@fabaff"],
-  "documentation": "https://www.home-assistant.io/integrations/darksky",
-  "iot_class": "cloud_polling",
-  "loggers": ["forecastio"],
-  "requirements": ["python-forecastio==1.4.0"]
-}

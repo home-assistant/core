@@ -38,6 +38,8 @@ UPDATE_FIELDS = {
     vol.Optional(LAST_SCANNED): cv.datetime,
 }
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 
 class TagIDExistsError(HomeAssistantError):
     """Raised when an item is not found."""
@@ -59,7 +61,7 @@ class TagIDManager(collection.IDManager):
         return suggestion
 
 
-class TagStorageCollection(collection.StorageCollection):
+class TagStorageCollection(collection.DictStorageCollection):
     """Tag collection stored in storage."""
 
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
@@ -80,9 +82,9 @@ class TagStorageCollection(collection.StorageCollection):
         """Suggest an ID based on the config."""
         return info[TAG_ID]
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
-        data = {**data, **self.UPDATE_SCHEMA(update_data)}
+        data = {**item, **self.UPDATE_SCHEMA(update_data)}
         # make last_scanned JSON serializeable
         if LAST_SCANNED in update_data:
             data[LAST_SCANNED] = data[LAST_SCANNED].isoformat()
@@ -95,11 +97,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     id_manager = TagIDManager()
     hass.data[DOMAIN][TAGS] = storage_collection = TagStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     await storage_collection.async_load()
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
@@ -117,10 +118,19 @@ async def async_scan_tag(
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("tag component has not been set up.")
 
-    hass.bus.async_fire(
-        EVENT_TAG_SCANNED, {TAG_ID: tag_id, DEVICE_ID: device_id}, context=context
-    )
     helper = hass.data[DOMAIN][TAGS]
+
+    # Get name from helper, default value None if not present in data
+    tag_name = None
+    if tag_data := helper.data.get(tag_id):
+        tag_name = tag_data.get(CONF_NAME)
+
+    hass.bus.async_fire(
+        EVENT_TAG_SCANNED,
+        {TAG_ID: tag_id, CONF_NAME: tag_name, DEVICE_ID: device_id},
+        context=context,
+    )
+
     if tag_id in helper.data:
         await helper.async_update_item(tag_id, {LAST_SCANNED: dt_util.utcnow()})
     else:

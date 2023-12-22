@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import voluptuous as vol
 
+from homeassistant.components.device_automation import async_validate_entity_schema
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
@@ -19,12 +20,19 @@ from .const import DOMAIN, SERVICE_PRESS
 
 ACTION_TYPES = {"press"}
 
-ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
+_ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(ACTION_TYPES),
-        vol.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
     }
 )
+
+
+async def async_validate_action_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
+    return async_validate_entity_schema(hass, config, _ACTION_SCHEMA)
 
 
 async def async_get_actions(
@@ -36,7 +44,7 @@ async def async_get_actions(
         {
             CONF_DEVICE_ID: device_id,
             CONF_DOMAIN: DOMAIN,
-            CONF_ENTITY_ID: entry.entity_id,
+            CONF_ENTITY_ID: entry.id,
             CONF_TYPE: "press",
         }
         for entry in er.async_entries_for_device(registry, device_id)

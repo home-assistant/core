@@ -34,6 +34,7 @@ PLATFORMS = [
     Platform.CLIMATE,
     Platform.COVER,
     Platform.LIGHT,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
@@ -118,9 +119,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Handle Memo Text service call."""
         memo_text = call.data[CONF_MEMO_TEXT]
         memo_text.hass = hass
-        await hass.data[DOMAIN][call.data[CONF_INTERFACE]]["cntrl"].get_module(
-            call.data[CONF_ADDRESS]
-        ).set_memo_text(memo_text.async_render())
+        await (
+            hass.data[DOMAIN][call.data[CONF_INTERFACE]]["cntrl"]
+            .get_module(call.data[CONF_ADDRESS])
+            .set_memo_text(memo_text.async_render())
+        )
 
     hass.services.async_register(
         DOMAIN,
@@ -209,8 +212,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             await hass.async_add_executor_job(shutil.rmtree, cache_path)
         # set the new version
         config_entry.version = 2
-        # update the entry
-        hass.config_entries.async_update_entry(config_entry)
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
     return True

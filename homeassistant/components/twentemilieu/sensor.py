@@ -17,57 +17,50 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, WASTE_TYPE_TO_DESCRIPTION
+from .const import DOMAIN
 from .entity import TwenteMilieuEntity
 
 
-@dataclass
-class TwenteMilieuSensorDescriptionMixin:
-    """Define an entity description mixin."""
+@dataclass(frozen=True, kw_only=True)
+class TwenteMilieuSensorDescription(SensorEntityDescription):
+    """Describe an Twente Milieu sensor."""
 
     waste_type: WasteType
-
-
-@dataclass
-class TwenteMilieuSensorDescription(
-    SensorEntityDescription, TwenteMilieuSensorDescriptionMixin
-):
-    """Describe an Ambient PWS binary sensor."""
 
 
 SENSORS: tuple[TwenteMilieuSensorDescription, ...] = (
     TwenteMilieuSensorDescription(
         key="tree",
+        translation_key="christmas_tree_pickup",
         waste_type=WasteType.TREE,
-        name=WASTE_TYPE_TO_DESCRIPTION[WasteType.TREE],
         icon="mdi:pine-tree",
         device_class=SensorDeviceClass.DATE,
     ),
     TwenteMilieuSensorDescription(
         key="Non-recyclable",
+        translation_key="non_recyclable_waste_pickup",
         waste_type=WasteType.NON_RECYCLABLE,
-        name=WASTE_TYPE_TO_DESCRIPTION[WasteType.NON_RECYCLABLE],
         icon="mdi:delete-empty",
         device_class=SensorDeviceClass.DATE,
     ),
     TwenteMilieuSensorDescription(
         key="Organic",
+        translation_key="organic_waste_pickup",
         waste_type=WasteType.ORGANIC,
-        name=WASTE_TYPE_TO_DESCRIPTION[WasteType.ORGANIC],
         icon="mdi:delete-empty",
         device_class=SensorDeviceClass.DATE,
     ),
     TwenteMilieuSensorDescription(
         key="Paper",
+        translation_key="paper_waste_pickup",
         waste_type=WasteType.PAPER,
-        name=WASTE_TYPE_TO_DESCRIPTION[WasteType.PAPER],
         icon="mdi:delete-empty",
         device_class=SensorDeviceClass.DATE,
     ),
     TwenteMilieuSensorDescription(
         key="Plastic",
+        translation_key="packages_waste_pickup",
         waste_type=WasteType.PACKAGES,
-        name=WASTE_TYPE_TO_DESCRIPTION[WasteType.PACKAGES],
         icon="mdi:delete-empty",
         device_class=SensorDeviceClass.DATE,
     ),

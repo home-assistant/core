@@ -2,7 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
+import voluptuous as vol
+from voluptuous.schema_builder import _compile_scalar
 import yaml
 
 
@@ -13,12 +16,16 @@ class NodeListClass(list):
 class NodeStrClass(str):
     """Wrapper class to be able to add attributes on a string."""
 
+    def __voluptuous_compile__(self, schema: vol.Schema) -> Any:
+        """Needed because vol.Schema.compile does not handle str subclasses."""
+        return _compile_scalar(self)
+
 
 class NodeDictClass(dict):
     """Wrapper class to be able to add attributes on a dict."""
 
 
-@dataclass(frozen=True)
+@dataclass(slots=True, frozen=True)
 class Input:
     """Input that should be substituted."""
 

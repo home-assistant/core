@@ -8,7 +8,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -44,6 +44,17 @@ async def async_setup_entry(
 class Ws66iZone(CoordinatorEntity[Ws66iDataUpdateCoordinator], MediaPlayerEntity):
     """Representation of a WS66i amplifier zone."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
+
     def __init__(
         self,
         device: WS66i,
@@ -61,19 +72,10 @@ class Ws66iZone(CoordinatorEntity[Ws66iDataUpdateCoordinator], MediaPlayerEntity
         self._zone_id_idx: int = data_idx
         self._status: ZoneStatus = coordinator.data[data_idx]
         self._attr_source_list = ws66i_data.sources.name_list
-        self._attr_unique_id = f"{entry_id}_{self._zone_id}"
-        self._attr_name = f"Zone {self._zone_id}"
-        self._attr_supported_features = (
-            MediaPlayerEntityFeature.VOLUME_MUTE
-            | MediaPlayerEntityFeature.VOLUME_SET
-            | MediaPlayerEntityFeature.VOLUME_STEP
-            | MediaPlayerEntityFeature.TURN_ON
-            | MediaPlayerEntityFeature.TURN_OFF
-            | MediaPlayerEntityFeature.SELECT_SOURCE
-        )
+        self._attr_unique_id = f"{entry_id}_{zone_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(self.unique_id))},
-            name=self.name,
+            name=f"Zone {zone_id}",
             manufacturer="Soundavo",
             model="WS66i 6-Zone Amplifier",
         )

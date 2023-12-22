@@ -3,8 +3,7 @@ from __future__ import annotations
 
 from homeassistant import config_entries
 from homeassistant.components.local_ip import DOMAIN
-from homeassistant.components.network import async_get_source_ip
-from homeassistant.components.zeroconf import MDNS_TARGET_IP
+from homeassistant.components.network import MDNS_TARGET_IP, async_get_source_ip
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry

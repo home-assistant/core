@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import voluptuous as vol
 
+from homeassistant.components.device_automation import async_validate_entity_schema
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
@@ -23,18 +24,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import (
-    ATTR_POSITION,
-    ATTR_TILT_POSITION,
-    DOMAIN,
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
-)
+from . import ATTR_POSITION, ATTR_TILT_POSITION, DOMAIN, CoverEntityFeature
 
 CMD_ACTION_TYPES = {"open", "close", "stop", "open_tilt", "close_tilt"}
 POSITION_ACTION_TYPES = {"set_position", "set_tilt_position"}
@@ -42,21 +32,28 @@ POSITION_ACTION_TYPES = {"set_position", "set_tilt_position"}
 CMD_ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(CMD_ACTION_TYPES),
-        vol.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
     }
 )
 
 POSITION_ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(POSITION_ACTION_TYPES),
-        vol.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Optional("position", default=0): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=100)
         ),
     }
 )
 
-ACTION_SCHEMA = vol.Any(CMD_ACTION_SCHEMA, POSITION_ACTION_SCHEMA)
+_ACTION_SCHEMA = vol.Any(CMD_ACTION_SCHEMA, POSITION_ACTION_SCHEMA)
+
+
+async def async_validate_action_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
+    return async_validate_entity_schema(hass, config, _ACTION_SCHEMA)
 
 
 async def async_get_actions(
@@ -77,26 +74,24 @@ async def async_get_actions(
         base_action = {
             CONF_DEVICE_ID: device_id,
             CONF_DOMAIN: DOMAIN,
-            CONF_ENTITY_ID: entry.entity_id,
+            CONF_ENTITY_ID: entry.id,
         }
 
-        if supported_features & SUPPORT_SET_POSITION:
+        if supported_features & CoverEntityFeature.SET_POSITION:
             actions.append({**base_action, CONF_TYPE: "set_position"})
-        else:
-            if supported_features & SUPPORT_OPEN:
-                actions.append({**base_action, CONF_TYPE: "open"})
-            if supported_features & SUPPORT_CLOSE:
-                actions.append({**base_action, CONF_TYPE: "close"})
-            if supported_features & SUPPORT_STOP:
-                actions.append({**base_action, CONF_TYPE: "stop"})
+        if supported_features & CoverEntityFeature.OPEN:
+            actions.append({**base_action, CONF_TYPE: "open"})
+        if supported_features & CoverEntityFeature.CLOSE:
+            actions.append({**base_action, CONF_TYPE: "close"})
+        if supported_features & CoverEntityFeature.STOP:
+            actions.append({**base_action, CONF_TYPE: "stop"})
 
-        if supported_features & SUPPORT_SET_TILT_POSITION:
+        if supported_features & CoverEntityFeature.SET_TILT_POSITION:
             actions.append({**base_action, CONF_TYPE: "set_tilt_position"})
-        else:
-            if supported_features & SUPPORT_OPEN_TILT:
-                actions.append({**base_action, CONF_TYPE: "open_tilt"})
-            if supported_features & SUPPORT_CLOSE_TILT:
-                actions.append({**base_action, CONF_TYPE: "close_tilt"})
+        if supported_features & CoverEntityFeature.OPEN_TILT:
+            actions.append({**base_action, CONF_TYPE: "open_tilt"})
+        if supported_features & CoverEntityFeature.CLOSE_TILT:
+            actions.append({**base_action, CONF_TYPE: "close_tilt"})
 
     return actions
 

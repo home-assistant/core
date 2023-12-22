@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_METHOD,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_PAYLOAD,
     CONF_RESOURCE,
     CONF_TIMEOUT,
     CONF_UNIQUE_ID,
@@ -60,7 +61,15 @@ from homeassistant.helpers.selector import (
 )
 
 from . import COMBINED_SCHEMA
-from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL, DOMAIN
+from .const import (
+    CONF_ENCODING,
+    CONF_INDEX,
+    CONF_SELECT,
+    DEFAULT_ENCODING,
+    DEFAULT_NAME,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+)
 
 RESOURCE_SETUP = {
     vol.Required(CONF_RESOURCE): TextSelector(
@@ -69,6 +78,7 @@ RESOURCE_SETUP = {
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): SelectSelector(
         SelectSelectorConfig(options=METHODS, mode=SelectSelectorMode.DROPDOWN)
     ),
+    vol.Optional(CONF_PAYLOAD): ObjectSelector(),
     vol.Optional(CONF_AUTHENTICATION): SelectSelector(
         SelectSelectorConfig(
             options=[HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION],
@@ -84,6 +94,7 @@ RESOURCE_SETUP = {
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): NumberSelector(
         NumberSelectorConfig(min=0, step=1, mode=NumberSelectorMode.BOX)
     ),
+    vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): TextSelector(),
 }
 
 SENSOR_SETUP = {
@@ -95,14 +106,20 @@ SENSOR_SETUP = {
     vol.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
     vol.Optional(CONF_DEVICE_CLASS): SelectSelector(
         SelectSelectorConfig(
-            options=[cls.value for cls in SensorDeviceClass],
+            options=[
+                cls.value for cls in SensorDeviceClass if cls != SensorDeviceClass.ENUM
+            ],
             mode=SelectSelectorMode.DROPDOWN,
+            translation_key="device_class",
+            sort=True,
         )
     ),
     vol.Optional(CONF_STATE_CLASS): SelectSelector(
         SelectSelectorConfig(
             options=[cls.value for cls in SensorStateClass],
             mode=SelectSelectorMode.DROPDOWN,
+            translation_key="state_class",
+            sort=True,
         )
     ),
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
@@ -110,6 +127,8 @@ SENSOR_SETUP = {
             options=[cls.value for cls in UnitOfTemperature],
             custom_value=True,
             mode=SelectSelectorMode.DROPDOWN,
+            translation_key="unit_of_measurement",
+            sort=True,
         )
     ),
 }
@@ -172,7 +191,7 @@ async def get_edit_sensor_suggested_values(
 ) -> dict[str, Any]:
     """Return suggested values for sensor editing."""
     idx: int = handler.flow_state["_idx"]
-    return cast(dict[str, Any], handler.options[SENSOR_DOMAIN][idx])
+    return dict(handler.options[SENSOR_DOMAIN][idx])
 
 
 async def validate_sensor_edit(
@@ -182,9 +201,14 @@ async def validate_sensor_edit(
     user_input[CONF_INDEX] = int(user_input[CONF_INDEX])
 
     # Standard behavior is to merge the result with the options.
-    # In this case, we want to add a sub-item so we update the options directly.
+    # In this case, we want to add a sub-item so we update the options directly,
+    # including popping omitted optional schema items.
     idx: int = handler.flow_state["_idx"]
     handler.options[SENSOR_DOMAIN][idx].update(user_input)
+    for key in DATA_SCHEMA_EDIT_SENSOR.schema:
+        if isinstance(key, vol.Optional) and key not in user_input:
+            # Key not present, delete keys old value (if present) too
+            handler.options[SENSOR_DOMAIN][idx].pop(key, None)
     return {}
 
 

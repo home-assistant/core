@@ -3,6 +3,7 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+from sfrbox_api.models import SystemInfo
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
@@ -23,13 +24,17 @@ def override_platforms() -> Generator[None, None, None]:
         yield
 
 
+@pytest.mark.parametrize("net_infra", ["adsl", "ftth"])
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
+    system_get_info: SystemInfo,
+    net_infra: str,
 ) -> None:
     """Test config entry diagnostics."""
+    system_get_info.net_infra = net_infra
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 

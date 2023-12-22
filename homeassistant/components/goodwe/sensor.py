@@ -19,16 +19,19 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
+    POWER_VOLT_AMPERE_REACTIVE,
     EntityCategory,
+    UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.typing import StateType
@@ -72,16 +75,16 @@ _ICONS: dict[SensorKind, str] = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class GoodweSensorEntityDescription(SensorEntityDescription):
     """Class describing Goodwe sensor entities."""
 
-    value: Callable[
-        [GoodweUpdateCoordinator, str], Any
-    ] = lambda coordinator, sensor: coordinator.sensor_value(sensor)
-    available: Callable[
-        [GoodweUpdateCoordinator], bool
-    ] = lambda coordinator: coordinator.last_update_success
+    value: Callable[[GoodweUpdateCoordinator, str], Any] = (
+        lambda coordinator, sensor: coordinator.sensor_value(sensor)
+    )
+    available: Callable[[GoodweUpdateCoordinator], bool] = (
+        lambda coordinator: coordinator.last_update_success
+    )
 
 
 _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
@@ -111,6 +114,20 @@ _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
         value=lambda coordinator, sensor: coordinator.total_sensor_value(sensor),
         available=lambda coordinator: coordinator.data is not None,
     ),
+    "VA": GoodweSensorEntityDescription(
+        key="VA",
+        device_class=SensorDeviceClass.APPARENT_POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        entity_registry_enabled_default=False,
+    ),
+    "var": GoodweSensorEntityDescription(
+        key="var",
+        device_class=SensorDeviceClass.REACTIVE_POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=POWER_VOLT_AMPERE_REACTIVE,
+        entity_registry_enabled_default=False,
+    ),
     "C": GoodweSensorEntityDescription(
         key="C",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -122,6 +139,13 @@ _DESCRIPTIONS: dict[str, GoodweSensorEntityDescription] = {
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
+    ),
+    "h": GoodweSensorEntityDescription(
+        key="h",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        entity_registry_enabled_default=False,
     ),
     "%": GoodweSensorEntityDescription(
         key="%",
@@ -219,7 +243,7 @@ class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
         In contrast to "total" sensors, these "daily" sensors need to be reset to 0 on midnight.
         """
         if not self.coordinator.last_update_success:
-            self.coordinator.reset_sensor(self._sensor.id)
+            self.coordinator.reset_sensor(self._sensor.id_)
             self.async_write_ha_state()
             _LOGGER.debug("Goodwe reset %s to 0", self.name)
         next_midnight = dt_util.start_of_local_day(

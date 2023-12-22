@@ -28,7 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, mock_platform
+from tests.common import MockConfigEntry, mock_config_flow, mock_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -98,7 +98,7 @@ async def mock_application_credentials_integration(
         yield
 
 
-class FakeConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN):
+class FakeConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
     """Config flow used during tests."""
 
     DOMAIN = TEST_DOMAIN
@@ -115,8 +115,8 @@ def config_flow_handler(
 ) -> Generator[FakeConfigFlow, None, None]:
     """Fixture for a test config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
-    with patch.dict(config_entries.HANDLERS, {TEST_DOMAIN: FakeConfigFlow}):
-        yield FakeConfigFlow
+    with mock_config_flow(TEST_DOMAIN, FakeConfigFlow):
+        yield
 
 
 class OAuthFixture:
@@ -479,7 +479,7 @@ async def test_config_flow(
     resp = await client.cmd("delete", {"application_credentials_id": ID})
     assert not resp.get("success")
     assert "error" in resp
-    assert resp["error"].get("code") == "unknown_error"
+    assert resp["error"].get("code") == "home_assistant_error"
     assert (
         resp["error"].get("message")
         == "Cannot delete credential in use by integration fake_integration"

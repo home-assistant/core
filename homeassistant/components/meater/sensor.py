@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -26,7 +27,7 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class MeaterSensorEntityDescriptionMixin:
     """Mixin for MeaterSensorEntityDescription."""
 
@@ -34,7 +35,7 @@ class MeaterSensorEntityDescriptionMixin:
     value: Callable[[MeaterProbe], datetime | float | str | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class MeaterSensorEntityDescription(
     SensorEntityDescription, MeaterSensorEntityDescriptionMixin
 ):
@@ -63,8 +64,8 @@ SENSOR_TYPES = (
     # Ambient temperature
     MeaterSensorEntityDescription(
         key="ambient",
+        translation_key="ambient",
         device_class=SensorDeviceClass.TEMPERATURE,
-        name="Ambient",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         available=lambda probe: probe is not None,
@@ -73,8 +74,8 @@ SENSOR_TYPES = (
     # Internal temperature (probe tip)
     MeaterSensorEntityDescription(
         key="internal",
+        translation_key="internal",
         device_class=SensorDeviceClass.TEMPERATURE,
-        name="Internal",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         available=lambda probe: probe is not None,
@@ -83,7 +84,7 @@ SENSOR_TYPES = (
     # Name of selected meat in user language or user given custom name
     MeaterSensorEntityDescription(
         key="cook_name",
-        name="Cooking",
+        translation_key="cook_name",
         available=lambda probe: probe is not None and probe.cook is not None,
         value=lambda probe: probe.cook.name if probe.cook else None,
     ),
@@ -91,15 +92,15 @@ SENSOR_TYPES = (
     # Slightly Underdone, Finished, Slightly Overdone, OVERCOOK!. Not translated.
     MeaterSensorEntityDescription(
         key="cook_state",
-        name="Cook state",
+        translation_key="cook_state",
         available=lambda probe: probe is not None and probe.cook is not None,
         value=lambda probe: probe.cook.state if probe.cook else None,
     ),
     # Target temperature
     MeaterSensorEntityDescription(
         key="cook_target_temp",
+        translation_key="cook_target_temp",
         device_class=SensorDeviceClass.TEMPERATURE,
-        name="Target",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         available=lambda probe: probe is not None and probe.cook is not None,
@@ -110,8 +111,8 @@ SENSOR_TYPES = (
     # Peak temperature
     MeaterSensorEntityDescription(
         key="cook_peak_temp",
+        translation_key="cook_peak_temp",
         device_class=SensorDeviceClass.TEMPERATURE,
-        name="Peak",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         available=lambda probe: probe is not None and probe.cook is not None,
@@ -123,8 +124,8 @@ SENSOR_TYPES = (
     # Exposed as a TIMESTAMP sensor where the timestamp is current time + remaining time.
     MeaterSensorEntityDescription(
         key="cook_time_remaining",
+        translation_key="cook_time_remaining",
         device_class=SensorDeviceClass.TIMESTAMP,
-        name="Remaining time",
         available=lambda probe: probe is not None and probe.cook is not None,
         value=_remaining_time_to_timestamp,
     ),
@@ -132,8 +133,8 @@ SENSOR_TYPES = (
     # where the timestamp is current time - elapsed time.
     MeaterSensorEntityDescription(
         key="cook_time_elapsed",
+        translation_key="cook_time_elapsed",
         device_class=SensorDeviceClass.TIMESTAMP,
-        name="Elapsed time",
         available=lambda probe: probe is not None and probe.cook is not None,
         value=_elapsed_time_to_timestamp,
     ),
@@ -191,16 +192,15 @@ class MeaterProbeTemperature(
     ) -> None:
         """Initialise the sensor."""
         super().__init__(coordinator)
-        self._attr_name = f"Meater Probe {description.name}"
-        self._attr_device_info = {
-            "identifiers": {
+        self._attr_device_info = DeviceInfo(
+            identifiers={
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, device_id)
             },
-            "manufacturer": "Apption Labs",
-            "model": "Meater Probe",
-            "name": f"Meater Probe {device_id}",
-        }
+            manufacturer="Apption Labs",
+            model="Meater Probe",
+            name=f"Meater Probe {device_id}",
+        )
         self._attr_unique_id = f"{device_id}-{description.key}"
 
         self.device_id = device_id

@@ -6,18 +6,17 @@ import logging
 
 from bimmer_connected.account import MyBMWAccount
 from bimmer_connected.api.regions import get_region_from_name
-from bimmer_connected.models import GPSPosition
-from httpx import HTTPError, HTTPStatusError, TimeoutException
+from bimmer_connected.models import GPSPosition, MyBMWAPIError, MyBMWAuthError
+from httpx import RequestError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_READ_ONLY, CONF_REFRESH_TOKEN, DOMAIN
+from .const import CONF_GCID, CONF_READ_ONLY, CONF_REFRESH_TOKEN, DOMAIN, SCAN_INTERVALS
 
-DEFAULT_SCAN_INTERVAL_SECONDS = 300
-SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL_SECONDS)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -33,20 +32,21 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
             entry.data[CONF_PASSWORD],
             get_region_from_name(entry.data[CONF_REGION]),
             observer_position=GPSPosition(hass.config.latitude, hass.config.longitude),
-            # Force metric system as BMW API apparently only returns metric values now
-            use_metric_units=True,
         )
         self.read_only = entry.options[CONF_READ_ONLY]
         self._entry = entry
 
         if CONF_REFRESH_TOKEN in entry.data:
-            self.account.set_refresh_token(entry.data[CONF_REFRESH_TOKEN])
+            self.account.set_refresh_token(
+                refresh_token=entry.data[CONF_REFRESH_TOKEN],
+                gcid=entry.data.get(CONF_GCID),
+            )
 
         super().__init__(
             hass,
             _LOGGER,
             name=f"{DOMAIN}-{entry.data['username']}",
-            update_interval=SCAN_INTERVAL,
+            update_interval=timedelta(seconds=SCAN_INTERVALS[entry.data[CONF_REGION]]),
         )
 
     async def _async_update_data(self) -> None:
@@ -55,19 +55,15 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         try:
             await self.account.get_vehicles()
-        except (HTTPError, HTTPStatusError, TimeoutException) as err:
-            if isinstance(err, HTTPStatusError) and err.response.status_code == 429:
-                # Increase scan interval to not jump to not bring up the issue next time
-                self.update_interval = timedelta(
-                    seconds=DEFAULT_SCAN_INTERVAL_SECONDS * 3
-                )
-            if isinstance(err, HTTPStatusError) and err.response.status_code in (
-                401,
-                403,
-            ):
-                # Clear refresh token only on issues with authorization
-                self._update_config_entry_refresh_token(None)
-            raise UpdateFailed(f"Error communicating with BMW API: {err}") from err
+        except MyBMWAuthError as err:
+            # Allow one retry interval before raising AuthFailed to avoid flaky API issues
+            if self.last_update_success:
+                raise UpdateFailed(err) from err
+            # Clear refresh token and trigger reauth if previous update failed as well
+            self._update_config_entry_refresh_token(None)
+            raise ConfigEntryAuthFailed(err) from err
+        except (MyBMWAPIError, RequestError) as err:
+            raise UpdateFailed(err) from err
 
         if self.account.refresh_token != old_refresh_token:
             self._update_config_entry_refresh_token(self.account.refresh_token)
@@ -76,9 +72,6 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 old_refresh_token,
                 self.account.refresh_token,
             )
-
-        # Reset scan interval after successful update
-        self.update_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL_SECONDS)
 
     def _update_config_entry_refresh_token(self, refresh_token: str | None) -> None:
         """Update or delete the refresh_token in the Config Entry."""

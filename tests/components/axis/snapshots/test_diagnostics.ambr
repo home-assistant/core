@@ -1,0 +1,93 @@
+# serializer version: 1
+# name: test_entry_diagnostics[api_discovery_items0]
+  dict({
+    'api_discovery': list([
+      dict({
+        'id': 'api-discovery',
+        'name': 'API Discovery Service',
+        'version': '1.0',
+      }),
+      dict({
+        'id': 'param-cgi',
+        'name': 'Legacy Parameter Handling',
+        'version': '1.0',
+      }),
+      dict({
+        'id': 'basic-device-info',
+        'name': 'Basic Device Information',
+        'version': '1.1',
+      }),
+    ]),
+    'basic_device_info': dict({
+      'ProdNbr': 'M1065-LW',
+      'ProdType': 'Network Camera',
+      'SerialNumber': '**REDACTED**',
+      'Version': '9.80.1',
+    }),
+    'camera_sources': dict({
+      'Image': 'http://1.2.3.4:80/axis-cgi/jpg/image.cgi',
+      'MJPEG': 'http://1.2.3.4:80/axis-cgi/mjpg/video.cgi',
+      'Stream': 'rtsp://user:pass@1.2.3.4/axis-media/media.amp?videocodec=h264',
+    }),
+    'config': dict({
+      'data': dict({
+        'host': '1.2.3.4',
+        'model': 'model',
+        'name': 'name',
+        'password': '**REDACTED**',
+        'port': 80,
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'domain': 'axis',
+      'entry_id': '676abe5b73621446e6550a2e86ffe3dd',
+      'minor_version': 1,
+      'options': dict({
+        'events': True,
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Mock Title',
+      'unique_id': '**REDACTED**',
+      'version': 3,
+    }),
+    'params': dict({
+      'root.IOPort': dict({
+        'I0.Configurable': 'no',
+        'I0.Direction': 'input',
+        'I0.Input.Name': 'PIR sensor',
+        'I0.Input.Trig': 'closed',
+      }),
+      'root.Input': dict({
+        'NbrOfInputs': '1',
+      }),
+      'root.Output': dict({
+        'NbrOfOutputs': '0',
+      }),
+      'root.Properties': dict({
+        'API.HTTP.Version': '3',
+        'API.Metadata.Metadata': 'yes',
+        'API.Metadata.Version': '1.0',
+        'EmbeddedDevelopment.Version': '2.16',
+        'Firmware.BuildDate': 'Feb 15 2019 09:42',
+        'Firmware.BuildNumber': '26',
+        'Firmware.Version': '9.10.1',
+        'Image.Format': 'jpeg,mjpeg,h264',
+        'Image.NbrOfViews': '2',
+        'Image.Resolution': '1920x1080,1280x960,1280x720,1024x768,1024x576,800x600,640x480,640x360,352x240,320x240',
+        'Image.Rotation': '0,180',
+        'System.SerialNumber': '**REDACTED**',
+      }),
+      'root.StreamProfile': dict({
+        'MaxGroups': '26',
+        'S0.Description': 'profile_1_description',
+        'S0.Name': 'profile_1',
+        'S0.Parameters': 'videocodec=h264',
+        'S1.Description': 'profile_2_description',
+        'S1.Name': 'profile_2',
+        'S1.Parameters': 'videocodec=h265',
+      }),
+    }),
+  })
+# ---

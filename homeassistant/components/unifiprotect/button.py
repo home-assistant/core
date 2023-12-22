@@ -28,7 +28,7 @@ from .utils import async_dispatch_id as _ufpd
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class ProtectButtonEntityDescription(
     ProtectSetableKeysMixin[T], ButtonEntityDescription
 ):
@@ -183,7 +183,8 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
         super()._async_update_device_from_protect(device)
 
         if self.entity_description.key == KEY_ADOPT:
-            self._attr_available = self.device.can_adopt and self.device.can_create(
+            device = self.device
+            self._attr_available = device.can_adopt and device.can_create(
                 self.data.api.bootstrap.auth_user
             )
 
@@ -192,3 +193,17 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
 
         if self.entity_description.ufp_press is not None:
             await getattr(self.device, self.entity_description.ufp_press)()
+
+    @callback
+    def _async_updated_event(self, device: ProtectModelWithId) -> None:
+        """Call back for incoming data that only writes when state has changed.
+
+        Only available is updated for these entities, and since the websocket
+        update for the device will trigger an update for all entities connected
+        to the device, we want to avoid writing state unless something has
+        actually changed.
+        """
+        previous_available = self._attr_available
+        self._async_update_device_from_protect(device)
+        if self._attr_available != previous_available:
+            self.async_write_ha_state()

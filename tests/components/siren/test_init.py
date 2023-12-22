@@ -1,8 +1,10 @@
 """The tests for the siren component."""
+from types import ModuleType
 from unittest.mock import MagicMock
 
 import pytest
 
+from homeassistant.components import siren
 from homeassistant.components.siren import (
     SirenEntity,
     SirenEntityDescription,
@@ -10,6 +12,8 @@ from homeassistant.components.siren import (
 )
 from homeassistant.components.siren.const import SirenEntityFeature
 from homeassistant.core import HomeAssistant
+
+from tests.common import import_and_test_deprecated_constant_enum
 
 
 class MockSirenEntity(SirenEntity):
@@ -104,3 +108,14 @@ async def test_missing_tones_dict(hass: HomeAssistant) -> None:
     siren.hass = hass
     with pytest.raises(ValueError):
         process_turn_on_params(siren, {"tone": 3})
+
+
+@pytest.mark.parametrize(("enum"), list(SirenEntityFeature))
+@pytest.mark.parametrize(("module"), [siren, siren.const])
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: SirenEntityFeature,
+    module: ModuleType,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(caplog, module, enum, "SUPPORT_", "2025.1")

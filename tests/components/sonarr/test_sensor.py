@@ -1,8 +1,9 @@
 """Tests for the Sonarr sensor platform."""
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 from aiopyarr import ArrException
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -25,7 +26,7 @@ async def test_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_sonarr: MagicMock,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test the creation and values of the sensors."""
     registry = er.async_get(hass)
@@ -122,6 +123,7 @@ async def test_disabled_by_default_sensors(
 
 async def test_availability(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_sonarr: MagicMock,
 ) -> None:
@@ -129,9 +131,9 @@ async def test_availability(
     now = dt_util.utcnow()
 
     mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    freezer.move_to(now)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert hass.states.get(UPCOMING_ENTITY_ID)
     assert hass.states.get(UPCOMING_ENTITY_ID).state == "1"
@@ -140,9 +142,9 @@ async def test_availability(
     mock_sonarr.async_get_calendar.side_effect = ArrException
 
     future = now + timedelta(minutes=1)
-    with patch("homeassistant.util.dt.utcnow", return_value=future):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
+    freezer.move_to(future)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
 
     assert hass.states.get(UPCOMING_ENTITY_ID)
     assert hass.states.get(UPCOMING_ENTITY_ID).state == STATE_UNAVAILABLE
@@ -151,9 +153,9 @@ async def test_availability(
     mock_sonarr.async_get_calendar.side_effect = None
 
     future += timedelta(minutes=1)
-    with patch("homeassistant.util.dt.utcnow", return_value=future):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
+    freezer.move_to(future)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
 
     assert hass.states.get(UPCOMING_ENTITY_ID)
     assert hass.states.get(UPCOMING_ENTITY_ID).state == "1"
@@ -162,9 +164,9 @@ async def test_availability(
     mock_sonarr.async_get_calendar.side_effect = ArrException
 
     future += timedelta(minutes=1)
-    with patch("homeassistant.util.dt.utcnow", return_value=future):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
+    freezer.move_to(future)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
 
     assert hass.states.get(UPCOMING_ENTITY_ID)
     assert hass.states.get(UPCOMING_ENTITY_ID).state == STATE_UNAVAILABLE
@@ -173,9 +175,9 @@ async def test_availability(
     mock_sonarr.async_get_calendar.side_effect = None
 
     future += timedelta(minutes=1)
-    with patch("homeassistant.util.dt.utcnow", return_value=future):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
+    freezer.move_to(future)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
 
     assert hass.states.get(UPCOMING_ENTITY_ID)
     assert hass.states.get(UPCOMING_ENTITY_ID).state == "1"

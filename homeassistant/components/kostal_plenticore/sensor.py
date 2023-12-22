@@ -22,8 +22,9 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -32,7 +33,7 @@ from .helper import PlenticoreDataFormatter, ProcessDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class PlenticoreRequiredKeysMixin:
     """A class that describes required properties for plenticore sensor entities."""
 
@@ -40,7 +41,7 @@ class PlenticoreRequiredKeysMixin:
     formatter: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class PlenticoreSensorEntityDescription(
     SensorEntityDescription, PlenticoreRequiredKeysMixin
 ):
@@ -650,6 +651,39 @@ SENSOR_PROCESS_DATA = [
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyDischarge:Day",
+        name="Battery Discharge Day",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyDischarge:Month",
+        name="Battery Discharge Month",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyDischarge:Year",
+        name="Battery Discharge Year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyDischarge:Total",
+        name="Battery Discharge Total",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyDischargeGrid:Day",
         name="Energy Discharge to Grid Day",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -676,6 +710,52 @@ SENSOR_PROCESS_DATA = [
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyDischargeGrid:Total",
         name="Energy Discharge to Grid Total",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="_virt_",
+        key="pv_P",
+        name="Sum power of all PV DC inputs",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True,
+        state_class=SensorStateClass.MEASUREMENT,
+        formatter="format_round",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="_virt_",
+        key="Statistic:EnergyGrid:Total",
+        name="Energy to Grid Total",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="_virt_",
+        key="Statistic:EnergyGrid:Year",
+        name="Energy to Grid Year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="_virt_",
+        key="Statistic:EnergyGrid:Month",
+        name="Energy to Grid Month",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="_virt_",
+        key="Statistic:EnergyGrid:Day",
+        name="Energy to Grid Day",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -744,16 +824,16 @@ class PlenticoreDataSensor(
         super().__init__(coordinator)
         self.entity_description = description
         self.entry_id = entry_id
-        self.platform_name = platform_name
         self.module_id = description.module_id
         self.data_id = description.key
 
-        self._sensor_name = description.name
         self._formatter: Callable[[str], Any] = PlenticoreDataFormatter.get_method(
             description.formatter
         )
 
-        self._device_info = device_info
+        self._attr_device_info = device_info
+        self._attr_unique_id = f"{entry_id}_{self.module_id}_{self.data_id}"
+        self._attr_name = f"{platform_name} {description.name}"
 
     @property
     def available(self) -> bool:
@@ -768,7 +848,9 @@ class PlenticoreDataSensor(
     async def async_added_to_hass(self) -> None:
         """Register this entity on the Update Coordinator."""
         await super().async_added_to_hass()
-        self.coordinator.start_fetch_data(self.module_id, self.data_id)
+        self.async_on_remove(
+            self.coordinator.start_fetch_data(self.module_id, self.data_id)
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister this entity from the Update Coordinator."""
@@ -776,22 +858,7 @@ class PlenticoreDataSensor(
         await super().async_will_remove_from_hass()
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return self._device_info
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id of this Sensor Entity."""
-        return f"{self.entry_id}_{self.module_id}_{self.data_id}"
-
-    @property
-    def name(self) -> str:
-        """Return the name of this Sensor Entity."""
-        return f"{self.platform_name} {self._sensor_name}"
-
-    @property
-    def native_value(self) -> Any | None:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if self.coordinator.data is None:
             # None is translated to STATE_UNKNOWN

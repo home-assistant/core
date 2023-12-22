@@ -1,9 +1,8 @@
 """Test the UniFi Protect sensor platform."""
-
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import Mock
 
 from pyunifiprotect.data import (
     NVR,
@@ -398,7 +397,7 @@ async def test_sensor_setup_camera(
 
 async def test_sensor_setup_camera_with_last_trip_time(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
     ufp: MockUFPFixture,
     doorbell: Camera,
     fixed_now: datetime,
@@ -474,7 +473,7 @@ async def test_sensor_update_alarm(
 
 async def test_sensor_update_alarm_with_last_trip_time(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
     ufp: MockUFPFixture,
     sensor_all: Sensor,
     fixed_now: datetime,
@@ -538,7 +537,9 @@ async def test_camera_update_licenseplate(
 
     new_camera = camera.copy()
     new_camera.is_smart_detected = True
-    new_camera.last_smart_detect_event_id = event.id
+    new_camera.last_smart_detect_event_ids[
+        SmartDetectObjectType.LICENSE_PLATE
+    ] = event.id
 
     mock_msg = Mock()
     mock_msg.changed_data = {}

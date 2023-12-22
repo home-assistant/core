@@ -8,6 +8,9 @@
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your FRITZ!Box router."
         }
       },
       "confirm": {
@@ -35,6 +38,21 @@
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "alarm": { "name": "Alarm" },
+      "device_lock": { "name": "Button lock via UI" },
+      "lock": { "name": "Button lock on device" }
+    },
+    "sensor": {
+      "comfort_temperature": { "name": "Comfort temperature" },
+      "eco_temperature": { "name": "Eco temperature" },
+      "nextchange_preset": { "name": "Next scheduled preset" },
+      "nextchange_temperature": { "name": "Next scheduled temperature" },
+      "nextchange_time": { "name": "Next scheduled change time" },
+      "scheduled_preset": { "name": "Current scheduled preset" }
     }
   }
 }

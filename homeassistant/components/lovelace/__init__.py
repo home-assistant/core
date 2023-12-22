@@ -4,7 +4,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import frontend, websocket_api
-from homeassistant.config import async_hass_config_yaml, async_process_component_config
+from homeassistant.config import (
+    async_hass_config_yaml,
+    async_process_component_and_handle_errors,
+)
 from homeassistant.const import CONF_FILENAME, CONF_MODE, CONF_RESOURCES
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -85,7 +88,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         integration = await async_get_integration(hass, DOMAIN)
 
-        config = await async_process_component_config(hass, conf, integration)
+        config = await async_process_component_and_handle_errors(
+            hass, conf, integration
+        )
 
         if config is None:
             raise HomeAssistantError("Config validation failed")
@@ -119,7 +124,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         resource_collection = resources.ResourceStorageCollection(hass, default_config)
 
-        collection.StorageCollectionWebsocket(
+        collection.DictStorageCollectionWebsocket(
             resource_collection,
             "lovelace/resources",
             "resource",
@@ -144,7 +149,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "yaml_dashboards": config[DOMAIN].get(CONF_DASHBOARDS, {}),
     }
 
-    if hass.config.safe_mode:
+    if hass.config.recovery_mode:
         return True
 
     async def storage_dashboard_changed(change_type, item_id, item):
@@ -198,7 +203,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     dashboards_collection.async_add_listener(storage_dashboard_changed)
     await dashboards_collection.async_load()
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         dashboards_collection,
         "lovelace/dashboards",
         "dashboard",

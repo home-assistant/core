@@ -12,6 +12,48 @@ if TYPE_CHECKING:
 class HomeAssistantError(Exception):
     """General Home Assistant exception occurred."""
 
+    def __init__(
+        self,
+        *args: object,
+        translation_domain: str | None = None,
+        translation_key: str | None = None,
+        translation_placeholders: dict[str, str] | None = None,
+    ) -> None:
+        """Initialize exception."""
+        super().__init__(*args)
+        self.translation_domain = translation_domain
+        self.translation_key = translation_key
+        self.translation_placeholders = translation_placeholders
+
+
+class ConfigValidationError(HomeAssistantError, ExceptionGroup[Exception]):
+    """A validation exception occurred when validating the configuration."""
+
+    def __init__(
+        self,
+        message: str,
+        exceptions: list[Exception],
+        translation_domain: str | None = None,
+        translation_key: str | None = None,
+        translation_placeholders: dict[str, str] | None = None,
+    ) -> None:
+        """Initialize exception."""
+        super().__init__(
+            *(message, exceptions),
+            translation_domain=translation_domain,
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders,
+        )
+        self._message = message
+
+    def __str__(self) -> str:
+        """Return exception message string."""
+        return self._message
+
+
+class ServiceValidationError(HomeAssistantError):
+    """A validation exception occurred when calling a service."""
+
 
 class InvalidEntityFormatError(HomeAssistantError):
     """When an invalid formatted entity is encountered."""
@@ -32,7 +74,7 @@ class TemplateError(HomeAssistantError):
             super().__init__(f"{exception.__class__.__name__}: {exception}")
 
 
-@dataclass
+@dataclass(slots=True)
 class ConditionError(HomeAssistantError):
     """Error during condition evaluation."""
 
@@ -52,7 +94,7 @@ class ConditionError(HomeAssistantError):
         return "\n".join(list(self.output(indent=0)))
 
 
-@dataclass
+@dataclass(slots=True)
 class ConditionErrorMessage(ConditionError):
     """Condition error message."""
 
@@ -64,7 +106,7 @@ class ConditionErrorMessage(ConditionError):
         yield self._indent(indent, f"In '{self.type}' condition: {self.message}")
 
 
-@dataclass
+@dataclass(slots=True)
 class ConditionErrorIndex(ConditionError):
     """Condition error with index."""
 
@@ -87,7 +129,7 @@ class ConditionErrorIndex(ConditionError):
         yield from self.error.output(indent + 1)
 
 
-@dataclass
+@dataclass(slots=True)
 class ConditionErrorContainer(ConditionError):
     """Condition error with subconditions."""
 
@@ -165,13 +207,19 @@ class ServiceNotFound(HomeAssistantError):
 
     def __init__(self, domain: str, service: str) -> None:
         """Initialize error."""
-        super().__init__(self, f"Service {domain}.{service} not found")
+        super().__init__(
+            self,
+            f"Service {domain}.{service} not found.",
+            translation_domain="homeassistant",
+            translation_key="service_not_found",
+            translation_placeholders={"domain": domain, "service": service},
+        )
         self.domain = domain
         self.service = service
 
     def __str__(self) -> str:
         """Return string representation."""
-        return f"Unable to find service {self.domain}.{self.service}"
+        return f"Service {self.domain}.{self.service} not found."
 
 
 class MaxLengthExceeded(HomeAssistantError):
@@ -189,21 +237,6 @@ class MaxLengthExceeded(HomeAssistantError):
         self.value = value
         self.property_name = property_name
         self.max_length = max_length
-
-
-class RequiredParameterMissing(HomeAssistantError):
-    """Raised when a required parameter is missing from a function call."""
-
-    def __init__(self, parameter_names: list[str]) -> None:
-        """Initialize error."""
-        super().__init__(
-            self,
-            (
-                "Call must include at least one of the following parameters: "
-                f"{', '.join(parameter_names)}"
-            ),
-        )
-        self.parameter_names = parameter_names
 
 
 class DependencyError(HomeAssistantError):

@@ -4,9 +4,7 @@ from datetime import datetime, timedelta
 from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, Mock, patch
 
-from freezegun import freeze_time
 import pytest
-import pytz
 from pyunifiprotect.data import (
     Bootstrap,
     Camera,
@@ -442,7 +440,7 @@ ONE_MONTH_SIMPLE = (
         minute=0,
         second=0,
         microsecond=0,
-        tzinfo=pytz.timezone("US/Pacific"),
+        tzinfo=dt_util.get_time_zone("US/Pacific"),
     ),
     1,
 )
@@ -455,7 +453,7 @@ TWO_MONTH_SIMPLE = (
         minute=0,
         second=0,
         microsecond=0,
-        tzinfo=pytz.timezone("US/Pacific"),
+        tzinfo=dt_util.get_time_zone("US/Pacific"),
     ),
     2,
 )
@@ -465,7 +463,7 @@ TWO_MONTH_SIMPLE = (
     ("start", "months"),
     [ONE_MONTH_SIMPLE, TWO_MONTH_SIMPLE],
 )
-@freeze_time("2022-09-15 03:00:00-07:00")
+@pytest.mark.freeze_time("2022-09-15 03:00:00-07:00")
 async def test_browse_media_time(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
@@ -514,7 +512,7 @@ ONE_MONTH_TIMEZONE = (
         minute=0,
         second=0,
         microsecond=0,
-        tzinfo=pytz.timezone("US/Pacific"),
+        tzinfo=dt_util.get_time_zone("US/Pacific"),
     ),
     1,
 )
@@ -527,7 +525,7 @@ TWO_MONTH_TIMEZONE = (
         minute=0,
         second=0,
         microsecond=0,
-        tzinfo=pytz.timezone("US/Pacific"),
+        tzinfo=dt_util.get_time_zone("US/Pacific"),
     ),
     2,
 )
@@ -537,7 +535,7 @@ TWO_MONTH_TIMEZONE = (
     ("start", "months"),
     [ONE_MONTH_TIMEZONE, TWO_MONTH_TIMEZONE],
 )
-@freeze_time("2022-08-31 21:00:00-07:00")
+@pytest.mark.freeze_time("2022-08-31 21:00:00-07:00")
 async def test_browse_media_time_timezone(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
@@ -713,7 +711,7 @@ async def test_browse_media_eventthumb(
     assert browse.media_class == MediaClass.IMAGE
 
 
-@freeze_time("2022-09-15 03:00:00-07:00")
+@pytest.mark.freeze_time("2022-09-15 03:00:00-07:00")
 async def test_browse_media_day(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ) -> None:

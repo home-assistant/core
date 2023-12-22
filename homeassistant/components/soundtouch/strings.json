@@ -4,6 +4,9 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Bose SoundTouch device."
         }
       },
       "zeroconf_confirm": {
@@ -18,10 +21,58 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The Bose SoundTouch YAML configuration is being removed",
-      "description": "Configuring Bose SoundTouch using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Bose SoundTouch YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+  "services": {
+    "play_everywhere": {
+      "name": "Play everywhere",
+      "description": "Plays on all Bose SoundTouch devices.",
+      "fields": {
+        "master": {
+          "name": "Master",
+          "description": "Name of the master entity that will coordinate the grouping. Platform dependent. It is a shortcut for creating a multi-room zone with all devices."
+        }
+      }
+    },
+    "create_zone": {
+      "name": "Create zone",
+      "description": "Creates a SoundTouch multi-room zone.",
+      "fields": {
+        "master": {
+          "name": "Master",
+          "description": "Name of the master entity that will coordinate the multi-room zone. Platform dependent."
+        },
+        "slaves": {
+          "name": "Slaves",
+          "description": "Name of slaves entities to add to the new zone."
+        }
+      }
+    },
+    "add_zone_slave": {
+      "name": "Add zone slave",
+      "description": "Adds a slave to a SoundTouch multi-room zone.",
+      "fields": {
+        "master": {
+          "name": "Master",
+          "description": "Name of the master entity that is coordinating the multi-room zone. Platform dependent."
+        },
+        "slaves": {
+          "name": "[%key:component::soundtouch::services::create_zone::fields::slaves::name%]",
+          "description": "Name of slaves entities to add to the existing zone."
+        }
+      }
+    },
+    "remove_zone_slave": {
+      "name": "Remove zone slave",
+      "description": "Removes a slave from the SoundTouch multi-room zone.",
+      "fields": {
+        "master": {
+          "name": "Master",
+          "description": "[%key:component::soundtouch::services::add_zone_slave::fields::master::description%]"
+        },
+        "slaves": {
+          "name": "[%key:component::soundtouch::services::create_zone::fields::slaves::name%]",
+          "description": "Name of slaves entities to remove from the existing zone."
+        }
+      }
     }
   }
 }

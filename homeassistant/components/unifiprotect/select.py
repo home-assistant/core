@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
 from enum import Enum
 import logging
 from typing import Any, Final
@@ -25,22 +24,15 @@ from pyunifiprotect.data import (
     Sensor,
     Viewer,
 )
-import voluptuous as vol
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
-    async_get_current_platform,
-)
-from homeassistant.util.dt import utcnow
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ATTR_DURATION, ATTR_MESSAGE, DISPATCH_ADOPT, DOMAIN, TYPE_EMPTY_VALUE
+from .const import DISPATCH_ADOPT, DOMAIN, TYPE_EMPTY_VALUE
 from .data import ProtectData
 from .entity import ProtectDeviceEntity, async_all_device_entities
 from .models import PermRequired, ProtectSetableKeysMixin, T
@@ -99,18 +91,8 @@ DEVICE_RECORDING_MODES = [
 
 DEVICE_CLASS_LCD_MESSAGE: Final = "unifiprotect__lcd_message"
 
-SERVICE_SET_DOORBELL_MESSAGE = "set_doorbell_message"
 
-SET_DOORBELL_LCD_MESSAGE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_MESSAGE): cv.string,
-        vol.Optional(ATTR_DURATION, default=""): cv.string,
-    }
-)
-
-
-@dataclass
+@dataclass(frozen=True)
 class ProtectSelectEntityDescription(
     ProtectSetableKeysMixin[T], SelectEntityDescription
 ):
@@ -352,12 +334,6 @@ async def async_setup_entry(
     )
 
     async_add_entities(entities)
-    platform = async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_DOORBELL_MESSAGE,
-        SET_DOORBELL_LCD_MESSAGE_SCHEMA,
-        "async_set_doorbell_message",
-    )
 
 
 class ProtectSelects(ProtectDeviceEntity, SelectEntity):
@@ -373,47 +349,44 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         description: ProtectSelectEntityDescription,
     ) -> None:
         """Initialize the unifi protect select entity."""
+        self._async_set_options(data, description)
         super().__init__(data, device, description)
         self._attr_name = f"{self.device.display_name} {self.entity_description.name}"
-        self._async_set_options()
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-
+        entity_description = self.entity_description
         # entities with categories are not exposed for voice
         # and safe to update dynamically
         if (
-            self.entity_description.entity_category is not None
-            and self.entity_description.ufp_options_fn is not None
+            entity_description.entity_category is not None
+            and entity_description.ufp_options_fn is not None
         ):
             _LOGGER.debug(
-                "Updating dynamic select options for %s", self.entity_description.name
+                "Updating dynamic select options for %s", entity_description.name
             )
-            self._async_set_options()
+            self._async_set_options(self.data, entity_description)
+        if (unifi_value := entity_description.get_ufp_value(device)) is None:
+            unifi_value = TYPE_EMPTY_VALUE
+        self._attr_current_option = self._unifi_to_hass_options.get(
+            unifi_value, unifi_value
+        )
 
     @callback
-    def _async_set_options(self) -> None:
+    def _async_set_options(
+        self, data: ProtectData, description: ProtectSelectEntityDescription
+    ) -> None:
         """Set options attributes from UniFi Protect device."""
-
-        if self.entity_description.ufp_options is not None:
-            options = self.entity_description.ufp_options
+        if (ufp_options := description.ufp_options) is not None:
+            options = ufp_options
         else:
-            assert self.entity_description.ufp_options_fn is not None
-            options = self.entity_description.ufp_options_fn(self.data.api)
+            assert description.ufp_options_fn is not None
+            options = description.ufp_options_fn(data.api)
 
         self._attr_options = [item["name"] for item in options]
         self._hass_to_unifi_options = {item["name"]: item["id"] for item in options}
         self._unifi_to_hass_options = {item["id"]: item["name"] for item in options}
-
-    @property
-    def current_option(self) -> str:
-        """Return the current selected option."""
-
-        unifi_value = self.entity_description.get_ufp_value(self.device)
-        if unifi_value is None:
-            unifi_value = TYPE_EMPTY_VALUE
-        return self._unifi_to_hass_options.get(unifi_value, unifi_value)
 
     async def async_select_option(self, option: str) -> None:
         """Change the Select Entity Option."""
@@ -429,42 +402,22 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
             unifi_value = self.entity_description.ufp_enum_type(unifi_value)
         await self.entity_description.ufp_set(self.device, unifi_value)
 
-    async def async_set_doorbell_message(self, message: str, duration: str) -> None:
-        """Set LCD Message on Doorbell display."""
+    @callback
+    def _async_updated_event(self, device: ProtectModelWithId) -> None:
+        """Call back for incoming data that only writes when state has changed.
 
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            "deprecated_service_set_doorbell_message",
-            breaks_in_ha_version="2023.3.0",
-            is_fixable=True,
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_placeholders={
-                "link": (
-                    "https://www.home-assistant.io/integrations"
-                    "/text#service-textset_value"
-                )
-            },
-            translation_key="deprecated_service_set_doorbell_message",
-        )
-
-        if self.entity_description.device_class != DEVICE_CLASS_LCD_MESSAGE:
-            raise HomeAssistantError("Not a doorbell text select entity")
-
-        assert isinstance(self.device, Camera)
-        reset_at = None
-        timeout_msg = ""
-        if duration.isnumeric():
-            reset_at = utcnow() + timedelta(minutes=int(duration))
-            timeout_msg = f" with timeout of {duration} minute(s)"
-
-        _LOGGER.debug(
-            'Setting message for %s to "%s"%s',
-            self.device.display_name,
-            message,
-            timeout_msg,
-        )
-        await self.device.set_lcd_text(
-            DoorbellMessageType.CUSTOM_MESSAGE, message, reset_at=reset_at
-        )
+        Only the options, option, and available are ever updated for these
+        entities, and since the websocket update for the device will trigger
+        an update for all entities connected to the device, we want to avoid
+        writing state unless something has actually changed.
+        """
+        previous_option = self._attr_current_option
+        previous_options = self._attr_options
+        previous_available = self._attr_available
+        self._async_update_device_from_protect(device)
+        if (
+            self._attr_current_option != previous_option
+            or self._attr_options != previous_options
+            or self._attr_available != previous_available
+        ):
+            self.async_write_ha_state()

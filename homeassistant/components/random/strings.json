@@ -1,0 +1,48 @@
+{
+  "config": {
+    "step": {
+      "binary_sensor": {
+        "data": {
+          "device_class": "[%key:component::random::config::step::sensor::data::device_class%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "title": "Random binary sensor"
+      },
+      "sensor": {
+        "data": {
+          "device_class": "Device class",
+          "name": "[%key:common::config_flow::data::name%]",
+          "minimum": "Minimum",
+          "maximum": "Maximum",
+          "unit_of_measurement": "Unit of measurement"
+        },
+        "title": "Random sensor"
+      },
+      "user": {
+        "description": "This helper allow you to create a helper that emits a random value.",
+        "menu_options": {
+          "binary_sensor": "Random binary sensor",
+          "sensor": "Random sensor"
+        },
+        "title": "Random helper"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "binary_sensor": {
+        "title": "[%key:component::random::config::step::binary_sensor::title%]",
+        "description": "This helper does not have any options."
+      },
+      "sensor": {
+        "data": {
+          "device_class": "[%key:component::random::config::step::sensor::data::device_class%]",
+          "minimum": "[%key:component::random::config::step::sensor::data::minimum%]",
+          "maximum": "[%key:component::random::config::step::sensor::data::maximum%]",
+          "unit_of_measurement": "[%key:component::random::config::step::sensor::data::unit_of_measurement%]"
+        },
+        "title": "[%key:component::random::config::step::sensor::title%]"
+      }
+    }
+  }
+}

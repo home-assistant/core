@@ -1,18 +1,17 @@
 """Constants used by Home Assistant components."""
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Final
 
-from .backports.enum import StrEnum
-
 APPLICATION_NAME: Final = "HomeAssistant"
-MAJOR_VERSION: Final = 2023
-MINOR_VERSION: Final = 4
+MAJOR_VERSION: Final = 2024
+MINOR_VERSION: Final = 1
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
-REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 10, 0)
-REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 10, 0)
+REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 11, 0)
+REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 11, 0)
 # Truthy date string triggers showing related deprecation warning messages.
 REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 
@@ -31,11 +30,16 @@ class Platform(StrEnum):
     CAMERA = "camera"
     CLIMATE = "climate"
     COVER = "cover"
+    DATE = "date"
+    DATETIME = "datetime"
     DEVICE_TRACKER = "device_tracker"
+    EVENT = "event"
     FAN = "fan"
     GEO_LOCATION = "geo_location"
     HUMIDIFIER = "humidifier"
+    IMAGE = "image"
     IMAGE_PROCESSING = "image_processing"
+    LAWN_MOWER = "lawn_mower"
     LIGHT = "light"
     LOCK = "lock"
     MAILBOX = "mailbox"
@@ -50,9 +54,13 @@ class Platform(StrEnum):
     STT = "stt"
     SWITCH = "switch"
     TEXT = "text"
+    TIME = "time"
+    TODO = "todo"
     TTS = "tts"
     VACUUM = "vacuum"
+    VALVE = "valve"
     UPDATE = "update"
+    WAKE_WORD = "wake_word"
     WATER_HEATER = "water_heater"
     WEATHER = "weather"
 
@@ -122,6 +130,7 @@ CONF_CONTINUE_ON_ERROR: Final = "continue_on_error"
 CONF_CONTINUE_ON_TIMEOUT: Final = "continue_on_timeout"
 CONF_COUNT: Final = "count"
 CONF_COUNTRY: Final = "country"
+CONF_COUNTRY_CODE: Final = "country_code"
 CONF_COVERS: Final = "covers"
 CONF_CURRENCY: Final = "currency"
 CONF_CUSTOMIZE: Final = "customize"
@@ -217,8 +226,9 @@ CONF_RECIPIENT: Final = "recipient"
 CONF_REGION: Final = "region"
 CONF_REPEAT: Final = "repeat"
 CONF_RESOURCE: Final = "resource"
-CONF_RESOURCES: Final = "resources"
 CONF_RESOURCE_TEMPLATE: Final = "resource_template"
+CONF_RESOURCES: Final = "resources"
+CONF_RESPONSE_VARIABLE: Final = "response_variable"
 CONF_RGB: Final = "rgb"
 CONF_ROOM: Final = "room"
 CONF_SCAN_INTERVAL: Final = "scan_interval"
@@ -281,10 +291,18 @@ EVENT_HOMEASSISTANT_STARTED: Final = "homeassistant_started"
 EVENT_HOMEASSISTANT_STOP: Final = "homeassistant_stop"
 EVENT_HOMEASSISTANT_FINAL_WRITE: Final = "homeassistant_final_write"
 EVENT_LOGBOOK_ENTRY: Final = "logbook_entry"
+EVENT_LOGGING_CHANGED: Final = "logging_changed"
 EVENT_SERVICE_REGISTERED: Final = "service_registered"
 EVENT_SERVICE_REMOVED: Final = "service_removed"
 EVENT_STATE_CHANGED: Final = "state_changed"
 EVENT_THEMES_UPDATED: Final = "themes_updated"
+EVENT_PANELS_UPDATED: Final = "panels_updated"
+EVENT_LOVELACE_UPDATED: Final = "lovelace_updated"
+EVENT_RECORDER_5MIN_STATISTICS_GENERATED: Final = "recorder_5min_statistics_generated"
+EVENT_RECORDER_HOURLY_STATISTICS_GENERATED: Final = (
+    "recorder_hourly_statistics_generated"
+)
+EVENT_SHOPPING_LIST_UPDATED: Final = "shopping_list_updated"
 
 # #### DEVICE CLASSES ####
 # DEVICE_CLASS_* below are deprecated as of 2021.12
@@ -452,6 +470,9 @@ ATTR_HIDDEN: Final = "hidden"
 # Location of the entity
 ATTR_LATITUDE: Final = "latitude"
 ATTR_LONGITUDE: Final = "longitude"
+
+# Elevation of the entity
+ATTR_ELEVATION: Final = "elevation"
 
 # Accuracy of location in meters
 ATTR_GPS_ACCURACY: Final = "gps_accuracy"
@@ -1040,9 +1061,6 @@ COMPRESSED_STATE_LAST_CHANGED = "lc"
 COMPRESSED_STATE_LAST_UPDATED = "lu"
 
 # #### SERVICES ####
-SERVICE_HOMEASSISTANT_STOP: Final = "stop"
-SERVICE_HOMEASSISTANT_RESTART: Final = "restart"
-
 SERVICE_TURN_ON: Final = "turn_on"
 SERVICE_TURN_OFF: Final = "turn_off"
 SERVICE_TOGGLE: Final = "toggle"
@@ -1088,6 +1106,11 @@ SERVICE_STOP_COVER: Final = "stop_cover"
 SERVICE_STOP_COVER_TILT: Final = "stop_cover_tilt"
 SERVICE_TOGGLE_COVER_TILT: Final = "toggle_cover_tilt"
 
+SERVICE_CLOSE_VALVE: Final = "close_valve"
+SERVICE_OPEN_VALVE: Final = "open_valve"
+SERVICE_SET_VALVE_POSITION: Final = "set_valve_position"
+SERVICE_STOP_VALVE: Final = "stop_valve"
+
 SERVICE_SELECT_OPTION: Final = "select_option"
 
 # #### API / REMOTE ####
@@ -1096,6 +1119,7 @@ SERVER_PORT: Final = 8123
 URL_ROOT: Final = "/"
 URL_API: Final = "/api/"
 URL_API_STREAM: Final = "/api/stream"
+URL_API_CORE_STATE: Final = "/api/core/state"
 URL_API_CONFIG: Final = "/api/config"
 URL_API_STATES: Final = "/api/states"
 URL_API_STATES_ENTITY: Final = "/api/states/{}"
@@ -1162,6 +1186,11 @@ CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
 HASSIO_USER_NAME = "Supervisor"
 
 SIGNAL_BOOTSTRAP_INTEGRATIONS = "bootstrap_integrations"
+
+# Date/Time formats
+FORMAT_DATE: Final = "%Y-%m-%d"
+FORMAT_TIME: Final = "%H:%M:%S"
+FORMAT_DATETIME: Final = f"{FORMAT_DATE} {FORMAT_TIME}"
 
 
 class EntityCategory(StrEnum):

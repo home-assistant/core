@@ -5,30 +5,28 @@ import asyncio
 import collections
 from collections.abc import Callable
 from contextlib import suppress
-from dataclasses import dataclass
 import datetime as dt
+from enum import StrEnum
 import functools as ft
 import hashlib
 from http import HTTPStatus
 import logging
 import secrets
-from typing import Any, Final, TypedDict, final
+from typing import Any, Final, Required, TypedDict, final
 from urllib.parse import quote, urlparse
 
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
-import async_timeout
-from typing_extensions import Required
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.websocket_api import ERR_NOT_SUPPORTED, ERR_UNKNOWN_ERROR
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
+    ATTR_ENTITY_PICTURE,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -450,15 +448,26 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class MediaPlayerEntityDescription(EntityDescription):
+class MediaPlayerEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes media player entities."""
 
     device_class: MediaPlayerDeviceClass | None = None
+    volume_step: float | None = None
 
 
 class MediaPlayerEntity(Entity):
     """ABC for media player entities."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {
+            ATTR_ENTITY_PICTURE_LOCAL,
+            ATTR_ENTITY_PICTURE,
+            ATTR_INPUT_SOURCE_LIST,
+            ATTR_MEDIA_POSITION_UPDATED_AT,
+            ATTR_MEDIA_POSITION,
+            ATTR_SOUND_MODE_LIST,
+        }
+    )
 
     entity_description: MediaPlayerEntityDescription
     _access_token: str | None = None
@@ -495,6 +504,7 @@ class MediaPlayerEntity(Entity):
     _attr_state: MediaPlayerState | None = None
     _attr_supported_features: MediaPlayerEntityFeature = MediaPlayerEntityFeature(0)
     _attr_volume_level: float | None = None
+    _attr_volume_step: float
 
     # Implement these for your media player
     @property
@@ -522,6 +532,18 @@ class MediaPlayerEntity(Entity):
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         return self._attr_volume_level
+
+    @property
+    def volume_step(self) -> float:
+        """Return the step to be used by the volume_up and volume_down services."""
+        if hasattr(self, "_attr_volume_step"):
+            return self._attr_volume_step
+        if (
+            hasattr(self, "entity_description")
+            and (volume_step := self.entity_description.volume_step) is not None
+        ):
+            return volume_step
+        return 0.1
 
     @property
     def is_volume_muted(self) -> bool | None:
@@ -946,7 +968,9 @@ class MediaPlayerEntity(Entity):
             and self.volume_level < 1
             and self.supported_features & MediaPlayerEntityFeature.VOLUME_SET
         ):
-            await self.async_set_volume_level(min(1, self.volume_level + 0.1))
+            await self.async_set_volume_level(
+                min(1, self.volume_level + self.volume_step)
+            )
 
     async def async_volume_down(self) -> None:
         """Turn volume down for media player.
@@ -962,7 +986,9 @@ class MediaPlayerEntity(Entity):
             and self.volume_level > 0
             and self.supported_features & MediaPlayerEntityFeature.VOLUME_SET
         ):
-            await self.async_set_volume_level(max(0, self.volume_level - 0.1))
+            await self.async_set_volume_level(
+                max(0, self.volume_level - self.volume_step)
+            )
 
     async def async_media_play_pause(self) -> None:
         """Play or pause the media player."""
@@ -1001,13 +1027,14 @@ class MediaPlayerEntity(Entity):
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         data: dict[str, Any] = {}
+        supported_features = self.supported_features
 
-        if self.supported_features & MediaPlayerEntityFeature.SELECT_SOURCE and (
+        if supported_features & MediaPlayerEntityFeature.SELECT_SOURCE and (
             source_list := self.source_list
         ):
             data[ATTR_INPUT_SOURCE_LIST] = source_list
 
-        if self.supported_features & MediaPlayerEntityFeature.SELECT_SOUND_MODE and (
+        if supported_features & MediaPlayerEntityFeature.SELECT_SOUND_MODE and (
             sound_mode_list := self.sound_mode_list
         ):
             data[ATTR_SOUND_MODE_LIST] = sound_mode_list
@@ -1037,7 +1064,7 @@ class MediaPlayerEntity(Entity):
 
     async def async_browse_media(
         self,
-        media_content_type: str | None = None,
+        media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Return a BrowseMedia instance.
@@ -1126,8 +1153,7 @@ class MediaPlayerImageView(HomeAssistantView):
     extra_urls = [
         # Need to modify the default regex for media_content_id as it may
         # include arbitrary characters including '/','{', or '}'
-        url
-        + "/browse_media/{media_content_type}/{media_content_id:.+}",
+        url + "/browse_media/{media_content_type}/{media_content_id:.+}",
     ]
 
     def __init__(self, component: EntityComponent[MediaPlayerEntity]) -> None:
@@ -1138,7 +1164,7 @@ class MediaPlayerImageView(HomeAssistantView):
         self,
         request: web.Request,
         entity_id: str,
-        media_content_type: str | None = None,
+        media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
     ) -> web.Response:
         """Start a get request."""
@@ -1258,12 +1284,13 @@ async def async_fetch_image(
     """Retrieve an image."""
     content, content_type = (None, None)
     websession = async_get_clientsession(hass)
-    with suppress(asyncio.TimeoutError), async_timeout.timeout(10):
-        response = await websession.get(url)
-        if response.status == HTTPStatus.OK:
-            content = await response.read()
-            if content_type := response.headers.get(CONTENT_TYPE):
-                content_type = content_type.split(";")[0]
+    with suppress(asyncio.TimeoutError):
+        async with asyncio.timeout(10):
+            response = await websession.get(url)
+            if response.status == HTTPStatus.OK:
+                content = await response.read()
+                if content_type := response.headers.get(CONTENT_TYPE):
+                    content_type = content_type.split(";")[0]
 
     if content is None:
         url_parts = URL(url)

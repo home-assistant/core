@@ -5,12 +5,15 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HassJob, HomeAssistant, callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .analytics import Analytics
 from .const import ATTR_ONBOARDED, ATTR_PREFERENCES, DOMAIN, INTERVAL, PREFERENCE_SCHEMA
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
@@ -24,10 +27,24 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
     def start_schedule(_event: Event) -> None:
         """Start the send schedule after the started event."""
         # Wait 15 min after started
-        async_call_later(hass, 900, analytics.send_analytics)
+        async_call_later(
+            hass,
+            900,
+            HassJob(
+                analytics.send_analytics,
+                name="analytics schedule",
+                cancel_on_shutdown=True,
+            ),
+        )
 
         # Send every day
-        async_track_time_interval(hass, analytics.send_analytics, INTERVAL)
+        async_track_time_interval(
+            hass,
+            analytics.send_analytics,
+            INTERVAL,
+            name="analytics daily",
+            cancel_on_shutdown=True,
+        )
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, start_schedule)
 

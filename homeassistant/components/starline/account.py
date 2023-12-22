@@ -9,8 +9,9 @@ from starline import StarlineApi, StarlineDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util import dt as dt_util
 
 from .const import (
     _LOGGER,
@@ -135,13 +136,16 @@ class StarlineAccount:
             model=device.typename,
             name=device.name,
             sw_version=device.fw_version,
+            configuration_url="https://starline-online.ru/",
         )
 
     @staticmethod
     def gps_attrs(device: StarlineDevice) -> dict[str, Any]:
         """Attributes for device tracker."""
         return {
-            "updated": datetime.utcfromtimestamp(device.position["ts"]).isoformat(),
+            "updated": dt_util.utc_from_timestamp(device.position["ts"])
+            .replace(tzinfo=None)
+            .isoformat(),
             "online": device.online,
         }
 

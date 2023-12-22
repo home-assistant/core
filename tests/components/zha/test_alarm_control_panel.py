@@ -65,7 +65,7 @@ async def test_alarm_control_panel(
 
     zha_device = await zha_device_joined_restored(zigpy_device)
     cluster = zigpy_device.endpoints.get(1).ias_ace
-    entity_id = await find_entity_id(Platform.ALARM_CONTROL_PANEL, zha_device, hass)
+    entity_id = find_entity_id(Platform.ALARM_CONTROL_PANEL, zha_device, hass)
     assert entity_id is not None
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
     await async_enable_traffic(hass, [zha_device], enabled=False)

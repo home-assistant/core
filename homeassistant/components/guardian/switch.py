@@ -29,7 +29,7 @@ SWITCH_KIND_ONBOARD_AP = "onboard_ap"
 SWITCH_KIND_VALVE = "valve"
 
 
-@dataclass
+@dataclass(frozen=True)
 class SwitchDescriptionMixin:
     """Define an entity description mixin for Guardian switches."""
 
@@ -37,7 +37,7 @@ class SwitchDescriptionMixin:
     on_action: Callable[[Client], Awaitable]
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValveControllerSwitchDescription(
     SwitchEntityDescription, ValveControllerEntityDescription, SwitchDescriptionMixin
 ):
@@ -67,7 +67,7 @@ async def _async_open_valve(client: Client) -> None:
 VALVE_CONTROLLER_DESCRIPTIONS = (
     ValveControllerSwitchDescription(
         key=SWITCH_KIND_ONBOARD_AP,
-        name="Onboard AP",
+        translation_key="onboard_access_point",
         icon="mdi:wifi",
         entity_category=EntityCategory.CONFIG,
         api_category=API_WIFI_STATUS,
@@ -76,7 +76,7 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
     ),
     ValveControllerSwitchDescription(
         key=SWITCH_KIND_VALVE,
-        name="Valve controller",
+        translation_key="valve_controller",
         icon="mdi:water",
         api_category=API_VALVE_STATUS,
         off_action=_async_close_valve,

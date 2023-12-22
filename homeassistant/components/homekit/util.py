@@ -37,9 +37,11 @@ from homeassistant.const import (
     CONF_TYPE,
     UnitOfTemperature,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.helpers.typing import EventType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
@@ -84,8 +86,6 @@ from .const import (
     FEATURE_PLAY_PAUSE,
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
-    HOMEKIT_PAIRING_QR,
-    HOMEKIT_PAIRING_QR_SECRET,
     MAX_NAME_LENGTH,
     TYPE_FAUCET,
     TYPE_OUTLET,
@@ -95,8 +95,10 @@ from .const import (
     TYPE_VALVE,
     VIDEO_CODEC_COPY,
     VIDEO_CODEC_H264_OMX,
+    VIDEO_CODEC_H264_V4L2M2M,
     VIDEO_CODEC_LIBX264,
 )
+from .models import HomeKitEntryData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,7 +109,12 @@ MAX_VERSION_PART = 2**32 - 1
 
 
 MAX_PORT = 65535
-VALID_VIDEO_CODECS = [VIDEO_CODEC_LIBX264, VIDEO_CODEC_H264_OMX, AUDIO_CODEC_COPY]
+VALID_VIDEO_CODECS = [
+    VIDEO_CODEC_LIBX264,
+    VIDEO_CODEC_H264_OMX,
+    VIDEO_CODEC_H264_V4L2M2M,
+    AUDIO_CODEC_COPY,
+]
 VALID_AUDIO_CODECS = [AUDIO_CODEC_OPUS, VIDEO_CODEC_COPY]
 
 BASIC_INFO_SCHEMA = vol.Schema(
@@ -344,8 +351,10 @@ def async_show_setup_message(
     url.svg(buffer, scale=5, module_color="#000", background="#FFF")
     pairing_secret = secrets.token_hex(32)
 
-    hass.data[DOMAIN][entry_id][HOMEKIT_PAIRING_QR] = buffer.getvalue()
-    hass.data[DOMAIN][entry_id][HOMEKIT_PAIRING_QR_SECRET] = pairing_secret
+    entry_data: HomeKitEntryData = hass.data[DOMAIN][entry_id]
+
+    entry_data.pairing_qr = buffer.getvalue()
+    entry_data.pairing_qr_secret = pairing_secret
 
     message = (
         f"To set up {bridge_name} in the Home App, "
@@ -606,16 +615,17 @@ def state_needs_accessory_mode(state: State) -> bool:
 
     return (
         state.domain == MEDIA_PLAYER_DOMAIN
-        and state.attributes.get(ATTR_DEVICE_CLASS) == MediaPlayerDeviceClass.TV
+        and state.attributes.get(ATTR_DEVICE_CLASS)
+        in (MediaPlayerDeviceClass.TV, MediaPlayerDeviceClass.RECEIVER)
         or state.domain == REMOTE_DOMAIN
         and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         & RemoteEntityFeature.ACTIVITY
     )
 
 
-def state_changed_event_is_same_state(event: Event) -> bool:
+def state_changed_event_is_same_state(event: EventType[EventStateChangedData]) -> bool:
     """Check if a state changed event is the same state."""
     event_data = event.data
-    old_state: State | None = event_data.get("old_state")
-    new_state: State | None = event_data.get("new_state")
+    old_state = event_data["old_state"]
+    new_state = event_data["new_state"]
     return bool(new_state and old_state and new_state.state == old_state.state)

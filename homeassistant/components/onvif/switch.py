@@ -16,7 +16,7 @@ from .device import ONVIFDevice
 from .models import Profile
 
 
-@dataclass
+@dataclass(frozen=True)
 class ONVIFSwitchEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -28,9 +28,10 @@ class ONVIFSwitchEntityDescriptionMixin:
     ]
     turn_on_data: Any
     turn_off_data: Any
+    supported_fn: Callable[[ONVIFDevice], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class ONVIFSwitchEntityDescription(
     SwitchEntityDescription, ONVIFSwitchEntityDescriptionMixin
 ):
@@ -46,6 +47,7 @@ SWITCHES: tuple[ONVIFSwitchEntityDescription, ...] = (
         turn_off_data={"Focus": {"AutoFocusMode": "MANUAL"}},
         turn_on_fn=lambda device: device.async_set_imaging_settings,
         turn_off_fn=lambda device: device.async_set_imaging_settings,
+        supported_fn=lambda device: device.capabilities.imaging,
     ),
     ONVIFSwitchEntityDescription(
         key="ir_lamp",
@@ -55,6 +57,7 @@ SWITCHES: tuple[ONVIFSwitchEntityDescription, ...] = (
         turn_off_data={"IrCutFilter": "ON"},
         turn_on_fn=lambda device: device.async_set_imaging_settings,
         turn_off_fn=lambda device: device.async_set_imaging_settings,
+        supported_fn=lambda device: device.capabilities.imaging,
     ),
     ONVIFSwitchEntityDescription(
         key="wiper",
@@ -64,6 +67,7 @@ SWITCHES: tuple[ONVIFSwitchEntityDescription, ...] = (
         turn_off_data="tt:Wiper|Off",
         turn_on_fn=lambda device: device.async_run_aux_command,
         turn_off_fn=lambda device: device.async_run_aux_command,
+        supported_fn=lambda device: device.capabilities.ptz,
     ),
 )
 
@@ -76,7 +80,11 @@ async def async_setup_entry(
     """Set up a ONVIF switch platform."""
     device = hass.data[DOMAIN][config_entry.unique_id]
 
-    async_add_entities(ONVIFSwitch(device, description) for description in SWITCHES)
+    async_add_entities(
+        ONVIFSwitch(device, description)
+        for description in SWITCHES
+        if description.supported_fn(device)
+    )
 
 
 class ONVIFSwitch(ONVIFBaseEntity, SwitchEntity):

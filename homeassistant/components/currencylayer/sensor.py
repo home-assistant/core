@@ -20,7 +20,6 @@ _RESOURCE = "http://apilayer.net/api/live"
 DEFAULT_BASE = "USD"
 DEFAULT_NAME = "CurrencyLayer Sensor"
 
-ICON = "mdi:currency"
 
 SCAN_INTERVAL = timedelta(hours=4)
 
@@ -60,6 +59,7 @@ class CurrencylayerSensor(SensorEntity):
     """Implementing the Currencylayer sensor."""
 
     _attr_attribution = "Data provided by currencylayer.com"
+    _attr_icon = "mdi:currency"
 
     def __init__(self, rest, base, quote):
         """Initialize the sensor."""
@@ -77,11 +77,6 @@ class CurrencylayerSensor(SensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._base
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
 
     @property
     def native_value(self):

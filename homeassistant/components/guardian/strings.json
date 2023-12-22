@@ -18,15 +18,82 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
-  "issues": {
-    "deprecated_service": {
-      "title": "The {deprecated_service} service will be removed",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "The {deprecated_service} service will be removed",
-            "description": "Update any automations or scripts that use this service to instead use the `{alternate_service}` service with a target entity ID of `{alternate_target}`."
-          }
+  "entity": {
+    "binary_sensor": {
+      "leak": {
+        "name": "Leak detected"
+      },
+      "moved": {
+        "name": "Recently moved"
+      }
+    },
+    "button": {
+      "reset_diagnostics": {
+        "name": "Reset valve diagnostics"
+      }
+    },
+    "sensor": {
+      "uptime": {
+        "name": "Uptime"
+      }
+    },
+    "switch": {
+      "onboard_access_point": {
+        "name": "Onboard access point"
+      },
+      "valve_controller": {
+        "name": "Valve controller"
+      }
+    }
+  },
+  "services": {
+    "pair_sensor": {
+      "name": "Pair sensor",
+      "description": "Adds a new paired sensor to the valve controller.",
+      "fields": {
+        "device_id": {
+          "name": "[%key:component::guardian::entity::switch::valve_controller::name%]",
+          "description": "The valve controller to add the sensor to."
+        },
+        "uid": {
+          "name": "UID",
+          "description": "The UID of the paired sensor."
+        }
+      }
+    },
+    "unpair_sensor": {
+      "name": "Unpair sensor",
+      "description": "Removes a paired sensor from the valve controller.",
+      "fields": {
+        "device_id": {
+          "name": "[%key:component::guardian::entity::switch::valve_controller::name%]",
+          "description": "The valve controller to remove the sensor from."
+        },
+        "uid": {
+          "name": "[%key:component::guardian::services::pair_sensor::fields::uid::name%]",
+          "description": "[%key:component::guardian::services::pair_sensor::fields::uid::description%]"
+        }
+      }
+    },
+    "upgrade_firmware": {
+      "name": "Upgrade firmware",
+      "description": "Upgrades the device firmware.",
+      "fields": {
+        "device_id": {
+          "name": "[%key:component::guardian::entity::switch::valve_controller::name%]",
+          "description": "The valve controller whose firmware should be upgraded."
+        },
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "The URL of the server hosting the firmware file."
+        },
+        "port": {
+          "name": "[%key:common::config_flow::data::port%]",
+          "description": "The port on which the firmware file is served."
+        },
+        "filename": {
+          "name": "Filename",
+          "description": "The firmware filename."
         }
       }
     }

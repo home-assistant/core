@@ -85,14 +85,15 @@ async def test_load_backups(hass: HomeAssistant) -> None:
     with patch("pathlib.Path.glob", return_value=[TEST_BACKUP.path]), patch(
         "tarfile.open", return_value=MagicMock()
     ), patch(
-        "json.loads",
+        "homeassistant.components.backup.manager.json_loads_object",
         return_value={
             "slug": TEST_BACKUP.slug,
             "name": TEST_BACKUP.name,
             "date": TEST_BACKUP.date,
         },
     ), patch(
-        "pathlib.Path.stat", return_value=MagicMock(st_size=TEST_BACKUP.size)
+        "pathlib.Path.stat",
+        return_value=MagicMock(st_size=TEST_BACKUP.size),
     ):
         await manager.load_backups()
     backups = await manager.get_backups()

@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -21,16 +21,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as UNIFI_DOMAIN
+from .controller import UniFiController
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
     async_device_available_fn,
     async_device_device_info_fn,
 )
-
-if TYPE_CHECKING:
-    from .controller import UniFiController
 
 LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +40,7 @@ async def async_device_control_fn(api: aiounifi.Controller, obj_id: str) -> None
     await api.request(DeviceUpgradeRequest.create(obj_id))
 
 
-@dataclass
+@dataclass(frozen=True)
 class UnifiUpdateEntityDescriptionMixin(Generic[_HandlerT, _DataT]):
     """Validate and load entities from different UniFi handlers."""
 
@@ -51,7 +48,7 @@ class UnifiUpdateEntityDescriptionMixin(Generic[_HandlerT, _DataT]):
     state_fn: Callable[[aiounifi.Controller, _DataT], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class UnifiUpdateEntityDescription(
     UpdateEntityDescription,
     UnifiEntityDescription[_HandlerT, _DataT],
@@ -74,6 +71,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiUpdateEntityDescription, ...] = (
         event_to_subscribe=None,
         name_fn=lambda device: None,
         object_fn=lambda api, obj_id: api.devices[obj_id],
+        should_poll=False,
         state_fn=lambda api, device: device.state == 4,
         supported_fn=lambda controller, obj_id: True,
         unique_id_fn=lambda controller, obj_id: f"device_update-{obj_id}",
@@ -87,9 +85,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up update entities for UniFi Network integration."""
-    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    controller.register_platform_add_entities(
-        UnifiDeviceUpdateEntity, ENTITY_DESCRIPTIONS, async_add_entities
+    UniFiController.register_platform(
+        hass,
+        config_entry,
+        async_add_entities,
+        UnifiDeviceUpdateEntity,
+        ENTITY_DESCRIPTIONS,
     )
 
 
@@ -102,7 +103,7 @@ class UnifiDeviceUpdateEntity(UnifiEntity[_HandlerT, _DataT], UpdateEntity):
     def async_initiate_state(self) -> None:
         """Initiate entity state."""
         self._attr_supported_features = UpdateEntityFeature.PROGRESS
-        if self.controller.site_role == "admin":
+        if self.controller.is_admin:
             self._attr_supported_features |= UpdateEntityFeature.INSTALL
 
         self.async_update_state(ItemEvent.ADDED, self._obj_id)

@@ -7,6 +7,9 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your TV."
         }
       },
       "confirm": {
@@ -38,6 +41,11 @@
       "not_supported": "This Samsung device is currently not supported.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "samsungtv.turn_on": "Device is requested to turn on"
     }
   }
 }

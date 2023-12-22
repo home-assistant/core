@@ -59,12 +59,6 @@ class IHCSwitch(IHCDevice, SwitchEntity):
         super().__init__(ihc_controller, controller_id, name, ihc_id, product)
         self._ihc_off_id = ihc_off_id
         self._ihc_on_id = ihc_on_id
-        self._state = False
-
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return self._state
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
@@ -82,5 +76,5 @@ class IHCSwitch(IHCDevice, SwitchEntity):
 
     def on_ihc_change(self, ihc_id, value):
         """Handle IHC resource change."""
-        self._state = value
+        self._attr_is_on = value
         self.schedule_update_ha_state()

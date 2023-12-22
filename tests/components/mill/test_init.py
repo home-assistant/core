@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 
 async def test_setup_with_cloud_config(hass: HomeAssistant) -> None:
@@ -23,7 +23,7 @@ async def test_setup_with_cloud_config(hass: HomeAssistant) -> None:
     with patch(
         "mill.Mill.fetch_heater_and_sensor_data", return_value={}
     ) as mock_fetch, patch("mill.Mill.connect", return_value=True) as mock_connect:
-        assert await async_setup_component(hass, "mill", entry)
+        assert await async_setup_component(hass, "mill", {})
     assert len(mock_fetch.mock_calls) == 1
     assert len(mock_connect.mock_calls) == 1
 
@@ -40,7 +40,7 @@ async def test_setup_with_cloud_config_fails(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
     with patch("mill.Mill.connect", return_value=False):
-        assert await async_setup_component(hass, "mill", entry)
+        assert await async_setup_component(hass, "mill", {})
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
@@ -57,7 +57,7 @@ async def test_setup_with_old_cloud_config(hass: HomeAssistant) -> None:
     with patch("mill.Mill.fetch_heater_and_sensor_data", return_value={}), patch(
         "mill.Mill.connect", return_value=True
     ) as mock_connect:
-        assert await async_setup_component(hass, "mill", entry)
+        assert await async_setup_component(hass, "mill", {})
 
     assert len(mock_connect.mock_calls) == 1
 
@@ -90,7 +90,7 @@ async def test_setup_with_local_config(hass: HomeAssistant) -> None:
             "status": "ok",
         },
     ) as mock_connect:
-        assert await async_setup_component(hass, "mill", entry)
+        assert await async_setup_component(hass, "mill", {})
 
     assert len(mock_fetch.mock_calls) == 1
     assert len(mock_connect.mock_calls) == 1
@@ -109,13 +109,16 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch.object(
-        hass.config_entries, "async_forward_entry_unload", return_value=mock_coro(True)
+        hass.config_entries,
+        "async_forward_entry_unload",
+        return_value=True,
     ) as unload_entry, patch(
         "mill.Mill.fetch_heater_and_sensor_data", return_value={}
     ), patch(
-        "mill.Mill.connect", return_value=True
+        "mill.Mill.connect",
+        return_value=True,
     ):
-        assert await async_setup_component(hass, "mill", entry)
+        assert await async_setup_component(hass, "mill", {})
 
         assert await hass.config_entries.async_unload(entry.entry_id)
 

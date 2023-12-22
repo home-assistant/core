@@ -2,7 +2,7 @@
 
 Call init before using it in your tests to ensure clean test data.
 """
-from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
+from homeassistant.components.lock import LockEntity, LockEntityFeature
 
 from tests.common import MockEntity
 
@@ -20,7 +20,7 @@ def init(empty=False):
             "support_open": MockLock(
                 name="Support open Lock",
                 is_locked=True,
-                supported_features=SUPPORT_OPEN,
+                supported_features=LockEntityFeature.OPEN,
                 unique_id="unique_support_open",
             ),
             "no_support_open": MockLock(
@@ -42,6 +42,11 @@ async def async_setup_platform(
 
 class MockLock(MockEntity, LockEntity):
     """Mock Lock class."""
+
+    @property
+    def code_format(self) -> str | None:
+        """Return code format."""
+        return self._handle("code_format")
 
     @property
     def is_locked(self):

@@ -1,13 +1,15 @@
 """Provides the constants needed for the component."""
 from __future__ import annotations
 
+from enum import StrEnum
+from functools import partial
 from typing import Final
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
@@ -30,8 +32,14 @@ from homeassistant.const import (
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolume,
     UnitOfVolumetricFlux,
+)
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstantEnum,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
 )
 from homeassistant.util.unit_conversion import BaseUnitConverter, TemperatureConverter
 
@@ -48,10 +56,23 @@ DOMAIN = "number"
 
 SERVICE_SET_VALUE = "set_value"
 
+
+class NumberMode(StrEnum):
+    """Modes for number entities."""
+
+    AUTO = "auto"
+    BOX = "box"
+    SLIDER = "slider"
+
+
 # MODE_* are deprecated as of 2021.12, use the NumberMode enum instead.
-MODE_AUTO: Final = "auto"
-MODE_BOX: Final = "box"
-MODE_SLIDER: Final = "slider"
+_DEPRECATED_MODE_AUTO: Final = DeprecatedConstantEnum(NumberMode.AUTO, "2025.1")
+_DEPRECATED_MODE_BOX: Final = DeprecatedConstantEnum(NumberMode.BOX, "2025.1")
+_DEPRECATED_MODE_SLIDER: Final = DeprecatedConstantEnum(NumberMode.SLIDER, "2025.1")
+
+# Both can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 
 class NumberDeviceClass(StrEnum):
@@ -119,6 +140,12 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `LENGTH_*` units
     - SI /metric: `mm`, `cm`, `m`, `km`
     - USCS / imperial: `in`, `ft`, `yd`, `mi`
+    """
+
+    DURATION = "duration"
+    """Fixed duration.
+
+    Unit of measurement: `d`, `h`, `min`, `s`, `ms`
     """
 
     ENERGY = "energy"
@@ -208,8 +235,14 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `µg/m³`
     """
 
+    PH = "ph"
+    """Potential hydrogen (acidity/alkalinity).
+
+    Unit of measurement: Unitless
+    """
+
     PM1 = "pm1"
-    """Particulate matter <= 0.1 μm.
+    """Particulate matter <= 1 μm.
 
     Unit of measurement: `µg/m³`
     """
@@ -309,6 +342,12 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `µg/m³`
     """
 
+    VOLATILE_ORGANIC_COMPOUNDS_PARTS = "volatile_organic_compounds_parts"
+    """Ratio of VOC.
+
+    Unit of measurement: `ppm`, `ppb`
+    """
+
     VOLTAGE = "voltage"
     """Voltage.
 
@@ -365,14 +404,6 @@ class NumberDeviceClass(StrEnum):
     """
 
 
-class NumberMode(StrEnum):
-    """Modes for number entities."""
-
-    AUTO = "auto"
-    BOX = "box"
-    SLIDER = "slider"
-
-
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(NumberDeviceClass))
 DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.APPARENT_POWER: set(UnitOfApparentPower),
@@ -385,6 +416,13 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.DATA_RATE: set(UnitOfDataRate),
     NumberDeviceClass.DATA_SIZE: set(UnitOfInformation),
     NumberDeviceClass.DISTANCE: set(UnitOfLength),
+    NumberDeviceClass.DURATION: {
+        UnitOfTime.DAYS,
+        UnitOfTime.HOURS,
+        UnitOfTime.MINUTES,
+        UnitOfTime.SECONDS,
+        UnitOfTime.MILLISECONDS,
+    },
     NumberDeviceClass.ENERGY: set(UnitOfEnergy),
     NumberDeviceClass.ENERGY_STORAGE: set(UnitOfEnergy),
     NumberDeviceClass.FREQUENCY: set(UnitOfFrequency),
@@ -401,6 +439,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.NITROGEN_MONOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.NITROUS_OXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.OZONE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    NumberDeviceClass.PH: {None},
     NumberDeviceClass.PM1: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.PM10: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.PM25: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
@@ -420,6 +459,10 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.TEMPERATURE: set(UnitOfTemperature),
     NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    },
+    NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: {
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
     },
     NumberDeviceClass.VOLTAGE: set(UnitOfElectricPotential),
     NumberDeviceClass.VOLUME: set(UnitOfVolume),

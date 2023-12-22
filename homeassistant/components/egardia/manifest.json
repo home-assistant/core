@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/egardia",
   "iot_class": "local_polling",
   "loggers": ["pythonegardia"],
-  "requirements": ["pythonegardia==1.0.40"]
+  "requirements": ["pythonegardia==1.0.52"]
 }

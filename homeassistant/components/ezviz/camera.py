@@ -17,7 +17,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, discovery_flow
+from homeassistant.helpers import (
+    config_validation as cv,
+    discovery_flow,
+    issue_registry as ir,
+)
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
@@ -29,12 +33,10 @@ from .const import (
     ATTR_LEVEL,
     ATTR_SERIAL,
     ATTR_SPEED,
-    ATTR_TYPE,
     CONF_FFMPEG_ARGUMENTS,
     DATA_COORDINATOR,
     DEFAULT_CAMERA_USERNAME,
     DEFAULT_FFMPEG_ARGUMENTS,
-    DEFAULT_RTSP_PORT,
     DIR_DOWN,
     DIR_LEFT,
     DIR_RIGHT,
@@ -42,7 +44,6 @@ from .const import (
     DOMAIN,
     SERVICE_ALARM_SOUND,
     SERVICE_ALARM_TRIGGER,
-    SERVICE_DETECTION_SENSITIVITY,
     SERVICE_PTZ,
     SERVICE_WAKE_DEVICE,
 )
@@ -70,24 +71,17 @@ async def async_setup_entry(
             if item.unique_id == camera and item.source != SOURCE_IGNORE
         ]
 
-        # There seem to be a bug related to localRtspPort in EZVIZ API.
-        local_rtsp_port = (
-            value["local_rtsp_port"]
-            if value["local_rtsp_port"] != 0
-            else DEFAULT_RTSP_PORT
-        )
-
         if camera_rtsp_entry:
             ffmpeg_arguments = camera_rtsp_entry[0].options[CONF_FFMPEG_ARGUMENTS]
             camera_username = camera_rtsp_entry[0].data[CONF_USERNAME]
             camera_password = camera_rtsp_entry[0].data[CONF_PASSWORD]
 
-            camera_rtsp_stream = f"rtsp://{camera_username}:{camera_password}@{value['local_ip']}:{local_rtsp_port}{ffmpeg_arguments}"
+            camera_rtsp_stream = f"rtsp://{camera_username}:{camera_password}@{value['local_ip']}:{value['local_rtsp_port']}{ffmpeg_arguments}"
             _LOGGER.debug(
                 "Configuring Camera %s with ip: %s rtsp port: %s ffmpeg arguments: %s",
                 camera,
                 value["local_ip"],
-                local_rtsp_port,
+                value["local_rtsp_port"],
                 ffmpeg_arguments,
             )
 
@@ -123,7 +117,7 @@ async def async_setup_entry(
                 camera_username,
                 camera_password,
                 camera_rtsp_stream,
-                local_rtsp_port,
+                value["local_rtsp_port"],
                 ffmpeg_arguments,
             )
         )
@@ -161,18 +155,11 @@ async def async_setup_entry(
         "perform_alarm_sound",
     )
 
-    platform.async_register_entity_service(
-        SERVICE_DETECTION_SENSITIVITY,
-        {
-            vol.Required(ATTR_LEVEL): cv.positive_int,
-            vol.Required(ATTR_TYPE): cv.positive_int,
-        },
-        "perform_set_alarm_detection_sensibility",
-    )
-
 
 class EzvizCamera(EzvizEntity, Camera):
     """An implementation of a EZVIZ security camera."""
+
+    _attr_name = None
 
     def __init__(
         self,
@@ -196,7 +183,6 @@ class EzvizCamera(EzvizEntity, Camera):
         self._ffmpeg_arguments = ffmpeg_arguments
         self._ffmpeg = get_ffmpeg_manager(hass)
         self._attr_unique_id = serial
-        self._attr_name = self.data["name"]
         if camera_password:
             self._attr_supported_features = CameraEntityFeature.STREAM
 
@@ -267,6 +253,17 @@ class EzvizCamera(EzvizEntity, Camera):
 
     def perform_ptz(self, direction: str, speed: int) -> None:
         """Perform a PTZ action on the camera."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_depreciation_ptz",
+            breaks_in_ha_version="2024.2.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_depreciation_ptz",
+        )
+
         try:
             self.coordinator.ezviz_client.ptz_control(
                 str(direction).upper(), self._serial, "START", speed
@@ -280,6 +277,17 @@ class EzvizCamera(EzvizEntity, Camera):
 
     def perform_sound_alarm(self, enable: int) -> None:
         """Sound the alarm on a camera."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_depreciation_sound_alarm",
+            breaks_in_ha_version="2024.3.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_depreciation_sound_alarm",
+        )
+
         try:
             self.coordinator.ezviz_client.sound_alarm(self._serial, enable)
         except HTTPError as err:
@@ -294,20 +302,19 @@ class EzvizCamera(EzvizEntity, Camera):
 
     def perform_alarm_sound(self, level: int) -> None:
         """Enable/Disable movement sound alarm."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "service_deprecation_alarm_sound_level",
+            breaks_in_ha_version="2024.2.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_deprecation_alarm_sound_level",
+        )
         try:
             self.coordinator.ezviz_client.alarm_sound(self._serial, level, 1)
         except HTTPError as err:
             raise HTTPError(
                 "Cannot set alarm sound level for on movement detected"
             ) from err
-
-    def perform_set_alarm_detection_sensibility(
-        self, level: int, type_value: int
-    ) -> None:
-        """Set camera detection sensibility level service."""
-        try:
-            self.coordinator.ezviz_client.detection_sensibility(
-                self._serial, level, type_value
-            )
-        except (HTTPError, PyEzvizError) as err:
-            raise PyEzvizError("Cannot set detection sensitivity level") from err

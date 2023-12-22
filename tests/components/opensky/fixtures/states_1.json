@@ -1,0 +1,45 @@
+{
+  "time": 1691244533,
+  "states": [
+    {
+      "icao24": "4846df",
+      "callsign": "",
+      "origin_country": "Kingdom of the Netherlands",
+      "time_position": 1691244404,
+      "last_contact": 1691244404,
+      "longitude": 4.7441,
+      "latitude": 52.3076,
+      "baro_altitude": null,
+      "on_ground": true,
+      "velocity": 8.75,
+      "true_track": 272.81,
+      "vertical_rate": null,
+      "sensors": null,
+      "geo_altitude": null,
+      "squawk": null,
+      "spi": false,
+      "position_source": 0,
+      "category": 17
+    },
+    {
+      "icao24": "3e3d01",
+      "callsign": "ECA2HL  ",
+      "origin_country": "Germany",
+      "time_position": 1691244533,
+      "last_contact": 1691244533,
+      "longitude": 5.5217,
+      "latitude": 52.4561,
+      "baro_altitude": 12500.8,
+      "on_ground": false,
+      "velocity": 201.9,
+      "true_track": 82.39,
+      "vertical_rate": 0,
+      "sensors": null,
+      "geo_altitude": 12733.02,
+      "squawk": "1071",
+      "spi": false,
+      "position_source": 0,
+      "category": 1
+    }
+  ]
+}

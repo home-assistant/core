@@ -3,6 +3,7 @@
   "name": "Synology DSM",
   "codeowners": ["@hacf-fr", "@Quentame", "@mib1185"],
   "config_flow": true,
+  "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/synology_dsm",
   "iot_class": "local_polling",
   "loggers": ["synology_dsm"],

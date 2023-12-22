@@ -7,7 +7,9 @@ import pytest
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
+    ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
+    ATTR_TILT_POSITION,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
@@ -21,6 +23,7 @@ from homeassistant.const import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
+    SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
     STATE_UNKNOWN,
 )
@@ -43,8 +46,10 @@ def shutterbox_fixture():
         full_name="shutterBox-position",
         device_class="shutter",
         current=None,
+        tilt_current=None,
         state=None,
         has_stop=True,
+        has_tilt=True,
         is_slider=True,
     )
     product = feature.product
@@ -93,7 +98,9 @@ def gate_fixture():
     return (feature, "cover.gatecontroller_position")
 
 
-async def test_init_gatecontroller(gatecontroller, hass: HomeAssistant) -> None:
+async def test_init_gatecontroller(
+    gatecontroller, hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test gateController default state."""
 
     _, entity_id = gatecontroller
@@ -113,7 +120,6 @@ async def test_init_gatecontroller(gatecontroller, hass: HomeAssistant) -> None:
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert state.state == STATE_UNKNOWN
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My gate controller"
@@ -123,7 +129,9 @@ async def test_init_gatecontroller(gatecontroller, hass: HomeAssistant) -> None:
     assert device.sw_version == "1.23"
 
 
-async def test_init_shutterbox(shutterbox, hass: HomeAssistant) -> None:
+async def test_init_shutterbox(
+    shutterbox, hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test gateBox default state."""
 
     _, entity_id = shutterbox
@@ -143,7 +151,6 @@ async def test_init_shutterbox(shutterbox, hass: HomeAssistant) -> None:
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert state.state == STATE_UNKNOWN
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My shutter"
@@ -153,7 +160,9 @@ async def test_init_shutterbox(shutterbox, hass: HomeAssistant) -> None:
     assert device.sw_version == "1.23"
 
 
-async def test_init_gatebox(gatebox, hass: HomeAssistant) -> None:
+async def test_init_gatebox(
+    gatebox, hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test cover default state."""
 
     _, entity_id = gatebox
@@ -175,7 +184,6 @@ async def test_init_gatebox(gatebox, hass: HomeAssistant) -> None:
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert state.state == STATE_UNKNOWN
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My gatebox"
@@ -420,3 +428,47 @@ async def test_closed_state(feature, hass: HomeAssistant) -> None:
     feature_mock.async_update = AsyncMock(side_effect=initial_update)
     await async_setup_entity(hass, entity_id)
     assert hass.states.get(entity_id).state == STATE_CLOSED
+
+
+async def test_tilt_position(shutterbox, hass: HomeAssistant) -> None:
+    """Test tilt capability is available."""
+
+    feature_mock, entity_id = shutterbox
+
+    def tilt_update():
+        feature_mock.tilt_current = 90
+
+    feature_mock.async_update = AsyncMock(side_effect=tilt_update)
+
+    await async_setup_entity(hass, entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 10
+
+
+async def test_set_tilt_position(shutterbox, hass: HomeAssistant) -> None:
+    """Test tilt position setting."""
+
+    feature_mock, entity_id = shutterbox
+
+    def initial_update():
+        feature_mock.state = 3
+
+    def set_tilt(tilt_position):
+        assert tilt_position == 20
+        feature_mock.state = 1
+
+    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    feature_mock.async_set_tilt_position = AsyncMock(side_effect=set_tilt)
+
+    await async_setup_entity(hass, entity_id)
+    assert hass.states.get(entity_id).state == STATE_CLOSED
+
+    feature_mock.async_update = AsyncMock()
+    await hass.services.async_call(
+        "cover",
+        SERVICE_SET_COVER_TILT_POSITION,
+        {"entity_id": entity_id, ATTR_TILT_POSITION: 80},
+        blocking=True,
+    )
+    assert hass.states.get(entity_id).state == STATE_OPENING

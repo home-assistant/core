@@ -14,8 +14,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_SHOW_ON_MAP,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import (
     aiohttp_client,
@@ -23,13 +28,17 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
+from homeassistant.helpers.typing import EventType
 
 from .const import CONF_SENSOR_INDICES, DOMAIN, LOGGER
 
@@ -318,6 +327,22 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
         self._flow_data: dict[str, Any] = {}
         self.config_entry = config_entry
 
+    @property
+    def settings_schema(self) -> vol.Schema:
+        """Return the settings schema."""
+        return vol.Schema(
+            {
+                vol.Optional(
+                    CONF_SHOW_ON_MAP,
+                    description={
+                        "suggested_value": self.config_entry.options.get(
+                            CONF_SHOW_ON_MAP
+                        )
+                    },
+                ): bool
+            }
+        )
+
     async def async_step_add_sensor(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -352,7 +377,7 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_choose_sensor(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the selection of a sensor."""
+        """Choose a sensor."""
         if user_input is None:
             options = self._flow_data.pop(CONF_NEARBY_SENSOR_OPTIONS)
             return self.async_show_form(
@@ -375,13 +400,13 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the options."""
         return self.async_show_menu(
             step_id="init",
-            menu_options=["add_sensor", "remove_sensor"],
+            menu_options=["add_sensor", "remove_sensor", "settings"],
         )
 
     async def async_step_remove_sensor(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Add a sensor."""
+        """Remove a sensor."""
         if user_input is None:
             return self.async_show_form(
                 step_id="remove_sensor",
@@ -404,7 +429,9 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
         device_entities_removed_event = asyncio.Event()
 
         @callback
-        def async_device_entity_state_changed(_: Event) -> None:
+        def async_device_entity_state_changed(
+            _: EventType[EventStateChangedData],
+        ) -> None:
             """Listen and respond when all device entities are removed."""
             if all(
                 self.hass.states.get(entity_entry.entity_id) is None
@@ -437,3 +464,15 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
         options[CONF_SENSOR_INDICES].remove(removed_sensor_index)
 
         return self.async_create_entry(data=options)
+
+    async def async_step_settings(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage settings."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="settings", data_schema=self.settings_schema
+            )
+
+        options = deepcopy({**self.config_entry.options})
+        return self.async_create_entry(data=options | user_input)

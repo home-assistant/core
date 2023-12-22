@@ -7,7 +7,9 @@ from __future__ import annotations
 
 import asyncio
 import binascii
+import collections
 from collections.abc import Callable, Iterator
+import dataclasses
 from dataclasses import dataclass
 import enum
 import functools
@@ -26,17 +28,12 @@ from zigpy.zcl.foundation import CommandSchema
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.exceptions import IntegrationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CLUSTER_TYPE_IN,
-    CLUSTER_TYPE_OUT,
-    CUSTOM_CONFIGURATION,
-    DATA_ZHA,
-    DATA_ZHA_GATEWAY,
-)
+from .const import CLUSTER_TYPE_IN, CLUSTER_TYPE_OUT, CUSTOM_CONFIGURATION, DATA_ZHA
 from .registries import BINDABLE_CLUSTERS
 
 if TYPE_CHECKING:
@@ -222,7 +219,7 @@ def async_get_zha_config_value(
 
 def async_cluster_exists(hass, cluster_id, skip_coordinator=True):
     """Determine if a device containing the specified in cluster is paired."""
-    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    zha_gateway = get_zha_gateway(hass)
     zha_devices = zha_gateway.devices.values()
     for zha_device in zha_devices:
         if skip_coordinator and zha_device.is_coordinator:
@@ -245,12 +242,9 @@ def async_get_zha_device(hass: HomeAssistant, device_id: str) -> ZHADevice:
     if not registry_device:
         _LOGGER.error("Device id `%s` not found in registry", device_id)
         raise KeyError(f"Device id `{device_id}` not found in registry.")
-    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-    if not zha_gateway.initialized:
-        _LOGGER.error("Attempting to get a ZHA device when ZHA is not initialized")
-        raise IntegrationError("ZHA is not initialized yet")
+    zha_gateway = get_zha_gateway(hass)
     try:
-        ieee_address = list(list(registry_device.identifiers)[0])[1]
+        ieee_address = list(registry_device.identifiers)[0][1]
         ieee = zigpy.types.EUI64.convert(ieee_address)
     except (IndexError, ValueError) as ex:
         _LOGGER.error(
@@ -309,19 +303,19 @@ class LogMixin:
 
     def debug(self, msg, *args, **kwargs):
         """Debug level log."""
-        return self.log(logging.DEBUG, msg, *args)
+        return self.log(logging.DEBUG, msg, *args, **kwargs)
 
     def info(self, msg, *args, **kwargs):
         """Info level log."""
-        return self.log(logging.INFO, msg, *args)
+        return self.log(logging.INFO, msg, *args, **kwargs)
 
     def warning(self, msg, *args, **kwargs):
         """Warning method log."""
-        return self.log(logging.WARNING, msg, *args)
+        return self.log(logging.WARNING, msg, *args, **kwargs)
 
     def error(self, msg, *args, **kwargs):
         """Error level log."""
-        return self.log(logging.ERROR, msg, *args)
+        return self.log(logging.ERROR, msg, *args, **kwargs)
 
 
 def retryable_req(
@@ -336,17 +330,17 @@ def retryable_req(
 
     def decorator(func):
         @functools.wraps(func)
-        async def wrapper(channel, *args, **kwargs):
+        async def wrapper(cluster_handler, *args, **kwargs):
             exceptions = (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError)
             try_count, errors = 1, []
             for delay in itertools.chain(delays, [None]):
                 try:
-                    return await func(channel, *args, **kwargs)
+                    return await func(cluster_handler, *args, **kwargs)
                 except exceptions as ex:
                     errors.append(ex)
                     if delay:
                         delay = uniform(delay * 0.75, delay * 1.25)
-                        channel.debug(
+                        cluster_handler.debug(
                             "%s: retryable request #%d failed: %s. Retrying in %ss",
                             func.__name__,
                             try_count,
@@ -356,7 +350,7 @@ def retryable_req(
                         try_count += 1
                         await asyncio.sleep(delay)
                     else:
-                        channel.warning(
+                        cluster_handler.warning(
                             "%s: all attempts have failed: %s", func.__name__, errors
                         )
                         if raise_:
@@ -403,6 +397,15 @@ QR_CODES = (
         ([0-9a-fA-F]{36})  # install code
         $
     """,
+    # Bosch
+    r"""
+        ^RB01SG
+        [0-9a-fA-F]{34}
+        ([0-9a-fA-F]{16}) # IEEE address
+        DLK
+        ([0-9a-fA-F]{36}) # install code
+        $
+    """,
 )
 
 
@@ -425,3 +428,33 @@ def qr_to_install_code(qr_code: str) -> tuple[zigpy.types.EUI64, bytes]:
         return ieee, install_code
 
     raise vol.Invalid(f"couldn't convert qr code: {qr_code}")
+
+
+@dataclasses.dataclass(kw_only=True, slots=True)
+class ZHAData:
+    """ZHA component data stored in `hass.data`."""
+
+    yaml_config: ConfigType = dataclasses.field(default_factory=dict)
+    platforms: collections.defaultdict[Platform, list] = dataclasses.field(
+        default_factory=lambda: collections.defaultdict(list)
+    )
+    gateway: ZHAGateway | None = dataclasses.field(default=None)
+    device_trigger_cache: dict[str, tuple[str, dict]] = dataclasses.field(
+        default_factory=dict
+    )
+
+
+def get_zha_data(hass: HomeAssistant) -> ZHAData:
+    """Get the global ZHA data object."""
+    if DATA_ZHA not in hass.data:
+        hass.data[DATA_ZHA] = ZHAData()
+
+    return hass.data[DATA_ZHA]
+
+
+def get_zha_gateway(hass: HomeAssistant) -> ZHAGateway:
+    """Get the ZHA gateway object."""
+    if (zha_gateway := get_zha_data(hass).gateway) is None:
+        raise ValueError("No gateway object exists")
+
+    return zha_gateway

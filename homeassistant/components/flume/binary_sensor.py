@@ -15,8 +15,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DOMAIN,
-    FLUME_AUTH,
     FLUME_DEVICES,
+    FLUME_NOTIFICATIONS_COORDINATOR,
     FLUME_TYPE_BRIDGE,
     FLUME_TYPE_SENSOR,
     KEY_DEVICE_ID,
@@ -25,6 +25,7 @@ from .const import (
     KEY_DEVICE_TYPE,
     NOTIFICATION_HIGH_FLOW,
     NOTIFICATION_LEAK_DETECTED,
+    NOTIFICATION_LOW_BATTERY,
 )
 from .coordinator import (
     FlumeDeviceConnectionUpdateCoordinator,
@@ -34,19 +35,18 @@ from .entity import FlumeEntity
 from .util import get_valid_flume_devices
 
 BINARY_SENSOR_DESCRIPTION_CONNECTED = BinarySensorEntityDescription(
-    name="Connected",
-    key="connected",
+    key="connected", device_class=BinarySensorDeviceClass.CONNECTIVITY
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class FlumeBinarySensorRequiredKeysMixin:
     """Mixin for required keys."""
 
     event_rule: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class FlumeBinarySensorEntityDescription(
     BinarySensorEntityDescription, FlumeBinarySensorRequiredKeysMixin
 ):
@@ -56,17 +56,23 @@ class FlumeBinarySensorEntityDescription(
 FLUME_BINARY_NOTIFICATION_SENSORS: tuple[FlumeBinarySensorEntityDescription, ...] = (
     FlumeBinarySensorEntityDescription(
         key="leak",
-        name="Leak detected",
+        translation_key="leak",
         entity_category=EntityCategory.DIAGNOSTIC,
         event_rule=NOTIFICATION_LEAK_DETECTED,
         icon="mdi:pipe-leak",
     ),
     FlumeBinarySensorEntityDescription(
         key="flow",
-        name="High flow",
+        translation_key="flow",
         entity_category=EntityCategory.DIAGNOSTIC,
         event_rule=NOTIFICATION_HIGH_FLOW,
         icon="mdi:waves",
+    ),
+    FlumeBinarySensorEntityDescription(
+        key="low_battery",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.BATTERY,
+        event_rule=NOTIFICATION_LOW_BATTERY,
     ),
 )
 
@@ -78,7 +84,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Flume binary sensor.."""
     flume_domain_data = hass.data[DOMAIN][config_entry.entry_id]
-    flume_auth = flume_domain_data[FLUME_AUTH]
     flume_devices = flume_domain_data[FLUME_DEVICES]
 
     flume_entity_list: list[
@@ -88,9 +93,7 @@ async def async_setup_entry(
     connection_coordinator = FlumeDeviceConnectionUpdateCoordinator(
         hass=hass, flume_devices=flume_devices
     )
-    notification_coordinator = FlumeNotificationDataUpdateCoordinator(
-        hass=hass, auth=flume_auth
-    )
+    notification_coordinator = flume_domain_data[FLUME_NOTIFICATIONS_COORDINATOR]
     flume_devices = get_valid_flume_devices(flume_devices)
     for device in flume_devices:
         device_id = device[KEY_DEVICE_ID]

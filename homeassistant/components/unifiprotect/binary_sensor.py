@@ -1,8 +1,7 @@
 """Component providing binary sensors for UniFi Protect."""
 from __future__ import annotations
 
-from copy import copy
-from dataclasses import dataclass
+import dataclasses
 import logging
 
 from pyunifiprotect.data import (
@@ -14,8 +13,6 @@ from pyunifiprotect.data import (
     ProtectAdoptableDeviceModel,
     ProtectModelWithId,
     Sensor,
-    SmartDetectAudioType,
-    SmartDetectObjectType,
 )
 from pyunifiprotect.data.nvr import UOSDisk
 
@@ -45,14 +42,14 @@ _LOGGER = logging.getLogger(__name__)
 _KEY_DOOR = "door"
 
 
-@dataclass
+@dataclasses.dataclass(frozen=True)
 class ProtectBinaryEntityDescription(
     ProtectRequiredKeysMixin, BinarySensorEntityDescription
 ):
     """Describes UniFi Protect Binary Sensor entity."""
 
 
-@dataclass
+@dataclasses.dataclass(frozen=True)
 class ProtectBinaryEventEntityDescription(
     ProtectEventMixin, BinarySensorEntityDescription
 ):
@@ -364,8 +361,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_value="is_smart_detected",
         ufp_required_field="can_detect_person",
         ufp_enabled="is_person_detection_on",
-        ufp_event_obj="last_smart_detect_event",
-        ufp_smart_type=SmartDetectObjectType.PERSON,
+        ufp_event_obj="last_person_detect_event",
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_obj_vehicle",
@@ -374,8 +370,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_value="is_smart_detected",
         ufp_required_field="can_detect_vehicle",
         ufp_enabled="is_vehicle_detection_on",
-        ufp_event_obj="last_smart_detect_event",
-        ufp_smart_type=SmartDetectObjectType.VEHICLE,
+        ufp_event_obj="last_vehicle_detect_event",
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_obj_face",
@@ -384,8 +379,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_value="is_smart_detected",
         ufp_required_field="can_detect_face",
         ufp_enabled="is_face_detection_on",
-        ufp_event_obj="last_smart_detect_event",
-        ufp_smart_type=SmartDetectObjectType.FACE,
+        ufp_event_obj="last_face_detect_event",
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_obj_package",
@@ -394,8 +388,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_value="is_smart_detected",
         ufp_required_field="can_detect_package",
         ufp_enabled="is_package_detection_on",
-        ufp_event_obj="last_smart_detect_event",
-        ufp_smart_type=SmartDetectObjectType.PACKAGE,
+        ufp_event_obj="last_package_detect_event",
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_any",
@@ -412,8 +405,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_value="is_smart_detected",
         ufp_required_field="can_detect_smoke",
         ufp_enabled="is_smoke_detection_on",
-        ufp_event_obj="last_smart_audio_detect_event",
-        ufp_smart_type=SmartDetectAudioType.SMOKE,
+        ufp_event_obj="last_smoke_detect_event",
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_cmonx",
@@ -422,8 +414,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_value="is_smart_detected",
         ufp_required_field="can_detect_smoke",
         ufp_enabled="is_smoke_detection_on",
-        ufp_event_obj="last_smart_audio_detect_event",
-        ufp_smart_type=SmartDetectAudioType.CMONX,
+        ufp_event_obj="last_cmonx_detect_event",
     ),
 )
 
@@ -564,13 +555,16 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-
-        self._attr_is_on = self.entity_description.get_ufp_value(self.device)
+        entity_description = self.entity_description
+        updated_device = self.device
+        self._attr_is_on = entity_description.get_ufp_value(updated_device)
         # UP Sense can be any of the 3 contact sensor device classes
-        if self.entity_description.key == _KEY_DOOR and isinstance(self.device, Sensor):
-            self.entity_description.device_class = MOUNT_DEVICE_CLASS_MAP.get(
-                self.device.mount_type, BinarySensorDeviceClass.DOOR
+        if entity_description.key == _KEY_DOOR and isinstance(updated_device, Sensor):
+            self._attr_device_class = MOUNT_DEVICE_CLASS_MAP.get(
+                updated_device.mount_type, BinarySensorDeviceClass.DOOR
             )
+        else:
+            self._attr_device_class = self.entity_description.device_class
 
 
 class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
@@ -591,9 +585,11 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
         # backwards compat with old unique IDs
         index = self._disk.slot - 1
 
-        description = copy(description)
-        description.key = f"{description.key}_{index}"
-        description.name = f"{disk.type} {disk.slot}"
+        description = dataclasses.replace(
+            description,
+            key=f"{description.key}_{index}",
+            name=f"{disk.type} {disk.slot}",
+        )
         super().__init__(data, device, description)
 
     @callback
@@ -623,8 +619,28 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-        is_on = self.entity_description.get_is_on(device)
+        is_on = self.entity_description.get_is_on(self._event)
         self._attr_is_on: bool | None = is_on
         if not is_on:
             self._event = None
             self._attr_extra_state_attributes = {}
+
+    @callback
+    def _async_updated_event(self, device: ProtectModelWithId) -> None:
+        """Call back for incoming data that only writes when state has changed.
+
+        Only the is_on, _attr_extra_state_attributes, and available are ever
+        updated for these entities, and since the websocket update for the
+        device will trigger an update for all entities connected to the device,
+        we want to avoid writing state unless something has actually changed.
+        """
+        previous_is_on = self._attr_is_on
+        previous_available = self._attr_available
+        previous_extra_state_attributes = self._attr_extra_state_attributes
+        self._async_update_device_from_protect(device)
+        if (
+            self._attr_is_on != previous_is_on
+            or self._attr_extra_state_attributes != previous_extra_state_attributes
+            or self._attr_available != previous_available
+        ):
+            self.async_write_ha_state()

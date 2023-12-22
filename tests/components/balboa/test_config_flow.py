@@ -5,7 +5,6 @@ from pybalboa.exceptions import SpaConnectionError
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.balboa.const import CONF_SYNC_TIME, DOMAIN
-from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -111,7 +110,7 @@ async def test_already_configured(hass: HomeAssistant, client: MagicMock) -> Non
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     with patch(
         "homeassistant.components.balboa.config_flow.SpaClient.__aenter__",

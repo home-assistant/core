@@ -14,16 +14,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import VeSyncDevice
-from .const import DOMAIN, VS_DISCOVERY, VS_LIGHTS
+from .const import DEV_TYPE_TO_HA, DOMAIN, VS_DISCOVERY, VS_LIGHTS
 
 _LOGGER = logging.getLogger(__name__)
-
-DEV_TYPE_TO_HA = {
-    "ESD16": "walldimmer",
-    "ESWD16": "walldimmer",
-    "ESL100": "bulb-dimmable",
-    "ESL100CW": "bulb-tunable-white",
-}
 
 
 async def async_setup_entry(
@@ -65,6 +58,8 @@ def _setup_entities(devices, async_add_entities):
 
 class VeSyncBaseLight(VeSyncDevice, LightEntity):
     """Base class for VeSync Light Devices Representations."""
+
+    _attr_name = None
 
     @property
     def brightness(self) -> int:

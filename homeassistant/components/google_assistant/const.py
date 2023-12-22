@@ -6,6 +6,7 @@ from homeassistant.components import (
     camera,
     climate,
     cover,
+    event,
     fan,
     group,
     humidifier,
@@ -21,6 +22,7 @@ from homeassistant.components import (
     sensor,
     switch,
     vacuum,
+    water_heater,
 )
 
 DOMAIN = "google_assistant"
@@ -48,6 +50,7 @@ DEFAULT_EXPOSED_DOMAINS = [
     "binary_sensor",
     "climate",
     "cover",
+    "event",
     "fan",
     "group",
     "humidifier",
@@ -62,6 +65,7 @@ DEFAULT_EXPOSED_DOMAINS = [
     "sensor",
     "switch",
     "vacuum",
+    "water_heater",
 ]
 
 # https://developers.google.com/assistant/smarthome/guides
@@ -73,6 +77,7 @@ TYPE_CAMERA = f"{PREFIX_TYPES}CAMERA"
 TYPE_CURTAIN = f"{PREFIX_TYPES}CURTAIN"
 TYPE_DEHUMIDIFIER = f"{PREFIX_TYPES}DEHUMIDIFIER"
 TYPE_DOOR = f"{PREFIX_TYPES}DOOR"
+TYPE_DOORBELL = f"{PREFIX_TYPES}DOORBELL"
 TYPE_FAN = f"{PREFIX_TYPES}FAN"
 TYPE_GARAGE = f"{PREFIX_TYPES}GARAGE"
 TYPE_HUMIDIFIER = f"{PREFIX_TYPES}HUMIDIFIER"
@@ -90,6 +95,7 @@ TYPE_THERMOSTAT = f"{PREFIX_TYPES}THERMOSTAT"
 TYPE_TV = f"{PREFIX_TYPES}TV"
 TYPE_WINDOW = f"{PREFIX_TYPES}WINDOW"
 TYPE_VACUUM = f"{PREFIX_TYPES}VACUUM"
+TYPE_WATERHEATER = f"{PREFIX_TYPES}WATERHEATER"
 
 SERVICE_REQUEST_SYNC = "request_sync"
 HOMEGRAPH_URL = "https://homegraph.googleapis.com/"
@@ -144,6 +150,7 @@ DOMAIN_TO_GOOGLE_TYPES = {
     sensor.DOMAIN: TYPE_SENSOR,
     switch.DOMAIN: TYPE_SWITCH,
     vacuum.DOMAIN: TYPE_VACUUM,
+    water_heater.DOMAIN: TYPE_WATERHEATER,
 }
 
 DEVICE_CLASS_TO_GOOGLE_TYPES = {
@@ -161,6 +168,8 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (cover.DOMAIN, cover.CoverDeviceClass.GARAGE): TYPE_GARAGE,
     (cover.DOMAIN, cover.CoverDeviceClass.GATE): TYPE_GARAGE,
     (cover.DOMAIN, cover.CoverDeviceClass.SHUTTER): TYPE_SHUTTER,
+    (cover.DOMAIN, cover.CoverDeviceClass.WINDOW): TYPE_WINDOW,
+    (event.DOMAIN, event.EventDeviceClass.DOORBELL): TYPE_DOORBELL,
     (
         humidifier.DOMAIN,
         humidifier.HumidifierDeviceClass.DEHUMIDIFIER,
@@ -169,6 +178,7 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (media_player.DOMAIN, media_player.MediaPlayerDeviceClass.RECEIVER): TYPE_RECEIVER,
     (media_player.DOMAIN, media_player.MediaPlayerDeviceClass.SPEAKER): TYPE_SPEAKER,
     (media_player.DOMAIN, media_player.MediaPlayerDeviceClass.TV): TYPE_TV,
+    (sensor.DOMAIN, sensor.SensorDeviceClass.AQI): TYPE_SENSOR,
     (sensor.DOMAIN, sensor.SensorDeviceClass.HUMIDITY): TYPE_SENSOR,
     (sensor.DOMAIN, sensor.SensorDeviceClass.TEMPERATURE): TYPE_SENSOR,
     (switch.DOMAIN, switch.SwitchDeviceClass.OUTLET): TYPE_OUTLET,
@@ -185,7 +195,7 @@ STORE_GOOGLE_LOCAL_WEBHOOK_ID = "local_webhook_id"
 SOURCE_CLOUD = "cloud"
 SOURCE_LOCAL = "local"
 
-NOT_EXPOSE_LOCAL = {TYPE_ALARM, TYPE_LOCK}
+NOT_EXPOSE_LOCAL = {TYPE_ALARM, TYPE_LOCK, TYPE_THERMOSTAT}
 
 FAN_SPEEDS = {
     "5/5": ["High", "Max", "Fast", "5"],

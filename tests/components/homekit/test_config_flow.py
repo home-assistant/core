@@ -427,6 +427,7 @@ async def test_options_flow_devices(
     demo_config_entry = MockConfigEntry(domain="domain")
     demo_config_entry.add_to_hass(hass)
 
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "demo", {"demo": {}})
     assert await async_setup_component(hass, "homekit", {"homekit": {}})
 

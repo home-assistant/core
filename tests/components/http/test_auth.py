@@ -35,9 +35,10 @@ from homeassistant.components.http.request_context import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
-from . import HTTP_HEADER_HA_AUTH, mock_real_ip
+from . import HTTP_HEADER_HA_AUTH
 
 from tests.common import MockUser
+from tests.test_util import mock_real_ip
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 API_PASSWORD = "test-password"
@@ -352,6 +353,12 @@ async def test_auth_access_signed_path_with_query_param(
     data = await req.json()
     assert data["user_id"] == refresh_token.user.id
 
+    # Without query params not allowed
+    url = yarl.URL(signed_path)
+    signed_path = f"{url.path}?{SIGN_QUERY_PARAM}={url.query.get(SIGN_QUERY_PARAM)}"
+    req = await client.get(signed_path)
+    assert req.status == HTTPStatus.UNAUTHORIZED
+
 
 async def test_auth_access_signed_path_with_query_param_order(
     hass: HomeAssistant,
@@ -374,12 +381,24 @@ async def test_auth_access_signed_path_with_query_param_order(
         refresh_token_id=refresh_token.id,
     )
     url = yarl.URL(signed_path)
-    signed_path = f"{url.path}?{SIGN_QUERY_PARAM}={url.query.get(SIGN_QUERY_PARAM)}&foo=bar&test=test"
 
-    req = await client.get(signed_path)
-    assert req.status == HTTPStatus.OK
-    data = await req.json()
-    assert data["user_id"] == refresh_token.user.id
+    # Change order
+    req = await client.get(
+        f"{url.path}?{SIGN_QUERY_PARAM}={url.query.get(SIGN_QUERY_PARAM)}&foo=bar&test=test"
+    )
+    assert req.status == HTTPStatus.UNAUTHORIZED
+
+    # Duplicate a param
+    req = await client.get(
+        f"{url.path}?{SIGN_QUERY_PARAM}={url.query.get(SIGN_QUERY_PARAM)}&test=test&foo=aaa&foo=bar"
+    )
+    assert req.status == HTTPStatus.UNAUTHORIZED
+
+    # Remove a param
+    req = await client.get(
+        f"{url.path}?{SIGN_QUERY_PARAM}={url.query.get(SIGN_QUERY_PARAM)}&test=test"
+    )
+    assert req.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_auth_access_signed_path_with_query_param_safe_param(

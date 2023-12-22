@@ -1,9 +1,6 @@
 """Test function in __init__.py."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
-
-from aiohttp import ClientWebSocketResponse
 from mysensors import BaseSyncGateway
 from mysensors.sensor import Sensor
 
@@ -13,14 +10,17 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 async def test_remove_config_entry_device(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     gps_sensor: Sensor,
     integration: MockConfigEntry,
     gateway: BaseSyncGateway,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that a device can be removed ok."""
     entity_id = "sensor.gps_sensor_1_1"
@@ -29,11 +29,9 @@ async def test_remove_config_entry_device(
     assert await async_setup_component(hass, "config", {})
     await hass.async_block_till_done()
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, f"{config_entry.entry_id}-{node_id}")}
     )
-    entity_registry = er.async_get(hass)
     state = hass.states.get(entity_id)
 
     assert gateway.sensors

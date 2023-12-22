@@ -73,11 +73,10 @@ async def async_setup_entry(
 
         async_add_entities(missing)
 
-    if device.device and "wifi1" in device.device.features:
-        restore_entities()
-        entry.async_on_unload(
-            coordinators[CONNECTED_WIFI_CLIENTS].async_add_listener(new_device_callback)
-        )
+    restore_entities()
+    entry.async_on_unload(
+        coordinators[CONNECTED_WIFI_CLIENTS].async_add_listener(new_device_callback)
+    )
 
 
 class DevoloScannerEntity(

@@ -6,6 +6,7 @@ from typing import Final, cast
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
@@ -16,6 +17,7 @@ from .const import (  # noqa: F401
     ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
     ERR_NOT_SUPPORTED,
+    ERR_SERVICE_VALIDATION_ERROR,
     ERR_TEMPLATE_ERROR,
     ERR_TIMEOUT,
     ERR_UNAUTHORIZED,
@@ -40,6 +42,8 @@ from .messages import (  # noqa: F401
 DOMAIN: Final = const.DOMAIN
 
 DEPENDENCIES: Final[tuple[str]] = ("http",)
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @bind_hass

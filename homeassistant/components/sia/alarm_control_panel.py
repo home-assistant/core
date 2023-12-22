@@ -29,7 +29,7 @@ from .sia_entity_base import SIABaseEntity, SIAEntityDescription
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class SIAAlarmControlPanelEntityDescription(
     AlarmControlPanelEntityDescription,
     SIAEntityDescription,
@@ -52,6 +52,8 @@ ENTITY_DESCRIPTION_ALARM = SIAAlarmControlPanelEntityDescription(
         "CQ": STATE_ALARM_ARMED_AWAY,
         "CS": STATE_ALARM_ARMED_AWAY,
         "CF": STATE_ALARM_ARMED_CUSTOM_BYPASS,
+        "NP": STATE_ALARM_DISARMED,
+        "NO": STATE_ALARM_DISARMED,
         "OA": STATE_ALARM_DISARMED,
         "OB": STATE_ALARM_DISARMED,
         "OG": STATE_ALARM_DISARMED,
@@ -61,9 +63,9 @@ ENTITY_DESCRIPTION_ALARM = SIAAlarmControlPanelEntityDescription(
         "OS": STATE_ALARM_DISARMED,
         "NC": STATE_ALARM_ARMED_NIGHT,
         "NL": STATE_ALARM_ARMED_NIGHT,
+        "NE": STATE_ALARM_ARMED_CUSTOM_BYPASS,
+        "NF": STATE_ALARM_ARMED_CUSTOM_BYPASS,
         "BR": PREVIOUS_STATE,
-        "NP": PREVIOUS_STATE,
-        "NO": PREVIOUS_STATE,
     },
 )
 
@@ -121,7 +123,9 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
 
         Return True if the event was relevant for this entity.
         """
-        new_state = self.entity_description.code_consequences.get(sia_event.code)
+        new_state = None
+        if sia_event.code:
+            new_state = self.entity_description.code_consequences.get(sia_event.code)
         if new_state is None:
             return False
         _LOGGER.debug("New state will be %s", new_state)

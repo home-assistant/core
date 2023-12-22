@@ -1,15 +1,15 @@
 """Tests for the repairs integration."""
-from collections.abc import Awaitable, Callable
 
-from aiohttp import ClientWebSocketResponse
 
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.typing import WebSocketGenerator
+
 
 async def get_repairs(
     hass: HomeAssistant,
-    hass_ws_client: Callable[[HomeAssistant], Awaitable[ClientWebSocketResponse]],
+    hass_ws_client: WebSocketGenerator,
 ):
     """Return the repairs list of issues."""
     assert await async_setup_component(hass, "repairs", {})

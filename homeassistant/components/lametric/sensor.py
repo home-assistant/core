@@ -21,24 +21,17 @@ from .coordinator import LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
 
 
-@dataclass
-class LaMetricEntityDescriptionMixin:
-    """Mixin values for LaMetric entities."""
+@dataclass(frozen=True, kw_only=True)
+class LaMetricSensorEntityDescription(SensorEntityDescription):
+    """Class describing LaMetric sensor entities."""
 
     value_fn: Callable[[Device], int | None]
-
-
-@dataclass
-class LaMetricSensorEntityDescription(
-    SensorEntityDescription, LaMetricEntityDescriptionMixin
-):
-    """Class describing LaMetric sensor entities."""
 
 
 SENSORS = [
     LaMetricSensorEntityDescription(
         key="rssi",
-        name="Wi-Fi signal",
+        translation_key="rssi",
         icon="mdi:wifi",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,

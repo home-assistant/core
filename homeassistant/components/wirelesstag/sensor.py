@@ -12,14 +12,19 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.const import CONF_MONITORED_CONDITIONS, Platform
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as WIRELESSTAG_DOMAIN, SIGNAL_TAG_UPDATE, WirelessTagBaseSensor
+from . import (
+    DOMAIN as WIRELESSTAG_DOMAIN,
+    SIGNAL_TAG_UPDATE,
+    WirelessTagBaseSensor,
+    async_migrate_unique_id,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,10 +73,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the sensor platform."""
@@ -83,9 +88,10 @@ def setup_platform(
             if key not in tag.allowed_sensor_types:
                 continue
             description = SENSOR_TYPES[key]
+            async_migrate_unique_id(hass, tag, Platform.SENSOR, description.key)
             sensors.append(WirelessTagSensor(platform, tag, description))
 
-    add_entities(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
@@ -100,12 +106,13 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
         self._sensor_type = description.key
         self.entity_description = description
         self._name = self._tag.name
+        self._attr_unique_id = f"{self._uuid}_{self._sensor_type}"
 
         # I want to see entity_id as:
         # sensor.wirelesstag_bedroom_temperature
         # and not as sensor.bedroom for temperature and
         # sensor.bedroom_2 for humidity
-        self._entity_id = (
+        self.entity_id = (
             f"sensor.{WIRELESSTAG_DOMAIN}_{self.underscored_name}_{self._sensor_type}"
         )
 
@@ -118,11 +125,6 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
                 self._update_tag_info_callback,
             )
         )
-
-    @property
-    def entity_id(self):
-        """Overridden version."""
-        return self._entity_id
 
     @property
     def underscored_name(self):

@@ -1,7 +1,6 @@
 """Support for MQTT lights."""
 from __future__ import annotations
 
-import functools
 from typing import Any
 
 import voluptuous as vol
@@ -10,24 +9,24 @@ from homeassistant.components import light
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
-from ..mixins import async_setup_entry_helper, warn_for_legacy_schema
+from ..mixins import async_setup_entity_entry_helper
 from .schema import CONF_SCHEMA, MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import (
     DISCOVERY_SCHEMA_BASIC,
     PLATFORM_SCHEMA_MODERN_BASIC,
-    async_setup_entity_basic,
+    MqttLight,
 )
 from .schema_json import (
     DISCOVERY_SCHEMA_JSON,
     PLATFORM_SCHEMA_MODERN_JSON,
-    async_setup_entity_json,
+    MqttLightJson,
 )
 from .schema_template import (
     DISCOVERY_SCHEMA_TEMPLATE,
     PLATFORM_SCHEMA_MODERN_TEMPLATE,
-    async_setup_entity_template,
+    MqttLightTemplate,
 )
 
 
@@ -58,12 +57,6 @@ DISCOVERY_SCHEMA = vol.All(
     validate_mqtt_light_discovery,
 )
 
-# Configuring MQTT Lights under the light platform key was deprecated in HA Core 2022.6
-# Setup for the legacy YAML format was removed in HA Core 2022.12
-PLATFORM_SCHEMA = vol.All(
-    warn_for_legacy_schema(light.DOMAIN),
-)
-
 PLATFORM_SCHEMA_MODERN = vol.All(
     MQTT_LIGHT_SCHEMA_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA),
     validate_mqtt_light_modern,
@@ -75,26 +68,14 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT lights configured under the light platform key (deprecated)."""
-    setup = functools.partial(
-        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
-    )
-    await async_setup_entry_helper(hass, light.DOMAIN, setup, DISCOVERY_SCHEMA)
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    async_add_entities: AddEntitiesCallback,
-    config: ConfigType,
-    config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up a MQTT Light."""
-    setup_entity = {
-        "basic": async_setup_entity_basic,
-        "json": async_setup_entity_json,
-        "template": async_setup_entity_template,
-    }
-    await setup_entity[config[CONF_SCHEMA]](
-        hass, config, async_add_entities, config_entry, discovery_data
+    """Set up MQTT lights through YAML and through MQTT discovery."""
+    await async_setup_entity_entry_helper(
+        hass,
+        config_entry,
+        None,
+        light.DOMAIN,
+        async_add_entities,
+        DISCOVERY_SCHEMA,
+        PLATFORM_SCHEMA_MODERN,
+        {"basic": MqttLight, "json": MqttLightJson, "template": MqttLightTemplate},
     )

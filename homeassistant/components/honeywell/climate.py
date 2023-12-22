@@ -1,10 +1,19 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 from __future__ import annotations
 
+import asyncio
 import datetime
 from typing import Any
 
-import aiosomecomfort
+from aiohttp import ClientConnectionError
+from aiosomecomfort import (
+    AuthError,
+    ConnectionError as AscConnectionError,
+    SomeComfortError,
+    UnauthorizedError,
+    UnexpectedResponse,
+)
+from aiosomecomfort.device import Device as SomeComfortDevice
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
@@ -24,7 +33,9 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HoneywellData
@@ -33,6 +44,7 @@ from .const import (
     CONF_COOL_AWAY_TEMPERATURE,
     CONF_HEAT_AWAY_TEMPERATURE,
     DOMAIN,
+    RETRY,
 )
 
 ATTR_FAN_ACTION = "fan_action"
@@ -93,17 +105,48 @@ async def async_setup_entry(
             for device in data.devices.values()
         ]
     )
+    remove_stale_devices(hass, entry, data.devices)
+
+
+def remove_stale_devices(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    devices: dict[str, SomeComfortDevice],
+) -> None:
+    """Remove stale devices from device registry."""
+    device_registry = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    all_device_ids = {device.deviceid for device in devices.values()}
+
+    for device_entry in device_entries:
+        device_id: str | None = None
+
+        for identifier in device_entry.identifiers:
+            if identifier[0] == DOMAIN:
+                device_id = identifier[1]
+                break
+
+        if device_id is None or device_id not in all_device_ids:
+            # If device_id is None an invalid device entry was found for this config entry.
+            # If the device_id is not in existing device ids it's a stale device entry.
+            # Remove config entry from this device entry in either case.
+            device_registry.async_update_device(
+                device_entry.id, remove_config_entry_id=config_entry.entry_id
+            )
 
 
 class HoneywellUSThermostat(ClimateEntity):
     """Representation of a Honeywell US Thermostat."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
         data: HoneywellData,
-        device: aiosomecomfort.device.Device,
+        device: SomeComfortDevice,
         cool_away_temp: int | None,
         heat_away_temp: int | None,
     ) -> None:
@@ -113,6 +156,7 @@ class HoneywellUSThermostat(ClimateEntity):
         self._cool_away_temp = cool_away_temp
         self._heat_away_temp = heat_away_temp
         self._away = False
+        self._retry = 0
 
         self._attr_unique_id = device.deviceid
 
@@ -143,13 +187,13 @@ class HoneywellUSThermostat(ClimateEntity):
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         )
 
-        if device._data["canControlHumidification"]:
+        if device._data.get("canControlHumidification"):
             self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
 
-        if device.raw_ui_data["SwitchEmergencyHeatAllowed"]:
+        if device.raw_ui_data.get("SwitchEmergencyHeatAllowed"):
             self._attr_supported_features |= ClimateEntityFeature.AUX_HEAT
 
-        if not device._data["hasFan"]:
+        if not device._data.get("hasFan"):
             return
 
         # not all honeywell fans support all modes
@@ -212,9 +256,9 @@ class HoneywellUSThermostat(ClimateEntity):
         return self._device.current_humidity
 
     @property
-    def hvac_mode(self) -> HVACMode:
+    def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
-        return HW_MODE_TO_HVAC_MODE[self._device.system_mode]
+        return HW_MODE_TO_HVAC_MODE.get(self._device.system_mode)
 
     @property
     def hvac_action(self) -> HVACAction | None:
@@ -309,8 +353,16 @@ class HoneywellUSThermostat(ClimateEntity):
                 if mode == "heat":
                     await self._device.set_setpoint_heat(temperature)
 
-        except aiosomecomfort.SomeComfortError as err:
+        except UnexpectedResponse as err:
+            raise HomeAssistantError(
+                "Honeywell set temperature failed: Invalid Response"
+            ) from err
+
+        except SomeComfortError as err:
             _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
+            raise ValueError(
+                f"Honeywell set temperature failed: invalid temperature {temperature}."
+            ) from err
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -322,16 +374,30 @@ class HoneywellUSThermostat(ClimateEntity):
                 if temperature := kwargs.get(ATTR_TARGET_TEMP_LOW):
                     await self._device.set_setpoint_heat(temperature)
 
-            except aiosomecomfort.SomeComfortError as err:
+            except UnexpectedResponse as err:
+                raise HomeAssistantError(
+                    "Honeywell set temperature failed: Invalid Response"
+                ) from err
+
+            except SomeComfortError as err:
                 _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
+                raise ValueError(
+                    f"Honeywell set temperature failed: invalid temperature: {temperature}."
+                ) from err
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        await self._device.set_fan_mode(self._fan_mode_map[fan_mode])
+        try:
+            await self._device.set_fan_mode(self._fan_mode_map[fan_mode])
+        except SomeComfortError as err:
+            raise HomeAssistantError("Honeywell could not set fan mode.") from err
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        await self._device.set_system_mode(self._hvac_mode_map[hvac_mode])
+        try:
+            await self._device.set_system_mode(self._hvac_mode_map[hvac_mode])
+        except SomeComfortError as err:
+            raise HomeAssistantError("Honeywell could not set system mode.") from err
 
     async def _turn_away_mode_on(self) -> None:
         """Turn away on.
@@ -341,12 +407,8 @@ class HoneywellUSThermostat(ClimateEntity):
         it doesn't get overwritten when away mode is switched on.
         """
         self._away = True
-        try:
-            # Get current mode
-            mode = self._device.system_mode
-        except aiosomecomfort.SomeComfortError:
-            _LOGGER.error("Can not get system mode")
-            return
+        # Get current mode
+        mode = self._device.system_mode
         try:
             # Set permanent hold
             # and Set temperature
@@ -355,22 +417,21 @@ class HoneywellUSThermostat(ClimateEntity):
             if mode in HEATING_MODES:
                 await self._device.set_hold_heat(True, self._heat_away_temp)
 
-        except aiosomecomfort.SomeComfortError:
+        except SomeComfortError as err:
             _LOGGER.error(
                 "Temperature out of range. Mode: %s, Heat Temperature:  %.1f, Cool Temperature: %.1f",
                 mode,
                 self._heat_away_temp,
                 self._cool_away_temp,
             )
+            raise ValueError(
+                f"Honeywell set temperature failed: temperature out of range. Mode: {mode}, Heat Temperuature: {self._heat_away_temp}, Cool Temperature: {self._cool_away_temp}."
+            ) from err
 
     async def _turn_hold_mode_on(self) -> None:
         """Turn permanent hold on."""
-        try:
-            # Get current mode
-            mode = self._device.system_mode
-        except aiosomecomfort.SomeComfortError:
-            _LOGGER.error("Can not get system mode")
-            return
+        # Get current mode
+        mode = self._device.system_mode
         # Check that we got a valid mode back
         if mode in HW_MODE_TO_HVAC_MODE:
             try:
@@ -380,10 +441,14 @@ class HoneywellUSThermostat(ClimateEntity):
                 if mode in HEATING_MODES:
                     await self._device.set_hold_heat(True)
 
-            except aiosomecomfort.SomeComfortError:
+            except SomeComfortError as err:
                 _LOGGER.error("Couldn't set permanent hold")
+                raise HomeAssistantError(
+                    "Honeywell couldn't set permanent hold."
+                ) from err
         else:
             _LOGGER.error("Invalid system mode returned: %s", mode)
+            raise HomeAssistantError(f"Honeywell invalid system mode returned {mode}.")
 
     async def _turn_away_mode_off(self) -> None:
         """Turn away/hold off."""
@@ -392,8 +457,9 @@ class HoneywellUSThermostat(ClimateEntity):
             # Disabling all hold modes
             await self._device.set_hold_cool(False)
             await self._device.set_hold_heat(False)
-        except aiosomecomfort.SomeComfortError:
+        except SomeComfortError as err:
             _LOGGER.error("Can not stop hold mode")
+            raise HomeAssistantError("Honeywell could not stop hold mode") from err
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
@@ -407,31 +473,57 @@ class HoneywellUSThermostat(ClimateEntity):
 
     async def async_turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
-        await self._device.set_system_mode("emheat")
+        try:
+            await self._device.set_system_mode("emheat")
+        except SomeComfortError as err:
+            raise HomeAssistantError(
+                "Honeywell could not set system mode to aux heat."
+            ) from err
 
     async def async_turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
-        if HVACMode.HEAT in self.hvac_modes:
-            await self.async_set_hvac_mode(HVACMode.HEAT)
-        else:
-            await self.async_set_hvac_mode(HVACMode.OFF)
+        try:
+            if HVACMode.HEAT in self.hvac_modes:
+                await self.async_set_hvac_mode(HVACMode.HEAT)
+            else:
+                await self.async_set_hvac_mode(HVACMode.OFF)
+        except HomeAssistantError as err:
+            raise HomeAssistantError("Honeywell could turn off aux heat mode.") from err
 
     async def async_update(self) -> None:
         """Get the latest state from the service."""
-        try:
-            await self._device.refresh()
-            self._attr_available = True
-        except (
-            aiosomecomfort.SomeComfortError,
-            OSError,
-        ):
+
+        async def _login() -> None:
             try:
                 await self._data.client.login()
+                await self._device.refresh()
 
-            except aiosomecomfort.AuthError:
-                self._attr_available = False
-                await self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self._data.entry_id)
-                )
-            except aiosomecomfort.SomeComfortError:
-                self._attr_available = False
+            except (
+                AuthError,
+                ClientConnectionError,
+                asyncio.TimeoutError,
+            ):
+                self._retry += 1
+                self._attr_available = self._retry <= RETRY
+                return
+
+            self._attr_available = True
+            self._retry = 0
+
+        try:
+            await self._device.refresh()
+
+        except UnauthorizedError:
+            await _login()
+            return
+
+        except (AscConnectionError, ClientConnectionError, asyncio.TimeoutError):
+            self._retry += 1
+            self._attr_available = self._retry <= RETRY
+            return
+
+        except UnexpectedResponse:
+            return
+
+        self._attr_available = True
+        self._retry = 0

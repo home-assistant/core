@@ -1,13 +1,13 @@
 """The tests for the logbook component."""
-# pylint: disable=invalid-name
 import asyncio
 import collections
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import json
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
+from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
@@ -352,7 +352,6 @@ def create_state_changed_event_from_old_new(
     row.context_id_bin = None
     row.friendly_name = None
     row.icon = None
-    row.old_format_icon = None
     row.context_user_id_bin = None
     row.context_parent_id_bin = None
     row.old_state_id = old_state and 1
@@ -417,7 +416,7 @@ async def test_logbook_view_period_entity(
 
     # Today time 00:00:00
     start = dt_util.utcnow().date()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
 
     # Test today entries without filters
     response = await client.get(f"/api/logbook/{start_date.isoformat()}")
@@ -455,7 +454,7 @@ async def test_logbook_view_period_entity(
 
     # Tomorrow time 00:00:00
     start = (dt_util.utcnow() + timedelta(days=1)).date()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
 
     # Test tomorrow entries without filters
     response = await client.get(f"/api/logbook/{start_date.isoformat()}")
@@ -495,29 +494,31 @@ async def test_logbook_describe_event(
         hass,
         "fake_integration.logbook",
         Mock(
-            async_describe_events=lambda hass, async_describe_event: async_describe_event(
-                "test_domain", "some_event", _describe
-            )
+            async_describe_events=(
+                lambda hass, async_describe_event: async_describe_event(
+                    "test_domain",
+                    "some_event",
+                    _describe,
+                )
+            ),
         ),
     )
 
     assert await async_setup_component(hass, "logbook", {})
-    with patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=dt_util.utcnow() - timedelta(seconds=5),
-    ):
+    with freeze_time(dt_util.utcnow() - timedelta(seconds=5)):
         hass.bus.async_fire("some_event")
         await async_wait_recording_done(hass)
 
     client = await hass_client()
     # Today time 00:00:00
     start = dt_util.utcnow().date()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
 
     # Test today entries with filter by end_time
-    end_time = start + timedelta(hours=24)
+    end_time = start_date + timedelta(hours=24)
     response = await client.get(
-        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat()},
     )
     results = await response.json()
     assert len(results) == 1
@@ -566,10 +567,7 @@ async def test_exclude_described_event(
         },
     )
 
-    with patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=dt_util.utcnow() - timedelta(seconds=5),
-    ):
+    with freeze_time(dt_util.utcnow() - timedelta(seconds=5)):
         hass.bus.async_fire(
             "some_automation_event",
             {logbook.ATTR_NAME: name, logbook.ATTR_ENTITY_ID: entity_id},
@@ -586,12 +584,13 @@ async def test_exclude_described_event(
     client = await hass_client()
     # Today time 00:00:00
     start = dt_util.utcnow().date()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
 
     # Test today entries with filter by end_time
-    end_time = start + timedelta(hours=24)
+    end_time = start_date + timedelta(hours=24)
     response = await client.get(
-        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat()},
     )
     results = await response.json()
     assert len(results) == 1
@@ -619,12 +618,13 @@ async def test_logbook_view_end_time_entity(
 
     # Today time 00:00:00
     start = dt_util.utcnow().date()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
 
     # Test today entries with filter by end_time
-    end_time = start + timedelta(hours=24)
+    end_time = start_date + timedelta(hours=24)
     response = await client.get(
-        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat()},
     )
     assert response.status == HTTPStatus.OK
     response_json = await response.json()
@@ -635,7 +635,8 @@ async def test_logbook_view_end_time_entity(
     # Test entries for 3 days with filter by entity_id
     end_time = start + timedelta(hours=72)
     response = await client.get(
-        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=switch.test"
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat(), "entity": "switch.test"},
     )
     assert response.status == HTTPStatus.OK
     response_json = await response.json()
@@ -644,15 +645,16 @@ async def test_logbook_view_end_time_entity(
 
     # Tomorrow time 00:00:00
     start = dt_util.utcnow()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
 
     # Test entries from today to 3 days with filter by entity_id
     end_time = start_date + timedelta(hours=72)
     response = await client.get(
-        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=switch.test"
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat(), "entity": "switch.test"},
     )
-    assert response.status == HTTPStatus.OK
     response_json = await response.json()
+    assert response.status == HTTPStatus.OK
     assert len(response_json) == 1
     assert response_json[0]["entity_id"] == entity_id_test
 
@@ -693,12 +695,13 @@ async def test_logbook_entity_filter_with_automations(
 
     # Today time 00:00:00
     start = dt_util.utcnow().date()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
 
     # Test today entries with filter by end_time
-    end_time = start + timedelta(hours=24)
+    end_time = start_date + timedelta(hours=24)
     response = await client.get(
-        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat()},
     )
     assert response.status == HTTPStatus.OK
     json_dict = await response.json()
@@ -712,7 +715,11 @@ async def test_logbook_entity_filter_with_automations(
     # Test entries for 3 days with filter by entity_id
     end_time = start + timedelta(hours=72)
     response = await client.get(
-        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=alarm_control_panel.area_001"
+        f"/api/logbook/{start_date.isoformat()}",
+        params={
+            "end_time": end_time.isoformat(),
+            "entity": "alarm_control_panel.area_001",
+        },
     )
     assert response.status == HTTPStatus.OK
     json_dict = await response.json()
@@ -721,12 +728,16 @@ async def test_logbook_entity_filter_with_automations(
 
     # Tomorrow time 00:00:00
     start = dt_util.utcnow()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
 
     # Test entries from today to 3 days with filter by entity_id
     end_time = start_date + timedelta(hours=72)
     response = await client.get(
-        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=alarm_control_panel.area_002"
+        f"/api/logbook/{start_date.isoformat()}",
+        params={
+            "end_time": end_time.isoformat(),
+            "entity": "alarm_control_panel.area_002",
+        },
     )
     assert response.status == HTTPStatus.OK
     json_dict = await response.json()
@@ -760,12 +771,13 @@ async def test_logbook_entity_no_longer_in_state_machine(
 
     # Today time 00:00:00
     start = dt_util.utcnow().date()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
 
     # Test today entries with filter by end_time
-    end_time = start + timedelta(hours=24)
+    end_time = start_date + timedelta(hours=24)
     response = await client.get(
-        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat()},
     )
     assert response.status == HTTPStatus.OK
     json_dict = await response.json()
@@ -804,7 +816,7 @@ async def test_filter_continuous_sensor_values(
 
     # Today time 00:00:00
     start = dt_util.utcnow().date()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
 
     # Test today entries without filters
     response = await client.get(f"/api/logbook/{start_date.isoformat()}")
@@ -845,7 +857,7 @@ async def test_exclude_new_entities(
 
     # Today time 00:00:00
     start = dt_util.utcnow().date()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
 
     # Test today entries without filters
     response = await client.get(f"/api/logbook/{start_date.isoformat()}")
@@ -893,7 +905,7 @@ async def test_exclude_removed_entities(
 
     # Today time 00:00:00
     start = dt_util.utcnow().date()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
 
     # Test today entries without filters
     response = await client.get(f"/api/logbook/{start_date.isoformat()}")
@@ -939,7 +951,7 @@ async def test_exclude_attribute_changes(
 
     # Today time 00:00:00
     start = dt_util.utcnow().date()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
 
     # Test today entries without filters
     response = await client.get(f"/api/logbook/{start_date.isoformat()}")
@@ -1053,12 +1065,13 @@ async def test_logbook_entity_context_id(
 
     # Today time 00:00:00
     start = dt_util.utcnow().date()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
 
     # Test today entries with filter by end_time
-    end_time = start + timedelta(hours=24)
+    end_time = start_date + timedelta(hours=24)
     response = await client.get(
-        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat()},
     )
     assert response.status == HTTPStatus.OK
     json_dict = await response.json()
@@ -1159,12 +1172,13 @@ async def test_logbook_context_id_automation_script_started_manually(
 
     # Today time 00:00:00
     start = dt_util.utcnow().date()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
 
     # Test today entries with filter by end_time
-    end_time = start + timedelta(hours=24)
+    end_time = start_date + timedelta(hours=24)
     response = await client.get(
-        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat()},
     )
     assert response.status == HTTPStatus.OK
     json_dict = await response.json()
@@ -1317,12 +1331,13 @@ async def test_logbook_entity_context_parent_id(
 
     # Today time 00:00:00
     start = dt_util.utcnow().date()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
 
     # Test today entries with filter by end_time
-    end_time = start + timedelta(hours=24)
+    end_time = start_date + timedelta(hours=24)
     response = await client.get(
-        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat()},
     )
     assert response.status == HTTPStatus.OK
     json_dict = await response.json()
@@ -1435,12 +1450,13 @@ async def test_logbook_context_from_template(
 
     # Today time 00:00:00
     start = dt_util.utcnow().date()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
 
     # Test today entries with filter by end_time
-    end_time = start + timedelta(hours=24)
+    end_time = start_date + timedelta(hours=24)
     response = await client.get(
-        f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat()},
     )
     assert response.status == HTTPStatus.OK
     json_dict = await response.json()
@@ -1518,7 +1534,7 @@ async def test_logbook_(
 
     # Today time 00:00:00
     start = dt_util.utcnow().date()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
 
     # Test today entries with filter by end_time
     end_time = start + timedelta(hours=24)
@@ -1561,7 +1577,7 @@ async def test_logbook_many_entities_multiple_calls(
 
     # Today time 00:00:00
     start = dt_util.utcnow().date()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
     end_time = start + timedelta(hours=24)
 
     for automation_id in range(5):
@@ -1628,7 +1644,7 @@ async def test_custom_log_entry_discoverable_via_(
 
     # Today time 00:00:00
     start = dt_util.utcnow().date()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
 
     # Test today entries with filter by end_time
     end_time = start + timedelta(hours=24)
@@ -1708,7 +1724,7 @@ async def test_logbook_multiple_entities(
 
     # Today time 00:00:00
     start = dt_util.utcnow().date()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
 
     # Test today entries with filter by end_time
     end_time = start + timedelta(hours=24)
@@ -1781,7 +1797,7 @@ async def test_logbook_invalid_entity(
 
     # Today time 00:00:00
     start = dt_util.utcnow().date()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
 
     # Test today entries with filter by end_time
     end_time = start + timedelta(hours=24)
@@ -2333,11 +2349,14 @@ async def _async_fetch_logbook(client, params=None):
         params = {}
 
     # Today time 00:00:00
-    start = dt_util.utcnow().date()
-    start_date = datetime(start.year, start.month, start.day) - timedelta(hours=24)
+    now = dt_util.utcnow()
+    start = datetime(now.year, now.month, now.day, tzinfo=dt_util.UTC)
+    start_date = datetime(
+        start.year, start.month, start.day, tzinfo=dt_util.UTC
+    ) - timedelta(hours=24)
 
     if "end_time" not in params:
-        params["end_time"] = str(start + timedelta(hours=48))
+        params["end_time"] = (start + timedelta(hours=48)).isoformat()
 
     # Test today entries without filters
     response = await client.get(f"/api/logbook/{start_date.isoformat()}", params=params)
@@ -2618,7 +2637,7 @@ async def test_get_events_with_device_ids(
 
         @ha.callback
         def async_describe_events(
-            hass: HomeAssistant,
+            hass: HomeAssistant,  # noqa: N805
             async_describe_event: Callable[
                 [str, str, Callable[[Event], dict[str, str]]], None
             ],
@@ -2825,7 +2844,7 @@ async def test_logbook_select_entities_context_id(
 
     # Today time 00:00:00
     start = dt_util.utcnow().date()
-    start_date = datetime(start.year, start.month, start.day)
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
 
     # Test today entries with filter by end_time
     end_time = start + timedelta(hours=24)

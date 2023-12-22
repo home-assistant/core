@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from asyncio import CancelledError
+from asyncio import CancelledError, timeout
 from datetime import timedelta
 from http import HTTPStatus
 import logging
@@ -12,7 +12,6 @@ from urllib import parse
 import aiohttp
 from aiohttp.client_exceptions import ClientError
 from aiohttp.hdrs import CONNECTION, KEEP_ALIVE
-import async_timeout
 import voluptuous as vol
 import xmltodict
 
@@ -201,6 +200,7 @@ class BluesoundPlayer(MediaPlayerEntity):
     """Representation of a Bluesound Player."""
 
     _attr_media_content_type = MediaType.MUSIC
+    _attr_volume_step = 0.01
 
     def __init__(self, hass, host, port=None, name=None, init_callback=None):
         """Initialize the media player."""
@@ -355,7 +355,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         try:
             websession = async_get_clientsession(self._hass)
-            async with async_timeout.timeout(10):
+            async with timeout(10):
                 response = await websession.get(url)
 
             if response.status == HTTPStatus.OK:
@@ -396,7 +396,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         _LOGGER.debug("Calling URL: %s", url)
 
         try:
-            async with async_timeout.timeout(125):
+            async with timeout(125):
                 response = await self._polling_session.get(
                     url, headers={CONNECTION: KEEP_ALIVE}
                 )
@@ -694,7 +694,7 @@ class BluesoundPlayer(MediaPlayerEntity):
         for source in [
             x
             for x in self._services_items
-            if x["type"] == "LocalMusic" or x["type"] == "RadioService"
+            if x["type"] in ("LocalMusic", "RadioService")
         ]:
             sources.append(source["title"])
 
@@ -1027,20 +1027,6 @@ class BluesoundPlayer(MediaPlayerEntity):
         url = f"Play?url={media_id}"
 
         return await self.send_bluesound_command(url)
-
-    async def async_volume_up(self) -> None:
-        """Volume up the media player."""
-        current_vol = self.volume_level
-        if not current_vol or current_vol >= 1:
-            return
-        return await self.async_set_volume_level(current_vol + 0.01)
-
-    async def async_volume_down(self) -> None:
-        """Volume down the media player."""
-        current_vol = self.volume_level
-        if not current_vol or current_vol <= 0:
-            return
-        return await self.async_set_volume_level(current_vol - 0.01)
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Send volume_up command to media player."""

@@ -1,7 +1,9 @@
 """Tests for the Entity Registry."""
+from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
+import attr
 import pytest
 import voluptuous as vol
 
@@ -15,7 +17,7 @@ from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, flush_store
+from tests.common import MockConfigEntry, async_fire_time_changed, flush_store
 
 YAML__OPEN_PATH = "homeassistant.util.yaml.loader.open"
 
@@ -32,6 +34,16 @@ def update_events(hass):
     hass.bus.async_listen(er.EVENT_ENTITY_REGISTRY_UPDATED, async_capture)
 
     return events
+
+
+async def test_get(hass: HomeAssistant, entity_registry: er.EntityRegistry):
+    """Test we can get an item."""
+    entry = entity_registry.async_get_or_create("light", "hue", "1234")
+
+    assert entity_registry.async_get(entry.entity_id) is entry
+    assert entity_registry.async_get(entry.id) is entry
+    assert entity_registry.async_get("blah") is None
+    assert entity_registry.async_get("blah.blah") is None
 
 
 async def test_get_or_create_returns_same_entry(
@@ -266,8 +278,13 @@ async def test_loading_saving_data(
         orig_entry2.entity_id, "light", {"minimum_brightness": 20}
     )
     orig_entry2 = entity_registry.async_get(orig_entry2.entity_id)
+    orig_entry3 = entity_registry.async_get_or_create("light", "hue", "ABCD")
+    orig_entry4 = entity_registry.async_get_or_create("light", "hue", "EFGH")
+    entity_registry.async_remove(orig_entry3.entity_id)
+    entity_registry.async_remove(orig_entry4.entity_id)
 
     assert len(entity_registry.entities) == 2
+    assert len(entity_registry.deleted_entities) == 2
 
     # Now load written data in new registry
     registry2 = er.EntityRegistry(hass)
@@ -276,11 +293,16 @@ async def test_loading_saving_data(
 
     # Ensure same order
     assert list(entity_registry.entities) == list(registry2.entities)
+    assert list(entity_registry.deleted_entities) == list(registry2.deleted_entities)
     new_entry1 = entity_registry.async_get_or_create("light", "hue", "1234")
     new_entry2 = entity_registry.async_get_or_create("light", "hue", "5678")
+    new_entry3 = entity_registry.async_get_or_create("light", "hue", "ABCD")
+    new_entry4 = entity_registry.async_get_or_create("light", "hue", "EFGH")
 
     assert orig_entry1 == new_entry1
     assert orig_entry2 == new_entry2
+    assert orig_entry3 == new_entry3
+    assert orig_entry4 == new_entry4
 
     assert new_entry2.area_id == "mock-area-id"
     assert new_entry2.capabilities == {"max": 100}
@@ -475,6 +497,42 @@ async def test_removing_config_entry_id(
     assert update_events[1]["entity_id"] == entry.entity_id
 
 
+async def test_deleted_entity_removing_config_entry_id(
+    hass, entity_registry: er.EntityRegistry
+):
+    """Test that we update config entry id in registry on deleted entity."""
+    mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
+
+    entry = entity_registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=mock_config
+    )
+    assert entry.config_entry_id == "mock-id-1"
+    entity_registry.async_remove(entry.entity_id)
+
+    assert len(entity_registry.entities) == 0
+    assert len(entity_registry.deleted_entities) == 1
+    assert (
+        entity_registry.deleted_entities[("light", "hue", "5678")].config_entry_id
+        == "mock-id-1"
+    )
+    assert (
+        entity_registry.deleted_entities[("light", "hue", "5678")].orphaned_timestamp
+        is None
+    )
+
+    entity_registry.async_clear_config_entry("mock-id-1")
+    assert len(entity_registry.entities) == 0
+    assert len(entity_registry.deleted_entities) == 1
+    assert (
+        entity_registry.deleted_entities[("light", "hue", "5678")].config_entry_id
+        is None
+    )
+    assert (
+        entity_registry.deleted_entities[("light", "hue", "5678")].orphaned_timestamp
+        is not None
+    )
+
+
 async def test_removing_area_id(entity_registry: er.EntityRegistry) -> None:
     """Make sure we can clear area id."""
     entry = entity_registry.async_get_or_create("light", "hue", "5678")
@@ -607,6 +665,7 @@ async def test_update_entity_unique_id(entity_registry: er.EntityRegistry) -> No
         )
     assert updated_entry != entry
     assert updated_entry.unique_id == new_unique_id
+    assert updated_entry.previous_unique_id == "5678"
     assert mock_schedule_save.call_count == 1
 
     assert entity_registry.async_get_entity_id("light", "hue", "5678") is None
@@ -747,6 +806,16 @@ async def test_update_entity_options(entity_registry: er.EntityRegistry) -> None
     assert entry.options == {}
     assert new_entry_1.options == {"light": {"minimum_brightness": 20}}
 
+    # Test it's not possible to modify the options
+    with pytest.raises(RuntimeError):
+        new_entry_1.options["blah"] = {}
+    with pytest.raises(RuntimeError):
+        new_entry_1.options["light"] = {}
+    with pytest.raises(RuntimeError):
+        new_entry_1.options["light"]["blah"] = 123
+    with pytest.raises(RuntimeError):
+        new_entry_1.options["light"]["minimum_brightness"] = 123
+
     entity_registry.async_update_entity_options(
         entry.entity_id, "light", {"minimum_brightness": 30}
     )
@@ -797,27 +866,27 @@ async def test_disabled_by_config_entry_pref(
     assert entry2.disabled_by is er.RegistryEntryDisabler.USER
 
 
-async def test_restore_states(hass: HomeAssistant) -> None:
+async def test_restore_states(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test restoring states."""
     hass.state = CoreState.not_running
 
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "light",
         "hue",
         "1234",
         suggested_object_id="simple",
     )
     # Should not be created
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "light",
         "hue",
         "5678",
         suggested_object_id="disabled",
         disabled_by=er.RegistryEntryDisabler.HASS,
     )
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "light",
         "hue",
         "9012",
@@ -852,9 +921,9 @@ async def test_restore_states(hass: HomeAssistant) -> None:
         "icon": "hass:original-icon",
     }
 
-    registry.async_remove("light.disabled")
-    registry.async_remove("light.simple")
-    registry.async_remove("light.all_info_set")
+    entity_registry.async_remove("light.disabled")
+    entity_registry.async_remove("light.simple")
+    entity_registry.async_remove("light.all_info_set")
 
     await hass.async_block_till_done()
 
@@ -863,58 +932,58 @@ async def test_restore_states(hass: HomeAssistant) -> None:
     assert hass.states.get("light.all_info_set") is None
 
 
-async def test_async_get_device_class_lookup(hass: HomeAssistant) -> None:
+async def test_async_get_device_class_lookup(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test registry device class lookup."""
     hass.state = CoreState.not_running
 
-    ent_reg = er.async_get(hass)
-
-    ent_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "binary_sensor",
         "light",
         "battery_charging",
         device_id="light_device_entry_id",
         original_device_class="battery_charging",
     )
-    ent_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "sensor",
         "light",
         "battery",
         device_id="light_device_entry_id",
         original_device_class="battery",
     )
-    ent_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "light", "light", "demo", device_id="light_device_entry_id"
     )
-    ent_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "binary_sensor",
         "vacuum",
         "battery_charging",
         device_id="vacuum_device_entry_id",
         original_device_class="battery_charging",
     )
-    ent_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "sensor",
         "vacuum",
         "battery",
         device_id="vacuum_device_entry_id",
         original_device_class="battery",
     )
-    ent_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "vacuum", "vacuum", "demo", device_id="vacuum_device_entry_id"
     )
-    ent_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "binary_sensor",
         "remote",
         "battery_charging",
         device_id="remote_device_entry_id",
         original_device_class="battery_charging",
     )
-    ent_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         "remote", "remote", "demo", device_id="remote_device_entry_id"
     )
 
-    device_lookup = ent_reg.async_get_device_class_lookup(
+    device_lookup = entity_registry.async_get_device_class_lookup(
         {("binary_sensor", "battery_charging"), ("sensor", "battery")}
     )
 
@@ -949,6 +1018,7 @@ async def test_remove_device_removes_entities(
 ) -> None:
     """Test that we remove entities tied to a device."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -978,7 +1048,9 @@ async def test_remove_config_entry_from_device_removes_entities(
 ) -> None:
     """Test that we remove entities tied to a device when config entry is removed."""
     config_entry_1 = MockConfigEntry(domain="hue")
+    config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry(domain="device_tracker")
+    config_entry_2.add_to_hass(hass)
 
     # Create device with two config entries
     device_registry.async_get_or_create(
@@ -1044,7 +1116,9 @@ async def test_remove_config_entry_from_device_removes_entities_2(
 ) -> None:
     """Test that we don't remove entities with no config entry when device is modified."""
     config_entry_1 = MockConfigEntry(domain="hue")
+    config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry(domain="device_tracker")
+    config_entry_2.add_to_hass(hass)
 
     # Create device with two config entries
     device_registry.async_get_or_create(
@@ -1087,6 +1161,7 @@ async def test_update_device_race(
 ) -> None:
     """Test race when a device is created, updated and removed."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     # Create device
     device_entry = device_registry.async_get_or_create(
@@ -1263,6 +1338,7 @@ async def test_disabled_entities_excluded_from_entity_list(
 ) -> None:
     """Test that disabled entities are excluded from async_entries_for_device."""
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -1400,50 +1476,52 @@ def test_entity_registry_items() -> None:
     assert entities.get_entry(entry2.id) is None
 
 
-async def test_disabled_by_str_not_allowed(hass: HomeAssistant) -> None:
+async def test_disabled_by_str_not_allowed(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test we need to pass disabled by type."""
-    reg = er.async_get(hass)
-
     with pytest.raises(ValueError):
-        reg.async_get_or_create(
+        entity_registry.async_get_or_create(
             "light", "hue", "1234", disabled_by=er.RegistryEntryDisabler.USER.value
         )
 
-    entity_id = reg.async_get_or_create("light", "hue", "1234").entity_id
+    entity_id = entity_registry.async_get_or_create("light", "hue", "1234").entity_id
     with pytest.raises(ValueError):
-        reg.async_update_entity(
+        entity_registry.async_update_entity(
             entity_id, disabled_by=er.RegistryEntryDisabler.USER.value
         )
 
 
-async def test_entity_category_str_not_allowed(hass: HomeAssistant) -> None:
+async def test_entity_category_str_not_allowed(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test we need to pass entity category type."""
-    reg = er.async_get(hass)
-
     with pytest.raises(ValueError):
-        reg.async_get_or_create(
+        entity_registry.async_get_or_create(
             "light", "hue", "1234", entity_category=EntityCategory.DIAGNOSTIC.value
         )
 
-    entity_id = reg.async_get_or_create("light", "hue", "1234").entity_id
+    entity_id = entity_registry.async_get_or_create("light", "hue", "1234").entity_id
     with pytest.raises(ValueError):
-        reg.async_update_entity(
+        entity_registry.async_update_entity(
             entity_id, entity_category=EntityCategory.DIAGNOSTIC.value
         )
 
 
-async def test_hidden_by_str_not_allowed(hass: HomeAssistant) -> None:
+async def test_hidden_by_str_not_allowed(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test we need to pass hidden by type."""
-    reg = er.async_get(hass)
-
     with pytest.raises(ValueError):
-        reg.async_get_or_create(
+        entity_registry.async_get_or_create(
             "light", "hue", "1234", hidden_by=er.RegistryEntryHider.USER.value
         )
 
-    entity_id = reg.async_get_or_create("light", "hue", "1234").entity_id
+    entity_id = entity_registry.async_get_or_create("light", "hue", "1234").entity_id
     with pytest.raises(ValueError):
-        reg.async_update_entity(entity_id, hidden_by=er.RegistryEntryHider.USER.value)
+        entity_registry.async_update_entity(
+            entity_id, hidden_by=er.RegistryEntryHider.USER.value
+        )
 
 
 def test_migrate_entity_to_new_platform(
@@ -1517,3 +1595,164 @@ def test_migrate_entity_to_new_platform(
             new_unique_id=new_unique_id,
             new_config_entry_id=new_config_entry.entry_id,
         )
+
+
+async def test_restore_entity(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, update_events, freezer
+):
+    """Make sure entity registry id is stable and entity_id is reused if possible."""
+    config_entry = MockConfigEntry(domain="light")
+    entry1 = entity_registry.async_get_or_create(
+        "light", "hue", "1234", config_entry=config_entry
+    )
+    entry2 = entity_registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=config_entry
+    )
+
+    entry1 = entity_registry.async_update_entity(
+        entry1.entity_id, new_entity_id="light.custom_1"
+    )
+
+    entity_registry.async_remove(entry1.entity_id)
+    entity_registry.async_remove(entry2.entity_id)
+    assert len(entity_registry.entities) == 0
+    assert len(entity_registry.deleted_entities) == 2
+
+    # Re-add entities
+    entry1_restored = entity_registry.async_get_or_create(
+        "light", "hue", "1234", config_entry=config_entry
+    )
+    entry2_restored = entity_registry.async_get_or_create("light", "hue", "5678")
+
+    assert len(entity_registry.entities) == 2
+    assert len(entity_registry.deleted_entities) == 0
+    assert entry1 != entry1_restored
+    # entity_id is not restored
+    assert attr.evolve(entry1, entity_id="light.hue_1234") == entry1_restored
+    assert entry2 != entry2_restored
+    # Config entry is not restored
+    assert attr.evolve(entry2, config_entry_id=None) == entry2_restored
+
+    # Remove two of the entities again, then bump time
+    entity_registry.async_remove(entry1_restored.entity_id)
+    entity_registry.async_remove(entry2.entity_id)
+    assert len(entity_registry.entities) == 0
+    assert len(entity_registry.deleted_entities) == 2
+    freezer.tick(timedelta(seconds=er.ORPHANED_ENTITY_KEEP_SECONDS + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Re-add two entities, expect to get a new id after the purge for entity w/o config entry
+    entry1_restored = entity_registry.async_get_or_create(
+        "light", "hue", "1234", config_entry=config_entry
+    )
+    entry2_restored = entity_registry.async_get_or_create("light", "hue", "5678")
+    assert len(entity_registry.entities) == 2
+    assert len(entity_registry.deleted_entities) == 0
+    assert entry1.id == entry1_restored.id
+    assert entry2.id != entry2_restored.id
+
+    # Remove the first entity, then its config entry, finally bump time
+    entity_registry.async_remove(entry1_restored.entity_id)
+    assert len(entity_registry.entities) == 1
+    assert len(entity_registry.deleted_entities) == 1
+    entity_registry.async_clear_config_entry(config_entry.entry_id)
+    freezer.tick(timedelta(seconds=er.ORPHANED_ENTITY_KEEP_SECONDS + 1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Re-add the entity, expect to get a new id after the purge
+    entry1_restored = entity_registry.async_get_or_create(
+        "light", "hue", "1234", config_entry=config_entry
+    )
+    assert len(entity_registry.entities) == 2
+    assert len(entity_registry.deleted_entities) == 0
+    assert entry1.id != entry1_restored.id
+
+    # Check the events
+    await hass.async_block_till_done()
+    assert len(update_events) == 13
+    assert update_events[0] == {"action": "create", "entity_id": "light.hue_1234"}
+    assert update_events[1] == {"action": "create", "entity_id": "light.hue_5678"}
+    assert update_events[2]["action"] == "update"
+    assert update_events[3] == {"action": "remove", "entity_id": "light.custom_1"}
+    assert update_events[4] == {"action": "remove", "entity_id": "light.hue_5678"}
+    # Restore entities the 1st time
+    assert update_events[5] == {"action": "create", "entity_id": "light.hue_1234"}
+    assert update_events[6] == {"action": "create", "entity_id": "light.hue_5678"}
+    assert update_events[7] == {"action": "remove", "entity_id": "light.hue_1234"}
+    assert update_events[8] == {"action": "remove", "entity_id": "light.hue_5678"}
+    # Restore entities the 2nd time
+    assert update_events[9] == {"action": "create", "entity_id": "light.hue_1234"}
+    assert update_events[10] == {"action": "create", "entity_id": "light.hue_5678"}
+    assert update_events[11] == {"action": "remove", "entity_id": "light.hue_1234"}
+    # Restore entities the 3rd time
+    assert update_events[12] == {"action": "create", "entity_id": "light.hue_1234"}
+
+
+async def test_async_migrate_entry_delete_self(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+):
+    """Test async_migrate_entry."""
+    config_entry1 = MockConfigEntry(domain="test1")
+    config_entry2 = MockConfigEntry(domain="test2")
+    entry1 = entity_registry.async_get_or_create(
+        "light", "hue", "1234", config_entry=config_entry1, original_name="Entry 1"
+    )
+    entry2 = entity_registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=config_entry1, original_name="Entry 2"
+    )
+    entry3 = entity_registry.async_get_or_create(
+        "light", "hue", "90AB", config_entry=config_entry2, original_name="Entry 3"
+    )
+
+    @callback
+    def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
+        entries.add(entity_entry.entity_id)
+        if entity_entry == entry1:
+            entity_registry.async_remove(entry1.entity_id)
+            return None
+        if entity_entry == entry2:
+            return {"original_name": "Entry 2 renamed"}
+        return None
+
+    entries = set()
+    await er.async_migrate_entries(hass, config_entry1.entry_id, _async_migrator)
+    assert entries == {entry1.entity_id, entry2.entity_id}
+    assert not entity_registry.async_is_registered(entry1.entity_id)
+    entry2 = entity_registry.async_get(entry2.entity_id)
+    assert entry2.original_name == "Entry 2 renamed"
+    assert entity_registry.async_get(entry3.entity_id) is entry3
+
+
+async def test_async_migrate_entry_delete_other(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+):
+    """Test async_migrate_entry."""
+    config_entry1 = MockConfigEntry(domain="test1")
+    config_entry2 = MockConfigEntry(domain="test2")
+    entry1 = entity_registry.async_get_or_create(
+        "light", "hue", "1234", config_entry=config_entry1, original_name="Entry 1"
+    )
+    entry2 = entity_registry.async_get_or_create(
+        "light", "hue", "5678", config_entry=config_entry1, original_name="Entry 2"
+    )
+    entity_registry.async_get_or_create(
+        "light", "hue", "90AB", config_entry=config_entry2, original_name="Entry 3"
+    )
+
+    @callback
+    def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
+        entries.add(entity_entry.entity_id)
+        if entity_entry == entry1:
+            entity_registry.async_remove(entry2.entity_id)
+            return None
+        if entity_entry == entry2:
+            # We should not get here
+            pytest.fail()
+        return None
+
+    entries = set()
+    await er.async_migrate_entries(hass, config_entry1.entry_id, _async_migrator)
+    assert entries == {entry1.entity_id}
+    assert not entity_registry.async_is_registered(entry2.entity_id)

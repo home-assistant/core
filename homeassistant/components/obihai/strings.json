@@ -6,20 +6,29 @@
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Obihai device."
+        }
+      },
+      "dhcp_confirm": {
+        "description": "Do you want to set up {host}?",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "[%key:component::obihai::config::step::user::data_description::host%]"
         }
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    }
-  },
-  "issues": {
-    "manual_migration": {
-      "title": "Obihai YAML configuration is being removed",
-      "description": "Configuration of the Obihai platform in YAML is deprecated and will be removed in Home Assistant 2023.6; Your existing configuration has been imported into the UI automatically and can be safely removed from your configuration.yaml file."
     }
   }
 }

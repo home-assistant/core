@@ -19,7 +19,7 @@ from homeassistant.util.color import rgb_hex_to_rgb_list
 
 from .. import mysensors
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo, SensorType
-from .device import MySensorsDevice
+from .device import MySensorsChildEntity
 from .helpers import on_unload
 
 
@@ -29,7 +29,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
-    device_class_map: dict[SensorType, type[MySensorsDevice]] = {
+    device_class_map: dict[SensorType, type[MySensorsChildEntity]] = {
         "S_DIMMER": MySensorsLightDimmer,
         "S_RGB_LIGHT": MySensorsLightRGB,
         "S_RGBW_LIGHT": MySensorsLightRGBW,
@@ -56,7 +56,7 @@ async def async_setup_entry(
     )
 
 
-class MySensorsLight(mysensors.device.MySensorsEntity, LightEntity):
+class MySensorsLight(mysensors.device.MySensorsChildEntity, LightEntity):
     """Representation of a MySensors Light child node."""
 
     def __init__(self, *args: Any) -> None:
@@ -172,7 +172,7 @@ class MySensorsLightRGB(MySensorsLight):
         new_rgb: tuple[int, int, int] | None = kwargs.get(ATTR_RGB_COLOR)
         if new_rgb is None:
             return
-        hex_color = "%02x%02x%02x" % new_rgb
+        hex_color = "{:02x}{:02x}{:02x}".format(*new_rgb)
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, hex_color, ack=1
         )
@@ -219,7 +219,7 @@ class MySensorsLightRGBW(MySensorsLightRGB):
         new_rgbw: tuple[int, int, int, int] | None = kwargs.get(ATTR_RGBW_COLOR)
         if new_rgbw is None:
             return
-        hex_color = "%02x%02x%02x%02x" % new_rgbw
+        hex_color = "{:02x}{:02x}{:02x}{:02x}".format(*new_rgbw)
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, hex_color, ack=1
         )

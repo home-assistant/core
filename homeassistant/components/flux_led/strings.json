@@ -27,8 +27,133 @@
         "data": {
           "mode": "The chosen brightness mode.",
           "custom_effect_colors": "Custom Effect: List of 1 to 16 [R,G,B] colors. Example: [255,0,255],[60,128,0]",
-          "custom_effect_speed_pct": "Custom Effect: Speed in percents for the effect that switch colors.",
+          "custom_effect_speed_pct": "Custom Effect: Speed in percentage for the effects that switch colors.",
           "custom_effect_transition": "Custom Effect: Type of transition between the colors."
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "unpair_remotes": {
+        "name": "Unpair remotes"
+      }
+    },
+    "number": {
+      "pixels_per_segment": {
+        "name": "Pixels per segment"
+      },
+      "segments": {
+        "name": "Segments"
+      },
+      "music_pixels_per_segment": {
+        "name": "Music pixels per segment"
+      },
+      "music_segments": {
+        "name": "Music segments"
+      },
+      "effect_speed": {
+        "name": "Effect speed"
+      }
+    },
+    "select": {
+      "operating_mode": {
+        "name": "Operating mode"
+      },
+      "wiring": {
+        "name": "Wiring"
+      },
+      "ic_type": {
+        "name": "IC type"
+      },
+      "remote_config": {
+        "name": "Remote config"
+      },
+      "white_channel": {
+        "name": "White channel"
+      },
+      "power_restored": {
+        "name": "Power restored"
+      }
+    },
+    "sensor": {
+      "paired_remotes": {
+        "name": "Paired remotes"
+      }
+    },
+    "switch": {
+      "remote_access": {
+        "name": "Remote access"
+      },
+      "music": {
+        "name": "Music"
+      }
+    }
+  },
+  "services": {
+    "set_custom_effect": {
+      "name": "Set custom effect",
+      "description": "Sets a custom light effect.",
+      "fields": {
+        "colors": {
+          "name": "Colors",
+          "description": "List of colors for the custom effect (RGB). (Max 16 Colors)."
+        },
+        "speed_pct": {
+          "name": "Speed",
+          "description": "Effect speed for the custom effect (0-100)."
+        },
+        "transition": {
+          "name": "Transition",
+          "description": "Effect transition."
+        }
+      }
+    },
+    "set_zones": {
+      "name": "Set zones",
+      "description": "Sets strip zones for Addressable v3 controllers (0xA3).",
+      "fields": {
+        "colors": {
+          "name": "[%key:component::flux_led::services::set_custom_effect::fields::colors::name%]",
+          "description": "List of colors for each zone (RGB). The length of each zone is the number of pixels per segment divided by the number of colors. (Max 2048 Colors)."
+        },
+        "speed_pct": {
+          "name": "Speed",
+          "description": "[%key:component::flux_led::services::set_custom_effect::fields::speed_pct::description%]"
+        },
+        "effect": {
+          "name": "Effect",
+          "description": "Effect."
+        }
+      }
+    },
+    "set_music_mode": {
+      "name": "Set music mode",
+      "description": "Configures music mode on Controller RGB with MIC (0x08), Addressable v2 (0xA2), and Addressable v3 (0xA3) devices that have a built-in microphone.",
+      "fields": {
+        "sensitivity": {
+          "name": "Sensitivity",
+          "description": "Microphone sensitivity (0-100)."
+        },
+        "brightness": {
+          "name": "Brightness",
+          "description": "Light brightness (0-100)."
+        },
+        "light_screen": {
+          "name": "Light screen",
+          "description": "Light screen mode for 2 dimensional pixels (Addressable models only)."
+        },
+        "effect": {
+          "name": "Effect",
+          "description": "Effect (1-16 on Addressable models, 0-3 on RGB with MIC models)."
+        },
+        "foreground_color": {
+          "name": "Foreground color",
+          "description": "The foreground RGB color."
+        },
+        "background_color": {
+          "name": "Background color",
+          "description": "The background RGB color (Addressable models only)."
         }
       }
     }

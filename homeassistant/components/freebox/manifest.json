@@ -3,6 +3,7 @@
   "name": "Freebox",
   "codeowners": ["@hacf-fr", "@Quentame"],
   "config_flow": true,
+  "dependencies": ["ffmpeg"],
   "documentation": "https://www.home-assistant.io/integrations/freebox",
   "iot_class": "local_polling",
   "loggers": ["freebox_api"],

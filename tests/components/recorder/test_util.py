@@ -1,14 +1,13 @@
 """Test util methods."""
 from collections.abc import Callable
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 import os
 from pathlib import Path
 import sqlite3
 from unittest.mock import MagicMock, Mock, patch
 
-from freezegun import freeze_time
 import pytest
-from sqlalchemy import text
+from sqlalchemy import lambda_stmt, text
 from sqlalchemy.engine.result import ChunkedIteratorResult
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql.elements import TextClause
@@ -18,14 +17,15 @@ from homeassistant.components import recorder
 from homeassistant.components.recorder import util
 from homeassistant.components.recorder.const import DOMAIN, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.db_schema import RecorderRuns
-from homeassistant.components.recorder.history.legacy import (
-    _get_single_entity_states_stmt,
+from homeassistant.components.recorder.history.modern import (
+    _get_single_entity_start_time_stmt,
 )
 from homeassistant.components.recorder.models import (
     UnsupportedDialect,
     process_timestamp,
 )
 from homeassistant.components.recorder.util import (
+    chunked_or_all,
     end_incomplete_runs,
     is_second_sunday,
     resolve_period,
@@ -73,11 +73,11 @@ def test_recorder_bad_execute(hass_recorder: Callable[..., HomeAssistant]) -> No
 
 
 def test_validate_or_move_away_sqlite_database(
-    hass: HomeAssistant, tmpdir, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Ensure a malformed sqlite database is moved away."""
-
-    test_dir = tmpdir.mkdir("test_validate_or_move_away_sqlite_database")
+    test_dir = tmp_path.joinpath("test_validate_or_move_away_sqlite_database")
+    test_dir.mkdir()
     test_db_file = f"{test_dir}/broken.db"
     dburl = f"{SQLITE_URL_PREFIX}{test_db_file}"
 
@@ -883,7 +883,7 @@ def test_build_mysqldb_conv() -> None:
 
 @patch("homeassistant.components.recorder.util.QUERY_RETRY_WAIT", 0)
 def test_execute_stmt_lambda_element(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test executing with execute_stmt_lambda_element."""
     hass = hass_recorder()
@@ -894,47 +894,62 @@ def test_execute_stmt_lambda_element(
     now = dt_util.utcnow()
     tomorrow = now + timedelta(days=1)
     one_week_from_now = now + timedelta(days=7)
+    all_calls = 0
 
     class MockExecutor:
         def __init__(self, stmt):
             assert isinstance(stmt, StatementLambdaElement)
-            self.calls = 0
 
         def all(self):
-            self.calls += 1
-            if self.calls == 2:
+            nonlocal all_calls
+            all_calls += 1
+            if all_calls == 2:
                 return ["mock_row"]
             raise SQLAlchemyError
 
     with session_scope(hass=hass) as session:
         # No time window, we always get a list
-        stmt = _get_single_entity_states_stmt(
-            instance.schema_version, dt_util.utcnow(), "sensor.on", False
+        metadata_id = instance.states_meta_manager.get("sensor.on", session, True)
+        start_time_ts = dt_util.utcnow().timestamp()
+        stmt = lambda_stmt(
+            lambda: _get_single_entity_start_time_stmt(
+                start_time_ts, metadata_id, False, False
+            )
         )
         rows = util.execute_stmt_lambda_element(session, stmt)
         assert isinstance(rows, list)
         assert rows[0].state == new_state.state
-        assert rows[0].entity_id == new_state.entity_id
+        assert rows[0].metadata_id == metadata_id
 
         # Time window >= 2 days, we get a ChunkedIteratorResult
         rows = util.execute_stmt_lambda_element(session, stmt, now, one_week_from_now)
         assert isinstance(rows, ChunkedIteratorResult)
         row = next(rows)
         assert row.state == new_state.state
-        assert row.entity_id == new_state.entity_id
+        assert row.metadata_id == metadata_id
+
+        # Time window >= 2 days, we should not get a ChunkedIteratorResult
+        # because orm_rows=False
+        rows = util.execute_stmt_lambda_element(
+            session, stmt, now, one_week_from_now, orm_rows=False
+        )
+        assert not isinstance(rows, ChunkedIteratorResult)
+        row = next(rows)
+        assert row.state == new_state.state
+        assert row.metadata_id == metadata_id
 
         # Time window < 2 days, we get a list
         rows = util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
         assert isinstance(rows, list)
         assert rows[0].state == new_state.state
-        assert rows[0].entity_id == new_state.entity_id
+        assert rows[0].metadata_id == metadata_id
 
         with patch.object(session, "execute", MockExecutor):
             rows = util.execute_stmt_lambda_element(session, stmt, now, tomorrow)
             assert rows == ["mock_row"]
 
 
-@freeze_time(datetime(2022, 10, 21, 7, 25, tzinfo=timezone.utc))
+@pytest.mark.freeze_time(datetime(2022, 10, 21, 7, 25, tzinfo=UTC))
 async def test_resolve_period(hass: HomeAssistant) -> None:
     """Test statistic_during_period."""
 
@@ -1009,3 +1024,24 @@ async def test_resolve_period(hass: HomeAssistant) -> None:
             }
         }
     ) == (now - timedelta(hours=1, minutes=25), now - timedelta(minutes=25))
+
+
+def test_chunked_or_all():
+    """Test chunked_or_all can iterate chunk sizes larger than the passed in collection."""
+    all = []
+    incoming = (1, 2, 3, 4)
+    for chunk in chunked_or_all(incoming, 2):
+        assert len(chunk) == 2
+        all.extend(chunk)
+    assert all == [1, 2, 3, 4]
+
+    all = []
+    incoming = (1, 2, 3, 4)
+    for chunk in chunked_or_all(incoming, 5):
+        assert len(chunk) == 4
+        # Verify the chunk is the same object as the incoming
+        # collection since we want to avoid copying the collection
+        # if we don't need to
+        assert chunk is incoming
+        all.extend(chunk)
+    assert all == [1, 2, 3, 4]

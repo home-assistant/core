@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_BRAND = "YI Home Camera"
 DEFAULT_PASSWORD = ""
-DEFAULT_PATH = "/tmp/sd/record"  # nosec
+DEFAULT_PATH = "/tmp/sd/record"  # noqa: S108
 DEFAULT_PORT = 21
 DEFAULT_USERNAME = "root"
 DEFAULT_ARGUMENTS = "-pred 1"

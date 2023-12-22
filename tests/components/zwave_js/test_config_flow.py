@@ -2,6 +2,7 @@
 import asyncio
 from collections.abc import Generator
 from copy import copy
+from ipaddress import ip_address
 from unittest.mock import DEFAULT, MagicMock, call, patch
 
 import aiohttp
@@ -342,6 +343,7 @@ async def test_supervisor_discovery(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -386,6 +388,7 @@ async def test_supervisor_discovery_cannot_connect(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -416,6 +419,7 @@ async def test_clean_discovery_on_user_create(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -486,6 +490,7 @@ async def test_abort_discovery_with_existing_entry(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -514,6 +519,7 @@ async def test_abort_hassio_discovery_with_existing_flow(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -536,6 +542,7 @@ async def test_abort_hassio_discovery_for_other_addon(
             },
             name="Other Z-Wave JS",
             slug="other_addon",
+            uuid="1234",
         ),
     )
 
@@ -741,6 +748,7 @@ async def test_discovery_addon_not_running(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -825,6 +833,7 @@ async def test_discovery_addon_not_installed(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -912,6 +921,7 @@ async def test_abort_usb_discovery_with_existing_flow(
             config=ADDON_DISCOVERY_INFO,
             name="Z-Wave JS",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -2663,8 +2673,8 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=ZeroconfServiceInfo(
-            host="localhost",
-            addresses=["127.0.0.1"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             name="mock_name",
             port=3000,
@@ -2688,7 +2698,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result["type"] == "create_entry"
     assert result["title"] == TITLE
     assert result["data"] == {
-        "url": "ws://localhost:3000",
+        "url": "ws://127.0.0.1:3000",
         "usb_path": None,
         "s0_legacy_key": None,
         "s2_access_control_key": None,

@@ -39,5 +39,15 @@
         }
       }
     }
+  },
+  "services": {
+    "arm_away_instant": {
+      "name": "Arm away instant",
+      "description": "Arms Away with zero entry delay."
+    },
+    "arm_home_instant": {
+      "name": "Arm home instant",
+      "description": "Arms Home with zero entry delay."
+    }
   }
 }

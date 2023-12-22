@@ -1,28 +1,36 @@
 load_url:
-  name: Load URL
-  description: Load a URL on Fully Kiosk Browser
   target:
     device:
       integration: fully_kiosk
   fields:
     url:
-      name: URL
-      description: URL to load.
       example: "https://home-assistant.io"
       required: true
       selector:
         text:
 
+set_config:
+  target:
+    device:
+      integration: fully_kiosk
+  fields:
+    key:
+      example: "motionSensitivity"
+      required: true
+      selector:
+        text:
+    value:
+      example: "90"
+      required: true
+      selector:
+        text:
+
 start_application:
-  name: Start Application
-  description: Start an application on the device running Fully Kiosk Browser.
   target:
     device:
       integration: fully_kiosk
   fields:
     application:
-      name: Application
-      description: Package name of the application to start.
       example: "de.ozerov.fully"
       required: true
       selector:

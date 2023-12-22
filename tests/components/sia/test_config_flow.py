@@ -328,6 +328,7 @@ async def test_options_basic(hass: HomeAssistant) -> None:
     updated = await hass.config_entries.options.async_configure(
         result["flow_id"], BASIC_OPTIONS
     )
+    await hass.async_block_till_done()
     assert updated["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert updated["data"] == {
         CONF_ACCOUNTS: {BASIC_CONFIG[CONF_ACCOUNT]: BASIC_OPTIONS}

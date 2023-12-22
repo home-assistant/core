@@ -31,7 +31,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import discovery, event
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -123,11 +123,12 @@ SERVICE_SELECT_DEVICE = "select_device"
 SERVICE_POWER_ON = "power_on"
 SERVICE_STANDBY = "standby"
 
-# pylint: disable=unnecessary-lambda
 DEVICE_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.All(cv.positive_int): vol.Any(
-            lambda devices: DEVICE_SCHEMA(devices), cv.string
+            # pylint: disable-next=unnecessary-lambda
+            lambda devices: DEVICE_SCHEMA(devices),
+            cv.string,
         )
     }
 )
@@ -194,9 +195,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
 
     loop = (
         # Create own thread if more than 1 CPU
-        hass.loop
-        if multiprocessing.cpu_count() < 2
-        else None
+        hass.loop if multiprocessing.cpu_count() < 2 else None
     )
     host = base_config[DOMAIN].get(CONF_HOST)
     display_name = base_config[DOMAIN].get(CONF_DISPLAY_NAME, DEFAULT_DISPLAY_NAME)
@@ -208,16 +207,18 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
 
     def _adapter_watchdog(now=None):
         _LOGGER.debug("Reached _adapter_watchdog")
-        event.call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog)
+        event.call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog_job)
         if not adapter.initialized:
             _LOGGER.info("Adapter not initialized; Trying to restart")
             hass.bus.fire(EVENT_HDMI_CEC_UNAVAILABLE)
             adapter.init()
 
+    _adapter_watchdog_job = HassJob(_adapter_watchdog, cancel_on_shutdown=True)
+
     @callback
     def _async_initialized_callback(*_: Any):
         """Add watchdog on initialization."""
-        return event.async_call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog)
+        return event.async_call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog_job)
 
     hdmi_network.set_initialized_callback(_async_initialized_callback)
 

@@ -1,10 +1,59 @@
 {
   "common": {
+    "generic": {
+      "model": "Model",
+      "ui_managed": "Managed via UI"
+    },
+    "device_automation": {
+      "condition_type": {
+        "is_on": "{entity_name} is on",
+        "is_off": "{entity_name} is off"
+      },
+      "trigger_type": {
+        "changed_states": "{entity_name} turned on or off",
+        "turned_on": "{entity_name} turned on",
+        "turned_off": "{entity_name} turned off"
+      },
+      "action_type": {
+        "toggle": "Toggle {entity_name}",
+        "turn_on": "Turn on {entity_name}",
+        "turn_off": "Turn off {entity_name}"
+      }
+    },
+    "action": {
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "enable": "Enable",
+      "disable": "Disable",
+      "open": "Open",
+      "close": "Close",
+      "reload": "Reload",
+      "restart": "Restart",
+      "start": "Start",
+      "stop": "Stop",
+      "pause": "Pause",
+      "turn_on": "Turn on",
+      "turn_off": "Turn off",
+      "toggle": "Toggle"
+    },
+    "time": {
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday",
+      "sunday": "Sunday"
+    },
     "state": {
       "off": "Off",
       "on": "On",
+      "yes": "Yes",
+      "no": "No",
       "open": "Open",
       "closed": "Closed",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
       "connected": "Connected",
       "disconnected": "Disconnected",
       "locked": "Locked",
@@ -18,8 +67,8 @@
     },
     "config_flow": {
       "title": {
-        "oauth2_pick_implementation": "Pick Authentication Method",
-        "reauth": "Reauthenticate Integration",
+        "oauth2_pick_implementation": "Pick authentication method",
+        "reauth": "Reauthenticate integration",
         "via_hassio_addon": "{name} via Home Assistant add-on"
       },
       "description": {
@@ -32,20 +81,20 @@
         "username": "Username",
         "password": "Password",
         "host": "Host",
-        "ip": "IP Address",
+        "ip": "IP address",
         "port": "Port",
         "url": "URL",
-        "usb_path": "USB Device Path",
-        "access_token": "Access Token",
-        "api_key": "API Key",
-        "api_token": "API Token",
+        "usb_path": "USB device path",
+        "access_token": "Access token",
+        "api_key": "API key",
+        "api_token": "API token",
         "ssl": "Uses an SSL certificate",
         "verify_ssl": "Verify SSL certificate",
         "elevation": "Elevation",
         "longitude": "Longitude",
         "latitude": "Latitude",
         "location": "Location",
-        "pin": "PIN Code",
+        "pin": "PIN code",
         "mode": "Mode",
         "path": "Path"
       },
@@ -77,6 +126,8 @@
         "oauth2_authorize_url_timeout": "Timeout generating authorize URL.",
         "oauth2_no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
         "oauth2_user_rejected_authorize": "Account linking rejected: {error}",
+        "oauth2_unauthorized": "OAuth authorization error while obtaining access token.",
+        "oauth2_failed": "Error while obtaining access token.",
         "reauth_successful": "Re-authentication was successful",
         "unknown_authorize_url_generation": "Unknown error generating an authorize URL.",
         "cloud_not_connected": "Not connected to Home Assistant Cloud."

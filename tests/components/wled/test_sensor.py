@@ -110,6 +110,15 @@ async def test_sensors(
     assert entry.unique_id == "aabbccddeeff_wifi_bssid"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
+    assert (state := hass.states.get("sensor.wled_rgb_light_ip"))
+    assert state.attributes.get(ATTR_ICON) == "mdi:ip-network"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+    assert state.state == "127.0.0.1"
+
+    assert (entry := entity_registry.async_get("sensor.wled_rgb_light_ip"))
+    assert entry.unique_id == "aabbccddeeff_ip"
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
+
 
 @pytest.mark.parametrize(
     "entity_id",

@@ -6,7 +6,7 @@ import datetime
 from datetime import timedelta
 import logging
 from random import randrange
-from typing import Any
+from typing import Any, cast
 
 import aiohttp
 import tibber
@@ -37,10 +37,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    DeviceInfo,
+    async_get as async_get_dev_reg,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_reg
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -288,7 +291,9 @@ async def async_setup_entry(
             )
 
         # migrate to new device ids
-        device_entry = device_registry.async_get_device({(TIBBER_DOMAIN, old_id)})
+        device_entry = device_registry.async_get_device(
+            identifiers={(TIBBER_DOMAIN, old_id)}
+        )
         if device_entry and entry.entry_id in device_entry.config_entries:
             device_registry.async_update_device(
                 device_entry.id, new_identifiers={(TIBBER_DOMAIN, home.home_id)}
@@ -426,9 +431,9 @@ class TibberDataSensor(TibberSensor, CoordinatorEntity["TibberDataCoordinator"])
         self._device_name = self._home_name
 
     @property
-    def native_value(self) -> Any:
+    def native_value(self) -> StateType:
         """Return the value of the sensor."""
-        return getattr(self._tibber_home, self.entity_description.key)
+        return getattr(self._tibber_home, self.entity_description.key)  # type: ignore[no-any-return]
 
 
 class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"]):
@@ -605,7 +610,7 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                 )
 
                 last_stats = await get_instance(self.hass).async_add_executor_job(
-                    get_last_statistics, self.hass, 1, statistic_id, True, {}
+                    get_last_statistics, self.hass, 1, statistic_id, True, set()
                 )
 
                 if not last_stats:
@@ -614,7 +619,7 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                         5 * 365 * 24, production=is_production
                     )
 
-                    _sum = 0
+                    _sum = 0.0
                     last_stats_time = None
                 else:
                     # hourly_consumption/production_data contains the last 30 days
@@ -636,13 +641,14 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                         self.hass,
                         start,
                         None,
-                        [statistic_id],
+                        {statistic_id},
                         "hour",
                         None,
                         {"sum"},
                     )
-                    _sum = stat[statistic_id][0]["sum"]
-                    last_stats_time = stat[statistic_id][0]["start"]
+                    first_stat = stat[statistic_id][0]
+                    _sum = cast(float, first_stat["sum"])
+                    last_stats_time = first_stat["start"]
 
                 statistics = []
 

@@ -18,11 +18,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
-from .renault_entities import RenaultDataEntity, RenaultDataEntityDescription
+from .entity import RenaultDataEntity, RenaultDataEntityDescription
 from .renault_hub import RenaultHub
 
 
-@dataclass
+@dataclass(frozen=True)
 class RenaultBinarySensorRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -30,7 +30,7 @@ class RenaultBinarySensorRequiredKeysMixin:
     on_value: StateType
 
 
-@dataclass
+@dataclass(frozen=True)
 class RenaultBinarySensorEntityDescription(
     BinarySensorEntityDescription,
     RenaultDataEntityDescription,
@@ -85,7 +85,6 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             key="plugged_in",
             coordinator="battery",
             device_class=BinarySensorDeviceClass.PLUG,
-            name="Plugged in",
             on_key="plugStatus",
             on_value=PlugState.PLUGGED.value,
         ),
@@ -93,7 +92,6 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             key="charging",
             coordinator="battery",
             device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-            name="Charging",
             on_key="chargingStatus",
             on_value=ChargeState.CHARGE_IN_PROGRESS.value,
         ),
@@ -101,16 +99,15 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             key="hvac_status",
             coordinator="hvac_status",
             icon_fn=lambda e: "mdi:fan" if e.is_on else "mdi:fan-off",
-            name="HVAC",
             on_key="hvacStatus",
             on_value="on",
+            translation_key="hvac_status",
         ),
         RenaultBinarySensorEntityDescription(
             key="lock_status",
             coordinator="lock_status",
             # lock: on means open (unlocked), off means closed (locked)
             device_class=BinarySensorDeviceClass.LOCK,
-            name="Lock",
             on_key="lockStatus",
             on_value="unlocked",
         ),
@@ -119,9 +116,9 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             coordinator="lock_status",
             # On means open, Off means closed
             device_class=BinarySensorDeviceClass.DOOR,
-            name="Hatch",
             on_key="hatchStatus",
             on_value="open",
+            translation_key="hatch_status",
         ),
     ]
     + [
@@ -130,9 +127,9 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             coordinator="lock_status",
             # On means open, Off means closed
             device_class=BinarySensorDeviceClass.DOOR,
-            name=f"{door.capitalize()} door",
             on_key=f"doorStatus{door.replace(' ','')}",
             on_value="open",
+            translation_key=f"{door.lower().replace(' ','_')}_door_status",
         )
         for door in ("Rear Left", "Rear Right", "Driver", "Passenger")
     ],

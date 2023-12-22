@@ -13,6 +13,7 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.components import recorder, websocket_api
+from homeassistant.components.recorder.statistics import StatisticsRow
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.integration_platform import (
@@ -261,8 +262,8 @@ async def ws_get_fossil_energy_consumption(
         connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
         return
 
-    statistic_ids = list(msg["energy_statistic_ids"])
-    statistic_ids.append(msg["co2_statistic_id"])
+    statistic_ids = set(msg["energy_statistic_ids"])
+    statistic_ids.add(msg["co2_statistic_id"])
 
     # Fetch energy + CO2 statistics
     statistics = await recorder.get_instance(hass).async_add_executor_job(
@@ -273,11 +274,11 @@ async def ws_get_fossil_energy_consumption(
         statistic_ids,
         "hour",
         {"energy": UnitOfEnergy.KILO_WATT_HOUR},
-        {"mean", "sum"},
+        {"mean", "change"},
     )
 
-    def _combine_sum_statistics(
-        stats: dict[str, list[dict[str, Any]]], statistic_ids: list[str]
+    def _combine_change_statistics(
+        stats: dict[str, list[StatisticsRow]], statistic_ids: list[str]
     ) -> dict[float, float]:
         """Combine multiple statistics, returns a dict indexed by start time."""
         result: defaultdict[float, float] = defaultdict(float)
@@ -286,20 +287,11 @@ async def ws_get_fossil_energy_consumption(
             if statistics_id not in statistic_ids:
                 continue
             for period in stat:
-                if period["sum"] is None:
+                if period["change"] is None:
                     continue
-                result[period["start"]] += period["sum"]
+                result[period["start"]] += period["change"]
 
         return {key: result[key] for key in sorted(result)}
-
-    def _calculate_deltas(sums: dict[float, float]) -> dict[float, float]:
-        prev: float | None = None
-        result: dict[float, float] = {}
-        for period, sum_ in sums.items():
-            if prev is not None:
-                result[period] = sum_ - prev
-            prev = sum_
-        return result
 
     def _reduce_deltas(
         stat_list: list[dict[str, Any]],
@@ -313,11 +305,10 @@ async def ws_get_fossil_energy_consumption(
         if not stat_list:
             return result
         prev_stat: dict[str, Any] = stat_list[0]
+        fake_stat = {"start": stat_list[-1]["start"] + period.total_seconds()}
 
         # Loop over the hourly deltas + a fake entry to end the period
-        for statistic in chain(
-            stat_list, ({"start": stat_list[-1]["start"] + period.total_seconds()},)
-        ):
+        for statistic in chain(stat_list, (fake_stat,)):
             if not same_period(prev_stat["start"], statistic["start"]):
                 start, _ = period_start_end(prev_stat["start"])
                 # The previous statistic was the last entry of the period
@@ -334,19 +325,21 @@ async def ws_get_fossil_energy_consumption(
 
         return result
 
-    merged_energy_statistics = _combine_sum_statistics(
+    merged_energy_statistics = _combine_change_statistics(
         statistics, msg["energy_statistic_ids"]
     )
-    energy_deltas = _calculate_deltas(merged_energy_statistics)
-    indexed_co2_statistics = {
-        period["start"]: period["mean"]
-        for period in statistics.get(msg["co2_statistic_id"], {})
-    }
+    indexed_co2_statistics = cast(
+        dict[float, float],
+        {
+            period["start"]: period["mean"]
+            for period in statistics.get(msg["co2_statistic_id"], {})
+        },
+    )
 
     # Calculate amount of fossil based energy, assume 100% fossil if missing
     fossil_energy = [
         {"start": start, "delta": delta * indexed_co2_statistics.get(start, 100) / 100}
-        for start, delta in energy_deltas.items()
+        for start, delta in merged_energy_statistics.items()
     ]
 
     if msg["period"] == "hour":

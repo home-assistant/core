@@ -35,7 +35,7 @@
         "state": {
           "down": "Down",
           "not_checked_yet": "Not checked yet",
-          "pause": "Pause",
+          "pause": "[%key:common::action::pause%]",
           "seems_down": "Seems down",
           "up": "Up"
         }

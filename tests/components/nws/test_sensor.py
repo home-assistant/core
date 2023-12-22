@@ -70,10 +70,13 @@ async def test_imperial_metric(
         assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
 
 
-async def test_none_values(hass: HomeAssistant, mock_simple_nws, no_weather) -> None:
+@pytest.mark.parametrize("values", [NONE_OBSERVATION, None])
+async def test_none_values(
+    hass: HomeAssistant, mock_simple_nws, no_weather, values
+) -> None:
     """Test with no values."""
     instance = mock_simple_nws.return_value
-    instance.observation = NONE_OBSERVATION
+    instance.observation = values
 
     registry = er.async_get(hass)
 

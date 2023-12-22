@@ -1,4 +1,6 @@
 """The tests for the demo text component."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.text import (
@@ -9,15 +11,30 @@ from homeassistant.components.text import (
     DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, MAX_LENGTH_STATE_STATE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_MODE,
+    MAX_LENGTH_STATE_STATE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 ENTITY_TEXT = "text.text"
 
 
+@pytest.fixture
+async def text_only() -> None:
+    """Enable only the text platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.TEXT],
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
-async def setup_demo_text(hass):
+async def setup_demo_text(hass, text_only):
     """Initialize setup demo text."""
     assert await async_setup_component(hass, DOMAIN, {"text": {"platform": "demo"}})
     await hass.async_block_till_done()

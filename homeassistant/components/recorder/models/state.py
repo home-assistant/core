@@ -16,12 +16,21 @@ from homeassistant.const import (
 from homeassistant.core import Context, State
 import homeassistant.util.dt as dt_util
 
-from .state_attributes import decode_attributes_from_row
+from .state_attributes import decode_attributes_from_source
 from .time import process_timestamp
 
-# pylint: disable=invalid-name
-
 _LOGGER = logging.getLogger(__name__)
+
+
+def extract_metadata_ids(
+    entity_id_to_metadata_id: dict[str, int | None],
+) -> list[int]:
+    """Extract metadata ids from entity_id_to_metadata_id."""
+    return [
+        metadata_id
+        for metadata_id in entity_id_to_metadata_id.values()
+        if metadata_id is not None
+    ]
 
 
 class LazyState(State):
@@ -40,19 +49,19 @@ class LazyState(State):
         self,
         row: Row,
         attr_cache: dict[str, dict[str, Any]],
-        start_time: datetime | None,
+        start_time_ts: float | None,
+        entity_id: str,
+        state: str,
+        last_updated_ts: float | None,
+        no_attributes: bool,
     ) -> None:
         """Init the lazy state."""
         self._row = row
-        self.entity_id: str = self._row.entity_id
-        self.state = self._row.state or ""
+        self.entity_id = entity_id
+        self.state = state or ""
         self._attributes: dict[str, Any] | None = None
-        self._last_updated_ts: float | None = self._row.last_updated_ts or (
-            dt_util.utc_to_timestamp(start_time) if start_time else None
-        )
-        self._last_changed_ts: float | None = (
-            self._row.last_changed_ts or self._last_updated_ts
-        )
+        self._last_updated_ts: float | None = last_updated_ts or start_time_ts
+        self._last_changed_ts: float | None = None
         self._context: Context | None = None
         self.attr_cache = attr_cache
 
@@ -60,7 +69,9 @@ class LazyState(State):
     def attributes(self) -> dict[str, Any]:
         """State attributes."""
         if self._attributes is None:
-            self._attributes = decode_attributes_from_row(self._row, self.attr_cache)
+            self._attributes = decode_attributes_from_source(
+                getattr(self._row, "attributes", None), self.attr_cache
+            )
         return self._attributes
 
     @attributes.setter
@@ -83,7 +94,10 @@ class LazyState(State):
     @property
     def last_changed(self) -> datetime:
         """Last changed datetime."""
-        assert self._last_changed_ts is not None
+        if self._last_changed_ts is None:
+            self._last_changed_ts = (
+                getattr(self._row, "last_changed_ts", None) or self._last_updated_ts
+            )
         return dt_util.utc_from_timestamp(self._last_changed_ts)
 
     @last_changed.setter
@@ -126,20 +140,24 @@ class LazyState(State):
 def row_to_compressed_state(
     row: Row,
     attr_cache: dict[str, dict[str, Any]],
-    start_time: datetime | None,
+    start_time_ts: float | None,
+    entity_id: str,
+    state: str,
+    last_updated_ts: float | None,
+    no_attributes: bool,
 ) -> dict[str, Any]:
-    """Convert a database row to a compressed state schema 31 and later."""
-    comp_state = {
-        COMPRESSED_STATE_STATE: row.state,
-        COMPRESSED_STATE_ATTRIBUTES: decode_attributes_from_row(row, attr_cache),
-    }
-    if start_time:
-        comp_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(start_time)
-    else:
-        row_last_updated_ts: float = row.last_updated_ts
-        comp_state[COMPRESSED_STATE_LAST_UPDATED] = row_last_updated_ts
-        if (
-            row_changed_changed_ts := row.last_changed_ts
-        ) and row_last_updated_ts != row_changed_changed_ts:
-            comp_state[COMPRESSED_STATE_LAST_CHANGED] = row_changed_changed_ts
+    """Convert a database row to a compressed state schema 41 and later."""
+    comp_state: dict[str, Any] = {COMPRESSED_STATE_STATE: state}
+    if not no_attributes:
+        comp_state[COMPRESSED_STATE_ATTRIBUTES] = decode_attributes_from_source(
+            getattr(row, "attributes", None), attr_cache
+        )
+    row_last_updated_ts: float = last_updated_ts or start_time_ts  # type: ignore[assignment]
+    comp_state[COMPRESSED_STATE_LAST_UPDATED] = row_last_updated_ts
+    if (
+        (row_last_changed_ts := getattr(row, "last_changed_ts", None))
+        and row_last_changed_ts
+        and row_last_updated_ts != row_last_changed_ts
+    ):
+        comp_state[COMPRESSED_STATE_LAST_CHANGED] = row_last_changed_ts
     return comp_state

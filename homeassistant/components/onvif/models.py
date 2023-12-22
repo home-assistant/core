@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any
 
 from homeassistant.const import EntityCategory
@@ -78,3 +79,20 @@ class Event:
     value: Any = None
     entity_category: EntityCategory | None = None
     entity_enabled: bool = True
+
+
+class PullPointManagerState(Enum):
+    """States for the pullpoint manager."""
+
+    STOPPED = 0  # Not running or not supported
+    STARTED = 1  # Running and renewing
+    PAUSED = 2  # Switched to webhook, but can resume
+    FAILED = 3  # Failed to do initial subscription
+
+
+class WebHookManagerState(Enum):
+    """States for the webhook manager."""
+
+    STOPPED = 0
+    STARTED = 1
+    FAILED = 2  # Failed to do initial subscription

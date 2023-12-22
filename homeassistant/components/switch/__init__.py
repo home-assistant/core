@@ -1,13 +1,13 @@
 """Component to interface with switches that can be controlled remotely."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
+from enum import StrEnum
+from functools import partial
 import logging
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SERVICE_TOGGLE,
@@ -19,6 +19,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
+)
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstantEnum,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
 )
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
@@ -48,8 +53,16 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(SwitchDeviceClass))
 # DEVICE_CLASS* below are deprecated as of 2021.12
 # use the SwitchDeviceClass enum instead.
 DEVICE_CLASSES = [cls.value for cls in SwitchDeviceClass]
-DEVICE_CLASS_OUTLET = SwitchDeviceClass.OUTLET.value
-DEVICE_CLASS_SWITCH = SwitchDeviceClass.SWITCH.value
+_DEPRECATED_DEVICE_CLASS_OUTLET = DeprecatedConstantEnum(
+    SwitchDeviceClass.OUTLET, "2025.1"
+)
+_DEPRECATED_DEVICE_CLASS_SWITCH = DeprecatedConstantEnum(
+    SwitchDeviceClass.SWITCH, "2025.1"
+)
+
+# Both can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 # mypy: disallow-any-generics
 
@@ -89,8 +102,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class SwitchEntityDescription(ToggleEntityDescription):
+class SwitchEntityDescription(ToggleEntityDescription, frozen_or_thawed=True):
     """A class that describes switch entities."""
 
     device_class: SwitchDeviceClass | None = None

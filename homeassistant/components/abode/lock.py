@@ -29,6 +29,7 @@ class AbodeLock(AbodeDevice, LockEntity):
     """Representation of an Abode lock."""
 
     _device: AbodeLK
+    _attr_name = None
 
     def lock(self, **kwargs: Any) -> None:
         """Lock the device."""

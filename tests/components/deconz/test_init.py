@@ -1,4 +1,5 @@
 """Test deCONZ component setup process."""
+import asyncio
 from unittest.mock import patch
 
 from homeassistant.components.deconz import (
@@ -133,7 +134,34 @@ async def test_unload_entry_multiple_gateways(
     assert hass.data[DECONZ_DOMAIN][config_entry2.entry_id].master
 
 
-async def test_update_group_unique_id(hass: HomeAssistant) -> None:
+async def test_unload_entry_multiple_gateways_parallel(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test race condition when unloading multiple config entries in parallel."""
+    config_entry = await setup_deconz_integration(hass, aioclient_mock)
+    aioclient_mock.clear_requests()
+
+    data = {"config": {"bridgeid": "01234E56789B"}}
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry2 = await setup_deconz_integration(
+            hass,
+            aioclient_mock,
+            entry_id="2",
+            unique_id="01234E56789B",
+        )
+
+    assert len(hass.data[DECONZ_DOMAIN]) == 2
+
+    await asyncio.gather(
+        config_entry.async_unload(hass), config_entry2.async_unload(hass)
+    )
+
+    assert len(hass.data[DECONZ_DOMAIN]) == 0
+
+
+async def test_update_group_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test successful migration of entry data."""
     old_unique_id = "123"
     new_unique_id = "1234"
@@ -148,9 +176,8 @@ async def test_update_group_unique_id(hass: HomeAssistant) -> None:
         },
     )
 
-    registry = er.async_get(hass)
     # Create entity entry to migrate to new unique ID
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         LIGHT_DOMAIN,
         DECONZ_DOMAIN,
         f"{old_unique_id}-OLD",
@@ -158,7 +185,7 @@ async def test_update_group_unique_id(hass: HomeAssistant) -> None:
         config_entry=entry,
     )
     # Create entity entry with new unique ID
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         LIGHT_DOMAIN,
         DECONZ_DOMAIN,
         f"{new_unique_id}-NEW",
@@ -169,11 +196,19 @@ async def test_update_group_unique_id(hass: HomeAssistant) -> None:
     await async_update_group_unique_id(hass, entry)
 
     assert entry.data == {CONF_API_KEY: "1", CONF_HOST: "2", CONF_PORT: "3"}
-    assert registry.async_get(f"{LIGHT_DOMAIN}.old").unique_id == f"{new_unique_id}-OLD"
-    assert registry.async_get(f"{LIGHT_DOMAIN}.new").unique_id == f"{new_unique_id}-NEW"
+    assert (
+        entity_registry.async_get(f"{LIGHT_DOMAIN}.old").unique_id
+        == f"{new_unique_id}-OLD"
+    )
+    assert (
+        entity_registry.async_get(f"{LIGHT_DOMAIN}.new").unique_id
+        == f"{new_unique_id}-NEW"
+    )
 
 
-async def test_update_group_unique_id_no_legacy_group_id(hass: HomeAssistant) -> None:
+async def test_update_group_unique_id_no_legacy_group_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test migration doesn't trigger without old legacy group id in entry data."""
     old_unique_id = "123"
     new_unique_id = "1234"
@@ -183,9 +218,8 @@ async def test_update_group_unique_id_no_legacy_group_id(hass: HomeAssistant) ->
         data={},
     )
 
-    registry = er.async_get(hass)
     # Create entity entry to migrate to new unique ID
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         LIGHT_DOMAIN,
         DECONZ_DOMAIN,
         f"{old_unique_id}-OLD",
@@ -195,4 +229,7 @@ async def test_update_group_unique_id_no_legacy_group_id(hass: HomeAssistant) ->
 
     await async_update_group_unique_id(hass, entry)
 
-    assert registry.async_get(f"{LIGHT_DOMAIN}.old").unique_id == f"{old_unique_id}-OLD"
+    assert (
+        entity_registry.async_get(f"{LIGHT_DOMAIN}.old").unique_id
+        == f"{old_unique_id}-OLD"
+    )

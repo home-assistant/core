@@ -2,6 +2,8 @@
 import datetime
 from unittest.mock import MagicMock, call, patch
 
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.components.qld_bushfire.geo_location import (
@@ -70,7 +72,7 @@ def _generate_mock_feed_entry(
     return feed_entry
 
 
-async def test_setup(hass: HomeAssistant) -> None:
+async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """Test the general setup of the platform."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -80,19 +82,18 @@ async def test_setup(hass: HomeAssistant) -> None:
         (38.0, -3.0),
         category="Category 1",
         attribution="Attribution 1",
-        published=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc),
-        updated=datetime.datetime(2018, 9, 22, 8, 10, tzinfo=datetime.timezone.utc),
+        published=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
+        updated=datetime.datetime(2018, 9, 22, 8, 10, tzinfo=datetime.UTC),
         status="Status 1",
     )
     mock_entry_2 = _generate_mock_feed_entry("2345", "Title 2", 20.5, (38.1, -3.1))
     mock_entry_3 = _generate_mock_feed_entry("3456", "Title 3", 25.5, (38.2, -3.2))
     mock_entry_4 = _generate_mock_feed_entry("4567", "Title 4", 12.5, (38.3, -3.3))
 
-    # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "georss_qld_bushfire_alert_client.QldBushfireAlertFeed"
-    ) as mock_feed:
+    freezer.move_to(utcnow)
+
+    with patch("georss_qld_bushfire_alert_client.QldBushfireAlertFeed") as mock_feed:
         mock_feed.return_value.update.return_value = (
             "OK",
             [mock_entry_1, mock_entry_2, mock_entry_3],
@@ -119,10 +120,10 @@ async def test_setup(hass: HomeAssistant) -> None:
                 ATTR_CATEGORY: "Category 1",
                 ATTR_ATTRIBUTION: "Attribution 1",
                 ATTR_PUBLICATION_DATE: datetime.datetime(
-                    2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc
+                    2018, 9, 22, 8, 0, tzinfo=datetime.UTC
                 ),
                 ATTR_UPDATED_DATE: datetime.datetime(
-                    2018, 9, 22, 8, 10, tzinfo=datetime.timezone.utc
+                    2018, 9, 22, 8, 10, tzinfo=datetime.UTC
                 ),
                 ATTR_STATUS: "Status 1",
                 ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,

@@ -1,0 +1,15 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "language": "Language",
+          "tld": "TLD"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  }
+}

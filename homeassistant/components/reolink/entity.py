@@ -1,10 +1,14 @@
 """Reolink parent entity class."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import TypeVar
 
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
+from reolink_aio.api import DUAL_LENS_MODELS, Host
+
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -16,8 +20,24 @@ from .const import DOMAIN
 _T = TypeVar("_T")
 
 
+@dataclass(frozen=True, kw_only=True)
+class ReolinkChannelEntityDescription(EntityDescription):
+    """A class that describes entities for a camera channel."""
+
+    cmd_key: str | None = None
+    supported: Callable[[Host, int], bool] = lambda api, ch: True
+
+
+@dataclass(frozen=True, kw_only=True)
+class ReolinkHostEntityDescription(EntityDescription):
+    """A class that describes host entities."""
+
+    cmd_key: str | None = None
+    supported: Callable[[Host], bool] = lambda api: True
+
+
 class ReolinkBaseCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[_T]]):
-    """Parent class fo Reolink entities."""
+    """Parent class for Reolink entities."""
 
     _attr_has_entity_name = True
 
@@ -41,6 +61,7 @@ class ReolinkBaseCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[_T]])
             manufacturer=self._host.api.manufacturer,
             hw_version=self._host.api.hardware_version,
             sw_version=self._host.api.sw_version,
+            serial_number=self._host.api.uid,
             configuration_url=self._conf_url,
         )
 
@@ -57,13 +78,28 @@ class ReolinkHostCoordinatorEntity(ReolinkBaseCoordinatorEntity[None]):
     basically a NVR with a single channel that has the camera connected to that channel.
     """
 
+    entity_description: ReolinkHostEntityDescription | ReolinkChannelEntityDescription
+
     def __init__(self, reolink_data: ReolinkData) -> None:
         """Initialize ReolinkHostCoordinatorEntity."""
         super().__init__(reolink_data, reolink_data.device_coordinator)
 
+        self._attr_unique_id = f"{self._host.unique_id}_{self.entity_description.key}"
+
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        await super().async_added_to_hass()
+        if (
+            self.entity_description.cmd_key is not None
+            and self.entity_description.cmd_key not in self._host.update_cmd_list
+        ):
+            self._host.update_cmd_list.append(self.entity_description.cmd_key)
+
 
 class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
     """Parent class for Reolink hardware camera entities connected to a channel of the NVR."""
+
+    entity_description: ReolinkChannelEntityDescription
 
     def __init__(
         self,
@@ -74,13 +110,21 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
         super().__init__(reolink_data)
 
         self._channel = channel
+        self._attr_unique_id = (
+            f"{self._host.unique_id}_{channel}_{self.entity_description.key}"
+        )
+
+        dev_ch = channel
+        if self._host.api.model in DUAL_LENS_MODELS:
+            dev_ch = 0
 
         if self._host.api.is_nvr:
             self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, f"{self._host.unique_id}_ch{self._channel}")},
+                identifiers={(DOMAIN, f"{self._host.unique_id}_ch{dev_ch}")},
                 via_device=(DOMAIN, self._host.unique_id),
-                name=self._host.api.camera_name(self._channel),
-                model=self._host.api.camera_model(self._channel),
+                name=self._host.api.camera_name(dev_ch),
+                model=self._host.api.camera_model(dev_ch),
                 manufacturer=self._host.api.manufacturer,
+                sw_version=self._host.api.camera_sw_version(dev_ch),
                 configuration_url=self._conf_url,
             )

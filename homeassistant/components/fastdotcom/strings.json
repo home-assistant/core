@@ -1,0 +1,38 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Do you want to start the setup? The initial setup will take about 30-40 seconds."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "download": {
+        "name": "Download"
+      }
+    }
+  },
+  "services": {
+    "speedtest": {
+      "name": "Speed test",
+      "description": "Immediately executes a speed test with Fast.com."
+    }
+  },
+  "issues": {
+    "service_deprecation": {
+      "title": "Fast.com speedtest service is being removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::fastdotcom::issues::service_deprecation::title%]",
+            "description": "Use `homeassistant.update_entity` instead to update the data.\n\nPlease replace this service and adjust your automations and scripts and select **submit** to fix this issue."
+          }
+        }
+      }
+    }
+  }
+}

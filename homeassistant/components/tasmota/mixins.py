@@ -16,9 +16,9 @@ from homeassistant.components.mqtt import (
     is_connected as mqtt_connected,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .discovery import (
     TASMOTA_DISCOVERY_ENTITY_UPDATED,
@@ -32,10 +32,15 @@ _LOGGER = logging.getLogger(__name__)
 class TasmotaEntity(Entity):
     """Base class for Tasmota entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, tasmota_entity: HATasmotaEntity) -> None:
         """Initialize."""
         self._tasmota_entity = tasmota_entity
         self._unique_id = tasmota_entity.unique_id
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, tasmota_entity.mac)}
+        )
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
@@ -58,13 +63,6 @@ class TasmotaEntity(Entity):
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         await self._tasmota_entity.subscribe_topics()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return a device description for device registry."""
-        return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._tasmota_entity.mac)}
-        )
 
     @property
     def name(self) -> str | None:
@@ -114,8 +112,11 @@ class TasmotaAvailability(TasmotaEntity):
 
     def __init__(self, **kwds: Any) -> None:
         """Initialize the availability mixin."""
-        self._available = False
         super().__init__(**kwds)
+        if self._tasmota_entity.deep_sleep_enabled:
+            self._available = True
+        else:
+            self._available = False
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
@@ -124,6 +125,8 @@ class TasmotaAvailability(TasmotaEntity):
             async_subscribe_connection_status(self.hass, self.async_mqtt_connected)
         )
         await super().async_added_to_hass()
+        if self._tasmota_entity.deep_sleep_enabled:
+            await self._tasmota_entity.poll_status()
 
     async def availability_updated(self, available: bool) -> None:
         """Handle updated availability."""
@@ -137,6 +140,8 @@ class TasmotaAvailability(TasmotaEntity):
         if not self.hass.is_stopping:
             if not mqtt_connected(self.hass):
                 self._available = False
+            elif self._tasmota_entity.deep_sleep_enabled:
+                self._available = True
             self.async_write_ha_state()
 
     @property
@@ -159,8 +164,16 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
         self._removed_from_hass = False
         await super().async_added_to_hass()
 
-        async def discovery_callback(config: TasmotaEntityConfig) -> None:
-            """Handle discovery update."""
+        @callback
+        def discovery_callback(config: TasmotaEntityConfig) -> None:
+            """Handle discovery update.
+
+            If the config has changed we will create a task to
+            do the discovery update.
+
+            As this callback can fire when nothing has changed, this
+            is a normal function to avoid task creation until it is needed.
+            """
             _LOGGER.debug(
                 "Got update for entity with hash: %s '%s'",
                 self._discovery_hash,
@@ -169,7 +182,7 @@ class TasmotaDiscoveryUpdate(TasmotaEntity):
             if not self._tasmota_entity.config_same(config):
                 # Changed payload: Notify component
                 _LOGGER.debug("Updating component: %s", self.entity_id)
-                await self.discovery_update(config)
+                self.hass.async_create_task(self.discovery_update(config))
             else:
                 # Unchanged payload: Ignore to avoid changing states
                 _LOGGER.debug("Ignoring unchanged update for: %s", self.entity_id)

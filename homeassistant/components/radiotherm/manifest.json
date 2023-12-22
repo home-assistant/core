@@ -1,7 +1,7 @@
 {
   "domain": "radiotherm",
   "name": "Radio Thermostat",
-  "codeowners": ["@bdraco", "@vinnyfuria"],
+  "codeowners": ["@vinnyfuria"],
   "config_flow": true,
   "dhcp": [
     {

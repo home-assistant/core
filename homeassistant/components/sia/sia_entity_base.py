@@ -10,8 +10,9 @@ from pysiaalarm import SIAEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
 from homeassistant.core import CALLBACK_TYPE, State, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
@@ -34,14 +35,14 @@ from .utils import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class SIARequiredKeysMixin:
     """Required keys for SIA entities."""
 
     code_consequences: dict[str, StateType | bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SIAEntityDescription(EntityDescription, SIARequiredKeysMixin):
     """Entity Description for SIA entities."""
 
@@ -126,7 +127,7 @@ class SIABaseEntity(RestoreEntity):
         then update the availability and schedule the next unavailability check.
         """
         _LOGGER.debug("Received event: %s", sia_event)
-        if int(sia_event.ri) not in (self.zone, SIA_HUB_ZONE):
+        if (int(sia_event.ri) if sia_event.ri else 0) not in (self.zone, SIA_HUB_ZONE):
             return
 
         relevant_event = self.update_state(sia_event)

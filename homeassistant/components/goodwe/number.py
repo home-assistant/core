@@ -15,7 +15,7 @@ from homeassistant.components.number import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
@@ -23,7 +23,7 @@ from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class GoodweNumberEntityDescriptionBase:
     """Required values when describing Goodwe number entities."""
 
@@ -32,18 +32,25 @@ class GoodweNumberEntityDescriptionBase:
     filter: Callable[[Inverter], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class GoodweNumberEntityDescription(
     NumberEntityDescription, GoodweNumberEntityDescriptionBase
 ):
     """Class describing Goodwe number entities."""
 
 
+def _get_setting_unit(inverter: Inverter, setting: str) -> str:
+    """Return the unit of an inverter setting."""
+    return next((s.unit for s in inverter.settings() if s.id_ == setting), "")
+
+
 NUMBERS = (
-    # non DT inverters (limit in W)
+    # Only one of the export limits are added.
+    # Availability is checked in the filter method.
+    # Export limit in W
     GoodweNumberEntityDescription(
         key="grid_export_limit",
-        name="Grid export limit",
+        translation_key="grid_export_limit",
         icon="mdi:transmission-tower",
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.POWER,
@@ -53,12 +60,12 @@ NUMBERS = (
         native_max_value=10000,
         getter=lambda inv: inv.get_grid_export_limit(),
         setter=lambda inv, val: inv.set_grid_export_limit(val),
-        filter=lambda inv: type(inv).__name__ != "DT",
+        filter=lambda inv: _get_setting_unit(inv, "grid_export_limit") != "%",
     ),
-    # DT inverters (limit is in %)
+    # Export limit in %
     GoodweNumberEntityDescription(
         key="grid_export_limit",
-        name="Grid export limit",
+        translation_key="grid_export_limit",
         icon="mdi:transmission-tower",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
@@ -67,11 +74,11 @@ NUMBERS = (
         native_max_value=100,
         getter=lambda inv: inv.get_grid_export_limit(),
         setter=lambda inv, val: inv.set_grid_export_limit(val),
-        filter=lambda inv: type(inv).__name__ == "DT",
+        filter=lambda inv: _get_setting_unit(inv, "grid_export_limit") == "%",
     ),
     GoodweNumberEntityDescription(
         key="battery_discharge_depth",
-        name="Depth of discharge (on-grid)",
+        translation_key="battery_discharge_depth",
         icon="mdi:battery-arrow-down",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
@@ -115,6 +122,7 @@ class InverterNumberEntity(NumberEntity):
     """Inverter numeric setting entity."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
     entity_description: GoodweNumberEntityDescription
 
     def __init__(

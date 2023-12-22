@@ -25,7 +25,7 @@
   },
   "iot_class": "cloud_push",
   "loggers": ["rachiopy"],
-  "requirements": ["rachiopy==1.0.3"],
+  "requirements": ["RachioPy==1.0.3"],
   "zeroconf": [
     {
       "type": "_http._tcp.local.",

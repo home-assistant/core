@@ -25,12 +25,18 @@ from homeassistant.components.fan import (
     SERVICE_SET_DIRECTION,
     SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
+    FanEntityFeature,
+    NotValidPresetModeError,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
 from .common import (
@@ -75,7 +81,11 @@ async def turn_fan_on(
     await hass.async_block_till_done()
 
 
-async def test_entity_registry(hass: HomeAssistant) -> None:
+async def test_entity_registry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(
         hass,
@@ -85,11 +95,9 @@ async def test_entity_registry(hass: HomeAssistant) -> None:
         bond_device_id="test-device-id",
     )
 
-    registry: EntityRegistry = er.async_get(hass)
-    entity = registry.entities["fan.name_1"]
+    entity = entity_registry.entities["fan.name_1"]
     assert entity.unique_id == "test-hub-id_test-device-id"
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entity.device_id)
     assert device.configuration_url == "http://some host"
 
@@ -211,9 +219,9 @@ async def test_turn_on_fan_preset_mode(hass: HomeAssistant) -> None:
         bond_device_id="test-device-id",
         props={"max_speed": 6},
     )
-    assert hass.states.get("fan.name_1").attributes[ATTR_PRESET_MODES] == [
-        PRESET_MODE_BREEZE
-    ]
+    state = hass.states.get("fan.name_1")
+    assert state.attributes[ATTR_PRESET_MODES] == [PRESET_MODE_BREEZE]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] & FanEntityFeature.PRESET_MODE
 
     with patch_bond_action() as mock_set_preset_mode, patch_bond_device_state():
         await turn_fan_on(hass, "fan.name_1", preset_mode=PRESET_MODE_BREEZE)
@@ -244,10 +252,14 @@ async def test_turn_on_fan_preset_mode_not_supported(hass: HomeAssistant) -> Non
         props={"max_speed": 6},
     )
 
-    with patch_bond_action(), patch_bond_device_state(), pytest.raises(ValueError):
+    with patch_bond_action(), patch_bond_device_state(), pytest.raises(
+        NotValidPresetModeError
+    ):
         await turn_fan_on(hass, "fan.name_1", preset_mode=PRESET_MODE_BREEZE)
 
-    with patch_bond_action(), patch_bond_device_state(), pytest.raises(ValueError):
+    with patch_bond_action(), patch_bond_device_state(), pytest.raises(
+        NotValidPresetModeError
+    ):
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_SET_PRESET_MODE,
@@ -468,3 +480,67 @@ async def test_fan_available(hass: HomeAssistant) -> None:
     await help_test_entity_available(
         hass, FAN_DOMAIN, ceiling_fan("name-1"), "fan.name_1"
     )
+
+
+async def test_setup_smart_by_bond_fan(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test setting up a fan without a hub."""
+    config_entry = await setup_platform(
+        hass,
+        FAN_DOMAIN,
+        ceiling_fan("name-1"),
+        bond_device_id="test-device-id",
+        bond_version={
+            "bondid": "KXXX12345",
+            "target": "test-model",
+            "fw_ver": "test-version",
+            "mcu_ver": "test-hw-version",
+        },
+    )
+    assert hass.states.get("fan.name_1") is not None
+    entry = entity_registry.async_get("fan.name_1")
+    assert entry.device_id is not None
+    device = device_registry.async_get(entry.device_id)
+    assert device is not None
+    assert device.sw_version == "test-version"
+    assert device.manufacturer == "Olibra"
+    assert device.identifiers == {("bond", "KXXX12345", "test-device-id")}
+    assert device.hw_version == "test-hw-version"
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_setup_hub_template_fan(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test setting up a fan on a hub created from a template."""
+    config_entry = await setup_platform(
+        hass,
+        FAN_DOMAIN,
+        {**ceiling_fan("name-1"), "template": "test-template"},
+        bond_device_id="test-device-id",
+        props={"branding_profile": "test-branding-profile"},
+        bond_version={
+            "bondid": "ZXXX12345",
+            "target": "test-model",
+            "fw_ver": "test-version",
+            "mcu_ver": "test-hw-version",
+        },
+    )
+    assert hass.states.get("fan.name_1") is not None
+    entry = entity_registry.async_get("fan.name_1")
+    assert entry.device_id is not None
+    device = device_registry.async_get(entry.device_id)
+    assert device is not None
+    assert device.sw_version is None
+    assert device.model == "test-branding-profile test-template"
+    assert device.manufacturer == "Olibra"
+    assert device.identifiers == {("bond", "ZXXX12345", "test-device-id")}
+    assert device.hw_version is None
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()

@@ -21,6 +21,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
     ATTR_TEMPERATURE,
+    CONF_DEVICE,
     CONF_HOST,
     CONF_MODEL,
     CONF_TOKEN,
@@ -31,7 +32,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     DOMAIN,
@@ -219,7 +219,7 @@ MODEL_TO_FEATURES_MAP = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class XiaomiMiioSwitchRequiredKeyMixin:
     """A class that describes switch entities."""
 
@@ -228,7 +228,7 @@ class XiaomiMiioSwitchRequiredKeyMixin:
     method_off: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class XiaomiMiioSwitchDescription(
     SwitchEntityDescription, XiaomiMiioSwitchRequiredKeyMixin
 ):
@@ -500,7 +500,9 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
                 if not hasattr(device, method["method"]):
                     continue
                 await getattr(device, method["method"])(**params)
-                update_tasks.append(device.async_update_ha_state(True))
+                update_tasks.append(
+                    asyncio.create_task(device.async_update_ha_state(True))
+                )
 
             if update_tasks:
                 await asyncio.wait(update_tasks)

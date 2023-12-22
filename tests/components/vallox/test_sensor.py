@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .conftest import patch_metrics
 
@@ -42,7 +42,7 @@ def _sensor_to_datetime(sensor):
 
 
 def _now_at_13():
-    return dt.now().timetz().replace(hour=13, minute=0, second=0, microsecond=0)
+    return dt_util.now().timetz().replace(hour=13, minute=0, second=0, microsecond=0)
 
 
 async def test_remaining_filter_returns_timestamp(
@@ -52,7 +52,7 @@ async def test_remaining_filter_returns_timestamp(
     # Act
     with patch(
         "homeassistant.components.vallox._api_get_next_filter_change_date",
-        return_value=dt.now().date(),
+        return_value=dt_util.now().date(),
     ), patch_metrics(metrics={}):
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
@@ -94,7 +94,7 @@ async def test_remaining_time_for_filter_in_the_future(
     """Test remaining time for filter when Vallox returns a date in the future."""
     # Arrange
     remaining_days = 112
-    mocked_filter_end_date = dt.now().date() + timedelta(days=remaining_days)
+    mocked_filter_end_date = dt_util.now().date() + timedelta(days=remaining_days)
 
     # Act
     with patch(
@@ -118,7 +118,7 @@ async def test_remaining_time_for_filter_today(
     """Test remaining time for filter when Vallox returns today."""
     # Arrange
     remaining_days = 0
-    mocked_filter_end_date = dt.now().date() + timedelta(days=remaining_days)
+    mocked_filter_end_date = dt_util.now().date() + timedelta(days=remaining_days)
 
     # Act
     with patch(
@@ -142,7 +142,7 @@ async def test_remaining_time_for_filter_in_the_past(
     """Test remaining time for filter when Vallox returns a date in the past."""
     # Arrange
     remaining_days = -3
-    mocked_filter_end_date = dt.now().date() + timedelta(days=remaining_days)
+    mocked_filter_end_date = dt_util.now().date() + timedelta(days=remaining_days)
 
     # Act
     with patch(

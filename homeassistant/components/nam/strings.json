@@ -6,6 +6,9 @@
         "description": "Set up Nettigo Air Monitor integration.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Nettigo Air Monitor to control."
         }
       },
       "credentials": {
@@ -40,7 +43,41 @@
   },
   "entity": {
     "sensor": {
-      "caqi_level": {
+      "bme280_humidity": {
+        "name": "BME280 humidity"
+      },
+      "bme280_pressure": {
+        "name": "BME280 pressure"
+      },
+      "bme280_temperature": {
+        "name": "BME280 temperature"
+      },
+      "bmp180_pressure": {
+        "name": "BMP180 pressure"
+      },
+      "bmp180_temperature": {
+        "name": "BMP180 temperature"
+      },
+      "bmp280_pressure": {
+        "name": "BMP280 pressure"
+      },
+      "bmp280_temperature": {
+        "name": "BMP280 temperature"
+      },
+      "heca_humidity": {
+        "name": "HECA humidity"
+      },
+      "heca_temperature": {
+        "name": "HECA temperature"
+      },
+      "mhz14a_carbon_dioxide": {
+        "name": "MH-Z14A carbon dioxide"
+      },
+      "pmsx003_caqi": {
+        "name": "PMSx003 common air quality index"
+      },
+      "pmsx003_caqi_level": {
+        "name": "PMSx003 common air quality index level",
         "state": {
           "very_low": "Very low",
           "low": "Low",
@@ -48,6 +85,74 @@
           "high": "High",
           "very_high": "Very high"
         }
+      },
+      "pmsx003_pm1": {
+        "name": "PMSx003 PM1"
+      },
+      "pmsx003_pm10": {
+        "name": "PMSx003 PM10"
+      },
+      "pmsx003_pm25": {
+        "name": "PMSx003 PM2.5"
+      },
+      "sds011_caqi": {
+        "name": "SDS011 common air quality index"
+      },
+      "sds011_caqi_level": {
+        "name": "SDS011 common air quality index level",
+        "state": {
+          "very_low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_low%]",
+          "low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::low%]",
+          "medium": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::medium%]",
+          "high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::high%]",
+          "very_high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_high%]"
+        }
+      },
+      "sds011_pm10": {
+        "name": "SDS011 PM10"
+      },
+      "sds011_pm25": {
+        "name": "SDS011 PM2.5"
+      },
+      "sht3x_humidity": {
+        "name": "SHT3X humidity"
+      },
+      "sht3x_temperature": {
+        "name": "SHT3X temperature"
+      },
+      "sps30_caqi": {
+        "name": "SPS30 common air quality index"
+      },
+      "sps30_caqi_level": {
+        "name": "SPS30 common air quality index level",
+        "state": {
+          "very_low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_low%]",
+          "low": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::low%]",
+          "medium": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::medium%]",
+          "high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::high%]",
+          "very_high": "[%key:component::nam::entity::sensor::pmsx003_caqi_level::state::very_high%]"
+        }
+      },
+      "sps30_pm1": {
+        "name": "SPS30 PM1"
+      },
+      "sps30_pm10": {
+        "name": "SPS30 PM10"
+      },
+      "sps30_pm25": {
+        "name": "SPS30 PM2.5"
+      },
+      "sps30_pm4": {
+        "name": "SPS30 PM4"
+      },
+      "dht22_humidity": {
+        "name": "DHT22 humidity"
+      },
+      "dht22_temperature": {
+        "name": "DHT22 temperature"
+      },
+      "last_restart": {
+        "name": "Last restart"
       }
     }
   }

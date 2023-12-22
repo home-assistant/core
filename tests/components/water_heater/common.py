@@ -11,8 +11,11 @@ from homeassistant.components.water_heater import (
     SERVICE_SET_AWAY_MODE,
     SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, ENTITY_MATCH_ALL
+from homeassistant.core import HomeAssistant
 
 
 async def async_set_away_mode(hass, away_mode, entity_id=ENTITY_MATCH_ALL):
@@ -54,3 +57,25 @@ async def async_set_operation_mode(hass, operation_mode, entity_id=ENTITY_MATCH_
     await hass.services.async_call(
         DOMAIN, SERVICE_SET_OPERATION_MODE, data, blocking=True
     )
+
+
+async def async_turn_on(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> None:
+    """Turn all or specified water_heater devices on."""
+    data = {}
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data, blocking=True)
+
+
+async def async_turn_off(
+    hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL
+) -> None:
+    """Turn all or specified water_heater devices off."""
+    data = {}
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data, blocking=True)

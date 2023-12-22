@@ -1,5 +1,4 @@
 """The tests for sensor recorder platform."""
-# pylint: disable=invalid-name
 import datetime
 from datetime import timedelta
 from statistics import fmean
@@ -15,9 +14,12 @@ from homeassistant.components.recorder.db_schema import Statistics, StatisticsSh
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
+    get_latest_short_term_statistics_with_session,
     get_metadata,
+    get_short_term_statistics_run_cache,
     list_statistic_ids,
 )
+from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.recorder.websocket_api import UNIT_SCHEMA
 from homeassistant.components.sensor import UNIT_CONVERTERS
 from homeassistant.core import HomeAssistant
@@ -188,8 +190,6 @@ async def test_statistics_during_period(
                 "min": pytest.approx(10),
                 "max": pytest.approx(10),
                 "last_reset": None,
-                "state": None,
-                "sum": None,
             }
         ]
     }
@@ -217,7 +217,7 @@ async def test_statistics_during_period(
     }
 
 
-@freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc))
+@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
 @pytest.mark.parametrize("offset", (0, 1, 2))
 async def test_statistic_during_period(
     recorder_mock: Recorder,
@@ -304,6 +304,13 @@ async def test_statistic_during_period(
         StatisticsShortTerm,
     )
     await async_wait_recording_done(hass)
+
+    metadata = get_metadata(hass, statistic_ids={"sensor.test"})
+    metadata_id = metadata["sensor.test"][0]
+    run_cache = get_short_term_statistics_run_cache(hass)
+    # Verify the import of the short term statistics
+    # also updates the run cache
+    assert run_cache.get_latest_ids({metadata_id}) is not None
 
     # No data for this period yet
     await client.send_json(
@@ -630,9 +637,29 @@ async def test_statistic_during_period(
         "change": (imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"])
         * 1000,
     }
+    with session_scope(hass=hass, read_only=True) as session:
+        stats = get_latest_short_term_statistics_with_session(
+            hass,
+            session,
+            {"sensor.test"},
+            {"last_reset", "max", "mean", "min", "state", "sum"},
+        )
+    start = imported_stats_5min[-1]["start"].timestamp()
+    end = start + (5 * 60)
+    assert stats == {
+        "sensor.test": [
+            {
+                "end": end,
+                "last_reset": None,
+                "start": start,
+                "state": None,
+                "sum": 38.0,
+            }
+        ]
+    }
 
 
-@freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc))
+@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
 async def test_statistic_during_period_hole(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -795,7 +822,7 @@ async def test_statistic_during_period_hole(
     }
 
 
-@freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.timezone.utc))
+@pytest.mark.freeze_time(datetime.datetime(2022, 10, 21, 7, 25, tzinfo=datetime.UTC))
 @pytest.mark.parametrize(
     ("calendar_period", "start_time", "end_time"),
     (
@@ -949,8 +976,6 @@ async def test_statistics_during_period_unit_conversion(
                 "min": pytest.approx(value),
                 "max": pytest.approx(value),
                 "last_reset": None,
-                "state": None,
-                "sum": None,
             }
         ]
     }
@@ -977,8 +1002,6 @@ async def test_statistics_during_period_unit_conversion(
                 "min": pytest.approx(converted_value),
                 "max": pytest.approx(converted_value),
                 "last_reset": None,
-                "state": None,
-                "sum": None,
             }
         ]
     }
@@ -1037,9 +1060,7 @@ async def test_sum_statistics_during_period_unit_conversion(
             {
                 "start": int(now.timestamp() * 1000),
                 "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
-                "mean": None,
-                "min": None,
-                "max": None,
+                "change": pytest.approx(value),
                 "last_reset": None,
                 "state": pytest.approx(value),
                 "sum": pytest.approx(value),
@@ -1065,9 +1086,7 @@ async def test_sum_statistics_during_period_unit_conversion(
             {
                 "start": int(now.timestamp() * 1000),
                 "end": int((now + timedelta(minutes=5)).timestamp() * 1000),
-                "mean": None,
-                "min": None,
-                "max": None,
+                "change": pytest.approx(converted_value),
                 "last_reset": None,
                 "state": pytest.approx(converted_value),
                 "sum": pytest.approx(converted_value),
@@ -1205,8 +1224,6 @@ async def test_statistics_during_period_in_the_past(
                 "min": pytest.approx(10),
                 "max": pytest.approx(10),
                 "last_reset": None,
-                "state": None,
-                "sum": None,
             }
         ]
     }
@@ -1232,8 +1249,6 @@ async def test_statistics_during_period_in_the_past(
                 "min": pytest.approx(10),
                 "max": pytest.approx(10),
                 "last_reset": None,
-                "state": None,
-                "sum": None,
             }
         ]
     }
@@ -1690,8 +1705,6 @@ async def test_clear_statistics(
                 "min": pytest.approx(value),
                 "max": pytest.approx(value),
                 "last_reset": None,
-                "state": None,
-                "sum": None,
             }
         ],
         "sensor.test2": [
@@ -1702,8 +1715,6 @@ async def test_clear_statistics(
                 "min": pytest.approx(value * 2),
                 "max": pytest.approx(value * 2),
                 "last_reset": None,
-                "state": None,
-                "sum": None,
             }
         ],
         "sensor.test3": [
@@ -1714,8 +1725,6 @@ async def test_clear_statistics(
                 "min": pytest.approx(value * 3),
                 "max": pytest.approx(value * 3),
                 "last_reset": None,
-                "state": None,
-                "sum": None,
             }
         ],
     }
@@ -1867,8 +1876,6 @@ async def test_update_statistics_metadata(
                 "mean": 10.0,
                 "min": 10.0,
                 "start": int(now.timestamp() * 1000),
-                "state": None,
-                "sum": None,
             }
         ],
     }
@@ -1931,8 +1938,6 @@ async def test_change_statistics_unit(
                 "mean": 10.0,
                 "min": 10.0,
                 "start": int(now.timestamp() * 1000),
-                "state": None,
-                "sum": None,
             }
         ],
     }
@@ -1987,11 +1992,39 @@ async def test_change_statistics_unit(
                 "mean": 10000.0,
                 "min": 10000.0,
                 "start": int(now.timestamp() * 1000),
-                "state": None,
-                "sum": None,
             }
         ],
     }
+
+    # Changing to the same unit is allowed but does nothing
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "recorder/change_statistics_unit",
+            "statistic_id": "sensor.test",
+            "new_unit_of_measurement": "W",
+            "old_unit_of_measurement": "W",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    await async_recorder_block_till_done(hass)
+
+    await client.send_json({"id": 7, "type": "recorder/list_statistic_ids"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == [
+        {
+            "statistic_id": "sensor.test",
+            "display_unit_of_measurement": "kW",
+            "has_mean": True,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": "W",
+            "unit_class": "power",
+        }
+    ]
 
 
 async def test_change_statistics_unit_errors(
@@ -2030,8 +2063,6 @@ async def test_change_statistics_unit_errors(
                 "mean": 10.0,
                 "min": 10.0,
                 "start": int(now.timestamp() * 1000),
-                "state": None,
-                "sum": None,
             }
         ],
     }
@@ -2196,8 +2227,8 @@ async def test_recorder_info_migration_queue_exhausted(
     ), patch(
         "homeassistant.components.recorder.core.create_engine",
         new=create_engine_test,
-    ), patch.object(
-        recorder.core, "MAX_QUEUE_BACKLOG", 1
+    ), patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1), patch.object(
+        recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 0
     ), patch(
         "homeassistant.components.recorder.migration._apply_update",
         wraps=stalled_migration,
@@ -2550,15 +2581,14 @@ async def test_import_statistics(
     assert response["result"] is None
 
     await async_wait_recording_done(hass)
-    stats = statistics_during_period(hass, zero, period="hour")
+    stats = statistics_during_period(
+        hass, zero, period="hour", statistic_ids={statistic_id}
+    )
     assert stats == {
         statistic_id: [
             {
                 "start": period1.timestamp(),
                 "end": (period1 + timedelta(hours=1)).timestamp(),
-                "max": None,
-                "mean": None,
-                "min": None,
                 "last_reset": None,
                 "state": pytest.approx(0.0),
                 "sum": pytest.approx(2.0),
@@ -2566,9 +2596,6 @@ async def test_import_statistics(
             {
                 "start": period2.timestamp(),
                 "end": (period2 + timedelta(hours=1)).timestamp(),
-                "max": None,
-                "mean": None,
-                "min": None,
                 "last_reset": None,
                 "state": pytest.approx(1.0),
                 "sum": pytest.approx(3.0),
@@ -2588,7 +2615,7 @@ async def test_import_statistics(
             "unit_class": "energy",
         }
     ]
-    metadata = get_metadata(hass, statistic_ids=(statistic_id,))
+    metadata = get_metadata(hass, statistic_ids={statistic_id})
     assert metadata == {
         statistic_id: (
             1,
@@ -2614,9 +2641,6 @@ async def test_import_statistics(
             {
                 "start": period2.timestamp(),
                 "end": (period2 + timedelta(hours=1)).timestamp(),
-                "max": None,
-                "mean": None,
-                "min": None,
                 "last_reset": None,
                 "state": pytest.approx(1.0),
                 "sum": pytest.approx(3.0),
@@ -2645,15 +2669,14 @@ async def test_import_statistics(
     assert response["result"] is None
 
     await async_wait_recording_done(hass)
-    stats = statistics_during_period(hass, zero, period="hour")
+    stats = statistics_during_period(
+        hass, zero, period="hour", statistic_ids={statistic_id}
+    )
     assert stats == {
         statistic_id: [
             {
                 "start": period1.timestamp(),
                 "end": (period1 + timedelta(hours=1)).timestamp(),
-                "max": None,
-                "mean": None,
-                "min": None,
                 "last_reset": None,
                 "state": pytest.approx(5.0),
                 "sum": pytest.approx(6.0),
@@ -2661,9 +2684,6 @@ async def test_import_statistics(
             {
                 "start": period2.timestamp(),
                 "end": (period2 + timedelta(hours=1)).timestamp(),
-                "max": None,
-                "mean": None,
-                "min": None,
                 "last_reset": None,
                 "state": pytest.approx(1.0),
                 "sum": pytest.approx(3.0),
@@ -2695,15 +2715,14 @@ async def test_import_statistics(
     assert response["result"] is None
 
     await async_wait_recording_done(hass)
-    stats = statistics_during_period(hass, zero, period="hour")
+    stats = statistics_during_period(
+        hass, zero, period="hour", statistic_ids={statistic_id}
+    )
     assert stats == {
         statistic_id: [
             {
                 "start": period1.timestamp(),
                 "end": (period1 + timedelta(hours=1)).timestamp(),
-                "max": pytest.approx(1.0),
-                "mean": pytest.approx(2.0),
-                "min": pytest.approx(3.0),
                 "last_reset": None,
                 "state": pytest.approx(4.0),
                 "sum": pytest.approx(5.0),
@@ -2711,9 +2730,6 @@ async def test_import_statistics(
             {
                 "start": period2.timestamp(),
                 "end": (period2 + timedelta(hours=1)).timestamp(),
-                "max": None,
-                "mean": None,
-                "min": None,
                 "last_reset": None,
                 "state": pytest.approx(1.0),
                 "sum": pytest.approx(3.0),
@@ -2820,7 +2836,7 @@ async def test_adjust_sum_statistics_energy(
             "unit_class": "energy",
         }
     ]
-    metadata = get_metadata(hass, statistic_ids=(statistic_id,))
+    metadata = get_metadata(hass, statistic_ids={statistic_id})
     assert metadata == {
         statistic_id: (
             1,
@@ -3016,7 +3032,7 @@ async def test_adjust_sum_statistics_gas(
             "unit_class": "volume",
         }
     ]
-    metadata = get_metadata(hass, statistic_ids=(statistic_id,))
+    metadata = get_metadata(hass, statistic_ids={statistic_id})
     assert metadata == {
         statistic_id: (
             1,
@@ -3230,7 +3246,7 @@ async def test_adjust_sum_statistics_errors(
             "unit_class": unit_class,
         }
     ]
-    metadata = get_metadata(hass, statistic_ids=(statistic_id,))
+    metadata = get_metadata(hass, statistic_ids={statistic_id})
     assert metadata == {
         statistic_id: (
             1,

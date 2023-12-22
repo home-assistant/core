@@ -16,7 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import DOMAIN
+from .const import DOMAIN, RING_DEVICES, RING_HISTORY_COORDINATOR
 from .entity import RingEntityMixin
 
 FORCE_REFRESH_INTERVAL = timedelta(minutes=3)
@@ -30,7 +30,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Ring Door Bell and StickUp Camera."""
-    devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
+    devices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
 
     cams = []
@@ -48,23 +48,25 @@ async def async_setup_entry(
 class RingCam(RingEntityMixin, Camera):
     """An implementation of a Ring Door Bell camera."""
 
+    _attr_name = None
+
     def __init__(self, config_entry_id, ffmpeg_manager, device):
         """Initialize a Ring Door Bell camera."""
         super().__init__(config_entry_id, device)
 
-        self._name = self._device.name
         self._ffmpeg_manager = ffmpeg_manager
         self._last_event = None
         self._last_video_id = None
         self._video_url = None
         self._image = None
         self._expires_at = dt_util.utcnow() - FORCE_REFRESH_INTERVAL
+        self._attr_unique_id = device.id
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
 
-        await self.ring_objects["history_data"].async_track_device(
+        await self.ring_objects[RING_HISTORY_COORDINATOR].async_track_device(
             self._device, self._history_update_callback
         )
 
@@ -72,7 +74,7 @@ class RingCam(RingEntityMixin, Camera):
         """Disconnect callbacks."""
         await super().async_will_remove_from_hass()
 
-        self.ring_objects["history_data"].async_untrack_device(
+        self.ring_objects[RING_HISTORY_COORDINATOR].async_untrack_device(
             self._device, self._history_update_callback
         )
 
@@ -89,16 +91,6 @@ class RingCam(RingEntityMixin, Camera):
             self._image = None
             self._expires_at = dt_util.utcnow()
             self.async_write_ha_state()
-
-    @property
-    def name(self):
-        """Return the name of this camera."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._device.id
 
     @property
     def extra_state_attributes(self):

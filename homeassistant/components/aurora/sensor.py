@@ -5,8 +5,8 @@ from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AuroraEntity
 from .const import COORDINATOR, DOMAIN
+from .entity import AuroraEntity
 
 
 async def async_setup_entry(
@@ -17,7 +17,7 @@ async def async_setup_entry(
 
     entity = AuroraSensor(
         coordinator=coordinator,
-        name=f"{coordinator.name} Aurora Visibility %",
+        translation_key="visibility",
         icon="mdi:gauge",
     )
 

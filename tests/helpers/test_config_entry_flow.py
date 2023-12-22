@@ -1,4 +1,5 @@
 """Tests for the Config Entry Flow helper."""
+from collections.abc import Generator
 from unittest.mock import Mock, PropertyMock, patch
 
 import pytest
@@ -8,20 +9,15 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow
 
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    mock_entity_platform,
-    mock_integration,
-)
+from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
 
 
 @pytest.fixture
-def discovery_flow_conf(hass):
+def discovery_flow_conf(hass: HomeAssistant) -> Generator[dict[str, bool], None, None]:
     """Register a handler."""
     handler_conf = {"discovered": False}
 
-    async def has_discovered_devices(hass):
+    async def has_discovered_devices(hass: HomeAssistant) -> bool:
         """Mock if we have discovered devices."""
         return handler_conf["discovered"]
 
@@ -33,17 +29,19 @@ def discovery_flow_conf(hass):
 
 
 @pytest.fixture
-def webhook_flow_conf(hass):
+def webhook_flow_conf(hass: HomeAssistant) -> Generator[None, None, None]:
     """Register a handler."""
     with patch.dict(config_entries.HANDLERS):
         config_entry_flow.register_webhook_flow("test_single", "Test Single", {}, False)
         config_entry_flow.register_webhook_flow(
             "test_multiple", "Test Multiple", {}, True
         )
-        yield {}
+        yield
 
 
-async def test_single_entry_allowed(hass: HomeAssistant, discovery_flow_conf) -> None:
+async def test_single_entry_allowed(
+    hass: HomeAssistant, discovery_flow_conf: dict[str, bool]
+) -> None:
     """Test only a single entry is allowed."""
     flow = config_entries.HANDLERS["test"]()
     flow.hass = hass
@@ -56,7 +54,9 @@ async def test_single_entry_allowed(hass: HomeAssistant, discovery_flow_conf) ->
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_user_no_devices_found(hass: HomeAssistant, discovery_flow_conf) -> None:
+async def test_user_no_devices_found(
+    hass: HomeAssistant, discovery_flow_conf: dict[str, bool]
+) -> None:
     """Test if no devices found."""
     flow = config_entries.HANDLERS["test"]()
     flow.hass = hass
@@ -67,10 +67,12 @@ async def test_user_no_devices_found(hass: HomeAssistant, discovery_flow_conf) -
     assert result["reason"] == "no_devices_found"
 
 
-async def test_user_has_confirmation(hass: HomeAssistant, discovery_flow_conf) -> None:
+async def test_user_has_confirmation(
+    hass: HomeAssistant, discovery_flow_conf: dict[str, bool]
+) -> None:
     """Test user requires confirmation to setup."""
     discovery_flow_conf["discovered"] = True
-    mock_entity_platform(hass, "config_flow.test", None)
+    mock_platform(hass, "test.config_flow", None)
 
     result = await hass.config_entries.flow.async_init(
         "test", context={"source": config_entries.SOURCE_USER}, data={}
@@ -104,7 +106,7 @@ async def test_user_has_confirmation(hass: HomeAssistant, discovery_flow_conf) -
     ],
 )
 async def test_discovery_single_instance(
-    hass: HomeAssistant, discovery_flow_conf, source
+    hass: HomeAssistant, discovery_flow_conf: dict[str, bool], source: str
 ) -> None:
     """Test we not allow duplicates."""
     flow = config_entries.HANDLERS["test"]()
@@ -130,7 +132,7 @@ async def test_discovery_single_instance(
     ],
 )
 async def test_discovery_confirmation(
-    hass: HomeAssistant, discovery_flow_conf, source
+    hass: HomeAssistant, discovery_flow_conf: dict[str, bool], source: str
 ) -> None:
     """Test we ask for confirmation via discovery."""
     flow = config_entries.HANDLERS["test"]()
@@ -158,7 +160,7 @@ async def test_discovery_confirmation(
     ],
 )
 async def test_discovery_during_onboarding(
-    hass: HomeAssistant, discovery_flow_conf, source
+    hass: HomeAssistant, discovery_flow_conf: dict[str, bool], source: str
 ) -> None:
     """Test we create config entry via discovery during onboarding."""
     flow = config_entries.HANDLERS["test"]()
@@ -173,9 +175,11 @@ async def test_discovery_during_onboarding(
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
-async def test_multiple_discoveries(hass: HomeAssistant, discovery_flow_conf) -> None:
+async def test_multiple_discoveries(
+    hass: HomeAssistant, discovery_flow_conf: dict[str, bool]
+) -> None:
     """Test we only create one instance for multiple discoveries."""
-    mock_entity_platform(hass, "config_flow.test", None)
+    mock_platform(hass, "test.config_flow", None)
 
     result = await hass.config_entries.flow.async_init(
         "test", context={"source": config_entries.SOURCE_DISCOVERY}, data={}
@@ -189,9 +193,11 @@ async def test_multiple_discoveries(hass: HomeAssistant, discovery_flow_conf) ->
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
 
 
-async def test_only_one_in_progress(hass: HomeAssistant, discovery_flow_conf) -> None:
+async def test_only_one_in_progress(
+    hass: HomeAssistant, discovery_flow_conf: dict[str, bool]
+) -> None:
     """Test a user initialized one will finish and cancel discovered one."""
-    mock_entity_platform(hass, "config_flow.test", None)
+    mock_platform(hass, "test.config_flow", None)
 
     # Discovery starts flow
     result = await hass.config_entries.flow.async_init(
@@ -215,9 +221,11 @@ async def test_only_one_in_progress(hass: HomeAssistant, discovery_flow_conf) ->
     assert len(hass.config_entries.flow.async_progress()) == 0
 
 
-async def test_import_abort_discovery(hass: HomeAssistant, discovery_flow_conf) -> None:
+async def test_import_abort_discovery(
+    hass: HomeAssistant, discovery_flow_conf: dict[str, bool]
+) -> None:
     """Test import will finish and cancel discovered one."""
-    mock_entity_platform(hass, "config_flow.test", None)
+    mock_platform(hass, "test.config_flow", None)
 
     # Discovery starts flow
     result = await hass.config_entries.flow.async_init(
@@ -236,7 +244,9 @@ async def test_import_abort_discovery(hass: HomeAssistant, discovery_flow_conf) 
     assert len(hass.config_entries.flow.async_progress()) == 0
 
 
-async def test_import_no_confirmation(hass: HomeAssistant, discovery_flow_conf) -> None:
+async def test_import_no_confirmation(
+    hass: HomeAssistant, discovery_flow_conf: dict[str, bool]
+) -> None:
     """Test import requires no confirmation to set up."""
     flow = config_entries.HANDLERS["test"]()
     flow.hass = hass
@@ -247,7 +257,9 @@ async def test_import_no_confirmation(hass: HomeAssistant, discovery_flow_conf) 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
-async def test_import_single_instance(hass: HomeAssistant, discovery_flow_conf) -> None:
+async def test_import_single_instance(
+    hass: HomeAssistant, discovery_flow_conf: dict[str, bool]
+) -> None:
     """Test import doesn't create second instance."""
     flow = config_entries.HANDLERS["test"]()
     flow.hass = hass
@@ -259,9 +271,11 @@ async def test_import_single_instance(hass: HomeAssistant, discovery_flow_conf) 
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
 
 
-async def test_ignored_discoveries(hass: HomeAssistant, discovery_flow_conf) -> None:
+async def test_ignored_discoveries(
+    hass: HomeAssistant, discovery_flow_conf: dict[str, bool]
+) -> None:
     """Test we can ignore discovered entries."""
-    mock_entity_platform(hass, "config_flow.test", None)
+    mock_platform(hass, "test.config_flow", None)
 
     result = await hass.config_entries.flow.async_init(
         "test", context={"source": config_entries.SOURCE_DISCOVERY}, data={}
@@ -292,7 +306,7 @@ async def test_ignored_discoveries(hass: HomeAssistant, discovery_flow_conf) -> 
 
 
 async def test_webhook_single_entry_allowed(
-    hass: HomeAssistant, webhook_flow_conf
+    hass: HomeAssistant, webhook_flow_conf: None
 ) -> None:
     """Test only a single entry is allowed."""
     flow = config_entries.HANDLERS["test_single"]()
@@ -306,7 +320,7 @@ async def test_webhook_single_entry_allowed(
 
 
 async def test_webhook_multiple_entries_allowed(
-    hass: HomeAssistant, webhook_flow_conf
+    hass: HomeAssistant, webhook_flow_conf: None
 ) -> None:
     """Test multiple entries are allowed when specified."""
     flow = config_entries.HANDLERS["test_multiple"]()
@@ -320,7 +334,7 @@ async def test_webhook_multiple_entries_allowed(
 
 
 async def test_webhook_config_flow_registers_webhook(
-    hass: HomeAssistant, webhook_flow_conf
+    hass: HomeAssistant, webhook_flow_conf: None
 ) -> None:
     """Test setting up an entry creates a webhook."""
     flow = config_entries.HANDLERS["test_single"]()
@@ -336,7 +350,9 @@ async def test_webhook_config_flow_registers_webhook(
     assert result["data"]["webhook_id"] is not None
 
 
-async def test_webhook_create_cloudhook(hass: HomeAssistant, webhook_flow_conf) -> None:
+async def test_webhook_create_cloudhook(
+    hass: HomeAssistant, webhook_flow_conf: None
+) -> None:
     """Test cloudhook will be created if subscribed."""
     assert await setup.async_setup_component(hass, "cloud", {})
 
@@ -352,7 +368,7 @@ async def test_webhook_create_cloudhook(hass: HomeAssistant, webhook_flow_conf) 
             async_remove_entry=config_entry_flow.webhook_async_remove_entry,
         ),
     )
-    mock_entity_platform(hass, "config_flow.test_single", None)
+    mock_platform(hass, "test_single.config_flow", None)
 
     result = await hass.config_entries.flow.async_init(
         "test_single", context={"source": config_entries.SOURCE_USER}
@@ -390,7 +406,7 @@ async def test_webhook_create_cloudhook(hass: HomeAssistant, webhook_flow_conf) 
 
 
 async def test_webhook_create_cloudhook_aborts_not_connected(
-    hass: HomeAssistant, webhook_flow_conf
+    hass: HomeAssistant, webhook_flow_conf: None
 ) -> None:
     """Test cloudhook aborts if subscribed but not connected."""
     assert await setup.async_setup_component(hass, "cloud", {})
@@ -407,7 +423,7 @@ async def test_webhook_create_cloudhook_aborts_not_connected(
             async_remove_entry=config_entry_flow.webhook_async_remove_entry,
         ),
     )
-    mock_entity_platform(hass, "config_flow.test_single", None)
+    mock_platform(hass, "test_single.config_flow", None)
 
     result = await hass.config_entries.flow.async_init(
         "test_single", context={"source": config_entries.SOURCE_USER}

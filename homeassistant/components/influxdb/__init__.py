@@ -22,9 +22,17 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PATH,
+    CONF_PORT,
+    CONF_SSL,
     CONF_TIMEOUT,
+    CONF_TOKEN,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_URL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
@@ -56,23 +64,15 @@ from .const import (
     CONF_COMPONENT_CONFIG_GLOB,
     CONF_DB_NAME,
     CONF_DEFAULT_MEASUREMENT,
-    CONF_HOST,
     CONF_IGNORE_ATTRIBUTES,
     CONF_MEASUREMENT_ATTR,
     CONF_ORG,
     CONF_OVERRIDE_MEASUREMENT,
-    CONF_PASSWORD,
-    CONF_PATH,
-    CONF_PORT,
     CONF_PRECISION,
     CONF_RETRY_COUNT,
-    CONF_SSL,
     CONF_SSL_CA_CERT,
     CONF_TAGS,
     CONF_TAGS_ATTRIBUTES,
-    CONF_TOKEN,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
     CONNECTION_ERROR,
     DEFAULT_API_VERSION,
     DEFAULT_HOST_V2,
@@ -145,12 +145,11 @@ def validate_version_specific_config(conf: dict) -> dict:
                 f" {CONF_API_VERSION} is {DEFAULT_API_VERSION}"
             )
 
-    else:
-        if CONF_TOKEN in conf:
-            raise vol.Invalid(
-                f"{CONF_TOKEN} and {CONF_BUCKET} are only allowed when"
-                f" {CONF_API_VERSION} is {API_VERSION_2}"
-            )
+    elif CONF_TOKEN in conf:
+        raise vol.Invalid(
+            f"{CONF_TOKEN} and {CONF_BUCKET} are only allowed when"
+            f" {CONF_API_VERSION} is {API_VERSION_2}"
+        )
 
     return conf
 

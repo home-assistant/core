@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from roonapi import split_media_path
 import voluptuous as vol
@@ -12,17 +12,18 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
     RepeatMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import convert
 from homeassistant.util.dt import utcnow
@@ -91,7 +92,6 @@ class RoonDevice(MediaPlayerEntity):
         MediaPlayerEntityFeature.BROWSE_MEDIA
         | MediaPlayerEntityFeature.GROUPING
         | MediaPlayerEntityFeature.PAUSE
-        | MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.NEXT_TRACK
@@ -103,7 +103,6 @@ class RoonDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.PLAY_MEDIA
-        | MediaPlayerEntityFeature.VOLUME_STEP
     )
 
     def __init__(self, server, player_data):
@@ -123,6 +122,8 @@ class RoonDevice(MediaPlayerEntity):
         self._attr_shuffle = False
         self._attr_media_image_url = None
         self._attr_volume_level = 0
+        self._volume_fixed = True
+        self._volume_incremental = False
         self.update_data(player_data)
 
     async def async_added_to_hass(self) -> None:
@@ -158,7 +159,10 @@ class RoonDevice(MediaPlayerEntity):
             dev_model = self.player_data["source_controls"][0].get("display_name")
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
-            name=self.name,
+            # Instead of setting the device name to the entity name, roon
+            # should be updated to set has_entity_name = True, and set the entity
+            # name to None
+            name=cast(str | None, self.name),
             manufacturer="RoonLabs",
             model=dev_model,
             via_device=(DOMAIN, self._server.roon_id),
@@ -186,12 +190,21 @@ class RoonDevice(MediaPlayerEntity):
             "level": 0,
             "step": 0,
             "muted": False,
+            "fixed": True,
+            "incremental": False,
         }
 
         try:
             volume_data = player_data["volume"]
-            volume_muted = volume_data["is_muted"]
-            volume_step = convert(volume_data["step"], int, 0)
+        except KeyError:
+            return volume
+
+        volume["fixed"] = False
+        volume["incremental"] = volume_data["type"] == "incremental"
+        volume["muted"] = volume_data.get("is_muted", False)
+        volume["step"] = convert(volume_data.get("step"), int, 0)
+
+        try:
             volume_max = volume_data["max"]
             volume_min = volume_data["min"]
             raw_level = convert(volume_data["value"], float, 0)
@@ -200,15 +213,9 @@ class RoonDevice(MediaPlayerEntity):
             volume_percentage_factor = volume_range / 100
 
             level = (raw_level - volume_min) / volume_percentage_factor
-            volume_level = convert(level, int, 0) / 100
-
+            volume["level"] = convert(level, int, 0) / 100
         except KeyError:
-            # catch KeyError
             pass
-        else:
-            volume["muted"] = volume_muted
-            volume["step"] = volume_step
-            volume["level"] = volume_level
 
         return volume
 
@@ -284,6 +291,16 @@ class RoonDevice(MediaPlayerEntity):
         self._attr_is_volume_muted = volume["muted"]
         self._attr_volume_step = volume["step"]
         self._attr_volume_level = volume["level"]
+        self._volume_fixed = volume["fixed"]
+        self._volume_incremental = volume["incremental"]
+        if not self._volume_fixed:
+            self._attr_supported_features = (
+                self._attr_supported_features | MediaPlayerEntityFeature.VOLUME_STEP
+            )
+            if not self._volume_incremental:
+                self._attr_supported_features = (
+                    self._attr_supported_features | MediaPlayerEntityFeature.VOLUME_SET
+                )
 
         now_playing = self._parse_now_playing(self.player_data)
         self._attr_media_title = now_playing["title"]
@@ -355,11 +372,17 @@ class RoonDevice(MediaPlayerEntity):
 
     def volume_up(self) -> None:
         """Send new volume_level to device."""
-        self._server.roonapi.change_volume_percent(self.output_id, 3)
+        if self._volume_incremental:
+            self._server.roonapi.change_volume_raw(self.output_id, 1, "relative")
+        else:
+            self._server.roonapi.change_volume_percent(self.output_id, 3)
 
     def volume_down(self) -> None:
         """Send new volume_level to device."""
-        self._server.roonapi.change_volume_percent(self.output_id, -3)
+        if self._volume_incremental:
+            self._server.roonapi.change_volume_raw(self.output_id, -1, "relative")
+        else:
+            self._server.roonapi.change_volume_percent(self.output_id, -3)
 
     def turn_on(self) -> None:
         """Turn on device (if supported)."""
@@ -394,7 +417,9 @@ class RoonDevice(MediaPlayerEntity):
             raise ValueError(f"Unsupported repeat mode: {repeat}")
         self._server.roonapi.repeat(self.output_id, REPEAT_MODE_MAPPING_TO_ROON[repeat])
 
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Send the play_media command to the media player."""
 
         _LOGGER.debug("Playback request for %s / %s", media_type, media_id)
@@ -495,7 +520,9 @@ class RoonDevice(MediaPlayerEntity):
         )
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return await self.hass.async_add_executor_job(

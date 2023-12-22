@@ -1,7 +1,7 @@
 {
   "domain": "lifx",
   "name": "LIFX",
-  "codeowners": ["@bdraco", "@Djelibeybi"],
+  "codeowners": [],
   "config_flow": true,
   "dependencies": ["network"],
   "dhcp": [
@@ -29,9 +29,11 @@
       "LIFX GU10",
       "LIFX Lightstrip",
       "LIFX Mini",
+      "LIFX Neon",
       "LIFX Nightvision",
       "LIFX Pls",
       "LIFX Plus",
+      "LIFX String",
       "LIFX Tile",
       "LIFX White",
       "LIFX Z"
@@ -39,10 +41,9 @@
   },
   "iot_class": "local_polling",
   "loggers": ["aiolifx", "aiolifx_effects", "bitstring"],
-  "quality_scale": "platinum",
   "requirements": [
-    "aiolifx==0.8.9",
-    "aiolifx_effects==0.3.1",
-    "aiolifx_themes==0.4.0"
+    "aiolifx==1.0.0",
+    "aiolifx-effects==0.3.2",
+    "aiolifx-themes==0.4.10"
   ]
 }

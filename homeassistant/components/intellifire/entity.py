@@ -11,6 +11,7 @@ class IntellifireEntity(CoordinatorEntity[IntellifireDataUpdateCoordinator]):
     """Define a generic class for Intellifire entities."""
 
     _attr_attribution = "Data provided by unpublished Intellifire API"
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -20,9 +21,6 @@ class IntellifireEntity(CoordinatorEntity[IntellifireDataUpdateCoordinator]):
         """Class initializer."""
         super().__init__(coordinator=coordinator)
         self.entity_description = description
-        # Set the Display name the User will see
-        self._attr_name = description.name
         self._attr_unique_id = f"{description.key}_{coordinator.read_api.data.serial}"
-        self._attr_has_entity_name = True
         # Configure the Device Info
         self._attr_device_info = self.coordinator.device_info

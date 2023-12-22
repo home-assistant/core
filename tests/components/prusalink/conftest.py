@@ -1,8 +1,9 @@
 """Fixtures for PrusaLink."""
-
 from unittest.mock import patch
 
 import pytest
+
+from homeassistant.components.prusalink import DOMAIN
 
 from tests.common import MockConfigEntry
 
@@ -11,7 +12,10 @@ from tests.common import MockConfigEntry
 def mock_config_entry(hass):
     """Mock a PrusaLink config entry."""
     entry = MockConfigEntry(
-        domain="prusalink", data={"host": "http://example.com", "api_key": "abcdefgh"}
+        domain=DOMAIN,
+        data={"host": "http://example.com", "username": "dummy", "password": "dummypw"},
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
     return entry
@@ -23,96 +27,138 @@ def mock_version_api(hass):
     resp = {
         "api": "2.0.0",
         "server": "2.1.2",
-        "text": "PrusaLink MINI",
-        "hostname": "PrusaMINI",
+        "text": "PrusaLink",
+        "hostname": "PrusaXL",
     }
     with patch("pyprusalink.PrusaLink.get_version", return_value=resp):
         yield resp
 
 
 @pytest.fixture
-def mock_printer_api(hass):
+def mock_info_api(hass):
+    """Mock PrusaLink info API."""
+    resp = {
+        "nozzle_diameter": 0.40,
+        "mmu": False,
+        "serial": "serial-1337",
+        "hostname": "PrusaXL",
+        "min_extrusion_temp": 170,
+    }
+    with patch("pyprusalink.PrusaLink.get_info", return_value=resp):
+        yield resp
+
+
+@pytest.fixture
+def mock_get_legacy_printer(hass):
+    """Mock PrusaLink printer API."""
+    resp = {"telemetry": {"material": "PLA"}}
+    with patch("pyprusalink.PrusaLink.get_legacy_printer", return_value=resp):
+        yield resp
+
+
+@pytest.fixture
+def mock_get_status_idle(hass):
     """Mock PrusaLink printer API."""
     resp = {
-        "telemetry": {
-            "temp-bed": 41.9,
-            "temp-nozzle": 47.8,
-            "print-speed": 100,
-            "z-height": 1.8,
-            "material": "PLA",
+        "storage": {
+            "path": "/usb/",
+            "name": "usb",
+            "read_only": False,
         },
-        "temperature": {
-            "tool0": {"actual": 47.8, "target": 0.0, "display": 0.0, "offset": 0},
-            "bed": {"actual": 41.9, "target": 0.0, "offset": 0},
-        },
-        "state": {
-            "text": "Operational",
-            "flags": {
-                "operational": True,
-                "paused": False,
-                "printing": False,
-                "cancelling": False,
-                "pausing": False,
-                "sdReady": False,
-                "error": False,
-                "closedOnError": False,
-                "ready": True,
-                "busy": False,
-            },
+        "printer": {
+            "state": "IDLE",
+            "temp_bed": 41.9,
+            "target_bed": 60.5,
+            "temp_nozzle": 47.8,
+            "target_nozzle": 210.1,
+            "axis_z": 1.8,
+            "axis_x": 7.9,
+            "axis_y": 8.4,
+            "flow": 100,
+            "speed": 100,
+            "fan_hotend": 100,
+            "fan_print": 75,
         },
     }
-    with patch("pyprusalink.PrusaLink.get_printer", return_value=resp):
+    with patch("pyprusalink.PrusaLink.get_status", return_value=resp):
+        yield resp
+
+
+@pytest.fixture
+def mock_get_status_printing(hass):
+    """Mock PrusaLink printer API."""
+    resp = {
+        "job": {
+            "id": 129,
+            "progress": 37.00,
+            "time_remaining": 73020,
+            "time_printing": 43987,
+        },
+        "storage": {"path": "/usb/", "name": "usb", "read_only": False},
+        "printer": {
+            "state": "PRINTING",
+            "temp_bed": 53.9,
+            "target_bed": 85.0,
+            "temp_nozzle": 6.0,
+            "target_nozzle": 0.0,
+            "axis_z": 5.0,
+            "flow": 100,
+            "speed": 100,
+            "fan_hotend": 5000,
+            "fan_print": 2500,
+        },
+    }
+    with patch("pyprusalink.PrusaLink.get_status", return_value=resp):
         yield resp
 
 
 @pytest.fixture
 def mock_job_api_idle(hass):
     """Mock PrusaLink job API having no job."""
+    resp = {}
+    with patch("pyprusalink.PrusaLink.get_job", return_value=resp):
+        yield resp
+
+
+@pytest.fixture
+def mock_job_api_printing(hass):
+    """Mock PrusaLink printing."""
     resp = {
-        "state": "Operational",
-        "job": None,
-        "progress": None,
+        "id": 129,
+        "state": "PRINTING",
+        "progress": 37.00,
+        "time_remaining": 73020,
+        "time_printing": 43987,
+        "file": {
+            "refs": {
+                "icon": "/thumb/s/usb/TabletStand3~4.BGC",
+                "thumbnail": "/thumb/l/usb/TabletStand3~4.BGC",
+                "download": "/usb/TabletStand3~4.BGC",
+            },
+            "name": "TabletStand3~4.BGC",
+            "display_name": "TabletStand3.bgcode",
+            "path": "/usb",
+            "size": 754535,
+            "m_timestamp": 1698686881,
+        },
     }
     with patch("pyprusalink.PrusaLink.get_job", return_value=resp):
         yield resp
 
 
 @pytest.fixture
-def mock_job_api_printing(hass, mock_printer_api, mock_job_api_idle):
-    """Mock PrusaLink printing."""
-    mock_printer_api["state"]["text"] = "Printing"
-    mock_printer_api["state"]["flags"]["printing"] = True
-
-    mock_job_api_idle.update(
-        {
-            "state": "Printing",
-            "job": {
-                "estimatedPrintTime": 117007,
-                "file": {
-                    "name": "TabletStand3.gcode",
-                    "path": "/usb/TABLET~1.GCO",
-                    "display": "TabletStand3.gcode",
-                },
-            },
-            "progress": {
-                "completion": 0.37,
-                "printTime": 43987,
-                "printTimeLeft": 73020,
-            },
-        }
-    )
-
-
-@pytest.fixture
-def mock_job_api_paused(hass, mock_printer_api, mock_job_api_idle):
+def mock_job_api_paused(hass, mock_get_status_printing, mock_job_api_printing):
     """Mock PrusaLink paused printing."""
-    mock_printer_api["state"]["text"] = "Paused"
-    mock_printer_api["state"]["flags"]["printing"] = False
-    mock_printer_api["state"]["flags"]["paused"] = True
-
-    mock_job_api_idle["state"] = "Paused"
+    mock_job_api_printing["state"] = "PAUSED"
+    mock_get_status_printing["printer"]["state"] = "PAUSED"
 
 
 @pytest.fixture
-def mock_api(mock_version_api, mock_printer_api, mock_job_api_idle):
+def mock_api(
+    mock_version_api,
+    mock_info_api,
+    mock_get_legacy_printer,
+    mock_get_status_idle,
+    mock_job_api_idle,
+):
     """Mock PrusaLink API."""

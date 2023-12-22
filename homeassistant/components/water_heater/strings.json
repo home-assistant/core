@@ -1,19 +1,75 @@
 {
   "device_automation": {
     "action_type": {
-      "turn_on": "Turn on {entity_name}",
-      "turn_off": "Turn off {entity_name}"
+      "turn_on": "[%key:common::device_automation::action_type::turn_on%]",
+      "turn_off": "[%key:common::device_automation::action_type::turn_off%]"
     }
   },
-  "state": {
+  "entity_component": {
     "_": {
-      "off": "[%key:common::state::off%]",
-      "eco": "Eco",
-      "electric": "Electric",
-      "gas": "Gas",
-      "high_demand": "High Demand",
-      "heat_pump": "Heat Pump",
-      "performance": "Performance"
+      "name": "Water heater",
+      "state": {
+        "off": "[%key:common::state::off%]",
+        "eco": "Eco",
+        "electric": "Electric",
+        "gas": "Gas",
+        "high_demand": "High Demand",
+        "heat_pump": "Heat Pump",
+        "performance": "Performance"
+      },
+      "state_attributes": {
+        "away_mode": {
+          "name": "Away mode",
+          "state": {
+            "off": "[%key:common::state::off%]",
+            "on": "[%key:common::state::on%]"
+          }
+        }
+      }
+    }
+  },
+  "services": {
+    "set_away_mode": {
+      "name": "Set away mode",
+      "description": "Turns away mode on/off.",
+      "fields": {
+        "away_mode": {
+          "name": "Away mode",
+          "description": "New value of away mode."
+        }
+      }
+    },
+    "set_temperature": {
+      "name": "Set temperature",
+      "description": "Sets the target temperature.",
+      "fields": {
+        "temperature": {
+          "name": "Temperature",
+          "description": "New target temperature for the water heater."
+        },
+        "operation_mode": {
+          "name": "Operation mode",
+          "description": "New value of the operation mode. For a list of possible modes, refer to the integration documentation."
+        }
+      }
+    },
+    "set_operation_mode": {
+      "name": "Set operation mode",
+      "description": "Sets the operation mode.",
+      "fields": {
+        "operation_mode": {
+          "name": "[%key:component::water_heater::services::set_temperature::fields::operation_mode::name%]",
+          "description": "[%key:component::water_heater::services::set_temperature::fields::operation_mode::description%]"
+        }
+      }
+    },
+    "turn_on": {
+      "name": "[%key:common::action::turn_on%]",
+      "description": "Turns water heater on."
+    },
+    "turn_off": {
+      "name": "[%key:common::action::turn_off%]",
+      "description": "Turns water heater off."
     }
   }
 }

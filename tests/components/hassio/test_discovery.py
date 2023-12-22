@@ -12,7 +12,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_S
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockModule, mock_entity_platform, mock_integration
+from tests.common import MockModule, mock_config_flow, mock_integration, mock_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -20,17 +20,16 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def mock_mqtt_fixture(hass):
     """Mock the MQTT integration's config flow."""
     mock_integration(hass, MockModule(MQTT_DOMAIN))
-    mock_entity_platform(hass, f"config_flow.{MQTT_DOMAIN}", None)
+    mock_platform(hass, f"{MQTT_DOMAIN}.config_flow", None)
 
-    with patch.dict(config_entries.HANDLERS):
+    class MqttFlow(config_entries.ConfigFlow):
+        """Test flow."""
 
-        class MqttFlow(config_entries.ConfigFlow, domain=MQTT_DOMAIN):
-            """Test flow."""
+        VERSION = 1
 
-            VERSION = 1
+        async_step_hassio = AsyncMock(return_value={"type": "abort"})
 
-            async_step_hassio = AsyncMock(return_value={"type": "abort"})
-
+    with mock_config_flow(MQTT_DOMAIN, MqttFlow):
         yield MqttFlow
 
 
@@ -85,6 +84,7 @@ async def test_hassio_discovery_startup(
             },
             name="Mosquitto Test",
             slug="mosquitto",
+            uuid="test",
         )
     )
 
@@ -149,6 +149,7 @@ async def test_hassio_discovery_startup_done(
                 },
                 name="Mosquitto Test",
                 slug="mosquitto",
+                uuid="test",
             )
         )
 
@@ -203,5 +204,6 @@ async def test_hassio_discovery_webhook(
             },
             name="Mosquitto Test",
             slug="mosquitto",
+            uuid="test",
         )
     )

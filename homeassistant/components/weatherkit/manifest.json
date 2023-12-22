@@ -1,0 +1,9 @@
+{
+  "domain": "weatherkit",
+  "name": "Apple WeatherKit",
+  "codeowners": ["@tjhorner"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/weatherkit",
+  "iot_class": "cloud_polling",
+  "requirements": ["apple_weatherkit==1.1.2"]
+}

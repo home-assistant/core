@@ -25,6 +25,7 @@ async def test_programmable_switch_button_fires_on_trigger(
 
     demo_config_entry = MockConfigEntry(domain="domain")
     demo_config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "demo", {"demo": {}})
     await hass.async_block_till_done()
     hass.states.async_set("light.ceiling_lights", STATE_OFF)
@@ -70,3 +71,4 @@ async def test_programmable_switch_button_fires_on_trigger(
         char = acc.get_characteristic(call.args[0]["aid"], call.args[0]["iid"])
         assert char.display_name == CHAR_PROGRAMMABLE_SWITCH_EVENT
     await acc.stop()
+    await hass.async_block_till_done()

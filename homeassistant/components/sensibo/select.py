@@ -20,7 +20,7 @@ from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 PARALLEL_UPDATES = 0
 
 
-@dataclass
+@dataclass(frozen=True)
 class SensiboSelectDescriptionMixin:
     """Mixin values for Sensibo entities."""
 
@@ -30,7 +30,7 @@ class SensiboSelectDescriptionMixin:
     transformation: Callable[[SensiboDevice], dict | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SensiboSelectEntityDescription(
     SelectEntityDescription, SensiboSelectDescriptionMixin
 ):
@@ -41,7 +41,6 @@ DEVICE_SELECT_TYPES = (
     SensiboSelectEntityDescription(
         key="horizontalSwing",
         data_key="horizontal_swing_mode",
-        name="Horizontal swing",
         icon="mdi:air-conditioner",
         value_fn=lambda data: data.horizontal_swing_mode,
         options_fn=lambda data: data.horizontal_swing_modes,
@@ -51,7 +50,6 @@ DEVICE_SELECT_TYPES = (
     SensiboSelectEntityDescription(
         key="light",
         data_key="light_mode",
-        name="Light",
         icon="mdi:flashlight",
         value_fn=lambda data: data.light_mode,
         options_fn=lambda data: data.light_modes,
@@ -108,9 +106,16 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Set state to the selected option."""
         if self.entity_description.key not in self.device_data.active_features:
+            hvac_mode = self.device_data.hvac_mode if self.device_data.hvac_mode else ""
             raise HomeAssistantError(
                 f"Current mode {self.device_data.hvac_mode} doesn't support setting"
-                f" {self.entity_description.name}"
+                f" {self.entity_description.name}",
+                translation_domain=DOMAIN,
+                translation_key="select_option_not_available",
+                translation_placeholders={
+                    "hvac_mode": hvac_mode,
+                    "key": self.entity_description.key,
+                },
             )
 
         await self.async_send_api_call(

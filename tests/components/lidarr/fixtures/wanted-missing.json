@@ -1,0 +1,134 @@
+{
+  "page": 1,
+  "pageSize": 20,
+  "sortKey": "title",
+  "sortDirection": "default",
+  "totalRecords": 1,
+  "records": [
+    {
+      "title": "test",
+      "disambiguation": "string",
+      "overview": "string",
+      "artistId": 0,
+      "foreignAlbumId": "string",
+      "monitored": true,
+      "anyReleaseOk": true,
+      "profileId": 1,
+      "duration": 0,
+      "albumType": "Album",
+      "secondaryTypes": [
+        {
+          "id": 0,
+          "name": "string"
+        }
+      ],
+      "mediumCount": 1,
+      "ratings": {
+        "votes": 0,
+        "value": 0
+      },
+      "releaseDate": "1968-01-01T00:00:00Z",
+      "releases": [
+        {
+          "id": 0,
+          "albumId": 0,
+          "foreignReleaseId": "string",
+          "title": "string",
+          "status": "string",
+          "duration": 0,
+          "trackCount": 1,
+          "media": [
+            {
+              "mediumNumber": 1,
+              "mediumName": "Unknown",
+              "mediumFormat": "Unknown"
+            }
+          ],
+          "mediumCount": 1,
+          "disambiguation": "",
+          "country": ["string"],
+          "label": ["test"],
+          "format": "Unknown",
+          "monitored": true
+        }
+      ],
+      "genres": ["string"],
+      "media": [
+        {
+          "mediumNumber": 1,
+          "mediumName": "Unknown",
+          "mediumFormat": "Unknown"
+        }
+      ],
+      "artist": {
+        "artistMetadataId": 0,
+        "status": "continuing",
+        "ended": false,
+        "artistName": "test",
+        "foreignArtistId": "string",
+        "tadbId": 0,
+        "discogsId": 0,
+        "overview": "string",
+        "artistType": "Group",
+        "disambiguation": "",
+        "links": [
+          {
+            "url": "string",
+            "name": "string"
+          }
+        ],
+        "images": [
+          {
+            "url": "https://test.jpg",
+            "coverType": "fanart",
+            "extension": ".jpg"
+          }
+        ],
+        "path": "string",
+        "qualityProfileId": 1,
+        "metadataProfileId": 1,
+        "monitored": true,
+        "monitorNewItems": "all",
+        "genres": ["string"],
+        "cleanName": "string",
+        "sortName": "string",
+        "tags": [0],
+        "added": "2020-03-18T15:51:22Z",
+        "ratings": {
+          "votes": 0,
+          "value": 0
+        },
+        "statistics": {
+          "albumCount": 0,
+          "trackFileCount": 0,
+          "trackCount": 0,
+          "totalTrackCount": 0,
+          "sizeOnDisk": 0,
+          "percentOfTracks": 0
+        },
+        "id": 0
+      },
+      "images": [
+        {
+          "url": "string",
+          "coverType": "poster"
+        }
+      ],
+      "links": [
+        {
+          "url": "string",
+          "name": "string"
+        }
+      ],
+      "statistics": {
+        "trackFileCount": 0,
+        "trackCount": 1,
+        "totalTrackCount": 1,
+        "sizeOnDisk": 0,
+        "percentOfTracks": 0
+      },
+      "grabbed": false,
+      "id": 1
+    }
+  ]
+}

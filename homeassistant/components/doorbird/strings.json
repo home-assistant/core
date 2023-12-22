@@ -17,8 +17,11 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "host": "[%key:common::config_flow::data::host%]",
-          "name": "Device Name",
+          "name": "Device name",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your DoorBird device."
         }
       }
     },
@@ -32,6 +35,19 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "entity": {
+    "camera": {
+      "live": {
+        "name": "live"
+      },
+      "last_ring": {
+        "name": "Last ring"
+      },
+      "last_motion": {
+        "name": "Last motion"
+      }
     }
   }
 }

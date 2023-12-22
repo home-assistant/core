@@ -42,7 +42,7 @@ class ECCamera(CoordinatorEntity, Camera):
     """Implementation of an Environment Canada radar camera."""
 
     _attr_has_entity_name = True
-    _attr_name = "Radar"
+    _attr_translation_key = "radar"
 
     def __init__(self, coordinator):
         """Initialize the camera."""

@@ -8,22 +8,24 @@ from unittest.mock import patch
 
 from astral import LocationInfo
 import astral.sun
-import async_timeout
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import jinja2
 import pytest
 
-from homeassistant.components import sun
 from homeassistant.const import MATCH_ALL
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
+from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     TrackStates,
     TrackTemplate,
     TrackTemplateResult,
     async_call_later,
+    async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
     async_track_point_in_time,
     async_track_point_in_utc_time,
@@ -43,6 +45,7 @@ from homeassistant.helpers.event import (
     track_point_in_utc_time,
 )
 from homeassistant.helpers.template import Template, result_as_boolean
+from homeassistant.helpers.typing import EventType
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -296,21 +299,21 @@ async def test_async_track_state_change_filtered(hass: HomeAssistant) -> None:
     multiple_entity_id_tracker = []
 
     @ha.callback
-    def single_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def single_run_callback(event: EventType[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         single_entity_id_tracker.append((old_state, new_state))
 
     @ha.callback
-    def multiple_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def multiple_run_callback(event: EventType[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         multiple_entity_id_tracker.append((old_state, new_state))
 
     @ha.callback
-    def callback_that_throws(event):
+    def callback_that_throws(event: EventType[EventStateChangedData]) -> None:
         raise ValueError
 
     track_single = async_track_state_change_filtered(
@@ -432,21 +435,21 @@ async def test_async_track_state_change_event(hass: HomeAssistant) -> None:
     multiple_entity_id_tracker = []
 
     @ha.callback
-    def single_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def single_run_callback(event: EventType[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         single_entity_id_tracker.append((old_state, new_state))
 
     @ha.callback
-    def multiple_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def multiple_run_callback(event: EventType[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         multiple_entity_id_tracker.append((old_state, new_state))
 
     @ha.callback
-    def callback_that_throws(event):
+    def callback_that_throws(event: EventType[EventStateChangedData]) -> None:
         raise ValueError
 
     unsub_single = async_track_state_change_event(
@@ -540,16 +543,16 @@ async def test_async_track_state_added_domain(hass: HomeAssistant) -> None:
     multiple_entity_id_tracker = []
 
     @ha.callback
-    def single_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def single_run_callback(event: EventType[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         single_entity_id_tracker.append((old_state, new_state))
 
     @ha.callback
-    def multiple_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def multiple_run_callback(event: EventType[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         multiple_entity_id_tracker.append((old_state, new_state))
 
@@ -652,16 +655,16 @@ async def test_async_track_state_removed_domain(hass: HomeAssistant) -> None:
     multiple_entity_id_tracker = []
 
     @ha.callback
-    def single_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def single_run_callback(event: EventType[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         single_entity_id_tracker.append((old_state, new_state))
 
     @ha.callback
-    def multiple_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def multiple_run_callback(event: EventType[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         multiple_entity_id_tracker.append((old_state, new_state))
 
@@ -734,16 +737,16 @@ async def test_async_track_state_removed_domain_match_all(hass: HomeAssistant) -
     match_all_entity_id_tracker = []
 
     @ha.callback
-    def single_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def single_run_callback(event: EventType[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         single_entity_id_tracker.append((old_state, new_state))
 
     @ha.callback
-    def match_all_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def match_all_run_callback(event: EventType[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         match_all_entity_id_tracker.append((old_state, new_state))
 
@@ -920,7 +923,9 @@ async def test_track_template_error_can_recover(
 
 
 async def test_track_template_time_change(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test tracking template with time change."""
     template_error = Template("{{ utcnow().minute % 2 == 0 }}", hass)
@@ -932,20 +937,20 @@ async def test_track_template_time_change(
 
     start_time = dt_util.utcnow() + timedelta(hours=24)
     time_that_will_not_match_right_away = start_time.replace(minute=1, second=0)
-    with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
-    ):
-        async_track_template(hass, template_error, error_callback)
-        await hass.async_block_till_done()
-        assert not calls
+    freezer.move_to(time_that_will_not_match_right_away)
+    unsub = async_track_template(hass, template_error, error_callback)
+    await hass.async_block_till_done()
+    assert not calls
 
     first_time = start_time.replace(minute=2, second=0)
-    with patch("homeassistant.util.dt.utcnow", return_value=first_time):
-        async_fire_time_changed(hass, first_time)
-        await hass.async_block_till_done()
+    freezer.move_to(first_time)
+    async_fire_time_changed(hass, first_time)
+    await hass.async_block_till_done()
 
     assert len(calls) == 1
     assert calls[0] == (None, None, None)
+
+    unsub()
 
 
 async def test_track_template_result(hass: HomeAssistant) -> None:
@@ -959,7 +964,10 @@ async def test_track_template_result(hass: HomeAssistant) -> None:
         "{{(states.sensor.test.state|int) + test }}", hass
     )
 
-    def specific_run_callback(event, updates):
+    def specific_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         track_result = updates.pop()
         specific_runs.append(int(track_result.result))
 
@@ -968,7 +976,10 @@ async def test_track_template_result(hass: HomeAssistant) -> None:
     )
 
     @ha.callback
-    def wildcard_run_callback(event, updates):
+    def wildcard_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         track_result = updates.pop()
         wildcard_runs.append(
             (int(track_result.last_result or 0), int(track_result.result))
@@ -978,7 +989,10 @@ async def test_track_template_result(hass: HomeAssistant) -> None:
         hass, [TrackTemplate(template_condition, None)], wildcard_run_callback
     )
 
-    async def wildercard_run_callback(event, updates):
+    async def wildercard_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         track_result = updates.pop()
         wildercard_runs.append(
             (int(track_result.last_result or 0), int(track_result.result))
@@ -1045,7 +1059,10 @@ async def test_track_template_result_none(hass: HomeAssistant) -> None:
         "{{(state_attr('sensor.test', 'battery')|int(default=0)) + test }}", hass
     )
 
-    def specific_run_callback(event, updates):
+    def specific_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         track_result = updates.pop()
         result = int(track_result.result) if track_result.result is not None else None
         specific_runs.append(result)
@@ -1055,7 +1072,10 @@ async def test_track_template_result_none(hass: HomeAssistant) -> None:
     )
 
     @ha.callback
-    def wildcard_run_callback(event, updates):
+    def wildcard_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         track_result = updates.pop()
         last_result = (
             int(track_result.last_result)
@@ -1069,7 +1089,10 @@ async def test_track_template_result_none(hass: HomeAssistant) -> None:
         hass, [TrackTemplate(template_condition, None)], wildcard_run_callback
     )
 
-    async def wildercard_run_callback(event, updates):
+    async def wildercard_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         track_result = updates.pop()
         last_result = (
             int(track_result.last_result)
@@ -1116,7 +1139,10 @@ async def test_track_template_result_super_template(hass: HomeAssistant) -> None
         "{{(states.sensor.test.state|int) + test }}", hass
     )
 
-    def specific_run_callback(event, updates):
+    def specific_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         for track_result in updates:
             if track_result.template is template_condition:
                 specific_runs.append(int(track_result.result))
@@ -1134,7 +1160,10 @@ async def test_track_template_result_super_template(hass: HomeAssistant) -> None
     )
 
     @ha.callback
-    def wildcard_run_callback(event, updates):
+    def wildcard_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         for track_result in updates:
             if track_result.template is template_condition:
                 wildcard_runs.append(
@@ -1153,7 +1182,10 @@ async def test_track_template_result_super_template(hass: HomeAssistant) -> None
         has_super_template=True,
     )
 
-    async def wildercard_run_callback(event, updates):
+    async def wildercard_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         for track_result in updates:
             if track_result.template is template_condition_var:
                 wildercard_runs.append(
@@ -1266,7 +1298,10 @@ async def test_track_template_result_super_template_initially_false(
     hass.states.async_set("sensor.test", "unavailable")
     await hass.async_block_till_done()
 
-    def specific_run_callback(event, updates):
+    def specific_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         for track_result in updates:
             if track_result.template is template_condition:
                 specific_runs.append(int(track_result.result))
@@ -1284,7 +1319,10 @@ async def test_track_template_result_super_template_initially_false(
     )
 
     @ha.callback
-    def wildcard_run_callback(event, updates):
+    def wildcard_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         for track_result in updates:
             if track_result.template is template_condition:
                 wildcard_runs.append(
@@ -1303,7 +1341,10 @@ async def test_track_template_result_super_template_initially_false(
         has_super_template=True,
     )
 
-    async def wildercard_run_callback(event, updates):
+    async def wildercard_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         for track_result in updates:
             if track_result.template is template_condition_var:
                 wildercard_runs.append(
@@ -1406,7 +1447,7 @@ async def test_track_template_result_super_template_initially_false(
     ],
 )
 async def test_track_template_result_super_template_2(
-    hass: HomeAssistant, availability_template
+    hass: HomeAssistant, availability_template: str
 ) -> None:
     """Test tracking template with super template listening to different entities."""
     specific_runs = []
@@ -1428,7 +1469,10 @@ async def test_track_template_result_super_template_2(
 
         return result_as_boolean(result)
 
-    def specific_run_callback(event, updates):
+    def specific_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         for track_result in updates:
             if track_result.template is template_condition:
                 specific_runs.append(int(track_result.result))
@@ -1437,7 +1481,7 @@ async def test_track_template_result_super_template_2(
                     _super_template_as_boolean(track_result.result)
                 )
 
-    async_track_template_result(
+    info = async_track_template_result(
         hass,
         [
             TrackTemplate(template_availability, None),
@@ -1448,7 +1492,10 @@ async def test_track_template_result_super_template_2(
     )
 
     @ha.callback
-    def wildcard_run_callback(event, updates):
+    def wildcard_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         for track_result in updates:
             if track_result.template is template_condition:
                 wildcard_runs.append(
@@ -1459,7 +1506,7 @@ async def test_track_template_result_super_template_2(
                     _super_template_as_boolean(track_result.result)
                 )
 
-    async_track_template_result(
+    info2 = async_track_template_result(
         hass,
         [
             TrackTemplate(template_availability, None),
@@ -1469,7 +1516,10 @@ async def test_track_template_result_super_template_2(
         has_super_template=True,
     )
 
-    async def wildercard_run_callback(event, updates):
+    async def wildercard_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         for track_result in updates:
             if track_result.template is template_condition_var:
                 wildercard_runs.append(
@@ -1480,7 +1530,7 @@ async def test_track_template_result_super_template_2(
                     _super_template_as_boolean(track_result.result)
                 )
 
-    async_track_template_result(
+    info3 = async_track_template_result(
         hass,
         [
             TrackTemplate(template_availability, None),
@@ -1530,6 +1580,10 @@ async def test_track_template_result_super_template_2(
     assert wildcard_runs == [(0, 5), (5, 30)]
     assert wildercard_runs == [(0, 10), (10, 35)]
 
+    info.async_remove()
+    info2.async_remove()
+    info3.async_remove()
+
 
 @pytest.mark.parametrize(
     "availability_template",
@@ -1545,7 +1599,7 @@ async def test_track_template_result_super_template_2(
     ],
 )
 async def test_track_template_result_super_template_2_initially_false(
-    hass: HomeAssistant, availability_template
+    hass: HomeAssistant, availability_template: str
 ) -> None:
     """Test tracking template with super template listening to different entities."""
     specific_runs = []
@@ -1570,7 +1624,10 @@ async def test_track_template_result_super_template_2_initially_false(
 
         return result_as_boolean(result)
 
-    def specific_run_callback(event, updates):
+    def specific_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         for track_result in updates:
             if track_result.template is template_condition:
                 specific_runs.append(int(track_result.result))
@@ -1579,7 +1636,7 @@ async def test_track_template_result_super_template_2_initially_false(
                     _super_template_as_boolean(track_result.result)
                 )
 
-    async_track_template_result(
+    info = async_track_template_result(
         hass,
         [
             TrackTemplate(template_availability, None),
@@ -1590,7 +1647,10 @@ async def test_track_template_result_super_template_2_initially_false(
     )
 
     @ha.callback
-    def wildcard_run_callback(event, updates):
+    def wildcard_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         for track_result in updates:
             if track_result.template is template_condition:
                 wildcard_runs.append(
@@ -1601,7 +1661,7 @@ async def test_track_template_result_super_template_2_initially_false(
                     _super_template_as_boolean(track_result.result)
                 )
 
-    async_track_template_result(
+    info2 = async_track_template_result(
         hass,
         [
             TrackTemplate(template_availability, None),
@@ -1611,7 +1671,10 @@ async def test_track_template_result_super_template_2_initially_false(
         has_super_template=True,
     )
 
-    async def wildercard_run_callback(event, updates):
+    async def wildercard_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         for track_result in updates:
             if track_result.template is template_condition_var:
                 wildercard_runs.append(
@@ -1622,7 +1685,7 @@ async def test_track_template_result_super_template_2_initially_false(
                     _super_template_as_boolean(track_result.result)
                 )
 
-    async_track_template_result(
+    info3 = async_track_template_result(
         hass,
         [
             TrackTemplate(template_availability, None),
@@ -1669,6 +1732,10 @@ async def test_track_template_result_super_template_2_initially_false(
     assert wildcard_runs == [(0, 5), (5, 30)]
     assert wildercard_runs == [(0, 10), (10, 35)]
 
+    info.async_remove()
+    info2.async_remove()
+    info3.async_remove()
+
 
 async def test_track_template_result_complex(hass: HomeAssistant) -> None:
     """Test tracking template."""
@@ -1687,7 +1754,10 @@ async def test_track_template_result_complex(hass: HomeAssistant) -> None:
 """
     template_complex = Template(template_complex_str, hass)
 
-    def specific_run_callback(event, updates):
+    def specific_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         specific_runs.append(updates.pop().result)
 
     hass.states.async_set("light.one", "on")
@@ -1832,7 +1902,7 @@ async def test_track_template_result_with_wildcard(hass: HomeAssistant) -> None:
     template_complex_str = r"""
 
 {% for state in states %}
-  {% if state.entity_id | regex_match('.*\.office_') %}
+  {% if state.entity_id | regex_match('.*\\.office_') %}
     {{ state.entity_id }}={{ state.state }}
   {% endif %}
 {% endfor %}
@@ -1840,7 +1910,10 @@ async def test_track_template_result_with_wildcard(hass: HomeAssistant) -> None:
 """
     template_complex = Template(template_complex_str, hass)
 
-    def specific_run_callback(event, updates):
+    def specific_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         specific_runs.append(updates.pop().result)
 
     hass.states.async_set("cover.office_drapes", "closed")
@@ -1892,7 +1965,10 @@ async def test_track_template_result_with_group(hass: HomeAssistant) -> None:
 """
     template_complex = Template(template_complex_str, hass)
 
-    def specific_run_callback(event, updates):
+    def specific_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         specific_runs.append(updates.pop().result)
 
     info = async_track_template_result(
@@ -1949,7 +2025,10 @@ async def test_track_template_result_and_conditional(hass: HomeAssistant) -> Non
 
     template = Template(template_str, hass)
 
-    def specific_run_callback(event, updates):
+    def specific_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         specific_runs.append(updates.pop().result)
 
     info = async_track_template_result(
@@ -2014,7 +2093,10 @@ async def test_track_template_result_and_conditional_upper_case(
 
     template = Template(template_str, hass)
 
-    def specific_run_callback(event, updates):
+    def specific_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         specific_runs.append(updates.pop().result)
 
     info = async_track_template_result(
@@ -2073,7 +2155,10 @@ async def test_track_template_result_iterator(hass: HomeAssistant) -> None:
     iterator_runs = []
 
     @ha.callback
-    def iterator_callback(event, updates):
+    def iterator_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         iterator_runs.append(updates.pop().result)
 
     async_track_template_result(
@@ -2106,7 +2191,10 @@ async def test_track_template_result_iterator(hass: HomeAssistant) -> None:
     filter_runs = []
 
     @ha.callback
-    def filter_callback(event, updates):
+    def filter_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         filter_runs.append(updates.pop().result)
 
     info = async_track_template_result(
@@ -2156,7 +2244,10 @@ async def test_track_template_result_errors(
     not_exist_runs = []
 
     @ha.callback
-    def syntax_error_listener(event, updates):
+    def syntax_error_listener(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         track_result = updates.pop()
         syntax_error_runs.append(
             (
@@ -2176,7 +2267,10 @@ async def test_track_template_result_errors(
     assert "TemplateSyntaxError" in caplog.text
 
     @ha.callback
-    def not_exist_runs_error_listener(event, updates):
+    def not_exist_runs_error_listener(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         template_track = updates.pop()
         not_exist_runs.append(
             (
@@ -2241,7 +2335,10 @@ async def test_track_template_result_transient_errors(
     sometimes_error_runs = []
 
     @ha.callback
-    def sometimes_error_listener(event, updates):
+    def sometimes_error_listener(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         track_result = updates.pop()
         sometimes_error_runs.append(
             (
@@ -2286,7 +2383,10 @@ async def test_static_string(hass: HomeAssistant) -> None:
     refresh_runs = []
 
     @ha.callback
-    def refresh_listener(event, updates):
+    def refresh_listener(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         refresh_runs.append(updates.pop().result)
 
     info = async_track_template_result(
@@ -2306,7 +2406,10 @@ async def test_track_template_rate_limit(hass: HomeAssistant) -> None:
     refresh_runs = []
 
     @ha.callback
-    def refresh_listener(event, updates):
+    def refresh_listener(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         refresh_runs.append(updates.pop().result)
 
     info = async_track_template_result(
@@ -2351,6 +2454,8 @@ async def test_track_template_rate_limit(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert refresh_runs == [0, 1, 2, 4]
 
+    info.async_remove()
+
 
 async def test_track_template_rate_limit_super(hass: HomeAssistant) -> None:
     """Test template rate limit with super template."""
@@ -2363,7 +2468,10 @@ async def test_track_template_rate_limit_super(hass: HomeAssistant) -> None:
     refresh_runs = []
 
     @ha.callback
-    def refresh_listener(event, updates):
+    def refresh_listener(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         for track_result in updates:
             if track_result.template is template_refresh:
                 refresh_runs.append(track_result.result)
@@ -2423,6 +2531,8 @@ async def test_track_template_rate_limit_super(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert refresh_runs == [0, 1, 4]
 
+    info.async_remove()
+
 
 async def test_track_template_rate_limit_super_2(hass: HomeAssistant) -> None:
     """Test template rate limit with rate limited super template."""
@@ -2434,7 +2544,10 @@ async def test_track_template_rate_limit_super_2(hass: HomeAssistant) -> None:
     refresh_runs = []
 
     @ha.callback
-    def refresh_listener(event, updates):
+    def refresh_listener(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         for track_result in updates:
             if track_result.template is template_refresh:
                 refresh_runs.append(track_result.result)
@@ -2490,6 +2603,8 @@ async def test_track_template_rate_limit_super_2(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert refresh_runs == [1, 5]
 
+    info.async_remove()
+
 
 async def test_track_template_rate_limit_super_3(hass: HomeAssistant) -> None:
     """Test template with rate limited super template."""
@@ -2501,7 +2616,10 @@ async def test_track_template_rate_limit_super_3(hass: HomeAssistant) -> None:
     refresh_runs = []
 
     @ha.callback
-    def refresh_listener(event, updates):
+    def refresh_listener(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         for track_result in updates:
             if track_result.template is template_refresh:
                 refresh_runs.append(track_result.result)
@@ -2562,6 +2680,8 @@ async def test_track_template_rate_limit_super_3(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert refresh_runs == [1, 2, 5, 6, 7]
 
+    info.async_remove()
+
 
 async def test_track_template_rate_limit_suppress_listener(hass: HomeAssistant) -> None:
     """Test template rate limit will suppress the listener during the rate limit."""
@@ -2570,7 +2690,10 @@ async def test_track_template_rate_limit_suppress_listener(hass: HomeAssistant) 
     refresh_runs = []
 
     @ha.callback
-    def refresh_listener(event, updates):
+    def refresh_listener(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         refresh_runs.append(updates.pop().result)
 
     info = async_track_template_result(
@@ -2657,6 +2780,8 @@ async def test_track_template_rate_limit_suppress_listener(hass: HomeAssistant) 
     }
     assert refresh_runs == [0, 1, 2, 4]
 
+    info.async_remove()
+
 
 async def test_track_template_rate_limit_five(hass: HomeAssistant) -> None:
     """Test template rate limit of 5 seconds."""
@@ -2665,7 +2790,10 @@ async def test_track_template_rate_limit_five(hass: HomeAssistant) -> None:
     refresh_runs = []
 
     @ha.callback
-    def refresh_listener(event, updates):
+    def refresh_listener(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         refresh_runs.append(updates.pop().result)
 
     info = async_track_template_result(
@@ -2690,6 +2818,8 @@ async def test_track_template_rate_limit_five(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert refresh_runs == [0, 1]
 
+    info.async_remove()
+
 
 async def test_track_template_has_default_rate_limit(hass: HomeAssistant) -> None:
     """Test template has a rate limit by default."""
@@ -2699,7 +2829,10 @@ async def test_track_template_has_default_rate_limit(hass: HomeAssistant) -> Non
     refresh_runs = []
 
     @ha.callback
-    def refresh_listener(event, updates):
+    def refresh_listener(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         refresh_runs.append(updates.pop().result)
 
     info = async_track_template_result(
@@ -2724,6 +2857,8 @@ async def test_track_template_has_default_rate_limit(hass: HomeAssistant) -> Non
     await hass.async_block_till_done()
     assert refresh_runs == [1, 2]
 
+    info.async_remove()
+
 
 async def test_track_template_unavailable_states_has_default_rate_limit(
     hass: HomeAssistant,
@@ -2738,7 +2873,10 @@ async def test_track_template_unavailable_states_has_default_rate_limit(
     refresh_runs = []
 
     @ha.callback
-    def refresh_listener(event, updates):
+    def refresh_listener(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         refresh_runs.append(updates.pop().result)
 
     info = async_track_template_result(
@@ -2779,7 +2917,10 @@ async def test_specifically_referenced_entity_is_not_rate_limited(
     refresh_runs = []
 
     @ha.callback
-    def refresh_listener(event, updates):
+    def refresh_listener(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         refresh_runs.append(updates.pop().result)
 
     info = async_track_template_result(
@@ -2822,7 +2963,10 @@ async def test_track_two_templates_with_different_rate_limits(
     }
 
     @ha.callback
-    def refresh_listener(event, updates):
+    def refresh_listener(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         for update in updates:
             refresh_runs[update.template].append(update.result)
 
@@ -2883,7 +3027,10 @@ async def test_string(hass: HomeAssistant) -> None:
     refresh_runs = []
 
     @ha.callback
-    def refresh_listener(event, updates):
+    def refresh_listener(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         refresh_runs.append(updates.pop().result)
 
     info = async_track_template_result(
@@ -2903,7 +3050,10 @@ async def test_track_template_result_refresh_cancel(hass: HomeAssistant) -> None
     refresh_runs = []
 
     @ha.callback
-    def refresh_listener(event, updates):
+    def refresh_listener(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         refresh_runs.append(updates.pop().result)
 
     info = async_track_template_result(
@@ -2965,7 +3115,10 @@ async def test_async_track_template_result_multiple_templates(
     refresh_runs = []
 
     @ha.callback
-    def refresh_listener(event, updates):
+    def refresh_listener(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         refresh_runs.append(updates)
 
     async_track_template_result(
@@ -3019,12 +3172,17 @@ async def test_async_track_template_result_multiple_templates_mixing_domain(
     template_1 = Template("{{ states.switch.test.state == 'on' }}")
     template_2 = Template("{{ states.switch.test.state == 'on' }}")
     template_3 = Template("{{ states.switch.test.state == 'off' }}")
-    template_4 = Template("{{ states.switch | map(attribute='entity_id') | list }}")
+    template_4 = Template(
+        "{{ states.switch | sort(attribute='entity_id') | map(attribute='entity_id') | list }}"
+    )
 
     refresh_runs = []
 
     @ha.callback
-    def refresh_listener(event, updates):
+    def refresh_listener(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         refresh_runs.append(updates)
 
     async_track_template_result(
@@ -3081,27 +3239,6 @@ async def test_async_track_template_result_multiple_templates_mixing_domain(
     ]
 
 
-async def test_async_track_template_result_raise_on_template_error(
-    hass: HomeAssistant,
-) -> None:
-    """Test that we raise as soon as we encounter a failed template."""
-
-    with pytest.raises(TemplateError):
-        async_track_template_result(
-            hass,
-            [
-                TrackTemplate(
-                    Template(
-                        "{{ states.switch | function_that_does_not_exist | list }}"
-                    ),
-                    None,
-                ),
-            ],
-            ha.callback(lambda event, updates: None),
-            raise_on_template_error=True,
-        )
-
-
 async def test_track_template_with_time(hass: HomeAssistant) -> None:
     """Test tracking template with time."""
 
@@ -3109,7 +3246,10 @@ async def test_track_template_with_time(hass: HomeAssistant) -> None:
     specific_runs = []
     template_complex = Template("{{ states.switch.test.state and now() }}", hass)
 
-    def specific_run_callback(event, updates):
+    def specific_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         specific_runs.append(updates.pop().result)
 
     info = async_track_template_result(
@@ -3139,7 +3279,10 @@ async def test_track_template_with_time_default(hass: HomeAssistant) -> None:
     specific_runs = []
     template_complex = Template("{{ now() }}", hass)
 
-    def specific_run_callback(event, updates):
+    def specific_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         specific_runs.append(updates.pop().result)
 
     info = async_track_template_result(
@@ -3169,81 +3312,89 @@ async def test_track_template_with_time_default(hass: HomeAssistant) -> None:
     info.async_remove()
 
 
-async def test_track_template_with_time_that_leaves_scope(hass: HomeAssistant) -> None:
+async def test_track_template_with_time_that_leaves_scope(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test tracking template with time."""
     now = dt_util.utcnow()
     test_time = datetime(now.year + 1, 5, 24, 11, 59, 1, 500000, tzinfo=dt_util.UTC)
+    freezer.move_to(test_time)
 
-    with patch("homeassistant.util.dt.utcnow", return_value=test_time):
-        hass.states.async_set("binary_sensor.washing_machine", "on")
-        specific_runs = []
-        template_complex = Template(
-            """
-            {% if states.binary_sensor.washing_machine.state == "on" %}
-                {{ now() }}
-            {% else %}
-                {{ states.binary_sensor.washing_machine.last_updated }}
-            {% endif %}
-        """,
-            hass,
-        )
+    hass.states.async_set("binary_sensor.washing_machine", "on")
+    specific_runs = []
+    template_complex = Template(
+        """
+        {% if states.binary_sensor.washing_machine.state == "on" %}
+            {{ now() }}
+        {% else %}
+            {{ states.binary_sensor.washing_machine.last_updated }}
+        {% endif %}
+    """,
+        hass,
+    )
 
-        def specific_run_callback(event, updates):
-            specific_runs.append(updates.pop().result)
+    def specific_run_callback(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
+        specific_runs.append(updates.pop().result)
 
-        info = async_track_template_result(
-            hass, [TrackTemplate(template_complex, None)], specific_run_callback
-        )
-        await hass.async_block_till_done()
+    info = async_track_template_result(
+        hass, [TrackTemplate(template_complex, None)], specific_run_callback
+    )
+    await hass.async_block_till_done()
 
-        assert info.listeners == {
-            "all": False,
-            "domains": set(),
-            "entities": {"binary_sensor.washing_machine"},
-            "time": True,
-        }
+    assert info.listeners == {
+        "all": False,
+        "domains": set(),
+        "entities": {"binary_sensor.washing_machine"},
+        "time": True,
+    }
 
-        hass.states.async_set("binary_sensor.washing_machine", "off")
-        await hass.async_block_till_done()
+    hass.states.async_set("binary_sensor.washing_machine", "off")
+    await hass.async_block_till_done()
 
-        assert info.listeners == {
-            "all": False,
-            "domains": set(),
-            "entities": {"binary_sensor.washing_machine"},
-            "time": False,
-        }
+    assert info.listeners == {
+        "all": False,
+        "domains": set(),
+        "entities": {"binary_sensor.washing_machine"},
+        "time": False,
+    }
 
-        hass.states.async_set("binary_sensor.washing_machine", "on")
-        await hass.async_block_till_done()
+    hass.states.async_set("binary_sensor.washing_machine", "on")
+    await hass.async_block_till_done()
 
-        assert info.listeners == {
-            "all": False,
-            "domains": set(),
-            "entities": {"binary_sensor.washing_machine"},
-            "time": True,
-        }
+    assert info.listeners == {
+        "all": False,
+        "domains": set(),
+        "entities": {"binary_sensor.washing_machine"},
+        "time": True,
+    }
 
-        # Verify we do not update before the minute rolls over
-        callback_count_before_time_change = len(specific_runs)
-        async_fire_time_changed(hass, test_time)
-        await hass.async_block_till_done()
-        assert len(specific_runs) == callback_count_before_time_change
+    # Verify we do not update before the minute rolls over
+    callback_count_before_time_change = len(specific_runs)
+    async_fire_time_changed(hass, test_time)
+    await hass.async_block_till_done()
+    assert len(specific_runs) == callback_count_before_time_change
 
-        async_fire_time_changed(hass, test_time + timedelta(seconds=58))
-        await hass.async_block_till_done()
-        assert len(specific_runs) == callback_count_before_time_change
+    new_time = test_time + timedelta(seconds=58)
+    freezer.move_to(new_time)
+    async_fire_time_changed(hass, new_time)
+    await hass.async_block_till_done()
+    assert len(specific_runs) == callback_count_before_time_change
 
-        # Verify we do update on the next change of minute
-        async_fire_time_changed(hass, test_time + timedelta(seconds=59))
-
-        await hass.async_block_till_done()
-        assert len(specific_runs) == callback_count_before_time_change + 1
+    # Verify we do update on the next change of minute
+    new_time = test_time + timedelta(seconds=59)
+    freezer.move_to(new_time)
+    async_fire_time_changed(hass, new_time)
+    await hass.async_block_till_done()
+    assert len(specific_runs) == callback_count_before_time_change + 1
 
     info.async_remove()
 
 
 async def test_async_track_template_result_multiple_templates_mixing_listeners(
-    hass: HomeAssistant,
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test tracking multiple templates with mixing listener types."""
 
@@ -3253,7 +3404,10 @@ async def test_async_track_template_result_multiple_templates_mixing_listeners(
     refresh_runs = []
 
     @ha.callback
-    def refresh_listener(event, updates):
+    def refresh_listener(
+        event: EventType[EventStateChangedData] | None,
+        updates: list[TrackTemplateResult],
+    ) -> None:
         refresh_runs.append(updates)
 
     now = dt_util.utcnow()
@@ -3261,18 +3415,16 @@ async def test_async_track_template_result_multiple_templates_mixing_listeners(
     time_that_will_not_match_right_away = datetime(
         now.year + 1, 5, 24, 11, 59, 55, tzinfo=dt_util.UTC
     )
+    freezer.move_to(time_that_will_not_match_right_away)
 
-    with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
-    ):
-        info = async_track_template_result(
-            hass,
-            [
-                TrackTemplate(template_1, None),
-                TrackTemplate(template_2, None),
-            ],
-            refresh_listener,
-        )
+    info = async_track_template_result(
+        hass,
+        [
+            TrackTemplate(template_1, None),
+            TrackTemplate(template_2, None),
+        ],
+        refresh_listener,
+    )
 
     assert info.listeners == {
         "all": False,
@@ -3301,15 +3453,17 @@ async def test_async_track_template_result_multiple_templates_mixing_listeners(
 
     refresh_runs = []
     next_time = time_that_will_not_match_right_away + timedelta(hours=25)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_time):
-        async_fire_time_changed(hass, next_time)
-        await hass.async_block_till_done()
+    freezer.move_to(next_time)
+    async_fire_time_changed(hass, next_time)
+    await hass.async_block_till_done()
 
     assert refresh_runs == [
         [
             TrackTemplateResult(template_2, None, True),
         ]
     ]
+
+    info.async_remove()
 
 
 async def test_track_same_state_simple_no_trigger(hass: HomeAssistant) -> None:
@@ -3412,6 +3566,28 @@ async def test_track_time_interval(hass: HomeAssistant) -> None:
     assert len(specific_runs) == 2
 
 
+async def test_track_time_interval_name(hass: HomeAssistant) -> None:
+    """Test tracking time interval name.
+
+    This test is to ensure that when a name is passed to async_track_time_interval,
+    that the name can be found in the TimerHandle when stringified.
+    """
+    specific_runs = []
+    unique_string = "xZ13"
+    unsub = async_track_time_interval(
+        hass,
+        callback(lambda x: specific_runs.append(x)),
+        timedelta(seconds=10),
+        name=unique_string,
+    )
+    scheduled = getattr(hass.loop, "_scheduled")
+    assert any(handle for handle in scheduled if unique_string in str(handle))
+    unsub()
+
+    assert all(handle for handle in scheduled if unique_string not in str(handle))
+    await hass.async_block_till_done()
+
+
 async def test_track_sunrise(hass: HomeAssistant) -> None:
     """Test track the sunrise."""
     latitude = 32.87336
@@ -3420,7 +3596,6 @@ async def test_track_sunrise(hass: HomeAssistant) -> None:
     # Setup sun component
     hass.config.latitude = latitude
     hass.config.longitude = longitude
-    assert await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
     location = LocationInfo(
         latitude=hass.config.latitude, longitude=hass.config.longitude
@@ -3485,7 +3660,6 @@ async def test_track_sunrise_update_location(hass: HomeAssistant) -> None:
     # Setup sun component
     hass.config.latitude = 32.87336
     hass.config.longitude = 117.22743
-    assert await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
     location = LocationInfo(
         latitude=hass.config.latitude, longitude=hass.config.longitude
@@ -3507,7 +3681,7 @@ async def test_track_sunrise_update_location(hass: HomeAssistant) -> None:
     # Track sunrise
     runs = []
     with freeze_time(utc_now):
-        async_track_sunrise(hass, callback(lambda: runs.append(1)))
+        unsub = async_track_sunrise(hass, callback(lambda: runs.append(1)))
 
     # Mimic sunrise
     with freeze_time(next_rising):
@@ -3548,6 +3722,8 @@ async def test_track_sunrise_update_location(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert len(runs) == 2
 
+    unsub()
+
 
 async def test_track_sunset(hass: HomeAssistant) -> None:
     """Test track the sunset."""
@@ -3559,7 +3735,6 @@ async def test_track_sunset(hass: HomeAssistant) -> None:
     # Setup sun component
     hass.config.latitude = latitude
     hass.config.longitude = longitude
-    assert await async_setup_component(hass, sun.DOMAIN, {sun.DOMAIN: {}})
 
     # Get next sunrise/sunset
     utc_now = datetime(2014, 5, 24, 12, 0, 0, tzinfo=dt_util.UTC)
@@ -3615,8 +3790,12 @@ async def test_track_sunset(hass: HomeAssistant) -> None:
         assert len(offset_runs) == 1
 
 
-async def test_async_track_time_change(hass: HomeAssistant) -> None:
+async def test_async_track_time_change(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test tracking time change."""
+    none_runs = []
     wildcard_runs = []
     specific_runs = []
 
@@ -3625,16 +3804,19 @@ async def test_async_track_time_change(hass: HomeAssistant) -> None:
     time_that_will_not_match_right_away = datetime(
         now.year + 1, 5, 24, 11, 59, 55, tzinfo=dt_util.UTC
     )
+    freezer.move_to(time_that_will_not_match_right_away)
 
-    with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
-    ):
-        unsub = async_track_time_change(
-            hass, callback(lambda x: wildcard_runs.append(x))
-        )
-        unsub_utc = async_track_utc_time_change(
-            hass, callback(lambda x: specific_runs.append(x)), second=[0, 30]
-        )
+    unsub = async_track_time_change(hass, callback(lambda x: none_runs.append(x)))
+    unsub_utc = async_track_utc_time_change(
+        hass, callback(lambda x: specific_runs.append(x)), second=[0, 30]
+    )
+    unsub_wildcard = async_track_time_change(
+        hass,
+        callback(lambda x: wildcard_runs.append(x)),
+        second="*",
+        minute="*",
+        hour="*",
+    )
 
     async_fire_time_changed(
         hass, datetime(now.year + 1, 5, 24, 12, 0, 0, 999999, tzinfo=dt_util.UTC)
@@ -3642,6 +3824,7 @@ async def test_async_track_time_change(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 1
+    assert len(none_runs) == 1
 
     async_fire_time_changed(
         hass, datetime(now.year + 1, 5, 24, 12, 0, 15, 999999, tzinfo=dt_util.UTC)
@@ -3649,6 +3832,7 @@ async def test_async_track_time_change(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
     assert len(wildcard_runs) == 2
+    assert len(none_runs) == 2
 
     async_fire_time_changed(
         hass, datetime(now.year + 1, 5, 24, 12, 0, 30, 999999, tzinfo=dt_util.UTC)
@@ -3656,9 +3840,11 @@ async def test_async_track_time_change(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
     assert len(wildcard_runs) == 3
+    assert len(none_runs) == 3
 
     unsub()
     unsub_utc()
+    unsub_wildcard()
 
     async_fire_time_changed(
         hass, datetime(now.year + 1, 5, 24, 12, 0, 30, 999999, tzinfo=dt_util.UTC)
@@ -3666,9 +3852,13 @@ async def test_async_track_time_change(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
     assert len(wildcard_runs) == 3
+    assert len(none_runs) == 3
 
 
-async def test_periodic_task_minute(hass: HomeAssistant) -> None:
+async def test_periodic_task_minute(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test periodic tasks per minute."""
     specific_runs = []
 
@@ -3677,13 +3867,11 @@ async def test_periodic_task_minute(hass: HomeAssistant) -> None:
     time_that_will_not_match_right_away = datetime(
         now.year + 1, 5, 24, 11, 59, 55, tzinfo=dt_util.UTC
     )
+    freezer.move_to(time_that_will_not_match_right_away)
 
-    with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
-    ):
-        unsub = async_track_utc_time_change(
-            hass, callback(lambda x: specific_runs.append(x)), minute="/5", second=0
-        )
+    unsub = async_track_utc_time_change(
+        hass, callback(lambda x: specific_runs.append(x)), minute="/5", second=0
+    )
 
     async_fire_time_changed(
         hass, datetime(now.year + 1, 5, 24, 12, 0, 0, 999999, tzinfo=dt_util.UTC)
@@ -3712,7 +3900,10 @@ async def test_periodic_task_minute(hass: HomeAssistant) -> None:
     assert len(specific_runs) == 2
 
 
-async def test_periodic_task_hour(hass: HomeAssistant) -> None:
+async def test_periodic_task_hour(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test periodic tasks per hour."""
     specific_runs = []
 
@@ -3721,17 +3912,15 @@ async def test_periodic_task_hour(hass: HomeAssistant) -> None:
     time_that_will_not_match_right_away = datetime(
         now.year + 1, 5, 24, 21, 59, 55, tzinfo=dt_util.UTC
     )
+    freezer.move_to(time_that_will_not_match_right_away)
 
-    with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
-    ):
-        unsub = async_track_utc_time_change(
-            hass,
-            callback(lambda x: specific_runs.append(x)),
-            hour="/2",
-            minute=0,
-            second=0,
-        )
+    unsub = async_track_utc_time_change(
+        hass,
+        callback(lambda x: specific_runs.append(x)),
+        hour="/2",
+        minute=0,
+        second=0,
+    )
 
     async_fire_time_changed(
         hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999, tzinfo=dt_util.UTC)
@@ -3790,71 +3979,77 @@ async def test_periodic_task_wrong_input(hass: HomeAssistant) -> None:
     assert len(specific_runs) == 0
 
 
-async def test_periodic_task_clock_rollback(hass: HomeAssistant) -> None:
+async def test_periodic_task_clock_rollback(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test periodic tasks with the time rolling backwards."""
     specific_runs = []
 
     now = dt_util.utcnow()
-
     time_that_will_not_match_right_away = datetime(
         now.year + 1, 5, 24, 21, 59, 55, tzinfo=dt_util.UTC
     )
+    freezer.move_to(time_that_will_not_match_right_away)
 
-    with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
-    ):
-        unsub = async_track_utc_time_change(
-            hass,
-            callback(lambda x: specific_runs.append(x)),
-            hour="/2",
-            minute=0,
-            second=0,
-        )
-
-    async_fire_time_changed(
-        hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999, tzinfo=dt_util.UTC)
+    unsub = async_track_utc_time_change(
+        hass,
+        callback(lambda x: specific_runs.append(x)),
+        hour="/2",
+        minute=0,
+        second=0,
     )
+
+    new_time = datetime(now.year + 1, 5, 24, 22, 0, 0, 999999, tzinfo=dt_util.UTC)
+    freezer.move_to(new_time)
+    async_fire_time_changed(hass, new_time)
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(
-        hass, datetime(now.year + 1, 5, 24, 23, 0, 0, 999999, tzinfo=dt_util.UTC)
-    )
+    new_time = datetime(now.year + 1, 5, 24, 23, 0, 0, 999999, tzinfo=dt_util.UTC)
+    freezer.move_to(new_time)
+    async_fire_time_changed(hass, new_time)
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
+    new_time = datetime(now.year + 1, 5, 24, 22, 0, 0, 999999, tzinfo=dt_util.UTC)
+    freezer.move_to(new_time)
     async_fire_time_changed(
         hass,
-        datetime(now.year + 1, 5, 24, 22, 0, 0, 999999, tzinfo=dt_util.UTC),
+        new_time,
         fire_all=True,
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
+    new_time = datetime(now.year + 1, 5, 24, 0, 0, 0, 999999, tzinfo=dt_util.UTC)
+    freezer.move_to(new_time)
     async_fire_time_changed(
         hass,
-        datetime(now.year + 1, 5, 24, 0, 0, 0, 999999, tzinfo=dt_util.UTC),
+        new_time,
         fire_all=True,
     )
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
-    async_fire_time_changed(
-        hass, datetime(now.year + 1, 5, 25, 2, 0, 0, 999999, tzinfo=dt_util.UTC)
-    )
+    new_time = datetime(now.year + 1, 5, 25, 2, 0, 0, 999999, tzinfo=dt_util.UTC)
+    freezer.move_to(new_time)
+    async_fire_time_changed(hass, new_time)
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
     unsub()
 
-    async_fire_time_changed(
-        hass, datetime(now.year + 1, 5, 25, 2, 0, 0, 999999, tzinfo=dt_util.UTC)
-    )
+    new_time = datetime(now.year + 1, 5, 25, 2, 0, 0, 999999, tzinfo=dt_util.UTC)
+    freezer.move_to(new_time)
+    async_fire_time_changed(hass, new_time)
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
 
-async def test_periodic_task_duplicate_time(hass: HomeAssistant) -> None:
+async def test_periodic_task_duplicate_time(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test periodic tasks not triggering on duplicate time."""
     specific_runs = []
 
@@ -3863,17 +4058,15 @@ async def test_periodic_task_duplicate_time(hass: HomeAssistant) -> None:
     time_that_will_not_match_right_away = datetime(
         now.year + 1, 5, 24, 21, 59, 55, tzinfo=dt_util.UTC
     )
+    freezer.move_to(time_that_will_not_match_right_away)
 
-    with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
-    ):
-        unsub = async_track_utc_time_change(
-            hass,
-            callback(lambda x: specific_runs.append(x)),
-            hour="/2",
-            minute=0,
-            second=0,
-        )
+    unsub = async_track_utc_time_change(
+        hass,
+        callback(lambda x: specific_runs.append(x)),
+        hour="/2",
+        minute=0,
+        second=0,
+    )
 
     async_fire_time_changed(
         hass, datetime(now.year + 1, 5, 24, 22, 0, 0, 999999, tzinfo=dt_util.UTC)
@@ -3898,7 +4091,9 @@ async def test_periodic_task_duplicate_time(hass: HomeAssistant) -> None:
 
 # DST starts early morning March 28th 2021
 @pytest.mark.freeze_time("2021-03-28 01:28:00+01:00")
-async def test_periodic_task_entering_dst(hass: HomeAssistant, freezer) -> None:
+async def test_periodic_task_entering_dst(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test periodic task behavior when entering dst."""
     hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
@@ -3944,7 +4139,9 @@ async def test_periodic_task_entering_dst(hass: HomeAssistant, freezer) -> None:
 
 # DST starts early morning March 28th 2021
 @pytest.mark.freeze_time("2021-03-28 01:59:59+01:00")
-async def test_periodic_task_entering_dst_2(hass: HomeAssistant, freezer) -> None:
+async def test_periodic_task_entering_dst_2(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test periodic task behavior when entering dst.
 
     This tests a task firing every second in the range 0..58 (not *:*:59)
@@ -3966,27 +4163,27 @@ async def test_periodic_task_entering_dst_2(hass: HomeAssistant, freezer) -> Non
     )
 
     freezer.move_to(f"{today} 01:59:59.999999+01:00")
-    async_fire_time_changed(hass)
+    async_fire_time_changed_exact(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 0
 
     freezer.move_to(f"{today} 03:00:00.999999+02:00")
-    async_fire_time_changed(hass)
+    async_fire_time_changed_exact(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 1
 
     freezer.move_to(f"{today} 03:00:01.999999+02:00")
-    async_fire_time_changed(hass)
+    async_fire_time_changed_exact(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 2
 
     freezer.move_to(f"{tomorrow} 01:59:59.999999+02:00")
-    async_fire_time_changed(hass)
+    async_fire_time_changed_exact(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 3
 
     freezer.move_to(f"{tomorrow} 02:00:00.999999+02:00")
-    async_fire_time_changed(hass)
+    async_fire_time_changed_exact(hass)
     await hass.async_block_till_done()
     assert len(specific_runs) == 4
 
@@ -3995,7 +4192,9 @@ async def test_periodic_task_entering_dst_2(hass: HomeAssistant, freezer) -> Non
 
 # DST ends early morning October 31st 2021
 @pytest.mark.freeze_time("2021-10-31 02:28:00+02:00")
-async def test_periodic_task_leaving_dst(hass: HomeAssistant, freezer) -> None:
+async def test_periodic_task_leaving_dst(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test periodic task behavior when leaving dst."""
     hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
@@ -4069,7 +4268,9 @@ async def test_periodic_task_leaving_dst(hass: HomeAssistant, freezer) -> None:
 
 # DST ends early morning October 31st 2021
 @pytest.mark.freeze_time("2021-10-31 02:28:00+02:00")
-async def test_periodic_task_leaving_dst_2(hass: HomeAssistant, freezer) -> None:
+async def test_periodic_task_leaving_dst_2(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test periodic task behavior when leaving dst."""
     hass.config.set_time_zone("Europe/Vienna")
     specific_runs = []
@@ -4148,7 +4349,7 @@ async def test_call_later(hass: HomeAssistant) -> None:
 
     async_fire_time_changed_exact(hass, dt_util.utcnow() + timedelta(seconds=delay))
 
-    async with async_timeout.timeout(delay + delay_tolerance):
+    async with asyncio.timeout(delay + delay_tolerance):
         assert await future, "callback was called but the delay was wrong"
 
 
@@ -4168,7 +4369,7 @@ async def test_async_call_later(hass: HomeAssistant) -> None:
 
     async_fire_time_changed_exact(hass, dt_util.utcnow() + timedelta(seconds=delay))
 
-    async with async_timeout.timeout(delay + delay_tolerance):
+    async with asyncio.timeout(delay + delay_tolerance):
         assert await future, "callback was called but the delay was wrong"
     assert isinstance(remove, Callable)
     remove()
@@ -4190,7 +4391,7 @@ async def test_async_call_later_timedelta(hass: HomeAssistant) -> None:
 
     async_fire_time_changed_exact(hass, dt_util.utcnow() + timedelta(seconds=delay))
 
-    async with async_timeout.timeout(delay + delay_tolerance):
+    async with asyncio.timeout(delay + delay_tolerance):
         assert await future, "callback was called but the delay was wrong"
     assert isinstance(remove, Callable)
     remove()
@@ -4217,7 +4418,7 @@ async def test_async_call_later_cancel(hass: HomeAssistant) -> None:
     async_fire_time_changed_exact(hass, dt_util.utcnow() + timedelta(seconds=delay))
 
     with contextlib.suppress(asyncio.TimeoutError):
-        async with async_timeout.timeout(delay + delay_tolerance):
+        async with asyncio.timeout(delay + delay_tolerance):
             assert await future, "callback not canceled"
 
 
@@ -4232,16 +4433,16 @@ async def test_track_state_change_event_chain_multple_entity(
     tracker_unsub = []
 
     @ha.callback
-    def chained_single_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def chained_single_run_callback(event: EventType[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         chained_tracker_called.append((old_state, new_state))
 
     @ha.callback
-    def single_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def single_run_callback(event: EventType[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         tracker_called.append((old_state, new_state))
 
@@ -4286,16 +4487,16 @@ async def test_track_state_change_event_chain_single_entity(
     tracker_unsub = []
 
     @ha.callback
-    def chained_single_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def chained_single_run_callback(event: EventType[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         chained_tracker_called.append((old_state, new_state))
 
     @ha.callback
-    def single_run_callback(event):
-        old_state = event.data.get("old_state")
-        new_state = event.data.get("new_state")
+    def single_run_callback(event: EventType[EventStateChangedData]) -> None:
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
 
         tracker_called.append((old_state, new_state))
 
@@ -4496,3 +4697,103 @@ async def test_async_track_entity_registry_updated_event_with_empty_list(
 
     unsub_single2()
     unsub_single()
+
+
+async def test_async_track_device_registry_updated_event(hass: HomeAssistant) -> None:
+    """Test tracking device registry updates for an device_id."""
+
+    device_id = "b92c0f06fbc911edacc9eea8ae14f866"
+    device_id2 = "747bbf22fbca11ed843aeea8ae14f866"
+    untracked_device_id = "bda93f86fbc911edacc9eea8ae14f866"
+
+    single_event_data = []
+    multiple_event_data = []
+
+    @ha.callback
+    def single_device_id_callback(event: ha.Event) -> None:
+        single_event_data.append(event.data)
+
+    @ha.callback
+    def multiple_device_id_callback(event: ha.Event) -> None:
+        multiple_event_data.append(event.data)
+
+    unsub1 = async_track_device_registry_updated_event(
+        hass, device_id, single_device_id_callback
+    )
+    unsub2 = async_track_device_registry_updated_event(
+        hass, [device_id, device_id2], multiple_device_id_callback
+    )
+    hass.bus.async_fire(
+        EVENT_DEVICE_REGISTRY_UPDATED, {"action": "create", "device_id": device_id}
+    )
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED,
+        {"action": "create", "device_id": untracked_device_id},
+    )
+    await hass.async_block_till_done()
+    assert len(single_event_data) == 1
+    assert len(multiple_event_data) == 1
+    hass.bus.async_fire(
+        EVENT_DEVICE_REGISTRY_UPDATED, {"action": "create", "device_id": device_id2}
+    )
+    await hass.async_block_till_done()
+    assert len(single_event_data) == 1
+    assert len(multiple_event_data) == 2
+
+    unsub1()
+    unsub2()
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "device_id": device_id}
+    )
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "device_id": device_id2}
+    )
+    await hass.async_block_till_done()
+    assert len(single_event_data) == 1
+    assert len(multiple_event_data) == 2
+
+
+async def test_async_track_device_registry_updated_event_with_empty_list(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_track_device_registry_updated_event passing an empty list of devices."""
+    unsub_single = async_track_device_registry_updated_event(
+        hass, [], ha.callback(lambda event: None)
+    )
+    unsub_single2 = async_track_device_registry_updated_event(
+        hass, [], ha.callback(lambda event: None)
+    )
+
+    unsub_single2()
+    unsub_single()
+
+
+async def test_async_track_device_registry_updated_event_with_a_callback_that_throws(
+    hass: HomeAssistant,
+) -> None:
+    """Test tracking device registry updates for an device when one callback throws."""
+
+    device_id = "b92c0f06fbc911edacc9eea8ae14f866"
+
+    event_data = []
+
+    @ha.callback
+    def run_callback(event: ha.Event) -> None:
+        event_data.append(event.data)
+
+    @ha.callback
+    def failing_callback(event: ha.Event) -> None:
+        raise ValueError
+
+    unsub1 = async_track_device_registry_updated_event(
+        hass, device_id, failing_callback
+    )
+    unsub2 = async_track_device_registry_updated_event(hass, device_id, run_callback)
+    hass.bus.async_fire(
+        EVENT_DEVICE_REGISTRY_UPDATED, {"action": "create", "device_id": device_id}
+    )
+    await hass.async_block_till_done()
+    unsub1()
+    unsub2()
+
+    assert event_data[0] == {"action": "create", "device_id": device_id}

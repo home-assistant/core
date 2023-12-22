@@ -1,14 +1,20 @@
 """Tests for Islamic Prayer Times config flow."""
-from unittest.mock import patch
+import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import islamic_prayer_times
-from homeassistant.components.islamic_prayer_times.const import CONF_CALC_METHOD, DOMAIN
+from homeassistant.components.islamic_prayer_times.const import (
+    CONF_CALC_METHOD,
+    CONF_LAT_ADJ_METHOD,
+    CONF_MIDNIGHT_MODE,
+    CONF_SCHOOL,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 
-from . import PRAYER_TIMES
-
 from tests.common import MockConfigEntry
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_flow_works(hass: HomeAssistant) -> None:
@@ -19,13 +25,11 @@ async def test_flow_works(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.islamic_prayer_times.async_setup_entry",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    await hass.async_block_till_done()
+
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "Islamic Prayer Times"
 
@@ -40,24 +44,25 @@ async def test_options(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
-        return_value=PRAYER_TIMES,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_CALC_METHOD: "makkah"}
+        result["flow_id"],
+        user_input={
+            CONF_CALC_METHOD: "makkah",
+            CONF_LAT_ADJ_METHOD: "one_seventh",
+            CONF_SCHOOL: "hanafi",
+        },
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_CALC_METHOD] == "makkah"
+    assert result["data"][CONF_LAT_ADJ_METHOD] == "one_seventh"
+    assert result["data"][CONF_MIDNIGHT_MODE] == "standard"
+    assert result["data"][CONF_SCHOOL] == "hanafi"
 
 
 async def test_integration_already_configured(hass: HomeAssistant) -> None:

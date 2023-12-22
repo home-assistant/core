@@ -66,7 +66,7 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
             self.last_temp = coordinator.data.thermostat_setpoint_c
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return current hvac mode."""
         if self.coordinator.read_api.data.thermostat_on:
             return HVACMode.HEAT

@@ -14,7 +14,10 @@ from songpal import (
 
 from homeassistant.components import media_player, songpal
 from homeassistant.components.media_player import MediaPlayerEntityFeature
-from homeassistant.components.songpal.const import SET_SOUND_SETTING
+from homeassistant.components.songpal.const import (
+    ERROR_REQUEST_RETRY,
+    SET_SOUND_SETTING,
+)
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -51,6 +54,15 @@ SUPPORT_SONGPAL = (
 def _get_attributes(hass):
     state = hass.states.get(ENTITY_ID)
     return state.as_dict()["attributes"]
+
+
+async def _call(hass, service, **argv):
+    await hass.services.async_call(
+        media_player.DOMAIN,
+        service,
+        {"entity_id": ENTITY_ID, **argv},
+        blocking=True,
+    )
 
 
 async def test_setup_platform(hass: HomeAssistant) -> None:
@@ -91,8 +103,8 @@ async def test_setup_failed(
         await hass.async_block_till_done()
     all_states = hass.states.async_all()
     assert len(all_states) == 0
-    warning_records = [x for x in caplog.records if x.levelno == logging.WARNING]
-    assert len(warning_records) == 2
+    assert "[name(http://0.0.0.0:10000/sony)] Unable to connect" in caplog.text
+    assert "Platform songpal not ready yet: Unable to do POST request" in caplog.text
     assert not any(x.levelno == logging.ERROR for x in caplog.records)
     caplog.clear()
 
@@ -222,32 +234,24 @@ async def test_services(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    async def _call(service, **argv):
-        await hass.services.async_call(
-            media_player.DOMAIN,
-            service,
-            {"entity_id": ENTITY_ID, **argv},
-            blocking=True,
-        )
-
-    await _call(media_player.SERVICE_TURN_ON)
-    await _call(media_player.SERVICE_TURN_OFF)
-    await _call(media_player.SERVICE_TOGGLE)
+    await _call(hass, media_player.SERVICE_TURN_ON)
+    await _call(hass, media_player.SERVICE_TURN_OFF)
+    await _call(hass, media_player.SERVICE_TOGGLE)
     assert mocked_device.set_power.call_count == 3
     mocked_device.set_power.assert_has_calls([call(True), call(False), call(False)])
 
-    await _call(media_player.SERVICE_VOLUME_SET, volume_level=0.6)
-    await _call(media_player.SERVICE_VOLUME_UP)
-    await _call(media_player.SERVICE_VOLUME_DOWN)
+    await _call(hass, media_player.SERVICE_VOLUME_SET, volume_level=0.6)
+    await _call(hass, media_player.SERVICE_VOLUME_UP)
+    await _call(hass, media_player.SERVICE_VOLUME_DOWN)
     assert mocked_device.volume1.set_volume.call_count == 3
     mocked_device.volume1.set_volume.assert_has_calls([call(60), call(51), call(49)])
 
-    await _call(media_player.SERVICE_VOLUME_MUTE, is_volume_muted=True)
+    await _call(hass, media_player.SERVICE_VOLUME_MUTE, is_volume_muted=True)
     mocked_device.volume1.set_mute.assert_called_once_with(True)
 
-    await _call(media_player.SERVICE_SELECT_SOURCE, source="none")
+    await _call(hass, media_player.SERVICE_SELECT_SOURCE, source="none")
     mocked_device.input1.activate.assert_not_called()
-    await _call(media_player.SERVICE_SELECT_SOURCE, source="title1")
+    await _call(hass, media_player.SERVICE_SELECT_SOURCE, source="title1")
     mocked_device.input1.activate.assert_called_once()
 
     await hass.services.async_call(
@@ -366,3 +370,33 @@ async def test_disconnected(
     assert warning_records[0].message.endswith("Got disconnected, trying to reconnect")
     assert warning_records[1].message.endswith("Connection reestablished")
     assert not any(x.levelno == logging.ERROR for x in caplog.records)
+
+
+@pytest.mark.parametrize(
+    "service", [media_player.SERVICE_TURN_ON, media_player.SERVICE_TURN_OFF]
+)
+@pytest.mark.parametrize(
+    ("error_code", "swallow"), [(ERROR_REQUEST_RETRY, True), (1234, False)]
+)
+async def test_error_swallowing(hass, caplog, service, error_code, swallow):
+    """Test swallowing specific errors on turn_on and turn_off."""
+    mocked_device = _create_mocked_device()
+    entry = MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA)
+    entry.add_to_hass(hass)
+
+    with _patch_media_player_device(mocked_device):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    type(mocked_device).set_power = AsyncMock(
+        side_effect=[
+            SongpalException("Error to swallow", error=(error_code, "Error to swallow"))
+        ]
+    )
+
+    if swallow:
+        await _call(hass, service)
+        assert "Swallowing" in caplog.text
+    else:
+        with pytest.raises(SongpalException):
+            await _call(hass, service)

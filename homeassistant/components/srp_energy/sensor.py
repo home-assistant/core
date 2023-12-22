@@ -1,9 +1,5 @@
 """Support for SRP Energy Sensor."""
-from datetime import datetime, timedelta
-import logging
-
-import async_timeout
-from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
+from __future__ import annotations
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,147 +9,52 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ATTRIBUTION,
-    DEFAULT_NAME,
-    ICON,
-    MIN_TIME_BETWEEN_UPDATES,
-    SENSOR_NAME,
-    SENSOR_TYPE,
-    SRP_ENERGY_DOMAIN,
-)
-
-_LOGGER = logging.getLogger(__name__)
+from . import SRPEnergyDataUpdateCoordinator
+from .const import DEVICE_CONFIG_URL, DEVICE_MANUFACTURER, DEVICE_MODEL, DOMAIN
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the SRP Energy Usage sensor."""
-    # API object stored here by __init__.py
-    is_time_of_use = False
-    api = hass.data[SRP_ENERGY_DOMAIN]
-    if entry and entry.data:
-        is_time_of_use = entry.data["is_tou"]
+    coordinator: SRPEnergyDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    async def async_update_data():
-        """Fetch data from API endpoint.
-
-        This is the place to pre-process the data to lookup tables
-        so entities can quickly look up their data.
-        """
-        try:
-            # Fetch srp_energy data
-            start_date = datetime.now() + timedelta(days=-1)
-            end_date = datetime.now()
-            async with async_timeout.timeout(10):
-                hourly_usage = await hass.async_add_executor_job(
-                    api.usage,
-                    start_date,
-                    end_date,
-                    is_time_of_use,
-                )
-
-                previous_daily_usage = 0.0
-                for _, _, _, kwh, _ in hourly_usage:
-                    previous_daily_usage += float(kwh)
-                return previous_daily_usage
-        except TimeoutError as timeout_err:
-            raise UpdateFailed("Timeout communicating with API") from timeout_err
-        except (ConnectError, HTTPError, Timeout, ValueError, TypeError) as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="sensor",
-        update_method=async_update_data,
-        update_interval=MIN_TIME_BETWEEN_UPDATES,
-    )
-
-    # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_refresh()
-
-    async_add_entities([SrpEntity(coordinator)])
+    async_add_entities([SrpEntity(coordinator, entry)])
 
 
-class SrpEntity(SensorEntity):
+class SrpEntity(CoordinatorEntity[SRPEnergyDataUpdateCoordinator], SensorEntity):
     """Implementation of a Srp Energy Usage sensor."""
 
-    _attr_attribution = ATTRIBUTION
-    _attr_should_poll = False
+    _attr_attribution = "Powered by SRP Energy"
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_has_entity_name = True
+    _attr_translation_key = "energy_usage"
 
-    def __init__(self, coordinator):
+    def __init__(
+        self,
+        coordinator: SRPEnergyDataUpdateCoordinator,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize the SrpEntity class."""
-        self._name = SENSOR_NAME
-        self.type = SENSOR_TYPE
-        self.coordinator = coordinator
-        self._unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{DEFAULT_NAME} {self._name}"
-
-    @property
-    def unique_id(self):
-        """Return sensor unique_id."""
-        return self.type
-
-    @property
-    def native_value(self):
-        """Return the state of the device."""
-        if self._state:
-            return f"{self._state:.2f}"
-        return None
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return icon."""
-        return ICON
-
-    @property
-    def usage(self):
-        """Return entity state."""
-        if self.coordinator.data:
-            return f"{self.coordinator.data:.2f}"
-        return None
-
-    @property
-    def available(self):
-        """Return if entity is available."""
-        return self.coordinator.last_update_success
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return SensorDeviceClass.ENERGY
-
-    @property
-    def state_class(self):
-        """Return the state class."""
-        return SensorStateClass.TOTAL_INCREASING
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{config_entry.entry_id}_total_usage"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry.entry_id)},
+            name=f"SRP Energy {config_entry.title}",
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer=DEVICE_MANUFACTURER,
+            model=DEVICE_MODEL,
+            configuration_url=DEVICE_CONFIG_URL,
         )
-        if self.coordinator.data:
-            self._state = self.coordinator.data
 
-    async def async_update(self) -> None:
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self.coordinator.async_request_refresh()
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the device."""
+        return self.coordinator.data

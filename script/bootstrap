@@ -8,5 +8,5 @@ cd "$(dirname "$0")/.."
 
 echo "Installing development dependencies..."
 python3 -m pip install wheel --constraint homeassistant/package_constraints.txt --upgrade
-python3 -m pip install colorlog pre-commit $(grep awesomeversion requirements.txt) --constraint homeassistant/package_constraints.txt --use-deprecated=legacy-resolver --upgrade
-python3 -m pip install -r requirements_test.txt -c homeassistant/package_constraints.txt --use-deprecated legacy-resolver --upgrade
+python3 -m pip install colorlog pre-commit $(grep awesomeversion requirements.txt) --constraint homeassistant/package_constraints.txt --upgrade
+python3 -m pip install -r requirements_test.txt -c homeassistant/package_constraints.txt --upgrade

@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 import pytest
 from renault_api.kamereon import schemas
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -11,16 +12,11 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import (
-    check_device_registry,
-    check_entities,
-    check_entities_no_data,
-    check_entities_unavailable,
-)
+from . import check_device_registry, check_entities_unavailable
 from .const import MOCK_VEHICLES
 
 from tests.common import load_fixture
@@ -39,41 +35,58 @@ def override_platforms() -> Generator[None, None, None]:
 async def test_selects(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    vehicle_type: str,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test for Renault selects."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_device_registry(device_registry, mock_vehicle["expected_device"])
+    # Ensure devices are correctly registered
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert device_entries == snapshot
 
-    expected_entities = mock_vehicle[Platform.SELECT]
-    assert len(entity_registry.entities) == len(expected_entities)
+    # Ensure entities are correctly registered
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert entity_entries == snapshot
 
-    check_entities(hass, entity_registry, expected_entities)
+    # Ensure entity states are correct
+    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
+    assert states == snapshot
 
 
 @pytest.mark.usefixtures("fixtures_with_no_data")
 async def test_select_empty(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    vehicle_type: str,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test for Renault selects with empty data from Renault."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_vehicle = MOCK_VEHICLES[vehicle_type]
-    check_device_registry(device_registry, mock_vehicle["expected_device"])
+    # Ensure devices are correctly registered
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert device_entries == snapshot
 
-    expected_entities = mock_vehicle[Platform.SELECT]
-    assert len(entity_registry.entities) == len(expected_entities)
-    check_entities_no_data(hass, entity_registry, expected_entities, STATE_UNKNOWN)
+    # Ensure entities are correctly registered
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert entity_entries == snapshot
+
+    # Ensure entity states are correct
+    states = [hass.states.get(ent.entity_id) for ent in entity_entries]
+    assert states == snapshot
 
 
 @pytest.mark.usefixtures("fixtures_with_invalid_upstream_exception")

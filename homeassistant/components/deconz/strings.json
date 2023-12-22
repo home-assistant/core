@@ -11,11 +11,14 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your deCONZ host."
         }
       },
       "link": {
         "title": "Link with deCONZ",
-        "description": "Unlock your deCONZ gateway to register with Home Assistant.\n\n1. Go to deCONZ Settings -> Gateway -> Advanced\n2. Press \"Authenticate app\" button"
+        "description": "Unlock your deCONZ gateway to register with Home Assistant.\n\n1. Go to deCONZ Settings > Gateway > Advanced\n2. Press \"Authenticate app\" button"
       },
       "hassio_confirm": {
         "title": "deCONZ Zigbee gateway via Home Assistant add-on",
@@ -79,14 +82,14 @@
       "remote_rotate_from_side_6": "Device rotated from \"side 6\" to \"{subtype}\""
     },
     "trigger_subtype": {
-      "turn_on": "Turn on",
-      "turn_off": "Turn off",
+      "turn_on": "[%key:common::action::turn_on%]",
+      "turn_off": "[%key:common::action::turn_off%]",
       "dim_up": "Dim up",
       "dim_down": "Dim down",
       "left": "Left",
       "right": "Right",
-      "open": "Open",
-      "close": "Close",
+      "open": "[%key:common::action::open%]",
+      "close": "[%key:common::action::close%]",
       "both_buttons": "Both buttons",
       "top_buttons": "Top buttons",
       "bottom_buttons": "Bottom buttons",
@@ -104,6 +107,50 @@
       "side_4": "Side 4",
       "side_5": "Side 5",
       "side_6": "Side 6"
+    }
+  },
+  "services": {
+    "configure": {
+      "name": "Configure",
+      "description": "Configures attributes of either a device endpoint in deCONZ or the deCONZ service itself.",
+      "fields": {
+        "entity": {
+          "name": "Entity",
+          "description": "Represents a specific device endpoint in deCONZ."
+        },
+        "field": {
+          "name": "[%key:common::config_flow::data::path%]",
+          "description": "String representing a full path to deCONZ endpoint (when entity is not specified) or a subpath of the device path for the entity (when entity is specified)."
+        },
+        "data": {
+          "name": "Configuration payload",
+          "description": "JSON object with what data you want to alter."
+        },
+        "bridgeid": {
+          "name": "Bridge identifier",
+          "description": "Unique string for each deCONZ hardware. It can be found as part of the integration name. Useful if you run multiple deCONZ integrations."
+        }
+      }
+    },
+    "device_refresh": {
+      "name": "Device refresh",
+      "description": "Refreshes available devices from deCONZ.",
+      "fields": {
+        "bridgeid": {
+          "name": "[%key:component::deconz::services::configure::fields::bridgeid::name%]",
+          "description": "[%key:component::deconz::services::configure::fields::bridgeid::description%]"
+        }
+      }
+    },
+    "remove_orphaned_entries": {
+      "name": "Remove orphaned entries",
+      "description": "Cleans up device and entity registry entries orphaned by deCONZ.",
+      "fields": {
+        "bridgeid": {
+          "name": "[%key:component::deconz::services::configure::fields::bridgeid::name%]",
+          "description": "[%key:component::deconz::services::configure::fields::bridgeid::description%]"
+        }
+      }
     }
   }
 }

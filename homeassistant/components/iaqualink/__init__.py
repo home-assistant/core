@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
+from datetime import datetime
 from functools import wraps
 import logging
 from typing import Any, Concatenate, ParamSpec, TypeVar
@@ -28,11 +29,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DOMAIN, UPDATE_INTERVAL
@@ -139,7 +141,7 @@ async def async_setup_entry(  # noqa: C901
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
-    async def _async_systems_update(now):
+    async def _async_systems_update(_: datetime) -> None:
         """Refresh internal state for all systems."""
         for system in systems:
             prev = system.online
@@ -161,7 +163,9 @@ async def async_setup_entry(  # noqa: C901
 
             async_dispatcher_send(hass, DOMAIN)
 
-    async_track_time_interval(hass, _async_systems_update, UPDATE_INTERVAL)
+    entry.async_on_unload(
+        async_track_time_interval(hass, _async_systems_update, UPDATE_INTERVAL)
+    )
 
     return True
 
@@ -181,7 +185,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 def refresh_system(
-    func: Callable[Concatenate[_AqualinkEntityT, _P], Awaitable[Any]]
+    func: Callable[Concatenate[_AqualinkEntityT, _P], Awaitable[Any]],
 ) -> Callable[Concatenate[_AqualinkEntityT, _P], Coroutine[Any, Any, None]]:
     """Force update all entities after state change."""
 
@@ -211,17 +215,20 @@ class AqualinkEntity(Entity):
     def __init__(self, dev: AqualinkDevice) -> None:
         """Initialize the entity."""
         self.dev = dev
+        self._attr_unique_id = f"{dev.system.serial}_{dev.name}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            manufacturer=dev.manufacturer,
+            model=dev.model,
+            name=dev.label,
+            via_device=(DOMAIN, dev.system.serial),
+        )
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
         self.async_on_remove(
             async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique identifier for this entity."""
-        return f"{self.dev.system.serial}_{self.dev.name}"
 
     @property
     def assumed_state(self) -> bool:
@@ -232,14 +239,3 @@ class AqualinkEntity(Entity):
     def available(self) -> bool:
         """Return whether the device is available or not."""
         return self.dev.system.online is True
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            manufacturer=self.dev.manufacturer,
-            model=self.dev.model,
-            name=self.name,
-            via_device=(DOMAIN, self.dev.system.serial),
-        )

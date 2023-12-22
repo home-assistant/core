@@ -40,7 +40,7 @@ def printc(the_color, *args):
 
 def validate_requirements_ok():
     """Validate requirements, returns True of ok."""
-    # pylint: disable-next=import-error,import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from gen_requirements_all import main as req_main
 
     return req_main(True) == 0
@@ -116,9 +116,9 @@ async def pylint(files):
     return res
 
 
-async def _ruff_or_flake8(tool, files):
-    """Exec ruff or flake8."""
-    _, log = await async_exec("pre-commit", "run", tool, "--files", *files)
+async def ruff(files):
+    """Exec ruff."""
+    _, log = await async_exec("pre-commit", "run", "ruff", "--files", *files)
     res = []
     for line in log.splitlines():
         line = line.split(":")
@@ -129,23 +129,12 @@ async def _ruff_or_flake8(tool, files):
     return res
 
 
-async def flake8(files):
-    """Exec flake8."""
-    return await _ruff_or_flake8("flake8", files)
-
-
-async def ruff(files):
-    """Exec ruff."""
-    return await _ruff_or_flake8("ruff", files)
-
-
 async def lint(files):
     """Perform lint."""
     files = [file for file in files if os.path.isfile(file)]
     res = sorted(
         itertools.chain(
             *await asyncio.gather(
-                flake8(files),
                 pylint(files),
                 ruff(files),
             )
@@ -184,8 +173,7 @@ async def main():
         )
         return
 
-    pyfile = re.compile(r".+\.py$")
-    pyfiles = [file for file in files if pyfile.match(file)]
+    pyfiles = [file for file in files if file.endswith(".py")]
 
     print("=============================")
     printc("bold", "CHANGED FILES:\n", "\n ".join(pyfiles))
@@ -235,7 +223,15 @@ async def main():
         return
 
     code, _ = await async_exec(
-        "pytest", "-vv", "--force-sugar", "--", *test_files, display=True
+        "python3",
+        "-b",
+        "-m",
+        "pytest",
+        "-vv",
+        "--force-sugar",
+        "--",
+        *test_files,
+        display=True,
     )
     print("=============================")
 

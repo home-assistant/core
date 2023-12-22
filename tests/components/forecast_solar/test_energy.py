@@ -1,5 +1,5 @@
 """Test forecast solar energy platform."""
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 from homeassistant.components.forecast_solar import energy
@@ -15,9 +15,9 @@ async def test_energy_solar_forecast(
     mock_forecast_solar: MagicMock,
 ) -> None:
     """Test the Forecast.Solar energy platform solar forecast."""
-    mock_forecast_solar.estimate.return_value.wh_hours = {
-        datetime(2021, 6, 27, 13, 0, tzinfo=timezone.utc): 12,
-        datetime(2021, 6, 27, 14, 0, tzinfo=timezone.utc): 8,
+    mock_forecast_solar.estimate.return_value.wh_period = {
+        datetime(2021, 6, 27, 13, 0, tzinfo=UTC): 12,
+        datetime(2021, 6, 27, 14, 0, tzinfo=UTC): 8,
     }
 
     mock_config_entry.add_to_hass(hass)

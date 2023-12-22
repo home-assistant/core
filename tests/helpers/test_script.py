@@ -9,12 +9,12 @@ from types import MappingProxyType
 from unittest import mock
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from async_timeout import timeout
+from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
 # Otherwise can't test just this file (import order issue)
-from homeassistant import exceptions
+from homeassistant import config_entries, exceptions
 import homeassistant.components.scene as scene
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -23,16 +23,18 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import (
-    SERVICE_CALL_LIMIT,
     Context,
     CoreState,
     HomeAssistant,
     ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
     callback,
 )
 from homeassistant.exceptions import ConditionError, HomeAssistantError, ServiceNotFound
 from homeassistant.helpers import (
     config_validation as cv,
+    device_registry as dr,
     entity_registry as er,
     script,
     template,
@@ -43,6 +45,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
+    MockConfigEntry,
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
@@ -264,7 +267,6 @@ async def test_calling_service_basic(
             "0": [
                 {
                     "result": {
-                        "limit": SERVICE_CALL_LIMIT,
                         "params": {
                             "domain": "test",
                             "service": "script",
@@ -317,7 +319,6 @@ async def test_calling_service_template(hass: HomeAssistant) -> None:
             "0": [
                 {
                     "result": {
-                        "limit": SERVICE_CALL_LIMIT,
                         "params": {
                             "domain": "test",
                             "service": "script",
@@ -330,6 +331,126 @@ async def test_calling_service_template(hass: HomeAssistant) -> None:
             ],
         }
     )
+
+
+async def test_calling_service_response_data(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the calling of a service with response data."""
+    context = Context()
+
+    def mock_service(call: ServiceCall) -> ServiceResponse:
+        """Mock service call."""
+        if call.return_response:
+            return {"data": "value-12345"}
+        return None
+
+    hass.services.async_register(
+        "test", "script", mock_service, supports_response=SupportsResponse.OPTIONAL
+    )
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "alias": "service step1",
+                "service": "test.script",
+                # Store the result of the service call as a variable
+                "response_variable": "my_response",
+            },
+            {
+                "alias": "service step2",
+                "service": "test.script",
+                "data_template": {
+                    # Result of previous service call
+                    "key": "{{ my_response.data }}"
+                },
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=context)
+    await hass.async_block_till_done()
+
+    assert "Executing step service step1" in caplog.text
+    assert "Executing step service step2" in caplog.text
+
+    assert_action_trace(
+        {
+            "0": [
+                {
+                    "result": {
+                        "params": {
+                            "domain": "test",
+                            "service": "script",
+                            "service_data": {},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    }
+                }
+            ],
+            "1": [
+                {
+                    "result": {
+                        "params": {
+                            "domain": "test",
+                            "service": "script",
+                            "service_data": {"key": "value-12345"},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    },
+                    "variables": {
+                        "my_response": {"data": "value-12345"},
+                    },
+                }
+            ],
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    ("supports_response", "params", "expected_error"),
+    [
+        (
+            SupportsResponse.NONE,
+            {"response_variable": "foo"},
+            "does not support 'response_variable'",
+        ),
+        (SupportsResponse.ONLY, {}, "requires 'response_variable'"),
+    ],
+)
+async def test_service_response_data_errors(
+    hass: HomeAssistant,
+    supports_response: SupportsResponse,
+    params: dict[str, str],
+    expected_error: str,
+) -> None:
+    """Test the calling of a service with response data error cases."""
+    context = Context()
+
+    def mock_service(call: ServiceCall) -> ServiceResponse:
+        """Mock service call."""
+        raise ValueError("Never invoked")
+
+    hass.services.async_register(
+        "test", "script", mock_service, supports_response=supports_response
+    )
+
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "alias": "service step1",
+                "service": "test.script",
+                **params,
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    with pytest.raises(vol.Invalid, match=expected_error):
+        await script_obj.async_run(context=context)
+        await hass.async_block_till_done()
 
 
 async def test_data_template_with_templated_key(hass: HomeAssistant) -> None:
@@ -356,7 +477,6 @@ async def test_data_template_with_templated_key(hass: HomeAssistant) -> None:
             "0": [
                 {
                     "result": {
-                        "limit": SERVICE_CALL_LIMIT,
                         "params": {
                             "domain": "test",
                             "service": "script",
@@ -882,7 +1002,7 @@ async def test_wait_basic_times_out(hass: HomeAssistant, action_type) -> None:
         assert script_obj.last_action == wait_alias
         hass.states.async_set("switch.test", "not_on")
 
-        async with timeout(0.1):
+        async with asyncio.timeout(0.1):
             await hass.async_block_till_done()
     except asyncio.TimeoutError:
         timed_out = True
@@ -936,6 +1056,7 @@ async def test_multiple_runs_wait(hass: HomeAssistant, action_type) -> None:
         hass.states.async_set("switch.test", "on")
         hass.async_create_task(script_obj.async_run(context=Context()))
         await asyncio.wait_for(wait_started_flag.wait(), 1)
+        await asyncio.sleep(0)
 
         assert script_obj.is_running
         assert len(events) == 1
@@ -945,6 +1066,7 @@ async def test_multiple_runs_wait(hass: HomeAssistant, action_type) -> None:
         wait_started_flag.clear()
         hass.async_create_task(script_obj.async_run())
         await asyncio.wait_for(wait_started_flag.wait(), 1)
+        await asyncio.sleep(0)
     except (AssertionError, asyncio.TimeoutError):
         await script_obj.async_stop()
         raise
@@ -1225,13 +1347,13 @@ async def test_wait_template_with_utcnow(hass: HomeAssistant) -> None:
 
     try:
         non_matching_time = start_time.replace(hour=3)
-        with patch("homeassistant.util.dt.utcnow", return_value=non_matching_time):
+        with freeze_time(non_matching_time):
             hass.async_create_task(script_obj.async_run(context=Context()))
             await asyncio.wait_for(wait_started_flag.wait(), 1)
             assert script_obj.is_running
 
         match_time = start_time.replace(hour=12)
-        with patch("homeassistant.util.dt.utcnow", return_value=match_time):
+        with freeze_time(match_time):
             async_fire_time_changed(hass, match_time)
     except (AssertionError, asyncio.TimeoutError):
         await script_obj.async_stop()
@@ -1257,18 +1379,16 @@ async def test_wait_template_with_utcnow_no_match(hass: HomeAssistant) -> None:
 
     try:
         non_matching_time = start_time.replace(hour=3)
-        with patch("homeassistant.util.dt.utcnow", return_value=non_matching_time):
+        with freeze_time(non_matching_time):
             hass.async_create_task(script_obj.async_run(context=Context()))
             await asyncio.wait_for(wait_started_flag.wait(), 1)
             assert script_obj.is_running
 
         second_non_matching_time = start_time.replace(hour=4)
-        with patch(
-            "homeassistant.util.dt.utcnow", return_value=second_non_matching_time
-        ):
+        with freeze_time(second_non_matching_time):
             async_fire_time_changed(hass, second_non_matching_time)
 
-        async with timeout(0.1):
+        async with asyncio.timeout(0.1):
             await hass.async_block_till_done()
     except asyncio.TimeoutError:
         timed_out = True
@@ -1667,11 +1787,12 @@ async def test_shorthand_template_condition(
 
 
 async def test_condition_validation(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if we can use conditions which validate late in a script."""
-    registry = er.async_get(hass)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "test", "hue", "1234", suggested_object_id="entity"
     )
     assert entry.entity_id == "test.entity"
@@ -2264,11 +2385,12 @@ async def test_repeat_conditional(
 
 
 async def test_repeat_until_condition_validation(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if we can use conditions in repeat until conditions which validate late."""
-    registry = er.async_get(hass)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "test", "hue", "1234", suggested_object_id="entity"
     )
     assert entry.entity_id == "test.entity"
@@ -2326,11 +2448,12 @@ async def test_repeat_until_condition_validation(
 
 
 async def test_repeat_while_condition_validation(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if we can use conditions in repeat while conditions which validate late."""
-    registry = er.async_get(hass)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "test", "hue", "1234", suggested_object_id="entity"
     )
     assert entry.entity_id == "test.entity"
@@ -2747,11 +2870,12 @@ async def test_choose(
 
 
 async def test_choose_condition_validation(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if we can use conditions in choose actions which validate late."""
-    registry = er.async_get(hass)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "test", "hue", "1234", suggested_object_id="entity"
     )
     assert entry.entity_id == "test.entity"
@@ -2991,11 +3115,12 @@ async def test_if_disabled(
 
 
 async def test_if_condition_validation(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if we can use conditions in if actions which validate late."""
-    registry = er.async_get(hass)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "test", "hue", "1234", suggested_object_id="entity"
     )
     assert entry.entity_id == "test.entity"
@@ -3338,7 +3463,6 @@ async def test_parallel_error(
             {
                 "error_type": ServiceNotFound,
                 "result": {
-                    "limit": 10,
                     "params": {
                         "domain": "epic",
                         "service": "failure",
@@ -3387,7 +3511,6 @@ async def test_propagate_error_service_not_found(hass: HomeAssistant) -> None:
             {
                 "error_type": ServiceNotFound,
                 "result": {
-                    "limit": 10,
                     "params": {
                         "domain": "test",
                         "service": "script",
@@ -3424,7 +3547,6 @@ async def test_propagate_error_invalid_service_data(hass: HomeAssistant) -> None
             {
                 "error_type": vol.MultipleInvalid,
                 "result": {
-                    "limit": 10,
                     "params": {
                         "domain": "test",
                         "service": "script",
@@ -3465,7 +3587,6 @@ async def test_propagate_error_service_exception(hass: HomeAssistant) -> None:
             {
                 "error_type": ValueError,
                 "result": {
-                    "limit": 10,
                     "params": {
                         "domain": "test",
                         "service": "script",
@@ -3966,6 +4087,7 @@ async def test_script_mode_2(
         hass.states.async_set("switch.test", "on")
         hass.async_create_task(script_obj.async_run(context=Context()))
         await asyncio.wait_for(wait_started_flag.wait(), 1)
+        await asyncio.sleep(0)
 
         assert script_obj.is_running
         assert len(events) == 1
@@ -3976,6 +4098,7 @@ async def test_script_mode_2(
         wait_started_flag.clear()
         hass.async_create_task(script_obj.async_run(context=Context()))
         await asyncio.wait_for(wait_started_flag.wait(), 1)
+        await asyncio.sleep(0)
 
         assert script_obj.is_running
         assert len(events) == 2
@@ -4213,6 +4336,7 @@ async def test_shutdown_at(
     assert_action_trace(expected_trace)
 
 
+@pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
 async def test_shutdown_after(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -4251,6 +4375,7 @@ async def test_shutdown_after(
     assert_action_trace(expected_trace)
 
 
+@pytest.mark.parametrize("wait_for_stop_scripts_after_shutdown", [True])
 async def test_start_script_after_shutdown(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -4341,7 +4466,6 @@ async def test_set_variable(
         "1": [
             {
                 "result": {
-                    "limit": SERVICE_CALL_LIMIT,
                     "params": {
                         "domain": "test",
                         "service": "script",
@@ -4384,7 +4508,6 @@ async def test_set_redefines_variable(
         "1": [
             {
                 "result": {
-                    "limit": SERVICE_CALL_LIMIT,
                     "params": {
                         "domain": "test",
                         "service": "script",
@@ -4400,7 +4523,6 @@ async def test_set_redefines_variable(
         "3": [
             {
                 "result": {
-                    "limit": SERVICE_CALL_LIMIT,
                     "params": {
                         "domain": "test",
                         "service": "script",
@@ -4416,12 +4538,23 @@ async def test_set_redefines_variable(
     assert_action_trace(expected_trace)
 
 
-async def test_validate_action_config(hass: HomeAssistant) -> None:
+async def test_validate_action_config(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Validate action config."""
+
+    config_entry = MockConfigEntry(domain="fake_integration", data={})
+    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.add_to_hass(hass)
+
+    mock_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:02")},
+    )
 
     def templated_device_action(message):
         return {
-            "device_id": "abcd",
+            "device_id": mock_device.id,
             "domain": "mobile_app",
             "message": f"{message} {{{{ 5 + 5}}}}",
             "type": "notify",
@@ -4934,7 +5067,6 @@ async def test_continue_on_error(hass: HomeAssistant) -> None:
             "1": [
                 {
                     "result": {
-                        "limit": 10,
                         "params": {
                             "domain": "broken",
                             "service": "service",
@@ -4950,7 +5082,6 @@ async def test_continue_on_error(hass: HomeAssistant) -> None:
                 {
                     "error_type": HomeAssistantError,
                     "result": {
-                        "limit": 10,
                         "params": {
                             "domain": "broken",
                             "service": "service",
@@ -5009,7 +5140,6 @@ async def test_continue_on_error_automation_issue(hass: HomeAssistant) -> None:
                 {
                     "error_type": ServiceNotFound,
                     "result": {
-                        "limit": 10,
                         "params": {
                             "domain": "service",
                             "service": "not_found",
@@ -5057,7 +5187,6 @@ async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
                 {
                     "error_type": MyLibraryError,
                     "result": {
-                        "limit": 10,
                         "params": {
                             "domain": "some",
                             "service": "service",

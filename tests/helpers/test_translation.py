@@ -56,14 +56,14 @@ async def test_component_translation_path(
     )
 
     assert path.normpath(
-        translation.component_translation_path("switch.test", "en", int_test)
+        translation.component_translation_path("test.switch", "en", int_test)
     ) == path.normpath(
         hass.config.path("custom_components", "test", "translations", "switch.en.json")
     )
 
     assert path.normpath(
         translation.component_translation_path(
-            "switch.test_embedded", "en", int_test_embedded
+            "test_embedded.switch", "en", int_test_embedded
         )
     ) == path.normpath(
         hass.config.path(
@@ -255,7 +255,7 @@ async def test_translation_merging(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we merge translations of two integrations."""
-    hass.config.components.add("sensor.moon")
+    hass.config.components.add("moon.sensor")
     hass.config.components.add("sensor")
 
     orig_load_translations = translation.load_translations_files
@@ -263,7 +263,7 @@ async def test_translation_merging(
     def mock_load_translations_files(files):
         """Mock loading."""
         result = orig_load_translations(files)
-        result["sensor.moon"] = {
+        result["moon.sensor"] = {
             "state": {"moon__phase": {"first_quarter": "First Quarter"}}
         }
         return result
@@ -276,13 +276,13 @@ async def test_translation_merging(
 
     assert "component.sensor.state.moon__phase.first_quarter" in translations
 
-    hass.config.components.add("sensor.season")
+    hass.config.components.add("season.sensor")
 
     # Patch in some bad translation data
     def mock_load_bad_translations_files(files):
         """Mock loading."""
         result = orig_load_translations(files)
-        result["sensor.season"] = {"state": "bad data"}
+        result["season.sensor"] = {"state": "bad data"}
         return result
 
     with patch(
@@ -308,7 +308,7 @@ async def test_translation_merging_loaded_apart(
     def mock_load_translations_files(files):
         """Mock loading."""
         result = orig_load_translations(files)
-        result["sensor.moon"] = {
+        result["moon.sensor"] = {
             "state": {"moon__phase": {"first_quarter": "First Quarter"}}
         }
         return result
@@ -323,7 +323,7 @@ async def test_translation_merging_loaded_apart(
 
     assert "component.sensor.state.moon__phase.first_quarter" not in translations
 
-    hass.config.components.add("sensor.moon")
+    hass.config.components.add("moon.sensor")
 
     with patch(
         "homeassistant.helpers.translation.load_translations_files",
@@ -373,32 +373,35 @@ async def test_caching(hass: HomeAssistant) -> None:
         "homeassistant.helpers.translation._merge_resources",
         side_effect=translation._merge_resources,
     ) as mock_merge:
-        load1 = await translation.async_get_translations(hass, "en", "state")
+        load1 = await translation.async_get_translations(hass, "en", "entity_component")
         assert len(mock_merge.mock_calls) == 1
 
-        load2 = await translation.async_get_translations(hass, "en", "state")
+        load2 = await translation.async_get_translations(hass, "en", "entity_component")
         assert len(mock_merge.mock_calls) == 1
 
         assert load1 == load2
 
         for key in load1:
-            assert key.startswith("component.sensor.state.") or key.startswith(
-                "component.light.state."
+            assert key.startswith(
+                (
+                    "component.sensor.entity_component.",
+                    "component.light.entity_component.",
+                )
             )
 
     load_sensor_only = await translation.async_get_translations(
-        hass, "en", "state", integrations={"sensor"}
+        hass, "en", "entity_component", integrations={"sensor"}
     )
     assert load_sensor_only
     for key in load_sensor_only:
-        assert key.startswith("component.sensor.state.")
+        assert key.startswith("component.sensor.entity_component.")
 
     load_light_only = await translation.async_get_translations(
-        hass, "en", "state", integrations={"light"}
+        hass, "en", "entity_component", integrations={"light"}
     )
     assert load_light_only
     for key in load_light_only:
-        assert key.startswith("component.light.state.")
+        assert key.startswith("component.light.entity_component.")
 
     hass.config.components.add("media_player")
 

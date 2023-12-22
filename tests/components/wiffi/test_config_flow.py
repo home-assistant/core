@@ -14,6 +14,8 @@ from tests.common import MockConfigEntry
 
 MOCK_CONFIG = {CONF_PORT: 8765}
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
 
 @pytest.fixture(name="dummy_tcp_server")
 def mock_dummy_tcp_server():

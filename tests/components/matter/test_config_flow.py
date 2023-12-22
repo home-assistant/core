@@ -193,6 +193,7 @@ async def test_supervisor_discovery(
             config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -232,6 +233,7 @@ async def test_supervisor_discovery_addon_info_failed(
             config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -262,6 +264,7 @@ async def test_clean_supervisor_discovery_on_user_create(
             config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -324,6 +327,7 @@ async def test_abort_supervisor_discovery_with_existing_entry(
             config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -353,6 +357,7 @@ async def test_abort_supervisor_discovery_with_existing_flow(
             config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -379,6 +384,7 @@ async def test_abort_supervisor_discovery_for_other_addon(
             },
             name="Other Matter Server",
             slug="other_addon",
+            uuid="1234",
         ),
     )
 
@@ -404,6 +410,7 @@ async def test_supervisor_discovery_addon_not_running(
             config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 
@@ -452,6 +459,7 @@ async def test_supervisor_discovery_addon_not_installed(
             config=ADDON_DISCOVERY_INFO,
             name="Matter Server",
             slug=ADDON_SLUG,
+            uuid="1234",
         ),
     )
 

@@ -47,13 +47,14 @@ async def test_async_setup_entry_auth_failed(hass: HomeAssistant) -> None:
 
 
 async def test_device_info(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test device info."""
     entry = await setup_platform(hass, aioclient_mock, SENSOR_DOMAIN)
-    device_registry = dr.async_get(hass)
 
-    device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
 
     assert device.configuration_url == "https://engage.efergy.com/user/login"
     assert device.connections == {("mac", "ff:ff:ff:ff:ff:ff")}

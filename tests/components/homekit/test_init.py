@@ -81,6 +81,7 @@ async def test_bridge_with_triggers(
     an above or below additional configuration which we have no way
     to input, we ignore them.
     """
+    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "demo", {"demo": {}})
     await hass.async_block_till_done()
 

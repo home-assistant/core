@@ -83,25 +83,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders=placeholders,
         )
 
-    async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
-        """Import from yaml."""
-        host = import_info[CONF_HOST]
-        self._async_abort_entries_match({CONF_HOST: host})
-        _LOGGER.debug("Importing entry for host: %s", host)
-        try:
-            init_data = await validate_connection(self.hass, host)
-        except CannotConnect as ex:
-            _LOGGER.debug("Importing failed for %s", host, exc_info=ex)
-            return self.async_abort(reason="cannot_connect")
-        await self.async_set_unique_id(init_data.mac, raise_on_progress=False)
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: host}, reload_on_update=False
-        )
-        return self.async_create_entry(
-            title=init_data.name,
-            data={CONF_HOST: import_info[CONF_HOST]},
-        )
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:

@@ -16,14 +16,14 @@ from .entity import JellyfinEntity
 from .models import JellyfinData
 
 
-@dataclass
+@dataclass(frozen=True)
 class JellyfinSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[JellyfinDataT], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class JellyfinSensorEntityDescription(
     SensorEntityDescription, JellyfinSensorEntityDescriptionMixin
 ):
@@ -42,6 +42,7 @@ def _count_now_playing(data: JellyfinDataT) -> int:
 SENSOR_TYPES: dict[str, JellyfinSensorEntityDescription] = {
     "sessions": JellyfinSensorEntityDescription(
         key="watching",
+        name=None,
         icon="mdi:television-play",
         native_unit_of_measurement="Watching",
         value_fn=_count_now_playing,

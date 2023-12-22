@@ -1,4 +1,5 @@
 """Test the Pure Energie config flow."""
+from ipaddress import ip_address
 from unittest.mock import MagicMock
 
 from gridnet import GridNetConnectionError
@@ -22,7 +23,7 @@ async def test_full_user_flow_implementation(
         context={"source": SOURCE_USER},
     )
 
-    assert result.get("step_id") == SOURCE_USER
+    assert result.get("step_id") == "user"
     assert result.get("type") == FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
@@ -47,8 +48,8 @@ async def test_full_zeroconf_flow_implementationn(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.123",
-            addresses=["192.168.1.123"],
+            ip_address=ip_address("192.168.1.123"),
+            ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",
             name="mock_name",
             port=None,
@@ -103,8 +104,8 @@ async def test_zeroconf_connection_error(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.123",
-            addresses=["192.168.1.123"],
+            ip_address=ip_address("192.168.1.123"),
+            ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",
             name="mock_name",
             port=None,

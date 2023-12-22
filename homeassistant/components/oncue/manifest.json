@@ -12,5 +12,5 @@
   "documentation": "https://www.home-assistant.io/integrations/oncue",
   "iot_class": "cloud_polling",
   "loggers": ["aiooncue"],
-  "requirements": ["aiooncue==0.3.4"]
+  "requirements": ["aiooncue==0.3.5"]
 }

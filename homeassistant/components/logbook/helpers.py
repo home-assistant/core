@@ -23,8 +23,11 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entityfilter import EntityFilter
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
+from homeassistant.helpers.typing import EventType
 
 from .const import ALWAYS_CONTINUOUS_DOMAINS, AUTOMATION_EVENTS, BUILT_IN_EVENTS, DOMAIN
 from .models import LogbookConfig
@@ -104,7 +107,7 @@ def extract_attr(source: dict[str, Any], attr: str) -> list[str]:
 @callback
 def event_forwarder_filtered(
     target: Callable[[Event], None],
-    entities_filter: EntityFilter | None,
+    entities_filter: Callable[[str], bool] | None,
     entity_ids: list[str] | None,
     device_ids: list[str] | None,
 ) -> Callable[[Event], None]:
@@ -159,7 +162,7 @@ def async_subscribe_events(
     subscriptions: list[CALLBACK_TYPE],
     target: Callable[[Event], None],
     event_types: tuple[str, ...],
-    entities_filter: EntityFilter | None,
+    entities_filter: Callable[[str], bool] | None,
     entity_ids: list[str] | None,
     device_ids: list[str] | None,
 ) -> None:
@@ -185,11 +188,11 @@ def async_subscribe_events(
         return
 
     @callback
-    def _forward_state_events_filtered(event: Event) -> None:
-        if event.data.get("old_state") is None or event.data.get("new_state") is None:
+    def _forward_state_events_filtered(event: EventType[EventStateChangedData]) -> None:
+        if (old_state := event.data["old_state"]) is None or (
+            new_state := event.data["new_state"]
+        ) is None:
             return
-        new_state: State = event.data["new_state"]
-        old_state: State = event.data["old_state"]
         if _is_state_filtered(ent_reg, new_state, old_state) or (
             entities_filter and not entities_filter(new_state.entity_id)
         ):
@@ -208,7 +211,7 @@ def async_subscribe_events(
     subscriptions.append(
         hass.bus.async_listen(
             EVENT_STATE_CHANGED,
-            _forward_state_events_filtered,
+            _forward_state_events_filtered,  # type: ignore[arg-type]
             run_immediately=True,
         )
     )

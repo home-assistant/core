@@ -1,5 +1,4 @@
 """Test Kostal Plenticore number."""
-
 from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import patch
@@ -17,16 +16,16 @@ from homeassistant.components.number import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_get
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
 def mock_plenticore_client() -> Generator[ApiClient, None, None]:
-    """Return a patched ApiClient."""
+    """Return a patched ExtendedApiClient."""
     with patch(
-        "homeassistant.components.kostal_plenticore.helper.ApiClient",
+        "homeassistant.components.kostal_plenticore.helper.ExtendedApiClient",
         autospec=True,
     ) as plenticore_client_class:
         yield plenticore_client_class.return_value
@@ -42,28 +41,35 @@ def mock_get_setting_values(mock_plenticore_client: ApiClient) -> list:
     mock_plenticore_client.get_settings.return_value = {
         "devices:local": [
             SettingsData(
-                {
-                    "default": None,
-                    "min": 5,
-                    "max": 100,
-                    "access": "readwrite",
-                    "unit": "%",
-                    "type": "byte",
-                    "id": "Battery:MinSoc",
-                }
+                min="5",
+                max="100",
+                default=None,
+                access="readwrite",
+                unit="%",
+                id="Battery:MinSoc",
+                type="byte",
             ),
             SettingsData(
-                {
-                    "default": None,
-                    "min": 50,
-                    "max": 38000,
-                    "access": "readwrite",
-                    "unit": "W",
-                    "type": "byte",
-                    "id": "Battery:MinHomeComsumption",
-                }
+                min="50",
+                max="38000",
+                default=None,
+                access="readwrite",
+                unit="W",
+                id="Battery:MinHomeComsumption",
+                type="byte",
             ),
-        ]
+        ],
+        "scb:network": [
+            SettingsData(
+                min="1",
+                max="63",
+                default=None,
+                access="readwrite",
+                unit=None,
+                id="Hostname",
+                type="string",
+            )
+        ],
     }
 
     # this values are always retrieved by the integration on startup
@@ -90,7 +96,7 @@ async def test_setup_all_entries(
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
-    entity_registry_enabled_by_default,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test if all available entries are setup."""
 
@@ -109,11 +115,24 @@ async def test_setup_no_entries(
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
-    entity_registry_enabled_by_default,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test that no entries are setup if Plenticore does not provide data."""
 
-    mock_plenticore_client.get_settings.return_value = []
+    # remove all settings except hostname which is used during setup
+    mock_plenticore_client.get_settings.return_value = {
+        "scb:network": [
+            SettingsData(
+                min="1",
+                max="63",
+                default=None,
+                access="readwrite",
+                unit=None,
+                id="Hostname",
+                type="string",
+            )
+        ],
+    }
 
     mock_config_entry.add_to_hass(hass)
 
@@ -130,7 +149,7 @@ async def test_number_has_value(
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
-    entity_registry_enabled_by_default,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test if number has a value if data is provided on update."""
 
@@ -141,7 +160,7 @@ async def test_number_has_value(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=3))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
 
     state = hass.states.get("number.scb_battery_min_soc")
@@ -155,7 +174,7 @@ async def test_number_is_unavailable(
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
-    entity_registry_enabled_by_default,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test if number is unavailable if no data is provided on update."""
 
@@ -164,7 +183,7 @@ async def test_number_is_unavailable(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=3))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
 
     state = hass.states.get("number.scb_battery_min_soc")
@@ -176,7 +195,7 @@ async def test_set_value(
     mock_config_entry: MockConfigEntry,
     mock_plenticore_client: ApiClient,
     mock_get_setting_values: list,
-    entity_registry_enabled_by_default,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test if a new value could be set."""
 
@@ -187,7 +206,7 @@ async def test_set_value(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=3))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
     await hass.async_block_till_done()
 
     await hass.services.async_call(

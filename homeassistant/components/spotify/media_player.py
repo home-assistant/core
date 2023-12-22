@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from asyncio import run_coroutine_threadsafe
-import datetime as dt
 from datetime import timedelta
 import logging
 from typing import Any
@@ -12,7 +11,9 @@ from spotipy import SpotifyException
 from yarl import URL
 
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_ENQUEUE,
     BrowseMedia,
+    MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -23,10 +24,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.dt import utc_from_timestamp
+from homeassistant.util.dt import utcnow
 
 from . import HomeAssistantSpotifyData
 from .browse_media import async_browse_media_internal
@@ -95,6 +95,7 @@ def spotify_exception_handler(func):
             self._attr_available = False
             if exc.reason == "NO_ACTIVE_DEVICE":
                 raise HomeAssistantError("No active playback device found") from None
+            raise HomeAssistantError(f"Spotify error: {exc.reason}") from exc
 
     return wrapper
 
@@ -105,6 +106,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     _attr_has_entity_name = True
     _attr_icon = "mdi:spotify"
     _attr_media_image_remotely_accessible = False
+    _attr_name = None
 
     def __init__(
         self,
@@ -117,9 +119,6 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         self.data = data
 
         self._attr_unique_id = user_id
-
-        if self.data.current_user["product"] == "premium":
-            self._attr_supported_features = SUPPORT_SPOTIFY
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, user_id)},
@@ -135,6 +134,16 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         )
         self._currently_playing: dict | None = {}
         self._playlist: dict | None = None
+        self._restricted_device: bool = False
+
+    @property
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Return the supported features."""
+        if self.data.current_user["product"] != "premium":
+            return MediaPlayerEntityFeature(0)
+        if self._restricted_device or not self._currently_playing:
+            return MediaPlayerEntityFeature.SELECT_SOURCE
+        return SUPPORT_SPOTIFY
 
     @property
     def state(self) -> MediaPlayerState:
@@ -188,13 +197,6 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         ):
             return None
         return self._currently_playing["progress_ms"] / 1000
-
-    @property
-    def media_position_updated_at(self) -> dt.datetime | None:
-        """When was the position of the current playing media valid."""
-        if not self._currently_playing:
-            return None
-        return utc_from_timestamp(self._currently_playing["timestamp"] / 1000)
 
     @property
     def media_image_url(self) -> str | None:
@@ -281,7 +283,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         return self._currently_playing.get("shuffle_state")
 
     @property
-    def repeat(self) -> str | None:
+    def repeat(self) -> RepeatMode | None:
         """Return current repeat mode."""
         if (
             not self._currently_playing
@@ -321,9 +323,15 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         self.data.client.seek_track(int(position * 1000))
 
     @spotify_exception_handler
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play media."""
         media_type = media_type.removeprefix(MEDIA_PLAYER_PREFIX)
+
+        enqueue: MediaPlayerEnqueue = kwargs.get(
+            ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE
+        )
 
         kwargs = {}
 
@@ -345,6 +353,17 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             and self.data.devices.data
         ):
             kwargs["device_id"] = self.data.devices.data[0].get("id")
+
+        if enqueue == MediaPlayerEnqueue.ADD:
+            if media_type not in {
+                MediaType.TRACK,
+                MediaType.EPISODE,
+                MediaType.MUSIC,
+            }:
+                raise ValueError(
+                    f"Media type {media_type} is not supported when enqueue is ADD"
+                )
+            return self.data.client.add_to_queue(media_id, kwargs.get("device_id"))
 
         self.data.client.start_playback(**kwargs)
 
@@ -386,17 +405,34 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             additional_types=[MediaType.EPISODE]
         )
         self._currently_playing = current or {}
+        # Record the last updated time, because Spotify's timestamp property is unreliable
+        # and doesn't actually return the fetch time as is mentioned in the API description
+        self._attr_media_position_updated_at = utcnow() if current is not None else None
 
-        context = self._currently_playing.get("context")
-        if context is not None and (
-            self._playlist is None or self._playlist["uri"] != context["uri"]
-        ):
+        context = self._currently_playing.get("context") or {}
+
+        # For some users in some cases, the uri is formed like
+        # "spotify:user:{name}:playlist:{id}" and spotipy wants
+        # the type to be playlist.
+        uri = context.get("uri")
+        if uri is not None:
+            parts = uri.split(":")
+            if len(parts) == 5 and parts[1] == "user" and parts[3] == "playlist":
+                uri = ":".join([parts[0], parts[3], parts[4]])
+
+        if context and (self._playlist is None or self._playlist["uri"] != uri):
             self._playlist = None
             if context["type"] == MediaType.PLAYLIST:
-                self._playlist = self.data.client.playlist(current["context"]["uri"])
+                self._playlist = self.data.client.playlist(uri)
+
+        device = self._currently_playing.get("device")
+        if device is not None:
+            self._restricted_device = device["is_restricted"]
 
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
 

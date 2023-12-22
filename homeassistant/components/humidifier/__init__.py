@@ -1,14 +1,14 @@
 """Provides functionality to interact with humidifier devices."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
+from enum import StrEnum
+from functools import partial
 import logging
 from typing import Any, final
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_MODE,
@@ -23,27 +23,34 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
+from homeassistant.helpers.deprecation import (
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from .const import (  # noqa: F401
+    _DEPRECATED_DEVICE_CLASS_DEHUMIDIFIER,
+    _DEPRECATED_DEVICE_CLASS_HUMIDIFIER,
+    _DEPRECATED_SUPPORT_MODES,
+    ATTR_ACTION,
     ATTR_AVAILABLE_MODES,
+    ATTR_CURRENT_HUMIDITY,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
-    DEVICE_CLASS_DEHUMIDIFIER,
-    DEVICE_CLASS_HUMIDIFIER,
     DOMAIN,
     MODE_AUTO,
     MODE_AWAY,
     MODE_NORMAL,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
-    SUPPORT_MODES,
+    HumidifierAction,
     HumidifierEntityFeature,
 )
 
@@ -67,6 +74,12 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(HumidifierDeviceClass))
 # DEVICE_CLASSES below is deprecated as of 2021.12
 # use the HumidifierDeviceClass enum instead.
 DEVICE_CLASSES = [cls.value for cls in HumidifierDeviceClass]
+
+# As we import deprecated constants from the const module, we need to add these two functions
+# otherwise this module will be logged for using deprecated constants and not the custom component
+# Both can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 # mypy: disallow-any-generics
 
@@ -121,8 +134,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class HumidifierEntityDescription(ToggleEntityDescription):
+class HumidifierEntityDescription(ToggleEntityDescription, frozen_or_thawed=True):
     """A class that describes humidifier entities."""
 
     device_class: HumidifierDeviceClass | None = None
@@ -131,8 +143,14 @@ class HumidifierEntityDescription(ToggleEntityDescription):
 class HumidifierEntity(ToggleEntity):
     """Base class for humidifier entities."""
 
+    _entity_component_unrecorded_attributes = frozenset(
+        {ATTR_MIN_HUMIDITY, ATTR_MAX_HUMIDITY, ATTR_AVAILABLE_MODES}
+    )
+
     entity_description: HumidifierEntityDescription
+    _attr_action: HumidifierAction | None = None
     _attr_available_modes: list[str] | None
+    _attr_current_humidity: int | None = None
     _attr_device_class: HumidifierDeviceClass | None
     _attr_max_humidity: int = DEFAULT_MAX_HUMIDITY
     _attr_min_humidity: int = DEFAULT_MIN_HUMIDITY
@@ -168,6 +186,12 @@ class HumidifierEntity(ToggleEntity):
         """Return the optional state attributes."""
         data: dict[str, int | str | None] = {}
 
+        if self.action is not None:
+            data[ATTR_ACTION] = self.action if self.is_on else HumidifierAction.OFF
+
+        if self.current_humidity is not None:
+            data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
+
         if self.target_humidity is not None:
             data[ATTR_HUMIDITY] = self.target_humidity
 
@@ -175,6 +199,16 @@ class HumidifierEntity(ToggleEntity):
             data[ATTR_MODE] = self.mode
 
         return data
+
+    @property
+    def action(self) -> HumidifierAction | None:
+        """Return the current action."""
+        return self._attr_action
+
+    @property
+    def current_humidity(self) -> int | None:
+        """Return the current humidity."""
+        return self._attr_current_humidity
 
     @property
     def target_humidity(self) -> int | None:

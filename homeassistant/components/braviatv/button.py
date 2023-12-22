@@ -19,14 +19,14 @@ from .coordinator import BraviaTVCoordinator
 from .entity import BraviaTVEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class BraviaTVButtonDescriptionMixin:
     """Mixin to describe a Bravia TV Button entity."""
 
     press_action: Callable[[BraviaTVCoordinator], Coroutine]
 
 
-@dataclass
+@dataclass(frozen=True)
 class BraviaTVButtonDescription(
     ButtonEntityDescription, BraviaTVButtonDescriptionMixin
 ):
@@ -36,14 +36,13 @@ class BraviaTVButtonDescription(
 BUTTONS: tuple[BraviaTVButtonDescription, ...] = (
     BraviaTVButtonDescription(
         key="reboot",
-        name="Reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action=lambda coordinator: coordinator.async_reboot_device(),
     ),
     BraviaTVButtonDescription(
         key="terminate_apps",
-        name="Terminate apps",
+        translation_key="terminate_apps",
         entity_category=EntityCategory.CONFIG,
         press_action=lambda coordinator: coordinator.async_terminate_apps(),
     ),

@@ -1,4 +1,6 @@
 """The tests for the Light Switch platform."""
+import pytest
+
 from homeassistant.components.light import (
     ATTR_COLOR_MODE,
     ATTR_SUPPORTED_COLOR_MODES,
@@ -10,6 +12,12 @@ from homeassistant.setup import async_setup_component
 from . import common as switch_common
 
 from tests.components.light import common
+
+
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
 
 
 async def test_default_state(hass: HomeAssistant) -> None:

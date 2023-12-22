@@ -34,7 +34,7 @@ async def test_load_unload_entry(hass: HomeAssistant) -> None:
         },
         options={
             CONF_RESOLVER: "208.67.222.222",
-            CONF_RESOLVER_IPV6: "2620:0:ccc::2",
+            CONF_RESOLVER_IPV6: "2620:119:53::53",
         },
         entry_id="1",
         unique_id="home-assistant.io",

@@ -73,7 +73,7 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
         )
 
     @property
-    def hvac_action(self) -> str:
+    def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation."""
         return OVERKIZ_TO_HVAC_ACTION[
             cast(str, self.executor.select_state(OverkizState.CORE_OPEN_CLOSED_VALVE))

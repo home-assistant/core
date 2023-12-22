@@ -10,7 +10,7 @@ from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SynoApi
@@ -22,7 +22,7 @@ from .models import SynologyDSMData
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class SynologyDSMSwitchEntityDescription(
     SwitchEntityDescription, SynologyDSMEntityDescription
 ):
@@ -33,7 +33,7 @@ SURVEILLANCE_SWITCH: tuple[SynologyDSMSwitchEntityDescription, ...] = (
     SynologyDSMSwitchEntityDescription(
         api_key=SynoSurveillanceStation.HOME_MODE_API_KEY,
         key="home_mode",
-        name="Home Mode",
+        translation_key="home_mode",
         icon="mdi:home-account",
     ),
 )
@@ -71,10 +71,6 @@ class SynoDSMSurveillanceHomeModeToggle(
         """Initialize a Synology Surveillance Station Home Mode."""
         super().__init__(api, coordinator, description)
         self._version = version
-
-        self._attr_name = (
-            f"{self._api.network.hostname} Surveillance Station {description.name}"
-        )
 
     @property
     def is_on(self) -> bool:

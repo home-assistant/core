@@ -8,6 +8,7 @@ from homeassistant.components import hue
 from homeassistant.components.hue.const import CONF_ALLOW_HUE_GROUPS
 from homeassistant.components.hue.v1 import light as hue_light
 from homeassistant.components.light import ColorMode
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import color
@@ -178,6 +179,8 @@ async def setup_bridge(hass, mock_bridge_v1):
     """Load the Hue light platform with the provided bridge."""
     hass.config.components.add(hue.DOMAIN)
     config_entry = create_config_entry()
+    config_entry.add_to_hass(hass)
+    config_entry.state = ConfigEntryState.LOADED
     config_entry.options = {CONF_ALLOW_HUE_GROUPS: True}
     mock_bridge_v1.config_entry = config_entry
     hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge_v1}
@@ -239,7 +242,7 @@ async def test_lights_color_mode(hass: HomeAssistant, mock_bridge_v1) -> None:
     assert lamp_1.state == "on"
     assert lamp_1.attributes["brightness"] == 145
     assert lamp_1.attributes["hs_color"] == (36.067, 69.804)
-    assert "color_temp" not in lamp_1.attributes
+    assert lamp_1.attributes["color_temp"] is None
     assert lamp_1.attributes["color_mode"] == ColorMode.HS
     assert lamp_1.attributes["supported_color_modes"] == [
         ColorMode.COLOR_TEMP,
@@ -272,7 +275,9 @@ async def test_lights_color_mode(hass: HomeAssistant, mock_bridge_v1) -> None:
     ]
 
 
-async def test_groups(hass: HomeAssistant, mock_bridge_v1) -> None:
+async def test_groups(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_bridge_v1
+) -> None:
     """Test the update_lights function with some lights."""
     mock_bridge_v1.mock_light_responses.append({})
     mock_bridge_v1.mock_group_responses.append(GROUP_RESPONSE)
@@ -292,9 +297,8 @@ async def test_groups(hass: HomeAssistant, mock_bridge_v1) -> None:
     assert lamp_2 is not None
     assert lamp_2.state == "on"
 
-    ent_reg = er.async_get(hass)
-    assert ent_reg.async_get("light.group_1").unique_id == "1"
-    assert ent_reg.async_get("light.group_2").unique_id == "2"
+    assert entity_registry.async_get("light.group_1").unique_id == "1"
+    assert entity_registry.async_get("light.group_2").unique_id == "2"
 
 
 async def test_new_group_discovered(hass: HomeAssistant, mock_bridge_v1) -> None:
@@ -761,7 +765,12 @@ def test_hs_color() -> None:
     assert light.hs_color == color.color_xy_to_hs(0.4, 0.5, LIGHT_GAMUT)
 
 
-async def test_group_features(hass: HomeAssistant, mock_bridge_v1) -> None:
+async def test_group_features(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_bridge_v1,
+) -> None:
     """Test group features."""
     color_temp_type = "Color temperature light"
     extended_color_type = "Extended color light"
@@ -945,9 +954,6 @@ async def test_group_features(hass: HomeAssistant, mock_bridge_v1) -> None:
     group_3 = hass.states.get("light.dining_room")
     assert group_3.attributes["supported_color_modes"] == extended_color_mode
     assert group_3.attributes["supported_features"] == extended_color_feature
-
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     entry = entity_registry.async_get("light.hue_lamp_1")
     device_entry = device_registry.async_get(entry.device_id)

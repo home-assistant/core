@@ -36,19 +36,24 @@ async def async_setup_entry(
         # Otherwise, add all the entities we found
         entities = []
         for actuator in panel_status.actuators:
+            # Skip already handled devices
+            if actuator.endpoint_id in known_devices:
+                continue
             entity = ElmaxSwitch(
                 panel=coordinator.panel_entry,
                 elmax_device=actuator,
                 panel_version=panel_status.release,
                 coordinator=coordinator,
             )
-            if entity.unique_id not in known_devices:
-                entities.append(entity)
-        async_add_entities(entities, True)
-        known_devices.update([entity.unique_id for entity in entities])
+            entities.append(entity)
+
+        if entities:
+            async_add_entities(entities)
+            known_devices.update([entity.unique_id for entity in entities])
 
     # Register a listener for the discovery of new devices
-    coordinator.async_add_listener(_discover_new_devices)
+    remove_handle = coordinator.async_add_listener(_discover_new_devices)
+    config_entry.async_on_unload(remove_handle)
 
     # Immediately run a discovery, so we don't need to wait for the next update
     _discover_new_devices()
@@ -63,7 +68,7 @@ class ElmaxSwitch(ElmaxEntity, SwitchEntity):
         return self.coordinator.get_actuator_state(self._device.endpoint_id).opened
 
     async def _wait_for_state_change(self) -> bool:
-        """Refresh data and wait until the state state changes."""
+        """Refresh data and wait until the state changes."""
         old_state = self.coordinator.get_actuator_state(self._device.endpoint_id).opened
 
         # Wait a bit at first to let Elmax cloud assimilate the new state.

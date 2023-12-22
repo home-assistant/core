@@ -8,11 +8,13 @@ Configuration of options through options flow.
 from __future__ import annotations
 
 from collections.abc import Mapping
+import operator
 import socket
 from types import MappingProxyType
 from typing import Any
 from urllib.parse import urlparse
 
+from aiounifi.interfaces.sites import Sites
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -33,6 +35,7 @@ from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_BLOCK_CLIENT,
+    CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
@@ -63,6 +66,8 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
     VERSION = 1
 
+    sites: Sites
+
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -74,8 +79,6 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
     def __init__(self) -> None:
         """Initialize the UniFi Network flow."""
         self.config: dict[str, Any] = {}
-        self.site_ids: dict[str, str] = {}
-        self.site_names: dict[str, str] = {}
         self.reauth_config_entry: config_entries.ConfigEntry | None = None
         self.reauth_schema: dict[vol.Marker, Any] = {}
 
@@ -99,7 +102,8 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
                 controller = await get_unifi_controller(
                     self.hass, MappingProxyType(self.config)
                 )
-                sites = await controller.sites()
+                await controller.sites.update()
+                self.sites = controller.sites
 
             except AuthenticationRequired:
                 errors["base"] = "faulty_credentials"
@@ -108,12 +112,10 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
                 errors["base"] = "service_unavailable"
 
             else:
-                self.site_ids = {site["_id"]: site["name"] for site in sites.values()}
-                self.site_names = {site["_id"]: site["desc"] for site in sites.values()}
-
                 if (
                     self.reauth_config_entry
-                    and self.reauth_config_entry.unique_id in self.site_names
+                    and self.reauth_config_entry.unique_id is not None
+                    and self.reauth_config_entry.unique_id in self.sites
                 ):
                     return await self.async_step_site(
                         {CONF_SITE_ID: self.reauth_config_entry.unique_id}
@@ -148,7 +150,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         """Select site to control."""
         if user_input is not None:
             unique_id = user_input[CONF_SITE_ID]
-            self.config[CONF_SITE_ID] = self.site_ids[unique_id]
+            self.config[CONF_SITE_ID] = self.sites[unique_id].name
 
             config_entry = await self.async_set_unique_id(unique_id)
             abort_reason = "configuration_updated"
@@ -171,19 +173,16 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
                 await self.hass.config_entries.async_reload(config_entry.entry_id)
                 return self.async_abort(reason=abort_reason)
 
-            site_nice_name = self.site_names[unique_id]
+            site_nice_name = self.sites[unique_id].description
             return self.async_create_entry(title=site_nice_name, data=self.config)
 
-        if len(self.site_names) == 1:
-            return await self.async_step_site(
-                {CONF_SITE_ID: next(iter(self.site_names))}
-            )
+        if len(self.sites.values()) == 1:
+            return await self.async_step_site({CONF_SITE_ID: next(iter(self.sites))})
 
+        site_names = {site.site_id: site.description for site in self.sites.values()}
         return self.async_show_form(
             step_id="site",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_SITE_ID): vol.In(self.site_names)}
-            ),
+            data_schema=vol.Schema({vol.Required(CONF_SITE_ID): vol.In(site_names)}),
         )
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
@@ -260,7 +259,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
         self.options[CONF_BLOCK_CLIENT] = self.controller.option_block_clients
 
         if self.show_advanced_options:
-            return await self.async_step_device_tracker()
+            return await self.async_step_configure_entity_sources()
 
         return await self.async_step_simple_options()
 
@@ -299,6 +298,39 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
             last_step=True,
         )
 
+    async def async_step_configure_entity_sources(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Select sources for entities."""
+        if user_input is not None:
+            self.options.update(user_input)
+            return await self.async_step_device_tracker()
+
+        clients = {
+            client.mac: f"{client.name or client.hostname} ({client.mac})"
+            for client in self.controller.api.clients.values()
+        }
+        clients |= {
+            mac: f"Unknown ({mac})"
+            for mac in self.options.get(CONF_CLIENT_SOURCE, [])
+            if mac not in clients
+        }
+
+        return self.async_show_form(
+            step_id="configure_entity_sources",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_CLIENT_SOURCE,
+                        default=self.options.get(CONF_CLIENT_SOURCE, []),
+                    ): cv.multi_select(
+                        dict(sorted(clients.items(), key=operator.itemgetter(1)))
+                    ),
+                }
+            ),
+            last_step=False,
+        )
+
     async def async_step_device_tracker(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -308,11 +340,12 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
             return await self.async_step_client_control()
 
         ssids = (
-            set(self.controller.api.wlans)
+            {wlan.name for wlan in self.controller.api.wlans.values()}
             | {
                 f"{wlan.name}{wlan.name_combine_suffix}"
                 for wlan in self.controller.api.wlans.values()
                 if not wlan.name_combine_enabled
+                and wlan.name_combine_suffix is not None
             }
             | {
                 wlan["name"]

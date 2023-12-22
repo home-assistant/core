@@ -30,7 +30,7 @@ import voluptuous as vol
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_MODEL
+from homeassistant.const import ATTR_ENTITY_ID, CONF_DEVICE, CONF_MODEL
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -40,7 +40,6 @@ from homeassistant.util.percentage import (
 )
 
 from .const import (
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
     DOMAIN,
     FEATURE_FLAGS_AIRFRESH,
@@ -275,9 +274,7 @@ async def async_setup_entry(
             if not entity_method:
                 continue
             await entity_method(**params)
-            update_tasks.append(
-                hass.async_create_task(entity.async_update_ha_state(True))
-            )
+            update_tasks.append(asyncio.create_task(entity.async_update_ha_state(True)))
 
         if update_tasks:
             await asyncio.wait(update_tasks)
@@ -293,6 +290,8 @@ async def async_setup_entry(
 
 class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
     """Representation of a generic Xiaomi device."""
+
+    _attr_name = None
 
     def __init__(self, device, entry, unique_id, coordinator):
         """Initialize the generic Xiaomi device."""
@@ -530,9 +529,6 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
 
         This method is a coroutine.
         """
-        if preset_mode not in self.preset_modes:
-            _LOGGER.warning("'%s'is not a valid preset mode", preset_mode)
-            return
         if await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
@@ -623,9 +619,6 @@ class XiaomiAirPurifierMB4(XiaomiGenericAirPurifier):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        if preset_mode not in self.preset_modes:
-            _LOGGER.warning("'%s'is not a valid preset mode", preset_mode)
-            return
         if await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
@@ -721,9 +714,6 @@ class XiaomiAirFresh(XiaomiGenericAirPurifier):
 
         This method is a coroutine.
         """
-        if preset_mode not in self.preset_modes:
-            _LOGGER.warning("'%s'is not a valid preset mode", preset_mode)
-            return
         if await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
@@ -809,9 +799,6 @@ class XiaomiAirFreshA1(XiaomiGenericAirPurifier):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan. This method is a coroutine."""
-        if preset_mode not in self.preset_modes:
-            _LOGGER.warning("'%s'is not a valid preset mode", preset_mode)
-            return
         if await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
@@ -958,10 +945,6 @@ class XiaomiFan(XiaomiGenericFan):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        if preset_mode not in self.preset_modes:
-            _LOGGER.warning("'%s'is not a valid preset mode", preset_mode)
-            return
-
         if preset_mode == ATTR_MODE_NATURE:
             await self._try_command(
                 "Setting natural fan speed percentage of the miio device failed.",
@@ -1034,9 +1017,6 @@ class XiaomiFanP5(XiaomiGenericFan):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        if preset_mode not in self.preset_modes:
-            _LOGGER.warning("'%s'is not a valid preset mode", preset_mode)
-            return
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
@@ -1093,9 +1073,6 @@ class XiaomiFanMiot(XiaomiGenericFan):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        if preset_mode not in self.preset_modes:
-            _LOGGER.warning("'%s'is not a valid preset mode", preset_mode)
-            return
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,

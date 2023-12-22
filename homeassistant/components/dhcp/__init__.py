@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from datetime import timedelta
 from fnmatch import translate
 from functools import lru_cache
-from ipaddress import ip_address as make_ip_address
 import logging
 import os
 import re
@@ -22,6 +21,7 @@ from aiodiscover.discovery import (
     IP_ADDRESS as DISCOVERY_IP_ADDRESS,
     MAC_ADDRESS as DISCOVERY_MAC_ADDRESS,
 )
+from cached_ipaddress import cached_ip_addresses
 from scapy.config import conf
 from scapy.error import Scapy_Exception
 
@@ -42,7 +42,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.data_entry_flow import BaseServiceInfo
-from homeassistant.helpers import discovery_flow
+from homeassistant.helpers import config_validation as cv, discovery_flow
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceRegistry,
@@ -51,17 +51,20 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     async_track_state_added_domain,
     async_track_time_interval,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.loader import DHCPMatcher, async_get_dhcp
-from homeassistant.util.async_ import run_callback_threadsafe
-from homeassistant.util.network import is_invalid, is_link_local, is_loopback
+
+from .const import DOMAIN
 
 if TYPE_CHECKING:
     from scapy.packet import Packet
     from scapy.sendrecv import AsyncSniffer
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 FILTER = "udp and (port 67 or 68)"
 REQUESTED_ADDR = "requested_addr"
@@ -77,7 +80,7 @@ SCAN_INTERVAL = timedelta(minutes=60)
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(slots=True)
 class DhcpServiceInfo(BaseServiceInfo):
     """Prepared info from dhcp entries."""
 
@@ -141,25 +144,24 @@ class WatcherBase(ABC):
 
     def process_client(self, ip_address: str, hostname: str, mac_address: str) -> None:
         """Process a client."""
-        return run_callback_threadsafe(
-            self.hass.loop,
-            self.async_process_client,
-            ip_address,
-            hostname,
-            mac_address,
-        ).result()
+        self.hass.loop.call_soon_threadsafe(
+            self.async_process_client, ip_address, hostname, mac_address
+        )
 
     @callback
     def async_process_client(
         self, ip_address: str, hostname: str, mac_address: str
     ) -> None:
         """Process a client."""
-        made_ip_address = make_ip_address(ip_address)
+        if (made_ip_address := cached_ip_addresses(ip_address)) is None:
+            # Ignore invalid addresses
+            _LOGGER.debug("Ignoring invalid IP Address: %s", ip_address)
+            return
 
         if (
-            is_link_local(made_ip_address)
-            or is_loopback(made_ip_address)
-            or is_invalid(made_ip_address)
+            made_ip_address.is_link_local
+            or made_ip_address.is_loopback
+            or made_ip_address.is_unspecified
         ):
             # Ignore self assigned addresses, loopback, invalid
             return
@@ -192,7 +194,7 @@ class WatcherBase(ABC):
 
         dev_reg: DeviceRegistry = async_get(self.hass)
         if device := dev_reg.async_get_device(
-            identifiers=set(), connections={(CONNECTION_NETWORK_MAC, uppercase_mac)}
+            connections={(CONNECTION_NETWORK_MAC, uppercase_mac)}
         ):
             for entry_id in device.config_entries:
                 if entry := self.hass.config_entries.async_get_entry(entry_id):
@@ -260,7 +262,10 @@ class NetworkWatcher(WatcherBase):
         """Start scanning for new devices on the network."""
         self._discover_hosts = DiscoverHosts()
         self._unsub = async_track_time_interval(
-            self.hass, self.async_start_discover, SCAN_INTERVAL
+            self.hass,
+            self.async_start_discover,
+            SCAN_INTERVAL,
+            name="DHCP network watcher",
         )
         self.async_start_discover()
 
@@ -310,14 +315,16 @@ class DeviceTrackerWatcher(WatcherBase):
             self._async_process_device_state(state)
 
     @callback
-    def _async_process_device_event(self, event: Event) -> None:
+    def _async_process_device_event(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         """Process a device tracker state change event."""
         self._async_process_device_state(event.data["new_state"])
 
     @callback
-    def _async_process_device_state(self, state: State) -> None:
+    def _async_process_device_state(self, state: State | None) -> None:
         """Process a device tracker state."""
-        if state.state != STATE_HOME:
+        if state is None or state.state != STATE_HOME:
             return
 
         attributes = state.attributes
@@ -405,9 +412,7 @@ class DHCPWatcher(WatcherBase):
         """Start watching for dhcp packets."""
         # Local import because importing from scapy has side effects such as opening
         # sockets
-        from scapy import (  # pylint: disable=import-outside-toplevel,unused-import  # noqa: F401
-            arch,
-        )
+        from scapy import arch  # pylint: disable=import-outside-toplevel # noqa: F401
         from scapy.layers.dhcp import DHCP  # pylint: disable=import-outside-toplevel
         from scapy.layers.inet import IP  # pylint: disable=import-outside-toplevel
         from scapy.layers.l2 import Ether  # pylint: disable=import-outside-toplevel
@@ -482,7 +487,7 @@ class DHCPWatcher(WatcherBase):
 
 
 def _dhcp_options_as_dict(
-    dhcp_options: Iterable[tuple[str, int | bytes | None]]
+    dhcp_options: Iterable[tuple[str, int | bytes | None]],
 ) -> dict[str, str | int | bytes | None]:
     """Extract data from packet options as a dict."""
     return {option[0]: option[1] for option in dhcp_options if len(option) >= 2}

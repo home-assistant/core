@@ -74,7 +74,7 @@ async def async_setup_platform(
     await sensor_manager.async_start()
 
 
-@dataclass
+@dataclass(slots=True)
 class SourceAdapter:
     """Adapter to allow sources and their flows to be used as sensors."""
 
@@ -226,6 +226,8 @@ class EnergyCostSensor(SensorEntity):
     """
 
     _attr_entity_registry_visible_default = False
+    _attr_should_poll = False
+
     _wrong_state_class_reported = False
     _wrong_unit_reported = False
 
@@ -315,6 +317,11 @@ class EnergyCostSensor(SensorEntity):
             try:
                 energy_price = float(energy_price_state.state)
             except ValueError:
+                if self._last_energy_sensor_state is None:
+                    # Initialize as it's the first time all required entities except
+                    # price are in place. This means that the cost will update the first
+                    # time the energy is updated after the price entity is in place.
+                    self._reset(energy_state)
                 return
 
             energy_price_unit: str | None = energy_price_state.attributes.get(
@@ -375,11 +382,10 @@ class EnergyCostSensor(SensorEntity):
         if energy_price_unit is None:
             converted_energy_price = energy_price
         else:
-            if self._adapter.source_type == "grid":
-                converter: Callable[
-                    [float, str, str], float
-                ] = unit_conversion.EnergyConverter.convert
-            elif self._adapter.source_type in ("gas", "water"):
+            converter: Callable[[float, str, str], float]
+            if energy_unit in VALID_ENERGY_UNITS:
+                converter = unit_conversion.EnergyConverter.convert
+            else:
                 converter = unit_conversion.VolumeConverter.convert
 
             converted_energy_price = converter(
@@ -432,6 +438,7 @@ class EnergyCostSensor(SensorEntity):
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
         self.add_finished.set()
+        super().add_to_platform_abort()
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removing from hass."""

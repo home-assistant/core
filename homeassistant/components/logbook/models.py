@@ -16,13 +16,12 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.const import ATTR_ICON, EVENT_STATE_CHANGED
 from homeassistant.core import Context, Event, State, callback
-from homeassistant.helpers.entityfilter import EntityFilter
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import json_loads
 from homeassistant.util.ulid import ulid_to_bytes
 
 
-@dataclass
+@dataclass(slots=True)
 class LogbookConfig:
     """Configuration for the logbook integration."""
 
@@ -30,7 +29,7 @@ class LogbookConfig:
         str, tuple[str, Callable[[LazyEventPartialState], dict[str, Any]]]
     ]
     sqlalchemy_filter: Filters | None = None
-    entity_filter: EntityFilter | None = None
+    entity_filter: Callable[[str], bool] | None = None
 
 
 class LazyEventPartialState:
@@ -43,9 +42,6 @@ class LazyEventPartialState:
         "event_type",
         "entity_id",
         "state",
-        "context_id_bin",
-        "context_user_id_bin",
-        "context_parent_id_bin",
         "data",
     ]
 
@@ -61,15 +57,14 @@ class LazyEventPartialState:
         self.event_type: str | None = self.row.event_type
         self.entity_id: str | None = self.row.entity_id
         self.state = self.row.state
-        self.context_id_bin: bytes | None = self.row.context_id_bin
-        self.context_user_id_bin: bytes | None = self.row.context_user_id_bin
-        self.context_parent_id_bin: bytes | None = self.row.context_parent_id_bin
-        if data := getattr(row, "data", None):
+        # We need to explicitly check for the row is EventAsRow as the unhappy path
+        # to fetch row.data for Row is very expensive
+        if type(row) is EventAsRow:  # noqa: E721
             # If its an EventAsRow we can avoid the whole
             # json decode process as we already have the data
-            self.data = data
+            self.data = row.data
             return
-        source = cast(str, self.row.shared_data or self.row.event_data)
+        source = cast(str, self.row.event_data)
         if not source:
             self.data = {}
         elif event_data := self._event_data_cache.get(source):
@@ -82,20 +77,20 @@ class LazyEventPartialState:
     @property
     def context_id(self) -> str | None:
         """Return the context id."""
-        return bytes_to_ulid_or_none(self.context_id_bin)
+        return bytes_to_ulid_or_none(self.row.context_id_bin)
 
     @property
     def context_user_id(self) -> str | None:
         """Return the context user id."""
-        return bytes_to_uuid_hex_or_none(self.context_user_id_bin)
+        return bytes_to_uuid_hex_or_none(self.row.context_user_id_bin)
 
     @property
     def context_parent_id(self) -> str | None:
         """Return the context parent id."""
-        return bytes_to_ulid_or_none(self.context_parent_id_bin)
+        return bytes_to_ulid_or_none(self.row.context_parent_id_bin)
 
 
-@dataclass(frozen=True)
+@dataclass(slots=True, frozen=True)
 class EventAsRow:
     """Convert an event to a row."""
 
@@ -103,17 +98,14 @@ class EventAsRow:
     context: Context
     context_id_bin: bytes
     time_fired_ts: float
-    state_id: int
+    row_id: int
     event_data: str | None = None
-    old_format_icon: None = None
-    event_id: None = None
     entity_id: str | None = None
     icon: str | None = None
     context_user_id_bin: bytes | None = None
     context_parent_id_bin: bytes | None = None
     event_type: str | None = None
     state: str | None = None
-    shared_data: str | None = None
     context_only: None = None
 
 
@@ -130,7 +122,7 @@ def async_event_to_row(event: Event) -> EventAsRow:
             context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
             context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
             time_fired_ts=dt_util.utc_to_timestamp(event.time_fired),
-            state_id=hash(event),
+            row_id=hash(event),
         )
     # States are prefiltered so we never get states
     # that are missing new_state or old_state
@@ -146,6 +138,6 @@ def async_event_to_row(event: Event) -> EventAsRow:
         context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
         context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
         time_fired_ts=dt_util.utc_to_timestamp(new_state.last_updated),
-        state_id=hash(event),
+        row_id=hash(event),
         icon=new_state.attributes.get(ATTR_ICON),
     )
