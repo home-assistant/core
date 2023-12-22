@@ -44,7 +44,7 @@ class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
         super().__init__(coordinator, "media")
 
     @property
-    def state(self) -> MediaPlayerState | None:
+    def state(self) -> MediaPlayerState:
         """State of the player."""
         return STATES.get(
             self.get("vehicle_state_media_info_media_playback_status"),
