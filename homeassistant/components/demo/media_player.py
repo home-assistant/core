@@ -401,7 +401,7 @@ class DemoBrowsePlayer(AbstractDemoPlayer):
 
 
 class DemoGroupPlayer(AbstractDemoPlayer):
-    """A Demo media player that supports browse."""
+    """A Demo media player that supports grouping."""
 
     _attr_supported_features = (
         YOUTUBE_PLAYER_SUPPORT
