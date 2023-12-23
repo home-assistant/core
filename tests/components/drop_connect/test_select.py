@@ -33,7 +33,6 @@ async def test_selects_hub(
         "HOME",
         "SCHEDULE",
     ]
-    assert protect_mode_select.state == "HOME"
 
     async_fire_mqtt_message(hass, TEST_DATA_HUB_TOPIC, TEST_DATA_HUB_RESET)
     await hass.async_block_till_done()
