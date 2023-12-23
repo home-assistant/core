@@ -416,7 +416,7 @@ def test_check_if_deprecated_constant(
 )
 def test_check_if_deprecated_constant_integration_not_found(
     caplog: pytest.LogCaptureFixture,
-    deprecated_constant: DeprecatedConstant | DeprecatedConstantEnum,
+    deprecated_constant: DeprecatedConstant | DeprecatedConstantEnum | tuple,
     extra_msg: str,
     module_name: str,
 ) -> None:
