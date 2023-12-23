@@ -109,7 +109,7 @@ async def test_flow_incorrect_guid(
         )
 
         assert result["type"] == FlowResultType.FORM
-        assert result["errors"] == {"base": "missing_guid"}
+        assert result["errors"] == {"base": "cannot_connect"}
 
     with patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"), patch(
         "homeassistant.components.lutron.config_flow.Lutron.guid", "12345678901"
@@ -195,7 +195,7 @@ async def test_import_flow_guid_failure(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "missing_guid"
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_import_already_configured(hass: HomeAssistant) -> None:
