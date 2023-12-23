@@ -173,12 +173,16 @@ class Enigma2Device(MediaPlayerEntity):
         """Update state of the media_player."""
         await self._device.update()
         self._attr_available = not self._device.is_offline
-        self._attr_extra_state_attributes = {
-            ATTR_MEDIA_CURRENTLY_RECORDING: self._device.status.is_recording,
-            ATTR_MEDIA_DESCRIPTION: self._device.status.currservice.fulldescription,
-            ATTR_MEDIA_START_TIME: self._device.status.currservice.begin,
-            ATTR_MEDIA_END_TIME: self._device.status.currservice.end,
-        }
+
+        if not self._device.status.in_standby:
+            self._attr_extra_state_attributes = {
+                ATTR_MEDIA_CURRENTLY_RECORDING: self._device.status.is_recording,
+                ATTR_MEDIA_DESCRIPTION: self._device.status.currservice.fulldescription,
+                ATTR_MEDIA_START_TIME: self._device.status.currservice.begin,
+                ATTR_MEDIA_END_TIME: self._device.status.currservice.end,
+            }
+        else:
+            self._attr_extra_state_attributes = {}
 
         self._attr_media_title = self._device.status.currservice.station
         self._attr_media_series_title = self._device.status.currservice.name
@@ -194,7 +198,7 @@ class Enigma2Device(MediaPlayerEntity):
         else:
             self._attr_state = MediaPlayerState.ON
 
-        if self._device.status.volume is None:
-            self._attr_volume_level = None
+        if (volume_level := self._device.status.volume) is not None:
+            self._attr_volume_level = volume_level / 100
         else:
-            self._attr_volume_level = self._device.status.volume / 100
+            self._attr_volume_level = None
