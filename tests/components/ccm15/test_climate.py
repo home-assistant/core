@@ -1,7 +1,9 @@
 """Unit test for CCM15 coordinator component."""
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from ccm15 import CCM15DeviceState, CCM15SlaveDevice
+from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ccm15.climate import CCM15Climate
@@ -24,7 +26,7 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, SERVICE_TU
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_climate_state(
@@ -32,6 +34,7 @@ async def test_climate_state(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     ccm15_device: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the coordinator."""
     entry = MockConfigEntry(
@@ -112,6 +115,22 @@ async def test_climate_state(
         )
         await hass.async_block_till_done()
         mock_set_state.assert_called_once()
+
+    # Create an instance of the CCM15DeviceState class
+    device_state = CCM15DeviceState(devices={})
+    with patch(
+        "ccm15.CCM15Device.CCM15Device.get_status_async",
+        return_value=device_state,
+    ):
+        freezer.tick(timedelta(minutes=15))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert entity_registry.async_get("climate.midea_0") == snapshot
+    assert entity_registry.async_get("climate.midea_1") == snapshot
+
+    assert hass.states.get("climate.midea_0") == snapshot
+    assert hass.states.get("climate.midea_1") == snapshot
 
 
 async def test_cmm15_data_isread_correctly(
