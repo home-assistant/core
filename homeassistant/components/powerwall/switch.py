@@ -34,8 +34,7 @@ async def async_setup_entry(
 class PowerwallOffGridEnabledEntity(PowerWallEntity, SwitchEntity):
     """Representation of a Switch entity for Powerwall Off-grid operation."""
 
-    _attr_name = "Off-Grid operation"
-    _attr_has_entity_name = True
+    _attr_translation_key = "off_grid_operation"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = SwitchDeviceClass.SWITCH
 

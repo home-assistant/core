@@ -114,6 +114,7 @@ def create_mock_client() -> Mock:
     mock_client.instances = [
         {"friendly_name": "Test instance 1", "instance": 0, "running": True}
     ]
+    mock_client.remote_url = f"http://{TEST_HOST}:{TEST_PORT_UI}"
 
     return mock_client
 

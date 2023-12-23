@@ -70,6 +70,7 @@ htmlcov/
 test-reports/
 test-results.xml
 test-output.xml
+pytest-*.txt
 
 # Translations
 *.mo
@@ -112,9 +113,6 @@ virtualization/vagrant/config
 !.vscode/extensions.json
 !.vscode/tasks.json
 .env
-
-# Built docs
-docs/build
 
 # Windows Explorer
 desktop.ini

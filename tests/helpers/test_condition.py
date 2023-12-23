@@ -303,7 +303,7 @@ async def test_and_condition_shorthand(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     assert config["alias"] == "And Condition Shorthand"
-    assert "and" not in config.keys()
+    assert "and" not in config
 
     hass.states.async_set("sensor.temperature", 120)
     assert not test(hass)
@@ -345,7 +345,7 @@ async def test_and_condition_list_shorthand(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     assert config["alias"] == "And Condition List Shorthand"
-    assert "and" not in config.keys()
+    assert "and" not in config
 
     hass.states.async_set("sensor.temperature", 120)
     assert not test(hass)
@@ -577,7 +577,7 @@ async def test_or_condition_shorthand(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     assert config["alias"] == "Or Condition Shorthand"
-    assert "or" not in config.keys()
+    assert "or" not in config
 
     hass.states.async_set("sensor.temperature", 120)
     assert not test(hass)
@@ -809,7 +809,7 @@ async def test_not_condition_shorthand(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     assert config["alias"] == "Not Condition Shorthand"
-    assert "not" not in config.keys()
+    assert "not" not in config
 
     hass.states.async_set("sensor.temperature", 101)
     assert test(hass)
@@ -1373,10 +1373,11 @@ async def test_state_attribute_boolean(hass: HomeAssistant) -> None:
     assert test(hass)
 
 
-async def test_state_entity_registry_id(hass: HomeAssistant) -> None:
+async def test_state_entity_registry_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test with entity specified by entity registry id."""
-    registry = er.async_get(hass)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "switch", "hue", "1234", suggested_object_id="test"
     )
     assert entry.entity_id == "switch.test"
@@ -1715,10 +1716,11 @@ async def test_numeric_state_attribute(hass: HomeAssistant) -> None:
     assert not test(hass)
 
 
-async def test_numeric_state_entity_registry_id(hass: HomeAssistant) -> None:
+async def test_numeric_state_entity_registry_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test with entity specified by entity registry id."""
-    registry = er.async_get(hass)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "sensor", "hue", "1234", suggested_object_id="test"
     )
     assert entry.entity_id == "sensor.test"

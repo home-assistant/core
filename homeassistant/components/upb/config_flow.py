@@ -4,7 +4,6 @@ from contextlib import suppress
 import logging
 from urllib.parse import urlparse
 
-import async_timeout
 import upb_lib
 import voluptuous as vol
 
@@ -44,8 +43,9 @@ async def _validate_input(data):
 
     upb.connect(_connected_callback)
 
-    with suppress(asyncio.TimeoutError), async_timeout.timeout(VALIDATE_TIMEOUT):
-        await connected_event.wait()
+    with suppress(asyncio.TimeoutError):
+        async with asyncio.timeout(VALIDATE_TIMEOUT):
+            await connected_event.wait()
 
     upb.disconnect()
 

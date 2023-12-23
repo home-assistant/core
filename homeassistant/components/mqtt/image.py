@@ -4,18 +4,14 @@ from __future__ import annotations
 from base64 import b64decode
 import binascii
 from collections.abc import Callable
-import functools
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import httpx
 import voluptuous as vol
 
 from homeassistant.components import image
-from homeassistant.components.image import (
-    DEFAULT_CONTENT_TYPE,
-    ImageEntity,
-)
+from homeassistant.components.image import DEFAULT_CONTENT_TYPE, ImageEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -30,7 +26,11 @@ from . import subscription
 from .config import MQTT_BASE_SCHEMA
 from .const import CONF_ENCODING, CONF_QOS
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_setup_entity_entry_helper,
+)
 from .models import MessageCallbackType, MqttValueTemplate, ReceiveMessage
 from .util import get_mqtt_data, valid_subscribe_topic
 
@@ -61,7 +61,7 @@ def validate_topic_required(config: ConfigType) -> ConfigType:
 PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_CONTENT_TYPE): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Exclusive(CONF_URL_TOPIC, "image_topic"): valid_subscribe_topic,
         vol.Exclusive(CONF_IMAGE_TOPIC, "image_topic"): valid_subscribe_topic,
         vol.Optional(CONF_IMAGE_ENCODING): "b64",
@@ -82,26 +82,21 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT image through YAML and through MQTT discovery."""
-    setup = functools.partial(
-        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
+    await async_setup_entity_entry_helper(
+        hass,
+        config_entry,
+        MqttImage,
+        image.DOMAIN,
+        async_add_entities,
+        DISCOVERY_SCHEMA,
+        PLATFORM_SCHEMA_MODERN,
     )
-    await async_setup_entry_helper(hass, image.DOMAIN, setup, DISCOVERY_SCHEMA)
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    async_add_entities: AddEntitiesCallback,
-    config: ConfigType,
-    config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the MQTT Image."""
-    async_add_entities([MqttImage(hass, config, config_entry, discovery_data)])
 
 
 class MqttImage(MqttEntity, ImageEntity):
     """representation of a MQTT image."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format: str = image.ENTITY_ID_FORMAT
     _last_image: bytes | None = None
     _client: httpx.AsyncClient
@@ -174,7 +169,8 @@ class MqttImage(MqttEntity, ImageEntity):
                 if CONF_IMAGE_ENCODING in self._config:
                     self._last_image = b64decode(msg.payload)
                 else:
-                    assert isinstance(msg.payload, bytes)
+                    if TYPE_CHECKING:
+                        assert isinstance(msg.payload, bytes)
                     self._last_image = msg.payload
             except (binascii.Error, ValueError, AssertionError) as err:
                 _LOGGER.error(

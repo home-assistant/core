@@ -2,12 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
 from datetime import datetime, timedelta
 import logging
 from typing import Final
 
-import bluetooth  # pylint: disable=import-error
+import bluetooth
 from bt_proximity import BluetoothRSSI
 import voluptuous as vol
 
@@ -152,7 +151,7 @@ async def async_setup_scanner(
     async def perform_bluetooth_update() -> None:
         """Discover Bluetooth devices and update status."""
         _LOGGER.debug("Performing Bluetooth devices discovery and update")
-        tasks: list[Awaitable[None]] = []
+        tasks: list[asyncio.Task[None]] = []
 
         try:
             if track_new:

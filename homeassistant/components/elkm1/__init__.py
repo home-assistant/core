@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 from enum import Enum
 import logging
 import re
 from types import MappingProxyType
-from typing import Any, cast
+from typing import Any
 
-import async_timeout
 from elkm1_lib.elements import Element
 from elkm1_lib.elk import Elk
 from elkm1_lib.util import parse_url
@@ -31,8 +31,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
@@ -66,6 +66,7 @@ from .discovery import (
     async_trigger_discovery,
     async_update_entry_from_discovery,
 )
+from .models import ELKM1Data
 
 SYNC_TIMEOUT = 120
 
@@ -304,14 +305,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         temperature_unit = UnitOfTemperature.FAHRENHEIT
     config["temperature_unit"] = temperature_unit
-    hass.data[DOMAIN][entry.entry_id] = {
-        "elk": elk,
-        "prefix": conf[CONF_PREFIX],
-        "mac": entry.unique_id,
-        "auto_configure": conf[CONF_AUTO_CONFIGURE],
-        "config": config,
-        "keypads": {},
-    }
+    prefix: str = conf[CONF_PREFIX]
+    auto_configure: bool = conf[CONF_AUTO_CONFIGURE]
+    hass.data[DOMAIN][entry.entry_id] = ELKM1Data(
+        elk=elk,
+        prefix=prefix,
+        mac=entry.unique_id,
+        auto_configure=auto_configure,
+        config=config,
+        keypads={},
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -327,21 +330,23 @@ def _included(ranges: list[tuple[int, int]], set_to: bool, values: list[bool]) -
 
 def _find_elk_by_prefix(hass: HomeAssistant, prefix: str) -> Elk | None:
     """Search all config entries for a given prefix."""
-    for entry_id in hass.data[DOMAIN]:
-        if hass.data[DOMAIN][entry_id]["prefix"] == prefix:
-            return cast(Elk, hass.data[DOMAIN][entry_id]["elk"])
+    all_elk: dict[str, ELKM1Data] = hass.data[DOMAIN]
+    for elk_data in all_elk.values():
+        if elk_data.prefix == prefix:
+            return elk_data.elk
     return None
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    all_elk: dict[str, ELKM1Data] = hass.data[DOMAIN]
 
     # disconnect cleanly
-    hass.data[DOMAIN][entry.entry_id]["elk"].disconnect()
+    all_elk[entry.entry_id].elk.disconnect()
 
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        all_elk.pop(entry.entry_id)
 
     return unload_ok
 
@@ -382,7 +387,7 @@ async def async_wait_for_elk_to_sync(
     ):
         _LOGGER.debug("Waiting for %s event for %s seconds", name, timeout)
         try:
-            async with async_timeout.timeout(timeout):
+            async with asyncio.timeout(timeout):
                 await event.wait()
         except asyncio.TimeoutError:
             _LOGGER.debug("Timed out waiting for %s event", name)
@@ -422,19 +427,19 @@ def _create_elk_services(hass: HomeAssistant) -> None:
 
 
 def create_elk_entities(
-    elk_data: dict[str, Any],
-    elk_elements: list[Element],
+    elk_data: ELKM1Data,
+    elk_elements: Iterable[Element],
     element_type: str,
     class_: Any,
     entities: list[ElkEntity],
 ) -> list[ElkEntity] | None:
     """Create the ElkM1 devices of a particular class."""
-    auto_configure = elk_data["auto_configure"]
+    auto_configure = elk_data.auto_configure
 
-    if not auto_configure and not elk_data["config"][element_type]["enabled"]:
+    if not auto_configure and not elk_data.config[element_type]["enabled"]:
         return None
 
-    elk = elk_data["elk"]
+    elk = elk_data.elk
     _LOGGER.debug("Creating elk entities for %s", elk)
 
     for element in elk_elements:
@@ -442,7 +447,7 @@ def create_elk_entities(
             if not element.configured:
                 continue
         # Only check the included list if auto configure is not
-        elif not elk_data["config"][element_type]["included"][element.index]:
+        elif not elk_data.config[element_type]["included"][element.index]:
             continue
 
         entities.append(class_(element, elk, elk_data))
@@ -455,13 +460,13 @@ class ElkEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, element: Element, elk: Elk, elk_data: dict[str, Any]) -> None:
+    def __init__(self, element: Element, elk: Elk, elk_data: ELKM1Data) -> None:
         """Initialize the base of all Elk devices."""
         self._elk = elk
         self._element = element
-        self._mac = elk_data["mac"]
-        self._prefix = elk_data["prefix"]
-        self._temperature_unit: str = elk_data["config"]["temperature_unit"]
+        self._mac = elk_data.mac
+        self._prefix = elk_data.prefix
+        self._temperature_unit: str = elk_data.config["temperature_unit"]
         # unique_id starts with elkm1_ iff there is no prefix
         # it starts with elkm1m_{prefix} iff there is a prefix
         # this is to avoid a conflict between
@@ -497,9 +502,7 @@ class ElkEntity(Entity):
 
     def initial_attrs(self) -> dict[str, Any]:
         """Return the underlying element's attributes as a dict."""
-        attrs = {}
-        attrs["index"] = self._element.index + 1
-        return attrs
+        return {"index": self._element.index + 1}
 
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         pass
@@ -519,6 +522,8 @@ class ElkEntity(Entity):
     def device_info(self) -> DeviceInfo:
         """Device info connecting via the ElkM1 system."""
         return DeviceInfo(
+            name=self._element.name,
+            identifiers={(DOMAIN, self._unique_id)},
             via_device=(DOMAIN, f"{self._prefix}_system"),
         )
 

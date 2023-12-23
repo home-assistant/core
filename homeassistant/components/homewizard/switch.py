@@ -23,23 +23,15 @@ from .entity import HomeWizardEntity
 from .helpers import homewizard_exception_handler
 
 
-@dataclass
-class HomeWizardEntityDescriptionMixin:
-    """Mixin values for HomeWizard entities."""
-
-    create_fn: Callable[[HWEnergyDeviceUpdateCoordinator], bool]
-    available_fn: Callable[[DeviceResponseEntry], bool]
-    is_on_fn: Callable[[DeviceResponseEntry], bool | None]
-    set_fn: Callable[[HomeWizardEnergy, bool], Awaitable[Any]]
-
-
-@dataclass
-class HomeWizardSwitchEntityDescription(
-    SwitchEntityDescription, HomeWizardEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class HomeWizardSwitchEntityDescription(SwitchEntityDescription):
     """Class describing HomeWizard switch entities."""
 
+    available_fn: Callable[[DeviceResponseEntry], bool]
+    create_fn: Callable[[HWEnergyDeviceUpdateCoordinator], bool]
     icon_off: str | None = None
+    is_on_fn: Callable[[DeviceResponseEntry], bool | None]
+    set_fn: Callable[[HomeWizardEnergy, bool], Awaitable[Any]]
 
 
 SWITCHES = [
@@ -86,11 +78,7 @@ async def async_setup_entry(
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        HomeWizardSwitchEntity(
-            coordinator=coordinator,
-            description=description,
-            entry=entry,
-        )
+        HomeWizardSwitchEntity(coordinator, description)
         for description in SWITCHES
         if description.create_fn(coordinator)
     )
@@ -105,12 +93,11 @@ class HomeWizardSwitchEntity(HomeWizardEntity, SwitchEntity):
         self,
         coordinator: HWEnergyDeviceUpdateCoordinator,
         description: HomeWizardSwitchEntityDescription,
-        entry: ConfigEntry,
     ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{entry.unique_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
 
     @property
     def icon(self) -> str | None:

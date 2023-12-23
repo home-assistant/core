@@ -15,7 +15,7 @@ from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.percentage import (
@@ -131,11 +131,9 @@ class Fan(CoordinatorEntity[FjaraskupanCoordinator], FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if command := PRESET_TO_COMMAND.get(preset_mode):
-            async with self.coordinator.async_connect_and_update() as device:
-                await device.send_command(command)
-        else:
-            raise UnsupportedPreset(f"The preset {preset_mode} is unsupported")
+        command = PRESET_TO_COMMAND[preset_mode]
+        async with self.coordinator.async_connect_and_update() as device:
+            await device.send_command(command)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""

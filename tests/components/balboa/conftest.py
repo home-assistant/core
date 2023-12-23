@@ -29,7 +29,7 @@ def client_fixture() -> Generator[MagicMock, None, None]:
         client = mock_balboa.return_value
         callback: list[Callable] = []
 
-        def on(_, _callback: Callable):  # pylint: disable=invalid-name
+        def on(_, _callback: Callable):
             callback.append(_callback)
             return lambda: None
 

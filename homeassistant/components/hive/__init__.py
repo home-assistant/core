@@ -17,12 +17,12 @@ from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS

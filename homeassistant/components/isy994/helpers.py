@@ -24,7 +24,7 @@ from pyisy.nodes import Group, Node, Nodes
 from pyisy.programs import Programs
 
 from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, Platform
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import (
     _LOGGER,

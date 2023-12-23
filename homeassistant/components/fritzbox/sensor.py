@@ -25,13 +25,13 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utc_from_timestamp
 
 from . import FritzBoxDeviceEntity
-from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
+from .common import get_coordinator
 from .model import FritzEntityDescriptionMixinBase
 
 
@@ -47,6 +47,8 @@ class FritzSensorEntityDescription(
     SensorEntityDescription, FritzEntityDescriptionMixinSensor
 ):
     """Description for Fritz!Smarthome sensor entities."""
+
+    entity_category_fn: Callable[[FritzhomeDevice], EntityCategory | None] | None = None
 
 
 def suitable_eco_temperature(device: FritzhomeDevice) -> bool:
@@ -74,6 +76,13 @@ def suitable_temperature(device: FritzhomeDevice) -> bool:
     return device.has_temperature_sensor and not device.has_thermostat
 
 
+def entity_category_temperature(device: FritzhomeDevice) -> EntityCategory | None:
+    """Determine proper entity category for temperature sensor."""
+    if device.has_switch or device.has_lightbulb:
+        return EntityCategory.DIAGNOSTIC
+    return None
+
+
 def value_nextchange_preset(device: FritzhomeDevice) -> str:
     """Return native value for next scheduled preset sensor."""
     if device.nextchange_temperature == device.eco_temperature:
@@ -94,7 +103,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_category_fn=entity_category_temperature,
         suitable=suitable_temperature,
         native_value=lambda device: device.temperature,
     ),
@@ -203,16 +212,25 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FRITZ!SmartHome sensor from ConfigEntry."""
-    coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
+    coordinator = get_coordinator(hass, entry.entry_id)
 
-    async_add_entities(
-        [
+    @callback
+    def _add_entities(devices: set[str] | None = None) -> None:
+        """Add devices."""
+        if devices is None:
+            devices = coordinator.new_devices
+        if not devices:
+            return
+        async_add_entities(
             FritzBoxSensor(coordinator, ain, description)
-            for ain, device in coordinator.data.devices.items()
+            for ain in devices
             for description in SENSOR_TYPES
-            if description.suitable(device)
-        ]
-    )
+            if description.suitable(coordinator.data.devices[ain])
+        )
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
+
+    _add_entities(set(coordinator.data.devices.keys()))
 
 
 class FritzBoxSensor(FritzBoxDeviceEntity, SensorEntity):
@@ -224,3 +242,10 @@ class FritzBoxSensor(FritzBoxDeviceEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.native_value(self.data)
+
+    @property
+    def entity_category(self) -> EntityCategory | None:
+        """Return the category of the entity, if any."""
+        if self.entity_description.entity_category_fn is not None:
+            return self.entity_description.entity_category_fn(self.data)
+        return super().entity_category

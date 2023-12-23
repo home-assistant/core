@@ -5,25 +5,19 @@ import logging
 from typing import Any
 
 from pymystrom.exceptions import MyStromConnectionError
-import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
-    PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN, MANUFACTURER
 
@@ -33,14 +27,6 @@ DEFAULT_NAME = "myStrom bulb"
 
 EFFECT_RAINBOW = "rainbow"
 EFFECT_SUNRISE = "sunrise"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_MAC): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
 
 
 async def async_setup_entry(
@@ -52,32 +38,11 @@ async def async_setup_entry(
     async_add_entities([MyStromLight(device, entry.title, info["mac"])])
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the myStrom light integration."""
-    async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2023.12.0",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
-
-
 class MyStromLight(LightEntity):
     """Representation of the myStrom WiFi bulb."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_color_mode = ColorMode.HS
     _attr_supported_color_modes = {ColorMode.HS}
     _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.FLASH
@@ -86,7 +51,6 @@ class MyStromLight(LightEntity):
     def __init__(self, bulb, name, mac):
         """Initialize the light."""
         self._bulb = bulb
-        self._attr_name = name
         self._attr_available = False
         self._attr_unique_id = mac
         self._attr_hs_color = 0, 0

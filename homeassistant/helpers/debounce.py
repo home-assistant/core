@@ -64,9 +64,7 @@ class Debouncer(Generic[_R_co]):
     async def async_call(self) -> None:
         """Call the function."""
         if self._shutdown_requested:
-            self.logger.warning(
-                "Debouncer call ignored as shutdown has been requested."
-            )
+            self.logger.debug("Debouncer call ignored as shutdown has been requested.")
             return
         assert self._job is not None
 

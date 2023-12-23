@@ -195,7 +195,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(ConversationProcessView())
     websocket_api.async_register_command(hass, websocket_process)
     websocket_api.async_register_command(hass, websocket_prepare)
-    websocket_api.async_register_command(hass, websocket_get_agent_info)
     websocket_api.async_register_command(hass, websocket_list_agents)
     websocket_api.async_register_command(hass, websocket_hass_agent_debug)
 
@@ -247,29 +246,6 @@ async def websocket_prepare(
     agent = await manager.async_get_agent(msg.get("agent_id"))
     await agent.async_prepare(msg.get("language"))
     connection.send_result(msg["id"])
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "conversation/agent/info",
-        vol.Optional("agent_id"): agent_id_validator,
-    }
-)
-@websocket_api.async_response
-async def websocket_get_agent_info(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Info about the agent in use."""
-    agent = await _get_agent_manager(hass).async_get_agent(msg.get("agent_id"))
-
-    connection.send_result(
-        msg["id"],
-        {
-            "attribution": agent.attribution,
-        },
-    )
 
 
 @websocket_api.websocket_command(
@@ -346,7 +322,11 @@ async def websocket_hass_agent_debug(
                     "intent": {
                         "name": result.intent.name,
                     },
-                    "entities": {
+                    "slots": {  # direct access to values
+                        entity_key: entity.value
+                        for entity_key, entity in result.entities.items()
+                    },
+                    "details": {
                         entity_key: {
                             "name": entity.name,
                             "value": entity.value,

@@ -108,9 +108,8 @@ async def async_register_dynalite_frontend(hass: HomeAssistant):
         await panel_custom.async_register_panel(
             hass=hass,
             frontend_url_path=DOMAIN,
+            config_panel_domain=DOMAIN,
             webcomponent_name="dynalite-panel",
-            sidebar_title=DOMAIN.capitalize(),
-            sidebar_icon="mdi:power",
             module_url=f"{URL_BASE}/entrypoint-{build_id}.js",
             embed_iframe=True,
             require_admin=True,

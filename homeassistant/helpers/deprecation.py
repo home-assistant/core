@@ -2,12 +2,17 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import suppress
 import functools
 import inspect
 import logging
 from typing import Any, ParamSpec, TypeVar
 
-from ..helpers.frame import MissingIntegrationFrame, get_integration_frame
+from homeassistant.core import HomeAssistant, async_get_hass
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import async_suggest_report_issue
+
+from .frame import MissingIntegrationFrame, get_integration_frame
 
 _ObjectT = TypeVar("_ObjectT", bound=object)
 _R = TypeVar("_R")
@@ -94,7 +99,11 @@ def get_deprecated(
 def deprecated_class(
     replacement: str,
 ) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
-    """Mark class as deprecated and provide a replacement class to be used instead."""
+    """Mark class as deprecated and provide a replacement class to be used instead.
+
+    If the deprecated function was called from a custom integration, ask the user to
+    report an issue.
+    """
 
     def deprecated_decorator(cls: Callable[_P, _R]) -> Callable[_P, _R]:
         """Decorate class as deprecated."""
@@ -102,7 +111,7 @@ def deprecated_class(
         @functools.wraps(cls)
         def deprecated_cls(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             """Wrap for the original class."""
-            _print_deprecation_warning(cls, replacement, "class")
+            _print_deprecation_warning(cls, replacement, "class", "instantiated")
             return cls(*args, **kwargs)
 
         return deprecated_cls
@@ -113,7 +122,11 @@ def deprecated_class(
 def deprecated_function(
     replacement: str,
 ) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
-    """Mark function as deprecated and provide a replacement to be used instead."""
+    """Mark function as deprecated and provide a replacement to be used instead.
+
+    If the deprecated function was called from a custom integration, ask the user to
+    report an issue.
+    """
 
     def deprecated_decorator(func: Callable[_P, _R]) -> Callable[_P, _R]:
         """Decorate function as deprecated."""
@@ -121,7 +134,7 @@ def deprecated_function(
         @functools.wraps(func)
         def deprecated_func(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             """Wrap for the original function."""
-            _print_deprecation_warning(func, replacement, "function")
+            _print_deprecation_warning(func, replacement, "function", "called")
             return func(*args, **kwargs)
 
         return deprecated_func
@@ -129,30 +142,15 @@ def deprecated_function(
     return deprecated_decorator
 
 
-def _print_deprecation_warning(obj: Any, replacement: str, description: str) -> None:
+def _print_deprecation_warning(
+    obj: Any,
+    replacement: str,
+    description: str,
+    verb: str,
+) -> None:
     logger = logging.getLogger(obj.__module__)
     try:
-        _, integration, path = get_integration_frame()
-        if path == "custom_components/":
-            logger.warning(
-                (
-                    "%s was called from %s, this is a deprecated %s. Use %s instead,"
-                    " please report this to the maintainer of %s"
-                ),
-                obj.__name__,
-                integration,
-                description,
-                replacement,
-                integration,
-            )
-        else:
-            logger.warning(
-                "%s was called from %s, this is a deprecated %s. Use %s instead",
-                obj.__name__,
-                integration,
-                description,
-                replacement,
-            )
+        integration_frame = get_integration_frame()
     except MissingIntegrationFrame:
         logger.warning(
             "%s is a deprecated %s. Use %s instead",
@@ -160,3 +158,34 @@ def _print_deprecation_warning(obj: Any, replacement: str, description: str) -> 
             description,
             replacement,
         )
+    else:
+        if integration_frame.custom_integration:
+            hass: HomeAssistant | None = None
+            with suppress(HomeAssistantError):
+                hass = async_get_hass()
+            report_issue = async_suggest_report_issue(
+                hass,
+                integration_domain=integration_frame.integration,
+                module=integration_frame.module,
+            )
+            logger.warning(
+                (
+                    "%s was %s from %s, this is a deprecated %s. Use %s instead,"
+                    " please %s"
+                ),
+                obj.__name__,
+                verb,
+                integration_frame.integration,
+                description,
+                replacement,
+                report_issue,
+            )
+        else:
+            logger.warning(
+                "%s was %s from %s, this is a deprecated %s. Use %s instead",
+                obj.__name__,
+                verb,
+                integration_frame.integration,
+                description,
+                replacement,
+            )

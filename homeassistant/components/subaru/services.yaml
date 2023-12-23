@@ -1,14 +1,10 @@
 unlock_specific_door:
-  name: Unlock Specific Door
-  description: Unlocks specific door(s)
   target:
     entity:
       domain: lock
       integration: subaru
   fields:
     door:
-      name: Door
-      description: "One of the following: 'all', 'driver', 'tailgate'"
       example: driver
       required: true
       selector:

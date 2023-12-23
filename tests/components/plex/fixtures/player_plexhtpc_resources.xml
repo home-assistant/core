@@ -1,0 +1,3 @@
+<MediaContainer size="1">
+    <Player machineIdentifier="plex_htpc" deviceClass="pc" platform="osx" platformVersion="13.5" product="Plex HTPC for Mac" protocol="plex" protocolCapabilities="timeline,playback,navigation,playqueues" protocolVersion="3" title="Plex HTPC" version="1.33.2.3525-140e01eb" />
+</MediaContainer>

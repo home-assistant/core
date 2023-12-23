@@ -357,9 +357,7 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
         "      example: 'This is a test of python_script.hello'"
     )
     services_yaml1 = {
-        "{}/{}/services.yaml".format(
-            hass.config.config_dir, FOLDER
-        ): service_descriptions1
+        f"{hass.config.config_dir}/{FOLDER}/services.yaml": service_descriptions1
     }
 
     with patch(
@@ -369,7 +367,7 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.python_script.os.path.exists", return_value=True
     ), patch_yaml_files(
-        services_yaml1
+        services_yaml1,
     ):
         await async_setup_component(hass, DOMAIN, {})
 
@@ -408,9 +406,7 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
         "      example: 'This is a test of python_script.hello2'"
     )
     services_yaml2 = {
-        "{}/{}/services.yaml".format(
-            hass.config.config_dir, FOLDER
-        ): service_descriptions2
+        f"{hass.config.config_dir}/{FOLDER}/services.yaml": service_descriptions2
     }
 
     with patch(
@@ -420,7 +416,7 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.python_script.os.path.exists", return_value=True
     ), patch_yaml_files(
-        services_yaml2
+        services_yaml2,
     ):
         await hass.services.async_call(DOMAIN, "reload", {}, blocking=True)
         descriptions = await async_get_all_descriptions(hass)

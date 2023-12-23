@@ -4,9 +4,10 @@ from amberelectric import Configuration
 from amberelectric.api import amber_api
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_API_TOKEN, CONF_SITE_ID, DOMAIN, PLATFORMS
+from .const import CONF_SITE_ID, DOMAIN, PLATFORMS
 from .coordinator import AmberUpdateCoordinator
 
 

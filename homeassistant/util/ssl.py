@@ -1,12 +1,11 @@
 """Helper to create SSL contexts."""
 import contextlib
+from enum import StrEnum
 from functools import cache
 from os import environ
 import ssl
 
 import certifi
-
-from homeassistant.backports.enum import StrEnum
 
 
 class SSLCipherList(StrEnum):
@@ -128,14 +127,9 @@ def server_context_modern() -> ssl.SSLContext:
     Modern guidelines are followed.
     """
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.minimum_version = ssl.TLSVersion.TLSv1_2
 
-    context.options |= (
-        ssl.OP_NO_SSLv2
-        | ssl.OP_NO_SSLv3
-        | ssl.OP_NO_TLSv1
-        | ssl.OP_NO_TLSv1_1
-        | ssl.OP_CIPHER_SERVER_PREFERENCE
-    )
+    context.options |= ssl.OP_CIPHER_SERVER_PREFERENCE
     if hasattr(ssl, "OP_NO_COMPRESSION"):
         context.options |= ssl.OP_NO_COMPRESSION
 

@@ -59,15 +59,15 @@ body:
     attributes:
       label: Integration causing the issue
       description: >
-        The name of the integration. For example: Automation, Philips Hue
+        The name of the integration, for example Automation or Philips Hue.
   - type: input
     id: integration_link
     attributes:
       label: Link to integration documentation on our website
       placeholder: "https://www.home-assistant.io/integrations/..."
       description: |
-        Providing a link [to the documentation][docs] helps us categorize the
-        issue, while also providing a useful reference for others.
+        Providing a link [to the documentation][docs] helps us categorize the issue and might speed up the
+        investigation by automatically informing a contributor, while also providing a useful reference for others.
 
         [docs]: https://www.home-assistant.io/integrations
 

@@ -7,28 +7,27 @@ from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import datetime as dt
+from enum import StrEnum
 import functools as ft
 import hashlib
 from http import HTTPStatus
 import logging
 import secrets
-from typing import Any, Final, TypedDict, final
+from typing import Any, Final, Required, TypedDict, final
 from urllib.parse import quote, urlparse
 
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
-import async_timeout
-from typing_extensions import Required
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.websocket_api import ERR_NOT_SUPPORTED, ERR_UNKNOWN_ERROR
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
+    ATTR_ENTITY_PICTURE,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -459,6 +458,17 @@ class MediaPlayerEntityDescription(EntityDescription):
 
 class MediaPlayerEntity(Entity):
     """ABC for media player entities."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {
+            ATTR_ENTITY_PICTURE_LOCAL,
+            ATTR_ENTITY_PICTURE,
+            ATTR_INPUT_SOURCE_LIST,
+            ATTR_MEDIA_POSITION_UPDATED_AT,
+            ATTR_MEDIA_POSITION,
+            ATTR_SOUND_MODE_LIST,
+        }
+    )
 
     entity_description: MediaPlayerEntityDescription
     _access_token: str | None = None
@@ -1001,13 +1011,14 @@ class MediaPlayerEntity(Entity):
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         data: dict[str, Any] = {}
+        supported_features = self.supported_features
 
-        if self.supported_features & MediaPlayerEntityFeature.SELECT_SOURCE and (
+        if supported_features & MediaPlayerEntityFeature.SELECT_SOURCE and (
             source_list := self.source_list
         ):
             data[ATTR_INPUT_SOURCE_LIST] = source_list
 
-        if self.supported_features & MediaPlayerEntityFeature.SELECT_SOUND_MODE and (
+        if supported_features & MediaPlayerEntityFeature.SELECT_SOUND_MODE and (
             sound_mode_list := self.sound_mode_list
         ):
             data[ATTR_SOUND_MODE_LIST] = sound_mode_list
@@ -1126,8 +1137,7 @@ class MediaPlayerImageView(HomeAssistantView):
     extra_urls = [
         # Need to modify the default regex for media_content_id as it may
         # include arbitrary characters including '/','{', or '}'
-        url
-        + "/browse_media/{media_content_type}/{media_content_id:.+}",
+        url + "/browse_media/{media_content_type}/{media_content_id:.+}",
     ]
 
     def __init__(self, component: EntityComponent[MediaPlayerEntity]) -> None:
@@ -1258,12 +1268,13 @@ async def async_fetch_image(
     """Retrieve an image."""
     content, content_type = (None, None)
     websession = async_get_clientsession(hass)
-    with suppress(asyncio.TimeoutError), async_timeout.timeout(10):
-        response = await websession.get(url)
-        if response.status == HTTPStatus.OK:
-            content = await response.read()
-            if content_type := response.headers.get(CONTENT_TYPE):
-                content_type = content_type.split(";")[0]
+    with suppress(asyncio.TimeoutError):
+        async with asyncio.timeout(10):
+            response = await websession.get(url)
+            if response.status == HTTPStatus.OK:
+                content = await response.read()
+                if content_type := response.headers.get(CONTENT_TYPE):
+                    content_type = content_type.split(";")[0]
 
     if content is None:
         url_parts = URL(url)

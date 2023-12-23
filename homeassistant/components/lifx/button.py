@@ -17,7 +17,6 @@ from .entity import LIFXEntity
 
 RESTART_BUTTON_DESCRIPTION = ButtonEntityDescription(
     key=RESTART,
-    name="Restart",
     device_class=ButtonDeviceClass.RESTART,
     entity_category=EntityCategory.CONFIG,
 )
@@ -45,8 +44,7 @@ async def async_setup_entry(
 class LIFXButton(LIFXEntity, ButtonEntity):
     """Base LIFX button."""
 
-    _attr_has_entity_name: bool = True
-    _attr_should_poll: bool = False
+    _attr_should_poll = False
 
     def __init__(self, coordinator: LIFXUpdateCoordinator) -> None:
         """Initialise a LIFX button."""

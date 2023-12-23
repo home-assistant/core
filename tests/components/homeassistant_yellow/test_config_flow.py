@@ -1,4 +1,5 @@
 """Test the Home Assistant Yellow config flow."""
+from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 import pytest
@@ -9,6 +10,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
+
+
+@pytest.fixture(autouse=True)
+def config_flow_handler(hass: HomeAssistant) -> Generator[None, None, None]:
+    """Fixture for a test config flow."""
+    with patch(
+        "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.WaitingAddonManager.async_wait_until_addon_state"
+    ):
+        yield
 
 
 @pytest.fixture(name="get_yellow_settings")
@@ -239,8 +249,8 @@ async def test_option_flow_install_multi_pan_addon_zha(
     assert zha_config_entry.data == {
         "device": {
             "path": "socket://core-silabs-multiprotocol:9999",
-            "baudrate": 57600,  # ZHA default
-            "flow_control": "software",  # ZHA default
+            "baudrate": 115200,
+            "flow_control": None,
         },
         "radio_type": "ezsp",
     }

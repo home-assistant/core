@@ -6,13 +6,18 @@ from collections.abc import Callable
 import contextlib
 from dataclasses import dataclass
 from functools import partial
+import inspect
 import logging
 from typing import TYPE_CHECKING, Any, Final
 
 from bleak import BleakClient, BleakError
 from bleak.backends.client import BaseBleakClient, get_platform_client_backend_type
 from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementDataCallback, BaseBleakScanner
+from bleak.backends.scanner import (
+    AdvertisementData,
+    AdvertisementDataCallback,
+    BaseBleakScanner,
+)
 from bleak_retry_connector import (
     NO_RSSI_VALUE,
     ble_device_description,
@@ -58,6 +63,7 @@ class HaBleakScannerWrapper(BaseBleakScanner):
         self._detection_cancel: CALLBACK_TYPE | None = None
         self._mapped_filters: dict[str, set[str]] = {}
         self._advertisement_data_callback: AdvertisementDataCallback | None = None
+        self._background_tasks: set[asyncio.Task] = set()
         remapped_kwargs = {
             "detection_callback": detection_callback,
             "service_uuids": service_uuids or [],
@@ -114,26 +120,40 @@ class HaBleakScannerWrapper(BaseBleakScanner):
 
     def register_detection_callback(
         self, callback: AdvertisementDataCallback | None
-    ) -> None:
+    ) -> Callable[[], None]:
         """Register a detection callback.
 
         The callback is called when a device is discovered or has a property changed.
 
-        This method takes the callback and registers it with the long running sscanner.
+        This method takes the callback and registers it with the long running scanner.
         """
         self._advertisement_data_callback = callback
         self._setup_detection_callback()
+        assert self._detection_cancel is not None
+        return self._detection_cancel
 
     def _setup_detection_callback(self) -> None:
         """Set up the detection callback."""
         if self._advertisement_data_callback is None:
             return
+        callback = self._advertisement_data_callback
         self._cancel_callback()
         super().register_detection_callback(self._advertisement_data_callback)
         assert models.MANAGER is not None
-        assert self._callback is not None
+
+        if not inspect.iscoroutinefunction(callback):
+            detection_callback = callback
+        else:
+
+            def detection_callback(
+                ble_device: BLEDevice, advertisement_data: AdvertisementData
+            ) -> None:
+                task = asyncio.create_task(callback(ble_device, advertisement_data))
+                self._background_tasks.add(task)
+                task.add_done_callback(self._background_tasks.discard)
+
         self._detection_cancel = models.MANAGER.async_register_bleak_callback(
-            self._callback, self._mapped_filters
+            detection_callback, self._mapped_filters
         )
 
     def __del__(self) -> None:
@@ -181,7 +201,7 @@ class HaBleakClientWrapper(BleakClient):
     when an integration does this.
     """
 
-    def __init__(  # pylint: disable=super-init-not-called, keyword-arg-before-vararg
+    def __init__(  # pylint: disable=super-init-not-called
         self,
         address_or_ble_device: str | BLEDevice,
         disconnected_callback: Callable[[BleakClient], None] | None = None,
@@ -250,6 +270,10 @@ class HaBleakClientWrapper(BleakClient):
         """Connect to the specified GATT server."""
         assert models.MANAGER is not None
         manager = models.MANAGER
+        if manager.shutdown:
+            raise BleakError("Bluetooth is already shutdown")
+        if debug_logging := _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("%s: Looking for backend to connect", self.__address)
         wrapped_backend = self._async_get_best_available_backend_and_device(manager)
         device = wrapped_backend.device
         scanner = wrapped_backend.scanner
@@ -261,12 +285,14 @@ class HaBleakClientWrapper(BleakClient):
             timeout=self.__timeout,
             hass=manager.hass,
         )
-        if debug_logging := _LOGGER.isEnabledFor(logging.DEBUG):
+        if debug_logging:
             # Only lookup the description if we are going to log it
             description = ble_device_description(device)
             _, adv = scanner.discovered_devices_and_advertisement_data[device.address]
             rssi = adv.rssi
-            _LOGGER.debug("%s: Connecting (last rssi: %s)", description, rssi)
+            _LOGGER.debug(
+                "%s: Connecting via %s (last rssi: %s)", description, scanner.name, rssi
+            )
         connected = None
         try:
             connected = await super().connect(**kwargs)
@@ -281,7 +307,9 @@ class HaBleakClientWrapper(BleakClient):
                     manager.async_release_connection_slot(device)
 
         if debug_logging:
-            _LOGGER.debug("%s: Connected (last rssi: %s)", description, rssi)
+            _LOGGER.debug(
+                "%s: Connected via %s (last rssi: %s)", description, scanner.name, rssi
+            )
         return connected
 
     @hass_callback

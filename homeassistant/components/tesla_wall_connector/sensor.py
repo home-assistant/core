@@ -24,7 +24,6 @@ from . import (
     WallConnectorData,
     WallConnectorEntity,
     WallConnectorLambdaValueGetterMixin,
-    prefix_entity_name,
 )
 from .const import DOMAIN, WALLCONNECTOR_DATA_LIFETIME, WALLCONNECTOR_DATA_VITALS
 
@@ -41,13 +40,13 @@ class WallConnectorSensorDescription(
 WALL_CONNECTOR_SENSORS = [
     WallConnectorSensorDescription(
         key="evse_state",
-        name=prefix_entity_name("State"),
+        translation_key="evse_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].evse_state,
     ),
     WallConnectorSensorDescription(
         key="handle_temp_c",
-        name=prefix_entity_name("Handle Temperature"),
+        translation_key="handle_temp_c",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_fn=lambda data: round(data[WALLCONNECTOR_DATA_VITALS].handle_temp_c, 1),
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -56,7 +55,7 @@ WALL_CONNECTOR_SENSORS = [
     ),
     WallConnectorSensorDescription(
         key="grid_v",
-        name=prefix_entity_name("Grid Voltage"),
+        translation_key="grid_v",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value_fn=lambda data: round(data[WALLCONNECTOR_DATA_VITALS].grid_v, 1),
         device_class=SensorDeviceClass.VOLTAGE,
@@ -65,7 +64,7 @@ WALL_CONNECTOR_SENSORS = [
     ),
     WallConnectorSensorDescription(
         key="grid_hz",
-        name=prefix_entity_name("Grid Frequency"),
+        translation_key="grid_hz",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         value_fn=lambda data: round(data[WALLCONNECTOR_DATA_VITALS].grid_hz, 3),
         device_class=SensorDeviceClass.FREQUENCY,
@@ -74,7 +73,7 @@ WALL_CONNECTOR_SENSORS = [
     ),
     WallConnectorSensorDescription(
         key="current_a_a",
-        name=prefix_entity_name("Phase A Current"),
+        translation_key="current_a_a",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].currentA_a,
         device_class=SensorDeviceClass.CURRENT,
@@ -83,7 +82,7 @@ WALL_CONNECTOR_SENSORS = [
     ),
     WallConnectorSensorDescription(
         key="current_b_a",
-        name=prefix_entity_name("Phase B Current"),
+        translation_key="current_b_a",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].currentB_a,
         device_class=SensorDeviceClass.CURRENT,
@@ -92,7 +91,7 @@ WALL_CONNECTOR_SENSORS = [
     ),
     WallConnectorSensorDescription(
         key="current_c_a",
-        name=prefix_entity_name("Phase C Current"),
+        translation_key="current_c_a",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].currentC_a,
         device_class=SensorDeviceClass.CURRENT,
@@ -101,7 +100,7 @@ WALL_CONNECTOR_SENSORS = [
     ),
     WallConnectorSensorDescription(
         key="voltage_a_v",
-        name=prefix_entity_name("Phase A Voltage"),
+        translation_key="voltage_a_v",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].voltageA_v,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -110,7 +109,7 @@ WALL_CONNECTOR_SENSORS = [
     ),
     WallConnectorSensorDescription(
         key="voltage_b_v",
-        name=prefix_entity_name("Phase B Voltage"),
+        translation_key="voltage_b_v",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].voltageB_v,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -119,7 +118,7 @@ WALL_CONNECTOR_SENSORS = [
     ),
     WallConnectorSensorDescription(
         key="voltage_c_v",
-        name=prefix_entity_name("Phase C Voltage"),
+        translation_key="voltage_c_v",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].voltageC_v,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -128,7 +127,6 @@ WALL_CONNECTOR_SENSORS = [
     ),
     WallConnectorSensorDescription(
         key="energy_kWh",
-        name=prefix_entity_name("Energy"),
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         value_fn=lambda data: data[WALLCONNECTOR_DATA_LIFETIME].energy_wh,
         device_class=SensorDeviceClass.ENERGY,

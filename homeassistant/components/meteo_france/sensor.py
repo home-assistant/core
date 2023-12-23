@@ -28,8 +28,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -137,6 +136,14 @@ SENSOR_TYPES: tuple[MeteoFranceSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         data_path="today_forecast:weather12H:desc",
     ),
+    MeteoFranceSensorEntityDescription(
+        key="humidity",
+        name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+        data_path="current_forecast:humidity",
+    ),
 )
 
 SENSOR_TYPES_RAIN: tuple[MeteoFranceSensorEntityDescription, ...] = (
@@ -189,9 +196,9 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator_forecast: DataUpdateCoordinator[Forecast] = data[COORDINATOR_FORECAST]
     coordinator_rain: DataUpdateCoordinator[Rain] | None = data[COORDINATOR_RAIN]
-    coordinator_alert: DataUpdateCoordinator[CurrentPhenomenons] | None = data[
+    coordinator_alert: DataUpdateCoordinator[CurrentPhenomenons] | None = data.get(
         COORDINATOR_ALERT
-    ]
+    )
 
     entities: list[MeteoFranceSensor[Any]] = [
         MeteoFranceSensor(coordinator_forecast, description)

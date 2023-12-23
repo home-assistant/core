@@ -1307,7 +1307,14 @@ async def test_prepare_reload(hass: HomeAssistant) -> None:
     # Confirm intents are loaded
     assert agent._lang_intents.get(language)
 
-    # Clear cache
+    # Try to clear for a different language
+    await hass.services.async_call("conversation", "reload", {"language": "elvish"})
+    await hass.async_block_till_done()
+
+    # Confirm intents are still loaded
+    assert agent._lang_intents.get(language)
+
+    # Clear cache for all languages
     await hass.services.async_call("conversation", "reload", {})
     await hass.async_block_till_done()
 
@@ -1409,6 +1416,7 @@ async def test_turn_on_area(
 ) -> None:
     """Test turning on an area."""
     entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
 
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -1480,6 +1488,7 @@ async def test_light_area_same_name(
 ) -> None:
     """Test turning on a light with the same name as an area."""
     entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
 
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -1609,43 +1618,6 @@ async def test_get_agent_info(
 
     agent_info = conversation.async_get_agent_info(hass)
     assert agent_info == snapshot
-
-
-async def test_ws_get_agent_info(
-    hass: HomeAssistant,
-    init_components,
-    mock_agent,
-    hass_ws_client: WebSocketGenerator,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test get agent info."""
-    client = await hass_ws_client(hass)
-
-    await client.send_json_auto_id({"type": "conversation/agent/info"})
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == snapshot
-
-    await client.send_json_auto_id(
-        {"type": "conversation/agent/info", "agent_id": "homeassistant"}
-    )
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == snapshot
-
-    await client.send_json_auto_id(
-        {"type": "conversation/agent/info", "agent_id": mock_agent.agent_id}
-    )
-    msg = await client.receive_json()
-    assert msg["success"]
-    assert msg["result"] == snapshot
-
-    await client.send_json_auto_id(
-        {"type": "conversation/agent/info", "agent_id": "not_exist"}
-    )
-    msg = await client.receive_json()
-    assert not msg["success"]
-    assert msg["error"] == snapshot
 
 
 async def test_ws_hass_agent_debug(

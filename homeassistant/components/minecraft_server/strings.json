@@ -6,17 +6,48 @@
         "description": "Set up your Minecraft Server instance to allow monitoring.",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
-          "host": "[%key:common::config_flow::data::host%]"
+          "address": "Server address"
         }
       }
     },
     "error": {
-      "invalid_port": "Port must be in range from 1024 to 65535. Please correct it and try again.",
-      "cannot_connect": "Failed to connect to server. Please check the host and port and try again. Also ensure that you are running at least Minecraft version 1.7 on your server.",
-      "invalid_ip": "IP address is invalid (MAC address could not be determined). Please correct it and try again."
+      "cannot_connect": "Failed to connect to server. Please check the address and try again. If a port was provided, it must be within a valid range. If you are running a Minecraft Java Edition server, ensure that it is at least version 1.7."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "name": "Status"
+      }
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    "sensor": {
+      "version": {
+        "name": "Version"
+      },
+      "protocol_version": {
+        "name": "Protocol version"
+      },
+      "latency": {
+        "name": "Latency"
+      },
+      "players_online": {
+        "name": "Players online"
+      },
+      "players_max": {
+        "name": "Players max"
+      },
+      "motd": {
+        "name": "World message"
+      },
+      "game_mode": {
+        "name": "Game mode"
+      },
+      "map_name": {
+        "name": "Map name"
+      },
+      "edition": {
+        "name": "Edition"
+      }
     }
   }
 }

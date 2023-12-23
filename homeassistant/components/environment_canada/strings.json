@@ -117,5 +117,17 @@
         "name": "Forecast"
       }
     }
+  },
+  "services": {
+    "set_radar_type": {
+      "name": "Set radar type",
+      "description": "Sets the type of radar image to retrieve.",
+      "fields": {
+        "radar_type": {
+          "name": "Radar type",
+          "description": "The type of radar image to display."
+        }
+      }
+    }
   }
 }

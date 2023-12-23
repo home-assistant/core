@@ -7,5 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/youtube",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": ["google-api-python-client==2.71.0"]
+  "requirements": ["youtubeaio==1.1.5"]
 }

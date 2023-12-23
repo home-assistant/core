@@ -1,11 +1,7 @@
 # Describes the format for available SimpliSafe services
 remove_pin:
-  name: Remove PIN
-  description: Remove a PIN by its label or value.
   fields:
     device_id:
-      name: System
-      description: The system to remove the PIN from
       required: true
       selector:
         device:
@@ -13,19 +9,13 @@ remove_pin:
           entity:
             domain: alarm_control_panel
     label_or_pin:
-      name: Label/PIN
-      description: The label/value to remove.
       required: true
       example: Test PIN
       selector:
         text:
 set_pin:
-  name: Set PIN
-  description: Set/update a PIN
   fields:
     device_id:
-      name: System
-      description: The system to set the PIN on
       required: true
       selector:
         device:
@@ -33,26 +23,18 @@ set_pin:
           entity:
             domain: alarm_control_panel
     label:
-      name: Label
-      description: The label of the PIN
       required: true
       example: Test PIN
       selector:
         text:
     pin:
-      name: PIN
-      description: The value of the PIN
       required: true
       example: 1256
       selector:
         text:
 set_system_properties:
-  name: Set system properties
-  description: Set one or more system properties
   fields:
     device_id:
-      name: System
-      description: The system whose properties should be set
       required: true
       selector:
         device:
@@ -60,16 +42,12 @@ set_system_properties:
           entity:
             domain: alarm_control_panel
     alarm_duration:
-      name: Alarm duration
-      description: The length of a triggered alarm
       selector:
         number:
           min: 30
           max: 480
           unit_of_measurement: seconds
     alarm_volume:
-      name: Alarm volume
-      description: The volume level of a triggered alarm
       selector:
         select:
           options:
@@ -78,8 +56,6 @@ set_system_properties:
             - "high"
             - "off"
     chime_volume:
-      name: Chime volume
-      description: The volume level of the door chime
       selector:
         select:
           options:
@@ -88,45 +64,33 @@ set_system_properties:
             - "high"
             - "off"
     entry_delay_away:
-      name: Entry delay away
-      description: How long to delay when entering while "away"
       selector:
         number:
           min: 30
           max: 255
           unit_of_measurement: seconds
     entry_delay_home:
-      name: Entry delay home
-      description: How long to delay when entering while "home"
       selector:
         number:
           min: 0
           max: 255
           unit_of_measurement: seconds
     exit_delay_away:
-      name: Exit delay away
-      description: How long to delay when exiting while "away"
       selector:
         number:
           min: 45
           max: 255
           unit_of_measurement: seconds
     exit_delay_home:
-      name: Exit delay home
-      description: How long to delay when exiting while "home"
       selector:
         number:
           min: 0
           max: 255
           unit_of_measurement: seconds
     light:
-      name: Light
-      description: Whether the armed light should be visible
       selector:
         boolean:
     voice_prompt_volume:
-      name: Voice prompt volume
-      description: The volume level of the voice prompt
       selector:
         select:
           options:

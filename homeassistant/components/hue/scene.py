@@ -13,8 +13,7 @@ import voluptuous as vol
 from homeassistant.components.scene import ATTR_TRANSITION, Scene as SceneEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
@@ -87,6 +86,8 @@ async def async_setup_entry(
 class HueSceneEntityBase(HueBaseEntity, SceneEntity):
     """Base Representation of a Scene entity from Hue Scenes."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         bridge: HueBridge,
@@ -98,6 +99,11 @@ class HueSceneEntityBase(HueBaseEntity, SceneEntity):
         self.resource = resource
         self.controller = controller
         self.group = self.controller.get_group(self.resource.id)
+        # we create a virtual service/device for Hue zones/rooms
+        # so we have a parent for grouped lights and scenes
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.group.id)},
+        )
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
@@ -113,24 +119,8 @@ class HueSceneEntityBase(HueBaseEntity, SceneEntity):
 
     @property
     def name(self) -> str:
-        """Return default entity name."""
-        return f"{self.group.metadata.name} {self.resource.metadata.name}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device (service) info."""
-        # we create a virtual service/device for Hue scenes
-        # so we have a parent for grouped lights and scenes
-        group_type = self.group.type.value.title()
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.group.id)},
-            entry_type=DeviceEntryType.SERVICE,
-            name=self.group.metadata.name,
-            manufacturer=self.bridge.api.config.bridge_device.product_data.manufacturer_name,
-            model=self.group.type.value.title(),
-            suggested_area=self.group.metadata.name if group_type == "Room" else None,
-            via_device=(DOMAIN, self.bridge.api.config.bridge_device.id),
-        )
+        """Return name of the scene."""
+        return self.resource.metadata.name
 
 
 class HueSceneEntity(HueSceneEntityBase):

@@ -1,5 +1,4 @@
 """Collection of test helpers."""
-from datetime import datetime
 from fractions import Fraction
 import functools
 from functools import partial
@@ -15,8 +14,9 @@ from homeassistant.components.stream.fmp4utils import (
     XYW_ROW,
     find_box,
 )
+from homeassistant.util import dt as dt_util
 
-FAKE_TIME = datetime.utcnow()
+FAKE_TIME = dt_util.utcnow()
 
 # Segment with defaults filled in for use in tests
 DefaultSegment = partial(
@@ -24,7 +24,7 @@ DefaultSegment = partial(
     init=None,
     stream_id=0,
     start_time=FAKE_TIME,
-    stream_outputs=[],
+    _stream_outputs=[],
 )
 
 AUDIO_SAMPLE_RATE = 8000

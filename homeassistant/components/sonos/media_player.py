@@ -195,6 +195,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         MediaPlayerEntityFeature.BROWSE_MEDIA
         | MediaPlayerEntityFeature.CLEAR_PLAYLIST
         | MediaPlayerEntityFeature.GROUPING
+        | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
+        | MediaPlayerEntityFeature.MEDIA_ENQUEUE
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.PLAY
@@ -278,9 +280,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     async def _async_fallback_poll(self) -> None:
         """Retrieve latest state by polling."""
-        await self.hass.data[DATA_SONOS].favorites[
-            self.speaker.household_id
-        ].async_poll()
+        await (
+            self.hass.data[DATA_SONOS].favorites[self.speaker.household_id].async_poll()
+        )
         await self.hass.async_add_executor_job(self._update)
 
     def _update(self) -> None:
@@ -627,7 +629,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 soco.play_uri(item.get_uri())
                 return
             try:
-                playlists = soco.get_sonos_playlists()
+                playlists = soco.get_sonos_playlists(complete_result=True)
                 playlist = next(p for p in playlists if p.title == media_id)
             except StopIteration:
                 _LOGGER.error('Could not find a Sonos playlist named "%s"', media_id)

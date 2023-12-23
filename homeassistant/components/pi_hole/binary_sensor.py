@@ -8,7 +8,6 @@ from typing import Any
 from hole import Hole
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -39,42 +38,6 @@ class PiHoleBinarySensorEntityDescription(
 
 
 BINARY_SENSOR_TYPES: tuple[PiHoleBinarySensorEntityDescription, ...] = (
-    PiHoleBinarySensorEntityDescription(
-        # Deprecated, scheduled to be removed in 2022.6
-        key="core_update_available",
-        name="Core Update Available",
-        entity_registry_enabled_default=False,
-        device_class=BinarySensorDeviceClass.UPDATE,
-        extra_value=lambda api: {
-            "current_version": api.versions["core_current"],
-            "latest_version": api.versions["core_latest"],
-        },
-        state_value=lambda api: bool(api.versions["core_update"]),
-    ),
-    PiHoleBinarySensorEntityDescription(
-        # Deprecated, scheduled to be removed in 2022.6
-        key="web_update_available",
-        name="Web Update Available",
-        entity_registry_enabled_default=False,
-        device_class=BinarySensorDeviceClass.UPDATE,
-        extra_value=lambda api: {
-            "current_version": api.versions["web_current"],
-            "latest_version": api.versions["web_latest"],
-        },
-        state_value=lambda api: bool(api.versions["web_update"]),
-    ),
-    PiHoleBinarySensorEntityDescription(
-        # Deprecated, scheduled to be removed in 2022.6
-        key="ftl_update_available",
-        name="FTL Update Available",
-        entity_registry_enabled_default=False,
-        device_class=BinarySensorDeviceClass.UPDATE,
-        extra_value=lambda api: {
-            "current_version": api.versions["FTL_current"],
-            "latest_version": api.versions["FTL_latest"],
-        },
-        state_value=lambda api: bool(api.versions["FTL_update"]),
-    ),
     PiHoleBinarySensorEntityDescription(
         key="status",
         translation_key="status",

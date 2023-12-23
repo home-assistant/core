@@ -4,7 +4,7 @@ from abc import abstractmethod
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import RadioThermUpdateCoordinator
@@ -13,6 +13,8 @@ from .data import RadioThermUpdate
 
 class RadioThermostatEntity(CoordinatorEntity[RadioThermUpdateCoordinator]):
     """Base class for radiotherm entities."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, coordinator: RadioThermUpdateCoordinator) -> None:
         """Initialize the entity."""

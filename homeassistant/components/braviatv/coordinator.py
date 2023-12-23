@@ -191,9 +191,11 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             if self.media_uri[:8] == "extInput":
                 self.source = playing_info.get("title")
             if self.media_uri[:2] == "tv":
-                self.media_title = playing_info.get("programTitle")
-                self.media_channel = playing_info.get("title")
                 self.media_content_id = playing_info.get("dispNum")
+                self.media_title = (
+                    playing_info.get("programTitle") or self.media_content_id
+                )
+                self.media_channel = playing_info.get("title") or self.media_content_id
                 self.media_content_type = MediaType.CHANNEL
         if not playing_info:
             self.media_title = "Smart TV"

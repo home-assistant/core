@@ -11,11 +11,11 @@ from dateutil import parser
 import pytest
 
 from homeassistant.components.amberelectric.const import (
-    CONF_API_TOKEN,
     CONF_SITE_ID,
     CONF_SITE_NAME,
     DOMAIN,
 )
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 

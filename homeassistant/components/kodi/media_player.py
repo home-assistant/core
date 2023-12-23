@@ -44,7 +44,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_platform,
 )
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import is_internal_request
@@ -282,7 +282,7 @@ class KodiEntity(MediaPlayerEntity):
         """Initialize the Kodi entity."""
         self._connection = connection
         self._kodi = kodi
-        self._unique_id = uid
+        self._attr_unique_id = uid
         self._device_id = None
         self._players = None
         self._properties = {}
@@ -370,11 +370,6 @@ class KodiEntity(MediaPlayerEntity):
             await self._connection.close()
 
     @property
-    def unique_id(self):
-        """Return the unique id of the device."""
-        return self._unique_id
-
-    @property
     def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self._kodi_is_off:
@@ -422,7 +417,7 @@ class KodiEntity(MediaPlayerEntity):
         version = (await self._kodi.get_application_properties(["version"]))["version"]
         sw_version = f"{version['major']}.{version['minor']}"
         dev_reg = dr.async_get(self.hass)
-        device = dev_reg.async_get_device({(DOMAIN, self.unique_id)})
+        device = dev_reg.async_get_device(identifiers={(DOMAIN, self.unique_id)})
         dev_reg.async_update_device(device.id, sw_version=sw_version)
         self._device_id = device.id
 

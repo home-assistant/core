@@ -31,7 +31,8 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -188,8 +189,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 raise UpdateFailed(
                     f"There was an unknown error while updating {attr}: {result}"
                 ) from result
+            if isinstance(result, BaseException):
+                raise result from None
 
-            data.update_data_from_response(result)
+            data.update_data_from_response(result)  # type: ignore[arg-type]
 
         return data
 
@@ -339,9 +342,13 @@ class NotionEntity(CoordinatorEntity[DataUpdateCoordinator[NotionData]]):
         self._bridge_id = sensor.bridge.id
 
         device_registry = dr.async_get(self.hass)
-        this_device = device_registry.async_get_device({(DOMAIN, sensor.hardware_id)})
+        this_device = device_registry.async_get_device(
+            identifiers={(DOMAIN, sensor.hardware_id)}
+        )
         bridge = self.coordinator.data.bridges[self._bridge_id]
-        bridge_device = device_registry.async_get_device({(DOMAIN, bridge.hardware_id)})
+        bridge_device = device_registry.async_get_device(
+            identifiers={(DOMAIN, bridge.hardware_id)}
+        )
 
         if not bridge_device or not this_device:
             return

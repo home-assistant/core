@@ -23,7 +23,9 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 @pytest.fixture
 async def setup_automation(
-    hass, automation_config, stub_blueprint_populate  # noqa: F811
+    hass,
+    automation_config,
+    stub_blueprint_populate,  # noqa: F811
 ):
     """Set up automation integration."""
     assert await async_setup_component(
@@ -337,13 +339,13 @@ async def test_bad_formatted_automations(
 async def test_delete_automation(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
     hass_config_store,
     setup_automation,
 ) -> None:
     """Test deleting an automation."""
-    ent_reg = er.async_get(hass)
 
-    assert len(ent_reg.entities) == 2
+    assert len(entity_registry.entities) == 2
 
     with patch.object(config, "SECTIONS", ["automation"]):
         assert await async_setup_component(hass, "config", {})
@@ -371,4 +373,36 @@ async def test_delete_automation(
 
     assert hass_config_store["automations.yaml"] == [{"id": "moon"}]
 
-    assert len(ent_reg.entities) == 1
+    assert len(entity_registry.entities) == 1
+
+
+@pytest.mark.parametrize("automation_config", ({},))
+async def test_api_calls_require_admin(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_read_only_access_token: str,
+    hass_config_store,
+    setup_automation,
+) -> None:
+    """Test cloud APIs endpoints do not work as a normal user."""
+    with patch.object(config, "SECTIONS", ["automation"]):
+        await async_setup_component(hass, "config", {})
+
+    hass_config_store["automations.yaml"] = [{"id": "sun"}, {"id": "moon"}]
+
+    client = await hass_client(hass_read_only_access_token)
+
+    # Get
+    resp = await client.get("/api/config/automation/config/moon")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+    # Update
+    resp = await client.post(
+        "/api/config/automation/config/moon",
+        data=json.dumps({"trigger": [], "action": [], "condition": []}),
+    )
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+    # Delete
+    resp = await client.delete("/api/config/automation/config/sun")
+    assert resp.status == HTTPStatus.UNAUTHORIZED

@@ -40,6 +40,9 @@ def _create_message(idx: int) -> dict[str, Any]:
 class TestMailbox(mailbox.Mailbox):
     """Test Mailbox, with 10 sample messages."""
 
+    # This class doesn't contain any tests! Skip pytest test collection.
+    __test__ = False
+
     def __init__(self, hass: HomeAssistant, name: str) -> None:
         """Initialize Test mailbox."""
         super().__init__(hass, name)

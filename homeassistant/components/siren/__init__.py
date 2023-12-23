@@ -131,7 +131,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_TOGGLE,
         {},
         "async_toggle",
-        [SirenEntityFeature.TURN_ON & SirenEntityFeature.TURN_OFF],
+        [SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF],
     )
 
     return True
@@ -158,6 +158,8 @@ class SirenEntityDescription(ToggleEntityDescription):
 
 class SirenEntity(ToggleEntity):
     """Representation of a siren device."""
+
+    _entity_component_unrecorded_attributes = frozenset({ATTR_AVAILABLE_TONES})
 
     entity_description: SirenEntityDescription
     _attr_available_tones: list[int | str] | dict[int, str] | None

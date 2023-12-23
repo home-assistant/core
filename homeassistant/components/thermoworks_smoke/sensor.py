@@ -111,9 +111,7 @@ class ThermoworksSmokeSensor(SensorEntity):
         self.type = sensor_type
         self.serial = serial
         self.mgr = mgr
-        self._attr_name = "{name} {sensor}".format(
-            name=mgr.name(serial), sensor=SENSOR_TYPES[sensor_type]
-        )
+        self._attr_name = f"{mgr.name(serial)} {SENSOR_TYPES[sensor_type]}"
         self._attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
         self._attr_unique_id = f"{serial}-{sensor_type}"
         self._attr_device_class = SensorDeviceClass.TEMPERATURE

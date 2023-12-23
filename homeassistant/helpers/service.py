@@ -28,6 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     Context,
+    EntityServiceResponse,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -50,6 +51,7 @@ from . import (
     device_registry,
     entity_registry,
     template,
+    translation,
 )
 from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType
@@ -72,7 +74,7 @@ ALL_SERVICE_DESCRIPTIONS_CACHE = "all_service_descriptions_cache"
 @cache
 def _base_components() -> dict[str, ModuleType]:
     """Return a cached lookup of base components."""
-    # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import (
         alarm_control_panel,
         calendar,
@@ -172,7 +174,7 @@ _SERVICE_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-_SERVICES_SCHEMA = vol.Schema({cv.slug: _SERVICE_SCHEMA})
+_SERVICES_SCHEMA = vol.Schema({cv.slug: vol.Any(None, _SERVICE_SCHEMA)})
 
 
 class ServiceParams(TypedDict):
@@ -240,7 +242,7 @@ class SelectedEntities:
             return
 
         _LOGGER.warning(
-            "Unable to find referenced %s or it is/they are currently not available",
+            "Referenced %s are missing or not currently available",
             ", ".join(parts),
         )
 
@@ -547,9 +549,11 @@ def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_T
             "Unable to find services.yaml for the %s integration", integration.domain
         )
         return {}
-    except (HomeAssistantError, vol.Invalid):
+    except (HomeAssistantError, vol.Invalid) as ex:
         _LOGGER.warning(
-            "Unable to parse services.yaml for the %s integration", integration.domain
+            "Unable to parse services.yaml for the %s integration: %s",
+            integration.domain,
+            ex,
         )
         return {}
 
@@ -596,7 +600,7 @@ async def async_get_all_descriptions(
         ints_or_excs = await async_get_integrations(hass, missing)
         integrations: list[Integration] = []
         for domain, int_or_exc in ints_or_excs.items():
-            if type(int_or_exc) is Integration:  # pylint: disable=unidiomatic-typecheck
+            if type(int_or_exc) is Integration:  # noqa: E721
                 integrations.append(int_or_exc)
                 continue
             if TYPE_CHECKING:
@@ -607,6 +611,11 @@ async def async_get_all_descriptions(
         )
         loaded = dict(zip(missing, contents))
 
+    # Load translations for all service domains
+    translations = await translation.async_get_translations(
+        hass, "en", "services", list(services)
+    )
+
     # Build response
     descriptions: dict[str, dict[str, Any]] = {}
     for domain, services_map in services.items():
@@ -616,37 +625,66 @@ async def async_get_all_descriptions(
         for service_name in services_map:
             cache_key = (domain, service_name)
             description = descriptions_cache.get(cache_key)
+            if description is not None:
+                domain_descriptions[service_name] = description
+                continue
+
             # Cache missing descriptions
-            if description is None:
-                domain_yaml = loaded.get(domain) or {}
-                # The YAML may be empty for dynamically defined
-                # services (ie shell_command) that never call
-                # service.async_set_service_schema for the dynamic
-                # service
+            domain_yaml = loaded.get(domain) or {}
+            # The YAML may be empty for dynamically defined
+            # services (ie shell_command) that never call
+            # service.async_set_service_schema for the dynamic
+            # service
 
-                yaml_description = domain_yaml.get(  # type: ignore[union-attr]
-                    service_name, {}
-                )
+            yaml_description = (
+                domain_yaml.get(service_name) or {}  # type: ignore[union-attr]
+            )
 
-                # Don't warn for missing services, because it triggers false
-                # positives for things like scripts, that register as a service
-                description = {
-                    "name": yaml_description.get("name", ""),
-                    "description": yaml_description.get("description", ""),
-                    "fields": yaml_description.get("fields", {}),
+            # Don't warn for missing services, because it triggers false
+            # positives for things like scripts, that register as a service
+            #
+            # When name & description are in the translations use those;
+            # otherwise fallback to backwards compatible behavior from
+            # the time when we didn't have translations for descriptions yet.
+            # This mimics the behavior of the frontend.
+            description = {
+                "name": translations.get(
+                    f"component.{domain}.services.{service_name}.name",
+                    yaml_description.get("name", ""),
+                ),
+                "description": translations.get(
+                    f"component.{domain}.services.{service_name}.description",
+                    yaml_description.get("description", ""),
+                ),
+                "fields": dict(yaml_description.get("fields", {})),
+            }
+
+            # Translate fields names & descriptions as well
+            for field_name, field_schema in description["fields"].items():
+                if name := translations.get(
+                    f"component.{domain}.services.{service_name}.fields.{field_name}.name"
+                ):
+                    field_schema["name"] = name
+                if desc := translations.get(
+                    f"component.{domain}.services.{service_name}.fields.{field_name}.description"
+                ):
+                    field_schema["description"] = desc
+                if example := translations.get(
+                    f"component.{domain}.services.{service_name}.fields.{field_name}.example"
+                ):
+                    field_schema["example"] = example
+
+            if "target" in yaml_description:
+                description["target"] = yaml_description["target"]
+
+            if (
+                response := hass.services.supports_response(domain, service_name)
+            ) != SupportsResponse.NONE:
+                description["response"] = {
+                    "optional": response == SupportsResponse.OPTIONAL,
                 }
 
-                if "target" in yaml_description:
-                    description["target"] = yaml_description["target"]
-
-                if (
-                    response := hass.services.supports_response(domain, service_name)
-                ) != SupportsResponse.NONE:
-                    description["response"] = {
-                        "optional": response == SupportsResponse.OPTIONAL,
-                    }
-
-                descriptions_cache[cache_key] = description
+            descriptions_cache[cache_key] = description
 
             domain_descriptions[service_name] = description
 
@@ -670,6 +708,9 @@ def async_set_service_schema(
     hass: HomeAssistant, domain: str, service: str, schema: dict[str, Any]
 ) -> None:
     """Register a description for a service."""
+    domain = domain.lower()
+    service = service.lower()
+
     descriptions_cache: dict[
         tuple[str, str], dict[str, Any] | None
     ] = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
@@ -694,19 +735,72 @@ def async_set_service_schema(
     descriptions_cache[(domain, service)] = description
 
 
+def _get_permissible_entity_candidates(
+    call: ServiceCall,
+    platforms: Iterable[EntityPlatform],
+    entity_perms: None | (Callable[[str, str], bool]),
+    target_all_entities: bool,
+    all_referenced: set[str] | None,
+) -> list[Entity]:
+    """Get entity candidates that the user is allowed to access."""
+    if entity_perms is not None:
+        # Check the permissions since entity_perms is set
+        if target_all_entities:
+            # If we target all entities, we will select all entities the user
+            # is allowed to control.
+            return [
+                entity
+                for platform in platforms
+                for entity in platform.entities.values()
+                if entity_perms(entity.entity_id, POLICY_CONTROL)
+            ]
+
+        assert all_referenced is not None
+        # If they reference specific entities, we will check if they are all
+        # allowed to be controlled.
+        for entity_id in all_referenced:
+            if not entity_perms(entity_id, POLICY_CONTROL):
+                raise Unauthorized(
+                    context=call.context,
+                    entity_id=entity_id,
+                    permission=POLICY_CONTROL,
+                )
+
+    elif target_all_entities:
+        return [
+            entity for platform in platforms for entity in platform.entities.values()
+        ]
+
+    # We have already validated they have permissions to control all_referenced
+    # entities so we do not need to check again.
+    assert all_referenced is not None
+    if single_entity := len(all_referenced) == 1 and list(all_referenced)[0]:
+        for platform in platforms:
+            if (entity := platform.entities.get(single_entity)) is not None:
+                return [entity]
+
+    return [
+        platform.entities[entity_id]
+        for platform in platforms
+        for entity_id in all_referenced.intersection(platform.entities)
+    ]
+
+
 @bind_hass
-async def entity_service_call(  # noqa: C901
+async def entity_service_call(
     hass: HomeAssistant,
     platforms: Iterable[EntityPlatform],
     func: str | Callable[..., Coroutine[Any, Any, ServiceResponse]],
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
-) -> ServiceResponse | None:
+) -> EntityServiceResponse | None:
     """Handle an entity service call.
 
     Calls all platforms simultaneously.
     """
     entity_perms: None | (Callable[[str, str], bool]) = None
+    return_response = call.return_response
+
     if call.context.user_id:
         user = await hass.auth.async_get_user(call.context.user_id)
         if user is None:
@@ -731,69 +825,24 @@ async def entity_service_call(  # noqa: C901
     else:
         data = call
 
-    # Check the permissions
-
     # A list with entities to call the service on.
-    entity_candidates: list[Entity] = []
-
-    if entity_perms is None:
-        for platform in platforms:
-            platform_entities = platform.entities
-            if target_all_entities:
-                entity_candidates.extend(platform_entities.values())
-            else:
-                assert all_referenced is not None
-                entity_candidates.extend(
-                    [
-                        platform_entities[entity_id]
-                        for entity_id in all_referenced.intersection(platform_entities)
-                    ]
-                )
-
-    elif target_all_entities:
-        # If we target all entities, we will select all entities the user
-        # is allowed to control.
-        for platform in platforms:
-            entity_candidates.extend(
-                [
-                    entity
-                    for entity in platform.entities.values()
-                    if entity_perms(entity.entity_id, POLICY_CONTROL)
-                ]
-            )
-
-    else:
-        assert all_referenced is not None
-
-        for platform in platforms:
-            platform_entities = platform.entities
-            platform_entity_candidates = []
-            entity_id_matches = all_referenced.intersection(platform_entities)
-            for entity_id in entity_id_matches:
-                if not entity_perms(entity_id, POLICY_CONTROL):
-                    raise Unauthorized(
-                        context=call.context,
-                        entity_id=entity_id,
-                        permission=POLICY_CONTROL,
-                    )
-
-                platform_entity_candidates.append(platform_entities[entity_id])
-
-            entity_candidates.extend(platform_entity_candidates)
+    entity_candidates = _get_permissible_entity_candidates(
+        call,
+        platforms,
+        entity_perms,
+        target_all_entities,
+        all_referenced,
+    )
 
     if not target_all_entities:
         assert referenced is not None
-
         # Only report on explicit referenced entities
-        missing = set(referenced.referenced)
-
+        missing = referenced.referenced.copy()
         for entity in entity_candidates:
             missing.discard(entity.entity_id)
-
         referenced.log_missing(missing)
 
     entities: list[Entity] = []
-
     for entity in entity_candidates:
         if not entity.available:
             continue
@@ -817,32 +866,42 @@ async def entity_service_call(  # noqa: C901
         entities.append(entity)
 
     if not entities:
-        if call.return_response:
+        if return_response:
             raise HomeAssistantError(
                 "Service call requested response data but did not match any entities"
             )
         return None
 
-    if call.return_response and len(entities) != 1:
-        raise HomeAssistantError(
-            "Service call requested response data but matched more than one entity"
+    if len(entities) == 1:
+        # Single entity case avoids creating task
+        entity = entities[0]
+        single_response = await _handle_entity_call(
+            hass, entity, func, data, call.context
         )
+        if entity.should_poll:
+            # Context expires if the turn on commands took a long time.
+            # Set context again so it's there when we update
+            entity.async_set_context(call.context)
+            await entity.async_update_ha_state(True)
+        return {entity.entity_id: single_response} if return_response else None
 
-    done, pending = await asyncio.wait(
-        [
-            asyncio.create_task(
-                entity.async_request_call(
-                    _handle_entity_call(hass, entity, func, data, call.context)
-                )
+    # Use asyncio.gather here to ensure the returned results
+    # are in the same order as the entities list
+    results: list[ServiceResponse | BaseException] = await asyncio.gather(
+        *[
+            entity.async_request_call(
+                _handle_entity_call(hass, entity, func, data, call.context)
             )
             for entity in entities
-        ]
+        ],
+        return_exceptions=True,
     )
-    assert not pending
 
-    response_data: ServiceResponse | None
-    for task in done:
-        response_data = task.result()  # pop exception if have
+    response_data: EntityServiceResponse = {}
+    for entity, result in zip(entities, results):
+        if isinstance(result, BaseException):
+            raise result from None
+        response_data[entity.entity_id] = result
 
     tasks: list[asyncio.Task[None]] = []
 
@@ -861,7 +920,7 @@ async def entity_service_call(  # noqa: C901
         for future in done:
             future.result()  # pop exception if have
 
-    return response_data if call.return_response else None
+    return response_data if return_response and response_data else None
 
 
 async def _handle_entity_call(
@@ -884,7 +943,7 @@ async def _handle_entity_call(
 
     # Guard because callback functions do not return a task when passed to
     # async_run_job.
-    result: ServiceResponse | None = None
+    result: ServiceResponse = None
     if task is not None:
         result = await task
 

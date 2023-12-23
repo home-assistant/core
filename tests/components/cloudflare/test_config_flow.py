@@ -1,9 +1,5 @@
 """Test the Cloudflare config flow."""
-from pycfdns.exceptions import (
-    CloudflareAuthenticationException,
-    CloudflareConnectionException,
-    CloudflareZoneException,
-)
+import pycfdns
 
 from homeassistant.components.cloudflare.const import CONF_RECORDS, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
@@ -81,7 +77,7 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, cfupdate_flow) -> N
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
-    instance.get_zones.side_effect = CloudflareConnectionException()
+    instance.list_zones.side_effect = pycfdns.ComunicationException()
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         USER_INPUT,
@@ -99,7 +95,7 @@ async def test_user_form_invalid_auth(hass: HomeAssistant, cfupdate_flow) -> Non
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
-    instance.get_zones.side_effect = CloudflareAuthenticationException()
+    instance.list_zones.side_effect = pycfdns.AuthenticationException()
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         USER_INPUT,
@@ -107,24 +103,6 @@ async def test_user_form_invalid_auth(hass: HomeAssistant, cfupdate_flow) -> Non
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_user_form_invalid_zone(hass: HomeAssistant, cfupdate_flow) -> None:
-    """Test we handle invalid zone error."""
-    instance = cfupdate_flow.return_value
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
-    )
-
-    instance.get_zones.side_effect = CloudflareZoneException()
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        USER_INPUT,
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_zone"}
 
 
 async def test_user_form_unexpected_exception(
@@ -137,7 +115,7 @@ async def test_user_form_unexpected_exception(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
 
-    instance.get_zones.side_effect = Exception()
+    instance.list_zones.side_effect = Exception()
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         USER_INPUT,
