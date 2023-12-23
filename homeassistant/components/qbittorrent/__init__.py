@@ -66,21 +66,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    async def handle_get_torrents(service_call: ServiceCall):
-        coordinator: QBittorrentDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-        items = await coordinator.get_torrents(service_call.data[FILTER])
-        info = format_torrents(items)
-        return {
-            STATE_ATTR_TORRENT_INFO: info,
-        }
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_GET_TORRENTS,
-        handle_get_torrents,
-        supports_response=SupportsResponse.ONLY
-    )
-
     return True
 
 
