@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from advantage_air import ApiError
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
@@ -183,6 +184,7 @@ async def test_climate_myauto_main(
     entity_registry: er.EntityRegistry,
     mock_get: AsyncMock,
     mock_update: AsyncMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test climate platform zone entity."""
 
@@ -220,6 +222,7 @@ async def test_climate_myauto_main(
         blocking=True,
     )
     mock_update.assert_called_once()
+    assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-fanauto")
 
 
 async def test_climate_async_failed_update(
