@@ -6,7 +6,7 @@ from py_aosmith import AOSmithAPIClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, device_registry as dr
 
 from .const import DOMAIN
 from .coordinator import AOSmithEnergyCoordinator, AOSmithStatusCoordinator
@@ -25,6 +25,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     status_coordinator = AOSmithStatusCoordinator(hass, client)
     await status_coordinator.async_config_entry_first_refresh()
+
+    device_registry = dr.async_get(hass)
+    for junction_id, status_data in status_coordinator.data.items():
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, junction_id)},
+            manufacturer="A. O. Smith",
+            name=status_data.get("name"),
+            model=status_data.get("model"),
+            serial_number=status_data.get("serial"),
+            suggested_area=status_data.get("install", {}).get("location"),
+            sw_version=status_data.get("data", {}).get("firmwareVersion"),
+        )
 
     energy_coordinator = AOSmithEnergyCoordinator(
         hass, client, list(status_coordinator.data)

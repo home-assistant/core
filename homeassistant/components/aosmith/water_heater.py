@@ -55,8 +55,8 @@ async def async_setup_entry(
     data: AOSmithData = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        AOSmithWaterHeaterEntity(data.status_coordinator, status_data)
-        for status_data in data.status_coordinator.data.values()
+        AOSmithWaterHeaterEntity(data.status_coordinator, junction_id)
+        for junction_id in data.status_coordinator.data
     )
 
 
@@ -70,11 +70,11 @@ class AOSmithWaterHeaterEntity(AOSmithStatusEntity, WaterHeaterEntity):
     def __init__(
         self,
         coordinator: AOSmithStatusCoordinator,
-        status_data: dict[str, Any],
+        junction_id: str,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator, status_data)
-        self._attr_unique_id = self.junction_id
+        super().__init__(coordinator, junction_id)
+        self._attr_unique_id = junction_id
 
     @property
     def operation_list(self) -> list[str]:

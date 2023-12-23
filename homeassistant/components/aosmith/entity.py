@@ -1,5 +1,5 @@
 """The base entity for the A. O. Smith integration."""
-from typing import Any, TypeVar
+from typing import TypeVar
 
 from py_aosmith import AOSmithAPIClient
 
@@ -14,33 +14,18 @@ _AOSmithCoordinatorT = TypeVar(
 )
 
 
-def build_device_info(status_data: dict[str, Any]) -> DeviceInfo:
-    """Build the device info."""
-    junction_id = status_data.get("junctionId", "")
-    return DeviceInfo(
-        identifiers={(DOMAIN, junction_id)},
-        manufacturer="A. O. Smith",
-        name=status_data.get("name"),
-        model=status_data.get("model"),
-        serial_number=status_data.get("serial"),
-        suggested_area=status_data.get("install", {}).get("location"),
-        sw_version=status_data.get("data", {}).get("firmwareVersion"),
-    )
-
-
 class AOSmithEntity(CoordinatorEntity[_AOSmithCoordinatorT]):
     """Base entity for A. O. Smith."""
 
     _attr_has_entity_name = True
 
-    def __init__(
-        self, coordinator: _AOSmithCoordinatorT, status_data: dict[str, Any]
-    ) -> None:
+    def __init__(self, coordinator: _AOSmithCoordinatorT, junction_id: str) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self.junction_id = status_data.get("junctionId", "")
-
-        self._attr_device_info = build_device_info(status_data)
+        self.junction_id = junction_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, junction_id)},
+        )
 
     @property
     def client(self) -> AOSmithAPIClient:
