@@ -129,7 +129,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
 
 def google_generative_ai_config_option_schema(
-    options: MappingProxyType[str, Any]
+    options: MappingProxyType[str, Any],
 ) -> dict:
     """Return a schema for Google Generative AI completion options."""
     if not options:

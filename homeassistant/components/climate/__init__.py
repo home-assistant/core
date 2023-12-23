@@ -1,7 +1,6 @@
 """Provides functionality to interact with climate devices."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 import functools as ft
 import logging
@@ -27,6 +26,10 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA_BASE,
     make_entity_service_schema,
 )
+from homeassistant.helpers.deprecation import (
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
@@ -34,6 +37,20 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (  # noqa: F401
+    _DEPRECATED_HVAC_MODE_AUTO,
+    _DEPRECATED_HVAC_MODE_COOL,
+    _DEPRECATED_HVAC_MODE_DRY,
+    _DEPRECATED_HVAC_MODE_FAN_ONLY,
+    _DEPRECATED_HVAC_MODE_HEAT,
+    _DEPRECATED_HVAC_MODE_HEAT_COOL,
+    _DEPRECATED_HVAC_MODE_OFF,
+    _DEPRECATED_SUPPORT_AUX_HEAT,
+    _DEPRECATED_SUPPORT_FAN_MODE,
+    _DEPRECATED_SUPPORT_PRESET_MODE,
+    _DEPRECATED_SUPPORT_SWING_MODE,
+    _DEPRECATED_SUPPORT_TARGET_HUMIDITY,
+    _DEPRECATED_SUPPORT_TARGET_TEMPERATURE,
+    _DEPRECATED_SUPPORT_TARGET_TEMPERATURE_RANGE,
     ATTR_AUX_HEAT,
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
@@ -65,10 +82,6 @@ from .const import (  # noqa: F401
     FAN_OFF,
     FAN_ON,
     FAN_TOP,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
     HVAC_MODES,
     PRESET_ACTIVITY,
     PRESET_AWAY,
@@ -85,13 +98,6 @@ from .const import (  # noqa: F401
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -128,6 +134,12 @@ SET_TEMPERATURE_SCHEMA = vol.All(
         }
     ),
 )
+
+# As we import deprecated constants from the const module, we need to add these two functions
+# otherwise this module will be logged for using deprecated constants and not the custom component
+# Both can be removed if no deprecated constant are in this module anymore
+__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = ft.partial(dir_with_deprecated_constants, module_globals=globals())
 
 # mypy: disallow-any-generics
 
@@ -201,8 +213,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class ClimateEntityDescription(EntityDescription):
+class ClimateEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes climate entities."""
 
 

@@ -48,7 +48,7 @@ _P = ParamSpec("_P")
 
 
 def api_call(
-    func: Callable[Concatenate[_T, _P], Awaitable[None]]
+    func: Callable[Concatenate[_T, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
     """Catch command exceptions."""
 

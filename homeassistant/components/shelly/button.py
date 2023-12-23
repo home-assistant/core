@@ -30,14 +30,14 @@ _ShellyCoordinatorT = TypeVar(
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class ShellyButtonDescriptionMixin(Generic[_ShellyCoordinatorT]):
     """Mixin to describe a Button entity."""
 
     press_action: Callable[[_ShellyCoordinatorT], Coroutine[Any, Any, None]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class ShellyButtonDescription(
     ButtonEntityDescription, ShellyButtonDescriptionMixin[_ShellyCoordinatorT]
 ):

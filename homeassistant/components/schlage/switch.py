@@ -24,7 +24,7 @@ from .coordinator import SchlageDataUpdateCoordinator
 from .entity import SchlageEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class SchlageSwitchEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -38,7 +38,7 @@ class SchlageSwitchEntityDescriptionMixin:
     value_fn: Callable[[Lock], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SchlageSwitchEntityDescription(
     SwitchEntityDescription, SchlageSwitchEntityDescriptionMixin
 ):

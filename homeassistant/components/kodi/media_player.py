@@ -231,7 +231,7 @@ async def async_setup_entry(
 
 
 def cmd(
-    func: Callable[Concatenate[_KodiEntityT, _P], Awaitable[Any]]
+    func: Callable[Concatenate[_KodiEntityT, _P], Awaitable[Any]],
 ) -> Callable[Concatenate[_KodiEntityT, _P], Coroutine[Any, Any, None]]:
     """Catch command exceptions."""
 
