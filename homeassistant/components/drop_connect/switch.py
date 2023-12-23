@@ -30,7 +30,7 @@ ICON_VALVE_CLOSED = "mdi:valve-closed"
 ICON_VALVE_UNKNOWN = "mdi:valve"
 ICON_VALVE = {False: ICON_VALVE_CLOSED, True: ICON_VALVE_OPEN, None: ICON_VALVE_UNKNOWN}
 
-SWITCH_VALUE = {0: False, 1: True, None: None}
+SWITCH_VALUE: dict[int | None, bool] = {0: False, 1: True}
 
 # Switch type constants
 WATER_SWITCH = "water"
@@ -121,4 +121,4 @@ class DROPSwitch(DROPEntity, SwitchEntity):
     @property
     def icon(self) -> str:
         """Return the icon to use for dynamic states."""
-        return ICON_VALVE.get(self.is_on, ICON_VALVE_UNKNOWN)
+        return ICON_VALVE[self.is_on]
