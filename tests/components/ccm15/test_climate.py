@@ -1,7 +1,6 @@
-"""Unit test for CCM15 climate platform."""
-from unittest.mock import patch
+"""Unit test for CCM15 coordinator component."""
+from unittest.mock import AsyncMock, patch
 
-from ccm15 import CCM15DeviceState, CCM15SlaveDevice
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ccm15.const import DOMAIN
@@ -25,7 +24,10 @@ from tests.common import MockConfigEntry
 
 
 async def test_climate_state(
-    hass: HomeAssistant, snapshot: SnapshotAssertion, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    ccm15_device: AsyncMock,
 ) -> None:
     """Test the coordinator."""
     entry = MockConfigEntry(
@@ -38,19 +40,8 @@ async def test_climate_state(
     )
     entry.add_to_hass(hass)
 
-    # Create a dictionary of CCM15SlaveDevice objects
-    ccm15_devices = {
-        0: CCM15SlaveDevice(bytes.fromhex("000000b0b8001b")),
-        1: CCM15SlaveDevice(bytes.fromhex("00000041c0001a")),
-    }
-    # Create an instance of the CCM15DeviceState class
-    device_state = CCM15DeviceState(devices=ccm15_devices)
-    with patch(
-        "homeassistant.components.ccm15.coordinator.CCM15Device.get_status_async",
-        return_value=device_state,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert entity_registry.async_get("climate.0") == snapshot
     assert entity_registry.async_get("climate.1") == snapshot
@@ -59,9 +50,6 @@ async def test_climate_state(
     assert hass.states.get("climate.1") == snapshot
 
     with patch(
-        "homeassistant.components.ccm15.coordinator.CCM15Device.get_status_async",
-        return_value=device_state,
-    ), patch(
         "homeassistant.components.ccm15.coordinator.CCM15Device.async_set_state"
     ) as mock_set_state:
         await hass.services.async_call(
@@ -74,9 +62,6 @@ async def test_climate_state(
         mock_set_state.assert_called_once()
 
     with patch(
-        "homeassistant.components.ccm15.coordinator.CCM15Device.get_status_async",
-        return_value=device_state,
-    ), patch(
         "homeassistant.components.ccm15.coordinator.CCM15Device.async_set_state"
     ) as mock_set_state:
         await hass.services.async_call(
@@ -89,9 +74,6 @@ async def test_climate_state(
         mock_set_state.assert_called_once()
 
     with patch(
-        "homeassistant.components.ccm15.coordinator.CCM15Device.get_status_async",
-        return_value=device_state,
-    ), patch(
         "homeassistant.components.ccm15.coordinator.CCM15Device.async_set_state"
     ) as mock_set_state:
         await hass.services.async_call(
@@ -104,9 +86,6 @@ async def test_climate_state(
         mock_set_state.assert_called_once()
 
     with patch(
-        "homeassistant.components.ccm15.coordinator.CCM15Device.get_status_async",
-        return_value=device_state,
-    ), patch(
         "homeassistant.components.ccm15.coordinator.CCM15Device.async_set_state"
     ) as mock_set_state:
         await hass.services.async_call(
@@ -119,9 +98,6 @@ async def test_climate_state(
         mock_set_state.assert_called_once()
 
     with patch(
-        "homeassistant.components.ccm15.coordinator.CCM15Device.get_status_async",
-        return_value=device_state,
-    ), patch(
         "homeassistant.components.ccm15.coordinator.CCM15Device.async_set_state"
     ) as mock_set_state:
         await hass.services.async_call(
