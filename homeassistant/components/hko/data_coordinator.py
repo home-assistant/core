@@ -1,9 +1,9 @@
 """Weather data coordinator for the HKO API."""
 
+from asyncio import timeout
 from datetime import timedelta
 import logging
 
-from async_timeout import timeout
 from hko import HKO, HKOError
 
 from homeassistant.components.weather import (
@@ -73,12 +73,11 @@ class HKOUpdateCoordinator(DataUpdateCoordinator):
         self.district = district
         self.hko = HKO(session)
 
-        update_interval = timedelta(minutes=15)
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=update_interval,
+            update_interval=timedelta(minutes=15),
         )
 
     async def _async_update_data(self):

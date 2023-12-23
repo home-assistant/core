@@ -1,52 +1,38 @@
 """Config flow for Hong Kong Observatory integration."""
 from __future__ import annotations
 
+from asyncio import timeout
 from typing import Any
 
-from async_timeout import timeout
 from hko import HKO, LOCATIONS, HKOError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_LOCATION
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_LOCATION, Platform
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import selector
 
-from .const import DEFAULT_LOCATION, DOMAIN
+from .const import API_RHRREAD, DEFAULT_LOCATION, DOMAIN, KEY_LOCATION
 
 
 def get_loc_name(item):
     """Return an array of supported locations."""
-    return item["LOCATION"]
+    return item[KEY_LOCATION]
 
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_LOCATION, default=DEFAULT_LOCATION): vol.In(
-            list(map(get_loc_name, LOCATIONS))  # Select Location
+        vol.Required(CONF_LOCATION, default=DEFAULT_LOCATION): selector(
+            {
+                Platform.SELECT: {
+                    "options": list(map(get_loc_name, LOCATIONS)),
+                    "sort": True,
+                }
+            }
         )
     }
 )
-
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect."""
-
-    if data[CONF_LOCATION] not in list(map(get_loc_name, LOCATIONS)):
-        raise InvalidLocation
-
-    websession = async_get_clientsession(hass)
-    hko = HKO(websession)
-
-    try:
-        async with timeout(60):
-            await hko.weather("rhrread")
-    except HKOError as error:
-        raise CannotConnect from error
-    except Exception as error:
-        raise UnknownError from error
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -66,17 +52,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            await validate_input(self.hass, user_input)
-        except CannotConnect:
+            websession = async_get_clientsession(self.hass)
+            hko = HKO(websession)
+            async with timeout(60):
+                await hko.weather(API_RHRREAD)
+
+        except HKOError:
             errors["base"] = "cannot_connect"
-        except InvalidLocation:
-            errors["base"] = "invalid_location"
-        except UnknownError:
-            errors["base"] = "unknown"
         else:
             await self.async_set_unique_id(
                 user_input[CONF_LOCATION], raise_on_progress=False
             )
+            self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=user_input[CONF_LOCATION], data=user_input
             )
@@ -84,15 +71,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidLocation(HomeAssistantError):
-    """Error to indicate an invalid location has been selected."""
-
-
-class UnknownError(HomeAssistantError):
-    """Error for an unknown_exception."""

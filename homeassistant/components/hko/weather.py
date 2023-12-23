@@ -7,6 +7,7 @@ from homeassistant.components.weather import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LOCATION, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -39,29 +40,31 @@ async def async_setup_entry(
 class HKOEntity(CoordinatorEntity, WeatherEntity):
     """Define a HKO entity."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
+    _attr_attribution = ATTRIBUTION
 
     def __init__(self, name, unique_id, coordinator: DataUpdateCoordinator) -> None:
         """Initialise the weather platform."""
         super().__init__(coordinator)
         self._name = name
-        self._unique_id = unique_id
+        self._attr_unique_id = unique_id
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, str(self.unique_id))},
+            name=self.name,
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @property
     def name(self) -> str:
         """Return the name."""
         return self._name
-
-    @property
-    def attribution(self) -> str:
-        """Return the attribution."""
-        return ATTRIBUTION
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique_id for this entity."""
-        return self._unique_id
 
     @property
     def condition(self) -> str:

@@ -40,6 +40,7 @@ API_HUMIDITY = "humidity"
 API_PLACE = "place"
 API_DATA = "data"
 API_VALUE = "value"
+API_RHRREAD = "rhrread"
 
 WEATHER_INFO_RAIN = "rain"
 WEATHER_INFO_SNOW = "snow"
