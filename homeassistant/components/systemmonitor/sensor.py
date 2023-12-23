@@ -49,7 +49,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, NETWORK_TYPES
 from .util import get_all_disk_mounts, get_all_network_interfaces
 
 _LOGGER = logging.getLogger(__name__)
@@ -360,7 +360,7 @@ async def async_setup_entry(
     sensor_registry: dict[tuple[str, str], SensorData] = {}
     for _type, sensor_description in SENSOR_TYPES.items():
         if _type.startswith("disk_"):
-            arguments = get_all_disk_mounts()
+            arguments = await hass.async_add_executor_job(get_all_disk_mounts)
             for argument in arguments:
                 sensor_registry[(_type, argument)] = SensorData(
                     argument, None, None, None, None
@@ -372,17 +372,8 @@ async def async_setup_entry(
                 )
             continue
 
-        if _type in [
-            "network_in",
-            "network_out",
-            "throughput_network_in",
-            "throughput_network_out",
-            "packets_in",
-            "packets_out",
-            "ipv4_address",
-            "ipv6_address",
-        ]:
-            arguments = get_all_network_interfaces()
+        if _type in NETWORK_TYPES:
+            arguments = await hass.async_add_executor_job(get_all_network_interfaces)
             for argument in arguments:
                 sensor_registry[(_type, argument)] = SensorData(
                     argument, None, None, None, None
@@ -404,21 +395,20 @@ async def async_setup_entry(
             continue
 
         if _type == "process":
-            entries: list[dict[str, str]] | None = entry.options.get(SENSOR_DOMAIN)
-            if entries:
-                for _entry in entries:
-                    for _, argument in _entry.items():
-                        sensor_registry[(_type, argument)] = SensorData(
-                            argument, None, None, None, None
+            entries: list[dict[str, str]] = entry.options.get(SENSOR_DOMAIN, [])
+            for _entry in entries:
+                for _, argument in _entry.items():
+                    sensor_registry[(_type, argument)] = SensorData(
+                        argument, None, None, None, None
+                    )
+                    entities.append(
+                        SystemMonitorSensor(
+                            sensor_registry,
+                            sensor_description,
+                            entry.entry_id,
+                            argument,
                         )
-                        entities.append(
-                            SystemMonitorSensor(
-                                sensor_registry,
-                                sensor_description,
-                                entry.entry_id,
-                                argument,
-                            )
-                        )
+                    )
             continue
 
         sensor_registry[(_type, "")] = SensorData("", None, None, None, None)
