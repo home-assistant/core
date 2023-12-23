@@ -37,7 +37,7 @@ async def test_cmm15_data_isread_correctly(
         "ccm15.CCM15Device.CCM15Device.get_status_async",
         return_value=device_state,
     ):
-        coordinator = CCM15Coordinator(hass, "1.1.1.1", "80")
+        coordinator = CCM15Coordinator(hass, "1.1.1.1", 80)
         await coordinator.async_refresh()
 
     data = coordinator.data
