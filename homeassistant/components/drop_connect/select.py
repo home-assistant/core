@@ -31,7 +31,7 @@ class DROPSelectEntityDescription(SelectEntityDescription):
     """Describes DROP select entity."""
 
     value_fn: Callable[[DROPDeviceDataUpdateCoordinator], str | None]
-    set_fn: Callable[[Any, Any], Any]
+    set_fn: Callable[[DROPDeviceDataUpdateCoordinator, str], Any]
 
 
 SELECTS: list[DROPSelectEntityDescription] = [
