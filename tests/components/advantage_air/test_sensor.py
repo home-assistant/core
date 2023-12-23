@@ -116,13 +116,14 @@ async def test_sensor_platform(
 
     mock_get.reset_mock()
     entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+    await hass.async_block_till_done()
 
     async_fire_time_changed(
         hass,
         dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
     await hass.async_block_till_done()
-    assert len(mock_get.mock_calls) == 2
+    assert len(mock_get.mock_calls) == 3
 
     state = hass.states.get(entity_id)
     assert state
