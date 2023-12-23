@@ -32,6 +32,10 @@
       "title": "The Lutron YAML configuration import cannot connect to server",
       "description": "Configuring Lutron using YAML is being removed but there was an connection error importing your YAML configuration.\n\nMake sure your home assistant can reach the main repeater. In case the main repeater is down, try again later."
     },
+    "import_issue_single_instance_allowed": {
+      "title": "The Lutron YAML configuration already imported",
+      "description": "Configuring Lutron using YAML is being removed but Lutron was already configured. The integration only allows a single instance.\n\nPlease remove the YAML from your configuration."
+    },
     "import_issue_unknown": {
       "title": "The Lutron YAML configuration import request failed due to an unknown error",
       "description": "Configuring Lutron using YAML is being removed but there was an unknown error while importing your existing configuration.\n\nSetup will proceed with required configuration."
