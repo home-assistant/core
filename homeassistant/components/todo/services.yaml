@@ -26,14 +26,23 @@ add_item:
       selector:
         text:
     due_date:
+      filter:
+        supported_features:
+          - todo.TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
       example: "2023-11-17"
       selector:
         date:
     due_datetime:
+      filter:
+        supported_features:
+          - todo.TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
       example: "2023-11-17 13:30:00"
       selector:
         datetime:
     description:
+      filter:
+        supported_features:
+          - todo.TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
       example: "A more complete description of the to-do item than that provided by the summary."
       selector:
         text:
@@ -62,14 +71,23 @@ update_item:
             - needs_action
             - completed
     due_date:
+      filter:
+        supported_features:
+          - todo.TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
       example: "2023-11-17"
       selector:
         date:
     due_datetime:
+      filter:
+        supported_features:
+          - todo.TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
       example: "2023-11-17 13:30:00"
       selector:
         datetime:
     description:
+      filter:
+        supported_features:
+          - todo.TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
       example: "A more complete description of the to-do item than that provided by the summary."
       selector:
         text:

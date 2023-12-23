@@ -95,6 +95,8 @@ DEFAULTS = {
     CONF_STATE_CLOSED: STATE_CLOSED,
 }
 
+RESET_CLOSING_OPENING = "reset_opening_closing"
+
 
 def _validate_and_add_defaults(config: ConfigType) -> ConfigType:
     """Validate config options and set defaults."""
@@ -218,10 +220,12 @@ class MqttValve(MqttEntity, ValveEntity):
 
     @callback
     def _update_state(self, state: str) -> None:
-        """Update the valve state based on static payload."""
-        self._attr_is_closed = state == STATE_CLOSED
+        """Update the valve state properties."""
         self._attr_is_opening = state == STATE_OPENING
         self._attr_is_closing = state == STATE_CLOSING
+        if self.reports_position:
+            return
+        self._attr_is_closed = state == STATE_CLOSED
 
     @callback
     def _process_binary_valve_update(
@@ -270,7 +274,11 @@ class MqttValve(MqttEntity, ValveEntity):
                     msg.topic,
                 )
             else:
-                self._attr_current_valve_position = min(max(percentage_payload, 0), 100)
+                percentage_payload = min(max(percentage_payload, 0), 100)
+                self._attr_current_valve_position = percentage_payload
+                # Reset closing and opening if the valve is fully opened or fully closed
+                if state is None and percentage_payload in (0, 100):
+                    state = RESET_CLOSING_OPENING
                 position_set = True
         if state_payload and state is None and not position_set:
             _LOGGER.warning(
@@ -301,10 +309,10 @@ class MqttValve(MqttEntity, ValveEntity):
         )
         def state_message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT state messages."""
-            payload_dict: Any = None
-            position_payload: Any = None
-            state_payload: Any = None
             payload = self._value_template(msg.payload)
+            payload_dict: Any = None
+            position_payload: Any = payload
+            state_payload: Any = payload
 
             if not payload:
                 _LOGGER.debug("Ignoring empty state message from '%s'", msg.topic)
@@ -312,12 +320,25 @@ class MqttValve(MqttEntity, ValveEntity):
 
             with suppress(*JSON_DECODE_EXCEPTIONS):
                 payload_dict = json_loads(payload)
-            if isinstance(payload_dict, dict) and "position" in payload_dict:
-                position_payload = payload_dict["position"]
-            if isinstance(payload_dict, dict) and "state" in payload_dict:
-                state_payload = payload_dict["state"]
-            state_payload = payload if state_payload is None else state_payload
-            position_payload = payload if position_payload is None else position_payload
+                if isinstance(payload_dict, dict):
+                    if self.reports_position and "position" not in payload_dict:
+                        _LOGGER.warning(
+                            "Missing required `position` attribute in json payload "
+                            "on topic '%s', got: %s",
+                            msg.topic,
+                            payload,
+                        )
+                        return
+                    if not self.reports_position and "state" not in payload_dict:
+                        _LOGGER.warning(
+                            "Missing required `state` attribute in json payload "
+                            " on topic '%s', got: %s",
+                            msg.topic,
+                            payload,
+                        )
+                        return
+                    position_payload = payload_dict.get("position")
+                    state_payload = payload_dict.get("state")
 
             if self._config[CONF_REPORTS_POSITION]:
                 self._process_position_valve_update(
