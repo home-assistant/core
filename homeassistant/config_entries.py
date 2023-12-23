@@ -1498,14 +1498,12 @@ async def _old_conf_migrator(old_config: dict[str, Any]) -> dict[str, Any]:
 
 @callback
 def _async_abort_entries_match(
-    other_entries: list[ConfigEntry], match_dict: dict[str, Any] | None = None
+    other_entries: list[ConfigEntry], match_dict: dict[str, Any]
 ) -> None:
     """Abort if current entries match all data.
 
     Requires `already_configured` in strings.json in user visible flows.
     """
-    if match_dict is None:
-        match_dict = {}  # Match any entry
     for entry in other_entries:
         options_items = entry.options.items()
         data_items = entry.data.items()
@@ -1546,9 +1544,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return cls.async_get_options_flow is not ConfigFlow.async_get_options_flow
 
     @callback
-    def _async_abort_entries_match(
-        self, match_dict: dict[str, Any] | None = None
-    ) -> None:
+    def _async_abort_entries_match(self, match_dict: dict[str, Any]) -> None:
         """Abort if current entries match all data.
 
         Requires `already_configured` in strings.json in user visible flows.
@@ -1913,9 +1909,7 @@ class OptionsFlow(data_entry_flow.FlowHandler):
     handler: str
 
     @callback
-    def _async_abort_entries_match(
-        self, match_dict: dict[str, Any] | None = None
-    ) -> None:
+    def _async_abort_entries_match(self, match_dict: dict[str, Any]) -> None:
         """Abort if another current entry matches all data.
 
         Requires `already_configured` in strings.json in user visible flows.
