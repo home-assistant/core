@@ -9,7 +9,7 @@ from collections.abc import Awaitable, Callable
 import contextlib
 from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response
@@ -192,82 +192,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = withings_data
 
-    register_lock = asyncio.Lock()
-    webhooks_registered = False
-
-    async def unregister_webhook(
-        _: Any,
-    ) -> None:
-        nonlocal webhooks_registered
-        async with register_lock:
-            LOGGER.debug(
-                "Unregister Withings webhook (%s)", entry.data[CONF_WEBHOOK_ID]
-            )
-            webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-            await async_unsubscribe_webhooks(client)
-            for coordinator in withings_data.coordinators:
-                coordinator.webhook_subscription_listener(False)
-            webhooks_registered = False
-
-    async def register_webhook(
-        _: Any,
-    ) -> None:
-        nonlocal webhooks_registered
-        async with register_lock:
-            if webhooks_registered:
-                return
-            if cloud.async_active_subscription(hass):
-                webhook_url = await _async_cloudhook_generate_url(hass, entry)
-            else:
-                webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
-            url = URL(webhook_url)
-            if url.scheme != "https" or url.port != 443:
-                LOGGER.warning(
-                    "Webhook not registered - "
-                    "https and port 443 is required to register the webhook"
-                )
-                return
-
-            webhook_name = "Withings"
-            if entry.title != DEFAULT_TITLE:
-                webhook_name = f"{DEFAULT_TITLE} {entry.title}"
-
-            webhook_register(
-                hass,
-                DOMAIN,
-                webhook_name,
-                entry.data[CONF_WEBHOOK_ID],
-                get_webhook_handler(withings_data),
-                allowed_methods=[METH_POST],
-            )
-            LOGGER.debug("Registered Withings webhook at hass: %s", webhook_url)
-
-            await async_subscribe_webhooks(client, webhook_url)
-            for coordinator in withings_data.coordinators:
-                coordinator.webhook_subscription_listener(True)
-            LOGGER.debug("Registered Withings webhook at Withings: %s", webhook_url)
-            entry.async_on_unload(
-                hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
-            )
-            webhooks_registered = True
+    webhook_manager = WithingsWebhookManager(hass, entry)
 
     async def manage_cloudhook(state: cloud.CloudConnectionState) -> None:
         LOGGER.debug("Cloudconnection state changed to %s", state)
         if state is cloud.CloudConnectionState.CLOUD_CONNECTED:
-            await register_webhook(None)
+            await webhook_manager.register_webhook(None)
 
         if state is cloud.CloudConnectionState.CLOUD_DISCONNECTED:
-            await unregister_webhook(None)
-            entry.async_on_unload(async_call_later(hass, 30, register_webhook))
+            await webhook_manager.unregister_webhook(None)
+            entry.async_on_unload(
+                async_call_later(hass, 30, webhook_manager.register_webhook)
+            )
 
     if cloud.async_active_subscription(hass):
         if cloud.async_is_connected(hass):
-            entry.async_on_unload(async_call_later(hass, 1, register_webhook))
+            entry.async_on_unload(
+                async_call_later(hass, 1, webhook_manager.register_webhook)
+            )
         entry.async_on_unload(
             cloud.async_listen_connection_change(hass, manage_cloudhook)
         )
     else:
-        entry.async_on_unload(async_call_later(hass, 1, register_webhook))
+        entry.async_on_unload(
+            async_call_later(hass, 1, webhook_manager.register_webhook)
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -307,6 +256,85 @@ async def async_subscribe_webhooks(client: WithingsClient, webhook_url: str) -> 
         # between each call or there is a higher chance of failure.
         await asyncio.sleep(SUBSCRIBE_DELAY.total_seconds())
         await client.subscribe_notification(webhook_url, notification)
+
+
+class WithingsWebhookManager:
+    """Manager that manages the Withings webhooks."""
+
+    _webhooks_registered = False
+    _register_lock = asyncio.Lock()
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Initialize webhook manager."""
+        self.hass = hass
+        self.entry = entry
+
+    @property
+    def withings_data(self) -> WithingsData:
+        """Return Withings data."""
+        return cast(WithingsData, self.hass.data[DOMAIN][self.entry.entry_id])
+
+    async def unregister_webhook(
+        self,
+        _: Any,
+    ) -> None:
+        """Unregister webhooks at Withings."""
+        async with self._register_lock:
+            LOGGER.debug(
+                "Unregister Withings webhook (%s)", self.entry.data[CONF_WEBHOOK_ID]
+            )
+            webhook_unregister(self.hass, self.entry.data[CONF_WEBHOOK_ID])
+            await async_unsubscribe_webhooks(self.withings_data.client)
+            for coordinator in self.withings_data.coordinators:
+                coordinator.webhook_subscription_listener(False)
+            self._webhooks_registered = False
+
+    async def register_webhook(
+        self,
+        _: Any,
+    ) -> None:
+        """Register webhooks at Withings."""
+        async with self._register_lock:
+            if self._webhooks_registered:
+                return
+            if cloud.async_active_subscription(self.hass):
+                webhook_url = await _async_cloudhook_generate_url(self.hass, self.entry)
+            else:
+                webhook_url = webhook_generate_url(
+                    self.hass, self.entry.data[CONF_WEBHOOK_ID]
+                )
+            url = URL(webhook_url)
+            if url.scheme != "https" or url.port != 443:
+                LOGGER.warning(
+                    "Webhook not registered - "
+                    "https and port 443 is required to register the webhook"
+                )
+                return
+
+            webhook_name = "Withings"
+            if self.entry.title != DEFAULT_TITLE:
+                webhook_name = f"{DEFAULT_TITLE} {self.entry.title}"
+
+            webhook_register(
+                self.hass,
+                DOMAIN,
+                webhook_name,
+                self.entry.data[CONF_WEBHOOK_ID],
+                get_webhook_handler(self.withings_data),
+                allowed_methods=[METH_POST],
+            )
+            LOGGER.debug("Registered Withings webhook at hass: %s", webhook_url)
+
+            await async_subscribe_webhooks(self.withings_data.client, webhook_url)
+            for coordinator in self.withings_data.coordinators:
+                coordinator.webhook_subscription_listener(True)
+            LOGGER.debug("Registered Withings webhook at Withings: %s", webhook_url)
+            self.entry.async_on_unload(
+                self.hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_STOP, self.unregister_webhook
+                )
+            )
+            self._webhooks_registered = True
 
 
 async def async_unsubscribe_webhooks(client: WithingsClient) -> None:
