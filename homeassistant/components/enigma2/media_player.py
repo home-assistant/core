@@ -123,33 +123,11 @@ class Enigma2Device(MediaPlayerEntity):
 
     def __init__(self, name: str, device: OpenWebIfDevice, about: dict) -> None:
         """Initialize the Enigma2 device."""
-        self._name = name
         self._device: OpenWebIfDevice = device
         self._device.mac_address = about["info"]["ifaces"][0]["mac"]
 
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for this entity."""
-        return self._device.mac_address
-
-    @property
-    def state(self) -> MediaPlayerState:
-        """Return the state of the device."""
-        return (
-            MediaPlayerState.OFF
-            if self._device.status.in_standby
-            else MediaPlayerState.ON
-        )
-
-    @property
-    def available(self) -> bool:
-        """Return True if the device is available."""
-        return not self._device.is_offline
+        self._attr_name = name
+        self._attr_unique_id = self._device.mac_address
 
     async def async_turn_off(self) -> None:
         """Turn off media player."""
@@ -159,48 +137,9 @@ class Enigma2Device(MediaPlayerEntity):
         """Turn the media player on."""
         await self._device.turn_on()
 
-    @property
-    def media_title(self):
-        """Title of current playing media."""
-        return self._device.status.currservice.station
-
-    @property
-    def media_series_title(self):
-        """Return the title of current episode of TV show."""
-        return self._device.status.currservice.name
-
-    @property
-    def media_channel(self):
-        """Channel of current playing media."""
-        return self._device.status.currservice.station
-
-    @property
-    def media_content_id(self):
-        """Service Ref of current playing media."""
-        return self._device.status.currservice.serviceref
-
-    @property
-    def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
-        return self._device.status.muted
-
-    @property
-    def media_image_url(self):
-        """Picon url for the channel."""
-        return self._device.picon_url
-
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._device.set_volume(int(volume * 100))
-
-    @property
-    def volume_level(self):
-        """Volume level of the media player (0..1)."""
-        return (
-            self._device.status.volume / 100
-            if self._device.status.volume is not None
-            else None
-        )
 
     async def async_media_stop(self) -> None:
         """Send stop command."""
@@ -226,16 +165,6 @@ class Enigma2Device(MediaPlayerEntity):
         """Mute or unmute."""
         await self._device.toggle_mute()
 
-    @property
-    def source(self):
-        """Return the current input source."""
-        return self._device.status.currservice.station
-
-    @property
-    def source_list(self):
-        """List of available input sources."""
-        return self._device.source_list
-
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         await self._device.zap(self._device.sources[source])
@@ -243,21 +172,32 @@ class Enigma2Device(MediaPlayerEntity):
     async def async_update(self) -> None:
         """Update state of the media_player."""
         await self._device.update()
-
-    @property
-    def extra_state_attributes(self):
-        """Return device specific state attributes.
-
-        isRecording:        Is the box currently recording.
-        currservice_fulldescription: Full program description.
-        currservice_begin:  is in the format '21:00'.
-        currservice_end:    is in the format '21:00'.
-        """
-        if self._device.status.in_standby:
-            return {}
-        return {
-            ATTR_MEDIA_CURRENTLY_RECORDING: self._device.status.is_recording,
-            ATTR_MEDIA_DESCRIPTION: self._device.status.currservice.fulldescription,
-            ATTR_MEDIA_START_TIME: self._device.status.currservice.begin,
-            ATTR_MEDIA_END_TIME: self._device.status.currservice.end,
-        }
+        self._attr_available = not self._device.is_offline
+        self._attr_media_title = self._device.status.currservice.station
+        self._attr_media_series_title = self._device.status.currservice.name
+        self._attr_media_channel = self._device.status.currservice.station
+        self._attr_is_volume_muted = self._device.status.muted
+        self._attr_media_content_id = self._device.status.currservice.serviceref
+        self._attr_media_image_url = self._device.picon_url
+        self._attr_source = self._device.status.currservice.station
+        self._attr_source_list = self._device.source_list
+        self._attr_state = (
+            MediaPlayerState.OFF
+            if self._device.status.in_standby
+            else MediaPlayerState.ON
+        )
+        self._attr_volume_level = (
+            self._device.status.volume / 100
+            if self._device.status.volume is not None
+            else None
+        )
+        self._attr_extra_state_attributes = (
+            {
+                ATTR_MEDIA_CURRENTLY_RECORDING: self._device.status.is_recording,
+                ATTR_MEDIA_DESCRIPTION: self._device.status.currservice.fulldescription,
+                ATTR_MEDIA_START_TIME: self._device.status.currservice.begin,
+                ATTR_MEDIA_END_TIME: self._device.status.currservice.end,
+            }
+            if not self._device.status.in_standby
+            else {}
+        )
