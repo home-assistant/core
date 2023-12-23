@@ -91,7 +91,7 @@ class MikrotikData:
     def get_info(self, param: str) -> str:
         """Return device model name."""
         cmd = IDENTITY if param == NAME else INFO
-        if data := self.command(cmd=MIKROTIK_SERVICES[cmd], discover=(cmd == INFO)):
+        if data := self.command(MIKROTIK_SERVICES[cmd], suppress_errors=(cmd == INFO)):
             return str(data[0].get(param))
         return ""
 
@@ -102,16 +102,16 @@ class MikrotikData:
         self.firmware = self.get_info(ATTR_FIRMWARE)
         self.serial_number = self.get_info(ATTR_SERIAL_NUMBER)
         self.support_capsman = bool(
-            self.command(cmd=MIKROTIK_SERVICES[IS_CAPSMAN], discover=True)
+            self.command(MIKROTIK_SERVICES[IS_CAPSMAN], suppress_errors=True)
         )
         self.support_wireless = bool(
-            self.command(cmd=MIKROTIK_SERVICES[IS_WIRELESS], discover=True)
+            self.command(MIKROTIK_SERVICES[IS_WIRELESS], suppress_errors=True)
         )
         self.support_wifiwave2 = bool(
-            self.command(cmd=MIKROTIK_SERVICES[IS_WIFIWAVE2], discover=True)
+            self.command(MIKROTIK_SERVICES[IS_WIFIWAVE2], suppress_errors=True)
         )
         self.support_wifi = bool(
-            self.command(cmd=MIKROTIK_SERVICES[IS_WIFI], discover=True)
+            self.command(MIKROTIK_SERVICES[IS_WIFI], suppress_errors=True)
         )
 
     def get_list_from_interface(self, interface: str) -> dict[str, dict[str, Any]]:
@@ -216,7 +216,7 @@ class MikrotikData:
         self,
         cmd: str,
         params: dict[str, Any] | None = None,
-        discover: bool = False,
+        suppress_errors: bool = False,
     ) -> list[dict[str, Any]]:
         """Retrieve data from Mikrotik API."""
         _LOGGER.debug("Running command %s", cmd)
@@ -236,7 +236,7 @@ class MikrotikData:
             raise CannotConnect from api_error
         except librouteros.exceptions.ProtocolError as api_error:
             emsg = "Mikrotik %s failed to retrieve data. cmd=[%s] Error: %s"
-            if discover and "no such command prefix" in str(api_error):
+            if suppress_errors and "no such command prefix" in str(api_error):
                 _LOGGER.debug(emsg, self._host, cmd, api_error)
                 return []
             _LOGGER.warning(emsg, self._host, cmd, api_error)

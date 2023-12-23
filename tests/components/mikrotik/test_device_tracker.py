@@ -53,7 +53,7 @@ def mock_device_registry_devices(hass: HomeAssistant) -> None:
 
 
 def mock_command(
-    self, cmd: str, params: dict[str, Any] | None = None, discover: bool = False
+    self, cmd: str, params: dict[str, Any] | None = None, suppress_errors: bool = False
 ) -> Any:
     """Mock the Mikrotik command method."""
     if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IS_WIRELESS]:
