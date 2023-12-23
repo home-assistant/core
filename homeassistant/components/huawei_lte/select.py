@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from functools import partial
 import logging
 
@@ -20,20 +20,20 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED
 
-from . import HuaweiLteBaseEntityWithDevice
+from . import HuaweiLteBaseEntityWithDevice, Router
 from .const import DOMAIN, KEY_NET_NET_MODE
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class HuaweiSelectEntityMixin:
     """Mixin for Huawei LTE select entities, to ensure required fields are set."""
 
     setter_fn: Callable[[str], None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class HuaweiSelectEntityDescription(SelectEntityDescription, HuaweiSelectEntityMixin):
     """Class describing Huawei LTE select entities."""
 
@@ -80,18 +80,25 @@ async def async_setup_entry(
     async_add_entities(selects, True)
 
 
-@dataclass
 class HuaweiLteSelectEntity(HuaweiLteBaseEntityWithDevice, SelectEntity):
     """Huawei LTE select entity."""
 
     entity_description: HuaweiSelectEntityDescription
-    key: str
-    item: str
+    _raw_state: str | None = None
 
-    _raw_state: str | None = field(default=None, init=False)
+    def __init__(
+        self,
+        router: Router,
+        entity_description: HuaweiSelectEntityDescription,
+        key: str,
+        item: str,
+    ) -> None:
+        """Initialize."""
+        super().__init__(router)
+        self.entity_description = entity_description
+        self.key = key
+        self.item = item
 
-    def __post_init__(self) -> None:
-        """Initialize remaining attributes."""
         name = None
         if self.entity_description.name != UNDEFINED:
             name = self.entity_description.name

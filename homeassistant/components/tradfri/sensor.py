@@ -37,14 +37,14 @@ from .const import (
 from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class TradfriSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value: Callable[[Device], Any | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class TradfriSensorEntityDescription(
     SensorEntityDescription,
     TradfriSensorEntityDescriptionMixin,

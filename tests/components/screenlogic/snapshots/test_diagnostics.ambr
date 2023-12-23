@@ -9,6 +9,7 @@
       'disabled_by': None,
       'domain': 'screenlogic',
       'entry_id': 'screenlogictest',
+      'minor_version': 1,
       'options': dict({
         'scan_interval': 30,
       }),
@@ -22,6 +23,8 @@
     'data': dict({
       'adapter': dict({
         'firmware': dict({
+          'major': 5.2,
+          'minor': 736.0,
           'name': 'Protocol Adapter Firmware',
           'value': 'POOL: 5.2 Build 736.0 Rel',
         }),
@@ -453,6 +456,14 @@
           'unknown_at_offset_11': 0,
         }),
         'controller_id': 100,
+        'date_time': dict({
+          'auto_dst': dict({
+            'name': 'Automatic Daylight Saving Time',
+            'value': 1,
+          }),
+          'timestamp': 1700489169.0,
+          'timestamp_host': 1700517812.0,
+        }),
         'equipment': dict({
           'flags': 98360,
           'list': list([
@@ -604,33 +615,45 @@
         }),
         'configuration': dict({
           'calcium_harness': dict({
+            'max_setpoint': 800,
+            'min_setpoint': 25,
             'name': 'Calcium Hardness',
             'unit': 'ppm',
             'value': 800,
           }),
           'cya': dict({
+            'max_setpoint': 201,
+            'min_setpoint': 0,
             'name': 'Cyanuric Acid',
             'unit': 'ppm',
             'value': 45,
           }),
           'flags': 32,
           'orp_setpoint': dict({
+            'max_setpoint': 800,
+            'min_setpoint': 400,
             'name': 'ORP Setpoint',
             'unit': 'mV',
             'value': 720,
           }),
           'ph_setpoint': dict({
+            'max_setpoint': 7.6,
+            'min_setpoint': 7.2,
             'name': 'pH Setpoint',
             'unit': 'pH',
             'value': 7.6,
           }),
           'probe_is_celsius': 0,
           'salt_tds_ppm': dict({
+            'max_setpoint': 6500,
+            'min_setpoint': 500,
             'name': 'Salt/TDS',
             'unit': 'ppm',
             'value': 1000,
           }),
           'total_alkalinity': dict({
+            'max_setpoint': 800,
+            'min_setpoint': 25,
             'name': 'Total Alkalinity',
             'unit': 'ppm',
             'value': 45,
@@ -688,6 +711,8 @@
           }),
         }),
         'firmware': dict({
+          'major': 1,
+          'minor': 60,
           'name': 'IntelliChem Firmware',
           'value': '1.060',
         }),
@@ -951,6 +976,10 @@
             'name': 'Chlorinator',
             'value': 0,
           }),
+        }),
+        'super_chlorinate': dict({
+          'name': 'Super Chlorinate',
+          'value': 0,
         }),
       }),
     }),
