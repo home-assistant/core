@@ -35,7 +35,7 @@ from .entity import HomeWizardEntity
 PARALLEL_UPDATES = 1
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class HomeWizardSensorEntityDescription(SensorEntityDescription):
     """Class describing HomeWizard sensor entities."""
 
@@ -436,7 +436,6 @@ async def async_setup_entry(
 ) -> None:
     """Initialize sensors."""
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
         HomeWizardSensorEntity(coordinator, description)
         for description in SENSORS

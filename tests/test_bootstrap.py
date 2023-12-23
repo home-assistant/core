@@ -40,7 +40,7 @@ async def apply_stop_hass(stop_hass: None) -> None:
     """Make sure all hass are stopped."""
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def mock_http_start_stop() -> Generator[None, None, None]:
     """Mock HTTP start and stop."""
     with patch(
@@ -913,6 +913,7 @@ async def test_bootstrap_dependencies(
         """Mock the MQTT config flow."""
 
         VERSION = 1
+        MINOR_VERSION = 1
 
     entry = MockConfigEntry(domain="mqtt", data={"broker": "test-broker"})
     entry.add_to_hass(hass)

@@ -9,11 +9,11 @@ from nextdns import ApiError, InvalidApiKeyError, NextDns
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_PROFILE_NAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_PROFILE_ID, CONF_PROFILE_NAME, DOMAIN
+from .const import CONF_PROFILE_ID, DOMAIN
 
 
 class NextDnsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

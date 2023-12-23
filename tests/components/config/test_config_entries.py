@@ -532,6 +532,7 @@ async def test_create_account(
         "description": None,
         "description_placeholders": None,
         "options": {},
+        "minor_version": 1,
     }
 
 
@@ -609,6 +610,7 @@ async def test_two_step_flow(
             "description": None,
             "description_placeholders": None,
             "options": {},
+            "minor_version": 1,
         }
 
 
@@ -942,6 +944,7 @@ async def test_two_step_options_flow(hass: HomeAssistant, client) -> None:
             "version": 1,
             "description": None,
             "description_placeholders": None,
+            "minor_version": 1,
         }
 
 

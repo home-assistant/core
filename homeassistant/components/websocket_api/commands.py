@@ -650,7 +650,7 @@ async def handle_render_template(
 
 
 def _serialize_entity_sources(
-    entity_infos: dict[str, entity.EntityInfo]
+    entity_infos: dict[str, entity.EntityInfo],
 ) -> dict[str, Any]:
     """Prepare a websocket response from a dict of entity sources."""
     return {

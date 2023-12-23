@@ -102,6 +102,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
     from homeassistant.components.todo import TodoListEntityFeature
     from homeassistant.components.update import UpdateEntityFeature
     from homeassistant.components.vacuum import VacuumEntityFeature
+    from homeassistant.components.valve import ValveEntityFeature
     from homeassistant.components.water_heater import WaterHeaterEntityFeature
     from homeassistant.components.weather import WeatherEntityFeature
 
@@ -122,6 +123,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
         "TodoListEntityFeature": TodoListEntityFeature,
         "UpdateEntityFeature": UpdateEntityFeature,
         "VacuumEntityFeature": VacuumEntityFeature,
+        "ValveEntityFeature": ValveEntityFeature,
         "WaterHeaterEntityFeature": WaterHeaterEntityFeature,
         "WeatherEntityFeature": WeatherEntityFeature,
     }
@@ -951,9 +953,6 @@ def validate_slider(data: Any) -> Any:
     if "min" not in data or "max" not in data:
         raise vol.Invalid("min and max are required in slider mode")
 
-    if "step" in data and data["step"] == "any":
-        raise vol.Invalid("step 'any' is not allowed in slider mode")
-
     return data
 
 
@@ -1206,6 +1205,7 @@ class TextSelectorConfig(TypedDict, total=False):
     suffix: str
     type: TextSelectorType
     autocomplete: str
+    multiple: bool
 
 
 class TextSelectorType(StrEnum):
@@ -1243,6 +1243,7 @@ class TextSelector(Selector[TextSelectorConfig]):
                 vol.Coerce(TextSelectorType), lambda val: val.value
             ),
             vol.Optional("autocomplete"): str,
+            vol.Optional("multiple", default=False): bool,
         }
     )
 
@@ -1250,10 +1251,14 @@ class TextSelector(Selector[TextSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
-    def __call__(self, data: Any) -> str:
+    def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
-        text: str = vol.Schema(str)(data)
-        return text
+        if not self.config["multiple"]:
+            text: str = vol.Schema(str)(data)
+            return text
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [vol.Schema(str)(val) for val in data]
 
 
 class ThemeSelectorConfig(TypedDict):

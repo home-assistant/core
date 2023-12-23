@@ -503,11 +503,12 @@ async def test_block_restored_climate_auth_error(
 
 
 async def test_device_not_calibrated(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant,
+    mock_block_device,
+    monkeypatch,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test to create an issue when the device is not calibrated."""
-    issue_registry: ir.IssueRegistry = ir.async_get(hass)
-
     await init_integration(hass, 1, sleep_period=1000, model=MODEL_VALVE)
 
     # Make device online

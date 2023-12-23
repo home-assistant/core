@@ -33,14 +33,14 @@ from .coordinator import PurpleAirDataUpdateCoordinator
 CONCENTRATION_PARTICLES_PER_100_MILLILITERS = f"particles/100{UnitOfVolume.MILLILITERS}"
 
 
-@dataclass
+@dataclass(frozen=True)
 class PurpleAirSensorEntityDescriptionMixin:
     """Define a description mixin for PurpleAir sensor entities."""
 
     value_fn: Callable[[SensorModel], float | str | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PurpleAirSensorEntityDescription(
     SensorEntityDescription, PurpleAirSensorEntityDescriptionMixin
 ):

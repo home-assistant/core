@@ -19,6 +19,7 @@ async def async_setup_entry(
         [
             DemoCamera("Demo camera", "image/jpg"),
             DemoCamera("Demo camera png", "image/png"),
+            DemoCameraWithoutStream("Demo camera without stream", "image/jpg"),
         ]
     )
 
@@ -28,7 +29,7 @@ class DemoCamera(Camera):
 
     _attr_is_streaming = True
     _attr_motion_detection_enabled = False
-    _attr_supported_features = CameraEntityFeature.ON_OFF
+    _attr_supported_features = CameraEntityFeature.ON_OFF | CameraEntityFeature.STREAM
 
     def __init__(self, name: str, content_type: str) -> None:
         """Initialize demo camera component."""
@@ -68,3 +69,9 @@ class DemoCamera(Camera):
         self._attr_is_streaming = True
         self._attr_is_on = True
         self.async_write_ha_state()
+
+
+class DemoCameraWithoutStream(DemoCamera):
+    """The representation of a Demo camera without stream."""
+
+    _attr_supported_features = CameraEntityFeature.ON_OFF

@@ -80,9 +80,6 @@
       },
       "comfort_temperature": {
         "name": "Comfort temperature"
-      },
-      "eco_temperature": {
-        "name": "Eco temperature"
       }
     },
     "sensor": {
@@ -283,8 +280,8 @@
       }
     },
     "water_heater": {
-      "water": {
-        "name": "Water"
+      "domestic_hot_water": {
+        "name": "Domestic hot water"
       }
     }
   },

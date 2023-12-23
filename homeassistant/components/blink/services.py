@@ -1,8 +1,6 @@
 """Services for the Blink integration."""
 from __future__ import annotations
 
-import logging
-
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -14,7 +12,7 @@ from homeassistant.const import (
     CONF_PIN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 
@@ -27,56 +25,72 @@ from .const import (
 )
 from .coordinator import BlinkUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
+SERVICE_UPDATE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+    }
+)
 SERVICE_SAVE_VIDEO_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.ensure_list,
+        vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_FILENAME): cv.string,
     }
 )
 SERVICE_SEND_PIN_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_DEVICE_ID): cv.ensure_list, vol.Optional(CONF_PIN): cv.string}
+    {
+        vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_PIN): cv.string,
+    }
 )
 SERVICE_SAVE_RECENT_CLIPS_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.ensure_list,
+        vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_FILE_PATH): cv.string,
     }
 )
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+def setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Blink integration."""
 
-    async def collect_coordinators(
+    def collect_coordinators(
         device_ids: list[str],
     ) -> list[BlinkUpdateCoordinator]:
-        config_entries = list[ConfigEntry]()
+        config_entries: list[ConfigEntry] = []
         registry = dr.async_get(hass)
         for target in device_ids:
             device = registry.async_get(target)
             if device:
-                device_entries = list[ConfigEntry]()
+                device_entries: list[ConfigEntry] = []
                 for entry_id in device.config_entries:
                     entry = hass.config_entries.async_get_entry(entry_id)
                     if entry and entry.domain == DOMAIN:
                         device_entries.append(entry)
                 if not device_entries:
-                    raise HomeAssistantError(
-                        f"Device '{target}' is not a {DOMAIN} device"
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_device",
+                        translation_placeholders={"target": target, "domain": DOMAIN},
                     )
                 config_entries.extend(device_entries)
             else:
                 raise HomeAssistantError(
-                    f"Device '{target}' not found in device registry"
+                    translation_domain=DOMAIN,
+                    translation_key="device_not_found",
+                    translation_placeholders={"target": target},
                 )
-        coordinators = list[BlinkUpdateCoordinator]()
+
+        coordinators: list[BlinkUpdateCoordinator] = []
         for config_entry in config_entries:
             if config_entry.state != ConfigEntryState.LOADED:
-                raise HomeAssistantError(f"{config_entry.title} is not loaded")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="not_loaded",
+                    translation_placeholders={"target": config_entry.title},
+                )
+
             coordinators.append(hass.data[DOMAIN][config_entry.entry_id])
         return coordinators
 
@@ -85,24 +99,36 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         camera_name = call.data[CONF_NAME]
         video_path = call.data[CONF_FILENAME]
         if not hass.config.is_allowed_path(video_path):
-            _LOGGER.error("Can't write %s, no access to path!", video_path)
-            return
-        for coordinator in await collect_coordinators(call.data[ATTR_DEVICE_ID]):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_path",
+                translation_placeholders={"target": video_path},
+            )
+
+        for coordinator in collect_coordinators(call.data[ATTR_DEVICE_ID]):
             all_cameras = coordinator.api.cameras
             if camera_name in all_cameras:
                 try:
                     await all_cameras[camera_name].video_to_file(video_path)
                 except OSError as err:
-                    _LOGGER.error("Can't write image to file: %s", err)
+                    raise ServiceValidationError(
+                        str(err),
+                        translation_domain=DOMAIN,
+                        translation_key="cant_write",
+                    ) from err
 
     async def async_handle_save_recent_clips_service(call: ServiceCall) -> None:
         """Save multiple recent clips to output directory."""
         camera_name = call.data[CONF_NAME]
         clips_dir = call.data[CONF_FILE_PATH]
         if not hass.config.is_allowed_path(clips_dir):
-            _LOGGER.error("Can't write to directory %s, no access to path!", clips_dir)
-            return
-        for coordinator in await collect_coordinators(call.data[ATTR_DEVICE_ID]):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_path",
+                translation_placeholders={"target": clips_dir},
+            )
+
+        for coordinator in collect_coordinators(call.data[ATTR_DEVICE_ID]):
             all_cameras = coordinator.api.cameras
             if camera_name in all_cameras:
                 try:
@@ -110,11 +136,15 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                         output_dir=clips_dir
                     )
                 except OSError as err:
-                    _LOGGER.error("Can't write recent clips to directory: %s", err)
+                    raise ServiceValidationError(
+                        str(err),
+                        translation_domain=DOMAIN,
+                        translation_key="cant_write",
+                    ) from err
 
     async def send_pin(call: ServiceCall):
         """Call blink to send new pin."""
-        for coordinator in await collect_coordinators(call.data[ATTR_DEVICE_ID]):
+        for coordinator in collect_coordinators(call.data[ATTR_DEVICE_ID]):
             await coordinator.api.auth.send_auth_key(
                 coordinator.api,
                 call.data[CONF_PIN],
@@ -122,12 +152,12 @@ async def async_setup_services(hass: HomeAssistant) -> None:
 
     async def blink_refresh(call: ServiceCall):
         """Call blink to refresh info."""
-        for coordinator in await collect_coordinators(call.data[ATTR_DEVICE_ID]):
+        for coordinator in collect_coordinators(call.data[ATTR_DEVICE_ID]):
             await coordinator.api.refresh(force_cache=True)
 
     # Register all the above services
     service_mapping = [
-        (blink_refresh, SERVICE_REFRESH, None),
+        (blink_refresh, SERVICE_REFRESH, SERVICE_UPDATE_SCHEMA),
         (
             async_handle_save_video_service,
             SERVICE_SAVE_VIDEO,
