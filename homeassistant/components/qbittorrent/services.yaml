@@ -1,0 +1,16 @@
+get_torrents:
+  function: handle_get_torrents
+  fields:
+    filter:
+      required: true
+      example: "all"
+      default: "all"
+      selector:
+        select:
+          options:
+            - "active"
+            - "inactive"
+            - "paused"
+            - "all"
+            - "seeding"
+            - "started"
