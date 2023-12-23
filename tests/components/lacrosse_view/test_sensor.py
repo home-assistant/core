@@ -19,8 +19,8 @@ from . import (
     TEST_NO_PERMISSION_SENSOR,
     TEST_SENSOR,
     TEST_STRING_SENSOR,
-    TEST_UNSUPPORTED_SENSOR,
     TEST_UNITS_OVERRIDE_SENSOR,
+    TEST_UNSUPPORTED_SENSOR,
 )
 
 from tests.common import MockConfigEntry
