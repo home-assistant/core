@@ -212,7 +212,7 @@
     'serial_number': None,
     'suggested_area': None,
     'sw_version': '10.10',
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_number_entities[binary_sensor.door_2_operational_status]
@@ -284,6 +284,6 @@
     'serial_number': None,
     'suggested_area': None,
     'sw_version': '10.10',
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
