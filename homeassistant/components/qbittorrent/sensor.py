@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
-    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, UnitOfDataRate
@@ -24,7 +23,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DOMAIN,
-    STATE_ATTR_TORRENT_INFO,
     STATE_DOWNLOADING,
     STATE_SEEDING,
     STATE_UP_DOWN,
