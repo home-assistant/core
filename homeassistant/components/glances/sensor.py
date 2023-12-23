@@ -234,6 +234,39 @@ SENSOR_TYPES = {
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    ("gpu", "mem"): GlancesSensorEntityDescription(
+        key="mem",
+        type="gpu",
+        name_suffix="memory use",
+        icon="mdi:memory",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("gpu", "proc"): GlancesSensorEntityDescription(
+        key="proc",
+        type="gpu",
+        name_suffix="processor use",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:expansion-card",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("gpu", "temperature"): GlancesSensorEntityDescription(
+        key="temperature",
+        type="gpu",
+        name_suffix="temperature",
+        icon="mdi:thermometer",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("gpu", "fan_speed"): GlancesSensorEntityDescription(
+        key="fan_speed",
+        type="gpu",
+        name_suffix="fan speed",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:fan",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 }
 
 
@@ -248,7 +281,7 @@ async def async_setup_entry(
     entities = []
 
     for sensor_type, sensors in coordinator.data.items():
-        if sensor_type in ["fs", "sensors", "raid"]:
+        if sensor_type in ["fs", "sensors", "raid", "gpu"]:
             for sensor_label, params in sensors.items():
                 for param in params:
                     if sensor_description := SENSOR_TYPES.get((sensor_type, param)):

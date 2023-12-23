@@ -207,4 +207,13 @@ HA_SENSOR_DATA: dict[str, Any] = {
             "config": "UU",
         },
     },
+    "gpu": {
+        "GPU_0__NVIDIA GeForce RTX 3080": {
+            "name": "NVIDIA GeForce RTX 3080",
+            "temperature": 51,
+            "mem": 8.41064453125,
+            "proc": 26,
+            "fan_speed": 0,
+        }
+    },
 }
