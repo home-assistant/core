@@ -235,6 +235,39 @@ SENSOR_TYPES = {
         translation_key="uptime",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
+    ("gpu", "mem"): GlancesSensorEntityDescription(
+        key="mem",
+        type="gpu",
+        name_suffix="memory use",
+        icon="mdi:memory",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("gpu", "proc"): GlancesSensorEntityDescription(
+        key="proc",
+        type="gpu",
+        name_suffix="processor use",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:expansion-card",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("gpu", "temperature"): GlancesSensorEntityDescription(
+        key="temperature",
+        type="gpu",
+        name_suffix="temperature",
+        icon="mdi:thermometer",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ("gpu", "fan_speed"): GlancesSensorEntityDescription(
+        key="fan_speed",
+        type="gpu",
+        name_suffix="fan speed",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:fan",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 }
 
 
@@ -249,7 +282,7 @@ async def async_setup_entry(
     entities: list[GlancesSensor] = []
 
     for sensor_type, sensors in coordinator.data.items():
-        if sensor_type in ["fs", "diskio", "sensors", "raid"]:
+        if sensor_type in ["fs", "diskio", "sensors", "raid", "gpu"]:
             entities.extend(
                 GlancesSensor(
                     coordinator,
