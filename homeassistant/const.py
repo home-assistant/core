@@ -1,8 +1,7 @@
 """Constants used by Home Assistant components."""
 from __future__ import annotations
 
-from enum import Enum, StrEnum
-import logging
+from enum import StrEnum
 from typing import Any, Final
 
 APPLICATION_NAME: Final = "HomeAssistant"
@@ -425,52 +424,17 @@ def __getattr__(name: str) -> Any:
     If it is, print a deprecation warning and return the value of the constant.
     Otherwise raise AttributeError.
     """
-    # Copied method from homeassistant.helpers.deprecattion#check_if_deprecated_constant to avoid import cycle
+    # Extrcated check from homeassistant.helpers.deprecation.check_if_deprecated_constant
+    # to avoid import cycle
     module_globals = globals()
-
-    module_name = module_globals.get("__name__")
-    logger = logging.getLogger(module_name)
-    value = replacement = None
-    if (deprecated_const := module_globals.get("_DEPRECATED_" + name)) is None:
-        raise AttributeError(f"Module {module_name!r} has no attribute {name!r}")
-    if isinstance(deprecated_const, tuple):
-        if len(deprecated_const) == 3:
-            value = deprecated_const[0]
-            replacement = deprecated_const[1]
-            breaks_in_ha_version = deprecated_const[2]
-        elif len(deprecated_const) == 2 and isinstance(deprecated_const[0], Enum):
-            enum = deprecated_const[0]
-            value = enum.value
-            replacement = f"{enum.__class__.__name__}.{enum.name}"
-            breaks_in_ha_version = deprecated_const[1]
-
-    if value is None or replacement is None:
-        msg = (
-            f"Value of _DEPRECATED_{name} is an instance of {type(deprecated_const)} "
-            "but an instance of tuple with a length of 2-3 is required"
-        )
-
-        logger.debug(msg)
-        # PEP 562 -- Module __getattr__ and __dir__
-        # specifies that __getattr__ should raise AttributeError if the attribute is not
-        # found.
-        # https://peps.python.org/pep-0562/#specification
-        raise AttributeError(msg)  # noqa: TRY004
+    if f"_DEPRECATED_{name}" not in module_globals:
+        raise AttributeError(f"Module {__name__} has no attribute {name!r}")
 
     from .helpers.deprecation import (  # pylint: disable=import-outside-toplevel
-        _print_deprecation_warning_internal,
+        check_if_deprecated_constant,
     )
 
-    _print_deprecation_warning_internal(
-        name,
-        module_name or __name__,
-        replacement,
-        "constant",
-        "used",
-        breaks_in_ha_version,
-        log_when_no_integration_is_found=False,
-    )
-    return value
+    return check_if_deprecated_constant(name, module_globals)
 
 
 # Can be removed if no deprecated constant are in this module anymore
