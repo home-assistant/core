@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
 from typing import Any
@@ -42,7 +42,7 @@ class DROPSwitchEntityDescription(SwitchEntityDescription):
     """Describes DROP switch entity."""
 
     value_fn: Callable[[DROPDeviceDataUpdateCoordinator], int | None]
-    set_fn: Callable
+    set_fn: Callable[[DROPDeviceDataUpdateCoordinator, int], Coroutine[Any, Any, None]]
 
 
 SWITCHES: list[DROPSwitchEntityDescription] = [
