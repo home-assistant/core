@@ -23,18 +23,10 @@ from homeassistant.helpers import (
 
 from .const import (
     DOMAIN,
-    SERVICE_GET_TORRENTS,
-    STATE_ATTR_TORRENT_INFO,
-    FILTER,
 )
 from .coordinator import QBittorrentDataCoordinator
 from .helpers import (
     setup_client,
-    seconds_to_hhmmss,
-    format_unix_timestamp,
-    format_progress,
-    format_torrents,
-    format_torrent,
 )
 
 _LOGGER = logging.getLogger(__name__)
