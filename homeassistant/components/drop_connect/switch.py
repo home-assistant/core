@@ -27,6 +27,8 @@ _LOGGER = logging.getLogger(__name__)
 
 ICON_VALVE_OPEN = "mdi:valve-open"
 ICON_VALVE_CLOSED = "mdi:valve-closed"
+ICON_VALVE_UNKNOWN = "mdi:valve"
+ICON_VALVE = {False: ICON_VALVE_CLOSED, True: ICON_VALVE_OPEN, None: ICON_VALVE_UNKNOWN}
 
 # Switch type constants
 WATER_SWITCH = "water"
@@ -45,14 +47,14 @@ SWITCHES: list[DROPSwitchEntityDescription] = [
     DROPSwitchEntityDescription(
         key=WATER_SWITCH,
         translation_key=WATER_SWITCH,
-        icon="mdi:valve",
+        icon=ICON_VALVE_UNKNOWN,
         value_fn=lambda device: device.drop_api.water(),
         set_fn=lambda device, value: device.set_water(value),
     ),
     DROPSwitchEntityDescription(
         key=BYPASS_SWITCH,
         translation_key=BYPASS_SWITCH,
-        icon="mdi:valve",
+        icon=ICON_VALVE_UNKNOWN,
         value_fn=lambda device: device.drop_api.bypass(),
         set_fn=lambda device, value: device.set_bypass(value),
     ),
@@ -122,6 +124,4 @@ class DROPSwitch(DROPEntity, SwitchEntity):
     @property
     def icon(self) -> str:
         """Return the icon to use for dynamic states."""
-        if self.is_on:
-            return ICON_VALVE_OPEN
-        return ICON_VALVE_CLOSED
+        return ICON_VALVE.get(self.is_on, ICON_VALVE_UNKNOWN)
