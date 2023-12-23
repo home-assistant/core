@@ -32,7 +32,7 @@ async def test_flow_user_init_data_success(hass: HomeAssistant) -> None:
     assert result["data_schema"] == config_flow.DATA_SCHEMA
 
     with patch(
-        "homeassistant.components.lutron.config_flow.OpendataTransport.async_get_data",
+        "homeassistant.components.lutron.config_flow.async_step_user",
         autospec=True,
         return_value=True,
     ):
@@ -67,7 +67,7 @@ async def test_flow_user_init_data_unknown_error_and_recover(
 ) -> None:
     """Test unknown errors."""
     with patch(
-        "homeassistant.components.lutron.config_flow.OpendataTransport.async_get_data",
+        "homeassistant.components.lutron.config_flow.async_step_user",
         autospec=True,
         side_effect=raise_error,
     ) as mock_OpendataTransport:
@@ -134,7 +134,7 @@ async def test_import(
 ) -> None:
     """Test import flow."""
     with patch(
-        "homeassistant.components.lutron.config_flow.OpendataTransport.async_get_data",
+        "homeassistant.components.lutron.config_flow.async_step_import",
         autospec=True,
         return_value=True,
     ):
@@ -167,7 +167,7 @@ async def test_import_cannot_connect_error(
 ) -> None:
     """Test import flow cannot_connect error."""
     with patch(
-        "homeassistant.components.lutron.config_flow.OpendataTransport.async_get_data",
+        "homeassistant.components.lutron.config_flow.async_step_import",
         autospec=True,
         side_effect=raise_error,
     ):
