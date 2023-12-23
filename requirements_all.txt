@@ -1425,7 +1425,7 @@ openhomedevice==2.2.0
 opensensemap-api==0.2.0
 
 # homeassistant.components.enigma2
-openwebifpy==3.2.7
+openwebifpy==4.0.0
 
 # homeassistant.components.luci
 openwrt-luci-rpc==1.1.16

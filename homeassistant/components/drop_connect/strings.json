@@ -32,6 +32,10 @@
       "reserve_in_use": { "name": "Reserve capacity in use" },
       "salt": { "name": "Salt low" },
       "pump": { "name": "Pump status" }
+    },
+    "switch": {
+      "water": { "name": "Water supply" },
+      "bypass": { "name": "Treatment bypass" }
     }
   }
 }
