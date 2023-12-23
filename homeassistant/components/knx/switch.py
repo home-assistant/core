@@ -125,7 +125,6 @@ class KnxUiSwitch(_KnxSwitch):
             )
         )
         self._attr_entity_category = config["entity"][CONF_ENTITY_CATEGORY]
-        self._attr_device_class = config["entity"][CONF_DEVICE_CLASS]
         self._attr_unique_id = unique_id
         if device_info := config["entity"].get("device_info"):
             self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_info)})
