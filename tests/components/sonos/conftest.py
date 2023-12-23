@@ -109,6 +109,7 @@ class MockSoCo(MagicMock):
     """Mock the Soco Object."""
 
     audio_delay = 2
+    sub_crossover = None  # Default to None for non-Amp devices
     sub_gain = 5
 
     @property
