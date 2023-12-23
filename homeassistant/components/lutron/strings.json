@@ -2,7 +2,6 @@
   "config": {
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "missing_guid": "Unable to obtain configuration from Main Repeater",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -24,10 +23,6 @@
     }
   },
   "issues": {
-    "import_issue_missing_guid": {
-      "title": "...",
-      "description": "..."
-    },
     "import_issue_cannot_connect": {
       "title": "The Lutron YAML configuration import cannot connect to server",
       "description": "Configuring Lutron using YAML is being removed but there was an connection error importing your YAML configuration.\n\nMake sure your home assistant can reach the main repeater. In case the main repeater is down, try again later."
