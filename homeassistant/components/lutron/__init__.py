@@ -13,9 +13,11 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
@@ -57,18 +59,40 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Set up the Lutron component."""
     if DOMAIN in base_config:
-        _LOGGER.warning(
-            "Your Lutron configuration has been imported into the UI; "
-            "please remove it from configuration.yaml as support for it "
-            "will be removed in a future release"
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=base_config[DOMAIN],
         )
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data=base_config[DOMAIN],
+        if (
+            result["type"] == FlowResultType.CREATE_ENTRY
+            or result["reason"] == "already_configured"
+        ):
+            async_create_issue(
+                hass,
+                HOMEASSISTANT_DOMAIN,
+                f"deprecated_yaml_{DOMAIN}",
+                breaks_in_ha_version="2024.7.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_yaml",
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "integration_title": "Lutron",
+                },
             )
-        )
+        else:
+            async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_yaml_import_issue_{result['reason']}",
+                breaks_in_ha_version="2024.7.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=IssueSeverity.WARNING,
+                translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+            )
 
     return True
 
