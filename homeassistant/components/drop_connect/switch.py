@@ -42,7 +42,7 @@ class DROPSwitchEntityDescription(SwitchEntityDescription):
     """Describes DROP switch entity."""
 
     value_fn: Callable[[DROPDeviceDataUpdateCoordinator], int | None]
-    set_fn: Callable[[DROPDeviceDataUpdateCoordinator, int], Coroutine[Any, Any, None]]
+    set_fn: Callable[[DROPDeviceDataUpdateCoordinator, int], Awaitable[Any]]
 
 
 SWITCHES: list[DROPSwitchEntityDescription] = [
