@@ -128,6 +128,11 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         return None
 
     @property
+    def available(self) -> bool:
+        """Return the avalability of the entity."""
+        return self.data is not None
+
+    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         if (data := self.data) is not None:

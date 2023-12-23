@@ -140,6 +140,7 @@ async def test_cmm15_data_isread_correctly(
     assert len(devices) == 2
     first_climate = list(devices)[0]
     assert first_climate is not None
+    assert first_climate.available is True
     assert first_climate.temperature_unit == UnitOfTemperature.CELSIUS
     assert first_climate.current_temperature == 27
     assert first_climate.target_temperature == 23
@@ -160,6 +161,7 @@ async def test_cmm15_data_isread_correctly(
         await coordinator.async_refresh()
 
     assert first_climate is not None
+    assert first_climate.available is False
     assert first_climate.hvac_mode is None
     assert first_climate.current_temperature is None
     assert first_climate.target_temperature is None
