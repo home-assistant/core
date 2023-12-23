@@ -79,6 +79,7 @@ class SleepIQFootWarmingTempSelectEntity(
     """Representation of a SleepIQ foot warming temperature select entity."""
 
     _attr_icon = "mdi:heat-wave"
+    _attr_options = [e.name.title() for e in FootWarmingTemps]
 
     def __init__(
         self,
@@ -90,7 +91,6 @@ class SleepIQFootWarmingTempSelectEntity(
         self.foot_warmer = foot_warmer
         sleeper = sleeper_for_side(bed, foot_warmer.side)
         super().__init__(coordinator, bed, sleeper, FOOT_WARMER)
-        self._attr_options = [e.name.title() for e in FootWarmingTemps]
         self._async_update_attrs()
 
     @callback
