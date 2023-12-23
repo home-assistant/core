@@ -1420,11 +1420,9 @@ build.json @home-assistant/supervisor
 /tests/components/velbus/ @Cereal2nd @brefra
 /homeassistant/components/velux/ @Julius2342
 /tests/components/velux/ @Julius2342
-/homeassistant/components/venstar/ @garbled1
-/tests/components/venstar/ @garbled1
-/homeassistant/components/verisure/ @frenck
-/tests/components/verisure/ @frenck
-/homeassistant/components/versasense/ @flamm3blemuff1n
+/homeassistant/components/venstar/ @garbled1 @jhollowe
+/tests/components/venstar/ @garbled1 @jhollowe
+/homeassistant/components/versasense/ @imstevenxyz
 /homeassistant/components/version/ @ludeeus
 /tests/components/version/ @ludeeus
 /homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja
