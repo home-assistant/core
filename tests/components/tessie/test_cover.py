@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
@@ -17,13 +18,15 @@ from homeassistant.exceptions import HomeAssistantError
 from .common import ERROR_UNKNOWN, TEST_RESPONSE, setup_platform
 
 
-async def test_window(hass: HomeAssistant) -> None:
+async def test_window(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Tests that the window cover entity is correct."""
+
+    assert len(hass.states.async_all(COVER_DOMAIN)) == 0
 
     await setup_platform(hass)
 
     entity_id = "cover.test_vent_windows"
-    assert hass.states.get(entity_id).state == STATE_CLOSED
+    assert hass.states.get(entity_id) == snapshot
 
     # Test open windows
     with patch(
@@ -54,13 +57,13 @@ async def test_window(hass: HomeAssistant) -> None:
     assert hass.states.get(entity_id).state == STATE_CLOSED
 
 
-async def test_charge_port(hass: HomeAssistant) -> None:
+async def test_charge_port(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Tests that the charge port cover entity is correct."""
 
     await setup_platform(hass)
 
     entity_id = "cover.test_charge_port_door"
-    assert hass.states.get(entity_id).state == STATE_OPEN
+    assert hass.states.get(entity_id) == snapshot
 
     # Test close charge port
     with patch(

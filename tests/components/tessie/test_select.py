@@ -2,30 +2,30 @@
 from unittest.mock import patch
 
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.components.tessie.const import TessieSeatHeaterOptions
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, STATE_OFF
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .common import ERROR_UNKNOWN, TEST_RESPONSE, setup_platform
 
 
-async def test_select(hass: HomeAssistant) -> None:
+async def test_select(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Tests that the select entities are correct."""
 
     assert len(hass.states.async_all(SELECT_DOMAIN)) == 0
 
     await setup_platform(hass)
 
-    assert len(hass.states.async_all(SELECT_DOMAIN)) == 5
+    assert hass.states.async_all(SELECT_DOMAIN) == snapshot(name="all")
 
     entity_id = "select.test_seat_heater_left"
-    assert hass.states.get(entity_id).state == STATE_OFF
 
     # Test changing select
     with patch(
@@ -41,7 +41,7 @@ async def test_select(hass: HomeAssistant) -> None:
         mock_set.assert_called_once()
         assert mock_set.call_args[1]["seat"] == "front_left"
         assert mock_set.call_args[1]["level"] == 1
-        assert hass.states.get(entity_id).state == TessieSeatHeaterOptions.LOW
+    assert hass.states.get(entity_id).state == TessieSeatHeaterOptions.LOW
 
 
 async def test_errors(hass: HomeAssistant) -> None:

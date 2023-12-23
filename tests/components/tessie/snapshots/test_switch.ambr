@@ -1,0 +1,79 @@
+# serializer version: 1
+# name: test_switches.1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'switch',
+      'friendly_name': 'Test Charge',
+      'icon': 'mdi:ev-station',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.test_charge',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[all]
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'switch',
+        'friendly_name': 'Test Charge',
+        'icon': 'mdi:ev-station',
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.test_charge',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'switch',
+        'friendly_name': 'Test Defrost mode',
+        'icon': 'mdi:snowflake',
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.test_defrost_mode',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'switch',
+        'friendly_name': 'Test Sentry mode',
+        'icon': 'mdi:shield-car',
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.test_sentry_mode',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'switch',
+        'friendly_name': 'Test Valet mode',
+        'icon': 'mdi:car-key',
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.test_valet_mode',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'switch',
+        'friendly_name': 'Test Steering wheel heater',
+        'icon': 'mdi:steering',
+      }),
+      'context': <ANY>,
+      'entity_id': 'switch.test_steering_wheel_heater',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+  ])
+# ---

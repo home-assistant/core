@@ -1,0 +1,143 @@
+# serializer version: 1
+# name: test_climate[all]
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'current_temperature': 30.5,
+        'friendly_name': 'Test Climate',
+        'hvac_modes': list([
+          <HVACMode.HEAT_COOL: 'heat_cool'>,
+          <HVACMode.OFF: 'off'>,
+        ]),
+        'max_temp': 28.0,
+        'min_temp': 15.0,
+        'preset_mode': 'off',
+        'preset_modes': list([
+          <TessieClimateKeeper.OFF: 'off'>,
+          <TessieClimateKeeper.ON: 'on'>,
+          <TessieClimateKeeper.DOG: 'dog'>,
+          <TessieClimateKeeper.CAMP: 'camp'>,
+        ]),
+        'supported_features': <ClimateEntityFeature: 17>,
+        'temperature': 22.5,
+      }),
+      'context': <ANY>,
+      'entity_id': 'climate.test_climate',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+  ])
+# ---
+# name: test_climate[climate.test_climate:off]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 30.5,
+      'friendly_name': 'Test Climate',
+      'hvac_modes': list([
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 28.0,
+      'min_temp': 15.0,
+      'preset_mode': 'off',
+      'preset_modes': list([
+        <TessieClimateKeeper.OFF: 'off'>,
+        <TessieClimateKeeper.ON: 'on'>,
+        <TessieClimateKeeper.DOG: 'dog'>,
+        <TessieClimateKeeper.CAMP: 'camp'>,
+      ]),
+      'supported_features': <ClimateEntityFeature: 17>,
+      'temperature': 20.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_climate',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_climate[climate.test_climate:on]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 30.5,
+      'friendly_name': 'Test Climate',
+      'hvac_modes': list([
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 28.0,
+      'min_temp': 15.0,
+      'preset_mode': 'off',
+      'preset_modes': list([
+        <TessieClimateKeeper.OFF: 'off'>,
+        <TessieClimateKeeper.ON: 'on'>,
+        <TessieClimateKeeper.DOG: 'dog'>,
+        <TessieClimateKeeper.CAMP: 'camp'>,
+      ]),
+      'supported_features': <ClimateEntityFeature: 17>,
+      'temperature': 22.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_climate',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_climate[climate.test_climate:preset]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 30.5,
+      'friendly_name': 'Test Climate',
+      'hvac_modes': list([
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 28.0,
+      'min_temp': 15.0,
+      'preset_mode': <TessieClimateKeeper.ON: 'on'>,
+      'preset_modes': list([
+        <TessieClimateKeeper.OFF: 'off'>,
+        <TessieClimateKeeper.ON: 'on'>,
+        <TessieClimateKeeper.DOG: 'dog'>,
+        <TessieClimateKeeper.CAMP: 'camp'>,
+      ]),
+      'supported_features': <ClimateEntityFeature: 17>,
+      'temperature': 20.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_climate',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_climate[climate.test_climate:temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 30.5,
+      'friendly_name': 'Test Climate',
+      'hvac_modes': list([
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 28.0,
+      'min_temp': 15.0,
+      'preset_mode': 'off',
+      'preset_modes': list([
+        <TessieClimateKeeper.OFF: 'off'>,
+        <TessieClimateKeeper.ON: 'on'>,
+        <TessieClimateKeeper.DOG: 'dog'>,
+        <TessieClimateKeeper.CAMP: 'camp'>,
+      ]),
+      'supported_features': <ClimateEntityFeature: 17>,
+      'temperature': 20.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_climate',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---

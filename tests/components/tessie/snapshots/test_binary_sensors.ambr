@@ -1,0 +1,189 @@
+# serializer version: 1
+# name: test_binary_sensors[all]
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'connectivity',
+        'friendly_name': 'Test Status',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.test_status',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'heat',
+        'friendly_name': 'Test Battery heater',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.test_battery_heater',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'battery_charging',
+        'friendly_name': 'Test Charging',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.test_charging',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Test Preconditioning enabled',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.test_preconditioning_enabled',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Test Scheduled charging pending',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.test_scheduled_charging_pending',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Test Trip charging',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.test_trip_charging',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'heat',
+        'friendly_name': 'Test Auto seat climate left',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.test_auto_seat_climate_left',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'heat',
+        'friendly_name': 'Test Auto seat climate right',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.test_auto_seat_climate_right',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'heat',
+        'friendly_name': 'Test Heat',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.test_heat',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'running',
+        'friendly_name': 'Test Cabin overheat protection',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.test_cabin_overheat_protection',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'heat',
+        'friendly_name': 'Test Cabin overheat protection actively cooling',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.test_cabin_overheat_protection_actively_cooling',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'running',
+        'friendly_name': 'Test Dashcam',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.test_dashcam',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'presence',
+        'friendly_name': 'Test User present',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.test_user_present',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'problem',
+        'friendly_name': 'Test Tire pressure warning front left',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.test_tire_pressure_warning_front_left',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'problem',
+        'friendly_name': 'Test Tire pressure warning front right',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.test_tire_pressure_warning_front_right',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'problem',
+        'friendly_name': 'Test Tire pressure warning rear left',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.test_tire_pressure_warning_rear_left',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'problem',
+        'friendly_name': 'Test Tire pressure warning rear right',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.test_tire_pressure_warning_rear_right',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+  ])
+# ---

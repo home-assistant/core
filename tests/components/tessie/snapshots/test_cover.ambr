@@ -1,0 +1,29 @@
+# serializer version: 1
+# name: test_charge_port
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Test Charge port door',
+      'supported_features': <CoverEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_charge_port_door',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_window
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'window',
+      'friendly_name': 'Test Vent windows',
+      'supported_features': <CoverEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.test_vent_windows',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---

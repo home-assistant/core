@@ -1,0 +1,35 @@
+# serializer version: 1
+# name: test_device_tracker[all]
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Test',
+        'gps_accuracy': 0,
+        'heading': 185,
+        'latitude': -30.222626,
+        'longitude': -97.6236871,
+        'source_type': <SourceType.GPS: 'gps'>,
+        'speed': None,
+      }),
+      'context': <ANY>,
+      'entity_id': 'device_tracker.test',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'not_home',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Test Route',
+        'gps_accuracy': 0,
+        'latitude': 30.2226265,
+        'longitude': -97.6236871,
+        'source_type': <SourceType.GPS: 'gps'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'device_tracker.test_route',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'not_home',
+    }),
+  ])
+# ---

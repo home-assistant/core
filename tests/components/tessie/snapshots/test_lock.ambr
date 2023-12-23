@@ -1,0 +1,16 @@
+# serializer version: 1
+# name: test_locks[all]
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'Test',
+        'supported_features': <LockEntityFeature: 0>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'lock.test',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'locked',
+    }),
+  ])
+# ---

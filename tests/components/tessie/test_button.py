@@ -1,4 +1,5 @@
 """Test the Tessie button platform."""
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.tessie.button import DESCRIPTIONS
@@ -8,10 +9,14 @@ from homeassistant.core import HomeAssistant
 from .common import patch_description, setup_platform
 
 
-async def test_buttons(hass: HomeAssistant) -> None:
+async def test_buttons(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Tests that the button entities are correct."""
 
+    assert len(hass.states.async_all(BUTTON_DOMAIN)) == 0
+
     await setup_platform(hass)
+
+    assert hass.states.async_all(BUTTON_DOMAIN) == snapshot(name="all")
 
     # Test wake button
     with patch_description("wake", "func", DESCRIPTIONS) as mock_wake:
