@@ -12,7 +12,6 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -391,14 +390,6 @@ class DemoBrowsePlayer(AbstractDemoPlayer):
 
     _attr_supported_features = BROWSE_PLAYER_SUPPORT
 
-    async def async_browse_media(
-        self,
-        media_content_type: MediaType | str | None = None,
-        media_content_id: str | None = None,
-    ) -> BrowseMedia:
-        """Browse media is not implemented for the demo."""
-        raise NotImplementedError()
-
 
 class DemoGroupPlayer(AbstractDemoPlayer):
     """A Demo media player that supports grouping."""
@@ -408,7 +399,3 @@ class DemoGroupPlayer(AbstractDemoPlayer):
         | MediaPlayerEntityFeature.GROUPING
         | MediaPlayerEntityFeature.TURN_OFF
     )
-
-    async def async_group_players(self, group_members: list[str]) -> None:
-        """Group players."""
-        raise NotImplementedError()
