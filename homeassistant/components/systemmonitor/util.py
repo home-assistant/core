@@ -23,7 +23,7 @@ def get_all_disk_mounts() -> list[str]:
     return disks
 
 
-def get_all_network_intefaces() -> list[str]:
+def get_all_network_interfaces() -> list[str]:
     """Return all network interfaces on system."""
     interfaces: list[str] = []
     for interface, _ in psutil.net_if_addrs().items():

@@ -50,7 +50,7 @@ from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
-from .util import get_all_disk_mounts, get_all_network_intefaces
+from .util import get_all_disk_mounts, get_all_network_interfaces
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -382,7 +382,7 @@ async def async_setup_entry(
             "ipv4_address",
             "ipv6_address",
         ]:
-            arguments = get_all_network_intefaces()
+            arguments = get_all_network_interfaces()
             for argument in arguments:
                 sensor_registry[(_type, argument)] = SensorData(
                     argument, None, None, None, None
