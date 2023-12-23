@@ -92,6 +92,10 @@ async def _async_import(hass: HomeAssistant, base_config: ConfigType) -> None:
         issue_domain=DOMAIN,
         severity=IssueSeverity.WARNING,
         translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Lutron",
+        },
     )
 
 
@@ -171,10 +175,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Clean up resources and entities associated with the integration."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class LutronDevice(Entity):

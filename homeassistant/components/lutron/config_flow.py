@@ -1,7 +1,6 @@
 """Config flow to configure the Lutron integration."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 from urllib.error import HTTPError
@@ -75,7 +74,7 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_config: Mapping[str, Any]) -> FlowResult:
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Attempt to import the existing configuration."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
