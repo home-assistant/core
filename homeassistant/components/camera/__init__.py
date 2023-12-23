@@ -51,6 +51,11 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstantEnum,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_time_interval
@@ -60,6 +65,8 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from .const import (  # noqa: F401
+    _DEPRECATED_STREAM_TYPE_HLS,
+    _DEPRECATED_STREAM_TYPE_WEB_RTC,
     CAMERA_IMAGE_TIMEOUT,
     CAMERA_STREAM_SOURCE_TIMEOUT,
     CONF_DURATION,
@@ -70,8 +77,6 @@ from .const import (  # noqa: F401
     PREF_ORIENTATION,
     PREF_PRELOAD_STREAM,
     SERVICE_RECORD,
-    STREAM_TYPE_HLS,
-    STREAM_TYPE_WEB_RTC,
     StreamType,
 )
 from .img_util import scale_jpeg_camera_image
@@ -105,8 +110,16 @@ class CameraEntityFeature(IntFlag):
 
 # These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
 # Pleease use the CameraEntityFeature enum instead.
-SUPPORT_ON_OFF: Final = 1
-SUPPORT_STREAM: Final = 2
+_DEPRECATED_SUPPORT_ON_OFF: Final = DeprecatedConstantEnum(
+    CameraEntityFeature.ON_OFF, "2025.1"
+)
+_DEPRECATED_SUPPORT_STREAM: Final = DeprecatedConstantEnum(
+    CameraEntityFeature.STREAM, "2025.1"
+)
+
+# Both can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 RTSP_PREFIXES = {"rtsp://", "rtsps://", "rtmp://"}
 
@@ -215,7 +228,7 @@ async def _async_get_stream_image(
     height: int | None = None,
     wait_for_next_keyframe: bool = False,
 ) -> bytes | None:
-    if not camera.stream and camera.supported_features & SUPPORT_STREAM:
+    if not camera.stream and camera.supported_features & CameraEntityFeature.STREAM:
         camera.stream = await camera.async_create_stream()
     if camera.stream:
         return await camera.stream.async_get_image(
