@@ -340,11 +340,11 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the system monitor sensors."""
-    processes = []
-    for resource in config[CONF_RESOURCES]:
-        if resource[CONF_TYPE] == "process":
-            processes.append(resource[CONF_ARG])
-
+    processes = [
+        resource[CONF_ARG]
+        for resource in config[CONF_RESOURCES]
+        if resource[CONF_TYPE] == "process"
+    ]
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data={"processes": processes}
