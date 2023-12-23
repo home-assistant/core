@@ -33,7 +33,7 @@ class TessieButtonEntityDescription(ButtonEntityDescription):
 
 
 DESCRIPTIONS: tuple[TessieButtonEntityDescription, ...] = (
-    TessieButtonEntityDescription(key="wake", func=wake, icon="mdi:sleep-off"),
+    TessieButtonEntityDescription(key="wake", func=lambda: wake, icon="mdi:sleep-off"),
     TessieButtonEntityDescription(
         key="flash_lights", func=lambda: flash_lights, icon="mdi:flashlight"
     ),
