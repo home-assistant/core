@@ -73,10 +73,8 @@ class SplunkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input:
             if not (errors := await self.async_check(user_input)):
-                url = f"{['http','https'][user_input[CONF_SSL]]}://{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
                 return self.async_create_entry(
                     title=user_input[CONF_HOST],
-                    description=f"Sending events to {url}",
                     data=user_input,
                 )
 
