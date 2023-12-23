@@ -116,7 +116,6 @@ async def test_sensor_platform(
 
     mock_get.reset_mock()
     entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
-    await hass.async_block_till_done()
 
     async_fire_time_changed(
         hass,
