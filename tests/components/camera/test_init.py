@@ -2,6 +2,7 @@
 import asyncio
 from http import HTTPStatus
 import io
+from types import ModuleType
 from unittest.mock import AsyncMock, Mock, PropertyMock, mock_open, patch
 
 import pytest
@@ -26,6 +27,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import EMPTY_8_6_JPEG, WEBRTC_ANSWER, mock_turbo_jpeg
 
+from tests.common import import_and_test_deprecated_constant_enum
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 STREAM_SOURCE = "rtsp://127.0.0.1/stream"
@@ -958,3 +960,36 @@ async def test_use_stream_for_stills(
         mock_stream.async_get_image.assert_called_once()
         assert resp.status == HTTPStatus.OK
         assert await resp.read() == b"stream_keyframe_image"
+
+
+@pytest.mark.parametrize(
+    "enum",
+    list(camera.const.StreamType),
+)
+@pytest.mark.parametrize(
+    "module",
+    [camera, camera.const],
+)
+def test_deprecated_stream_type_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: camera.const.StreamType,
+    module: ModuleType,
+) -> None:
+    """Test deprecated stream type constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, module, enum, "STREAM_TYPE_", "2025.1"
+    )
+
+
+@pytest.mark.parametrize(
+    "entity_feature",
+    list(camera.CameraEntityFeature),
+)
+def test_deprecated_support_constants(
+    caplog: pytest.LogCaptureFixture,
+    entity_feature: camera.CameraEntityFeature,
+) -> None:
+    """Test deprecated support constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, camera, entity_feature, "SUPPORT_", "2025.1"
+    )

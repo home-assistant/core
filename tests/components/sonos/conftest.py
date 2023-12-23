@@ -108,8 +108,26 @@ def config_entry_fixture():
 class MockSoCo(MagicMock):
     """Mock the Soco Object."""
 
+    uid = "RINCON_test"
+    play_mode = "NORMAL"
+    mute = False
+    night_mode = True
+    dialog_level = True
+    loudness = True
+    volume = 19
     audio_delay = 2
+    balance = (61, 100)
+    bass = 1
+    treble = -1
+    mic_enabled = False
+    sub_crossover = None  # Default to None for non-Amp devices
+    sub_enabled = False
     sub_gain = 5
+    surround_enabled = True
+    surround_mode = True
+    surround_level = 3
+    music_surround_level = 4
+    soundbar_audio_input_format = "Dolby 5.1"
 
     @property
     def visible_zones(self):
@@ -143,10 +161,7 @@ class SoCoMockFactory:
         mock_soco.mock_add_spec(SoCo)
         mock_soco.ip_address = ip_address
         if ip_address != "192.168.42.2":
-            mock_soco.uid = f"RINCON_test_{ip_address}"
-        else:
-            mock_soco.uid = "RINCON_test"
-        mock_soco.play_mode = "NORMAL"
+            mock_soco.uid += f"_{ip_address}"
         mock_soco.music_library = self.music_library
         mock_soco.get_current_track_info.return_value = self.current_track_info
         mock_soco.music_source_from_uri = SoCo.music_source_from_uri
@@ -161,23 +176,6 @@ class SoCoMockFactory:
         mock_soco.contentDirectory = SonosMockService("ContentDirectory", ip_address)
         mock_soco.deviceProperties = SonosMockService("DeviceProperties", ip_address)
         mock_soco.alarmClock = self.alarm_clock
-        mock_soco.mute = False
-        mock_soco.night_mode = True
-        mock_soco.dialog_level = True
-        mock_soco.loudness = True
-        mock_soco.volume = 19
-        mock_soco.audio_delay = 2
-        mock_soco.balance = (61, 100)
-        mock_soco.bass = 1
-        mock_soco.treble = -1
-        mock_soco.mic_enabled = False
-        mock_soco.sub_enabled = False
-        mock_soco.sub_gain = 5
-        mock_soco.surround_enabled = True
-        mock_soco.surround_mode = True
-        mock_soco.surround_level = 3
-        mock_soco.music_surround_level = 4
-        mock_soco.soundbar_audio_input_format = "Dolby 5.1"
         mock_soco.get_battery_info.return_value = self.battery_info
         mock_soco.all_zones = {mock_soco}
         mock_soco.group.coordinator = mock_soco
