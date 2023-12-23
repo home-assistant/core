@@ -80,7 +80,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, f"{self._ac_host}.{self._ac_index}"),
             },
-            name=str(self._ac_index),
+            name=f"Midea {self._ac_index}",
             manufacturer="Midea",
             model="CCM15",
         )
