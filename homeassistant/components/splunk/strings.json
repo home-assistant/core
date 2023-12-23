@@ -9,6 +9,7 @@
     },
     "step": {
       "user": {
+        "title": "Connect to HTTP Event Collector",
         "data": {
           "token": "HTTP Event Collector Token",
           "host": "[%key:common::config_flow::data::host%]",
@@ -17,8 +18,7 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "name": "Host field"
         },
-        "description": "Add Splunk HTTP Event Collector.",
-        "title": "[%key:common::action::connect%]"
+        "description": "Add Splunk HTTP Event Collector."
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
