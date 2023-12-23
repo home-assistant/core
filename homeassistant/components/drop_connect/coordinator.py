@@ -5,11 +5,12 @@ import logging
 
 from dropmqttapi.mqttapi import DropAPI
 
+from homeassistant.components import mqtt
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import CONF_COMMAND_TOPIC, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,3 +24,21 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize the device."""
         super().__init__(hass, _LOGGER, name=f"{DOMAIN}-{unique_id}")
         self.drop_api = DropAPI()
+
+    async def set_water(self, value: int):
+        """Change water supply state."""
+        payload = self.drop_api.set_water_message(value)
+        await mqtt.async_publish(
+            self.hass,
+            self.config_entry.data[CONF_COMMAND_TOPIC],
+            payload,
+        )
+
+    async def set_bypass(self, value: int):
+        """Change water bypass state."""
+        payload = self.drop_api.set_bypass_message(value)
+        await mqtt.async_publish(
+            self.hass,
+            self.config_entry.data[CONF_COMMAND_TOPIC],
+            payload,
+        )
