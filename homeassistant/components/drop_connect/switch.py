@@ -30,6 +30,8 @@ ICON_VALVE_CLOSED = "mdi:valve-closed"
 ICON_VALVE_UNKNOWN = "mdi:valve"
 ICON_VALVE = {False: ICON_VALVE_CLOSED, True: ICON_VALVE_OPEN, None: ICON_VALVE_UNKNOWN}
 
+SWITCH_VALUE = {0: False, 1: True, None: None}
+
 # Switch type constants
 WATER_SWITCH = "water"
 BYPASS_SWITCH = "bypass"
@@ -106,12 +108,7 @@ class DROPSwitch(DROPEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
-        switch_value: int | None = self.entity_description.value_fn(self.coordinator)
-        if switch_value == 1:
-            return True
-        if switch_value == 0:
-            return False
-        return None
+        return SWITCH_VALUE.get(self.entity_description.value_fn(self.coordinator))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
