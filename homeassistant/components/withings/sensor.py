@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Generic, TypeVar
 
 from aiowithings import (
     Activity,
@@ -39,6 +40,7 @@ from homeassistant.util import dt as dt_util
 from . import WithingsData
 from .const import (
     DOMAIN,
+    LOGGER,
     SCORE_POINTS,
     UOM_BEATS_PER_MINUTE,
     UOM_BREATHS_PER_MINUTE,
@@ -56,18 +58,11 @@ from .coordinator import (
 from .entity import WithingsEntity
 
 
-@dataclass
-class WithingsMeasurementSensorEntityDescriptionMixin:
-    """Mixin for describing withings data."""
+@dataclass(frozen=True, kw_only=True)
+class WithingsMeasurementSensorEntityDescription(SensorEntityDescription):
+    """Immutable class for describing withings data."""
 
     measurement_type: MeasurementType
-
-
-@dataclass
-class WithingsMeasurementSensorEntityDescription(
-    SensorEntityDescription, WithingsMeasurementSensorEntityDescriptionMixin
-):
-    """Immutable class for describing withings data."""
 
 
 MEASUREMENT_SENSORS: dict[
@@ -241,18 +236,11 @@ MEASUREMENT_SENSORS: dict[
 }
 
 
-@dataclass
-class WithingsSleepSensorEntityDescriptionMixin:
-    """Mixin for describing withings data."""
+@dataclass(frozen=True, kw_only=True)
+class WithingsSleepSensorEntityDescription(SensorEntityDescription):
+    """Immutable class for describing withings data."""
 
     value_fn: Callable[[SleepSummary], StateType]
-
-
-@dataclass
-class WithingsSleepSensorEntityDescription(
-    SensorEntityDescription, WithingsSleepSensorEntityDescriptionMixin
-):
-    """Immutable class for describing withings data."""
 
 
 SLEEP_SENSORS = [
@@ -408,18 +396,11 @@ SLEEP_SENSORS = [
 ]
 
 
-@dataclass
-class WithingsActivitySensorEntityDescriptionMixin:
-    """Mixin for describing withings data."""
+@dataclass(frozen=True, kw_only=True)
+class WithingsActivitySensorEntityDescription(SensorEntityDescription):
+    """Immutable class for describing withings data."""
 
     value_fn: Callable[[Activity], StateType]
-
-
-@dataclass
-class WithingsActivitySensorEntityDescription(
-    SensorEntityDescription, WithingsActivitySensorEntityDescriptionMixin
-):
-    """Immutable class for describing withings data."""
 
 
 ACTIVITY_SENSORS = [
@@ -443,10 +424,11 @@ ACTIVITY_SENSORS = [
     ),
     WithingsActivitySensorEntityDescription(
         key="activity_floors_climbed_today",
-        value_fn=lambda activity: activity.floors_climbed,
-        translation_key="activity_floors_climbed_today",
+        value_fn=lambda activity: activity.elevation,
+        translation_key="activity_elevation_today",
         icon="mdi:stairs-up",
-        native_unit_of_measurement="floors",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL,
     ),
     WithingsActivitySensorEntityDescription(
@@ -512,18 +494,11 @@ SLEEP_GOAL = "sleep"
 WEIGHT_GOAL = "weight"
 
 
-@dataclass
-class WithingsGoalsSensorEntityDescriptionMixin:
-    """Mixin for describing withings data."""
+@dataclass(frozen=True, kw_only=True)
+class WithingsGoalsSensorEntityDescription(SensorEntityDescription):
+    """Immutable class for describing withings data."""
 
     value_fn: Callable[[Goals], StateType]
-
-
-@dataclass
-class WithingsGoalsSensorEntityDescription(
-    SensorEntityDescription, WithingsGoalsSensorEntityDescriptionMixin
-):
-    """Immutable class for describing withings data."""
 
 
 GOALS_SENSORS: dict[str, WithingsGoalsSensorEntityDescription] = {
@@ -556,18 +531,11 @@ GOALS_SENSORS: dict[str, WithingsGoalsSensorEntityDescription] = {
 }
 
 
-@dataclass
-class WithingsWorkoutSensorEntityDescriptionMixin:
-    """Mixin for describing withings data."""
+@dataclass(frozen=True, kw_only=True)
+class WithingsWorkoutSensorEntityDescription(SensorEntityDescription):
+    """Immutable class for describing withings data."""
 
     value_fn: Callable[[Workout], StateType]
-
-
-@dataclass
-class WithingsWorkoutSensorEntityDescription(
-    SensorEntityDescription, WithingsWorkoutSensorEntityDescriptionMixin
-):
-    """Immutable class for describing withings data."""
 
 
 _WORKOUT_CATEGORY = [
@@ -601,10 +569,11 @@ WORKOUT_SENSORS = [
     ),
     WithingsWorkoutSensorEntityDescription(
         key="workout_floors_climbed",
-        value_fn=lambda workout: workout.floors_climbed,
-        translation_key="workout_floors_climbed",
+        value_fn=lambda workout: workout.elevation,
+        translation_key="workout_elevation",
         icon="mdi:stairs-up",
-        native_unit_of_measurement="floors",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
     ),
     WithingsWorkoutSensorEntityDescription(
         key="workout_intensity",
@@ -705,26 +674,28 @@ async def async_setup_entry(
 
     activity_coordinator = withings_data.activity_coordinator
 
-    activity_callback: Callable[[], None] | None = None
-
     activity_entities_setup_before = ent_reg.async_get_entity_id(
         Platform.SENSOR, DOMAIN, f"withings_{entry.unique_id}_activity_steps_today"
     )
 
-    def _async_add_activity_entities() -> None:
-        """Add activity entities."""
-        if activity_coordinator.data is not None or activity_entities_setup_before:
-            async_add_entities(
-                WithingsActivitySensor(activity_coordinator, attribute)
-                for attribute in ACTIVITY_SENSORS
-            )
-            if activity_callback:
-                activity_callback()
-
     if activity_coordinator.data is not None or activity_entities_setup_before:
-        _async_add_activity_entities()
+        entities.extend(
+            WithingsActivitySensor(activity_coordinator, attribute)
+            for attribute in ACTIVITY_SENSORS
+        )
     else:
-        activity_callback = activity_coordinator.async_add_listener(
+        remove_activity_listener: Callable[[], None]
+
+        def _async_add_activity_entities() -> None:
+            """Add activity entities."""
+            if activity_coordinator.data is not None:
+                async_add_entities(
+                    WithingsActivitySensor(activity_coordinator, attribute)
+                    for attribute in ACTIVITY_SENSORS
+                )
+                remove_activity_listener()
+
+        remove_activity_listener = activity_coordinator.async_add_listener(
             _async_add_activity_entities
         )
 
@@ -784,28 +755,40 @@ async def async_setup_entry(
             _async_add_workout_entities
         )
 
+    if not entities:
+        LOGGER.warning(
+            "No data found for Withings entry %s, sensors will be added when new data is available"
+        )
+
     async_add_entities(entities)
 
 
-class WithingsSensor(WithingsEntity, SensorEntity):
+_T = TypeVar("_T", bound=WithingsDataUpdateCoordinator)
+_ED = TypeVar("_ED", bound=SensorEntityDescription)
+
+
+class WithingsSensor(WithingsEntity[_T], SensorEntity, Generic[_T, _ED]):
     """Implementation of a Withings sensor."""
+
+    entity_description: _ED
 
     def __init__(
         self,
-        coordinator: WithingsDataUpdateCoordinator,
-        entity_description: SensorEntityDescription,
+        coordinator: _T,
+        entity_description: _ED,
     ) -> None:
         """Initialize sensor."""
         super().__init__(coordinator, entity_description.key)
         self.entity_description = entity_description
 
 
-class WithingsMeasurementSensor(WithingsSensor):
+class WithingsMeasurementSensor(
+    WithingsSensor[
+        WithingsMeasurementDataUpdateCoordinator,
+        WithingsMeasurementSensorEntityDescription,
+    ]
+):
     """Implementation of a Withings measurement sensor."""
-
-    coordinator: WithingsMeasurementDataUpdateCoordinator
-
-    entity_description: WithingsMeasurementSensorEntityDescription
 
     @property
     def native_value(self) -> float:
@@ -821,12 +804,13 @@ class WithingsMeasurementSensor(WithingsSensor):
         )
 
 
-class WithingsSleepSensor(WithingsSensor):
+class WithingsSleepSensor(
+    WithingsSensor[
+        WithingsSleepDataUpdateCoordinator,
+        WithingsSleepSensorEntityDescription,
+    ]
+):
     """Implementation of a Withings sleep sensor."""
-
-    coordinator: WithingsSleepDataUpdateCoordinator
-
-    entity_description: WithingsSleepSensorEntityDescription
 
     @property
     def native_value(self) -> StateType:
@@ -836,12 +820,13 @@ class WithingsSleepSensor(WithingsSensor):
         return self.entity_description.value_fn(self.coordinator.data)
 
 
-class WithingsGoalsSensor(WithingsSensor):
+class WithingsGoalsSensor(
+    WithingsSensor[
+        WithingsGoalsDataUpdateCoordinator,
+        WithingsGoalsSensorEntityDescription,
+    ]
+):
     """Implementation of a Withings goals sensor."""
-
-    coordinator: WithingsGoalsDataUpdateCoordinator
-
-    entity_description: WithingsGoalsSensorEntityDescription
 
     @property
     def native_value(self) -> StateType:
@@ -850,12 +835,13 @@ class WithingsGoalsSensor(WithingsSensor):
         return self.entity_description.value_fn(self.coordinator.data)
 
 
-class WithingsActivitySensor(WithingsSensor):
+class WithingsActivitySensor(
+    WithingsSensor[
+        WithingsActivityDataUpdateCoordinator,
+        WithingsActivitySensorEntityDescription,
+    ]
+):
     """Implementation of a Withings activity sensor."""
-
-    coordinator: WithingsActivityDataUpdateCoordinator
-
-    entity_description: WithingsActivitySensorEntityDescription
 
     @property
     def native_value(self) -> StateType:
@@ -870,12 +856,13 @@ class WithingsActivitySensor(WithingsSensor):
         return dt_util.start_of_local_day()
 
 
-class WithingsWorkoutSensor(WithingsSensor):
+class WithingsWorkoutSensor(
+    WithingsSensor[
+        WithingsWorkoutDataUpdateCoordinator,
+        WithingsWorkoutSensorEntityDescription,
+    ]
+):
     """Implementation of a Withings workout sensor."""
-
-    coordinator: WithingsWorkoutDataUpdateCoordinator
-
-    entity_description: WithingsWorkoutSensorEntityDescription
 
     @property
     def native_value(self) -> StateType:

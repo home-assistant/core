@@ -10,6 +10,11 @@ from homeassistant.components.cover import (
     SERVICE_OPEN_COVER,
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.components.lock import (
+    DOMAIN as LOCK_DOMAIN,
+    SERVICE_LOCK,
+    SERVICE_UNLOCK,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TOGGLE,
@@ -74,13 +79,37 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
         if state.domain == COVER_DOMAIN:
             # on = open
             # off = close
+            if self.service == SERVICE_TURN_ON:
+                service_name = SERVICE_OPEN_COVER
+            else:
+                service_name = SERVICE_CLOSE_COVER
+
             await self._run_then_background(
                 hass.async_create_task(
                     hass.services.async_call(
                         COVER_DOMAIN,
-                        SERVICE_OPEN_COVER
-                        if self.service == SERVICE_TURN_ON
-                        else SERVICE_CLOSE_COVER,
+                        service_name,
+                        {ATTR_ENTITY_ID: state.entity_id},
+                        context=intent_obj.context,
+                        blocking=True,
+                    )
+                )
+            )
+            return
+
+        if state.domain == LOCK_DOMAIN:
+            # on = lock
+            # off = unlock
+            if self.service == SERVICE_TURN_ON:
+                service_name = SERVICE_LOCK
+            else:
+                service_name = SERVICE_UNLOCK
+
+            await self._run_then_background(
+                hass.async_create_task(
+                    hass.services.async_call(
+                        LOCK_DOMAIN,
+                        service_name,
                         {ATTR_ENTITY_ID: state.entity_id},
                         context=intent_obj.context,
                         blocking=True,

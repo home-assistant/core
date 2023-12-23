@@ -59,6 +59,7 @@ class BalboaClimateEntity(BalboaEntity, ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
     _attr_translation_key = DOMAIN
+    _attr_name = None
 
     def __init__(self, client: SpaClient) -> None:
         """Initialize the climate entity."""

@@ -96,6 +96,8 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         self.api: HueBridgeV2 = bridge.api
         self._attr_supported_features |= LightEntityFeature.FLASH
         self._attr_supported_features |= LightEntityFeature.TRANSITION
+        self._restore_brightness: float | None = None
+        self._brightness_pct: float = 0
         # we create a virtual service/device for Hue zones/rooms
         # so we have a parent for grouped lights and scenes
         self._attr_device_info = DeviceInfo(
@@ -153,6 +155,18 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
         flash = kwargs.get(ATTR_FLASH)
 
+        if self._restore_brightness and brightness is None:
+            # The Hue bridge sets the brightness to 1% when turning on a bulb
+            # when a transition was used to turn off the bulb.
+            # This issue has been reported on the Hue forum several times:
+            # https://developers.meethue.com/forum/t/brightness-turns-down-to-1-automatically-shortly-after-sending-off-signal-hue-bug/5692
+            # https://developers.meethue.com/forum/t/lights-turn-on-with-lowest-brightness-via-siri-if-turned-off-via-api/6700
+            # https://developers.meethue.com/forum/t/using-transitiontime-with-on-false-resets-bri-to-1/4585
+            # https://developers.meethue.com/forum/t/bri-value-changing-in-switching-lights-on-off/6323
+            # https://developers.meethue.com/forum/t/fade-in-fade-out/6673
+            brightness = self._restore_brightness
+            self._restore_brightness = None
+
         if flash is not None:
             await self.async_set_flash(flash)
             return
@@ -170,6 +184,8 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
+        if transition is not None:
+            self._restore_brightness = self._brightness_pct
         flash = kwargs.get(ATTR_FLASH)
 
         if flash is not None:
@@ -244,6 +260,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             if len(supported_color_modes) == 0:
                 # only add color mode brightness if no color variants
                 supported_color_modes.add(ColorMode.BRIGHTNESS)
+            self._brightness_pct = total_brightness / lights_with_dimming_support
             self._attr_brightness = round(
                 ((total_brightness / lights_with_dimming_support) / 100) * 255
             )

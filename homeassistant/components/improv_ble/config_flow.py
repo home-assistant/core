@@ -20,13 +20,10 @@ from improv_ble_client import (
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.bluetooth import (
-    BluetoothServiceInfoBleak,
-    async_discovered_service_info,
-    async_last_service_info,
-)
+from homeassistant.components import bluetooth
 from homeassistant.const import CONF_ADDRESS
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
 from .const import DOMAIN
 
@@ -40,14 +37,6 @@ STEP_PROVISION_SCHEMA = vol.Schema(
         vol.Optional("password"): str,
     }
 )
-
-
-class AbortFlow(Exception):
-    """Raised when a flow should be aborted."""
-
-    def __init__(self, reason: str) -> None:
-        """Initialize."""
-        self.reason = reason
 
 
 @dataclass
@@ -69,15 +58,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _provision_result: FlowResult | None = None
     _provision_task: asyncio.Task | None = None
     _reauth_entry: config_entries.ConfigEntry | None = None
+    _remove_bluetooth_callback: Callable[[], None] | None = None
     _unsub: Callable[[], None] | None = None
 
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._device: ImprovBLEClient | None = None
         # Populated by user step
-        self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
+        self._discovered_devices: dict[str, bluetooth.BluetoothServiceInfoBleak] = {}
         # Populated by bluetooth, reauth_confirm and user steps
-        self._discovery_info: BluetoothServiceInfoBleak | None = None
+        self._discovery_info: bluetooth.BluetoothServiceInfoBleak | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -95,7 +85,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_start_improv()
 
         current_addresses = self._async_current_ids()
-        for discovery in async_discovered_service_info(self.hass):
+        for discovery in bluetooth.async_discovered_service_info(self.hass):
             if (
                 discovery.address in current_addresses
                 or discovery.address in self._discovered_devices
@@ -125,22 +115,66 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_bluetooth(
-        self, discovery_info: BluetoothServiceInfoBleak
-    ) -> FlowResult:
-        """Handle the Bluetooth discovery step."""
-        await self.async_set_unique_id(discovery_info.address)
-        self._abort_if_unique_id_configured()
-        service_data = discovery_info.service_data
+    def _abort_if_provisioned(self) -> None:
+        """Check improv state and abort flow if needed."""
+        # mypy is not aware that we can't get here without having these set already
+        assert self._discovery_info is not None
+
+        service_data = self._discovery_info.service_data
         improv_service_data = ImprovServiceData.from_bytes(
             service_data[SERVICE_DATA_UUID]
         )
         if improv_service_data.state in (State.PROVISIONING, State.PROVISIONED):
             _LOGGER.debug(
-                "Device is already provisioned: %s", improv_service_data.state
+                "Aborting improv flow, device is already provisioned: %s",
+                improv_service_data.state,
             )
-            return self.async_abort(reason="already_provisioned")
+            raise AbortFlow("already_provisioned")
+
+    @callback
+    def _async_update_ble(
+        self,
+        service_info: bluetooth.BluetoothServiceInfoBleak,
+        change: bluetooth.BluetoothChange,
+    ) -> None:
+        """Update from a ble callback."""
+        _LOGGER.debug(
+            "Got updated BLE data: %s",
+            service_info.service_data[SERVICE_DATA_UUID].hex(),
+        )
+
+        self._discovery_info = service_info
+        try:
+            self._abort_if_provisioned()
+        except AbortFlow:
+            self.hass.config_entries.flow.async_abort(self.flow_id)
+
+    def _unregister_bluetooth_callback(self) -> None:
+        """Unregister bluetooth callbacks."""
+        if not self._remove_bluetooth_callback:
+            return
+        self._remove_bluetooth_callback()
+        self._remove_bluetooth_callback = None
+
+    async def async_step_bluetooth(
+        self, discovery_info: bluetooth.BluetoothServiceInfoBleak
+    ) -> FlowResult:
+        """Handle the Bluetooth discovery step."""
         self._discovery_info = discovery_info
+
+        await self.async_set_unique_id(discovery_info.address)
+        self._abort_if_unique_id_configured()
+        self._abort_if_provisioned()
+
+        self._remove_bluetooth_callback = bluetooth.async_register_callback(
+            self.hass,
+            self._async_update_ble,
+            bluetooth.BluetoothCallbackMatcher(
+                {bluetooth.match.ADDRESS: discovery_info.address}
+            ),
+            bluetooth.BluetoothScanningMode.PASSIVE,
+        )
+
         name = self._discovery_info.name or self._discovery_info.address
         self.context["title_placeholders"] = {"name": name}
         return await self.async_step_bluetooth_confirm()
@@ -159,6 +193,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders={"name": name},
             )
 
+        self._unregister_bluetooth_callback()
         return await self.async_step_start_improv()
 
     async def async_step_start_improv(
@@ -171,23 +206,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """
         # mypy is not aware that we can't get here without having these set already
         assert self._discovery_info is not None
-        discovery_info = self._discovery_info = async_last_service_info(
-            self.hass, self._discovery_info.address
-        )
-        if not discovery_info:
-            return self.async_abort(reason="cannot_connect")
-        service_data = discovery_info.service_data
-        improv_service_data = ImprovServiceData.from_bytes(
-            service_data[SERVICE_DATA_UUID]
-        )
-        if improv_service_data.state in (State.PROVISIONING, State.PROVISIONED):
-            _LOGGER.debug(
-                "Device is already provisioned: %s", improv_service_data.state
-            )
-            return self.async_abort(reason="already_provisioned")
 
         if not self._device:
-            self._device = ImprovBLEClient(discovery_info.device)
+            self._device = ImprovBLEClient(self._discovery_info.device)
         device = self._device
 
         if self._can_identify is None:
@@ -384,6 +405,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise AbortFlow("characteristic_missing") from err
         except improv_ble_errors.CommandFailed:
             raise
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:
             _LOGGER.exception("Unexpected exception")
             raise AbortFlow("unknown") from err
+
+    @callback
+    def async_remove(self) -> None:
+        """Notification that the flow has been removed."""
+        self._unregister_bluetooth_callback()

@@ -1,5 +1,6 @@
 """Test Matter sensors."""
-from unittest.mock import MagicMock
+from datetime import UTC, datetime, timedelta
+from unittest.mock import MagicMock, patch
 
 from matter_server.client.models.node import MatterNode
 import pytest
@@ -13,6 +14,8 @@ from .common import (
     setup_integration_with_node_fixture,
     trigger_subscription_callback,
 )
+
+from tests.common import async_fire_time_changed
 
 
 @pytest.fixture(name="flow_sensor_node")
@@ -60,6 +63,16 @@ async def temperature_sensor_node_fixture(
     """Fixture for a temperature sensor node."""
     return await setup_integration_with_node_fixture(
         hass, "temperature-sensor", matter_client
+    )
+
+
+@pytest.fixture(name="eve_energy_plug_node")
+async def eve_energy_plug_node_fixture(
+    hass: HomeAssistant, matter_client: MagicMock
+) -> MatterNode:
+    """Fixture for a Eve Energy Plug node."""
+    return await setup_integration_with_node_fixture(
+        hass, "eve-energy-plug", matter_client
     )
 
 
@@ -187,6 +200,7 @@ async def test_temperature_sensor(
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_battery_sensor(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     matter_client: MagicMock,
     eve_contact_sensor_node: MatterNode,
 ) -> None:
@@ -203,8 +217,74 @@ async def test_battery_sensor(
     assert state
     assert state.state == "50"
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get(entity_id)
 
     assert entry
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
+
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
+async def test_eve_energy_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    eve_energy_plug_node: MatterNode,
+) -> None:
+    """Test Energy sensors created from Eve Energy custom cluster."""
+    # power sensor
+    entity_id = "sensor.eve_energy_plug_power"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0.0"
+    assert state.attributes["unit_of_measurement"] == "W"
+    assert state.attributes["device_class"] == "power"
+    assert state.attributes["friendly_name"] == "Eve Energy Plug Power"
+
+    # voltage sensor
+    entity_id = "sensor.eve_energy_plug_voltage"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "238.800003051758"
+    assert state.attributes["unit_of_measurement"] == "V"
+    assert state.attributes["device_class"] == "voltage"
+    assert state.attributes["friendly_name"] == "Eve Energy Plug Voltage"
+
+    # energy sensor
+    entity_id = "sensor.eve_energy_plug_energy"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0.220000028610229"
+    assert state.attributes["unit_of_measurement"] == "kWh"
+    assert state.attributes["device_class"] == "energy"
+    assert state.attributes["friendly_name"] == "Eve Energy Plug Energy"
+    assert state.attributes["state_class"] == "total_increasing"
+
+    # current sensor
+    entity_id = "sensor.eve_energy_plug_current"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "0.0"
+    assert state.attributes["unit_of_measurement"] == "A"
+    assert state.attributes["device_class"] == "current"
+    assert state.attributes["friendly_name"] == "Eve Energy Plug Current"
+
+    # test if the sensor gets polled on interval
+    eve_energy_plug_node.update_attribute("1/319486977/319422472", 237.0)
+    async_fire_time_changed(hass, datetime.now(UTC) + timedelta(seconds=31))
+    await hass.async_block_till_done()
+    entity_id = "sensor.eve_energy_plug_voltage"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "237.0"
+
+    # test extra poll triggered when secondary value (switch state) changes
+    set_node_attribute(eve_energy_plug_node, 1, 6, 0, True)
+    eve_energy_plug_node.update_attribute("1/319486977/319422474", 5.0)
+    with patch("homeassistant.components.matter.entity.EXTRA_POLL_DELAY", 0.0):
+        await trigger_subscription_callback(hass, matter_client)
+        await hass.async_block_till_done()
+        entity_id = "sensor.eve_energy_plug_power"
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == "5.0"

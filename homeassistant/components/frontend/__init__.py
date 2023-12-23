@@ -385,8 +385,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if os.path.isdir(local):
         hass.http.register_static_path("/local", local, not is_dev)
 
-    # Can be removed in 2023
-    hass.http.register_redirect("/config/server_control", "/developer-tools/yaml")
+    # Shopping list panel was replaced by todo panel in 2023.11
+    hass.http.register_redirect("/shopping-list", "/todo")
 
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
@@ -666,18 +666,13 @@ def websocket_get_themes(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get themes command."""
-    if hass.config.recovery_mode:
+    if hass.config.recovery_mode or hass.config.safe_mode:
         connection.send_message(
             websocket_api.result_message(
                 msg["id"],
                 {
-                    "themes": {
-                        "recovery_mode": {
-                            "primary-color": "#db4437",
-                            "accent-color": "#ffca28",
-                        }
-                    },
-                    "default_theme": "recovery_mode",
+                    "themes": {},
+                    "default_theme": "default",
                 },
             )
         )

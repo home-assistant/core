@@ -147,6 +147,15 @@ def check_percentage_change(
     return _check_numeric_change(old_state, new_state, change, percentage_change)
 
 
+def check_valid_float(value: str | int | float) -> bool:
+    """Check if given value is a valid float."""
+    try:
+        float(value)
+    except ValueError:
+        return False
+    return True
+
+
 class SignificantlyChangedChecker:
     """Class to keep track of entities to see if they have significantly changed.
 

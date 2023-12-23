@@ -30,14 +30,14 @@ UNIT_MAPPINGS = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class SteamistSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[SteamistStatus], int | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SteamistSensorEntityDescription(
     SensorEntityDescription, SteamistSensorEntityDescriptionMixin
 ):

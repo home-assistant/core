@@ -65,12 +65,12 @@ def get_event_name(category: WorkoutCategory) -> str:
     return name.replace("_", " ")
 
 
-class WithingsWorkoutCalendarEntity(CalendarEntity, WithingsEntity):
+class WithingsWorkoutCalendarEntity(
+    WithingsEntity[WithingsWorkoutDataUpdateCoordinator], CalendarEntity
+):
     """A calendar entity."""
 
     _attr_translation_key = "workout"
-
-    coordinator: WithingsWorkoutDataUpdateCoordinator
 
     def __init__(
         self, client: WithingsClient, coordinator: WithingsWorkoutDataUpdateCoordinator

@@ -135,7 +135,7 @@ class ValloxState:
     @property
     def sw_version(self) -> str:
         """Return the SW version."""
-        return cast(str, _api_get_sw_version(self.metric_cache))
+        return _api_get_sw_version(self.metric_cache)
 
     @property
     def uuid(self) -> UUID | None:

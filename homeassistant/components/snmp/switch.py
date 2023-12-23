@@ -2,9 +2,34 @@
 from __future__ import annotations
 
 import logging
-import sys
 from typing import Any
 
+import pysnmp.hlapi.asyncio as hlapi
+from pysnmp.hlapi.asyncio import (
+    CommunityData,
+    ContextData,
+    ObjectIdentity,
+    ObjectType,
+    SnmpEngine,
+    UdpTransportTarget,
+    UsmUserData,
+    getCmd,
+    setCmd,
+)
+from pysnmp.proto.rfc1902 import (
+    Counter32,
+    Counter64,
+    Gauge32,
+    Integer,
+    Integer32,
+    IpAddress,
+    Null,
+    ObjectIdentifier,
+    OctetString,
+    Opaque,
+    TimeTicks,
+    Unsigned32,
+)
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
@@ -17,7 +42,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -43,34 +67,6 @@ from .const import (
     SNMP_VERSIONS,
 )
 
-if sys.version_info < (3, 12):
-    import pysnmp.hlapi.asyncio as hlapi
-    from pysnmp.hlapi.asyncio import (
-        CommunityData,
-        ContextData,
-        ObjectIdentity,
-        ObjectType,
-        SnmpEngine,
-        UdpTransportTarget,
-        UsmUserData,
-        getCmd,
-        setCmd,
-    )
-    from pysnmp.proto.rfc1902 import (
-        Counter32,
-        Counter64,
-        Gauge32,
-        Integer,
-        Integer32,
-        IpAddress,
-        Null,
-        ObjectIdentifier,
-        OctetString,
-        Opaque,
-        TimeTicks,
-        Unsigned32,
-    )
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_COMMAND_OID = "command_oid"
@@ -81,22 +77,21 @@ DEFAULT_COMMUNITY = "private"
 DEFAULT_PAYLOAD_OFF = 0
 DEFAULT_PAYLOAD_ON = 1
 
-if sys.version_info < (3, 12):
-    MAP_SNMP_VARTYPES = {
-        "Counter32": Counter32,
-        "Counter64": Counter64,
-        "Gauge32": Gauge32,
-        "Integer32": Integer32,
-        "Integer": Integer,
-        "IpAddress": IpAddress,
-        "Null": Null,
-        # some work todo to support tuple ObjectIdentifier, this just supports str
-        "ObjectIdentifier": ObjectIdentifier,
-        "OctetString": OctetString,
-        "Opaque": Opaque,
-        "TimeTicks": TimeTicks,
-        "Unsigned32": Unsigned32,
-    }
+MAP_SNMP_VARTYPES = {
+    "Counter32": Counter32,
+    "Counter64": Counter64,
+    "Gauge32": Gauge32,
+    "Integer32": Integer32,
+    "Integer": Integer,
+    "IpAddress": IpAddress,
+    "Null": Null,
+    # some work todo to support tuple ObjectIdentifier, this just supports str
+    "ObjectIdentifier": ObjectIdentifier,
+    "OctetString": OctetString,
+    "Opaque": Opaque,
+    "TimeTicks": TimeTicks,
+    "Unsigned32": Unsigned32,
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -132,10 +127,6 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the SNMP switch."""
-    if sys.version_info >= (3, 12):
-        raise HomeAssistantError(
-            "SNMP is not supported on Python 3.12. Please use Python 3.11."
-        )
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)

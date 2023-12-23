@@ -2,7 +2,6 @@
 import pytest
 
 from homeassistant.components.knx.const import (
-    CONF_PAYLOAD,
     CONF_PAYLOAD_LENGTH,
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
@@ -10,7 +9,7 @@ from homeassistant.components.knx.const import (
     KNX_ADDRESS,
 )
 from homeassistant.components.knx.schema import SelectSchema
-from homeassistant.const import CONF_NAME, STATE_UNKNOWN
+from homeassistant.const import CONF_NAME, CONF_PAYLOAD, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 
 from .conftest import KNXTestKit

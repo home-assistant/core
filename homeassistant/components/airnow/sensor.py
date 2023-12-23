@@ -51,7 +51,7 @@ ATTR_LEVEL = "level"
 ATTR_STATION = "reporting_station"
 
 
-@dataclass
+@dataclass(frozen=True)
 class AirNowEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -59,7 +59,7 @@ class AirNowEntityDescriptionMixin:
     extra_state_attributes_fn: Callable[[Any], dict[str, str]] | None
 
 
-@dataclass
+@dataclass(frozen=True)
 class AirNowEntityDescription(SensorEntityDescription, AirNowEntityDescriptionMixin):
     """Describes Airnow sensor entity."""
 
@@ -148,13 +148,14 @@ class AirNowSensor(CoordinatorEntity[AirNowDataUpdateCoordinator], SensorEntity)
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
+
+        _device_id = f"{coordinator.latitude}-{coordinator.longitude}"
+
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{coordinator.latitude}-{coordinator.longitude}-{description.key.lower()}"
-        )
+        self._attr_unique_id = f"{_device_id}-{description.key.lower()}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self._attr_unique_id)},
+            identifiers={(DOMAIN, _device_id)},
             manufacturer=DEFAULT_NAME,
             name=DEFAULT_NAME,
         )

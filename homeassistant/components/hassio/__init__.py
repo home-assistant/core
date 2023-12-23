@@ -34,6 +34,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
@@ -74,6 +75,7 @@ from .const import (
     DATA_KEY_SUPERVISOR,
     DATA_KEY_SUPERVISOR_ISSUES,
     DOMAIN,
+    REQUEST_REFRESH_DELAY,
     SUPERVISOR_CONTAINER,
     SupervisorEntityModel,
 )
@@ -268,6 +270,7 @@ HARDWARE_INTEGRATIONS = {
     "rpi3-64": "raspberry_pi",
     "rpi4": "raspberry_pi",
     "rpi4-64": "raspberry_pi",
+    "rpi5-64": "raspberry_pi",
     "yellow": "homeassistant_yellow",
 }
 
@@ -334,7 +337,7 @@ def get_addons_stats(hass):
 
     Async friendly.
     """
-    return hass.data.get(DATA_ADDONS_STATS)
+    return hass.data.get(DATA_ADDONS_STATS) or {}
 
 
 @callback
@@ -344,7 +347,7 @@ def get_core_stats(hass):
 
     Async friendly.
     """
-    return hass.data.get(DATA_CORE_STATS)
+    return hass.data.get(DATA_CORE_STATS) or {}
 
 
 @callback
@@ -354,7 +357,7 @@ def get_supervisor_stats(hass):
 
     Async friendly.
     """
-    return hass.data.get(DATA_SUPERVISOR_STATS)
+    return hass.data.get(DATA_SUPERVISOR_STATS) or {}
 
 
 @callback
@@ -754,6 +757,12 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=DOMAIN,
             update_interval=HASSIO_UPDATE_INTERVAL,
+            # We don't want an immediate refresh since we want to avoid
+            # fetching the container stats right away and avoid hammering
+            # the Supervisor API on startup
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+            ),
         )
         self.hassio: HassIO = hass.data[DOMAIN]
         self.data = {}
@@ -875,9 +884,9 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             DATA_SUPERVISOR_INFO: hassio.get_supervisor_info(),
             DATA_OS_INFO: hassio.get_os_info(),
         }
-        if first_update or CONTAINER_STATS in container_updates[CORE_CONTAINER]:
+        if CONTAINER_STATS in container_updates[CORE_CONTAINER]:
             updates[DATA_CORE_STATS] = hassio.get_core_stats()
-        if first_update or CONTAINER_STATS in container_updates[SUPERVISOR_CONTAINER]:
+        if CONTAINER_STATS in container_updates[SUPERVISOR_CONTAINER]:
             updates[DATA_SUPERVISOR_STATS] = hassio.get_supervisor_stats()
 
         results = await asyncio.gather(*updates.values())
@@ -903,20 +912,28 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         # API calls since otherwise we would fetch stats for all containers
         # and throw them away.
         #
-        for data_key, update_func, enabled_key, wanted_addons in (
+        for data_key, update_func, enabled_key, wanted_addons, needs_first_update in (
             (
                 DATA_ADDONS_STATS,
                 self._update_addon_stats,
                 CONTAINER_STATS,
                 started_addons,
+                False,
             ),
             (
                 DATA_ADDONS_CHANGELOGS,
                 self._update_addon_changelog,
                 CONTAINER_CHANGELOG,
                 all_addons,
+                True,
             ),
-            (DATA_ADDONS_INFO, self._update_addon_info, CONTAINER_INFO, all_addons),
+            (
+                DATA_ADDONS_INFO,
+                self._update_addon_info,
+                CONTAINER_INFO,
+                all_addons,
+                True,
+            ),
         ):
             container_data: dict[str, Any] = data.setdefault(data_key, {})
             container_data.update(
@@ -925,7 +942,8 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
                         *[
                             update_func(slug)
                             for slug in wanted_addons
-                            if first_update or enabled_key in container_updates[slug]
+                            if (first_update and needs_first_update)
+                            or enabled_key in container_updates[slug]
                         ]
                     )
                 )
