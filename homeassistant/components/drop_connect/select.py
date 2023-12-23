@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 # Select type constants
 PROTECT_MODE = "protect_mode"
 
-PROTECT_MODE_OPTIONS = ["AWAY", "HOME", "SCHEDULE"]
+PROTECT_MODE_OPTIONS = ["away", "home", "schedule"]
 
 FLOOD_ICON = "mdi:home-flood"
 

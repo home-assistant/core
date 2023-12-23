@@ -29,9 +29,9 @@ async def test_selects_hub(
     protect_mode_select = hass.states.get(protect_mode_select_name)
     assert protect_mode_select
     assert protect_mode_select.attributes.get(ATTR_OPTIONS) == [
-        "AWAY",
-        "HOME",
-        "SCHEDULE",
+        "away",
+        "home",
+        "schedule",
     ]
 
     async_fire_mqtt_message(hass, TEST_DATA_HUB_TOPIC, TEST_DATA_HUB_RESET)
@@ -41,12 +41,12 @@ async def test_selects_hub(
 
     protect_mode_select = hass.states.get(protect_mode_select_name)
     assert protect_mode_select
-    assert protect_mode_select.state == "HOME"
+    assert protect_mode_select.state == "home"
 
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_OPTION: "AWAY", ATTR_ENTITY_ID: protect_mode_select_name},
+        {ATTR_OPTION: "away", ATTR_ENTITY_ID: protect_mode_select_name},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -56,4 +56,4 @@ async def test_selects_hub(
 
     protect_mode_select = hass.states.get(protect_mode_select_name)
     assert protect_mode_select
-    assert protect_mode_select.state == "AWAY"
+    assert protect_mode_select.state == "away"
