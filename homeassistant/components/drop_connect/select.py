@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
 from typing import Any
@@ -31,7 +31,7 @@ class DROPSelectEntityDescription(SelectEntityDescription):
     """Describes DROP select entity."""
 
     value_fn: Callable[[DROPDeviceDataUpdateCoordinator], str | None]
-    set_fn: Callable[[DROPDeviceDataUpdateCoordinator, str], Coroutine[Any, Any, None]]
+    set_fn: Callable[[DROPDeviceDataUpdateCoordinator, str], Awaitable[Any]]
 
 
 SELECTS: list[DROPSelectEntityDescription] = [
