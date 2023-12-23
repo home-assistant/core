@@ -58,7 +58,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Old setup for Splunk component."""
     if DOMAIN in config:
         # Entity filters are not configurable in Config Flow, so are removed
-        del config[DOMAIN]["filter"]
+        data = {k: v for k, v in config[DOMAIN].items() if k != "filter"}
         _LOGGER.warning(
             "Your Splunk configuration has been imported into the UI; "
             "please remove it from configuration.yaml as support for it "
@@ -66,7 +66,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=data
             )
         )
 
