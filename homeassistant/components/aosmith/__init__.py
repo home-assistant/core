@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await status_coordinator.async_config_entry_first_refresh()
 
     energy_coordinator = AOSmithEnergyCoordinator(
-        hass, client, list(status_coordinator.data.keys())
+        hass, client, list(status_coordinator.data)
     )
     await energy_coordinator.async_config_entry_first_refresh()
 
