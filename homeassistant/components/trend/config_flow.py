@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from functools import partial
 from typing import Any, cast
 
 import voluptuous as vol
@@ -31,11 +30,9 @@ from .const import (
 )
 
 
-async def get_options_schema(
-    full_options: bool, handler: SchemaCommonFlowHandler
-) -> vol.Schema:
-    """Get options schema."""
-    base_schema = vol.Schema(
+async def get_base_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    """Get base options schema."""
+    return vol.Schema(
         {
             vol.Optional(CONF_ATTRIBUTE): selector.AttributeSelector(
                 selector.AttributeSelectorConfig(
@@ -46,11 +43,10 @@ async def get_options_schema(
         }
     )
 
-    # just return a subset of the schema, to make the setup easier
-    if not full_options:
-        return base_schema
 
-    return base_schema.extend(
+async def get_extended_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    """Get extended options schema."""
+    return (await get_base_options_schema(handler)).extend(
         {
             vol.Optional(
                 CONF_MAX_SAMPLES, default=DEFAULT_MAX_SAMPLES
@@ -105,10 +101,10 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = {
         "user": SchemaFlowFormStep(schema=CONFIG_SCHEMA, next_step="settings"),
-        "settings": SchemaFlowFormStep(partial(get_options_schema, False)),
+        "settings": SchemaFlowFormStep(get_base_options_schema),
     }
     options_flow = {
-        "init": SchemaFlowFormStep(partial(get_options_schema, True)),
+        "init": SchemaFlowFormStep(get_extended_options_schema),
     }
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
@@ -117,7 +113,7 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     async def async_step_import(self, import_config: Mapping[str, Any]) -> FlowResult:
         """Import a sensor from YAML configuration."""
-        self._async_abort_entries_match({CONF_NAME: import_config[CONF_NAME]})
+        self._async_abort_entries_match({**import_config})
         return self.async_create_entry(
             data={**import_config},
         )

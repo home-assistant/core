@@ -59,6 +59,26 @@ async def test_options(hass: HomeAssistant, config_entry: MockConfigEntry) -> No
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
 
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "min_samples": 30,
+            "max_samples": 50,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "min_samples": 30,
+        "max_samples": 50,
+        "entity_id": "sensor.cpu_temp",
+        "invert": False,
+        "min_gradient": 0.0,
+        "name": "My trend",
+        "sample_duration": 0.0,
+    }
+
 
 async def test_step_import(hass: HomeAssistant) -> None:
     """Test for import step."""
@@ -87,3 +107,30 @@ async def test_step_import(hass: HomeAssistant) -> None:
         "name": "test_trend_sensor",
         "device_class": "battery",
     }
+
+
+async def test_step_import_abort_already_configured(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test if import step aborts when already configured."""
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.trend.async_setup_entry", wraps=async_setup_entry
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                "name": "My trend",
+                "entity_id": "sensor.cpu_temp",
+                "invert": False,
+                "max_samples": 2.0,
+                "min_gradient": 0.0,
+                "sample_duration": 0.0,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

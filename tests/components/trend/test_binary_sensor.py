@@ -14,6 +14,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, assert_setup_component, mock_restore_cache
+from tests.components.trend.conftest import ComponentSetup
 
 
 async def _setup_legacy_component(hass: HomeAssistant, params: dict[str, Any]) -> None:
@@ -33,22 +34,6 @@ async def _setup_legacy_component(hass: HomeAssistant, params: dict[str, Any]) -
     await hass.async_block_till_done()
 
 
-async def _setup_component(
-    hass: HomeAssistant, config_entry: MockConfigEntry, params: dict[str, Any]
-) -> None:
-    """Set up the trend component."""
-    config_entry.title = "test_trend_sensor"
-    config_entry.options = {
-        **config_entry.options,
-        **params,
-        "name": "test_trend_sensor",
-        "entity_id": "sensor.test_state",
-    }
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-
 @pytest.mark.parametrize(
     ("states", "inverted", "expected_state"),
     [
@@ -62,14 +47,13 @@ async def _setup_component(
 async def test_basic_trend(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    setup_component: ComponentSetup,
     states: list[str],
     inverted: bool,
     expected_state: str,
 ):
     """Test trend with a basic setup."""
-    await _setup_component(
-        hass,
-        config_entry,
+    await setup_component(
         {
             "invert": inverted,
         },
@@ -108,14 +92,13 @@ async def test_using_trendline(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    setup_component: ComponentSetup,
     state_series: list[list[str]],
     inverted: bool,
     expected_states: list[str],
 ):
     """Test uptrend using multiple samples and trendline calculation."""
-    await _setup_component(
-        hass,
-        config_entry,
+    await setup_component(
         {
             "sample_duration": 10000,
             "min_gradient": 1,
@@ -146,13 +129,12 @@ async def test_using_trendline(
 async def test_attribute_trend(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    setup_component: ComponentSetup,
     attr_values: list[str],
     expected_state: str,
 ):
     """Test attribute uptrend."""
-    await _setup_component(
-        hass,
-        config_entry,
+    await setup_component(
         {
             "entity_id": "sensor.test_state",
             "attribute": "attr",
@@ -167,11 +149,11 @@ async def test_attribute_trend(
     assert sensor_state.state == expected_state
 
 
-async def test_max_samples(hass: HomeAssistant, config_entry: MockConfigEntry):
+async def test_max_samples(
+    hass: HomeAssistant, config_entry: MockConfigEntry, setup_component: ComponentSetup
+):
     """Test that sample count is limited correctly."""
-    await _setup_component(
-        hass,
-        config_entry,
+    await setup_component(
         {
             "max_samples": 3,
             "min_gradient": -1,
@@ -187,9 +169,11 @@ async def test_max_samples(hass: HomeAssistant, config_entry: MockConfigEntry):
     assert state.attributes["sample_count"] == 3
 
 
-async def test_non_numeric(hass: HomeAssistant, config_entry: MockConfigEntry):
+async def test_non_numeric(
+    hass: HomeAssistant, config_entry: MockConfigEntry, setup_component: ComponentSetup
+):
     """Test for non-numeric sensor."""
-    await _setup_component(hass, config_entry, {"entity_id": "sensor.test_state"})
+    await setup_component({"entity_id": "sensor.test_state"})
 
     for val in ["Non", "Numeric"]:
         hass.states.async_set("sensor.test_state", val)
@@ -199,11 +183,11 @@ async def test_non_numeric(hass: HomeAssistant, config_entry: MockConfigEntry):
     assert state.state == STATE_UNKNOWN
 
 
-async def test_missing_attribute(hass: HomeAssistant, config_entry: MockConfigEntry):
+async def test_missing_attribute(
+    hass: HomeAssistant, config_entry: MockConfigEntry, setup_component: ComponentSetup
+):
     """Test for missing attribute."""
-    await _setup_component(
-        hass,
-        config_entry,
+    await setup_component(
         {
             "attribute": "missing",
         },
@@ -270,15 +254,14 @@ async def test_restore_state(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    setup_component: ComponentSetup,
     saved_state: str,
     restored_state: str,
 ) -> None:
     """Test we restore the trend state."""
     mock_restore_cache(hass, (State("binary_sensor.test_trend_sensor", saved_state),))
 
-    await _setup_component(
-        hass,
-        config_entry,
+    await setup_component(
         {
             "sample_duration": 10000,
             "min_gradient": 1,
