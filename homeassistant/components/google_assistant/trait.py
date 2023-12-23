@@ -29,6 +29,7 @@ from homeassistant.components import (
     sensor,
     switch,
     vacuum,
+    valve,
     water_heater,
 )
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
@@ -41,6 +42,7 @@ from homeassistant.components.light import LightEntityFeature
 from homeassistant.components.lock import STATE_JAMMED, STATE_UNLOCKING
 from homeassistant.components.media_player import MediaPlayerEntityFeature, MediaType
 from homeassistant.components.vacuum import VacuumEntityFeature
+from homeassistant.components.valve import ValveEntityFeature
 from homeassistant.components.water_heater import WaterHeaterEntityFeature
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -179,6 +181,57 @@ COMMAND_CHARGE = f"{PREFIX_COMMANDS}Charge"
 TRAITS: list[type[_Trait]] = []
 
 FAN_SPEED_MAX_SPEED_COUNT = 5
+
+COVER_VALVE_STATES = {
+    cover.DOMAIN: {
+        "closed": cover.STATE_CLOSED,
+        "closing": cover.STATE_CLOSING,
+        "open": cover.STATE_OPEN,
+        "opening": cover.STATE_OPENING,
+    },
+    valve.DOMAIN: {
+        "closed": valve.STATE_CLOSED,
+        "closing": valve.STATE_CLOSING,
+        "open": valve.STATE_OPEN,
+        "opening": valve.STATE_OPENING,
+    },
+}
+
+SERVICE_STOP_COVER_VALVE = {
+    cover.DOMAIN: cover.SERVICE_STOP_COVER,
+    valve.DOMAIN: valve.SERVICE_STOP_VALVE,
+}
+SERVICE_OPEN_COVER_VALVE = {
+    cover.DOMAIN: cover.SERVICE_OPEN_COVER,
+    valve.DOMAIN: valve.SERVICE_OPEN_VALVE,
+}
+SERVICE_CLOSE_COVER_VALVE = {
+    cover.DOMAIN: cover.SERVICE_CLOSE_COVER,
+    valve.DOMAIN: valve.SERVICE_CLOSE_VALVE,
+}
+SERVICE_SET_POSITION_COVER_VALVE = {
+    cover.DOMAIN: cover.SERVICE_SET_COVER_POSITION,
+    valve.DOMAIN: valve.SERVICE_SET_VALVE_POSITION,
+}
+
+COVER_VALVE_CURRENT_POSITION = {
+    cover.DOMAIN: cover.ATTR_CURRENT_POSITION,
+    valve.DOMAIN: valve.ATTR_CURRENT_POSITION,
+}
+
+COVER_VALVE_POSITION = {
+    cover.DOMAIN: cover.ATTR_POSITION,
+    valve.DOMAIN: valve.ATTR_POSITION,
+}
+
+COVER_VALVE_SET_POSITION_FEATURE = {
+    cover.DOMAIN: CoverEntityFeature.SET_POSITION,
+    valve.DOMAIN: ValveEntityFeature.SET_POSITION,
+}
+
+COVER_VALVE_DOMAINS = {cover.DOMAIN, valve.DOMAIN}
+
+FRIENDLY_DOMAIN = {cover.DOMAIN: "Cover", valve.DOMAIN: "Valve"}
 
 _TraitT = TypeVar("_TraitT", bound="_Trait")
 
@@ -796,6 +849,9 @@ class StartStopTrait(_Trait):
         if domain == cover.DOMAIN and features & CoverEntityFeature.STOP:
             return True
 
+        if domain == valve.DOMAIN and features & ValveEntityFeature.STOP:
+            return True
+
         return False
 
     def sync_attributes(self):
@@ -807,7 +863,7 @@ class StartStopTrait(_Trait):
                 & VacuumEntityFeature.PAUSE
                 != 0
             }
-        if domain == cover.DOMAIN:
+        if domain in COVER_VALVE_DOMAINS:
             return {}
 
     def query_attributes(self):
@@ -823,14 +879,16 @@ class StartStopTrait(_Trait):
 
         if domain == cover.DOMAIN:
             return {"isRunning": state in (cover.STATE_CLOSING, cover.STATE_OPENING)}
+        if domain == valve.DOMAIN:
+            return {"isRunning": True}
 
     async def execute(self, command, data, params, challenge):
         """Execute a StartStop command."""
         domain = self.state.domain
         if domain == vacuum.DOMAIN:
             return await self._execute_vacuum(command, data, params, challenge)
-        if domain == cover.DOMAIN:
-            return await self._execute_cover(command, data, params, challenge)
+        if domain in COVER_VALVE_DOMAINS:
+            return await self._execute_cover_or_valve(command, data, params, challenge)
 
     async def _execute_vacuum(self, command, data, params, challenge):
         """Execute a StartStop command."""
@@ -869,28 +927,35 @@ class StartStopTrait(_Trait):
                     context=data.context,
                 )
 
-    async def _execute_cover(self, command, data, params, challenge):
+    async def _execute_cover_or_valve(self, command, data, params, challenge):
         """Execute a StartStop command."""
+        domain = self.state.domain
         if command == COMMAND_STARTSTOP:
             if params["start"] is False:
-                if self.state.state in (
-                    cover.STATE_CLOSING,
-                    cover.STATE_OPENING,
-                ) or self.state.attributes.get(ATTR_ASSUMED_STATE):
+                if (
+                    self.state.state
+                    in (
+                        COVER_VALVE_STATES[domain]["closing"],
+                        COVER_VALVE_STATES[domain]["opening"],
+                    )
+                    or domain == valve.DOMAIN
+                    or self.state.attributes.get(ATTR_ASSUMED_STATE)
+                ):
                     await self.hass.services.async_call(
-                        self.state.domain,
-                        cover.SERVICE_STOP_COVER,
+                        domain,
+                        SERVICE_STOP_COVER_VALVE[domain],
                         {ATTR_ENTITY_ID: self.state.entity_id},
                         blocking=not self.config.should_report_state,
                         context=data.context,
                     )
                 else:
                     raise SmartHomeError(
-                        ERR_ALREADY_STOPPED, "Cover is already stopped"
+                        ERR_ALREADY_STOPPED,
+                        f"{FRIENDLY_DOMAIN[domain]} is already stopped",
                     )
             else:
                 raise SmartHomeError(
-                    ERR_NOT_SUPPORTED, "Starting a cover is not supported"
+                    ERR_NOT_SUPPORTED, f"Starting a {domain} is not supported"
                 )
         else:
             raise SmartHomeError(
@@ -2081,7 +2146,7 @@ class OpenCloseTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
-        if domain == cover.DOMAIN:
+        if domain in COVER_VALVE_DOMAINS:
             return True
 
         return domain == binary_sensor.DOMAIN and device_class in (
@@ -2116,6 +2181,17 @@ class OpenCloseTrait(_Trait):
                 and features & CoverEntityFeature.CLOSE == 0
             ):
                 response["queryOnlyOpenClose"] = True
+        elif (
+            self.state.domain == valve.DOMAIN
+            and features & ValveEntityFeature.SET_POSITION == 0
+        ):
+            response["discreteOnlyOpenClose"] = True
+
+            if (
+                features & ValveEntityFeature.OPEN == 0
+                and features & ValveEntityFeature.CLOSE == 0
+            ):
+                response["queryOnlyOpenClose"] = True
 
         if self.state.attributes.get(ATTR_ASSUMED_STATE):
             response["commandOnlyOpenClose"] = True
@@ -2134,17 +2210,17 @@ class OpenCloseTrait(_Trait):
         if self.state.attributes.get(ATTR_ASSUMED_STATE):
             return response
 
-        if domain == cover.DOMAIN:
+        if domain in COVER_VALVE_DOMAINS:
             if self.state.state == STATE_UNKNOWN:
                 raise SmartHomeError(
                     ERR_NOT_SUPPORTED, "Querying state is not supported"
                 )
 
-            position = self.state.attributes.get(cover.ATTR_CURRENT_POSITION)
+            position = self.state.attributes.get(COVER_VALVE_CURRENT_POSITION[domain])
 
             if position is not None:
                 response["openPercent"] = position
-            elif self.state.state != cover.STATE_CLOSED:
+            elif self.state.state != COVER_VALVE_STATES[domain]["closed"]:
                 response["openPercent"] = 100
             else:
                 response["openPercent"] = 0
@@ -2162,11 +2238,13 @@ class OpenCloseTrait(_Trait):
         domain = self.state.domain
         features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        if domain == cover.DOMAIN:
+        if domain in COVER_VALVE_DOMAINS:
             svc_params = {ATTR_ENTITY_ID: self.state.entity_id}
             should_verify = False
             if command == COMMAND_OPENCLOSE_RELATIVE:
-                position = self.state.attributes.get(cover.ATTR_CURRENT_POSITION)
+                position = self.state.attributes.get(
+                    COVER_VALVE_CURRENT_POSITION[domain]
+                )
                 if position is None:
                     raise SmartHomeError(
                         ERR_NOT_SUPPORTED,
@@ -2177,16 +2255,16 @@ class OpenCloseTrait(_Trait):
                 position = params["openPercent"]
 
             if position == 0:
-                service = cover.SERVICE_CLOSE_COVER
+                service = SERVICE_CLOSE_COVER_VALVE[domain]
                 should_verify = False
             elif position == 100:
-                service = cover.SERVICE_OPEN_COVER
+                service = SERVICE_OPEN_COVER_VALVE[domain]
                 should_verify = True
-            elif features & CoverEntityFeature.SET_POSITION:
-                service = cover.SERVICE_SET_COVER_POSITION
+            elif features & COVER_VALVE_SET_POSITION_FEATURE[domain]:
+                service = SERVICE_SET_POSITION_COVER_VALVE[domain]
                 if position > 0:
                     should_verify = True
-                svc_params[cover.ATTR_POSITION] = position
+                svc_params[COVER_VALVE_POSITION[domain]] = position
             else:
                 raise SmartHomeError(
                     ERR_NOT_SUPPORTED, "No support for partial open close"
@@ -2200,7 +2278,7 @@ class OpenCloseTrait(_Trait):
                 _verify_pin_challenge(data, self.state, challenge)
 
             await self.hass.services.async_call(
-                cover.DOMAIN,
+                domain,
                 service,
                 svc_params,
                 blocking=not self.config.should_report_state,
