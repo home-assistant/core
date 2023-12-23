@@ -424,12 +424,11 @@ def __getattr__(name: str) -> Any:
     If it is, print a deprecation warning and return the value of the constant.
     Otherwise raise AttributeError.
     """
-    # Extrcated check from homeassistant.helpers.deprecation.check_if_deprecated_constant
-    # to avoid import cycle
     module_globals = globals()
     if f"_DEPRECATED_{name}" not in module_globals:
         raise AttributeError(f"Module {__name__} has no attribute {name!r}")
 
+    # Avoid circular import
     from .helpers.deprecation import (  # pylint: disable=import-outside-toplevel
         check_if_deprecated_constant,
     )
