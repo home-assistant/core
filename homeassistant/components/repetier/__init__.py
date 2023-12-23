@@ -124,14 +124,14 @@ def has_all_unique_names(value):
     return value
 
 
-@dataclass
+@dataclass(frozen=True)
 class RepetierRequiredKeysMixin:
     """Mixin for required keys."""
 
     type: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class RepetierSensorEntityDescription(
     SensorEntityDescription, RepetierRequiredKeysMixin
 ):

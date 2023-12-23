@@ -335,7 +335,7 @@ async def async_setup_entry(  # noqa: C901
         """Hydrate a service call with the appropriate controller."""
 
         def decorator(
-            func: Callable[[ServiceCall, Controller], Coroutine[Any, Any, None]]
+            func: Callable[[ServiceCall, Controller], Coroutine[Any, Any, None]],
         ) -> Callable[[ServiceCall], Coroutine[Any, Any, None]]:
             """Define the decorator."""
 
