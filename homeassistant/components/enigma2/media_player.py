@@ -127,7 +127,7 @@ class Enigma2Device(MediaPlayerEntity):
         self._device.mac_address = about["info"]["ifaces"][0]["mac"]
 
         self._attr_name = name
-        self._attr_unique_id = self._device.mac_address
+        self._attr_unique_id = device.mac_address
 
     async def async_turn_off(self) -> None:
         """Turn off media player."""
@@ -173,6 +173,13 @@ class Enigma2Device(MediaPlayerEntity):
         """Update state of the media_player."""
         await self._device.update()
         self._attr_available = not self._device.is_offline
+        self._attr_extra_state_attributes = {
+            ATTR_MEDIA_CURRENTLY_RECORDING: self._device.status.is_recording,
+            ATTR_MEDIA_DESCRIPTION: self._device.status.currservice.fulldescription,
+            ATTR_MEDIA_START_TIME: self._device.status.currservice.begin,
+            ATTR_MEDIA_END_TIME: self._device.status.currservice.end,
+        }
+
         self._attr_media_title = self._device.status.currservice.station
         self._attr_media_series_title = self._device.status.currservice.name
         self._attr_media_channel = self._device.status.currservice.station
@@ -181,23 +188,13 @@ class Enigma2Device(MediaPlayerEntity):
         self._attr_media_image_url = self._device.picon_url
         self._attr_source = self._device.status.currservice.station
         self._attr_source_list = self._device.source_list
-        self._attr_state = (
-            MediaPlayerState.OFF
-            if self._device.status.in_standby
-            else MediaPlayerState.ON
-        )
-        self._attr_volume_level = (
-            self._device.status.volume / 100
-            if self._device.status.volume is not None
-            else None
-        )
-        self._attr_extra_state_attributes = (
-            {
-                ATTR_MEDIA_CURRENTLY_RECORDING: self._device.status.is_recording,
-                ATTR_MEDIA_DESCRIPTION: self._device.status.currservice.fulldescription,
-                ATTR_MEDIA_START_TIME: self._device.status.currservice.begin,
-                ATTR_MEDIA_END_TIME: self._device.status.currservice.end,
-            }
-            if not self._device.status.in_standby
-            else {}
-        )
+
+        if self._device.status.in_standby:
+            self._attr_state = MediaPlayerState.OFF
+        else:
+            self._attr_state = MediaPlayerState.ON
+
+        if self._device.status.volume is None:
+            self._attr_volume_level = None
+        else:
+            self._attr_volume_level = self._device.status.volume / 100
