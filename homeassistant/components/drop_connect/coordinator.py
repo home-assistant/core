@@ -42,3 +42,14 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             self.config_entry.data[CONF_COMMAND_TOPIC],
             payload,
         )
+
+    async def set_protect_mode(self, value: str):
+        """Change protect mode state."""
+        payload = self.drop_api.set_protect_mode_message(value)
+        await mqtt.async_publish(
+            self.hass,
+            self.config_entry.data[CONF_COMMAND_TOPIC],
+            payload,
+            qos=0,
+            retain=False,
+        )

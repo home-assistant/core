@@ -33,6 +33,7 @@
       "salt": { "name": "Salt low" },
       "pump": { "name": "Pump status" }
     },
+    "select": { "protect_mode": { "name": "Protect mode" } },
     "switch": {
       "water": { "name": "Water supply" },
       "bypass": { "name": "Treatment bypass" }
