@@ -47,11 +47,11 @@ async def test_climate_state(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entity_registry.async_get("climate.0") == snapshot
-    assert entity_registry.async_get("climate.1") == snapshot
+    assert entity_registry.async_get("climate.midea_0") == snapshot
+    assert entity_registry.async_get("climate.midea_1") == snapshot
 
-    assert hass.states.get("climate.0") == snapshot
-    assert hass.states.get("climate.1") == snapshot
+    assert hass.states.get("climate.midea_0") == snapshot
+    assert hass.states.get("climate.midea_1") == snapshot
 
     with patch(
         "homeassistant.components.ccm15.coordinator.CCM15Device.async_set_state"
@@ -59,7 +59,7 @@ async def test_climate_state(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: ["climate.0"], ATTR_FAN_MODE: FAN_HIGH},
+            {ATTR_ENTITY_ID: ["climate.midea_0"], ATTR_FAN_MODE: FAN_HIGH},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -71,7 +71,7 @@ async def test_climate_state(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: ["climate.0"], ATTR_HVAC_MODE: HVACMode.COOL},
+            {ATTR_ENTITY_ID: ["climate.midea_0"], ATTR_HVAC_MODE: HVACMode.COOL},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -83,7 +83,7 @@ async def test_climate_state(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: ["climate.0"], ATTR_TEMPERATURE: 25},
+            {ATTR_ENTITY_ID: ["climate.midea_0"], ATTR_TEMPERATURE: 25},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -95,7 +95,7 @@ async def test_climate_state(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ["climate.0"]},
+            {ATTR_ENTITY_ID: ["climate.midea_0"]},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -107,7 +107,7 @@ async def test_climate_state(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: ["climate.0"]},
+            {ATTR_ENTITY_ID: ["climate.midea_0"]},
             blocking=True,
         )
         await hass.async_block_till_done()
