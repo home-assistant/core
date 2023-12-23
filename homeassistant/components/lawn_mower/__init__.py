@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import final
+from typing import TYPE_CHECKING, final
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -23,6 +23,12 @@ from .const import (
     LawnMowerActivity,
     LawnMowerEntityFeature,
 )
+
+if TYPE_CHECKING:
+    pass
+else:
+    pass
+
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -68,7 +74,13 @@ class LawnMowerEntityEntityDescription(EntityDescription, frozen_or_thawed=True)
     """A class that describes lawn mower entities."""
 
 
-class LawnMowerEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "activity",
+    "supported_features",
+}
+
+
+class LawnMowerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for lawn mower entities."""
 
     entity_description: LawnMowerEntityEntityDescription
