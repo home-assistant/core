@@ -13,21 +13,16 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ADDRESS,
-    CONF_BINARY_SENSORS,
-    CONF_COVERS,
     CONF_DEVICES,
     CONF_DOMAIN,
     CONF_ENTITIES,
     CONF_HOST,
     CONF_IP_ADDRESS,
-    CONF_LIGHTS,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_RESOURCE,
-    CONF_SENSORS,
     CONF_SOURCE,
-    CONF_SWITCHES,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
@@ -36,14 +31,12 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     BINSENSOR_PORTS,
-    CONF_CLIMATES,
-    CONF_CONNECTIONS,
+    CONF_CONNECTION,
     CONF_DIM_MODE,
     CONF_DOMAIN_DATA,
     CONF_HARDWARE_SERIAL,
     CONF_HARDWARE_TYPE,
     CONF_OUTPUT,
-    CONF_SCENES,
     CONF_SK_NUM_TRIES,
     CONF_SOFTWARE_SERIAL,
     CONNECTION,
@@ -70,17 +63,6 @@ InputType = type[pypck.inputs.Input]
 PATTERN_ADDRESS = re.compile(
     "^((?P<conn_id>\\w+)\\.)?s?(?P<seg_id>\\d+)\\.(?P<type>m|g)?(?P<id>\\d+)$"
 )
-
-
-DOMAIN_LOOKUP = {
-    CONF_BINARY_SENSORS: "binary_sensor",
-    CONF_CLIMATES: "climate",
-    CONF_COVERS: "cover",
-    CONF_LIGHTS: "light",
-    CONF_SCENES: "scene",
-    CONF_SENSORS: "sensor",
-    CONF_SWITCHES: "switch",
-}
 
 
 def get_device_connection(
@@ -184,7 +166,7 @@ def import_lcn_config(lcn_config: ConfigType) -> list[ConfigType]:
     }
     """
     data = {}
-    for connection in lcn_config[CONF_CONNECTIONS]:
+    for connection in lcn_config[CONF_CONNECTION]:
         host = {
             CONF_HOST: connection[CONF_NAME],
             CONF_IP_ADDRESS: connection[CONF_HOST],
@@ -198,10 +180,9 @@ def import_lcn_config(lcn_config: ConfigType) -> list[ConfigType]:
         }
         data[connection[CONF_NAME]] = host
 
-    for confkey, domain_config in lcn_config.items():
-        if confkey == CONF_CONNECTIONS:
+    for domain, domain_config in lcn_config.items():
+        if domain == CONF_CONNECTION:
             continue
-        domain = DOMAIN_LOOKUP[confkey]
         # loop over entities in configuration.yaml
         for domain_data in domain_config:
             # remove name and address from domain_data

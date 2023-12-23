@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_SWITCHES,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
+    Platform,
     UnitOfTemperature,
 )
 import homeassistant.helpers.config_validation as cv
@@ -24,6 +25,7 @@ import homeassistant.helpers.config_validation as cv
 from .const import (
     BINSENSOR_PORTS,
     CONF_CLIMATES,
+    CONF_CONNECTION,
     CONF_CONNECTIONS,
     CONF_DIM_MODE,
     CONF_DIMMABLE,
@@ -138,19 +140,19 @@ DOMAIN_DATA_BASE = {
     vol.Required(CONF_ADDRESS): is_address,
 }
 
-BINARY_SENSORS_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_BINARY_SENSOR})
+BINARY_SENSOR_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_BINARY_SENSOR})
 
-CLIMATES_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_CLIMATE})
+CLIMATE_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_CLIMATE})
 
-COVERS_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_COVER})
+COVER_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_COVER})
 
-LIGHTS_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_LIGHT})
+LIGHT_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_LIGHT})
 
-SCENES_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_SCENE})
+SCENE_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_SCENE})
 
-SENSORS_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_SENSOR})
+SENSOR_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_SENSOR})
 
-SWITCHES_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_SWITCH})
+SWITCH_SCHEMA = vol.Schema({**DOMAIN_DATA_BASE, **DOMAIN_DATA_SWITCH})
 
 CONNECTION_SCHEMA = vol.Schema(
     {
@@ -168,21 +170,43 @@ CONNECTION_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_CONNECTIONS): vol.All(
-                    cv.ensure_list, has_unique_host_names, [CONNECTION_SCHEMA]
-                ),
-                vol.Optional(CONF_BINARY_SENSORS): vol.All(
-                    cv.ensure_list, [BINARY_SENSORS_SCHEMA]
-                ),
-                vol.Optional(CONF_CLIMATES): vol.All(cv.ensure_list, [CLIMATES_SCHEMA]),
-                vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
-                vol.Optional(CONF_LIGHTS): vol.All(cv.ensure_list, [LIGHTS_SCHEMA]),
-                vol.Optional(CONF_SCENES): vol.All(cv.ensure_list, [SCENES_SCHEMA]),
-                vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [SENSORS_SCHEMA]),
-                vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCHES_SCHEMA]),
-            }
+        DOMAIN: vol.All(
+            cv.deprecated(CONF_CONNECTIONS, CONF_CONNECTION),
+            cv.deprecated(CONF_BINARY_SENSORS, Platform.BINARY_SENSOR),
+            cv.deprecated(CONF_CLIMATES, Platform.CLIMATE),
+            cv.deprecated(CONF_COVERS, Platform.COVER),
+            cv.deprecated(CONF_LIGHTS, Platform.LIGHT),
+            cv.deprecated(CONF_SCENES, Platform.SCENE),
+            cv.deprecated(CONF_SENSORS, Platform.SENSOR),
+            cv.deprecated(CONF_SWITCHES, Platform.SWITCH),
+            vol.Schema(
+                {
+                    vol.Required(CONF_CONNECTION): vol.All(
+                        cv.ensure_list, has_unique_host_names, [CONNECTION_SCHEMA]
+                    ),
+                    vol.Optional(Platform.BINARY_SENSOR.value): vol.All(
+                        cv.ensure_list, [BINARY_SENSOR_SCHEMA]
+                    ),
+                    vol.Optional(Platform.CLIMATE.value): vol.All(
+                        cv.ensure_list, [CLIMATE_SCHEMA]
+                    ),
+                    vol.Optional(Platform.COVER.value): vol.All(
+                        cv.ensure_list, [COVER_SCHEMA]
+                    ),
+                    vol.Optional(Platform.LIGHT.value): vol.All(
+                        cv.ensure_list, [LIGHT_SCHEMA]
+                    ),
+                    vol.Optional(Platform.SCENE.value): vol.All(
+                        cv.ensure_list, [SCENE_SCHEMA]
+                    ),
+                    vol.Optional(Platform.SENSOR.value): vol.All(
+                        cv.ensure_list, [SENSOR_SCHEMA]
+                    ),
+                    vol.Optional(Platform.SWITCH.value): vol.All(
+                        cv.ensure_list, [SWITCH_SCHEMA]
+                    ),
+                }
+            ),
         )
     },
     extra=vol.ALLOW_EXTRA,
