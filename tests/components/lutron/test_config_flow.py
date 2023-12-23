@@ -206,12 +206,9 @@ async def test_import_already_configured(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.lutron.config_flow.Lutron.load_xml_db"), patch(
-        "homeassistant.components.lutron.config_flow.Lutron.guid", "12345678901"
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_DATA_IMPORT
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_DATA_IMPORT
+    )
 
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
