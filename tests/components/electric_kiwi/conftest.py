@@ -43,14 +43,17 @@ def component_setup(
 
     async def _setup_func() -> bool:
         assert await async_setup_component(hass, "application_credentials", {})
+        await hass.async_block_till_done()
         await async_import_client_credential(
             hass,
             DOMAIN,
             ClientCredential(CLIENT_ID, CLIENT_SECRET),
             DOMAIN,
         )
+        await hass.async_block_till_done()
         config_entry.add_to_hass(hass)
-        return await hass.config_entries.async_setup(config_entry.entry_id)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     return _setup_func
 
