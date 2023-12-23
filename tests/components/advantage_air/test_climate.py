@@ -192,10 +192,7 @@ async def test_climate_myauto_main(
 
     # Test MyAuto Climate Entity
     entity_id = "climate.myauto"
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 20
-    assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 24
+    assert hass.states.get(entity_id) == snapshot(name=entity_id)
 
     entry = entity_registry.async_get(entity_id)
     assert entry
@@ -213,6 +210,7 @@ async def test_climate_myauto_main(
     )
     mock_update.assert_called_once()
     mock_update.reset_mock()
+    assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-settemp")
 
     # Test AutoFanMode
     await hass.services.async_call(
@@ -222,7 +220,7 @@ async def test_climate_myauto_main(
         blocking=True,
     )
     mock_update.assert_called_once()
-    assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-fanauto")
+    assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-fanmode")
 
 
 async def test_climate_async_failed_update(
