@@ -37,19 +37,18 @@ class AsekoBinarySensorEntityDescription(
 UNIT_BINARY_SENSORS: tuple[AsekoBinarySensorEntityDescription, ...] = (
     AsekoBinarySensorEntityDescription(
         key="water_flow",
-        name="Water Flow",
+        translation_key="water_flow",
         icon="mdi:waves-arrow-right",
         value_fn=lambda unit: unit.water_flow,
     ),
     AsekoBinarySensorEntityDescription(
         key="has_alarm",
-        name="Alarm",
+        translation_key="alarm",
         value_fn=lambda unit: unit.has_alarm,
         device_class=BinarySensorDeviceClass.SAFETY,
     ),
     AsekoBinarySensorEntityDescription(
         key="has_error",
-        name="Error",
         value_fn=lambda unit: unit.has_error,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),

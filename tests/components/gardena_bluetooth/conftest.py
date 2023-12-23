@@ -3,7 +3,7 @@ from collections.abc import Awaitable, Callable, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 from gardena_bluetooth.client import Client
 from gardena_bluetooth.const import DeviceInformation
 from gardena_bluetooth.exceptions import CharacteristicNotFound
@@ -49,19 +49,19 @@ def mock_read_char_raw():
 
 @pytest.fixture
 async def scan_step(
-    hass: HomeAssistant,
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> Generator[None, None, Callable[[], Awaitable[None]]]:
     """Step system time forward."""
 
-    with freeze_time("2023-01-01", tz_offset=1) as frozen_time:
+    freezer.move_to("2023-01-01T01:00:00Z")
 
-        async def delay():
-            """Trigger delay in system."""
-            frozen_time.tick(delta=SCAN_INTERVAL)
-            async_fire_time_changed(hass)
-            await hass.async_block_till_done()
+    async def delay():
+        """Trigger delay in system."""
+        freezer.tick(delta=SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
-        yield delay
+    return delay
 
 
 @pytest.fixture(autouse=True)

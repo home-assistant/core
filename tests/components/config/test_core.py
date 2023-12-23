@@ -60,6 +60,21 @@ async def test_validate_config_ok(
     assert result["errors"] == "beer"
 
 
+async def test_validate_config_requires_admin(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test checking configuration does not work as a normal user."""
+    with patch.object(config, "SECTIONS", ["core"]):
+        await async_setup_component(hass, "config", {})
+
+    client = await hass_client(hass_read_only_access_token)
+    resp = await client.post("/api/config/core/check_config")
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
 async def test_websocket_core_update(hass: HomeAssistant, client) -> None:
     """Test core config update websocket command."""
     assert hass.config.latitude != 60

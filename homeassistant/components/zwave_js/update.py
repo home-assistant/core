@@ -62,7 +62,12 @@ class ZWaveNodeFirmwareUpdateExtraStoredData(ExtraStoredData):
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ZWaveNodeFirmwareUpdateExtraStoredData:
         """Initialize the extra data from a dict."""
-        if not (firmware_dict := data[ATTR_LATEST_VERSION_FIRMWARE]):
+        # If there was no firmware info stored, or if it's stale info, we don't restore
+        # anything.
+        if (
+            not (firmware_dict := data[ATTR_LATEST_VERSION_FIRMWARE])
+            or "normalizedVersion" not in firmware_dict
+        ):
             return cls(None)
 
         return cls(NodeFirmwareUpdateInfo.from_dict(firmware_dict))
@@ -206,11 +211,15 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
                 return
 
         try:
-            available_firmware_updates = (
-                await self.driver.controller.async_get_available_firmware_updates(
-                    self.node, API_KEY_FIRMWARE_UPDATE_SERVICE
+            # Retrieve all firmware updates including non-stable ones but filter
+            # non-stable channels out
+            available_firmware_updates = [
+                update
+                for update in await self.driver.controller.async_get_available_firmware_updates(
+                    self.node, API_KEY_FIRMWARE_UPDATE_SERVICE, True
                 )
-            )
+                if update.channel == "stable"
+            ]
         except FailedZWaveCommand as err:
             LOGGER.debug(
                 "Failed to get firmware updates for node %s: %s",
@@ -267,9 +276,7 @@ class ZWaveNodeFirmwareUpdate(UpdateEntity):
         )
 
         try:
-            await self.driver.controller.async_firmware_update_ota(
-                self.node, firmware.files
-            )
+            await self.driver.controller.async_firmware_update_ota(self.node, firmware)
         except BaseZwaveJSServerError as err:
             self._unsub_firmware_events_and_reset_progress()
             raise HomeAssistantError(err) from err

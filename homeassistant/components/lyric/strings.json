@@ -18,6 +18,28 @@
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
+  "entity": {
+    "sensor": {
+      "indoor_temperature": {
+        "name": "Indoor temperature"
+      },
+      "indoor_humidity": {
+        "name": "Indoor humidity"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "outdoor_humidity": {
+        "name": "Outdoor humidity"
+      },
+      "next_period_time": {
+        "name": "Next period time"
+      },
+      "setpoint_status": {
+        "name": "Setpoint status"
+      }
+    }
+  },
   "services": {
     "set_hold_time": {
       "name": "Set Hold Time",

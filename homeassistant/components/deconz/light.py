@@ -29,7 +29,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import color_hs_to_xy
 
@@ -154,8 +154,9 @@ class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
             self._attr_supported_color_modes.add(ColorMode.ONOFF)
 
         if device.brightness is not None:
-            self._attr_supported_features |= LightEntityFeature.FLASH
-            self._attr_supported_features |= LightEntityFeature.TRANSITION
+            self._attr_supported_features |= (
+                LightEntityFeature.FLASH | LightEntityFeature.TRANSITION
+            )
 
         if device.effect is not None:
             self._attr_supported_features |= LightEntityFeature.EFFECT

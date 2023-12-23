@@ -2,6 +2,7 @@
 from unittest.mock import AsyncMock
 
 from devolo_plc_api.exceptions.device import DeviceUnavailable
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -13,7 +14,6 @@ from homeassistant.components.devolo_home_network.const import (
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from . import configure_integration
 from .const import PLCNET_ATTACHED
@@ -40,6 +40,7 @@ async def test_update_attached_to_router(
     hass: HomeAssistant,
     mock_device: MockDevice,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test state change of a attached_to_router binary sensor device."""
@@ -57,7 +58,8 @@ async def test_update_attached_to_router(
     mock_device.plcnet.async_get_network_overview = AsyncMock(
         side_effect=DeviceUnavailable
     )
-    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
+    freezer.tick(LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)
@@ -68,7 +70,8 @@ async def test_update_attached_to_router(
     mock_device.plcnet.async_get_network_overview = AsyncMock(
         return_value=PLCNET_ATTACHED
     )
-    async_fire_time_changed(hass, dt_util.utcnow() + LONG_UPDATE_INTERVAL)
+    freezer.tick(LONG_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)

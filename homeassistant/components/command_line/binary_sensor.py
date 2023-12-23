@@ -16,6 +16,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (
     CONF_COMMAND,
     CONF_DEVICE_CLASS,
+    CONF_ICON,
     CONF_NAME,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
@@ -29,7 +30,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.template_entity import ManualTriggerEntity
+from homeassistant.helpers.trigger_template_entity import ManualTriggerEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
@@ -86,6 +87,7 @@ async def async_setup_platform(
     device_class: BinarySensorDeviceClass | None = binary_sensor_config.get(
         CONF_DEVICE_CLASS
     )
+    icon: Template | None = binary_sensor_config.get(CONF_ICON)
     value_template: Template | None = binary_sensor_config.get(CONF_VALUE_TEMPLATE)
     command_timeout: int = binary_sensor_config[CONF_COMMAND_TIMEOUT]
     unique_id: str | None = binary_sensor_config.get(CONF_UNIQUE_ID)
@@ -100,6 +102,7 @@ async def async_setup_platform(
         CONF_UNIQUE_ID: unique_id,
         CONF_NAME: Template(name, hass),
         CONF_DEVICE_CLASS: device_class,
+        CONF_ICON: icon,
     }
 
     async_add_entities(

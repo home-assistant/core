@@ -13,4 +13,5 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.TIME,
     Platform.NUMBER,
+    Platform.BINARY_SENSOR,
 ]

@@ -1,4 +1,5 @@
 """Tests for Samsung TV config flow."""
+from ipaddress import ip_address
 from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 import pytest
@@ -130,8 +131,8 @@ MOCK_DHCP_DATA = dhcp.DhcpServiceInfo(
 )
 EXISTING_IP = "192.168.40.221"
 MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
-    host="fake_host",
-    addresses=["fake_host"],
+    ip_address=ip_address("127.0.0.1"),
+    ip_addresses=[ip_address("127.0.0.1")],
     hostname="mock_hostname",
     name="mock_name",
     port=1234,
@@ -975,7 +976,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     )
     assert result["type"] == "create_entry"
     assert result["title"] == "Living Room (82GXARRS)"
-    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["data"][CONF_HOST] == "127.0.0.1"
     assert result["data"][CONF_NAME] == "Living Room"
     assert result["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
@@ -1273,7 +1274,9 @@ async def test_update_missing_mac_unique_id_added_from_zeroconf(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test missing mac and unique id added."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY, unique_id=None)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={**MOCK_OLD_ENTRY, "host": "127.0.0.1"}, unique_id=None
+    )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -1539,7 +1542,7 @@ async def test_update_missing_mac_added_unique_id_preserved_from_zeroconf(
     """Test missing mac and unique id added."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=MOCK_OLD_ENTRY,
+        data={**MOCK_OLD_ENTRY, "host": "127.0.0.1"},
         unique_id="0d1cef00-00dc-1000-9c80-4844f7b172de",
     )
     entry.add_to_hass(hass)

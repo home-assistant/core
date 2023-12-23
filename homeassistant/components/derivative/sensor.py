@@ -24,7 +24,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     EventStateChangedData,
@@ -116,8 +116,8 @@ async def async_setup_entry(
     else:
         device_info = None
 
-    unit_prefix = config_entry.options[CONF_UNIT_PREFIX]
-    if unit_prefix == "none":
+    if (unit_prefix := config_entry.options.get(CONF_UNIT_PREFIX)) == "none":
+        # Before we had support for optional selectors, "none" was used for selecting nothing
         unit_prefix = None
 
     derivative_sensor = DerivativeSensor(

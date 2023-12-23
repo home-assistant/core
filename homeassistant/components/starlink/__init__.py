@@ -11,6 +11,7 @@ from .coordinator import StarlinkUpdateCoordinator
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.DEVICE_TRACKER,
     Platform.SENSOR,
     Platform.SWITCH,
 ]

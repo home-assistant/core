@@ -21,5 +21,24 @@
         "title": "Pick endpoint."
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "wind_direction": {
+        "name": "Wind direction"
+      },
+      "wind_average": {
+        "name": "Wind average"
+      },
+      "wind_gust": {
+        "name": "Wind gust"
+      },
+      "uv": {
+        "name": "UV"
+      },
+      "dew_point": {
+        "name": "Dew point"
+      }
+    }
   }
 }

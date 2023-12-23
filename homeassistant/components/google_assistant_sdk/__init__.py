@@ -1,6 +1,8 @@
 """Support for Google Assistant SDK."""
 from __future__ import annotations
 
+import dataclasses
+
 import aiohttp
 from gassist_text import TextAssistant
 from google.oauth2.credentials import Credentials
@@ -9,7 +11,12 @@ import voluptuous as vol
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery, intent
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -101,19 +108,30 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_setup_service(hass: HomeAssistant) -> None:
     """Add the services for Google Assistant SDK."""
 
-    async def send_text_command(call: ServiceCall) -> None:
+    async def send_text_command(call: ServiceCall) -> ServiceResponse:
         """Send a text command to Google Assistant SDK."""
         commands: list[str] = call.data[SERVICE_SEND_TEXT_COMMAND_FIELD_COMMAND]
         media_players: list[str] | None = call.data.get(
             SERVICE_SEND_TEXT_COMMAND_FIELD_MEDIA_PLAYER
         )
-        await async_send_text_commands(hass, commands, media_players)
+        command_response_list = await async_send_text_commands(
+            hass, commands, media_players
+        )
+        if call.return_response:
+            return {
+                "responses": [
+                    dataclasses.asdict(command_response)
+                    for command_response in command_response_list
+                ]
+            }
+        return None
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_SEND_TEXT_COMMAND,
         send_text_command,
         schema=SERVICE_SEND_TEXT_COMMAND_SCHEMA,
+        supports_response=SupportsResponse.OPTIONAL,
     )
 
 

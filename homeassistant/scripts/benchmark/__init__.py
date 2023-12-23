@@ -49,7 +49,7 @@ def run(args):
 
 async def run_benchmark(bench):
     """Run a benchmark."""
-    hass = core.HomeAssistant()
+    hass = core.HomeAssistant("")
     runtime = await bench(hass)
     print(f"Benchmark {bench.__name__} done in {runtime}s")
     await hass.async_stop()

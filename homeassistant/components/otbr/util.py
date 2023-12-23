@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 import dataclasses
 from functools import wraps
+import logging
 from typing import Any, Concatenate, ParamSpec, TypeVar, cast
 
 import python_otbr_api
@@ -13,7 +14,7 @@ from python_otbr_api.tlv_parser import MeshcopTLVType
 
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     MultiprotocolAddonManager,
-    get_addon_manager,
+    get_multiprotocol_addon_manager,
     is_multiprotocol_url,
     multi_pan_addon_using_device,
 )
@@ -26,6 +27,8 @@ from .const import DOMAIN
 
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
+
+_LOGGER = logging.getLogger(__name__)
 
 INFO_URL_SKY_CONNECT = (
     "https://skyconnect.home-assistant.io/multiprotocol-channel-missmatch"
@@ -67,6 +70,25 @@ class OTBRData:
     url: str
     api: python_otbr_api.OTBR
     entry_id: str
+
+    @_handle_otbr_error
+    async def factory_reset(self) -> None:
+        """Reset the router."""
+        try:
+            await self.api.factory_reset()
+        except python_otbr_api.FactoryResetNotSupportedError:
+            _LOGGER.warning(
+                "OTBR does not support factory reset, attempting to delete dataset"
+            )
+            await self.delete_active_dataset()
+
+    @_handle_otbr_error
+    async def get_border_agent_id(self) -> bytes | None:
+        """Get the border agent ID or None if not supported by the router."""
+        try:
+            return await self.api.get_border_agent_id()
+        except python_otbr_api.GetBorderAgentIdNotSupportedError:
+            return None
 
     @_handle_otbr_error
     async def set_enabled(self, enabled: bool) -> None:
@@ -124,8 +146,10 @@ async def get_allowed_channel(hass: HomeAssistant, otbr_url: str) -> int | None:
         # The OTBR is not sharing the radio, no restriction
         return None
 
-    addon_manager: MultiprotocolAddonManager = await get_addon_manager(hass)
-    return addon_manager.async_get_channel()
+    multipan_manager: MultiprotocolAddonManager = await get_multiprotocol_addon_manager(
+        hass
+    )
+    return multipan_manager.async_get_channel()
 
 
 async def _warn_on_channel_collision(

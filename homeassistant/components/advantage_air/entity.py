@@ -4,7 +4,7 @@ from typing import Any
 from advantage_air import ApiError
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -61,6 +61,12 @@ class AdvantageAirAcEntity(AdvantageAirEntity):
     @property
     def _ac(self) -> dict[str, Any]:
         return self.coordinator.data["aircons"][self.ac_key]["info"]
+
+    @property
+    def _myzone(self) -> dict[str, Any] | None:
+        return self.coordinator.data["aircons"][self.ac_key]["zones"].get(
+            f"z{self._ac['myZone']:02}"
+        )
 
 
 class AdvantageAirZoneEntity(AdvantageAirAcEntity):

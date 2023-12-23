@@ -22,5 +22,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["aiolyric"],
   "quality_scale": "silver",
-  "requirements": ["aiolyric==1.0.9"]
+  "requirements": ["aiolyric==1.1.0"]
 }

@@ -303,7 +303,7 @@ async def test_and_condition_shorthand(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     assert config["alias"] == "And Condition Shorthand"
-    assert "and" not in config.keys()
+    assert "and" not in config
 
     hass.states.async_set("sensor.temperature", 120)
     assert not test(hass)
@@ -345,7 +345,7 @@ async def test_and_condition_list_shorthand(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     assert config["alias"] == "And Condition List Shorthand"
-    assert "and" not in config.keys()
+    assert "and" not in config
 
     hass.states.async_set("sensor.temperature", 120)
     assert not test(hass)
@@ -577,7 +577,7 @@ async def test_or_condition_shorthand(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     assert config["alias"] == "Or Condition Shorthand"
-    assert "or" not in config.keys()
+    assert "or" not in config
 
     hass.states.async_set("sensor.temperature", 120)
     assert not test(hass)
@@ -809,7 +809,7 @@ async def test_not_condition_shorthand(hass: HomeAssistant) -> None:
     test = await condition.async_from_config(hass, config)
 
     assert config["alias"] == "Not Condition Shorthand"
-    assert "not" not in config.keys()
+    assert "not" not in config
 
     hass.states.async_set("sensor.temperature", 101)
     assert test(hass)

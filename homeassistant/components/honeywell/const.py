@@ -9,7 +9,4 @@ DEFAULT_COOL_AWAY_TEMPERATURE = 88
 DEFAULT_HEAT_AWAY_TEMPERATURE = 61
 CONF_DEV_ID = "thermostat"
 CONF_LOC_ID = "location"
-TEMPERATURE_STATUS_KEY = "outdoor_temperature"
-HUMIDITY_STATUS_KEY = "outdoor_humidity"
-
 _LOGGER = logging.getLogger(__name__)

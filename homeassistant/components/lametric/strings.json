@@ -115,7 +115,7 @@
       "description": "Displays a message with an optional icon on a LaMetric device.",
       "fields": {
         "device_id": {
-          "name": "[%key:component::lametric::services::chart::fields::device_id::name%]",
+          "name": "[%key:common::config_flow::data::device%]",
           "description": "The LaMetric device to display the message on."
         },
         "message": {

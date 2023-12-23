@@ -8,7 +8,15 @@ import logging
 from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from denonavr import DenonAVR
-from denonavr.const import POWER_ON, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
+from denonavr.const import (
+    ALL_TELNET_EVENTS,
+    ALL_ZONES,
+    POWER_ON,
+    STATE_OFF,
+    STATE_ON,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 from denonavr.exceptions import (
     AvrCommandError,
     AvrForbiddenError,
@@ -19,6 +27,7 @@ from denonavr.exceptions import (
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -28,7 +37,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import CONF_RECEIVER
@@ -71,6 +80,23 @@ PARALLEL_UPDATES = 1
 SERVICE_GET_COMMAND = "get_command"
 SERVICE_SET_DYNAMIC_EQ = "set_dynamic_eq"
 SERVICE_UPDATE_AUDYSSEY = "update_audyssey"
+
+# HA Telnet events
+TELNET_EVENTS = {
+    "HD",
+    "MS",
+    "MU",
+    "MV",
+    "NS",
+    "NSE",
+    "PS",
+    "SI",
+    "SS",
+    "TF",
+    "ZM",
+    "Z2",
+    "Z3",
+}
 
 _DenonDeviceT = TypeVar("_DenonDeviceT", bound="DenonDevice")
 _R = TypeVar("_R")
@@ -196,11 +222,10 @@ def async_log_errors(
             )
         except DenonAvrError as err:
             available = False
-            _LOGGER.error(
+            _LOGGER.exception(
                 "Error %s occurred in method %s for Denon AVR receiver",
                 err,
                 func.__name__,
-                exc_info=True,
             )
         finally:
             if available and not self.available:
@@ -217,6 +242,10 @@ def async_log_errors(
 class DenonDevice(MediaPlayerEntity):
     """Representation of a Denon Media Player Device."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
+
     def __init__(
         self,
         receiver: DenonAVR,
@@ -225,7 +254,6 @@ class DenonDevice(MediaPlayerEntity):
         update_audyssey: bool,
     ) -> None:
         """Initialize the device."""
-        self._attr_name = receiver.name
         self._attr_unique_id = unique_id
         assert config_entry.unique_id
         self._attr_device_info = DeviceInfo(
@@ -234,10 +262,9 @@ class DenonDevice(MediaPlayerEntity):
             identifiers={(DOMAIN, config_entry.unique_id)},
             manufacturer=config_entry.data[CONF_MANUFACTURER],
             model=config_entry.data[CONF_MODEL],
-            name=config_entry.title,
+            name=receiver.name,
         )
         self._attr_sound_mode_list = receiver.sound_mode_list
-
         self._receiver = receiver
         self._update_audyssey = update_audyssey
 
@@ -252,7 +279,9 @@ class DenonDevice(MediaPlayerEntity):
     async def _telnet_callback(self, zone, event, parameter) -> None:
         """Process a telnet command callback."""
         # There are multiple checks implemented which reduce unnecessary updates of the ha state machine
-        if zone != self._receiver.zone:
+        if zone not in (self._receiver.zone, ALL_ZONES):
+            return
+        if event not in TELNET_EVENTS:
             return
         # Some updates trigger multiple events like one for artist and one for title for one change
         # We skip every event except the last one
@@ -266,11 +295,11 @@ class DenonDevice(MediaPlayerEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register for telnet events."""
-        self._receiver.register_callback("ALL", self._telnet_callback)
+        self._receiver.register_callback(ALL_TELNET_EVENTS, self._telnet_callback)
 
     async def async_will_remove_from_hass(self) -> None:
         """Clean up the entity."""
-        self._receiver.unregister_callback("ALL", self._telnet_callback)
+        self._receiver.unregister_callback(ALL_TELNET_EVENTS, self._telnet_callback)
 
     @async_log_errors
     async def async_update(self) -> None:

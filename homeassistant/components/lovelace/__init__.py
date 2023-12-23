@@ -144,7 +144,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "yaml_dashboards": config[DOMAIN].get(CONF_DASHBOARDS, {}),
     }
 
-    if hass.config.safe_mode:
+    if hass.config.recovery_mode:
         return True
 
     async def storage_dashboard_changed(change_type, item_id, item):

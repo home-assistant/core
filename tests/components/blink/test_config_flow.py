@@ -1,5 +1,5 @@
 """Test the Blink config flow."""
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from blinkpy.auth import LoginError
 from blinkpy.blinkpy import BlinkSetupError
@@ -268,10 +268,10 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    mock_auth = Mock(
+    mock_auth = AsyncMock(
         startup=Mock(return_value=True), check_key_required=Mock(return_value=False)
     )
-    mock_blink = Mock()
+    mock_blink = AsyncMock(cameras=Mock(), sync=Mock())
 
     with patch("homeassistant.components.blink.Auth", return_value=mock_auth), patch(
         "homeassistant.components.blink.Blink", return_value=mock_blink
@@ -293,7 +293,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input={"scan_interval": 5},
         )
-
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"] == {"scan_interval": 5}
         await hass.async_block_till_done()

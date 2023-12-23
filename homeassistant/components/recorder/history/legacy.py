@@ -50,7 +50,7 @@ _BASE_STATES = (
     States.last_changed_ts,
     States.last_updated_ts,
 )
-_BASE_STATES_NO_LAST_CHANGED = (  # type: ignore[var-annotated]
+_BASE_STATES_NO_LAST_CHANGED = (
     States.entity_id,
     States.state,
     literal(value=None).label("last_changed_ts"),
@@ -565,8 +565,6 @@ def _get_states_for_entities_stmt(
                 most_recent_states_for_entities_by_date := (
                     select(
                         States.entity_id.label("max_entity_id"),
-                        # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-                        # pylint: disable-next=not-callable
                         func.max(States.last_updated_ts).label("max_last_updated"),
                     )
                     .filter(
@@ -590,8 +588,6 @@ def _get_states_for_entities_stmt(
             (
                 most_recent_states_for_entities_by_date := select(
                     States.entity_id.label("max_entity_id"),
-                    # https://github.com/sqlalchemy/sqlalchemy/issues/9189
-                    # pylint: disable-next=not-callable
                     func.max(States.last_updated).label("max_last_updated"),
                 )
                 .filter(

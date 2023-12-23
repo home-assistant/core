@@ -60,6 +60,7 @@ from .test_common import (
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_skipped_async_ha_write_state,
     help_test_unique_id,
     help_test_unload_config_entry_with_platform,
     help_test_update_with_json_attrs_bad_json,
@@ -95,9 +96,8 @@ async def test_fail_setup_if_no_command_topic(
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
     """Test if command fails with command topic."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
-    assert "Invalid config for [mqtt]: required key not provided" in caplog.text
+    assert await mqtt_mock_entry()
+    assert "required key not provided" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -1583,7 +1583,7 @@ async def test_attributes(
 
 
 @pytest.mark.parametrize(
-    ("name", "hass_config", "success", "features"),
+    ("name", "hass_config", "success", "features", "error_message"),
     [
         (
             "test1",
@@ -1597,6 +1597,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature(0),
+            None,
         ),
         (
             "test2",
@@ -1611,6 +1612,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.OSCILLATE,
+            None,
         ),
         (
             "test3",
@@ -1625,6 +1627,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.SET_SPEED,
+            None,
         ),
         (
             "test4",
@@ -1639,6 +1642,7 @@ async def test_attributes(
             },
             False,
             None,
+            "some but not all values in the same group of inclusion 'preset_modes'",
         ),
         (
             "test5",
@@ -1654,6 +1658,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.PRESET_MODE,
+            None,
         ),
         (
             "test6",
@@ -1669,6 +1674,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.PRESET_MODE,
+            None,
         ),
         (
             "test7",
@@ -1683,6 +1689,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.SET_SPEED,
+            None,
         ),
         (
             "test8",
@@ -1698,6 +1705,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.OSCILLATE | fan.FanEntityFeature.SET_SPEED,
+            None,
         ),
         (
             "test9",
@@ -1713,6 +1721,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.PRESET_MODE,
+            None,
         ),
         (
             "test10",
@@ -1728,6 +1737,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.PRESET_MODE,
+            None,
         ),
         (
             "test11",
@@ -1744,6 +1754,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.PRESET_MODE | fan.FanEntityFeature.OSCILLATE,
+            None,
         ),
         (
             "test12",
@@ -1760,6 +1771,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.SET_SPEED,
+            None,
         ),
         (
             "test13",
@@ -1776,6 +1788,7 @@ async def test_attributes(
             },
             False,
             None,
+            "not a valid value",
         ),
         (
             "test14",
@@ -1792,13 +1805,14 @@ async def test_attributes(
             },
             False,
             None,
+            "not a valid value",
         ),
         (
             "test15",
             {
                 mqtt.DOMAIN: {
                     fan.DOMAIN: {
-                        "name": "test7reset_payload_in_preset_modes_a",
+                        "name": "test15",
                         "command_topic": "command-topic",
                         "preset_mode_command_topic": "preset-mode-command-topic",
                         "preset_modes": ["auto", "smart", "normal", "None"],
@@ -1807,6 +1821,7 @@ async def test_attributes(
             },
             False,
             None,
+            "preset_modes must not contain payload_reset_preset_mode",
         ),
         (
             "test16",
@@ -1823,6 +1838,7 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.PRESET_MODE,
+            "some error",
         ),
         (
             "test17",
@@ -1837,25 +1853,27 @@ async def test_attributes(
             },
             True,
             fan.FanEntityFeature.DIRECTION,
+            "some error",
         ),
     ],
 )
 async def test_supported_features(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
     name: str,
     success: bool,
-    features,
+    features: fan.FanEntityFeature | None,
+    error_message: str | None,
 ) -> None:
     """Test optimistic mode without state topic."""
+    await mqtt_mock_entry()
+    state = hass.states.get(f"fan.{name}")
+    assert (state is not None) == success
     if success:
-        await mqtt_mock_entry()
-
-        state = hass.states.get(f"fan.{name}")
         assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == features
         return
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    assert error_message in caplog.text
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -2244,3 +2262,48 @@ async def test_unload_entry(
     await help_test_unload_config_entry_with_platform(
         hass, mqtt_mock_entry, domain, config
     )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            fan.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "availability_topic": "availability-topic",
+                    "json_attributes_topic": "json-attributes-topic",
+                    "direction_state_topic": "direction-state-topic",
+                    "percentage_state_topic": "percentage-state-topic",
+                    "preset_mode_command_topic": "preset-mode-command-topic",
+                    "preset_mode_state_topic": "preset-mode-state-topic",
+                    "preset_modes": ["eco", "silent"],
+                    "oscillation_state_topic": "oscillation-state-topic",
+                },
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("topic", "payload1", "payload2"),
+    [
+        ("availability-topic", "online", "offline"),
+        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
+        ("state-topic", "ON", "OFF"),
+        ("direction-state-topic", "forward", "reverse"),
+        ("percentage-state-topic", "30", "40"),
+        ("preset-mode-state-topic", "eco", "silent"),
+        ("oscillation-state-topic", "oscillate_on", "oscillate_off"),
+    ],
+)
+async def test_skipped_async_ha_write_state(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    topic: str,
+    payload1: str,
+    payload2: str,
+) -> None:
+    """Test a write state command is only called when there is change."""
+    await mqtt_mock_entry()
+    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)

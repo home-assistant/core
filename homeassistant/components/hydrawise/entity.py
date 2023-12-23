@@ -3,9 +3,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import HydrawiseDataUpdateCoordinator
 
 
@@ -13,6 +15,7 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
     """Entity class for Hydrawise devices."""
 
     _attr_attribution = "Data provided by hydrawise.com"
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -20,14 +23,16 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
         data: dict[str, Any],
         coordinator: HydrawiseDataUpdateCoordinator,
         description: EntityDescription,
+        device_id_key: str = "relay_id",
     ) -> None:
         """Initialize the Hydrawise entity."""
         super().__init__(coordinator=coordinator)
         self.data = data
         self.entity_description = description
-        self._attr_name = f"{self.data['name']} {description.name}"
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        return {"identifier": self.data.get("relay")}
+        self._device_id = str(data.get(device_id_key))
+        self._attr_unique_id = f"{self._device_id}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            name=data["name"],
+            manufacturer=MANUFACTURER,
+        )

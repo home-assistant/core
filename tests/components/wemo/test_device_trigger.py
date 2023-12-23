@@ -17,10 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    async_get_device_automations,
-    async_mock_service,
-)
+from tests.common import async_get_device_automations, async_mock_service
 
 MOCK_DEVICE_ID = "some-device-id"
 DATA_MESSAGE = {"message": "service-called"}

@@ -6,7 +6,6 @@ import asyncio
 import logging
 from typing import Any
 
-import async_timeout
 from pyrainbird.async_client import (
     AsyncRainbirdClient,
     AsyncRainbirdController,
@@ -106,7 +105,7 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         )
         try:
-            async with async_timeout.timeout(TIMEOUT_SECONDS):
+            async with asyncio.timeout(TIMEOUT_SECONDS):
                 return await controller.get_serial_number()
         except asyncio.TimeoutError as err:
             raise ConfigFlowError(
@@ -126,8 +125,13 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         options: dict[str, Any],
     ) -> FlowResult:
         """Create the config entry."""
-        await self.async_set_unique_id(serial_number)
-        self._abort_if_unique_id_configured()
+        # Prevent devices with the same serial number. If the device does not have a serial number
+        # then we can at least prevent configuring the same host twice.
+        if serial_number:
+            await self.async_set_unique_id(serial_number)
+            self._abort_if_unique_id_configured()
+        else:
+            self._async_abort_entries_match(data)
         return self.async_create_entry(
             title=data[CONF_HOST],
             data=data,

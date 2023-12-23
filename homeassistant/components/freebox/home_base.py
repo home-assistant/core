@@ -5,10 +5,11 @@ import logging
 from typing import Any
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
-from .const import CATEGORY_TO_MODEL, DOMAIN
+from .const import CATEGORY_TO_MODEL, DOMAIN, FreeboxHomeCategory
 from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,10 +48,10 @@ class FreeboxHomeEntity(Entity):
         if self._model is None:
             if node["type"].get("inherit") == "node::rts":
                 self._manufacturer = "Somfy"
-                self._model = CATEGORY_TO_MODEL.get("rts")
+                self._model = CATEGORY_TO_MODEL[FreeboxHomeCategory.RTS]
             elif node["type"].get("inherit") == "node::ios":
                 self._manufacturer = "Somfy"
-                self._model = CATEGORY_TO_MODEL.get("iohome")
+                self._model = CATEGORY_TO_MODEL[FreeboxHomeCategory.IOHOME]
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._id)},
@@ -76,23 +77,36 @@ class FreeboxHomeEntity(Entity):
             )
         self.async_write_ha_state()
 
-    async def set_home_endpoint_value(self, command_id: Any, value=None) -> None:
+    async def set_home_endpoint_value(self, command_id: Any, value=None) -> bool:
         """Set Home endpoint value."""
         if command_id is None:
             _LOGGER.error("Unable to SET a value through the API. Command is None")
-            return
+            return False
+
         await self._router.home.set_home_endpoint_value(
             self._id, command_id, {"value": value}
         )
+        return True
 
-    def get_command_id(self, nodes, name) -> int | None:
+    async def get_home_endpoint_value(self, command_id: Any) -> Any | None:
+        """Get Home endpoint value."""
+        if command_id is None:
+            _LOGGER.error("Unable to GET a value through the API. Command is None")
+            return None
+
+        node = await self._router.home.get_home_endpoint_value(self._id, command_id)
+        return node.get("value")
+
+    def get_command_id(self, nodes, ep_type, name) -> int | None:
         """Get the command id."""
         node = next(
-            filter(lambda x: (x["name"] == name), nodes),
+            filter(lambda x: (x["name"] == name and x["ep_type"] == ep_type), nodes),
             None,
         )
         if not node:
-            _LOGGER.warning("The Freebox Home device has no value for: %s", name)
+            _LOGGER.warning(
+                "The Freebox Home device has no command value for: %s/%s", name, ep_type
+            )
             return None
         return node["id"]
 
@@ -114,7 +128,7 @@ class FreeboxHomeEntity(Entity):
         """Register state update callback."""
         self._remove_signal_update = dispacher
 
-    def get_value(self, ep_type, name):
+    def get_value(self, ep_type: str, name: str):
         """Get the value."""
         node = next(
             filter(
@@ -125,7 +139,7 @@ class FreeboxHomeEntity(Entity):
         )
         if not node:
             _LOGGER.warning(
-                "The Freebox Home device has no node for: " + ep_type + "/" + name
+                "The Freebox Home device has no node value for: %s/%s", ep_type, name
             )
             return None
         return node.get("value")

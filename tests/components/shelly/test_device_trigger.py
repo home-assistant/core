@@ -25,10 +25,7 @@ from homeassistant.setup import async_setup_component
 
 from . import init_integration
 
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automations,
-)
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
 @pytest.mark.parametrize(

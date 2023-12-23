@@ -293,7 +293,6 @@ async def async_setup_entry(
     return True
 
 
-# pylint: disable=invalid-name
 class iOSPushConfigView(HomeAssistantView):
     """A view that provides the push categories configuration."""
 

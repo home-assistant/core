@@ -115,6 +115,26 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         )
         self._attr_available = is_connected and updated_device.feature_flags.has_speaker
 
+    @callback
+    def _async_updated_event(self, device: ProtectModelWithId) -> None:
+        """Call back for incoming data that only writes when state has changed.
+
+        Only the state, volume, and available are ever updated for these
+        entities, and since the websocket update for the device will trigger
+        an update for all entities connected to the device, we want to avoid
+        writing state unless something has actually changed.
+        """
+        previous_state = self._attr_state
+        previous_available = self._attr_available
+        previous_volume_level = self._attr_volume_level
+        self._async_update_device_from_protect(device)
+        if (
+            self._attr_state != previous_state
+            or self._attr_volume_level != previous_volume_level
+            or self._attr_available != previous_available
+        ):
+            self.async_write_ha_state()
+
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
 

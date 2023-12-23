@@ -14,7 +14,6 @@ from homeassistant.setup import async_setup_component
 from . import (
     DEFAULT_ENTRY_TITLE,
     IP_ADDRESS,
-    MAC_ADDRESS,
     SERIAL,
     _mocked_bulb,
     _patch_config_flow_try_connect,
@@ -38,7 +37,7 @@ async def test_button_restart(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         title=DEFAULT_ENTRY_TITLE,
         data={CONF_HOST: IP_ADDRESS},
-        unique_id=MAC_ADDRESS,
+        unique_id=SERIAL,
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
@@ -70,7 +69,7 @@ async def test_button_identify(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         title=DEFAULT_ENTRY_TITLE,
         data={CONF_HOST: IP_ADDRESS},
-        unique_id=MAC_ADDRESS,
+        unique_id=SERIAL,
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()

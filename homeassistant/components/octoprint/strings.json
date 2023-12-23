@@ -6,8 +6,8 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "path": "Application Path",
-          "port": "Port Number",
-          "ssl": "Use SSL",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "username": "[%key:common::config_flow::data::username%]"
         }

@@ -43,5 +43,23 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "name": "Status"
+      }
+    },
+    "sensor": {
+      "e5": {
+        "name": "Super"
+      },
+      "e10": {
+        "name": "Super E10"
+      },
+      "diesel": {
+        "name": "Diesel"
+      }
+    }
   }
 }

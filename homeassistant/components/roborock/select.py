@@ -7,6 +7,7 @@ from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
@@ -43,6 +44,7 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         translation_key="mop_intensity",
         api_command=RoborockCommand.SET_WATER_BOX_CUSTOM_MODE,
         value_fn=lambda data: data.water_box_mode.name,
+        entity_category=EntityCategory.CONFIG,
         options_lambda=lambda data: data.water_box_mode.keys()
         if data.water_box_mode
         else None,
@@ -53,6 +55,7 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         translation_key="mop_mode",
         api_command=RoborockCommand.SET_MOP_MODE,
         value_fn=lambda data: data.mop_mode.name,
+        entity_category=EntityCategory.CONFIG,
         options_lambda=lambda data: data.mop_mode.keys() if data.mop_mode else None,
         parameter_lambda=lambda key, status: [status.mop_mode.as_dict().get(key)],
     ),

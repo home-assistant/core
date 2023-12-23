@@ -563,6 +563,9 @@ def test_string_with_no_html() -> None:
     with pytest.raises(vol.Invalid):
         schema("<b>Bold</b>")
 
+    with pytest.raises(vol.Invalid):
+        schema("HTML element names are <EM>case-insensitive</eM>.")
+
     for value in (
         True,
         3,
@@ -1221,7 +1224,7 @@ def test_enum() -> None:
         schema("value3")
 
 
-def test_socket_timeout():  # pylint: disable=invalid-name
+def test_socket_timeout():
     """Test socket timeout validator."""
     schema = vol.Schema(cv.socket_timeout)
 

@@ -94,8 +94,6 @@ async def async_check_ha_config_file(  # noqa: C901
         if not await hass.async_add_executor_job(os.path.isfile, config_path):
             return result.add_error("File configuration.yaml not found.")
 
-        assert hass.config.config_dir is not None
-
         config = await hass.async_add_executor_job(
             load_yaml_config_file,
             config_path,
@@ -129,7 +127,7 @@ async def async_check_ha_config_file(  # noqa: C901
         try:
             integration = await async_get_integration_with_requirements(hass, domain)
         except loader.IntegrationNotFound as ex:
-            if not hass.config.safe_mode:
+            if not hass.config.recovery_mode:
                 result.add_error(f"Integration error: {domain} - {ex}")
             continue
         except RequirementsNotFound as ex:
@@ -218,7 +216,7 @@ async def async_check_ha_config_file(  # noqa: C901
                 )
                 platform = p_integration.get_platform(domain)
             except loader.IntegrationNotFound as ex:
-                if not hass.config.safe_mode:
+                if not hass.config.recovery_mode:
                     result.add_error(f"Platform error {domain}.{p_name} - {ex}")
                 continue
             except (

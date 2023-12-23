@@ -160,6 +160,7 @@ async def test_list_get_dataset(
                 "network_name": "OpenThreadDemo",
                 "pan_id": "1234",
                 "preferred": True,
+                "preferred_border_agent_id": None,
                 "source": "Google",
             },
             {
@@ -170,6 +171,7 @@ async def test_list_get_dataset(
                 "network_name": "HomeAssistant!",
                 "pan_id": "1234",
                 "preferred": False,
+                "preferred_border_agent_id": None,
                 "source": "Multipan",
             },
             {
@@ -180,6 +182,7 @@ async def test_list_get_dataset(
                 "network_name": "~🐣🐥🐤~",
                 "pan_id": "1234",
                 "preferred": False,
+                "preferred_border_agent_id": None,
                 "source": "🎅",
             },
         ]
@@ -198,6 +201,47 @@ async def test_list_get_dataset(
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"] == {"code": "not_found", "message": "unknown dataset"}
+
+
+async def test_set_preferred_border_agent_id(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test setting the preferred border agent ID."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "thread/add_dataset_tlv", "source": "test", "tlv": DATASET_1}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    await client.send_json_auto_id({"type": "thread/list_datasets"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    datasets = msg["result"]["datasets"]
+    dataset_id = datasets[0]["dataset_id"]
+    assert datasets[0]["preferred_border_agent_id"] is None
+
+    await client.send_json_auto_id(
+        {
+            "type": "thread/set_preferred_border_agent_id",
+            "dataset_id": dataset_id,
+            "border_agent_id": "blah",
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    await client.send_json_auto_id({"type": "thread/list_datasets"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    datasets = msg["result"]["datasets"]
+    assert datasets[0]["preferred_border_agent_id"] == "blah"
 
 
 async def test_set_preferred_dataset(
@@ -288,6 +332,7 @@ async def test_discover_routers(
         "event": {
             "data": {
                 "addresses": ["192.168.0.115"],
+                "border_agent_id": "230c6a1ac57f6f4be262acf32e5ef52c",
                 "brand": "homeassistant",
                 "extended_address": "aeeb2f594b570bbf",
                 "extended_pan_id": "e60fc7c186212ce5",
@@ -317,6 +362,7 @@ async def test_discover_routers(
         "event": {
             "data": {
                 "addresses": ["192.168.0.124"],
+                "border_agent_id": "bc3740c3e963aa8735bebecd7cc503c7",
                 "brand": "google",
                 "extended_address": "f6a99b425a67abed",
                 "extended_pan_id": "9e75e256f61409a3",

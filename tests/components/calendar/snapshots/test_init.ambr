@@ -1,0 +1,31 @@
+# serializer version: 1
+# name: test_list_events_service_duration[calendar.calendar_1-00:15:00]
+  dict({
+    'events': list([
+    ]),
+  })
+# ---
+# name: test_list_events_service_duration[calendar.calendar_1-01:00:00]
+  dict({
+    'events': list([
+      dict({
+        'description': 'Future Description',
+        'end': '2023-10-19T08:20:05-07:00',
+        'location': 'Future Location',
+        'start': '2023-10-19T07:20:05-07:00',
+        'summary': 'Future Event',
+      }),
+    ]),
+  })
+# ---
+# name: test_list_events_service_duration[calendar.calendar_2-00:15:00]
+  dict({
+    'events': list([
+      dict({
+        'end': '2023-10-19T07:20:05-07:00',
+        'start': '2023-10-19T06:20:05-07:00',
+        'summary': 'Current Event',
+      }),
+    ]),
+  })
+# ---

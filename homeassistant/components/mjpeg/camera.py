@@ -7,7 +7,6 @@ from contextlib import suppress
 
 import aiohttp
 from aiohttp import web
-import async_timeout
 import httpx
 from yarl import URL
 
@@ -26,7 +25,7 @@ from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_web,
     async_get_clientsession,
 )
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
 
@@ -144,7 +143,7 @@ class MjpegCamera(Camera):
 
         websession = async_get_clientsession(self.hass, verify_ssl=self._verify_ssl)
         try:
-            async with async_timeout.timeout(TIMEOUT):
+            async with asyncio.timeout(TIMEOUT):
                 response = await websession.get(self._still_image_url, auth=self._auth)
 
                 image = await response.read()
@@ -206,7 +205,7 @@ class MjpegCamera(Camera):
                 async for chunk in stream.aiter_bytes(BUFFER_SIZE):
                     if not self.hass.is_running:
                         break
-                    async with async_timeout.timeout(TIMEOUT):
+                    async with asyncio.timeout(TIMEOUT):
                         await response.write(chunk)
         return response
 

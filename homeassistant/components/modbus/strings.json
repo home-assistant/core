@@ -68,5 +68,15 @@
         }
       }
     }
+  },
+  "issues": {
+    "deprecated_close_comm_config": {
+      "title": "`{config_key}` configuration key is being removed",
+      "description": "Please remove the `{config_key}` key from the {integration} entry in your configuration.yaml file and restart Home Assistant to fix this issue.\n\nCommunication is automatically closed on errors, see [the documentation]({url}) for other error handling parameters."
+    },
+    "deprecated_retry_on_empty": {
+      "title": "`{config_key}` configuration key is being removed",
+      "description": "Please remove the `{config_key}` key from the {integration} entry in your configuration.yaml file and restart Home Assistant to fix this issue.\n\nRetry on empty is automatically applied, see [the documentation]({url}) for other error handling parameters."
+    }
   }
 }

@@ -7,7 +7,7 @@ import urllib
 import zoneinfo
 
 import pytest
-from todoist_api_python.models import Collaborator, Due, Label, Project, Task
+from todoist_api_python.models import Due
 
 from homeassistant import setup
 from homeassistant.components.todoist.const import (
@@ -24,9 +24,10 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
+from .conftest import SUMMARY
+
 from tests.typing import ClientSessionGenerator
 
-SUMMARY = "A task"
 # Set our timezone to CST/Regina so we can check calculations
 # This keeps UTC-6 all year round
 TZ_NAME = "America/Regina"
@@ -37,69 +38,6 @@ TIMEZONE = zoneinfo.ZoneInfo(TZ_NAME)
 def set_time_zone(hass: HomeAssistant):
     """Set the time zone for the tests."""
     hass.config.set_time_zone(TZ_NAME)
-
-
-@pytest.fixture(name="due")
-def mock_due() -> Due:
-    """Mock a todoist Task Due date/time."""
-    return Due(
-        is_recurring=False, date=dt_util.now().strftime("%Y-%m-%d"), string="today"
-    )
-
-
-@pytest.fixture(name="task")
-def mock_task(due: Due) -> Task:
-    """Mock a todoist Task instance."""
-    return Task(
-        assignee_id="1",
-        assigner_id="1",
-        comment_count=0,
-        is_completed=False,
-        content=SUMMARY,
-        created_at="2021-10-01T00:00:00",
-        creator_id="1",
-        description="A task",
-        due=due,
-        id="1",
-        labels=["Label1"],
-        order=1,
-        parent_id=None,
-        priority=1,
-        project_id="12345",
-        section_id=None,
-        url="https://todoist.com",
-        sync_id=None,
-    )
-
-
-@pytest.fixture(name="api")
-def mock_api(task) -> AsyncMock:
-    """Mock the api state."""
-    api = AsyncMock()
-    api.get_projects.return_value = [
-        Project(
-            id="12345",
-            color="blue",
-            comment_count=0,
-            is_favorite=False,
-            name="Name",
-            is_shared=False,
-            url="",
-            is_inbox_project=False,
-            is_team_inbox=False,
-            order=1,
-            parent_id=None,
-            view_style="list",
-        )
-    ]
-    api.get_labels.return_value = [
-        Label(id="1", name="Label1", color="1", order=1, is_favorite=False)
-    ]
-    api.get_collaborators.return_value = [
-        Collaborator(email="user@gmail.com", id="1", name="user")
-    ]
-    api.get_tasks.return_value = [task]
-    return api
 
 
 def get_events_url(entity: str, start: str, end: str) -> str:
@@ -127,8 +65,8 @@ def mock_todoist_config() -> dict[str, Any]:
     return {}
 
 
-@pytest.fixture(name="setup_integration", autouse=True)
-async def mock_setup_integration(
+@pytest.fixture(name="setup_platform", autouse=True)
+async def mock_setup_platform(
     hass: HomeAssistant,
     api: AsyncMock,
     todoist_config: dict[str, Any],
@@ -215,7 +153,7 @@ async def test_update_entity_for_calendar_with_due_date_in_the_future(
     assert state.attributes["end_time"] == expected_end_time
 
 
-@pytest.mark.parametrize("setup_integration", [None])
+@pytest.mark.parametrize("setup_platform", [None])
 async def test_failed_coordinator_update(hass: HomeAssistant, api: AsyncMock) -> None:
     """Test a failed data coordinator update is handled correctly."""
     api.get_tasks.side_effect = Exception("API error")
@@ -417,3 +355,44 @@ async def test_task_due_datetime(
     )
     assert response.status == HTTPStatus.OK
     assert await response.json() == []
+
+
+@pytest.mark.parametrize(
+    ("due", "setup_platform"),
+    [
+        (
+            Due(
+                date="2023-03-30",
+                is_recurring=False,
+                string="Mar 30 6:00 PM",
+                datetime="2023-03-31T00:00:00Z",
+                timezone="America/Regina",
+            ),
+            None,
+        )
+    ],
+)
+async def test_config_entry(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test for a calendar created with a config entry."""
+
+    await async_update_entity(hass, "calendar.name")
+    state = hass.states.get("calendar.name")
+    assert state
+
+    client = await hass_client()
+    response = await client.get(
+        get_events_url(
+            "calendar.name", "2023-03-30T08:00:00.000Z", "2023-03-31T08:00:00.000Z"
+        ),
+    )
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == [
+        get_events_response(
+            {"dateTime": "2023-03-30T18:00:00-06:00"},
+            {"dateTime": "2023-03-31T18:00:00-06:00"},
+        )
+    ]

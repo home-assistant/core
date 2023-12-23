@@ -4,7 +4,8 @@ from typing import Any
 
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
-from homeassistant.helpers.entity import DeviceInfo, Entity, ToggleEntity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity, ToggleEntity
 
 from .const import DOMAIN, VS_FANS, VS_LIGHTS, VS_SENSORS, VS_SWITCHES
 

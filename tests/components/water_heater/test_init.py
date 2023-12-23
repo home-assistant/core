@@ -71,14 +71,12 @@ async def test_sync_turn_on(hass: HomeAssistant) -> None:
     setattr(water_heater, "turn_on", MagicMock())
     await water_heater.async_turn_on()
 
-    # pylint: disable-next=no-member
     assert water_heater.turn_on.call_count == 1
 
     # Test with async_turn_on method defined
     setattr(water_heater, "async_turn_on", AsyncMock())
     await water_heater.async_turn_on()
 
-    # pylint: disable-next=no-member
     assert water_heater.async_turn_on.call_count == 1
 
 
@@ -91,12 +89,10 @@ async def test_sync_turn_off(hass: HomeAssistant) -> None:
     setattr(water_heater, "turn_off", MagicMock())
     await water_heater.async_turn_off()
 
-    # pylint: disable-next=no-member
     assert water_heater.turn_off.call_count == 1
 
     # Test with async_turn_off method defined
     setattr(water_heater, "async_turn_off", AsyncMock())
     await water_heater.async_turn_off()
 
-    # pylint: disable-next=no-member
     assert water_heater.async_turn_off.call_count == 1

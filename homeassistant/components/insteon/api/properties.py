@@ -3,7 +3,12 @@
 from typing import Any
 
 from pyinsteon import devices
-from pyinsteon.config import RADIO_BUTTON_GROUPS, RAMP_RATE_IN_SEC, get_usable_value
+from pyinsteon.config import (
+    LOAD_BUTTON,
+    RADIO_BUTTON_GROUPS,
+    RAMP_RATE_IN_SEC,
+    get_usable_value,
+)
 from pyinsteon.constants import (
     RAMP_RATES_SEC,
     PropertyType,
@@ -75,8 +80,11 @@ def get_schema(prop, name, groups):
     if name == RAMP_RATE_IN_SEC:
         return _list_schema(name, RAMP_RATE_LIST)
     if name == RADIO_BUTTON_GROUPS:
-        button_list = {str(group): groups[group].name for group in groups if group != 1}
+        button_list = {str(group): groups[group].name for group in groups}
         return _multi_select_schema(name, button_list)
+    if name == LOAD_BUTTON:
+        button_list = {group: groups[group].name for group in groups}
+        return _list_schema(name, button_list)
     if prop.value_type == bool:
         return _bool_schema(name)
     if prop.value_type == int:

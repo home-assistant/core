@@ -1,6 +1,7 @@
 """The ping component."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 
 from icmplib import SocketPermissionError, ping as icmp_ping
@@ -10,19 +11,28 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, PING_PRIVS, PLATFORMS
+from .const import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.platform_only_config_schema(DOMAIN)
 
 
+@dataclass(slots=True)
+class PingDomainData:
+    """Dataclass to store privileged status."""
+
+    privileged: bool | None
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ping integration."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    hass.data[DOMAIN] = {
-        PING_PRIVS: await hass.async_add_executor_job(_can_use_icmp_lib_with_privilege),
-    }
+
+    hass.data[DOMAIN] = PingDomainData(
+        privileged=await hass.async_add_executor_job(_can_use_icmp_lib_with_privilege),
+    )
+
     return True
 
 

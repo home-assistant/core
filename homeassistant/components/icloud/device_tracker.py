@@ -6,8 +6,8 @@ from typing import Any
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .account import IcloudAccount, IcloudDevice
@@ -64,11 +64,7 @@ class IcloudTrackerEntity(TrackerEntity):
         self._account = account
         self._device = device
         self._unsub_dispatcher: CALLBACK_TYPE | None = None
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._device.unique_id
+        self._attr_unique_id = device.unique_id
 
     @property
     def location_accuracy(self):

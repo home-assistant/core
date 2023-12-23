@@ -5,7 +5,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
-from zigpy.exceptions import ZigbeeException
 import zigpy.zcl
 
 from homeassistant.core import callback
@@ -92,7 +91,7 @@ class TuyaClusterHandler(ClusterHandler):
             "_TZE200_k6jhsr0q",
             "_TZE200_9mahtqtg",
         ):
-            self.ZCL_INIT_ATTRS = {  # pylint: disable=invalid-name
+            self.ZCL_INIT_ATTRS = {
                 "backlight_mode": True,
                 "power_on_state": True,
             }
@@ -109,7 +108,7 @@ class OppleRemote(ClusterHandler):
         """Initialize Opple cluster handler."""
         super().__init__(cluster, endpoint)
         if self.cluster.endpoint.model == "lumi.motion.ac02":
-            self.ZCL_INIT_ATTRS = {  # pylint: disable=invalid-name
+            self.ZCL_INIT_ATTRS = {
                 "detection_interval": True,
                 "motion_sensitivity": True,
                 "trigger_indicator": True,
@@ -351,12 +350,7 @@ class IkeaAirPurifierClusterHandler(ClusterHandler):
 
     async def async_set_speed(self, value) -> None:
         """Set the speed of the fan."""
-
-        try:
-            await self.cluster.write_attributes({"fan_mode": value})
-        except ZigbeeException as ex:
-            self.error("Could not set speed: %s", ex)
-            return
+        await self.write_attributes_safe({"fan_mode": value})
 
     async def async_update(self) -> None:
         """Retrieve latest state."""

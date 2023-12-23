@@ -84,6 +84,8 @@ class SmartPlugLedSwitch(CoordinatedTPLinkEntity, SwitchEntity):
 class SmartPlugSwitch(CoordinatedTPLinkEntity, SwitchEntity):
     """Representation of a TPLink Smart Plug switch."""
 
+    _attr_name = None
+
     def __init__(
         self,
         device: SmartDevice,
@@ -114,7 +116,7 @@ class SmartPlugSwitchChild(SmartPlugSwitch):
         coordinator: TPLinkDataUpdateCoordinator,
         plug: SmartDevice,
     ) -> None:
-        """Initialize the switch."""
+        """Initialize the child switch."""
         super().__init__(device, coordinator)
         self._plug = plug
         self._attr_unique_id = legacy_device_id(plug)
@@ -122,10 +124,15 @@ class SmartPlugSwitchChild(SmartPlugSwitch):
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the switch on."""
+        """Turn the child switch on."""
         await self._plug.turn_on()
 
     @async_refresh_after
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the switch off."""
+        """Turn the child switch off."""
         await self._plug.turn_off()
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if child switch is on."""
+        return bool(self._plug.is_on)

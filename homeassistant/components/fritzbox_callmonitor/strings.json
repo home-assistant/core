@@ -37,5 +37,17 @@
     "error": {
       "malformed_prefixes": "Prefixes are malformed, please check their format."
     }
+  },
+  "entity": {
+    "sensor": {
+      "fritzbox_callmonitor": {
+        "state": {
+          "ringing": "Ringing",
+          "dialing": "Dialing",
+          "talking": "Talking",
+          "idle": "[%key:common::state::idle%]"
+        }
+      }
+    }
   }
 }

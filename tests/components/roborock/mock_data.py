@@ -13,6 +13,9 @@ from roborock.containers import (
 )
 from roborock.roborock_typing import DeviceProp
 
+from homeassistant.components.roborock import CONF_BASE_URL, CONF_USER_DATA
+from homeassistant.const import CONF_USERNAME
+
 # All data is based on a U.S. customer with a Roborock S7 MaxV Ultra
 USER_EMAIL = "user@domain.com"
 
@@ -48,9 +51,9 @@ USER_DATA = UserData.from_dict(
 )
 
 MOCK_CONFIG = {
-    "username": USER_EMAIL,
-    "user_data": USER_DATA.as_dict(),
-    "base_url": None,
+    CONF_USERNAME: USER_EMAIL,
+    CONF_USER_DATA: USER_DATA.as_dict(),
+    CONF_BASE_URL: None,
 }
 
 HOME_DATA_RAW = {
@@ -61,7 +64,7 @@ HOME_DATA_RAW = {
     "geoName": None,
     "products": [
         {
-            "id": "abc123",
+            "id": "s7_product",
             "name": "Roborock S7 MaxV",
             "code": "a27",
             "model": "roborock.vacuum.a27",
@@ -227,7 +230,7 @@ HOME_DATA_RAW = {
             "runtimeEnv": None,
             "timeZoneId": "America/Los_Angeles",
             "iconUrl": "",
-            "productId": "abc123",
+            "productId": "s7_product",
             "lon": None,
             "lat": None,
             "share": False,
@@ -255,7 +258,45 @@ HOME_DATA_RAW = {
                 "120": 0,
             },
             "silentOtaSwitch": True,
-        }
+        },
+        {
+            "duid": "device_2",
+            "name": "Roborock S7 2",
+            "attribute": None,
+            "activeTime": 1672364449,
+            "localKey": "device_2",
+            "runtimeEnv": None,
+            "timeZoneId": "America/Los_Angeles",
+            "iconUrl": "",
+            "productId": "s7_product",
+            "lon": None,
+            "lat": None,
+            "share": False,
+            "shareTime": None,
+            "online": True,
+            "fv": "02.56.02",
+            "pv": "1.0",
+            "roomId": 2362003,
+            "tuyaUuid": None,
+            "tuyaMigrated": False,
+            "extra": '{"RRPhotoPrivacyVersion": "1"}',
+            "sn": "abc123",
+            "featureSet": "2234201184108543",
+            "newFeatureSet": "0000000000002041",
+            "deviceStatus": {
+                "121": 8,
+                "122": 100,
+                "123": 102,
+                "124": 203,
+                "125": 94,
+                "126": 90,
+                "127": 87,
+                "128": 0,
+                "133": 1,
+                "120": 0,
+            },
+            "silentOtaSwitch": True,
+        },
     ],
     "receivedDevices": [],
     "rooms": [

@@ -56,10 +56,7 @@ def setup_platform(
     try:
         token = auth.get_token(email, password)
     except requests.exceptions.HTTPError as http_error:
-        if (
-            http_error.response.status_code
-            == requests.codes.unauthorized  # pylint: disable=no-member
-        ):
+        if http_error.response.status_code == requests.codes.unauthorized:
             _LOGGER.error("Invalid credentials")
             return
 
@@ -121,8 +118,8 @@ class TankUtilitySensor(SensorEntity):
             data = tank_monitor.get_device_data(self._token, self.device)
         except requests.exceptions.HTTPError as http_error:
             if http_error.response.status_code in (
-                requests.codes.unauthorized,  # pylint: disable=no-member
-                requests.codes.bad_request,  # pylint: disable=no-member
+                requests.codes.unauthorized,
+                requests.codes.bad_request,
             ):
                 _LOGGER.info("Getting new token")
                 self._token = auth.get_token(self._email, self._password, force=True)

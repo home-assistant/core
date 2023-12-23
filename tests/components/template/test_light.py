@@ -130,7 +130,7 @@ async def test_template_state_invalid(
     """Test template state with render error."""
     state = hass.states.get("light.test_template_light")
     assert state.state == STATE_OFF
-    assert "color_mode" not in state.attributes
+    assert state.attributes["color_mode"] is None
     assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == supported_features
 
@@ -163,7 +163,7 @@ async def test_template_state_text(hass: HomeAssistant, setup_light) -> None:
     await hass.async_block_till_done()
     state = hass.states.get("light.test_template_light")
     assert state.state == set_state
-    assert "color_mode" not in state.attributes
+    assert state.attributes["color_mode"] is None
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
 
@@ -281,7 +281,7 @@ async def test_on_action(hass: HomeAssistant, setup_light, calls) -> None:
 
     state = hass.states.get("light.test_template_light")
     assert state.state == STATE_OFF
-    assert "color_mode" not in state.attributes
+    assert state.attributes["color_mode"] is None
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
 
@@ -297,7 +297,7 @@ async def test_on_action(hass: HomeAssistant, setup_light, calls) -> None:
     assert calls[-1].data["caller"] == "light.test_template_light"
 
     assert state.state == STATE_OFF
-    assert "color_mode" not in state.attributes
+    assert state.attributes["color_mode"] is None
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
 
@@ -341,7 +341,7 @@ async def test_on_action_with_transition(
 
     state = hass.states.get("light.test_template_light")
     assert state.state == STATE_OFF
-    assert "color_mode" not in state.attributes
+    assert state.attributes["color_mode"] is None
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == LightEntityFeature.TRANSITION
 
@@ -356,7 +356,7 @@ async def test_on_action_with_transition(
     assert calls[0].data["transition"] == 5
 
     assert state.state == STATE_OFF
-    assert "color_mode" not in state.attributes
+    assert state.attributes["color_mode"] is None
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == LightEntityFeature.TRANSITION
 
@@ -383,7 +383,7 @@ async def test_on_action_optimistic(
 
     state = hass.states.get("light.test_template_light")
     assert state.state == STATE_OFF
-    assert "color_mode" not in state.attributes
+    assert state.attributes["color_mode"] is None
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
 
@@ -533,7 +533,7 @@ async def test_off_action_optimistic(hass: HomeAssistant, setup_light, calls) ->
     """Test off action with optimistic state."""
     state = hass.states.get("light.test_template_light")
     assert state.state == STATE_OFF
-    assert "color_mode" not in state.attributes
+    assert state.attributes["color_mode"] is None
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
 
@@ -547,7 +547,7 @@ async def test_off_action_optimistic(hass: HomeAssistant, setup_light, calls) ->
     assert len(calls) == 1
     state = hass.states.get("light.test_template_light")
     assert state.state == STATE_OFF
-    assert "color_mode" not in state.attributes
+    assert state.attributes["color_mode"] is None
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
 
@@ -921,7 +921,7 @@ async def test_color_and_temperature_actions_no_template(
 
     state = hass.states.get("light.test_template_light")
     assert state.attributes["color_mode"] == ColorMode.HS
-    assert "color_temp" not in state.attributes
+    assert state.attributes["color_temp"] is None
     assert state.attributes["hs_color"] == (40, 50)
     assert state.attributes["supported_color_modes"] == [
         ColorMode.COLOR_TEMP,
@@ -964,7 +964,7 @@ async def test_color_and_temperature_actions_no_template(
 
     state = hass.states.get("light.test_template_light")
     assert state.attributes["color_mode"] == ColorMode.HS
-    assert "color_temp" not in state.attributes
+    assert state.attributes["color_temp"] is None
     assert state.attributes["hs_color"] == (10, 20)
     assert state.attributes["supported_color_modes"] == [
         ColorMode.COLOR_TEMP,

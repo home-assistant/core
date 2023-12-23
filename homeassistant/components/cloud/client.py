@@ -19,6 +19,7 @@ from homeassistant.components.alexa import (
 from homeassistant.components.google_assistant import smart_home as ga
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import Context, HassJob, HomeAssistant, callback
+from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.aiohttp import MockRequest, serialize_response
@@ -54,7 +55,6 @@ class CloudClient(Interface):
     @property
     def base_path(self) -> Path:
         """Return path to base dir."""
-        assert self._hass.config.config_dir is not None
         return Path(self._hass.config.config_dir)
 
     @property
@@ -86,6 +86,11 @@ class CloudClient(Interface):
     def remote_autostart(self) -> bool:
         """Return true if we want start a remote connection."""
         return self._prefs.remote_enabled
+
+    @property
+    def client_name(self) -> str:
+        """Return the client name that will be used for API calls."""
+        return SERVER_SOFTWARE
 
     @property
     def relayer_region(self) -> str | None:
@@ -222,6 +227,7 @@ class CloudClient(Interface):
                 "connected": self.cloud.remote.is_connected,
                 "enabled": self._prefs.remote_enabled,
                 "instance_domain": self.cloud.remote.instance_domain,
+                "alias": self.cloud.remote.alias,
             },
             "version": HA_VERSION,
         }
@@ -230,7 +236,7 @@ class CloudClient(Interface):
         """Process cloud alexa message to client."""
         cloud_user = await self._prefs.get_cloud_user()
         aconfig = await self.get_alexa_config()
-        return await alexa_smart_home.async_handle_message(  # type: ignore[no-any-return, no-untyped-call]
+        return await alexa_smart_home.async_handle_message(
             self._hass,
             aconfig,
             payload,

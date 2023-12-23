@@ -44,7 +44,6 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
-        # pylint: disable-next=no-member
         assert insteon.devices.async_save.call_count == 1
         assert mock_close.called
 

@@ -1,7 +1,7 @@
 """Constants for the Fronius integration."""
 from typing import Final, NamedTuple, TypedDict
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 
 DOMAIN: Final = "fronius"
 

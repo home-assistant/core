@@ -5,8 +5,8 @@ import pytest
 import requests_mock
 
 from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
-from homeassistant.components.wallbox import InvalidAuth
 from homeassistant.components.wallbox.const import CHARGER_STATUS_ID_KEY
+from homeassistant.components.wallbox.coordinator import InvalidAuth
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 

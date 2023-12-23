@@ -6,7 +6,6 @@ from contextlib import suppress
 import logging
 import shlex
 
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.core import (
@@ -89,7 +88,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         process = await create_process
         try:
-            async with async_timeout.timeout(COMMAND_TIMEOUT):
+            async with asyncio.timeout(COMMAND_TIMEOUT):
                 stdout_data, stderr_data = await process.communicate()
         except asyncio.TimeoutError:
             _LOGGER.error(
@@ -105,14 +104,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
             raise
 
-        service_response: JsonObjectType = {
-            "stdout": "",
-            "stderr": "",
-            "returncode": process.returncode,
-        }
-
         if stdout_data:
-            service_response["stdout"] = stdout_data.decode("utf-8").strip()
             _LOGGER.debug(
                 "Stdout of command: `%s`, return code: %s:\n%s",
                 cmd,
@@ -120,7 +112,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 stdout_data,
             )
         if stderr_data:
-            service_response["stderr"] = stderr_data.decode("utf-8").strip()
             _LOGGER.debug(
                 "Stderr of command: `%s`, return code: %s:\n%s",
                 cmd,
@@ -132,7 +123,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 "Error running command: `%s`, return code: %s", cmd, process.returncode
             )
 
-        return service_response
+        if service.return_response:
+            service_response: JsonObjectType = {
+                "stdout": "",
+                "stderr": "",
+                "returncode": process.returncode,
+            }
+            try:
+                if stdout_data:
+                    service_response["stdout"] = stdout_data.decode("utf-8").strip()
+                if stderr_data:
+                    service_response["stderr"] = stderr_data.decode("utf-8").strip()
+                return service_response
+            except UnicodeDecodeError:
+                _LOGGER.exception(
+                    "Unable to handle non-utf8 output of command: `%s`", cmd
+                )
+                raise
+        return None
 
     for name in conf:
         hass.services.async_register(

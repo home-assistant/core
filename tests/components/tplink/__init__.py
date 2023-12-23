@@ -180,12 +180,14 @@ def _mocked_strip() -> SmartStrip:
     plug0.alias = "Plug0"
     plug0.device_id = "bb:bb:cc:dd:ee:ff_PLUG0DEVICEID"
     plug0.mac = "bb:bb:cc:dd:ee:ff"
+    plug0.is_on = True
     plug0.protocol = _mock_protocol()
     plug1 = _mocked_plug()
     plug1.device_id = "cc:bb:cc:dd:ee:ff_PLUG1DEVICEID"
     plug1.mac = "cc:bb:cc:dd:ee:ff"
     plug1.alias = "Plug1"
     plug1.protocol = _mock_protocol()
+    plug1.is_on = False
     strip.children = [plug0, plug1]
     return strip
 

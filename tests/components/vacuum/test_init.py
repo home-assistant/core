@@ -36,8 +36,30 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
         yield
 
 
+ISSUE_TRACKER = "https://blablabla.com"
+
+
+@pytest.mark.parametrize(
+    ("manifest_extra", "translation_key", "translation_placeholders_extra"),
+    [
+        (
+            {},
+            "deprecated_vacuum_base_class",
+            {},
+        ),
+        (
+            {"issue_tracker": ISSUE_TRACKER},
+            "deprecated_vacuum_base_class_url",
+            {"issue_tracker": ISSUE_TRACKER},
+        ),
+    ],
+)
 async def test_deprecated_base_class(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    manifest_extra: dict[str, str],
+    translation_key: str,
+    translation_placeholders_extra: dict[str, str],
 ) -> None:
     """Test warnings when adding VacuumEntity to the state machine."""
 
@@ -54,7 +76,9 @@ async def test_deprecated_base_class(
         MockModule(
             TEST_DOMAIN,
             async_setup_entry=async_setup_entry_init,
+            partial_manifest=manifest_extra,
         ),
+        built_in=False,
     )
 
     entity1 = VacuumEntity()
@@ -91,3 +115,9 @@ async def test_deprecated_base_class(
         VACUUM_DOMAIN, f"deprecated_vacuum_base_class_{TEST_DOMAIN}"
     )
     assert issue.issue_domain == TEST_DOMAIN
+    assert issue.issue_id == f"deprecated_vacuum_base_class_{TEST_DOMAIN}"
+    assert issue.translation_key == translation_key
+    assert (
+        issue.translation_placeholders
+        == {"platform": "test"} | translation_placeholders_extra
+    )

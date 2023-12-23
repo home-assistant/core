@@ -28,7 +28,7 @@ from .objects import Input, NodeDictClass, NodeListClass, NodeStrClass
 
 # mypy: allow-untyped-calls, no-warn-return-any
 
-JSON_TYPE = list | dict | str  # pylint: disable=invalid-name
+JSON_TYPE = list | dict | str
 _DictT = TypeVar("_DictT", bound=dict)
 
 _LOGGER = logging.getLogger(__name__)
@@ -203,7 +203,7 @@ def _parse_yaml(
     # If configuration file is empty YAML returns None
     # We convert that to an empty dict
     return (
-        yaml.load(content, Loader=lambda stream: loader(stream, secrets))
+        yaml.load(content, Loader=lambda stream: loader(stream, secrets))  # type: ignore[arg-type]
         or NodeDictClass()
     )
 

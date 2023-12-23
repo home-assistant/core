@@ -44,7 +44,7 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "roku",
     },
-    "EB-*": {
+    "EB": {
         "always_discover": True,
         "domain": "ecobee",
     },
@@ -386,6 +386,11 @@ ZEROCONF = {
             "name": "wac*",
         },
     ],
+    "_ecobee._tcp.local.": [
+        {
+            "domain": "ecobee",
+        },
+    ],
     "_elg._tcp.local.": [
         {
             "domain": "elgato",
@@ -681,6 +686,12 @@ ZEROCONF = {
     "_touch-able._tcp.local.": [
         {
             "domain": "apple_tv",
+        },
+    ],
+    "_uzg-01._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "uzg-01*",
         },
     ],
     "_viziocast._tcp.local.": [

@@ -103,7 +103,6 @@ class EzvizButtonEntity(EzvizEntity, ButtonEntity):
     """Representation of a EZVIZ button entity."""
 
     entity_description: EzvizButtonEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,

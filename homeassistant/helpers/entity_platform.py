@@ -26,10 +26,7 @@ from homeassistant.core import (
     split_entity_id,
     valid_entity_id,
 )
-from homeassistant.exceptions import (
-    HomeAssistantError,
-    PlatformNotReady,
-)
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.generated import languages
 from homeassistant.setup import async_start_setup
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -621,8 +618,13 @@ class EntityPlatform:
                         **device_info,
                     )
                 except dev_reg.DeviceInfoError as exc:
-                    self.logger.error("Ignoring invalid device info: %s", str(exc))
-                    device = None
+                    self.logger.error(
+                        "%s: Not adding entity with invalid device info: %s",
+                        self.platform_name,
+                        str(exc),
+                    )
+                    entity.add_to_platform_abort()
+                    return
             else:
                 device = None
 

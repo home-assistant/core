@@ -68,7 +68,13 @@
     },
     "restart": {
       "name": "[%key:common::action::restart%]",
-      "description": "Restarts Home Assistant."
+      "description": "Restarts Home Assistant.",
+      "fields": {
+        "safe_mode": {
+          "name": "Safe mode",
+          "description": "Disable custom integrations and custom cards."
+        }
+      }
     },
     "set_location": {
       "name": "Set location",
@@ -81,6 +87,10 @@
         "longitude": {
           "name": "[%key:common::config_flow::data::longitude%]",
           "description": "Longitude of your location."
+        },
+        "elevation": {
+          "name": "[%key:common::config_flow::data::elevation%]",
+          "description": "Elevation of your location."
         }
       }
     },
@@ -121,6 +131,10 @@
     "save_persistent_states": {
       "name": "Save persistent states",
       "description": "Saves the persistent states immediately. Maintains the normal periodic saving interval."
+    },
+    "reload_all": {
+      "name": "Reload all",
+      "description": "Reload all YAML configuration that can be reloaded without restarting Home Assistant."
     }
   }
 }

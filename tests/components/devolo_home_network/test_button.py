@@ -5,10 +5,7 @@ from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnav
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.button import (
-    DOMAIN as PLATFORM,
-    SERVICE_PRESS,
-)
+from homeassistant.components.button import DOMAIN as PLATFORM, SERVICE_PRESS
 from homeassistant.components.devolo_home_network.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_ENTITY_ID

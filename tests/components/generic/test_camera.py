@@ -1,6 +1,7 @@
 """The tests for generic camera component."""
 import asyncio
 from http import HTTPStatus
+import sys
 from unittest.mock import patch
 
 import aiohttp
@@ -27,7 +28,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import AsyncMock, Mock, MockConfigEntry
+from tests.common import Mock, MockConfigEntry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -163,10 +164,17 @@ async def test_limit_refetch(
 
     hass.states.async_set("sensor.temp", "5")
 
-    with pytest.raises(aiohttp.ServerTimeoutError), patch(
-        "async_timeout.timeout", side_effect=asyncio.TimeoutError()
-    ):
-        resp = await client.get("/api/camera_proxy/camera.config_test")
+    # TODO: Remove version check with aiohttp 3.9.0
+    if sys.version_info >= (3, 12):
+        with pytest.raises(aiohttp.ServerTimeoutError), patch(
+            "asyncio.timeout", side_effect=asyncio.TimeoutError()
+        ):
+            resp = await client.get("/api/camera_proxy/camera.config_test")
+    else:
+        with pytest.raises(aiohttp.ServerTimeoutError), patch(
+            "async_timeout.timeout", side_effect=asyncio.TimeoutError()
+        ):
+            resp = await client.get("/api/camera_proxy/camera.config_test")
 
     assert respx.calls.call_count == 1
     assert resp.status == HTTPStatus.OK
@@ -501,51 +509,6 @@ async def test_timeout_cancelled(
         assert respx.calls.call_count == total_calls
         assert resp.status == HTTPStatus.OK
         assert await resp.read() == fakeimgbytes_png
-
-
-async def test_no_still_image_url(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
-) -> None:
-    """Test that the component can grab images from stream with no still_image_url."""
-    assert await async_setup_component(
-        hass,
-        "camera",
-        {
-            "camera": {
-                "name": "config_test",
-                "platform": "generic",
-                "stream_source": "rtsp://example.com:554/rtsp/",
-            },
-        },
-    )
-    await hass.async_block_till_done()
-
-    client = await hass_client()
-
-    with patch(
-        "homeassistant.components.generic.camera.GenericCamera.stream_source",
-        return_value=None,
-    ) as mock_stream_source:
-        # First test when there is no stream_source should fail
-        resp = await client.get("/api/camera_proxy/camera.config_test")
-        await hass.async_block_till_done()
-        mock_stream_source.assert_called_once()
-        assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
-
-    with patch("homeassistant.components.camera.create_stream") as mock_create_stream:
-        # Now test when creating the stream succeeds
-        mock_stream = Mock()
-        mock_stream.async_get_image = AsyncMock()
-        mock_stream.async_get_image.return_value = b"stream_keyframe_image"
-        mock_create_stream.return_value = mock_stream
-
-        # should start the stream and get the image
-        resp = await client.get("/api/camera_proxy/camera.config_test")
-        await hass.async_block_till_done()
-        mock_create_stream.assert_called_once()
-        mock_stream.async_get_image.assert_called_once()
-        assert resp.status == HTTPStatus.OK
-        assert await resp.read() == b"stream_keyframe_image"
 
 
 async def test_frame_interval_property(hass: HomeAssistant) -> None:

@@ -1,4 +1,5 @@
 """Define tests for the Brother Printer config flow."""
+from ipaddress import ip_address
 import json
 from unittest.mock import patch
 
@@ -155,8 +156,8 @@ async def test_zeroconf_snmp_error(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="127.0.0.1",
-                addresses=["mock_host"],
+                ip_address=ip_address("127.0.0.1"),
+                ip_addresses=[ip_address("127.0.0.1")],
                 hostname="example.local.",
                 name="Brother Printer",
                 port=None,
@@ -178,8 +179,8 @@ async def test_zeroconf_unsupported_model(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="127.0.0.1",
-                addresses=["mock_host"],
+                ip_address=ip_address("127.0.0.1"),
+                ip_addresses=[ip_address("127.0.0.1")],
                 hostname="example.local.",
                 name="Brother Printer",
                 port=None,
@@ -210,8 +211,8 @@ async def test_zeroconf_device_exists_abort(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="127.0.0.1",
-                addresses=["mock_host"],
+                ip_address=ip_address("127.0.0.1"),
+                ip_addresses=[ip_address("127.0.0.1")],
                 hostname="example.local.",
                 name="Brother Printer",
                 port=None,
@@ -238,8 +239,8 @@ async def test_zeroconf_no_probe_existing_device(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="127.0.0.1",
-                addresses=["mock_host"],
+                ip_address=ip_address("127.0.0.1"),
+                ip_addresses=[ip_address("127.0.0.1")],
                 hostname="example.local.",
                 name="Brother Printer",
                 port=None,
@@ -264,8 +265,8 @@ async def test_zeroconf_confirm_create_entry(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="127.0.0.1",
-                addresses=["mock_host"],
+                ip_address=ip_address("127.0.0.1"),
+                ip_addresses=[ip_address("127.0.0.1")],
                 hostname="example.local.",
                 name="Brother Printer",
                 port=None,

@@ -10,7 +10,6 @@ from sqlalchemy.orm.session import Session
 from homeassistant.core import Event
 from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS
 
-from ..const import SQLITE_MAX_BIND_VARS
 from ..db_schema import EventData
 from ..queries import get_shared_event_datas
 from ..util import chunked, execute_stmt_lambda_element
@@ -95,7 +94,7 @@ class EventDataManager(BaseLRUTableManager[EventData]):
         """
         results: dict[str, int | None] = {}
         with session.no_autoflush:
-            for hashs_chunk in chunked(hashes, SQLITE_MAX_BIND_VARS):
+            for hashs_chunk in chunked(hashes, self.recorder.max_bind_vars):
                 for data_id, shared_data in execute_stmt_lambda_element(
                     session, get_shared_event_datas(hashs_chunk), orm_rows=False
                 ):

@@ -75,6 +75,7 @@ BOARD_MAP: Final[dict[str, str]] = {
     "Generic AArch64": "generic-aarch64",
     "Generic x86-64": "generic-x86-64",
     "Home Assistant Yellow": "yellow",
+    "Home Assistant Green": "green",
     "Khadas VIM3": "khadas-vim3",
 }
 

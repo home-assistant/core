@@ -19,7 +19,7 @@ from homeassistant.util import dt as dt_util, ulid as ulid_util
 DATA_STORE = "thread.datasets"
 STORAGE_KEY = "thread.datasets"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 3
 SAVE_DELAY = 10
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,6 +33,7 @@ class DatasetPreferredError(HomeAssistantError):
 class DatasetEntry:
     """Dataset store entry."""
 
+    preferred_border_agent_id: str | None
     source: str
     tlv: str
 
@@ -73,6 +74,7 @@ class DatasetEntry:
         return {
             "created": self.created.isoformat(),
             "id": self.id,
+            "preferred_border_agent_id": self.preferred_border_agent_id,
             "source": self.source,
             "tlv": self.tlv,
         }
@@ -86,7 +88,9 @@ class DatasetStoreStore(Store):
     ) -> dict[str, Any]:
         """Migrate to the new version."""
         if old_major_version == 1:
+            data = old_data
             if old_minor_version < 2:
+                # Deduplicate datasets
                 datasets: dict[str, DatasetEntry] = {}
                 preferred_dataset = old_data["preferred_dataset"]
 
@@ -95,6 +99,7 @@ class DatasetStoreStore(Store):
                     entry = DatasetEntry(
                         created=created,
                         id=dataset["id"],
+                        preferred_border_agent_id=None,
                         source=dataset["source"],
                         tlv=dataset["tlv"],
                     )
@@ -156,6 +161,10 @@ class DatasetStoreStore(Store):
                     "preferred_dataset": preferred_dataset,
                     "datasets": [dataset.to_json() for dataset in datasets.values()],
                 }
+            if old_minor_version < 3:
+                # Add border agent ID
+                for dataset in data["datasets"]:
+                    dataset.setdefault("preferred_border_agent_id", None)
 
         return data
 
@@ -177,7 +186,9 @@ class DatasetStore:
         )
 
     @callback
-    def async_add(self, source: str, tlv: str) -> None:
+    def async_add(
+        self, source: str, tlv: str, preferred_border_agent_id: str | None
+    ) -> None:
         """Add dataset, does nothing if it already exists."""
         # Make sure the tlv is valid
         dataset = tlv_parser.parse_tlv(tlv)
@@ -191,8 +202,17 @@ class DatasetStore:
             raise HomeAssistantError("Invalid dataset")
 
         # Bail out if the dataset already exists
-        if any(entry for entry in self.datasets.values() if entry.dataset == dataset):
-            return
+        entry: DatasetEntry | None
+        for entry in self.datasets.values():
+            if entry.dataset == dataset:
+                if (
+                    preferred_border_agent_id
+                    and entry.preferred_border_agent_id is None
+                ):
+                    self.async_set_preferred_border_agent_id(
+                        entry.id, preferred_border_agent_id
+                    )
+                return
 
         # Update if dataset with same extended pan id exists and the timestamp
         # is newer
@@ -237,9 +257,15 @@ class DatasetStore:
                 self.datasets[entry.id], tlv=tlv
             )
             self.async_schedule_save()
+            if preferred_border_agent_id and entry.preferred_border_agent_id is None:
+                self.async_set_preferred_border_agent_id(
+                    entry.id, preferred_border_agent_id
+                )
             return
 
-        entry = DatasetEntry(source=source, tlv=tlv)
+        entry = DatasetEntry(
+            preferred_border_agent_id=preferred_border_agent_id, source=source, tlv=tlv
+        )
         self.datasets[entry.id] = entry
         # Set to preferred if there is no preferred dataset
         if self._preferred_dataset is None:
@@ -258,6 +284,16 @@ class DatasetStore:
     def async_get(self, dataset_id: str) -> DatasetEntry | None:
         """Get dataset by id."""
         return self.datasets.get(dataset_id)
+
+    @callback
+    def async_set_preferred_border_agent_id(
+        self, dataset_id: str, border_agent_id: str
+    ) -> None:
+        """Set preferred border agent id of a dataset."""
+        self.datasets[dataset_id] = dataclasses.replace(
+            self.datasets[dataset_id], preferred_border_agent_id=border_agent_id
+        )
+        self.async_schedule_save()
 
     @property
     @callback
@@ -287,6 +323,7 @@ class DatasetStore:
                 datasets[dataset["id"]] = DatasetEntry(
                     created=created,
                     id=dataset["id"],
+                    preferred_border_agent_id=dataset["preferred_border_agent_id"],
                     source=dataset["source"],
                     tlv=dataset["tlv"],
                 )
@@ -317,10 +354,16 @@ async def async_get_store(hass: HomeAssistant) -> DatasetStore:
     return store
 
 
-async def async_add_dataset(hass: HomeAssistant, source: str, tlv: str) -> None:
+async def async_add_dataset(
+    hass: HomeAssistant,
+    source: str,
+    tlv: str,
+    *,
+    preferred_border_agent_id: str | None = None,
+) -> None:
     """Add a dataset."""
     store = await async_get_store(hass)
-    store.async_add(source, tlv)
+    store.async_add(source, tlv, preferred_border_agent_id)
 
 
 async def async_get_dataset(hass: HomeAssistant, dataset_id: str) -> str | None:

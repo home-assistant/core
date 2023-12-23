@@ -79,6 +79,44 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
         ),
         entity_category=EntityCategory.CONFIG,
     ),
+    RoborockTimeDescription(
+        key="off_peak_start",
+        translation_key="off_peak_start",
+        icon="mdi:power-plug",
+        cache_key=CacheableAttribute.valley_electricity_timer,
+        update_value=lambda cache, desired_time: cache.update_value(
+            [
+                desired_time.hour,
+                desired_time.minute,
+                cache.value.get("end_hour"),
+                cache.value.get("end_minute"),
+            ]
+        ),
+        get_value=lambda cache: datetime.time(
+            hour=cache.value.get("start_hour"), minute=cache.value.get("start_minute")
+        ),
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+    ),
+    RoborockTimeDescription(
+        key="off_peak_end",
+        translation_key="off_peak_end",
+        icon="mdi:power-plug-off",
+        cache_key=CacheableAttribute.valley_electricity_timer,
+        update_value=lambda cache, desired_time: cache.update_value(
+            [
+                cache.value.get("start_hour"),
+                cache.value.get("start_minute"),
+                desired_time.hour,
+                desired_time.minute,
+            ]
+        ),
+        get_value=lambda cache: datetime.time(
+            hour=cache.value.get("end_hour"), minute=cache.value.get("end_minute")
+        ),
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+    ),
 ]
 
 
