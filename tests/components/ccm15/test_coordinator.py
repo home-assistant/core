@@ -2,7 +2,6 @@
 from unittest.mock import AsyncMock, patch
 
 from ccm15 import CCM15DeviceState, CCM15SlaveDevice
-import pytest
 
 from homeassistant.components.ccm15 import CCM15Coordinator
 from homeassistant.components.ccm15.climate import CCM15Climate
@@ -20,8 +19,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 async def test_cmm15_data_isread_correctly(
