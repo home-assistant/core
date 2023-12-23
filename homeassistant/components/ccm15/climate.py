@@ -72,15 +72,14 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     ) -> None:
         """Create a climate device managed from a coordinator."""
         super().__init__(coordinator)
-        self._ac_host: str = ac_host
         self._ac_index: int = ac_index
-        self._attr_unique_id = f"{self._ac_host}.{self._ac_index}"
+        self._attr_unique_id = f"{ac_host}.{ac_index}"
         self._attr_device_info = DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, f"{self._ac_host}.{self._ac_index}"),
+                (DOMAIN, f"{ac_host}.{ac_index}"),
             },
-            name=f"Midea {self._ac_index}",
+            name=f"Midea {ac_index}",
             manufacturer="Midea",
             model="CCM15",
         )
