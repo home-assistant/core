@@ -31,7 +31,6 @@ class SteamistEntity(CoordinatorEntity[SteamistDataUpdateCoordinator], Entity):
         if entry.unique_id:  # Only present if UDP broadcast works
             self._attr_device_info = DeviceInfo(
                 connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)},
-                name=coordinator.device_name,
                 manufacturer="Steamist",
                 model=entry.data[CONF_MODEL],
                 configuration_url=f"http://{entry.data[CONF_HOST]}",
