@@ -28,14 +28,16 @@ async def test_unload_unloads(
     assert len(calls) == 1
 
 
-async def test_remove_entry(hass: HomeAssistant, create_registrations) -> None:
+async def test_remove_entry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    create_registrations,
+) -> None:
     """Test we clean up when we remove entry."""
     for config_entry in hass.config_entries.async_entries("mobile_app"):
         await hass.config_entries.async_remove(config_entry.entry_id)
         assert config_entry.data["webhook_id"] in hass.data[DOMAIN][DATA_DELETED_IDS]
 
-    dev_reg = dr.async_get(hass)
-    assert len(dev_reg.devices) == 0
-
-    ent_reg = er.async_get(hass)
-    assert len(ent_reg.entities) == 0
+    assert len(device_registry.devices) == 0
+    assert len(entity_registry.entities) == 0

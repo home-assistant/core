@@ -2,6 +2,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from aioshelly.const import MODEL_BULB, MODEL_BUTTON1
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 from freezegun.api import FrozenDateTimeFactory
 
@@ -23,8 +24,10 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
     async_entries_for_config_entry,
     async_get as async_get_dev_reg,
+    format_mac,
 )
 import homeassistant.helpers.issue_registry as ir
 
@@ -77,7 +80,7 @@ async def test_block_no_reload_on_bulb_changes(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_block_device, monkeypatch
 ) -> None:
     """Test block no reload on bulb mode/effect change."""
-    await init_integration(hass, 1, model="SHBLB-1")
+    await init_integration(hass, 1, model=MODEL_BULB)
 
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "cfgChanged", 1)
     mock_block_device.mock_update()
@@ -247,11 +250,12 @@ async def test_block_sleeping_device_no_periodic_updates(
 
 
 async def test_block_device_push_updates_failure(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant,
+    mock_block_device,
+    monkeypatch,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test block device with push updates failure."""
-    issue_registry: ir.IssueRegistry = ir.async_get(hass)
-
     await init_integration(hass, 1)
 
     # Updates with COAP_REPLAY type should create an issue
@@ -282,7 +286,7 @@ async def test_block_button_click_event(
         "sensor_ids",
         {"inputEvent": "S", "inputEventCnt": 0},
     )
-    entry = await init_integration(hass, 1, model="SHBTN-1", sleep_period=1000)
+    entry = await init_integration(hass, 1, model=MODEL_BUTTON1, sleep_period=1000)
 
     # Make device online
     mock_block_device.mock_update()
@@ -632,3 +636,34 @@ async def test_rpc_polling_disconnected(
     await mock_polling_rpc_update(hass, freezer)
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_rpc_update_entry_fw_ver(
+    hass: HomeAssistant, mock_rpc_device, monkeypatch
+) -> None:
+    """Test RPC update entry firmware version."""
+    entry = await init_integration(hass, 2, sleep_period=600)
+    dev_reg = async_get_dev_reg(hass)
+
+    # Make device online
+    mock_rpc_device.mock_update()
+    await hass.async_block_till_done()
+
+    device = dev_reg.async_get_device(
+        identifiers={(DOMAIN, entry.entry_id)},
+        connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
+    )
+
+    assert device.sw_version == "some fw string"
+
+    monkeypatch.setattr(mock_rpc_device, "firmware_version", "99.0.0")
+
+    mock_rpc_device.mock_update()
+    await hass.async_block_till_done()
+
+    device = dev_reg.async_get_device(
+        identifiers={(DOMAIN, entry.entry_id)},
+        connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
+    )
+
+    assert device.sw_version == "99.0.0"

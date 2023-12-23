@@ -54,14 +54,14 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_schlage():
+def mock_schlage() -> Mock:
     """Mock pyschlage.Schlage."""
     with patch("pyschlage.Schlage", autospec=True) as mock_schlage:
         yield mock_schlage.return_value
 
 
 @pytest.fixture
-def mock_pyschlage_auth():
+def mock_pyschlage_auth() -> Mock:
     """Mock pyschlage.Auth."""
     with patch("pyschlage.Auth", autospec=True) as mock_auth:
         mock_auth.return_value.user_id = "abc123"
@@ -69,7 +69,7 @@ def mock_pyschlage_auth():
 
 
 @pytest.fixture
-def mock_lock():
+def mock_lock() -> Mock:
     """Mock Lock fixture."""
     mock_lock = create_autospec(Lock)
     mock_lock.configure_mock(
@@ -85,4 +85,5 @@ def mock_lock():
     )
     mock_lock.logs.return_value = []
     mock_lock.last_changed_by.return_value = "thumbturn"
+    mock_lock.keypad_disabled.return_value = False
     return mock_lock

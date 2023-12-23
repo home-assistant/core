@@ -88,6 +88,12 @@ class ZerprocLight(LightEntity):
     def __init__(self, light) -> None:
         """Initialize a Zerproc light."""
         self._light = light
+        self._attr_unique_id = light.address
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, light.address)},
+            manufacturer="Zerproc",
+            name=light.name,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -107,20 +113,6 @@ class ZerprocLight(LightEntity):
             _LOGGER.debug(
                 "Exception disconnecting from %s", self._light.address, exc_info=True
             )
-
-    @property
-    def unique_id(self):
-        """Return the ID of this light."""
-        return self._light.address
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info for this light."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            manufacturer="Zerproc",
-            name=self._light.name,
-        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""

@@ -20,7 +20,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN as UNIFI_DOMAIN
 from .controller import UniFiController
 from .entity import (
     HandlerT,
@@ -37,7 +36,7 @@ def async_wlan_qr_code_image_fn(controller: UniFiController, wlan: Wlan) -> byte
     return controller.api.wlans.generate_wlan_qr_code(wlan)
 
 
-@dataclass
+@dataclass(frozen=True)
 class UnifiImageEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
     """Validate and load entities from different UniFi handlers."""
 
@@ -45,7 +44,7 @@ class UnifiImageEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
     value_fn: Callable[[ApiItemT], str | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class UnifiImageEntityDescription(
     ImageEntityDescription,
     UnifiEntityDescription[HandlerT, ApiItemT],
@@ -83,13 +82,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up image platform for UniFi Network integration."""
-    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-
-    if not controller.is_admin:
-        return
-
-    controller.register_platform_add_entities(
-        UnifiImageEntity, ENTITY_DESCRIPTIONS, async_add_entities
+    UniFiController.register_platform(
+        hass,
+        config_entry,
+        async_add_entities,
+        UnifiImageEntity,
+        ENTITY_DESCRIPTIONS,
+        requires_admin=True,
     )
 
 

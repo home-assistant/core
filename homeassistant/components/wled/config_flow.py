@@ -13,7 +13,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_KEEP_MASTER_LIGHT, DEFAULT_KEEP_MASTER_LIGHT, DOMAIN
+from .const import CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT, DOMAIN
 
 
 class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -136,9 +136,9 @@ class WLEDOptionsFlowHandler(OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_KEEP_MASTER_LIGHT,
+                        CONF_KEEP_MAIN_LIGHT,
                         default=self.config_entry.options.get(
-                            CONF_KEEP_MASTER_LIGHT, DEFAULT_KEEP_MASTER_LIGHT
+                            CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT
                         ),
                     ): bool,
                 }

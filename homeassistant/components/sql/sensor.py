@@ -123,7 +123,7 @@ async def async_setup_entry(
             value_template.hass = hass
 
     name_template = Template(name, hass)
-    trigger_entity_config = {CONF_NAME: name_template}
+    trigger_entity_config = {CONF_NAME: name_template, CONF_UNIQUE_ID: entry.entry_id}
     for key in TRIGGER_ENTITY_OPTIONS:
         if key not in entry.options:
             continue
@@ -362,6 +362,8 @@ class SQLSensor(ManualTriggerSensorEntity):
                 self._query,
                 redact_credentials(str(err)),
             )
+            sess.rollback()
+            sess.close()
             return
 
         for res in result.mappings():

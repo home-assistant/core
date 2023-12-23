@@ -1,4 +1,5 @@
 """Support for EcoNet products."""
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -13,7 +14,7 @@ from pyeconet.errors import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform, UnitOfTemperature
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -80,14 +81,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         await hass.async_add_executor_job(api.unsubscribe)
         api.subscribe()
 
-    async def fetch_update(now):
-        """Fetch the latest changes from the API."""
+        # Refresh values
+        await asyncio.sleep(60)
         await api.refresh_equipment()
 
     config_entry.async_on_unload(async_track_time_interval(hass, resubscribe, INTERVAL))
-    config_entry.async_on_unload(
-        async_track_time_interval(hass, fetch_update, INTERVAL + timedelta(minutes=1))
-    )
 
     return True
 
@@ -137,8 +135,3 @@ class EcoNetEntity(Entity):
             manufacturer="Rheem",
             name=self._econet.device_name,
         )
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return UnitOfTemperature.FAHRENHEIT

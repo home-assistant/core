@@ -47,18 +47,13 @@ class NZBGetDownloadSwitch(NZBGetEntity, SwitchEntity):
         entry_name: str,
     ) -> None:
         """Initialize a new NZBGet switch."""
-        self._unique_id = f"{entry_id}_download"
+        self._attr_unique_id = f"{entry_id}_download"
 
         super().__init__(
             coordinator=coordinator,
             entry_id=entry_id,
             entry_name=entry_name,
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the switch."""
-        return self._unique_id
 
     @property
     def is_on(self):

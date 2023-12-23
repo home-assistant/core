@@ -18,9 +18,6 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test unloading the aurora_abb_powerone entry."""
 
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
-        "homeassistant.components.aurora_abb_powerone.sensor.AuroraSensor.update",
-        return_value=None,
-    ), patch(
         "aurorapy.client.AuroraSerialClient.serial_number",
         return_value="9876543",
     ), patch(

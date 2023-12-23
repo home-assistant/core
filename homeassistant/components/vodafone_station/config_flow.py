@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from aiovodafone import VodafoneStationApi, exceptions as aiovodafone_exceptions
+from aiovodafone import VodafoneStationSercommApi, exceptions as aiovodafone_exceptions
 import voluptuous as vol
 
 from homeassistant import core
@@ -35,7 +35,9 @@ async def validate_input(
 ) -> dict[str, str]:
     """Validate the user input allows us to connect."""
 
-    api = VodafoneStationApi(data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD])
+    api = VodafoneStationSercommApi(
+        data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD]
+    )
 
     try:
         await api.login()
@@ -68,10 +70,14 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, user_input)
+        except aiovodafone_exceptions.AlreadyLogged:
+            errors["base"] = "already_logged"
         except aiovodafone_exceptions.CannotConnect:
             errors["base"] = "cannot_connect"
         except aiovodafone_exceptions.CannotAuthenticate:
             errors["base"] = "invalid_auth"
+        except aiovodafone_exceptions.ModelNotSupported:
+            errors["base"] = "model_not_supported"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -99,6 +105,8 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await validate_input(self.hass, {**self.entry.data, **user_input})
+            except aiovodafone_exceptions.AlreadyLogged:
+                errors["base"] = "already_logged"
             except aiovodafone_exceptions.CannotConnect:
                 errors["base"] = "cannot_connect"
             except aiovodafone_exceptions.CannotAuthenticate:

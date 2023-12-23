@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -29,7 +30,7 @@ from . import GlancesDataUpdateCoordinator
 from .const import CPU_ICON, DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class GlancesSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -37,7 +38,7 @@ class GlancesSensorEntityDescriptionMixin:
     name_suffix: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class GlancesSensorEntityDescription(
     SensorEntityDescription, GlancesSensorEntityDescriptionMixin
 ):
@@ -346,5 +347,7 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
         value = self.coordinator.data[self.entity_description.type]
 
         if isinstance(value.get(self._sensor_name_prefix), dict):
-            return value[self._sensor_name_prefix][self.entity_description.key]
-        return value[self.entity_description.key]
+            return cast(
+                StateType, value[self._sensor_name_prefix][self.entity_description.key]
+            )
+        return cast(StateType, value[self.entity_description.key])

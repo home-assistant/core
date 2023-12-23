@@ -1,9 +1,11 @@
 """Rest API for Home Assistant."""
 import asyncio
-from asyncio import timeout
+from asyncio import shield, timeout
+from collections.abc import Collection
 from functools import lru_cache
 from http import HTTPStatus
 import logging
+from typing import Any
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPBadRequest
@@ -14,7 +16,9 @@ from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.bootstrap import DATA_LOGGING
 from homeassistant.components.http import HomeAssistantView, require_admin
 from homeassistant.const import (
+    CONTENT_TYPE_JSON,
     EVENT_HOMEASSISTANT_STOP,
+    EVENT_STATE_CHANGED,
     MATCH_ALL,
     URL_API,
     URL_API_COMPONENTS,
@@ -29,12 +33,20 @@ from homeassistant.const import (
 )
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceNotFound, TemplateError, Unauthorized
+from homeassistant.exceptions import (
+    InvalidEntityFormatError,
+    InvalidStateError,
+    ServiceNotFound,
+    TemplateError,
+    Unauthorized,
+)
 from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.service import async_get_all_descriptions
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.util.json import json_loads
+from homeassistant.util.read_only_dict import ReadOnlyDict
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +62,7 @@ ATTR_VERSION = "version"
 DOMAIN = "api"
 STREAM_PING_PAYLOAD = "ping"
 STREAM_PING_INTERVAL = 50  # seconds
+SERVICE_WAIT_TIMEOUT = 10
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -195,15 +208,21 @@ class APIStatesView(HomeAssistantView):
         user: User = request["hass_user"]
         hass: HomeAssistant = request.app["hass"]
         if user.is_admin:
-            return self.json([state.as_dict() for state in hass.states.async_all()])
-        entity_perm = user.permissions.check_entity
-        return self.json(
-            [
-                state.as_dict()
+            states = (state.as_dict_json for state in hass.states.async_all())
+        else:
+            entity_perm = user.permissions.check_entity
+            states = (
+                state.as_dict_json
                 for state in hass.states.async_all()
                 if entity_perm(state.entity_id, "read")
-            ]
+            )
+        response = web.Response(
+            body=f'[{",".join(states)}]',
+            content_type=CONTENT_TYPE_JSON,
+            zlib_executor_size=32768,
         )
+        response.enable_compression()
+        return response
 
 
 class APIEntityStateView(HomeAssistantView):
@@ -213,21 +232,25 @@ class APIEntityStateView(HomeAssistantView):
     name = "api:entity-state"
 
     @ha.callback
-    def get(self, request, entity_id):
+    def get(self, request: web.Request, entity_id: str) -> web.Response:
         """Retrieve state of entity."""
-        user = request["hass_user"]
+        user: User = request["hass_user"]
+        hass: HomeAssistant = request.app["hass"]
         if not user.permissions.check_entity(entity_id, POLICY_READ):
             raise Unauthorized(entity_id=entity_id)
 
-        if state := request.app["hass"].states.get(entity_id):
-            return self.json(state)
+        if state := hass.states.get(entity_id):
+            return web.Response(
+                body=state.as_dict_json,
+                content_type=CONTENT_TYPE_JSON,
+            )
         return self.json_message("Entity not found.", HTTPStatus.NOT_FOUND)
 
     async def post(self, request, entity_id):
         """Update state of entity."""
         if not request["hass_user"].is_admin:
             raise Unauthorized(entity_id=entity_id)
-        hass = request.app["hass"]
+        hass: HomeAssistant = request.app["hass"]
         try:
             data = await request.json()
         except ValueError:
@@ -242,13 +265,20 @@ class APIEntityStateView(HomeAssistantView):
         is_new_state = hass.states.get(entity_id) is None
 
         # Write state
-        hass.states.async_set(
-            entity_id, new_state, attributes, force_update, self.context(request)
-        )
+        try:
+            hass.states.async_set(
+                entity_id, new_state, attributes, force_update, self.context(request)
+            )
+        except InvalidEntityFormatError:
+            return self.json_message(
+                "Invalid entity ID specified.", HTTPStatus.BAD_REQUEST
+            )
+        except InvalidStateError:
+            return self.json_message("Invalid state specified.", HTTPStatus.BAD_REQUEST)
 
         # Read the state back for our response
         status_code = HTTPStatus.CREATED if is_new_state else HTTPStatus.OK
-        resp = self.json(hass.states.get(entity_id), status_code)
+        resp = self.json(hass.states.get(entity_id).as_dict(), status_code)
 
         resp.headers.add("Location", f"/api/states/{entity_id}")
 
@@ -347,19 +377,30 @@ class APIDomainServicesView(HomeAssistantView):
             )
 
         context = self.context(request)
+        changed_states: list[ReadOnlyDict[str, Collection[Any]]] = []
+
+        @ha.callback
+        def _async_save_changed_entities(
+            event: EventType[EventStateChangedData],
+        ) -> None:
+            if event.context == context and (state := event.data["new_state"]):
+                changed_states.append(state.as_dict())
+
+        cancel_listen = hass.bus.async_listen(
+            EVENT_STATE_CHANGED, _async_save_changed_entities, run_immediately=True
+        )
 
         try:
-            await hass.services.async_call(
-                domain, service, data, blocking=True, context=context
+            # shield the service call from cancellation on connection drop
+            await shield(
+                hass.services.async_call(
+                    domain, service, data, blocking=True, context=context
+                )
             )
         except (vol.Invalid, ServiceNotFound) as ex:
             raise HTTPBadRequest() from ex
-
-        changed_states = []
-
-        for state in hass.states.async_all():
-            if state.context is context:
-                changed_states.append(state)
+        finally:
+            cancel_listen()
 
         return self.json(changed_states)
 

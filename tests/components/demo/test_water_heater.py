@@ -1,8 +1,11 @@
 """The tests for the demo water_heater component."""
+from unittest.mock import patch
+
 import pytest
 import voluptuous as vol
 
 from homeassistant.components import water_heater
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -13,8 +16,18 @@ ENTITY_WATER_HEATER = "water_heater.demo_water_heater"
 ENTITY_WATER_HEATER_CELSIUS = "water_heater.demo_water_heater_celsius"
 
 
+@pytest.fixture
+async def water_heater_only() -> None:
+    """Enable only the datetime platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.WATER_HEATER],
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
-async def setup_comp(hass, disable_platforms):
+async def setup_comp(hass: HomeAssistant, water_heater_only: None):
     """Set up demo component."""
     hass.config.units = US_CUSTOMARY_SYSTEM
     assert await async_setup_component(

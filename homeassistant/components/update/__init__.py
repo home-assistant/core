@@ -1,19 +1,18 @@
 """Component to allow for providing device or service updates."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 from enum import StrEnum
 from functools import lru_cache
 import logging
-from typing import Any, Final, final
+from typing import TYPE_CHECKING, Any, Final, final
 
 from awesomeversion import AwesomeVersion, AwesomeVersionCompareException
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
+from homeassistant.const import ATTR_ENTITY_PICTURE, STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -21,7 +20,7 @@ from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.entity import ABCCachedProperties, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
@@ -42,6 +41,11 @@ from .const import (
     SERVICE_SKIP,
     UpdateEntityFeature,
 )
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 SCAN_INTERVAL = timedelta(minutes=15)
 
@@ -175,8 +179,7 @@ async def async_clear_skipped(entity: UpdateEntity, service_call: ServiceCall) -
     await entity.async_clear_skipped()
 
 
-@dataclass
-class UpdateEntityDescription(EntityDescription):
+class UpdateEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes update entities."""
 
     device_class: UpdateDeviceClass | None = None
@@ -189,8 +192,29 @@ def _version_is_newer(latest_version: str, installed_version: str) -> bool:
     return AwesomeVersion(latest_version) > installed_version
 
 
-class UpdateEntity(RestoreEntity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "auto_update",
+    "installed_version",
+    "device_class",
+    "in_progress",
+    "latest_version",
+    "release_summary",
+    "release_url",
+    "supported_features",
+    "title",
+}
+
+
+class UpdateEntity(
+    RestoreEntity,
+    metaclass=ABCCachedProperties,
+    cached_properties=CACHED_PROPERTIES_WITH_ATTR_,
+):
     """Representation of an update entity."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {ATTR_ENTITY_PICTURE, ATTR_IN_PROGRESS, ATTR_RELEASE_SUMMARY}
+    )
 
     entity_description: UpdateEntityDescription
     _attr_auto_update: bool = False
@@ -206,12 +230,12 @@ class UpdateEntity(RestoreEntity):
     __skipped_version: str | None = None
     __in_progress: bool = False
 
-    @property
+    @cached_property
     def auto_update(self) -> bool:
         """Indicate if the device or service has auto update enabled."""
         return self._attr_auto_update
 
-    @property
+    @cached_property
     def installed_version(self) -> str | None:
         """Version installed and in use."""
         return self._attr_installed_version
@@ -223,7 +247,7 @@ class UpdateEntity(RestoreEntity):
         """
         return self.device_class is not None
 
-    @property
+    @cached_property
     def device_class(self) -> UpdateDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -254,7 +278,7 @@ class UpdateEntity(RestoreEntity):
             f"https://brands.home-assistant.io/_/{self.platform.platform_name}/icon.png"
         )
 
-    @property
+    @cached_property
     def in_progress(self) -> bool | int | None:
         """Update installation progress.
 
@@ -265,12 +289,12 @@ class UpdateEntity(RestoreEntity):
         """
         return self._attr_in_progress
 
-    @property
+    @cached_property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         return self._attr_latest_version
 
-    @property
+    @cached_property
     def release_summary(self) -> str | None:
         """Summary of the release notes or changelog.
 
@@ -279,17 +303,17 @@ class UpdateEntity(RestoreEntity):
         """
         return self._attr_release_summary
 
-    @property
+    @cached_property
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         return self._attr_release_url
 
-    @property
+    @cached_property
     def supported_features(self) -> UpdateEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
 
-    @property
+    @cached_property
     def title(self) -> str | None:
         """Title of the software.
 

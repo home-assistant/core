@@ -1,7 +1,7 @@
 """Support for Velux covers."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from pyvlx import OpeningDevice, Position
 from pyvlx.opening_device import Awning, Blind, GarageDoor, Gate, RollerShutter, Window
@@ -39,6 +39,27 @@ async def async_setup_platform(
 class VeluxCover(VeluxEntity, CoverEntity):
     """Representation of a Velux cover."""
 
+    _is_blind = False
+    node: OpeningDevice
+
+    def __init__(self, node: OpeningDevice) -> None:
+        """Initialize VeluxCover."""
+        super().__init__(node)
+        self._attr_device_class = CoverDeviceClass.WINDOW
+        if isinstance(node, Awning):
+            self._attr_device_class = CoverDeviceClass.AWNING
+        if isinstance(node, Blind):
+            self._attr_device_class = CoverDeviceClass.BLIND
+            self._is_blind = True
+        if isinstance(node, GarageDoor):
+            self._attr_device_class = CoverDeviceClass.GARAGE
+        if isinstance(node, Gate):
+            self._attr_device_class = CoverDeviceClass.GATE
+        if isinstance(node, RollerShutter):
+            self._attr_device_class = CoverDeviceClass.SHUTTER
+        if isinstance(node, Window):
+            self._attr_device_class = CoverDeviceClass.WINDOW
+
     @property
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
@@ -65,26 +86,9 @@ class VeluxCover(VeluxEntity, CoverEntity):
     @property
     def current_cover_tilt_position(self) -> int | None:
         """Return the current position of the cover."""
-        if isinstance(self.node, Blind):
-            return 100 - self.node.orientation.position_percent
+        if self._is_blind:
+            return 100 - cast(Blind, self.node).orientation.position_percent
         return None
-
-    @property
-    def device_class(self) -> CoverDeviceClass:
-        """Define this cover as either awning, blind, garage, gate, shutter or window."""
-        if isinstance(self.node, Awning):
-            return CoverDeviceClass.AWNING
-        if isinstance(self.node, Blind):
-            return CoverDeviceClass.BLIND
-        if isinstance(self.node, GarageDoor):
-            return CoverDeviceClass.GARAGE
-        if isinstance(self.node, Gate):
-            return CoverDeviceClass.GATE
-        if isinstance(self.node, RollerShutter):
-            return CoverDeviceClass.SHUTTER
-        if isinstance(self.node, Window):
-            return CoverDeviceClass.WINDOW
-        return CoverDeviceClass.WINDOW
 
     @property
     def is_closed(self) -> bool:
@@ -113,20 +117,20 @@ class VeluxCover(VeluxEntity, CoverEntity):
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close cover tilt."""
-        await self.node.close_orientation(wait_for_completion=False)
+        await cast(Blind, self.node).close_orientation(wait_for_completion=False)
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open cover tilt."""
-        await self.node.open_orientation(wait_for_completion=False)
+        await cast(Blind, self.node).open_orientation(wait_for_completion=False)
 
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop cover tilt."""
-        await self.node.stop_orientation(wait_for_completion=False)
+        await cast(Blind, self.node).stop_orientation(wait_for_completion=False)
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move cover tilt to a specific position."""
         position_percent = 100 - kwargs[ATTR_TILT_POSITION]
         orientation = Position(position_percent=position_percent)
-        await self.node.set_orientation(
+        await cast(Blind, self.node).set_orientation(
             orientation=orientation, wait_for_completion=False
         )

@@ -15,16 +15,15 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_ICON_TEMPLATE,
     CONF_NAME,
-    EVENT_HOMEASSISTANT_START,
     STATE_UNKNOWN,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
-    CoreState,
     HomeAssistant,
     State,
     callback,
+    validate_state,
 )
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
@@ -33,9 +32,11 @@ from homeassistant.helpers.event import (
     EventStateChangedData,
     TrackTemplate,
     TrackTemplateResult,
+    TrackTemplateResultInfo,
     async_track_template_result,
 )
 from homeassistant.helpers.script import Script, _VarsType
+from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.template import (
     Template,
     TemplateStateFromEntityId,
@@ -259,12 +260,18 @@ class TemplateEntity(Entity):
     ) -> None:
         """Template Entity."""
         self._template_attrs: dict[Template, list[_TemplateAttribute]] = {}
-        self._async_update: Callable[[], None] | None = None
+        self._template_result_info: TrackTemplateResultInfo | None = None
         self._attr_extra_state_attributes = {}
         self._self_ref_update_count = 0
         self._attr_unique_id = unique_id
         self._preview_callback: Callable[
-            [str | None, dict[str, Any] | None, str | None], None
+            [
+                str | None,
+                dict[str, Any] | None,
+                dict[str, bool | set[str]] | None,
+                str | None,
+            ],
+            None,
         ] | None = None
         if config is None:
             self._attribute_templates = attribute_templates
@@ -413,8 +420,8 @@ class TemplateEntity(Entity):
             return
 
         for update in updates:
-            for attr in self._template_attrs[update.template]:
-                attr.handle_result(
+            for template_attr in self._template_attrs[update.template]:
+                template_attr.handle_result(
                     event, update.template, update.last_result, update.result
                 )
 
@@ -422,10 +429,26 @@ class TemplateEntity(Entity):
             self.async_write_ha_state()
             return
 
-        self._preview_callback(*self._async_generate_attributes(), None)
+        try:
+            calculated_state = self._async_calculate_state()
+            validate_state(calculated_state.state)
+        except Exception as err:  # pylint: disable=broad-exception-caught
+            self._preview_callback(None, None, None, str(err))
+        else:
+            assert self._template_result_info
+            self._preview_callback(
+                calculated_state.state,
+                calculated_state.attributes,
+                self._template_result_info.listeners,
+                None,
+            )
 
     @callback
-    def _async_template_startup(self, *_: Any) -> None:
+    def _async_template_startup(
+        self,
+        _hass: HomeAssistant | None,
+        log_fn: Callable[[int, str], None] | None = None,
+    ) -> None:
         template_var_tups: list[TrackTemplate] = []
         has_availability_template = False
 
@@ -450,10 +473,11 @@ class TemplateEntity(Entity):
             self.hass,
             template_var_tups,
             self._handle_results,
+            log_fn=log_fn,
             has_super_template=has_availability_template,
         )
         self.async_on_remove(result_info.async_remove)
-        self._async_update = result_info.async_refresh
+        self._template_result_info = result_info
         result_info.async_refresh()
 
     @callback
@@ -487,35 +511,38 @@ class TemplateEntity(Entity):
     def async_start_preview(
         self,
         preview_callback: Callable[
-            [str | None, Mapping[str, Any] | None, str | None], None
+            [
+                str | None,
+                Mapping[str, Any] | None,
+                dict[str, bool | set[str]] | None,
+                str | None,
+            ],
+            None,
         ],
     ) -> CALLBACK_TYPE:
         """Render a preview."""
 
+        def log_template_error(level: int, msg: str) -> None:
+            preview_callback(None, None, None, msg)
+
         self._preview_callback = preview_callback
         self._async_setup_templates()
         try:
-            self._async_template_startup()
+            self._async_template_startup(None, log_template_error)
         except Exception as err:  # pylint: disable=broad-exception-caught
-            preview_callback(None, None, str(err))
+            preview_callback(None, None, None, str(err))
         return self._call_on_remove_callbacks
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self._async_setup_templates()
 
-        if self.hass.state == CoreState.running:
-            self._async_template_startup()
-            return
-
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, self._async_template_startup
-        )
+        async_at_start(self.hass, self._async_template_startup)
 
     async def async_update(self) -> None:
         """Call for forced update."""
-        assert self._async_update
-        self._async_update()
+        assert self._template_result_info
+        self._template_result_info.async_refresh()
 
     async def async_run_script(
         self,

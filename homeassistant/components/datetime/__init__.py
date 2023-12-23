@@ -1,7 +1,6 @@
 """Component to allow setting date/time as platforms."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 import logging
 from typing import final
@@ -12,7 +11,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
-    ENTITY_SERVICE_FIELDS,
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
@@ -53,7 +51,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_SET_VALUE,
         {
             vol.Required(ATTR_DATETIME): cv.datetime,
-            **ENTITY_SERVICE_FIELDS,
         },
         _async_set_value,
     )
@@ -73,8 +70,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class DateTimeEntityDescription(EntityDescription):
+class DateTimeEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes date/time entities."""
 
 

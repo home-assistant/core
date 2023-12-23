@@ -34,7 +34,10 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_deconz_events(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    mock_deconz_websocket,
 ) -> None:
     """Test successful creation of deconz events."""
     data = {
@@ -78,8 +81,6 @@ async def test_deconz_events(
     }
     with patch.dict(DECONZ_WEB_REQUEST, data):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
-    device_registry = dr.async_get(hass)
 
     assert len(hass.states.async_all()) == 3
     # 5 switches + 2 additional devices for deconz service and host
@@ -212,7 +213,10 @@ async def test_deconz_events(
 
 
 async def test_deconz_alarm_events(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    mock_deconz_websocket,
 ) -> None:
     """Test successful creation of deconz alarm events."""
     data = {
@@ -275,8 +279,6 @@ async def test_deconz_alarm_events(
     }
     with patch.dict(DECONZ_WEB_REQUEST, data):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
-    device_registry = dr.async_get(hass)
 
     assert len(hass.states.async_all()) == 4
     # 1 alarm control device + 2 additional devices for deconz service and host
@@ -424,7 +426,10 @@ async def test_deconz_alarm_events(
 
 
 async def test_deconz_presence_events(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    mock_deconz_websocket,
 ) -> None:
     """Test successful creation of deconz presence events."""
     data = {
@@ -456,8 +461,6 @@ async def test_deconz_presence_events(
     }
     with patch.dict(DECONZ_WEB_REQUEST, data):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
-    device_registry = dr.async_get(hass)
 
     assert len(hass.states.async_all()) == 5
     assert (
@@ -527,7 +530,10 @@ async def test_deconz_presence_events(
 
 
 async def test_deconz_relative_rotary_events(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    mock_deconz_websocket,
 ) -> None:
     """Test successful creation of deconz relative rotary events."""
     data = {
@@ -558,8 +564,6 @@ async def test_deconz_relative_rotary_events(
     }
     with patch.dict(DECONZ_WEB_REQUEST, data):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
-    device_registry = dr.async_get(hass)
 
     assert len(hass.states.async_all()) == 1
     assert (
@@ -626,7 +630,9 @@ async def test_deconz_relative_rotary_events(
 
 
 async def test_deconz_events_bad_unique_id(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Verify no devices are created if unique id is bad or missing."""
     data = {
@@ -648,8 +654,6 @@ async def test_deconz_events_bad_unique_id(
     }
     with patch.dict(DECONZ_WEB_REQUEST, data):
         config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
-    device_registry = dr.async_get(hass)
 
     assert len(hass.states.async_all()) == 1
     assert (

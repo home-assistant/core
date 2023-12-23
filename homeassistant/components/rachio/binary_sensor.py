@@ -59,16 +59,6 @@ class RachioControllerBinarySensor(RachioDevice, BinarySensorEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, controller):
-        """Set up a new Rachio controller binary sensor."""
-        super().__init__(controller)
-        self._state = None
-
-    @property
-    def is_on(self) -> bool:
-        """Return whether the sensor has a 'true' value."""
-        return self._state
-
     @callback
     def _async_handle_any_update(self, *args, **kwargs) -> None:
         """Determine whether an update event applies to this device."""
@@ -98,15 +88,15 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
     def _async_handle_update(self, *args, **kwargs) -> None:
         """Handle an update to the state of this sensor."""
         if args[0][0][KEY_SUBTYPE] in (SUBTYPE_ONLINE, SUBTYPE_COLD_REBOOT):
-            self._state = True
+            self._attr_is_on = True
         elif args[0][0][KEY_SUBTYPE] == SUBTYPE_OFFLINE:
-            self._state = False
+            self._attr_is_on = False
 
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
-        self._state = self._controller.init_data[KEY_STATUS] == STATUS_ONLINE
+        self._attr_is_on = self._controller.init_data[KEY_STATUS] == STATUS_ONLINE
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -132,15 +122,15 @@ class RachioRainSensor(RachioControllerBinarySensor):
     def _async_handle_update(self, *args, **kwargs) -> None:
         """Handle an update to the state of this sensor."""
         if args[0][0][KEY_SUBTYPE] == SUBTYPE_RAIN_SENSOR_DETECTION_ON:
-            self._state = True
+            self._attr_is_on = True
         elif args[0][0][KEY_SUBTYPE] == SUBTYPE_RAIN_SENSOR_DETECTION_OFF:
-            self._state = False
+            self._attr_is_on = False
 
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
-        self._state = self._controller.init_data[KEY_RAIN_SENSOR_TRIPPED]
+        self._attr_is_on = self._controller.init_data[KEY_RAIN_SENSOR_TRIPPED]
 
         self.async_on_remove(
             async_dispatcher_connect(

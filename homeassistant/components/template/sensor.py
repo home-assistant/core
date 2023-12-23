@@ -42,6 +42,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.trigger_template_entity import TEMPLATE_SENSOR_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import TriggerUpdateCoordinator
 from .const import (
     CONF_ATTRIBUTE_TEMPLATES,
     CONF_AVAILABILITY_TEMPLATE,
@@ -274,6 +275,17 @@ class TriggerSensorEntity(TriggerEntity, RestoreSensor):
     domain = SENSOR_DOMAIN
     extra_template_keys = (CONF_STATE,)
 
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: TriggerUpdateCoordinator,
+        config: ConfigType,
+    ) -> None:
+        """Initialize."""
+        super().__init__(hass, coordinator, config)
+        self._attr_state_class = config.get(CONF_STATE_CLASS)
+        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
@@ -292,16 +304,6 @@ class TriggerSensorEntity(TriggerEntity, RestoreSensor):
     def native_value(self) -> str | datetime | date | None:
         """Return state of the sensor."""
         return self._rendered.get(CONF_STATE)
-
-    @property
-    def state_class(self) -> str | None:
-        """Sensor state class."""
-        return self._config.get(CONF_STATE_CLASS)
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of the sensor, if any."""
-        return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @callback
     def _process_data(self) -> None:

@@ -1,5 +1,4 @@
 """Test service helpers."""
-from collections import OrderedDict
 from collections.abc import Iterable
 from copy import deepcopy
 from typing import Any
@@ -54,7 +53,7 @@ def mock_handle_entity_call():
 
 
 @pytest.fixture
-def mock_entities(hass):
+def mock_entities(hass: HomeAssistant) -> dict[str, MockEntity]:
     """Return mock entities in an ordered dict."""
     kitchen = MockEntity(
         entity_id="light.kitchen",
@@ -80,11 +79,13 @@ def mock_entities(hass):
         should_poll=False,
         supported_features=(SUPPORT_B | SUPPORT_C),
     )
-    entities = OrderedDict()
+    entities = {}
     entities[kitchen.entity_id] = kitchen
     entities[living_room.entity_id] = living_room
     entities[bedroom.entity_id] = bedroom
     entities[bathroom.entity_id] = bathroom
+    for entity in entities.values():
+        entity.hass = hass
     return entities
 
 
@@ -464,7 +465,14 @@ async def test_extract_entity_ids(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "group", {})
     await hass.async_block_till_done()
     await hass.components.group.Group.async_create_group(
-        hass, "test", ["light.Ceiling", "light.Kitchen"]
+        hass,
+        "test",
+        created_by_service=False,
+        entity_ids=["light.Ceiling", "light.Kitchen"],
+        icon=None,
+        mode=None,
+        object_id=None,
+        order=None,
     )
 
     call = ServiceCall("light", "turn_on", {ATTR_ENTITY_ID: "light.Bowl"})

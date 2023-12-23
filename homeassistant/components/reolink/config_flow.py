@@ -10,16 +10,22 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_PROTOCOL,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DOMAIN
+from .const import CONF_USE_HTTPS, DOMAIN
 from .exceptions import ReolinkException, ReolinkWebhookException, UserNotAdmin
 from .host import ReolinkHost
-from .util import has_connection_problem
+from .util import is_connected
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,7 +109,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             and CONF_PASSWORD in existing_entry.data
             and existing_entry.data[CONF_HOST] != discovery_info.ip
         ):
-            if has_connection_problem(self.hass, existing_entry):
+            if is_connected(self.hass, existing_entry):
                 _LOGGER.debug(
                     "Reolink DHCP reported new IP '%s', "
                     "but connection to camera seems to be okay, so sticking to IP '%s'",
@@ -113,7 +119,9 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 raise AbortFlow("already_configured")
 
             # check if the camera is reachable at the new IP
-            host = ReolinkHost(self.hass, existing_entry.data, existing_entry.options)
+            new_config = dict(existing_entry.data)
+            new_config[CONF_HOST] = discovery_info.ip
+            host = ReolinkHost(self.hass, new_config, existing_entry.options)
             try:
                 await host.api.get_state("GetLocalLink")
                 await host.api.logout()
@@ -122,7 +130,7 @@ class ReolinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     "Reolink DHCP reported new IP '%s', "
                     "but got error '%s' trying to connect, so sticking to IP '%s'",
                     discovery_info.ip,
-                    str(err),
+                    err,
                     existing_entry.data[CONF_HOST],
                 )
                 raise AbortFlow("already_configured") from err

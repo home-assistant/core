@@ -6,6 +6,9 @@
         "description": "Please enter the host name or IP address of a Heos device (preferably one connected via wire to the network).",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your HEOS device."
         }
       }
     },

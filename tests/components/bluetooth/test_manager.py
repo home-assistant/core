@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import AdvertisementHistory
+from habluetooth.manager import FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
 import pytest
 
 from homeassistant.components import bluetooth
@@ -19,14 +20,16 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     HaBluetoothConnector,
     async_ble_device_from_address,
-    async_get_advertisement_callback,
+    async_get_fallback_availability_interval,
+    async_get_learned_advertising_interval,
     async_scanner_count,
+    async_set_fallback_availability_interval,
     async_track_unavailable,
     storage,
 )
-from homeassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
-from homeassistant.components.bluetooth.manager import (
-    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+from homeassistant.components.bluetooth.const import (
+    SOURCE_LOCAL,
+    UNAVAILABLE_TRACK_SECONDS,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
@@ -42,6 +45,7 @@ from . import (
     inject_advertisement_with_source,
     inject_advertisement_with_time_and_source,
     inject_advertisement_with_time_and_source_connectable,
+    patch_bluetooth_time,
 )
 
 from tests.common import async_fire_time_changed, load_fixture
@@ -50,8 +54,8 @@ from tests.common import async_fire_time_changed, load_fixture
 @pytest.fixture
 def register_hci0_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
     """Register an hci0 scanner."""
-    hci0_scanner = FakeScanner(hass, "hci0", "hci0")
-    cancel = bluetooth.async_register_scanner(hass, hci0_scanner, True)
+    hci0_scanner = FakeScanner("hci0", "hci0")
+    cancel = bluetooth.async_register_scanner(hass, hci0_scanner)
     yield
     cancel()
 
@@ -59,8 +63,8 @@ def register_hci0_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
 @pytest.fixture
 def register_hci1_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
     """Register an hci1 scanner."""
-    hci1_scanner = FakeScanner(hass, "hci1", "hci1")
-    cancel = bluetooth.async_register_scanner(hass, hci1_scanner, True)
+    hci1_scanner = FakeScanner("hci1", "hci1")
+    cancel = bluetooth.async_register_scanner(hass, hci1_scanner)
     yield
     cancel()
 
@@ -555,9 +559,7 @@ async def test_switching_adapters_when_one_goes_away(
     hass: HomeAssistant, enable_bluetooth: None, register_hci0_scanner: None
 ) -> None:
     """Test switching adapters when one goes away."""
-    cancel_hci2 = bluetooth.async_register_scanner(
-        hass, FakeScanner(hass, "hci2", "hci2"), True
-    )
+    cancel_hci2 = bluetooth.async_register_scanner(hass, FakeScanner("hci2", "hci2"))
 
     address = "44:44:33:11:23:45"
 
@@ -606,8 +608,8 @@ async def test_switching_adapters_when_one_stop_scanning(
     hass: HomeAssistant, enable_bluetooth: None, register_hci0_scanner: None
 ) -> None:
     """Test switching adapters when stops scanning."""
-    hci2_scanner = FakeScanner(hass, "hci2", "hci2")
-    cancel_hci2 = bluetooth.async_register_scanner(hass, hci2_scanner, True)
+    hci2_scanner = FakeScanner("hci2", "hci2")
+    cancel_hci2 = bluetooth.async_register_scanner(hass, hci2_scanner)
 
     address = "44:44:33:11:23:45"
 
@@ -715,21 +717,18 @@ async def test_goes_unavailable_connectable_only_and_recovers(
                 MONOTONIC_TIME(),
             )
 
-    new_info_callback = async_get_advertisement_callback(hass)
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
     connectable_scanner = FakeScanner(
-        hass,
         "connectable",
         "connectable",
-        new_info_callback,
         connector,
         True,
     )
     unsetup_connectable_scanner = connectable_scanner.async_setup()
     cancel_connectable_scanner = _get_manager().async_register_scanner(
-        connectable_scanner, True
+        connectable_scanner
     )
     connectable_scanner.inject_advertisement(
         switchbot_device_connectable, switchbot_device_adv
@@ -744,16 +743,14 @@ async def test_goes_unavailable_connectable_only_and_recovers(
     )
 
     not_connectable_scanner = FakeScanner(
-        hass,
         "not_connectable",
         "not_connectable",
-        new_info_callback,
         connector,
         False,
     )
     unsetup_not_connectable_scanner = not_connectable_scanner.async_setup()
     cancel_not_connectable_scanner = _get_manager().async_register_scanner(
-        not_connectable_scanner, False
+        not_connectable_scanner
     )
     not_connectable_scanner.inject_advertisement(
         switchbot_device_non_connectable, switchbot_device_adv
@@ -795,16 +792,14 @@ async def test_goes_unavailable_connectable_only_and_recovers(
     cancel_unavailable()
 
     connectable_scanner_2 = FakeScanner(
-        hass,
         "connectable",
         "connectable",
-        new_info_callback,
         connector,
         True,
     )
     unsetup_connectable_scanner_2 = connectable_scanner_2.async_setup()
     cancel_connectable_scanner_2 = _get_manager().async_register_scanner(
-        connectable_scanner, True
+        connectable_scanner
     )
     connectable_scanner_2.inject_advertisement(
         switchbot_device_connectable, switchbot_device_adv
@@ -892,22 +887,20 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
             """Clear all devices."""
             self._discovered_device_advertisement_datas.clear()
             self._discovered_device_timestamps.clear()
+            self._previous_service_info.clear()
 
-    new_info_callback = async_get_advertisement_callback(hass)
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
     non_connectable_scanner = FakeScanner(
-        hass,
         "connectable",
         "connectable",
-        new_info_callback,
         connector,
         False,
     )
     unsetup_connectable_scanner = non_connectable_scanner.async_setup()
     cancel_connectable_scanner = _get_manager().async_register_scanner(
-        non_connectable_scanner, True
+        non_connectable_scanner
     )
     with patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
         non_connectable_scanner.inject_advertisement(
@@ -919,7 +912,7 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
     assert mock_config_flow.mock_calls[0][1][0] == "switchbot"
 
     assert async_ble_device_from_address(hass, "44:44:33:11:23:45", False) is not None
-    assert async_scanner_count(hass, connectable=True) == 1
+    assert async_scanner_count(hass, connectable=False) == 1
     assert len(callbacks) == 1
 
     assert (
@@ -956,9 +949,8 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
         return_value=[{"flow_id": "mock_flow_id"}],
     ) as mock_async_progress_by_init_data_type, patch.object(
         hass.config_entries.flow, "async_abort"
-    ) as mock_async_abort, patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+    ) as mock_async_abort, patch_bluetooth_time(
+        monotonic_now + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -1005,6 +997,7 @@ async def test_debug_logging(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test debug logging."""
+    assert await async_setup_component(hass, "logger", {"logger": {}})
     await hass.services.async_call(
         "logger",
         "set_level",
@@ -1053,3 +1046,139 @@ async def test_debug_logging(
         "hci0",
     )
     assert "wohand_good_signal_hci0" not in caplog.text
+
+
+async def test_set_fallback_interval_small(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_bluetooth: None,
+    macos_adapter: None,
+) -> None:
+    """Test we can set the fallback advertisement interval."""
+    assert async_get_fallback_availability_interval(hass, "44:44:33:11:23:12") is None
+
+    async_set_fallback_availability_interval(hass, "44:44:33:11:23:12", 2.0)
+    assert async_get_fallback_availability_interval(hass, "44:44:33:11:23:12") == 2.0
+
+    start_monotonic_time = time.monotonic()
+    switchbot_device = generate_ble_device("44:44:33:11:23:12", "wohand")
+    switchbot_adv = generate_advertisement_data(
+        local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+    )
+    switchbot_device_went_unavailable = False
+
+    inject_advertisement_with_time_and_source(
+        hass,
+        switchbot_device,
+        switchbot_adv,
+        start_monotonic_time,
+        SOURCE_LOCAL,
+    )
+
+    @callback
+    def _switchbot_device_unavailable_callback(_address: str) -> None:
+        """Switchbot device unavailable callback."""
+        nonlocal switchbot_device_went_unavailable
+        switchbot_device_went_unavailable = True
+
+    assert async_get_learned_advertising_interval(hass, "44:44:33:11:23:12") is None
+
+    switchbot_device_unavailable_cancel = async_track_unavailable(
+        hass,
+        _switchbot_device_unavailable_callback,
+        switchbot_device.address,
+        connectable=False,
+    )
+
+    monotonic_now = start_monotonic_time + 2
+    with patch_bluetooth_time(
+        monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    ):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
+        )
+        await hass.async_block_till_done()
+
+    assert switchbot_device_went_unavailable is True
+    switchbot_device_unavailable_cancel()
+
+    # We should forget fallback interval after it expires
+    assert async_get_fallback_availability_interval(hass, "44:44:33:11:23:12") is None
+
+
+async def test_set_fallback_interval_big(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_bluetooth: None,
+    macos_adapter: None,
+) -> None:
+    """Test we can set the fallback advertisement interval."""
+    assert async_get_fallback_availability_interval(hass, "44:44:33:11:23:12") is None
+
+    # Force the interval to be really big and check it doesn't expire using the default timeout (900)
+
+    async_set_fallback_availability_interval(hass, "44:44:33:11:23:12", 604800.0)
+    assert (
+        async_get_fallback_availability_interval(hass, "44:44:33:11:23:12") == 604800.0
+    )
+
+    start_monotonic_time = time.monotonic()
+    switchbot_device = generate_ble_device("44:44:33:11:23:12", "wohand")
+    switchbot_adv = generate_advertisement_data(
+        local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+    )
+    switchbot_device_went_unavailable = False
+
+    inject_advertisement_with_time_and_source(
+        hass,
+        switchbot_device,
+        switchbot_adv,
+        start_monotonic_time,
+        SOURCE_LOCAL,
+    )
+
+    @callback
+    def _switchbot_device_unavailable_callback(_address: str) -> None:
+        """Switchbot device unavailable callback."""
+        nonlocal switchbot_device_went_unavailable
+        switchbot_device_went_unavailable = True
+
+    assert async_get_learned_advertising_interval(hass, "44:44:33:11:23:12") is None
+
+    switchbot_device_unavailable_cancel = async_track_unavailable(
+        hass,
+        _switchbot_device_unavailable_callback,
+        switchbot_device.address,
+        connectable=False,
+    )
+
+    # Check that device hasn't expired after a day
+
+    monotonic_now = start_monotonic_time + 86400
+    with patch_bluetooth_time(
+        monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    ):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
+        )
+        await hass.async_block_till_done()
+
+    assert switchbot_device_went_unavailable is False
+
+    # Try again after it has expired
+
+    monotonic_now = start_monotonic_time + 604800
+    with patch_bluetooth_time(
+        monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    ):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
+        )
+        await hass.async_block_till_done()
+
+    assert switchbot_device_went_unavailable is True
+
+    switchbot_device_unavailable_cancel()
+
+    # We should forget fallback interval after it expires
+    assert async_get_fallback_availability_interval(hass, "44:44:33:11:23:12") is None
