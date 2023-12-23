@@ -28,5 +28,15 @@
         }
       }
     }
+  },
+  "issues": {
+    "deprecated_yaml_import": {
+      "title": "Splunk YAML configuration is being removed",
+      "description": "Configuring Splunk using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `splunk` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    },
+    "deprecated_yaml_import_without_filter": {
+      "title": "Splunk YAML configuration is being removed",
+      "description": "Configuring Splunk using YAML is being removed, along with the ability to filter entities.\n\nYour existing YAML configuration without the filter has been imported into the UI automatically.\n\nRemove the `splunk` configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+    }
   }
 }

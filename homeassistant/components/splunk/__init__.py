@@ -17,12 +17,13 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     EVENT_STATE_CHANGED,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import state as state_helper
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import ConfigType
 
@@ -58,7 +59,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Old setup for Splunk component."""
     if DOMAIN in config:
         # Entity filters are not configurable in Config Flow, so are removed
-        data = {k: v for k, v in config[DOMAIN].items() if k != "filter"}
+        data = {k: v for k, v in config[DOMAIN].items() if k != CONF_FILTER}
         _LOGGER.warning(
             "Your Splunk configuration has been imported into the UI; "
             "please remove it from configuration.yaml as support for it "
@@ -70,6 +71,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
 
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.6.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_import"
+            if CONF_FILTER in config[DOMAIN]
+            else "deprecated_yaml_import_without_filter",
+        )
     return True
 
 
