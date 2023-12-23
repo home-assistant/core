@@ -21,7 +21,7 @@ from .const import DOMAIN
 from .entity import TwenteMilieuEntity
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class TwenteMilieuSensorDescription(SensorEntityDescription):
     """Describe an Twente Milieu sensor."""
 

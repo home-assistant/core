@@ -67,7 +67,7 @@ EVENT_FIRST_TELEGRAM = "dsmr_first_telegram_{}"
 UNIT_CONVERSION = {"m3": UnitOfVolume.CUBIC_METERS}
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class DSMRSensorEntityDescription(SensorEntityDescription):
     """Represents an DSMR Sensor."""
 
