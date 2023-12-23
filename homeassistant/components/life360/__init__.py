@@ -2,121 +2,20 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
-import voluptuous as vol
-
-from homeassistant.components.device_tracker import CONF_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_EXCLUDE,
-    CONF_INCLUDE,
-    CONF_PASSWORD,
-    CONF_PREFIX,
-    CONF_USERNAME,
-    Platform,
-)
+from homeassistant.const import CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_CIRCLES,
-    CONF_DRIVING_SPEED,
-    CONF_ERROR_THRESHOLD,
-    CONF_MAX_GPS_ACCURACY,
-    CONF_MAX_UPDATE_WAIT,
-    CONF_MEMBERS,
-    CONF_SHOW_AS_STATE,
-    CONF_WARNING_THRESHOLD,
-    DEFAULT_OPTIONS,
-    DOMAIN,
-    LOGGER,
-    SHOW_DRIVING,
-    SHOW_MOVING,
-)
+from .const import DEFAULT_OPTIONS, DOMAIN
 from .coordinator import Life360DataUpdateCoordinator, MissingLocReason
 
 PLATFORMS = [Platform.DEVICE_TRACKER, Platform.BUTTON]
-
-CONF_ACCOUNTS = "accounts"
-
-SHOW_AS_STATE_OPTS = [SHOW_DRIVING, SHOW_MOVING]
-
-
-def _show_as_state(config: dict) -> dict:
-    if opts := config.pop(CONF_SHOW_AS_STATE):
-        if SHOW_DRIVING in opts:
-            config[SHOW_DRIVING] = True
-        if SHOW_MOVING in opts:
-            LOGGER.warning(
-                "%s is no longer supported as an option for %s",
-                SHOW_MOVING,
-                CONF_SHOW_AS_STATE,
-            )
-    return config
-
-
-def _unsupported(unsupported: set[str]) -> Callable[[dict], dict]:
-    """Warn about unsupported options and remove from config."""
-
-    def validator(config: dict) -> dict:
-        if unsupported_keys := unsupported & set(config):
-            LOGGER.warning(
-                "The following options are no longer supported: %s",
-                ", ".join(sorted(unsupported_keys)),
-            )
-        return {k: v for k, v in config.items() if k not in unsupported}
-
-    return validator
-
-
-ACCOUNT_SCHEMA = {
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-}
-CIRCLES_MEMBERS = {
-    vol.Optional(CONF_EXCLUDE): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_INCLUDE): vol.All(cv.ensure_list, [cv.string]),
-}
-LIFE360_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Optional(CONF_ACCOUNTS): vol.All(cv.ensure_list, [ACCOUNT_SCHEMA]),
-            vol.Optional(CONF_CIRCLES): CIRCLES_MEMBERS,
-            vol.Optional(CONF_DRIVING_SPEED): vol.Coerce(float),
-            vol.Optional(CONF_ERROR_THRESHOLD): vol.Coerce(int),
-            vol.Optional(CONF_MAX_GPS_ACCURACY): vol.Coerce(float),
-            vol.Optional(CONF_MAX_UPDATE_WAIT): cv.time_period,
-            vol.Optional(CONF_MEMBERS): CIRCLES_MEMBERS,
-            vol.Optional(CONF_PREFIX): vol.Any(None, cv.string),
-            vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
-            vol.Optional(CONF_SHOW_AS_STATE, default=[]): vol.All(
-                cv.ensure_list, [vol.In(SHOW_AS_STATE_OPTS)]
-            ),
-            vol.Optional(CONF_WARNING_THRESHOLD): vol.Coerce(int),
-        }
-    ),
-    _unsupported(
-        {
-            CONF_ACCOUNTS,
-            CONF_CIRCLES,
-            CONF_ERROR_THRESHOLD,
-            CONF_MAX_UPDATE_WAIT,
-            CONF_MEMBERS,
-            CONF_PREFIX,
-            CONF_SCAN_INTERVAL,
-            CONF_WARNING_THRESHOLD,
-        }
-    ),
-    _show_as_state,
-)
-CONFIG_SCHEMA = vol.Schema(
-    vol.All({DOMAIN: LIFE360_SCHEMA}, cv.removed(DOMAIN, raise_if_present=False)),
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @dataclass
