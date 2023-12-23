@@ -537,7 +537,7 @@ def test_saving_event(hass_recorder: Callable[..., HomeAssistant]) -> None:
 
 
 def test_saving_state_with_commit_interval_zero(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test saving a state with a commit interval of zero."""
     hass = hass_recorder({"commit_interval": 0})
@@ -594,7 +594,7 @@ def test_setup_without_migration(hass_recorder: Callable[..., HomeAssistant]) ->
 
 
 def test_saving_state_include_domains(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder({"include": {"domains": "test2"}})
@@ -604,7 +604,7 @@ def test_saving_state_include_domains(
 
 
 def test_saving_state_include_domains_globs(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder(
@@ -627,7 +627,7 @@ def test_saving_state_include_domains_globs(
 
 
 def test_saving_state_incl_entities(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder({"include": {"entities": "test2.recorder"}})
@@ -688,7 +688,7 @@ async def test_saving_event_exclude_event_type(
 
 
 def test_saving_state_exclude_domains(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder({"exclude": {"domains": "test"}})
@@ -698,7 +698,7 @@ def test_saving_state_exclude_domains(
 
 
 def test_saving_state_exclude_domains_globs(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder(
@@ -712,7 +712,7 @@ def test_saving_state_exclude_domains_globs(
 
 
 def test_saving_state_exclude_entities(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder({"exclude": {"entities": "test.recorder"}})
@@ -722,7 +722,7 @@ def test_saving_state_exclude_entities(
 
 
 def test_saving_state_exclude_domain_include_entity(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder(
@@ -733,7 +733,7 @@ def test_saving_state_exclude_domain_include_entity(
 
 
 def test_saving_state_exclude_domain_glob_include_entity(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder(
@@ -749,7 +749,7 @@ def test_saving_state_exclude_domain_glob_include_entity(
 
 
 def test_saving_state_include_domain_exclude_entity(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder(
@@ -762,7 +762,7 @@ def test_saving_state_include_domain_exclude_entity(
 
 
 def test_saving_state_include_domain_glob_exclude_entity(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test saving and restoring a state."""
     hass = hass_recorder(
@@ -780,7 +780,7 @@ def test_saving_state_include_domain_glob_exclude_entity(
 
 
 def test_saving_state_and_removing_entity(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test saving the state of a removed entity."""
     hass = hass_recorder()
@@ -1025,7 +1025,7 @@ def test_auto_purge(hass_recorder: Callable[..., HomeAssistant]) -> None:
 
 @pytest.mark.parametrize("enable_nightly_purge", [True])
 def test_auto_purge_auto_repack_on_second_sunday(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test periodic purge scheduling does a repack on the 2nd sunday."""
     hass = hass_recorder()
@@ -1065,7 +1065,7 @@ def test_auto_purge_auto_repack_on_second_sunday(
 
 @pytest.mark.parametrize("enable_nightly_purge", [True])
 def test_auto_purge_auto_repack_disabled_on_second_sunday(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test periodic purge scheduling does not auto repack on the 2nd sunday if disabled."""
     hass = hass_recorder({CONF_AUTO_REPACK: False})
@@ -1105,7 +1105,7 @@ def test_auto_purge_auto_repack_disabled_on_second_sunday(
 
 @pytest.mark.parametrize("enable_nightly_purge", [True])
 def test_auto_purge_no_auto_repack_on_not_second_sunday(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test periodic purge scheduling does not do a repack unless its the 2nd sunday."""
     hass = hass_recorder()
@@ -1431,7 +1431,7 @@ def test_has_services(hass_recorder: Callable[..., HomeAssistant]) -> None:
 
 
 def test_service_disable_events_not_recording(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test that events are not recorded when recorder is disabled using service."""
     hass = hass_recorder()
@@ -1515,7 +1515,7 @@ def test_service_disable_events_not_recording(
 
 
 def test_service_disable_states_not_recording(
-    hass_recorder: Callable[..., HomeAssistant]
+    hass_recorder: Callable[..., HomeAssistant],
 ) -> None:
     """Test that state changes are not recorded when recorder is disabled using service."""
     hass = hass_recorder()

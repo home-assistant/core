@@ -15,6 +15,9 @@
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "location": "[%key:common::config_flow::data::location%]"
+        },
+        "data_description": {
+          "location": "Equal or part of name, description or camera id"
         }
       }
     }

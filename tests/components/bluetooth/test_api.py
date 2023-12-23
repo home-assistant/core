@@ -7,9 +7,9 @@ import pytest
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
+    BaseHaRemoteScanner,
     BaseHaScanner,
     HaBluetoothConnector,
-    HomeAssistantRemoteScanner,
     async_scanner_by_source,
     async_scanner_devices_by_address,
 )
@@ -28,7 +28,7 @@ async def test_scanner_by_source(hass: HomeAssistant, enable_bluetooth: None) ->
     """Test we can get a scanner by source."""
 
     hci2_scanner = FakeScanner("hci2", "hci2")
-    cancel_hci2 = bluetooth.async_register_scanner(hass, hci2_scanner, True)
+    cancel_hci2 = bluetooth.async_register_scanner(hass, hci2_scanner)
 
     assert async_scanner_by_source(hass, "hci2") is hci2_scanner
     cancel_hci2()
@@ -40,13 +40,21 @@ async def test_monotonic_time() -> None:
     assert MONOTONIC_TIME() == pytest.approx(time.monotonic(), abs=0.1)
 
 
+async def test_async_get_advertisement_callback(
+    hass: HomeAssistant, enable_bluetooth: None
+) -> None:
+    """Test getting advertisement callback."""
+    callback = bluetooth.async_get_advertisement_callback(hass)
+    assert callback is not None
+
+
 async def test_async_scanner_devices_by_address_connectable(
     hass: HomeAssistant, enable_bluetooth: None
 ) -> None:
     """Test getting scanner devices by address with connectable devices."""
     manager = _get_manager()
 
-    class FakeInjectableScanner(HomeAssistantRemoteScanner):
+    class FakeInjectableScanner(BaseHaRemoteScanner):
         def inject_advertisement(
             self, device: BLEDevice, advertisement_data: AdvertisementData
         ) -> None:
@@ -63,15 +71,12 @@ async def test_async_scanner_devices_by_address_connectable(
                 MONOTONIC_TIME(),
             )
 
-    new_info_callback = manager.scanner_adv_received
     connector = (
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
-    scanner = FakeInjectableScanner(
-        hass, "esp32", "esp32", new_info_callback, connector, False
-    )
+    scanner = FakeInjectableScanner("esp32", "esp32", connector, True)
     unsetup = scanner.async_setup()
-    cancel = manager.async_register_scanner(scanner, True)
+    cancel = manager.async_register_scanner(scanner)
     switchbot_device = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
@@ -136,7 +141,7 @@ async def test_async_scanner_devices_by_address_non_connectable(
         HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
     )
     scanner = FakeStaticScanner("esp32", "esp32", connector)
-    cancel = manager.async_register_scanner(scanner, False)
+    cancel = manager.async_register_scanner(scanner)
 
     assert scanner.discovered_devices_and_advertisement_data == {
         switchbot_device.address: (switchbot_device, switchbot_device_adv)

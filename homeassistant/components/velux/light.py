@@ -35,6 +35,8 @@ class VeluxLight(VeluxEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_color_mode = ColorMode.BRIGHTNESS
 
+    node: LighteningDevice
+
     @property
     def brightness(self):
         """Return the current brightness."""

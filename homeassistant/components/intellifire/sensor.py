@@ -24,14 +24,14 @@ from .coordinator import IntellifireDataUpdateCoordinator
 from .entity import IntellifireEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class IntellifireSensorRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[IntellifirePollData], int | str | datetime | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class IntellifireSensorEntityDescription(
     SensorEntityDescription,
     IntellifireSensorRequiredKeysMixin,
