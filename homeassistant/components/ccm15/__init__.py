@@ -14,7 +14,6 @@ PLATFORMS: list[Platform] = [Platform.CLIMATE]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Midea ccm15 AC Controller from a config entry."""
 
-    hass.data.setdefault(DOMAIN, {})
     coordinator = CCM15Coordinator(
         hass,
         entry.data[CONF_HOST],
