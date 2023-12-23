@@ -25,9 +25,9 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    pass
+    from functools import cached_property
 else:
-    pass
+    from homeassistant.backports.functools import cached_property
 
 
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -95,12 +95,12 @@ class LawnMowerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return None
         return str(activity)
 
-    @property
+    @cached_property
     def activity(self) -> LawnMowerActivity | None:
         """Return the current lawn mower activity."""
         return self._attr_activity
 
-    @property
+    @cached_property
     def supported_features(self) -> LawnMowerEntityFeature:
         """Flag lawn mower features that are supported."""
         return self._attr_supported_features
