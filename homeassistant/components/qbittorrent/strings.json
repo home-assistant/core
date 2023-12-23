@@ -33,7 +33,19 @@
           "seeding": "Seeding",
           "downloading": "Downloading"
         }
-      }
+      },
+    },
+    "active_torrents": {
+      "name": "Active torrents"
+    },
+    "inactive_torrents": {
+      "name": "Inactive torrents"
+    },
+    "paused_torrents": {
+      "name": "Paused torrents"
+    },
+    "all_torrents": {
+      "name": "All torrents"
     }
   }
 }

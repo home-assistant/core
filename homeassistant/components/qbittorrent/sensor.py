@@ -36,6 +36,10 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPE_CURRENT_STATUS = "current_status"
 SENSOR_TYPE_DOWNLOAD_SPEED = "download_speed"
 SENSOR_TYPE_UPLOAD_SPEED = "upload_speed"
+SENSOR_TYPE_ALL_TORRENTS = "all_torrents"
+SENSOR_TYPE_PAUSED_TORRENTS = "paused_torrents"
+SENSOR_TYPE_ACTIVE_TORRENTS = "active_torrents"
+SENSOR_TYPE_INACTIVE_TORRENTS = "inactive_torrents"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -78,6 +82,53 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
         val_func=lambda coordinator: float(coordinator.data["server_state"]["up_info_speed"]),
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_ALL_TORRENTS,
+        translation_key="all_torrents",
+        name="All Torrents",
+        native_unit_of_measurement="Torrents",
+        suggested_display_precision=0,
+        val_func=lambda coordinator: int(len(coordinator.data["torrents"])),
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_ACTIVE_TORRENTS,
+        translation_key="active_torrents",
+        name="Active Torrents",
+        native_unit_of_measurement="Torrents",
+        suggested_display_precision=0,
+        val_func=lambda coordinator: int(
+            len([
+                torrent for torrent in coordinator.data["torrents"].values()
+                if torrent["state"] in ["downloading", "uploading"]
+            ])
+        ),
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_INACTIVE_TORRENTS,
+        translation_key="inactive_torrents",
+        name="Inactive Torrents",
+        native_unit_of_measurement="Torrents",
+        suggested_display_precision=0,
+        val_func=lambda coordinator: int(
+            len([
+                torrent for torrent in coordinator.data["torrents"].values()
+                if torrent["state"] in ["stalledDL", "stalledUP"]
+            ])
+        ),
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_PAUSED_TORRENTS,
+        translation_key="paused_torrents",
+        name="Paused Torrents",
+        native_unit_of_measurement="Torrents",
+        suggested_display_precision=0,
+        val_func=lambda coordinator: int(
+            len([
+                torrent for torrent in coordinator.data["torrents"].values()
+                if torrent["state"] in ["pausedDL", "pausedUP"]
+            ])
+        ),
     ),
 )
 
