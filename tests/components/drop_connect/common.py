@@ -7,7 +7,7 @@ TEST_DATA_HUB = (
 )
 TEST_DATA_HUB_RESET = (
     '{"curFlow":0,"peakFlow":0,"usedToday":0,"avgUsed":0,"psi":0,"psiLow":0,"psiHigh":0,'
-    '"water":0,"bypass":0,"pMode":"AWAY","battery":0,"notif":0,"leak":0}'
+    '"water":0,"bypass":1,"pMode":"AWAY","battery":0,"notif":0,"leak":0}'
 )
 
 TEST_DATA_SALT_TOPIC = "drop_connect/DROP-1_C0FFEE/8"
@@ -23,12 +23,12 @@ TEST_DATA_SOFTENER = (
     '{"curFlow":5.0,"bypass":0,"battery":20,"capacity":1000,"resInUse":1,"psi":50.5}'
 )
 TEST_DATA_SOFTENER_RESET = (
-    '{"curFlow":0,"bypass":0,"battery":0,"capacity":0,"resInUse":0,"psi":null}'
+    '{"curFlow":0,"bypass":1,"battery":0,"capacity":0,"resInUse":0,"psi":null}'
 )
 
 TEST_DATA_FILTER_TOPIC = "drop_connect/DROP-1_C0FFEE/4"
 TEST_DATA_FILTER = '{"curFlow":19.84,"bypass":0,"battery":12,"psi":38.2}'
-TEST_DATA_FILTER_RESET = '{"curFlow":0,"bypass":0,"battery":0,"psi":null}'
+TEST_DATA_FILTER_RESET = '{"curFlow":0,"bypass":1,"battery":0,"psi":null}'
 
 TEST_DATA_PROTECTION_VALVE_TOPIC = "drop_connect/DROP-1_C0FFEE/78"
 TEST_DATA_PROTECTION_VALVE = (

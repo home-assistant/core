@@ -59,6 +59,10 @@ async def test_switches_hub(
         blocking=True,
     )
 
+    # Simulate response from the hub
+    async_fire_mqtt_message(hass, TEST_DATA_HUB_TOPIC, TEST_DATA_HUB_RESET)
+    await hass.async_block_till_done()
+
     water_supply_switch = hass.states.get(water_supply_switch_name)
     assert water_supply_switch
     assert water_supply_switch.state == STATE_OFF
@@ -70,6 +74,10 @@ async def test_switches_hub(
         {ATTR_ENTITY_ID: water_supply_switch_name},
         blocking=True,
     )
+
+    # Simulate response from the hub
+    async_fire_mqtt_message(hass, TEST_DATA_HUB_TOPIC, TEST_DATA_HUB)
+    await hass.async_block_till_done()
 
     water_supply_switch = hass.states.get(water_supply_switch_name)
     assert water_supply_switch
@@ -87,6 +95,10 @@ async def test_switches_hub(
         blocking=True,
     )
 
+    # Simulate response from the device
+    async_fire_mqtt_message(hass, TEST_DATA_HUB_TOPIC, TEST_DATA_HUB_RESET)
+    await hass.async_block_till_done()
+
     bypass_switch = hass.states.get(bypass_switch_name)
     assert bypass_switch
     assert bypass_switch.state == STATE_ON
@@ -98,6 +110,10 @@ async def test_switches_hub(
         {ATTR_ENTITY_ID: bypass_switch_name},
         blocking=True,
     )
+
+    # Simulate response from the device
+    async_fire_mqtt_message(hass, TEST_DATA_HUB_TOPIC, TEST_DATA_HUB)
+    await hass.async_block_till_done()
 
     bypass_switch = hass.states.get(bypass_switch_name)
     assert bypass_switch
@@ -132,6 +148,12 @@ async def test_switches_protection_valve(
         blocking=True,
     )
 
+    # Simulate response from the device
+    async_fire_mqtt_message(
+        hass, TEST_DATA_PROTECTION_VALVE_TOPIC, TEST_DATA_PROTECTION_VALVE_RESET
+    )
+    await hass.async_block_till_done()
+
     water_supply_switch = hass.states.get(water_supply_switch_name)
     assert water_supply_switch
     assert water_supply_switch.state == STATE_OFF
@@ -143,6 +165,12 @@ async def test_switches_protection_valve(
         {ATTR_ENTITY_ID: water_supply_switch_name},
         blocking=True,
     )
+
+    # Simulate response from the device
+    async_fire_mqtt_message(
+        hass, TEST_DATA_PROTECTION_VALVE_TOPIC, TEST_DATA_PROTECTION_VALVE
+    )
+    await hass.async_block_till_done()
 
     water_supply_switch = hass.states.get(water_supply_switch_name)
     assert water_supply_switch
@@ -173,6 +201,10 @@ async def test_switches_softener(
         blocking=True,
     )
 
+    # Simulate response from the device
+    async_fire_mqtt_message(hass, TEST_DATA_SOFTENER_TOPIC, TEST_DATA_SOFTENER_RESET)
+    await hass.async_block_till_done()
+
     bypass_switch = hass.states.get(bypass_switch_name)
     assert bypass_switch
     assert bypass_switch.state == STATE_ON
@@ -184,6 +216,10 @@ async def test_switches_softener(
         {ATTR_ENTITY_ID: bypass_switch_name},
         blocking=True,
     )
+
+    # Simulate response from the device
+    async_fire_mqtt_message(hass, TEST_DATA_SOFTENER_TOPIC, TEST_DATA_SOFTENER)
+    await hass.async_block_till_done()
 
     bypass_switch = hass.states.get(bypass_switch_name)
     assert bypass_switch
@@ -214,6 +250,10 @@ async def test_switches_filter(
         blocking=True,
     )
 
+    # Simulate response from the device
+    async_fire_mqtt_message(hass, TEST_DATA_FILTER_TOPIC, TEST_DATA_FILTER_RESET)
+    await hass.async_block_till_done()
+
     bypass_switch = hass.states.get(bypass_switch_name)
     assert bypass_switch
     assert bypass_switch.state == STATE_ON
@@ -225,6 +265,10 @@ async def test_switches_filter(
         {ATTR_ENTITY_ID: bypass_switch_name},
         blocking=True,
     )
+
+    # Simulate response from the device
+    async_fire_mqtt_message(hass, TEST_DATA_FILTER_TOPIC, TEST_DATA_FILTER)
+    await hass.async_block_till_done()
 
     bypass_switch = hass.states.get(bypass_switch_name)
     assert bypass_switch
