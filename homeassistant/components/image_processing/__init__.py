@@ -262,7 +262,7 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
                 continue
 
             face.update({ATTR_ENTITY_ID: self.entity_id})
-            self.hass.async_add_job(self.hass.bus.async_fire, EVENT_DETECT_FACE, face)
+            self.hass.bus.async_fire(EVENT_DETECT_FACE, dict(face))
 
         # Update entity store
         self.faces = faces
