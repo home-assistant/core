@@ -110,7 +110,6 @@ class MockSoCo(MagicMock):
 
     uid = "RINCON_test"
     play_mode = "NORMAL"
-    audio_delay = 2
     mute = False
     night_mode = True
     dialog_level = True
