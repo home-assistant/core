@@ -1,5 +1,5 @@
 """The base entity for the A. O. Smith integration."""
-from typing import TypeVar
+from typing import Any, TypeVar
 
 from py_aosmith import AOSmithAPIClient
 
@@ -8,11 +8,24 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import AOSmithEnergyCoordinator, AOSmithStatusCoordinator
-from .models import AOSmithDeviceDetails
 
 _AOSmithCoordinatorT = TypeVar(
     "_AOSmithCoordinatorT", bound=AOSmithStatusCoordinator | AOSmithEnergyCoordinator
 )
+
+
+def build_device_info(status_data: dict[str, Any]) -> DeviceInfo:
+    """Build the device info."""
+    junction_id = status_data.get("junctionId", "")
+    return DeviceInfo(
+        identifiers={(DOMAIN, junction_id)},
+        manufacturer="A. O. Smith",
+        name=status_data.get("name"),
+        model=status_data.get("model"),
+        serial_number=status_data.get("serial"),
+        suggested_area=status_data.get("install", {}).get("location"),
+        sw_version=status_data.get("data", {}).get("firmwareVersion"),
+    )
 
 
 class AOSmithEntity(CoordinatorEntity[_AOSmithCoordinatorT]):
@@ -21,23 +34,13 @@ class AOSmithEntity(CoordinatorEntity[_AOSmithCoordinatorT]):
     _attr_has_entity_name = True
 
     def __init__(
-        self,
-        coordinator: _AOSmithCoordinatorT,
-        device_details: AOSmithDeviceDetails,
+        self, coordinator: _AOSmithCoordinatorT, status_data: dict[str, Any]
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self.device_details = device_details
+        self.junction_id = status_data.get("junctionId", "")
 
-        self._attr_device_info = DeviceInfo(
-            manufacturer="A. O. Smith",
-            name=device_details.name,
-            model=device_details.model,
-            serial_number=device_details.serial_number,
-            suggested_area=device_details.install_location,
-            identifiers={(DOMAIN, device_details.junction_id)},
-            sw_version=device_details.firmware_version,
-        )
+        self._attr_device_info = build_device_info(status_data)
 
     @property
     def client(self) -> AOSmithAPIClient:
@@ -51,7 +54,7 @@ class AOSmithStatusEntity(AOSmithEntity[AOSmithStatusCoordinator]):
     @property
     def device(self):
         """Shortcut to get the device status from the coordinator data."""
-        return self.coordinator.data.get(self.device_details.junction_id)
+        return self.coordinator.data.get(self.junction_id)
 
     @property
     def device_data(self):
@@ -71,4 +74,4 @@ class AOSmithEnergyEntity(AOSmithEntity[AOSmithEnergyCoordinator]):
     @property
     def energy_usage(self) -> float | None:
         """Shortcut to get the energy usage from the coordinator data."""
-        return self.coordinator.data.get(self.device_details.junction_id)
+        return self.coordinator.data.get(self.junction_id)

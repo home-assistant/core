@@ -19,7 +19,6 @@ from . import AOSmithData
 from .const import DOMAIN, HOT_WATER_STATUS_MAP
 from .coordinator import AOSmithEnergyCoordinator, AOSmithStatusCoordinator
 from .entity import AOSmithEnergyEntity, AOSmithStatusEntity
-from .models import AOSmithDeviceDetails
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -50,14 +49,14 @@ async def async_setup_entry(
     data: AOSmithData = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        AOSmithStatusSensorEntity(data.status_coordinator, description, device_details)
+        AOSmithStatusSensorEntity(data.status_coordinator, description, status_data)
         for description in STATUS_ENTITY_DESCRIPTIONS
-        for device_details in data.device_details_list
+        for status_data in data.status_coordinator.data.values()
     )
 
     async_add_entities(
-        AOSmithEnergySensorEntity(data.energy_coordinator, device_details)
-        for device_details in data.device_details_list
+        AOSmithEnergySensorEntity(data.energy_coordinator, status_data)
+        for status_data in data.status_coordinator.data.values()
     )
 
 
@@ -70,12 +69,12 @@ class AOSmithStatusSensorEntity(AOSmithStatusEntity, SensorEntity):
         self,
         coordinator: AOSmithStatusCoordinator,
         description: AOSmithStatusSensorEntityDescription,
-        device_details: AOSmithDeviceDetails,
+        status_data: dict[str, Any],
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator, device_details)
+        super().__init__(coordinator, status_data)
         self.entity_description = description
-        self._attr_unique_id = f"{description.key}_{device_details.junction_id}"
+        self._attr_unique_id = f"{description.key}_{self.junction_id}"
 
     @property
     def native_value(self) -> str | int | None:
@@ -95,11 +94,11 @@ class AOSmithEnergySensorEntity(AOSmithEnergyEntity, SensorEntity):
     def __init__(
         self,
         coordinator: AOSmithEnergyCoordinator,
-        device_details: AOSmithDeviceDetails,
+        status_data: dict[str, Any],
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator, device_details)
-        self._attr_unique_id = f"energy_usage_{device_details.junction_id}"
+        super().__init__(coordinator, status_data)
+        self._attr_unique_id = f"energy_usage_{self.junction_id}"
 
     @property
     def native_value(self) -> float | None:

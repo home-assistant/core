@@ -25,7 +25,6 @@ from .const import (
 )
 from .coordinator import AOSmithStatusCoordinator
 from .entity import AOSmithStatusEntity
-from .models import AOSmithDeviceDetails
 
 MODE_HA_TO_AOSMITH = {
     STATE_OFF: AOSMITH_MODE_VACATION,
@@ -56,8 +55,8 @@ async def async_setup_entry(
     data: AOSmithData = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        AOSmithWaterHeaterEntity(data.status_coordinator, device_details)
-        for device_details in data.device_details_list
+        AOSmithWaterHeaterEntity(data.status_coordinator, status_data)
+        for status_data in data.status_coordinator.data.values()
     )
 
 
@@ -71,11 +70,11 @@ class AOSmithWaterHeaterEntity(AOSmithStatusEntity, WaterHeaterEntity):
     def __init__(
         self,
         coordinator: AOSmithStatusCoordinator,
-        device_details: AOSmithDeviceDetails,
+        status_data: dict[str, Any],
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator, device_details)
-        self._attr_unique_id = device_details.junction_id
+        super().__init__(coordinator, status_data)
+        self._attr_unique_id = self.junction_id
 
     @property
     def operation_list(self) -> list[str]:
@@ -128,29 +127,25 @@ class AOSmithWaterHeaterEntity(AOSmithStatusEntity, WaterHeaterEntity):
         """Set new target operation mode."""
         aosmith_mode = MODE_HA_TO_AOSMITH.get(operation_mode)
         if aosmith_mode is not None:
-            await self.client.update_mode(self.device_details.junction_id, aosmith_mode)
+            await self.client.update_mode(self.junction_id, aosmith_mode)
 
         await self.coordinator.async_request_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get("temperature")
-        await self.client.update_setpoint(self.device_details.junction_id, temperature)
+        await self.client.update_setpoint(self.junction_id, temperature)
 
         await self.coordinator.async_request_refresh()
 
     async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
-        await self.client.update_mode(
-            self.device_details.junction_id, AOSMITH_MODE_VACATION
-        )
+        await self.client.update_mode(self.junction_id, AOSMITH_MODE_VACATION)
 
         await self.coordinator.async_request_refresh()
 
     async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""
-        await self.client.update_mode(
-            self.device_details.junction_id, DEFAULT_OPERATION_MODE
-        )
+        await self.client.update_mode(self.junction_id, DEFAULT_OPERATION_MODE)
 
         await self.coordinator.async_request_refresh()

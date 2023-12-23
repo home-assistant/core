@@ -10,7 +10,7 @@ from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
 from .coordinator import AOSmithEnergyCoordinator, AOSmithStatusCoordinator
-from .models import AOSmithData, build_device_details
+from .models import AOSmithData
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.WATER_HEATER]
 
@@ -31,12 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     await energy_coordinator.async_config_entry_first_refresh()
 
-    device_details_list = [
-        build_device_details(device) for device in status_coordinator.data.values()
-    ]
-
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = AOSmithData(
-        device_details_list,
         client,
         status_coordinator,
         energy_coordinator,
