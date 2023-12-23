@@ -95,6 +95,8 @@ DEFAULTS = {
     CONF_STATE_CLOSED: STATE_CLOSED,
 }
 
+RESET_CLOSING_OPENING = "reset_opening_closing"
+
 
 def _validate_and_add_defaults(config: ConfigType) -> ConfigType:
     """Validate config options and set defaults."""
@@ -218,10 +220,12 @@ class MqttValve(MqttEntity, ValveEntity):
 
     @callback
     def _update_state(self, state: str) -> None:
-        """Update the valve state based on static payload."""
-        self._attr_is_closed = state == STATE_CLOSED
+        """Update the valve state properties."""
         self._attr_is_opening = state == STATE_OPENING
         self._attr_is_closing = state == STATE_CLOSING
+        if self.reports_position:
+            return
+        self._attr_is_closed = state == STATE_CLOSED
 
     @callback
     def _process_binary_valve_update(
@@ -270,12 +274,10 @@ class MqttValve(MqttEntity, ValveEntity):
                     msg.topic,
                 )
             else:
-                if state is None:
-                    if percentage_payload == 0:
-                        state = STATE_CLOSED
-                    elif percentage_payload == 100:
-                        state = STATE_OPEN
-                self._attr_current_valve_position = min(max(percentage_payload, 0), 100)
+                percentage_payload = min(max(percentage_payload, 0), 100)
+                self._attr_current_valve_position = percentage_payload
+                if state is None and (percentage_payload in {0, 100}):
+                    state = RESET_CLOSING_OPENING
                 position_set = True
         if state_payload and state is None and not position_set:
             _LOGGER.warning(
@@ -287,7 +289,9 @@ class MqttValve(MqttEntity, ValveEntity):
             return
         if state is None:
             return
-        self._update_state(state)
+        self._attr_is_closed = state == STATE_CLOSED
+        self._attr_is_opening = state == STATE_OPENING
+        self._attr_is_closing = state == STATE_CLOSING
 
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
