@@ -25,6 +25,9 @@ from .entity import DROPEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+ICON_VALVE_OPEN = "mdi:valve-open"
+ICON_VALVE_CLOSED = "mdi:valve-closed"
+
 # Switch type constants
 WATER_SWITCH = "water"
 BYPASS_SWITCH = "bypass"
@@ -119,10 +122,6 @@ class DROPSwitch(DROPEntity, SwitchEntity):
     @property
     def icon(self) -> str:
         """Return the icon to use for dynamic states."""
-        _icon = self.entity_description.icon or ""
-        if self.entity_description.key in (WATER_SWITCH, BYPASS_SWITCH):
-            if self.is_on:
-                _icon = "mdi:valve-open"
-            else:
-                _icon = "mdi:valve-closed"
-        return _icon
+        if self.is_on:
+            return ICON_VALVE_OPEN
+        return ICON_VALVE_CLOSED
