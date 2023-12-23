@@ -290,9 +290,7 @@ class MqttValve(MqttEntity, ValveEntity):
             return
         if state is None:
             return
-        self._attr_is_closed = state == STATE_CLOSED
-        self._attr_is_opening = state == STATE_OPENING
-        self._attr_is_closing = state == STATE_CLOSING
+        self._update_state(state)
 
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
