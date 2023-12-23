@@ -25,7 +25,7 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(hass, _LOGGER, name=f"{DOMAIN}-{unique_id}")
         self.drop_api = DropAPI()
 
-    async def set_water(self, value: int):
+    async def set_water(self, value: int) -> None:
         """Change water supply state."""
         payload = self.drop_api.set_water_message(value)
         await mqtt.async_publish(
@@ -34,7 +34,7 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             payload,
         )
 
-    async def set_bypass(self, value: int):
+    async def set_bypass(self, value: int) -> None:
         """Change water bypass state."""
         payload = self.drop_api.set_bypass_message(value)
         await mqtt.async_publish(
@@ -43,7 +43,7 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             payload,
         )
 
-    async def set_protect_mode(self, value: str):
+    async def set_protect_mode(self, value: str) -> None:
         """Change protect mode state."""
         payload = self.drop_api.set_protect_mode_message(value)
         await mqtt.async_publish(

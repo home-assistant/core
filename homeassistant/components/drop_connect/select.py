@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -30,7 +31,7 @@ class DROPSelectEntityDescription(SelectEntityDescription):
     """Describes DROP select entity."""
 
     value_fn: Callable[[DROPDeviceDataUpdateCoordinator], str | None]
-    set_fn: Callable
+    set_fn: Callable[[Any, Any], Any]
 
 
 SELECTS: list[DROPSelectEntityDescription] = [
