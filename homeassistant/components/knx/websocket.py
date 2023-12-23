@@ -253,13 +253,13 @@ async def ws_create_entity(
     """Create entity in entity store and load it."""
     knx: KNXModule = hass.data[DOMAIN]
     try:
-        await knx.config_store.create_entitiy(msg["platform"], msg["data"])
+        entity_id = await knx.config_store.create_entitiy(msg["platform"], msg["data"])
     except ConfigStoreException as err:
         connection.send_error(
             msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
         )
         return
-    connection.send_result(msg["id"])
+    connection.send_result(msg["id"], entity_id)
 
 
 @websocket_api.require_admin

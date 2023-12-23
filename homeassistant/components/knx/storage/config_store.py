@@ -61,7 +61,9 @@ class KNXConfigStore:
                 len(self.data["entities"]),
             )
 
-    async def create_entitiy(self, platform: Platform, data: dict[str, Any]) -> None:
+    async def create_entitiy(
+        self, platform: Platform, data: dict[str, Any]
+    ) -> str | None:
         """Create a new entity."""
         if platform not in self.async_add_entity:
             raise ConfigStoreException(f"Entity platform not ready: {platform}")
@@ -72,6 +74,9 @@ class KNXConfigStore:
         # store data after entity was added to be sure config didn't raise exceptions
         self.data["entities"][platform][unique_id] = data
         await self._store.async_save(self.data)
+
+        entity_registry = er.async_get(self.hass)
+        return entity_registry.async_get_entity_id(platform, DOMAIN, unique_id)
 
     @callback
     def get_entity_config(self, entity_id: str) -> dict[str, Any]:
