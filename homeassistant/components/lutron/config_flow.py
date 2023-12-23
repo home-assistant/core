@@ -55,7 +55,7 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
                 guid = main_repeater.guid
 
                 if len(guid) <= 10:
-                    errors["base"] = "missing_guid"
+                    errors["base"] = "cannot_connect"
 
             if not errors:
                 await self.async_set_unique_id(guid)
