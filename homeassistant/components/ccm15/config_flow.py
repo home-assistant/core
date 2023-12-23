@@ -42,13 +42,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 if not await ccm15.async_test_connection():
                     errors["base"] = "cannot_connect"
-                    return self.async_show_form(
-                        step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-                    )
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
-            else:
+
+            if not errors:
                 return self.async_create_entry(
                     title=user_input[CONF_HOST], data=user_input
                 )
