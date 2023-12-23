@@ -12,6 +12,7 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
+from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -38,6 +39,8 @@ async def async_setup_entry(
             DemoMusicPlayer(),
             DemoMusicPlayer("Kitchen"),
             DemoTVShowPlayer(),
+            DemoBrowsePlayer("Browse"),
+            DemoGroupPlayer("Group"),
         ]
     )
 
@@ -89,6 +92,8 @@ NETFLIX_PLAYER_SUPPORT = (
     | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     | MediaPlayerEntityFeature.STOP
 )
+
+BROWSE_PLAYER_SUPPORT = MediaPlayerEntityFeature.BROWSE_MEDIA
 
 
 class AbstractDemoPlayer(MediaPlayerEntity):
@@ -379,3 +384,31 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         """Set the input source."""
         self._attr_source = source
         self.schedule_update_ha_state()
+
+
+class DemoBrowsePlayer(AbstractDemoPlayer):
+    """A Demo media player that supports browse."""
+
+    _attr_supported_features = BROWSE_PLAYER_SUPPORT
+
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Browse media is not implemented for the demo."""
+        raise NotImplementedError()
+
+
+class DemoGroupPlayer(AbstractDemoPlayer):
+    """A Demo media player that supports browse."""
+
+    _attr_supported_features = (
+        YOUTUBE_PLAYER_SUPPORT
+        | MediaPlayerEntityFeature.GROUPING
+        | MediaPlayerEntityFeature.TURN_OFF
+    )
+
+    async def async_group_players(self, group_members: list[str]) -> None:
+        """Group players."""
+        raise NotImplementedError()
