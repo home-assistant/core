@@ -13,7 +13,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-            "host": "The hostname or IP address of the Lutron main repeater."
+          "host": "The hostname or IP address of the Lutron main repeater."
         },
         "description": "Please enter the main repeater login information",
         "title": "Main repeater setup"
