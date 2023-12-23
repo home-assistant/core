@@ -1,22 +1,20 @@
 """Support for WeMo binary sensors."""
-import asyncio
 
 from pywemo import Insight, Maker, StandbyState
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as WEMO_DOMAIN
+from . import async_wemo_dispatcher_connect
 from .entity import WemoBinaryStateEntity, WemoEntity
 from .wemo_device import DeviceCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    _config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up WeMo binary sensors."""
@@ -30,14 +28,7 @@ async def async_setup_entry(
         else:
             async_add_entities([WemoBinarySensor(coordinator)])
 
-    async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.binary_sensor", _discovered_wemo)
-
-    await asyncio.gather(
-        *(
-            _discovered_wemo(coordinator)
-            for coordinator in hass.data[WEMO_DOMAIN]["pending"].pop("binary_sensor")
-        )
-    )
+    await async_wemo_dispatcher_connect(hass, _discovered_wemo)
 
 
 class WemoBinarySensor(WemoBinaryStateEntity, BinarySensorEntity):

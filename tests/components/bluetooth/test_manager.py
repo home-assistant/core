@@ -20,11 +20,17 @@ from homeassistant.components.bluetooth import (
     HaBluetoothConnector,
     async_ble_device_from_address,
     async_get_advertisement_callback,
+    async_get_fallback_availability_interval,
+    async_get_learned_advertising_interval,
     async_scanner_count,
+    async_set_fallback_availability_interval,
     async_track_unavailable,
     storage,
 )
-from homeassistant.components.bluetooth.const import UNAVAILABLE_TRACK_SECONDS
+from homeassistant.components.bluetooth.const import (
+    SOURCE_LOCAL,
+    UNAVAILABLE_TRACK_SECONDS,
+)
 from homeassistant.components.bluetooth.manager import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
@@ -1005,6 +1011,7 @@ async def test_debug_logging(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test debug logging."""
+    assert await async_setup_component(hass, "logger", {"logger": {}})
     await hass.services.async_call(
         "logger",
         "set_level",
@@ -1053,3 +1060,142 @@ async def test_debug_logging(
         "hci0",
     )
     assert "wohand_good_signal_hci0" not in caplog.text
+
+
+async def test_set_fallback_interval_small(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_bluetooth: None,
+    macos_adapter: None,
+) -> None:
+    """Test we can set the fallback advertisement interval."""
+    assert async_get_fallback_availability_interval(hass, "44:44:33:11:23:12") is None
+
+    async_set_fallback_availability_interval(hass, "44:44:33:11:23:12", 2.0)
+    assert async_get_fallback_availability_interval(hass, "44:44:33:11:23:12") == 2.0
+
+    start_monotonic_time = time.monotonic()
+    switchbot_device = generate_ble_device("44:44:33:11:23:12", "wohand")
+    switchbot_adv = generate_advertisement_data(
+        local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+    )
+    switchbot_device_went_unavailable = False
+
+    inject_advertisement_with_time_and_source(
+        hass,
+        switchbot_device,
+        switchbot_adv,
+        start_monotonic_time,
+        SOURCE_LOCAL,
+    )
+
+    @callback
+    def _switchbot_device_unavailable_callback(_address: str) -> None:
+        """Switchbot device unavailable callback."""
+        nonlocal switchbot_device_went_unavailable
+        switchbot_device_went_unavailable = True
+
+    assert async_get_learned_advertising_interval(hass, "44:44:33:11:23:12") is None
+
+    switchbot_device_unavailable_cancel = async_track_unavailable(
+        hass,
+        _switchbot_device_unavailable_callback,
+        switchbot_device.address,
+        connectable=False,
+    )
+
+    monotonic_now = start_monotonic_time + 2
+    with patch(
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    ):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
+        )
+        await hass.async_block_till_done()
+
+    assert switchbot_device_went_unavailable is True
+    switchbot_device_unavailable_cancel()
+
+    # We should forget fallback interval after it expires
+    assert async_get_fallback_availability_interval(hass, "44:44:33:11:23:12") is None
+
+
+async def test_set_fallback_interval_big(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_bluetooth: None,
+    macos_adapter: None,
+) -> None:
+    """Test we can set the fallback advertisement interval."""
+    assert async_get_fallback_availability_interval(hass, "44:44:33:11:23:12") is None
+
+    # Force the interval to be really big and check it doesn't expire using the default timeout (900)
+
+    async_set_fallback_availability_interval(hass, "44:44:33:11:23:12", 604800.0)
+    assert (
+        async_get_fallback_availability_interval(hass, "44:44:33:11:23:12") == 604800.0
+    )
+
+    start_monotonic_time = time.monotonic()
+    switchbot_device = generate_ble_device("44:44:33:11:23:12", "wohand")
+    switchbot_adv = generate_advertisement_data(
+        local_name="wohand", service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+    )
+    switchbot_device_went_unavailable = False
+
+    inject_advertisement_with_time_and_source(
+        hass,
+        switchbot_device,
+        switchbot_adv,
+        start_monotonic_time,
+        SOURCE_LOCAL,
+    )
+
+    @callback
+    def _switchbot_device_unavailable_callback(_address: str) -> None:
+        """Switchbot device unavailable callback."""
+        nonlocal switchbot_device_went_unavailable
+        switchbot_device_went_unavailable = True
+
+    assert async_get_learned_advertising_interval(hass, "44:44:33:11:23:12") is None
+
+    switchbot_device_unavailable_cancel = async_track_unavailable(
+        hass,
+        _switchbot_device_unavailable_callback,
+        switchbot_device.address,
+        connectable=False,
+    )
+
+    # Check that device hasn't expired after a day
+
+    monotonic_now = start_monotonic_time + 86400
+    with patch(
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    ):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
+        )
+        await hass.async_block_till_done()
+
+    assert switchbot_device_went_unavailable is False
+
+    # Try again after it has expired
+
+    monotonic_now = start_monotonic_time + 604800
+    with patch(
+        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
+        return_value=monotonic_now + UNAVAILABLE_TRACK_SECONDS,
+    ):
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
+        )
+        await hass.async_block_till_done()
+
+    assert switchbot_device_went_unavailable is True
+
+    switchbot_device_unavailable_cancel()
+
+    # We should forget fallback interval after it expires
+    assert async_get_fallback_availability_interval(hass, "44:44:33:11:23:12") is None

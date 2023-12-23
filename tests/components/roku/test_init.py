@@ -26,6 +26,25 @@ async def test_config_entry_not_ready(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_config_entry_no_unique_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_roku: AsyncMock,
+) -> None:
+    """Test the Roku configuration entry with missing unique id."""
+    mock_config_entry.unique_id = None
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.entry_id in hass.data[DOMAIN]
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (
+        hass.data[DOMAIN][mock_config_entry.entry_id].device_id
+        == mock_config_entry.entry_id
+    )
+
+
 async def test_load_unload_config_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

@@ -277,6 +277,7 @@ async def test_change_device_source(hass: HomeAssistant) -> None:
 
     # Configure source entity 1 (with a linked device)
     source_config_entry_1 = MockConfigEntry()
+    source_config_entry_1.add_to_hass(hass)
     source_device_entry_1 = device_registry.async_get_or_create(
         config_entry_id=source_config_entry_1.entry_id,
         identifiers={("sensor", "identifier_test1")},
@@ -292,6 +293,7 @@ async def test_change_device_source(hass: HomeAssistant) -> None:
 
     # Configure source entity 2 (with a linked device)
     source_config_entry_2 = MockConfigEntry()
+    source_config_entry_2.add_to_hass(hass)
     source_device_entry_2 = device_registry.async_get_or_create(
         config_entry_id=source_config_entry_2.entry_id,
         identifiers={("sensor", "identifier_test2")},

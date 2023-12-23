@@ -4,16 +4,21 @@ from __future__ import annotations
 import contextlib
 from typing import Any, Final
 
-from aioshelly.block_device import BlockDevice
+from aioshelly.block_device import BlockDevice, BlockUpdateType
 from aioshelly.common import ConnectionOptions
-from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
-from aioshelly.rpc_device import RpcDevice, UpdateType
+from aioshelly.exceptions import (
+    DeviceConnectionError,
+    InvalidAuthError,
+    MacAddressMismatchError,
+)
+from aioshelly.rpc_device import RpcDevice, RpcUpdateType
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import (
@@ -30,6 +35,7 @@ from .const import (
     DEFAULT_COAP_PORT,
     DOMAIN,
     LOGGER,
+    PUSH_UPDATE_ISSUE_ID,
 )
 from .coordinator import (
     ShellyBlockCoordinator,
@@ -52,6 +58,7 @@ BLOCK_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.COVER,
+    Platform.EVENT,
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -66,7 +73,9 @@ BLOCK_SLEEPING_PLATFORMS: Final = [
 RPC_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.COVER,
+    Platform.EVENT,
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -143,7 +152,6 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     device_entry = None
     if entry.unique_id is not None:
         device_entry = dev_reg.async_get_device(
-            identifiers=set(),
             connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
         )
     # https://github.com/home-assistant/core/pull/48076
@@ -167,7 +175,7 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     @callback
-    def _async_device_online(_: Any) -> None:
+    def _async_device_online(_: Any, update_type: BlockUpdateType) -> None:
         LOGGER.debug("Device %s is online, resuming setup", entry.title)
         shelly_entry_data.device = None
 
@@ -184,7 +192,7 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         LOGGER.debug("Setting up online block device %s", entry.title)
         try:
             await device.initialize()
-        except DeviceConnectionError as err:
+        except (DeviceConnectionError, MacAddressMismatchError) as err:
             raise ConfigEntryNotReady(repr(err)) from err
         except InvalidAuthError as err:
             raise ConfigEntryAuthFailed(repr(err)) from err
@@ -227,7 +235,6 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
     device_entry = None
     if entry.unique_id is not None:
         device_entry = dev_reg.async_get_device(
-            identifiers=set(),
             connections={(CONNECTION_NETWORK_MAC, format_mac(entry.unique_id))},
         )
     # https://github.com/home-assistant/core/pull/48076
@@ -253,7 +260,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
         await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     @callback
-    def _async_device_online(_: Any, update_type: UpdateType) -> None:
+    def _async_device_online(_: Any, update_type: RpcUpdateType) -> None:
         LOGGER.debug("Device %s is online, resuming setup", entry.title)
         shelly_entry_data.device = None
 
@@ -271,7 +278,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> boo
         LOGGER.debug("Setting up online RPC device %s", entry.title)
         try:
             await device.initialize()
-        except DeviceConnectionError as err:
+        except (DeviceConnectionError, MacAddressMismatchError) as err:
             raise ConfigEntryNotReady(repr(err)) from err
         except InvalidAuthError as err:
             raise ConfigEntryAuthFailed(repr(err)) from err
@@ -324,6 +331,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             get_entry_data(hass).pop(entry.entry_id)
 
         return unload_ok
+
+    # delete push update issue if it exists
+    LOGGER.debug(
+        "Deleting issue %s", PUSH_UPDATE_ISSUE_ID.format(unique=entry.unique_id)
+    )
+    ir.async_delete_issue(
+        hass, DOMAIN, PUSH_UPDATE_ISSUE_ID.format(unique=entry.unique_id)
+    )
 
     platforms = BLOCK_SLEEPING_PLATFORMS
 

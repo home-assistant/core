@@ -38,13 +38,15 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.loader import async_get_bluetooth
 
-from . import models
+from . import models, passive_update_processor
 from .api import (
     _get_manager,
     async_address_present,
     async_ble_device_from_address,
     async_discovered_service_info,
     async_get_advertisement_callback,
+    async_get_fallback_availability_interval,
+    async_get_learned_advertising_interval,
     async_get_scanner,
     async_last_service_info,
     async_process_advertisements,
@@ -54,6 +56,7 @@ from .api import (
     async_scanner_by_source,
     async_scanner_count,
     async_scanner_devices_by_address,
+    async_set_fallback_availability_interval,
     async_track_unavailable,
 )
 from .base_scanner import BaseHaRemoteScanner, BaseHaScanner, BluetoothScannerDevice
@@ -86,12 +89,15 @@ __all__ = [
     "async_address_present",
     "async_ble_device_from_address",
     "async_discovered_service_info",
+    "async_get_fallback_availability_interval",
+    "async_get_learned_advertising_interval",
     "async_get_scanner",
     "async_last_service_info",
     "async_process_advertisements",
     "async_rediscover_address",
     "async_register_callback",
     "async_register_scanner",
+    "async_set_fallback_availability_interval",
     "async_track_unavailable",
     "async_scanner_by_source",
     "async_scanner_count",
@@ -125,6 +131,7 @@ async def _async_get_adapter_from_address(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
+    await passive_update_processor.async_setup(hass)
     integration_matcher = IntegrationMatcher(await async_get_bluetooth(hass))
     integration_matcher.async_setup()
     bluetooth_adapters = get_adapters()

@@ -1,0 +1,26 @@
+{
+  "services": {
+    "download_file": {
+      "name": "Download file",
+      "description": "Downloads a file to the download location.",
+      "fields": {
+        "url": {
+          "name": "[%key:common::config_flow::data::url%]",
+          "description": "The URL of the file to download."
+        },
+        "subdir": {
+          "name": "Subdirectory",
+          "description": "Download into subdirectory."
+        },
+        "filename": {
+          "name": "Filename",
+          "description": "Determine the filename."
+        },
+        "overwrite": {
+          "name": "Overwrite",
+          "description": "Whether to overwrite the file or not."
+        }
+      }
+    }
+  }
+}

@@ -4,6 +4,14 @@
     "@TimeToLive": "38",
     "LocalAuthority": [
       {
+        "@LocalAuthorityCode": "7",
+        "@LocalAuthorityName": "City of London",
+        "@LaCentreLatitude": "51.51333",
+        "@LaCentreLongitude": "-0.088947",
+        "@LaCentreLatitudeWGS84": "6712603.132989",
+        "@LaCentreLongitudeWGS84": "-9901.534748"
+      },
+      {
         "@LocalAuthorityCode": "24",
         "@LocalAuthorityName": "Merton",
         "@LaCentreLatitude": "51.415672",

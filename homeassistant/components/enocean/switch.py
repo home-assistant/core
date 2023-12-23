@@ -76,24 +76,15 @@ async def async_setup_platform(
 class EnOceanSwitch(EnOceanEntity, SwitchEntity):
     """Representation of an EnOcean switch device."""
 
+    _attr_is_on = False
+
     def __init__(self, dev_id: list[int], dev_name: str, channel: int) -> None:
         """Initialize the EnOcean switch device."""
-        super().__init__(dev_id, dev_name)
+        super().__init__(dev_id)
         self._light = None
-        self._on_state = False
-        self._on_state2 = False
         self.channel = channel
         self._attr_unique_id = generate_unique_id(dev_id, channel)
-
-    @property
-    def is_on(self):
-        """Return whether the switch is on or off."""
-        return self._on_state
-
-    @property
-    def name(self):
-        """Return the device name."""
-        return self.dev_name
+        self._attr_name = dev_name
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
@@ -105,7 +96,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
             optional=optional,
             packet_type=0x01,
         )
-        self._on_state = True
+        self._attr_is_on = True
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
@@ -117,7 +108,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
             optional=optional,
             packet_type=0x01,
         )
-        self._on_state = False
+        self._attr_is_on = False
 
     def value_changed(self, packet):
         """Update the internal state of the switch."""
@@ -129,7 +120,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
                 divisor = packet.parsed["DIV"]["raw_value"]
                 watts = raw_val / (10**divisor)
                 if watts > 1:
-                    self._on_state = True
+                    self._attr_is_on = True
                     self.schedule_update_ha_state()
         elif packet.data[0] == 0xD2:
             # actuator status telegram
@@ -138,5 +129,5 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
                 channel = packet.parsed["IO"]["raw_value"]
                 output = packet.parsed["OV"]["raw_value"]
                 if channel == self.channel:
-                    self._on_state = output > 0
+                    self._attr_is_on = output > 0
                     self.schedule_update_ha_state()

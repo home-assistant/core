@@ -12,7 +12,8 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+import homeassistant.helpers.issue_registry as ir
 
 
 @pytest.fixture(name="gdacs_setup", autouse=True)
@@ -65,6 +66,32 @@ async def test_step_import(hass: HomeAssistant) -> None:
         CONF_SCAN_INTERVAL: 240.0,
         CONF_CATEGORIES: ["Drought", "Earthquake"],
     }
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, "deprecated_yaml_gdacs"
+    )
+    assert issue.translation_key == "deprecated_yaml"
+
+
+async def test_step_import_already_exist(
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+) -> None:
+    """Test that errors are shown when duplicates are added."""
+    conf = {CONF_LATITUDE: -41.2, CONF_LONGITUDE: 174.7, CONF_RADIUS: 25}
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, "deprecated_yaml_gdacs"
+    )
+    assert issue.translation_key == "deprecated_yaml"
 
 
 async def test_step_user(hass: HomeAssistant) -> None:

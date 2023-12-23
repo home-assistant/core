@@ -30,8 +30,8 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -84,6 +84,9 @@ class SwitcherClimateEntity(
 ):
     """Representation of a Switcher climate entity."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(
         self, coordinator: SwitcherDataUpdateCoordinator, remote: SwitcherBreezeRemote
     ) -> None:
@@ -91,7 +94,6 @@ class SwitcherClimateEntity(
         super().__init__(coordinator)
         self._remote = remote
 
-        self._attr_name = coordinator.name
         self._attr_unique_id = f"{coordinator.device_id}-{coordinator.mac_address}"
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}

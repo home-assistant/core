@@ -7,8 +7,6 @@ from aioqsw.const import (
     QSD_DESCRIPTION,
     QSD_FIRMWARE_CHECK,
     QSD_FIRMWARE_INFO,
-    QSD_PRODUCT,
-    QSD_SYSTEM_BOARD,
     QSD_VERSION,
 )
 
@@ -32,7 +30,6 @@ UPDATE_TYPES: Final[tuple[UpdateEntityDescription, ...]] = (
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
         key=QSW_UPDATE,
-        name="Firmware Update",
     ),
 )
 
@@ -63,9 +60,6 @@ class QswUpdate(QswFirmwareEntity, UpdateEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry)
-        self._attr_name = (
-            f"{self.get_device_value(QSD_SYSTEM_BOARD, QSD_PRODUCT)} {description.name}"
-        )
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
         self.entity_description = description
 

@@ -5,25 +5,22 @@
         "title": "Connect to the QNAP device",
         "description": "This qnap sensor allows getting various statistics from your QNAP NAS.",
         "data": {
-          "host": "Hostname",
-          "username": "Username",
-          "password": "Password",
-          "port": "Port",
-          "ssl": "Enable SSL",
-          "verify_ssl": "Verify SSL"
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your QNAP device."
         }
       }
     },
     "error": {
-      "cannot_connect": "Cannot connect to host",
-      "invalid_auth": "Bad authentication",
-      "unknown": "Unknown error"
-    }
-  },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The QNAP YAML configuration is being removed",
-      "description": "Configuring QNAP using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the QNAP YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   }
 }

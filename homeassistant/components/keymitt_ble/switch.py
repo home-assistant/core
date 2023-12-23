@@ -43,7 +43,7 @@ async def async_setup_entry(
 class MicroBotBinarySwitch(MicroBotEntity, SwitchEntity):
     """MicroBot switch class."""
 
-    _attr_has_entity_name = True
+    _attr_translation_key = "push"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""

@@ -5,7 +5,7 @@ from homeassistant.components.starlink.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 
-from .patchers import COORDINATOR_SUCCESS_PATCHER
+from .patchers import LOCATION_DATA_SUCCESS_PATCHER, STATUS_DATA_SUCCESS_PATCHER
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -23,7 +23,7 @@ async def test_diagnostics(
         data={CONF_IP_ADDRESS: "1.2.3.4:0000"},
     )
 
-    with COORDINATOR_SUCCESS_PATCHER:
+    with STATUS_DATA_SUCCESS_PATCHER, LOCATION_DATA_SUCCESS_PATCHER:
         entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(entry.entry_id)

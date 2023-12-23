@@ -1,10 +1,28 @@
 """API for Netatmo bound to HASS OAuth."""
+from collections.abc import Iterable
 from typing import cast
 
 from aiohttp import ClientSession
 import pyatmo
 
+from homeassistant.components import cloud
 from homeassistant.helpers import config_entry_oauth2_flow
+
+from .const import API_SCOPES_EXCLUDED_FROM_CLOUD
+
+
+def get_api_scopes(auth_implementation: str) -> Iterable[str]:
+    """Return the Netatmo API scopes based on the auth implementation."""
+
+    if auth_implementation == cloud.DOMAIN:
+        return set(
+            {
+                scope
+                for scope in pyatmo.const.ALL_SCOPES
+                if scope not in API_SCOPES_EXCLUDED_FROM_CLOUD
+            }
+        )
+    return sorted(pyatmo.const.ALL_SCOPES)
 
 
 class AsyncConfigEntryNetatmoAuth(pyatmo.AbstractAsyncAuth):

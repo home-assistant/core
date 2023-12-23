@@ -69,7 +69,7 @@ class StarlinkSwitchEntity(StarlinkEntity, SwitchEntity):
 SWITCHES = [
     StarlinkSwitchEntityDescription(
         key="stowed",
-        name="Stowed",
+        translation_key="stowed",
         device_class=SwitchDeviceClass.SWITCH,
         value_fn=lambda data: data.status["state"] == "STOWED",
         turn_on_fn=lambda coordinator: coordinator.async_stow_starlink(True),

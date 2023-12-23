@@ -18,7 +18,7 @@ from bluetooth_adapters import (
 )
 
 from homeassistant import config_entries
-from homeassistant.components.logger import EVENT_LOGGING_CHANGED
+from homeassistant.const import EVENT_LOGGING_CHANGED
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -102,6 +102,31 @@ def _dispatch_bleak_callback(
 class BluetoothManager:
     """Manage Bluetooth."""
 
+    __slots__ = (
+        "hass",
+        "_integration_matcher",
+        "_cancel_unavailable_tracking",
+        "_cancel_logging_listener",
+        "_advertisement_tracker",
+        "_fallback_intervals",
+        "_intervals",
+        "_unavailable_callbacks",
+        "_connectable_unavailable_callbacks",
+        "_callback_index",
+        "_bleak_callbacks",
+        "_all_history",
+        "_connectable_history",
+        "_non_connectable_scanners",
+        "_connectable_scanners",
+        "_adapters",
+        "_sources",
+        "_bluetooth_adapters",
+        "storage",
+        "slot_manager",
+        "_debug",
+        "shutdown",
+    )
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -117,6 +142,8 @@ class BluetoothManager:
         self._cancel_logging_listener: CALLBACK_TYPE | None = None
 
         self._advertisement_tracker = AdvertisementTracker()
+        self._fallback_intervals = self._advertisement_tracker.fallback_intervals
+        self._intervals = self._advertisement_tracker.intervals
 
         self._unavailable_callbacks: dict[
             str, list[Callable[[BluetoothServiceInfoBleak], None]]
@@ -139,6 +166,7 @@ class BluetoothManager:
         self.storage = storage
         self.slot_manager = slot_manager
         self._debug = _LOGGER.isEnabledFor(logging.DEBUG)
+        self.shutdown = False
 
     @property
     def supports_passive_scan(self) -> bool:
@@ -233,6 +261,7 @@ class BluetoothManager:
     def async_stop(self, event: Event) -> None:
         """Stop the Bluetooth integration at shutdown."""
         _LOGGER.debug("Stopping bluetooth manager")
+        self.shutdown = True
         if self._cancel_unavailable_tracking:
             self._cancel_unavailable_tracking()
             self._cancel_unavailable_tracking = None
@@ -320,7 +349,9 @@ class BluetoothManager:
                     # since it may have gone to sleep and since we do not need an active
                     # connection to it we can only determine its availability
                     # by the lack of advertisements
-                    if advertising_interval := intervals.get(address):
+                    if advertising_interval := (
+                        intervals.get(address) or self._fallback_intervals.get(address)
+                    ):
                         advertising_interval += TRACKER_BUFFERING_WOBBLE_SECONDS
                     else:
                         advertising_interval = (
@@ -333,6 +364,7 @@ class BluetoothManager:
                     # The second loop (connectable=False) is responsible for removing
                     # the device from all the interval tracking since it is no longer
                     # available for both connectable and non-connectable
+                    tracker.async_remove_fallback_interval(address)
                     tracker.async_remove_address(address)
                     self._integration_matcher.async_clear_address(address)
                     self._async_dismiss_discoveries(address)
@@ -363,8 +395,11 @@ class BluetoothManager:
     ) -> bool:
         """Prefer previous advertisement from a different source if it is better."""
         if new.time - old.time > (
-            stale_seconds := self._advertisement_tracker.intervals.get(
-                new.address, FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+            stale_seconds := self._intervals.get(
+                new.address,
+                self._fallback_intervals.get(
+                    new.address, FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+                ),
             )
         ):
             # If the old advertisement is stale, any new advertisement is preferred
@@ -413,23 +448,20 @@ class BluetoothManager:
 
         # Pre-filter noisy apple devices as they can account for 20-35% of the
         # traffic on a typical network.
-        advertisement_data = service_info.advertisement
-        manufacturer_data = advertisement_data.manufacturer_data
         if (
-            len(manufacturer_data) == 1
-            and (apple_data := manufacturer_data.get(APPLE_MFR_ID))
-            and apple_data[0] not in APPLE_START_BYTES_WANTED
-            and not advertisement_data.service_data
+            (manufacturer_data := service_info.manufacturer_data)
+            and APPLE_MFR_ID in manufacturer_data
+            and manufacturer_data[APPLE_MFR_ID][0] not in APPLE_START_BYTES_WANTED
+            and len(manufacturer_data) == 1
+            and not service_info.service_data
         ):
             return
 
-        device = service_info.device
-        address = device.address
+        address = service_info.device.address
         all_history = self._all_history
         connectable = service_info.connectable
         connectable_history = self._connectable_history
         old_connectable_service_info = connectable and connectable_history.get(address)
-
         source = service_info.source
         # This logic is complex due to the many combinations of scanners
         # that are supported.
@@ -544,13 +576,17 @@ class BluetoothManager:
                 "%s: %s %s match: %s",
                 self._async_describe_source(service_info),
                 address,
-                advertisement_data,
+                service_info.advertisement,
                 matched_domains,
             )
 
-        if connectable or old_connectable_service_info:
+        if (connectable or old_connectable_service_info) and (
+            bleak_callbacks := self._bleak_callbacks
+        ):
             # Bleak callbacks must get a connectable device
-            for callback_filters in self._bleak_callbacks:
+            device = service_info.device
+            advertisement_data = service_info.advertisement
+            for callback_filters in bleak_callbacks:
                 _dispatch_bleak_callback(*callback_filters, device, advertisement_data)
 
         for match in self._callback_index.match_callbacks(service_info):
@@ -614,7 +650,7 @@ class BluetoothManager:
         else:
             # We could write out every item in the typed dict here
             # but that would be a bit inefficient and verbose.
-            callback_matcher.update(matcher)  # type: ignore[typeddict-item]
+            callback_matcher.update(matcher)
             callback_matcher[CONNECTABLE] = matcher.get(CONNECTABLE, True)
 
         connectable = callback_matcher[CONNECTABLE]
@@ -756,3 +792,20 @@ class BluetoothManager:
     def async_allocate_connection_slot(self, device: BLEDevice) -> bool:
         """Allocate a connection slot."""
         return self.slot_manager.allocate_slot(device)
+
+    @hass_callback
+    def async_get_learned_advertising_interval(self, address: str) -> float | None:
+        """Get the learned advertising interval for a MAC address."""
+        return self._intervals.get(address)
+
+    @hass_callback
+    def async_get_fallback_availability_interval(self, address: str) -> float | None:
+        """Get the fallback availability timeout for a MAC address."""
+        return self._fallback_intervals.get(address)
+
+    @hass_callback
+    def async_set_fallback_availability_interval(
+        self, address: str, interval: float
+    ) -> None:
+        """Override the fallback availability timeout for a MAC address."""
+        self._fallback_intervals[address] = interval

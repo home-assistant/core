@@ -3,7 +3,6 @@
   "name": "Total Connect",
   "codeowners": ["@austinmroczek"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/totalconnect",
   "iot_class": "cloud_polling",
   "loggers": ["total_connect_client"],

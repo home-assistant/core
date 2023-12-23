@@ -1,7 +1,5 @@
 """The tests for sensor recorder platform."""
 from collections.abc import Callable
-
-# pylint: disable=invalid-name
 from datetime import datetime, timedelta
 import math
 from statistics import mean
@@ -1339,7 +1337,7 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
             "energy",
             0,
             "from integration test ",
-            "report it to the custom integration author",
+            "report it to the author of the 'test' custom integration",
         ),
     ],
 )

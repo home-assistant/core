@@ -151,7 +151,6 @@ class AirzoneAidooSensor(AirzoneAidooEntity, AirzoneSensor):
         """Initialize."""
         super().__init__(coordinator, aidoo_id, aidoo_data)
 
-        self._attr_has_entity_name = True
         self._attr_unique_id = f"{aidoo_id}_{description.key}"
         self.entity_description = description
 
@@ -171,7 +170,6 @@ class AirzoneWebServerSensor(AirzoneWebServerEntity, AirzoneSensor):
         """Initialize."""
         super().__init__(coordinator, ws_id, ws_data)
 
-        self._attr_has_entity_name = True
         self._attr_unique_id = f"{ws_id}_{description.key}"
         self.entity_description = description
 
@@ -191,7 +189,6 @@ class AirzoneZoneSensor(AirzoneZoneEntity, AirzoneSensor):
         """Initialize."""
         super().__init__(coordinator, zone_id, zone_data)
 
-        self._attr_has_entity_name = True
         self._attr_unique_id = f"{zone_id}_{description.key}"
         self.entity_description = description
 

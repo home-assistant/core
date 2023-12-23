@@ -10,7 +10,7 @@ from .const import CONF_API, CONF_COORDINATOR, CONF_COUNTRY_CODE, DOMAIN
 from .coordinator import PicnicUpdateCoordinator
 from .services import async_register_services
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.TODO]
 
 
 def create_picnic_client(entry: ConfigEntry):

@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import partial
 from typing import Any
 
 from xknx import XKNX
@@ -221,9 +222,9 @@ class KNXSystemSensor(SensorEntity):
         self.knx.xknx.connection_manager.register_connection_state_changed_cb(
             self.after_update_callback
         )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect device object when removed."""
-        self.knx.xknx.connection_manager.unregister_connection_state_changed_cb(
-            self.after_update_callback
+        self.async_on_remove(
+            partial(
+                self.knx.xknx.connection_manager.unregister_connection_state_changed_cb,
+                self.after_update_callback,
+            )
         )

@@ -10,6 +10,8 @@ from decimal import Decimal
 from itertools import chain, repeat
 from unittest.mock import DEFAULT, MagicMock
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
@@ -22,7 +24,6 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
-    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfEnergy,
     UnitOfPower,
@@ -34,7 +35,9 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, patch
 
 
-async def test_default_setup(hass: HomeAssistant, dsmr_connection_fixture) -> None:
+async def test_default_setup(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, dsmr_connection_fixture
+) -> None:
     """Test the default setup."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -49,7 +52,6 @@ async def test_default_setup(hass: HomeAssistant, dsmr_connection_fixture) -> No
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -59,14 +61,18 @@ async def test_default_setup(hass: HomeAssistant, dsmr_connection_fixture) -> No
 
     telegram = {
         CURRENT_ELECTRICITY_USAGE: CosemObject(
-            [{"value": Decimal("0.0"), "unit": UnitOfPower.WATT}]
+            CURRENT_ELECTRICITY_USAGE,
+            [{"value": Decimal("0.0"), "unit": UnitOfPower.WATT}],
         ),
-        ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0001", "unit": ""}]),
+        ELECTRICITY_ACTIVE_TARIFF: CosemObject(
+            ELECTRICITY_ACTIVE_TARIFF, [{"value": "0001", "unit": ""}]
+        ),
         GAS_METER_READING: MBusObject(
+            GAS_METER_READING,
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal(745.695), "unit": UnitOfVolume.CUBIC_METERS},
-            ]
+            ],
         ),
     }
 
@@ -79,21 +85,25 @@ async def test_default_setup(hass: HomeAssistant, dsmr_connection_fixture) -> No
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    registry = er.async_get(hass)
+    telegram_callback = connection_factory.call_args_list[0][0][2]
 
-    entry = registry.async_get("sensor.electricity_meter_power_consumption")
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get("sensor.electricity_meter_power_consumption")
     assert entry
     assert entry.unique_id == "1234_current_electricity_usage"
 
-    entry = registry.async_get("sensor.gas_meter_gas_consumption")
+    entry = entity_registry.async_get("sensor.gas_meter_gas_consumption")
     assert entry
     assert entry.unique_id == "5678_gas_meter_reading"
 
-    telegram_callback = connection_factory.call_args_list[0][0][2]
-
-    # make sure entities have been created and return 'unavailable' state
+    # make sure entities are initialized
     power_consumption = hass.states.get("sensor.electricity_meter_power_consumption")
-    assert power_consumption.state == STATE_UNAVAILABLE
+    assert power_consumption.state == "0.0"
     assert (
         power_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     )
@@ -102,17 +112,34 @@ async def test_default_setup(hass: HomeAssistant, dsmr_connection_fixture) -> No
         power_consumption.attributes.get(ATTR_STATE_CLASS)
         == SensorStateClass.MEASUREMENT
     )
-    assert power_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+    assert power_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "W"
+
+    telegram = {
+        CURRENT_ELECTRICITY_USAGE: CosemObject(
+            CURRENT_ELECTRICITY_USAGE,
+            [{"value": Decimal("35.0"), "unit": UnitOfPower.WATT}],
+        ),
+        ELECTRICITY_ACTIVE_TARIFF: CosemObject(
+            ELECTRICITY_ACTIVE_TARIFF, [{"value": "0001", "unit": ""}]
+        ),
+        GAS_METER_READING: MBusObject(
+            GAS_METER_READING,
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642214)},
+                {"value": Decimal(745.701), "unit": UnitOfVolume.CUBIC_METERS},
+            ],
+        ),
+    }
 
     # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
     telegram_callback(telegram)
 
-    # after receiving telegram entities need to have the chance to update
-    await asyncio.sleep(0)
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
 
     # ensure entities have new state value after incoming telegram
     power_consumption = hass.states.get("sensor.electricity_meter_power_consumption")
-    assert power_consumption.state == "0.0"
+    assert power_consumption.state == "35.0"
     assert power_consumption.attributes.get("unit_of_measurement") == UnitOfPower.WATT
 
     # tariff should be translated in human readable and have no unit
@@ -126,11 +153,11 @@ async def test_default_setup(hass: HomeAssistant, dsmr_connection_fixture) -> No
     )
     assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
-    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
+    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
-    assert gas_consumption.state == "745.695"
+    assert gas_consumption.state == "745.701"
     assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
     assert (
         gas_consumption.attributes.get(ATTR_FRIENDLY_NAME)
@@ -146,18 +173,40 @@ async def test_default_setup(hass: HomeAssistant, dsmr_connection_fixture) -> No
     )
 
 
-async def test_setup_only_energy(hass: HomeAssistant, dsmr_connection_fixture) -> None:
+async def test_setup_only_energy(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, dsmr_connection_fixture
+) -> None:
     """Test the default setup."""
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
+
+    from dsmr_parser.obis_references import (
+        CURRENT_ELECTRICITY_USAGE,
+        ELECTRICITY_ACTIVE_TARIFF,
+    )
+    from dsmr_parser.objects import CosemObject
+
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": "1234",
+    }
+    entry_options = {
+        "time_between_update": 0,
+    }
+
+    telegram = {
+        CURRENT_ELECTRICITY_USAGE: CosemObject(
+            CURRENT_ELECTRICITY_USAGE,
+            [{"value": Decimal("35.0"), "unit": UnitOfPower.WATT}],
+        ),
+        ELECTRICITY_ACTIVE_TARIFF: CosemObject(
+            ELECTRICITY_ACTIVE_TARIFF, [{"value": "0001", "unit": ""}]
+        ),
     }
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
     )
 
     mock_entry.add_to_hass(hass)
@@ -165,13 +214,19 @@ async def test_setup_only_energy(hass: HomeAssistant, dsmr_connection_fixture) -
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    registry = er.async_get(hass)
+    telegram_callback = connection_factory.call_args_list[0][0][2]
 
-    entry = registry.async_get("sensor.electricity_meter_power_consumption")
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get("sensor.electricity_meter_power_consumption")
     assert entry
     assert entry.unique_id == "1234_current_electricity_usage"
 
-    entry = registry.async_get("sensor.gas_meter_gas_consumption")
+    entry = entity_registry.async_get("sensor.gas_meter_gas_consumption")
     assert not entry
 
 
@@ -189,7 +244,6 @@ async def test_v4_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
         "port": "/dev/ttyUSB0",
         "dsmr_version": "4",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -199,12 +253,15 @@ async def test_v4_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
 
     telegram = {
         HOURLY_GAS_METER_READING: MBusObject(
+            HOURLY_GAS_METER_READING,
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal(745.695), "unit": "m3"},
-            ]
+            ],
         ),
-        ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0001", "unit": ""}]),
+        ELECTRICITY_ACTIVE_TARIFF: CosemObject(
+            ELECTRICITY_ACTIVE_TARIFF, [{"value": "0001", "unit": ""}]
+        ),
     }
 
     mock_entry = MockConfigEntry(
@@ -221,8 +278,8 @@ async def test_v4_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
     telegram_callback(telegram)
 
-    # after receiving telegram entities need to have the chance to update
-    await asyncio.sleep(0)
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
 
     # tariff should be translated in human readable and have no unit
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
@@ -231,7 +288,7 @@ async def test_v4_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
     assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
-    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
+    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
@@ -251,7 +308,17 @@ async def test_v4_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     )
 
 
-async def test_v5_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
+@pytest.mark.parametrize(
+    ("value", "state"),
+    [
+        (Decimal(745.690), "745.69"),
+        (Decimal(745.695), "745.695"),
+        (Decimal(0.000), STATE_UNKNOWN),
+    ],
+)
+async def test_v5_meter(
+    hass: HomeAssistant, dsmr_connection_fixture, value: Decimal, state: str
+) -> None:
     """Test if v5 meter is correctly parsed."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
@@ -265,7 +332,6 @@ async def test_v5_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -275,12 +341,15 @@ async def test_v5_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
 
     telegram = {
         HOURLY_GAS_METER_READING: MBusObject(
+            HOURLY_GAS_METER_READING,
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": "m3"},
-            ]
+                {"value": value, "unit": "m3"},
+            ],
         ),
-        ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0001", "unit": ""}]),
+        ELECTRICITY_ACTIVE_TARIFF: CosemObject(
+            ELECTRICITY_ACTIVE_TARIFF, [{"value": "0001", "unit": ""}]
+        ),
     }
 
     mock_entry = MockConfigEntry(
@@ -297,8 +366,8 @@ async def test_v5_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
     telegram_callback(telegram)
 
-    # after receiving telegram entities need to have the chance to update
-    await asyncio.sleep(0)
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
 
     # tariff should be translated in human readable and have no unit
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
@@ -307,11 +376,11 @@ async def test_v5_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
     assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
-    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
+    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
-    assert gas_consumption.state == "745.695"
+    assert gas_consumption.state == state
     assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
     assert (
         gas_consumption.attributes.get(ATTR_STATE_CLASS)
@@ -338,7 +407,6 @@ async def test_luxembourg_meter(hass: HomeAssistant, dsmr_connection_fixture) ->
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5L",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -348,16 +416,19 @@ async def test_luxembourg_meter(hass: HomeAssistant, dsmr_connection_fixture) ->
 
     telegram = {
         HOURLY_GAS_METER_READING: MBusObject(
+            HOURLY_GAS_METER_READING,
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal(745.695), "unit": "m3"},
-            ]
+            ],
         ),
         ELECTRICITY_IMPORTED_TOTAL: CosemObject(
-            [{"value": Decimal(123.456), "unit": UnitOfEnergy.KILO_WATT_HOUR}]
+            ELECTRICITY_IMPORTED_TOTAL,
+            [{"value": Decimal(123.456), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
         ),
         ELECTRICITY_EXPORTED_TOTAL: CosemObject(
-            [{"value": Decimal(654.321), "unit": UnitOfEnergy.KILO_WATT_HOUR}]
+            ELECTRICITY_EXPORTED_TOTAL,
+            [{"value": Decimal(654.321), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
         ),
     }
 
@@ -375,8 +446,8 @@ async def test_luxembourg_meter(hass: HomeAssistant, dsmr_connection_fixture) ->
     # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
     telegram_callback(telegram)
 
-    # after receiving telegram entities need to have the chance to update
-    await asyncio.sleep(0)
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
 
     active_tariff = hass.states.get("sensor.electricity_meter_energy_consumption_total")
     assert active_tariff.state == "123.456"
@@ -417,7 +488,20 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     from dsmr_parser.obis_references import (
-        BELGIUM_5MIN_GAS_METER_READING,
+        BELGIUM_CURRENT_AVERAGE_DEMAND,
+        BELGIUM_MAXIMUM_DEMAND_MONTH,
+        BELGIUM_MBUS1_DEVICE_TYPE,
+        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
+        BELGIUM_MBUS1_METER_READING2,
+        BELGIUM_MBUS2_DEVICE_TYPE,
+        BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER,
+        BELGIUM_MBUS2_METER_READING1,
+        BELGIUM_MBUS3_DEVICE_TYPE,
+        BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER,
+        BELGIUM_MBUS3_METER_READING2,
+        BELGIUM_MBUS4_DEVICE_TYPE,
+        BELGIUM_MBUS4_EQUIPMENT_IDENTIFIER,
+        BELGIUM_MBUS4_METER_READING1,
         ELECTRICITY_ACTIVE_TARIFF,
     )
     from dsmr_parser.objects import CosemObject, MBusObject
@@ -426,22 +510,84 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5B",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": "1234",
-        "serial_id_gas": "5678",
+        "serial_id_gas": None,
     }
     entry_options = {
         "time_between_update": 0,
     }
 
     telegram = {
-        BELGIUM_5MIN_GAS_METER_READING: MBusObject(
+        BELGIUM_CURRENT_AVERAGE_DEMAND: CosemObject(
+            BELGIUM_CURRENT_AVERAGE_DEMAND,
+            [{"value": Decimal(1.75), "unit": "kW"}],
+        ),
+        BELGIUM_MAXIMUM_DEMAND_MONTH: MBusObject(
+            BELGIUM_MAXIMUM_DEMAND_MONTH,
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642218)},
+                {"value": Decimal(4.11), "unit": "kW"},
+            ],
+        ),
+        BELGIUM_MBUS1_DEVICE_TYPE: CosemObject(
+            BELGIUM_MBUS1_DEVICE_TYPE, [{"value": "003", "unit": ""}]
+        ),
+        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER: CosemObject(
+            BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
+            [{"value": "37464C4F32313139303333373331", "unit": ""}],
+        ),
+        BELGIUM_MBUS1_METER_READING2: MBusObject(
+            BELGIUM_MBUS1_METER_READING2,
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal(745.695), "unit": "m3"},
-            ]
+            ],
         ),
-        ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0001", "unit": ""}]),
+        BELGIUM_MBUS2_DEVICE_TYPE: CosemObject(
+            BELGIUM_MBUS2_DEVICE_TYPE, [{"value": "007", "unit": ""}]
+        ),
+        BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER: CosemObject(
+            BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER,
+            [{"value": "37464C4F32313139303333373332", "unit": ""}],
+        ),
+        BELGIUM_MBUS2_METER_READING1: MBusObject(
+            BELGIUM_MBUS2_METER_READING1,
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642214)},
+                {"value": Decimal(678.695), "unit": "m3"},
+            ],
+        ),
+        BELGIUM_MBUS3_DEVICE_TYPE: CosemObject(
+            BELGIUM_MBUS3_DEVICE_TYPE, [{"value": "003", "unit": ""}]
+        ),
+        BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER: CosemObject(
+            BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER,
+            [{"value": "37464C4F32313139303333373333", "unit": ""}],
+        ),
+        BELGIUM_MBUS3_METER_READING2: MBusObject(
+            BELGIUM_MBUS3_METER_READING2,
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642215)},
+                {"value": Decimal(12.12), "unit": "m3"},
+            ],
+        ),
+        BELGIUM_MBUS4_DEVICE_TYPE: CosemObject(
+            BELGIUM_MBUS4_DEVICE_TYPE, [{"value": "007", "unit": ""}]
+        ),
+        BELGIUM_MBUS4_EQUIPMENT_IDENTIFIER: CosemObject(
+            BELGIUM_MBUS4_EQUIPMENT_IDENTIFIER,
+            [{"value": "37464C4F32313139303333373334", "unit": ""}],
+        ),
+        BELGIUM_MBUS4_METER_READING1: MBusObject(
+            BELGIUM_MBUS4_METER_READING1,
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642216)},
+                {"value": Decimal(13.13), "unit": "m3"},
+            ],
+        ),
+        ELECTRICITY_ACTIVE_TARIFF: CosemObject(
+            ELECTRICITY_ACTIVE_TARIFF, [{"value": "0001", "unit": ""}]
+        ),
     }
 
     mock_entry = MockConfigEntry(
@@ -458,8 +604,8 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
     telegram_callback(telegram)
 
-    # after receiving telegram entities need to have the chance to update
-    await asyncio.sleep(0)
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
 
     # tariff should be translated in human readable and have no unit
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
@@ -468,9 +614,23 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
     assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
-    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
+    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
-    # check if gas consumption is parsed correctly
+    # check current average demand is parsed correctly
+    avg_demand = hass.states.get("sensor.electricity_meter_current_average_demand")
+    assert avg_demand.state == "1.75"
+    assert avg_demand.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.KILO_WATT
+    assert avg_demand.attributes.get(ATTR_STATE_CLASS) is None
+
+    # check max average demand is parsed correctly
+    max_demand = hass.states.get(
+        "sensor.electricity_meter_maximum_demand_current_month"
+    )
+    assert max_demand.state == "4.11"
+    assert max_demand.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.KILO_WATT
+    assert max_demand.attributes.get(ATTR_STATE_CLASS) is None
+
+    # check if gas consumption mbus1 is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
     assert gas_consumption.state == "745.695"
     assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
@@ -480,6 +640,335 @@ async def test_belgian_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     )
     assert (
         gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfVolume.CUBIC_METERS
+    )
+
+    # check if water usage mbus2 is parsed correctly
+    water_consumption = hass.states.get("sensor.water_meter_water_consumption")
+    assert water_consumption.state == "678.695"
+    assert (
+        water_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
+    )
+    assert (
+        water_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+    assert (
+        water_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfVolume.CUBIC_METERS
+    )
+
+    # check if gas consumption mbus1 is parsed correctly
+    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption_2")
+    assert gas_consumption.state == "12.12"
+    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
+    assert (
+        gas_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+    assert (
+        gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfVolume.CUBIC_METERS
+    )
+
+    # check if water usage mbus2 is parsed correctly
+    water_consumption = hass.states.get("sensor.water_meter_water_consumption_2")
+    assert water_consumption.state == "13.13"
+    assert (
+        water_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
+    )
+    assert (
+        water_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+    assert (
+        water_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfVolume.CUBIC_METERS
+    )
+
+
+async def test_belgian_meter_alt(hass: HomeAssistant, dsmr_connection_fixture) -> None:
+    """Test if Belgian meter is correctly parsed."""
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
+
+    from dsmr_parser.obis_references import (
+        BELGIUM_MBUS1_DEVICE_TYPE,
+        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
+        BELGIUM_MBUS1_METER_READING1,
+        BELGIUM_MBUS2_DEVICE_TYPE,
+        BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER,
+        BELGIUM_MBUS2_METER_READING2,
+        BELGIUM_MBUS3_DEVICE_TYPE,
+        BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER,
+        BELGIUM_MBUS3_METER_READING1,
+        BELGIUM_MBUS4_DEVICE_TYPE,
+        BELGIUM_MBUS4_EQUIPMENT_IDENTIFIER,
+        BELGIUM_MBUS4_METER_READING2,
+    )
+    from dsmr_parser.objects import CosemObject, MBusObject
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "5B",
+        "precision": 4,
+        "serial_id": "1234",
+        "serial_id_gas": None,
+    }
+    entry_options = {
+        "time_between_update": 0,
+    }
+
+    telegram = {
+        BELGIUM_MBUS1_DEVICE_TYPE: CosemObject(
+            BELGIUM_MBUS1_DEVICE_TYPE, [{"value": "007", "unit": ""}]
+        ),
+        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER: CosemObject(
+            BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
+            [{"value": "37464C4F32313139303333373331", "unit": ""}],
+        ),
+        BELGIUM_MBUS1_METER_READING1: MBusObject(
+            BELGIUM_MBUS1_METER_READING1,
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642215)},
+                {"value": Decimal(123.456), "unit": "m3"},
+            ],
+        ),
+        BELGIUM_MBUS2_DEVICE_TYPE: CosemObject(
+            BELGIUM_MBUS2_DEVICE_TYPE, [{"value": "003", "unit": ""}]
+        ),
+        BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER: CosemObject(
+            BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER,
+            [{"value": "37464C4F32313139303333373332", "unit": ""}],
+        ),
+        BELGIUM_MBUS2_METER_READING2: MBusObject(
+            BELGIUM_MBUS2_METER_READING2,
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642216)},
+                {"value": Decimal(678.901), "unit": "m3"},
+            ],
+        ),
+        BELGIUM_MBUS3_DEVICE_TYPE: CosemObject(
+            BELGIUM_MBUS3_DEVICE_TYPE, [{"value": "007", "unit": ""}]
+        ),
+        BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER: CosemObject(
+            BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER,
+            [{"value": "37464C4F32313139303333373333", "unit": ""}],
+        ),
+        BELGIUM_MBUS3_METER_READING1: MBusObject(
+            BELGIUM_MBUS3_METER_READING1,
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642217)},
+                {"value": Decimal(12.12), "unit": "m3"},
+            ],
+        ),
+        BELGIUM_MBUS4_DEVICE_TYPE: CosemObject(
+            BELGIUM_MBUS4_DEVICE_TYPE, [{"value": "003", "unit": ""}]
+        ),
+        BELGIUM_MBUS4_EQUIPMENT_IDENTIFIER: CosemObject(
+            BELGIUM_MBUS4_EQUIPMENT_IDENTIFIER,
+            [{"value": "37464C4F32313139303333373334", "unit": ""}],
+        ),
+        BELGIUM_MBUS4_METER_READING2: MBusObject(
+            BELGIUM_MBUS4_METER_READING2,
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642218)},
+                {"value": Decimal(13.13), "unit": "m3"},
+            ],
+        ),
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
+
+    # check if water usage mbus1 is parsed correctly
+    water_consumption = hass.states.get("sensor.water_meter_water_consumption")
+    assert water_consumption.state == "123.456"
+    assert (
+        water_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
+    )
+    assert (
+        water_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+    assert (
+        water_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfVolume.CUBIC_METERS
+    )
+
+    # check if gas consumption mbus2 is parsed correctly
+    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
+    assert gas_consumption.state == "678.901"
+    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
+    assert (
+        gas_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+    assert (
+        gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfVolume.CUBIC_METERS
+    )
+
+    # check if water usage mbus3 is parsed correctly
+    water_consumption = hass.states.get("sensor.water_meter_water_consumption_2")
+    assert water_consumption.state == "12.12"
+    assert (
+        water_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
+    )
+    assert (
+        water_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+    assert (
+        water_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfVolume.CUBIC_METERS
+    )
+
+    # check if gas consumption mbus4 is parsed correctly
+    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption_2")
+    assert gas_consumption.state == "13.13"
+    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
+    assert (
+        gas_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+    assert (
+        gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == UnitOfVolume.CUBIC_METERS
+    )
+
+
+async def test_belgian_meter_mbus(hass: HomeAssistant, dsmr_connection_fixture) -> None:
+    """Test if Belgian meter is correctly parsed."""
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
+
+    from dsmr_parser.obis_references import (
+        BELGIUM_MBUS1_DEVICE_TYPE,
+        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
+        BELGIUM_MBUS2_DEVICE_TYPE,
+        BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER,
+        BELGIUM_MBUS3_DEVICE_TYPE,
+        BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER,
+        BELGIUM_MBUS3_METER_READING2,
+        BELGIUM_MBUS4_DEVICE_TYPE,
+        BELGIUM_MBUS4_METER_READING1,
+        ELECTRICITY_ACTIVE_TARIFF,
+    )
+    from dsmr_parser.objects import CosemObject, MBusObject
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "5B",
+        "precision": 4,
+        "serial_id": "1234",
+        "serial_id_gas": None,
+    }
+    entry_options = {
+        "time_between_update": 0,
+    }
+
+    telegram = {
+        ELECTRICITY_ACTIVE_TARIFF: CosemObject(
+            ELECTRICITY_ACTIVE_TARIFF, [{"value": "0003", "unit": ""}]
+        ),
+        BELGIUM_MBUS1_DEVICE_TYPE: CosemObject(
+            BELGIUM_MBUS1_DEVICE_TYPE, [{"value": "006", "unit": ""}]
+        ),
+        BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER: CosemObject(
+            BELGIUM_MBUS1_EQUIPMENT_IDENTIFIER,
+            [{"value": "37464C4F32313139303333373331", "unit": ""}],
+        ),
+        BELGIUM_MBUS2_DEVICE_TYPE: CosemObject(
+            BELGIUM_MBUS2_DEVICE_TYPE, [{"value": "003", "unit": ""}]
+        ),
+        BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER: CosemObject(
+            BELGIUM_MBUS2_EQUIPMENT_IDENTIFIER,
+            [{"value": "37464C4F32313139303333373332", "unit": ""}],
+        ),
+        BELGIUM_MBUS3_DEVICE_TYPE: CosemObject(
+            BELGIUM_MBUS3_DEVICE_TYPE, [{"value": "007", "unit": ""}]
+        ),
+        BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER: CosemObject(
+            BELGIUM_MBUS3_EQUIPMENT_IDENTIFIER,
+            [{"value": "37464C4F32313139303333373333", "unit": ""}],
+        ),
+        BELGIUM_MBUS3_METER_READING2: MBusObject(
+            BELGIUM_MBUS3_METER_READING2,
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642217)},
+                {"value": Decimal(12.12), "unit": "m3"},
+            ],
+        ),
+        BELGIUM_MBUS4_DEVICE_TYPE: CosemObject(
+            BELGIUM_MBUS4_DEVICE_TYPE, [{"value": "007", "unit": ""}]
+        ),
+        BELGIUM_MBUS4_METER_READING1: MBusObject(
+            BELGIUM_MBUS4_METER_READING1,
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642218)},
+                {"value": Decimal(13.13), "unit": "m3"},
+            ],
+        ),
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
+
+    # tariff should be translated in human readable and have no unit
+    active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
+    assert active_tariff.state == "unknown"
+
+    # check if gas consumption mbus2 is parsed correctly
+    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
+    assert gas_consumption is None
+
+    # check if water usage mbus3 is parsed correctly
+    water_consumption = hass.states.get("sensor.water_meter_water_consumption_2")
+    assert water_consumption is None
+
+    # check if gas consumption mbus4 is parsed correctly
+    gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption_2")
+    assert gas_consumption is None
+
+    # check if gas consumption mbus4 is parsed correctly
+    water_consumption = hass.states.get("sensor.water_meter_water_consumption")
+    assert water_consumption.state == "13.13"
+    assert (
+        water_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
+    )
+    assert (
+        water_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
+    assert (
+        water_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == UnitOfVolume.CUBIC_METERS
     )
 
@@ -495,7 +984,6 @@ async def test_belgian_meter_low(hass: HomeAssistant, dsmr_connection_fixture) -
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5B",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -503,7 +991,11 @@ async def test_belgian_meter_low(hass: HomeAssistant, dsmr_connection_fixture) -
         "time_between_update": 0,
     }
 
-    telegram = {ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0002", "unit": ""}])}
+    telegram = {
+        ELECTRICITY_ACTIVE_TARIFF: CosemObject(
+            ELECTRICITY_ACTIVE_TARIFF, [{"value": "0002", "unit": ""}]
+        )
+    }
 
     mock_entry = MockConfigEntry(
         domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
@@ -519,8 +1011,8 @@ async def test_belgian_meter_low(hass: HomeAssistant, dsmr_connection_fixture) -
     # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
     telegram_callback(telegram)
 
-    # after receiving telegram entities need to have the chance to update
-    await asyncio.sleep(0)
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
 
     # tariff should be translated in human readable and have no unit
     active_tariff = hass.states.get("sensor.electricity_meter_active_tariff")
@@ -529,7 +1021,7 @@ async def test_belgian_meter_low(hass: HomeAssistant, dsmr_connection_fixture) -
     assert active_tariff.attributes.get(ATTR_ICON) == "mdi:flash"
     assert active_tariff.attributes.get(ATTR_OPTIONS) == ["low", "normal"]
     assert active_tariff.attributes.get(ATTR_STATE_CLASS) is None
-    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ""
+    assert active_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
 
 async def test_swedish_meter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
@@ -546,7 +1038,6 @@ async def test_swedish_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5S",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": None,
         "serial_id_gas": None,
     }
@@ -556,10 +1047,12 @@ async def test_swedish_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
 
     telegram = {
         ELECTRICITY_IMPORTED_TOTAL: CosemObject(
-            [{"value": Decimal(123.456), "unit": UnitOfEnergy.KILO_WATT_HOUR}]
+            ELECTRICITY_IMPORTED_TOTAL,
+            [{"value": Decimal(123.456), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
         ),
         ELECTRICITY_EXPORTED_TOTAL: CosemObject(
-            [{"value": Decimal(654.321), "unit": UnitOfEnergy.KILO_WATT_HOUR}]
+            ELECTRICITY_EXPORTED_TOTAL,
+            [{"value": Decimal(654.321), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
         ),
     }
 
@@ -577,8 +1070,8 @@ async def test_swedish_meter(hass: HomeAssistant, dsmr_connection_fixture) -> No
     # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
     telegram_callback(telegram)
 
-    # after receiving telegram entities need to have the chance to update
-    await asyncio.sleep(0)
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
 
     active_tariff = hass.states.get("sensor.electricity_meter_energy_consumption_total")
     assert active_tariff.state == "123.456"
@@ -619,7 +1112,6 @@ async def test_easymeter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
         "port": "/dev/ttyUSB0",
         "dsmr_version": "Q3D",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": None,
         "serial_id_gas": None,
     }
@@ -629,10 +1121,12 @@ async def test_easymeter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
 
     telegram = {
         ELECTRICITY_IMPORTED_TOTAL: CosemObject(
-            [{"value": Decimal(54184.6316), "unit": UnitOfEnergy.KILO_WATT_HOUR}]
+            ELECTRICITY_IMPORTED_TOTAL,
+            [{"value": Decimal(54184.6316), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
         ),
         ELECTRICITY_EXPORTED_TOTAL: CosemObject(
-            [{"value": Decimal(19981.1069), "unit": UnitOfEnergy.KILO_WATT_HOUR}]
+            ELECTRICITY_EXPORTED_TOTAL,
+            [{"value": Decimal(19981.1069), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
         ),
     }
 
@@ -653,8 +1147,8 @@ async def test_easymeter(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
     telegram_callback(telegram)
 
-    # after receiving telegram entities need to have the chance to update
-    await asyncio.sleep(0)
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
 
     active_tariff = hass.states.get("sensor.electricity_meter_energy_consumption_total")
     assert active_tariff.state == "54184.6316"
@@ -691,7 +1185,6 @@ async def test_tcp(hass: HomeAssistant, dsmr_connection_fixture) -> None:
         "dsmr_version": "2.2",
         "protocol": "dsmr_protocol",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -719,7 +1212,6 @@ async def test_rfxtrx_tcp(hass: HomeAssistant, rfxtrx_dsmr_connection_fixture) -
         "dsmr_version": "2.2",
         "protocol": "rfxtrx_dsmr_protocol",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -737,6 +1229,7 @@ async def test_rfxtrx_tcp(hass: HomeAssistant, rfxtrx_dsmr_connection_fixture) -
     assert connection_factory.call_args_list[0][0][1] == "1234"
 
 
+@patch("homeassistant.components.dsmr.sensor.DEFAULT_RECONNECT_INTERVAL", 0)
 async def test_connection_errors_retry(
     hass: HomeAssistant, dsmr_connection_fixture
 ) -> None:
@@ -747,7 +1240,6 @@ async def test_connection_errors_retry(
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
         "precision": 4,
-        "reconnect_interval": 0,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -776,17 +1268,36 @@ async def test_connection_errors_retry(
         assert first_fail_connection_factory.call_count >= 2, "connecting not retried"
 
 
+@patch("homeassistant.components.dsmr.sensor.DEFAULT_RECONNECT_INTERVAL", 0)
 async def test_reconnect(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     """If transport disconnects, the connection should be retried."""
+    from dsmr_parser.obis_references import (
+        CURRENT_ELECTRICITY_USAGE,
+        ELECTRICITY_ACTIVE_TARIFF,
+    )
+    from dsmr_parser.objects import CosemObject
+
     (connection_factory, transport, protocol) = dsmr_connection_fixture
 
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
         "precision": 4,
-        "reconnect_interval": 0,
         "serial_id": "1234",
         "serial_id_gas": "5678",
+    }
+    entry_options = {
+        "time_between_update": 0,
+    }
+
+    telegram = {
+        CURRENT_ELECTRICITY_USAGE: CosemObject(
+            CURRENT_ELECTRICITY_USAGE,
+            [{"value": Decimal("35.0"), "unit": UnitOfPower.WATT}],
+        ),
+        ELECTRICITY_ACTIVE_TARIFF: CosemObject(
+            ELECTRICITY_ACTIVE_TARIFF, [{"value": "0001", "unit": ""}]
+        ),
     }
 
     # mock waiting coroutine while connection lasts
@@ -801,7 +1312,7 @@ async def test_reconnect(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     protocol.wait_closed = wait_closed
 
     mock_entry = MockConfigEntry(
-        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
     )
 
     mock_entry.add_to_hass(hass)
@@ -809,11 +1320,19 @@ async def test_reconnect(hass: HomeAssistant, dsmr_connection_fixture) -> None:
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
+
     assert connection_factory.call_count == 1
 
     state = hass.states.get("sensor.electricity_meter_power_consumption")
     assert state
-    assert state.state == STATE_UNKNOWN
+    assert state.state == "35.0"
 
     # indicate disconnect, release wait lock and allow reconnect to happen
     closed.set()
@@ -846,7 +1365,6 @@ async def test_gas_meter_providing_energy_reading(
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
         "precision": 4,
-        "reconnect_interval": 30,
         "serial_id": "1234",
         "serial_id_gas": "5678",
     }
@@ -856,10 +1374,11 @@ async def test_gas_meter_providing_energy_reading(
 
     telegram = {
         GAS_METER_READING: MBusObject(
+            GAS_METER_READING,
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
                 {"value": Decimal(123.456), "unit": UnitOfEnergy.GIGA_JOULE},
-            ]
+            ],
         ),
     }
 
@@ -874,7 +1393,7 @@ async def test_gas_meter_providing_energy_reading(
 
     telegram_callback = connection_factory.call_args_list[0][0][2]
     telegram_callback(telegram)
-    await asyncio.sleep(0)
+    await hass.async_block_till_done()
 
     gas_consumption = hass.states.get("sensor.gas_meter_gas_consumption")
     assert gas_consumption.state == "123.456"

@@ -2,7 +2,7 @@
   "domain": "sonos",
   "name": "Sonos",
   "after_dependencies": ["plex", "spotify", "zeroconf", "media_source"],
-  "codeowners": ["@cgtobi", "@jjlawren"],
+  "codeowners": ["@jjlawren"],
   "config_flow": true,
   "dependencies": ["ssdp"],
   "documentation": "https://www.home-assistant.io/integrations/sonos",

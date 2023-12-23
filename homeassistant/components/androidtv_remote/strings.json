@@ -34,5 +34,14 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "enable_ime": "Enable IME. Needed for getting the current app. Disable for devices that show 'Use keyboard on mobile device screen' instead of the on screen keyboard."
+        }
+      }
+    }
   }
 }

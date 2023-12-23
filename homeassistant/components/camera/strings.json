@@ -25,8 +25,8 @@
         "motion_detection": {
           "name": "Motion detection",
           "state": {
-            "true": "Enabled",
-            "false": "Disabled"
+            "true": "[%key:common::state::enabled%]",
+            "false": "[%key:common::state::disabled%]"
           }
         },
         "model_name": {
@@ -35,10 +35,65 @@
       }
     }
   },
-  "issues": {
-    "platform_integration_no_support": {
-      "title": "[%key:common::issues::platform_integration_no_support_title%]",
-      "description": "[%key:common::issues::platform_integration_no_support_description%]"
+  "services": {
+    "turn_off": {
+      "name": "[%key:common::action::turn_off%]",
+      "description": "Turns off the camera."
+    },
+    "turn_on": {
+      "name": "[%key:common::action::turn_on%]",
+      "description": "Turns on the camera."
+    },
+    "enable_motion_detection": {
+      "name": "Enable motion detection",
+      "description": "Enables the motion detection."
+    },
+    "disable_motion_detection": {
+      "name": "Disable motion detection",
+      "description": "Disables the motion detection."
+    },
+    "snapshot": {
+      "name": "Take snapshot",
+      "description": "Takes a snapshot from a camera.",
+      "fields": {
+        "filename": {
+          "name": "Filename",
+          "description": "Template of a filename. Variable available is `entity_id`."
+        }
+      }
+    },
+    "play_stream": {
+      "name": "Play stream",
+      "description": "Plays the camera stream on a supported media player.",
+      "fields": {
+        "media_player": {
+          "name": "Media player",
+          "description": "Media players to stream to."
+        },
+        "format": {
+          "name": "Format",
+          "description": "Stream format supported by the media player."
+        }
+      }
+    },
+    "record": {
+      "name": "Record",
+      "description": "Creates a recording of a live camera feed.",
+      "fields": {
+        "filename": {
+          "name": "[%key:component::camera::services::snapshot::fields::filename::name%]",
+          "description": "Template of a filename. Variable available is `entity_id`. Must be mp4."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "Planned duration of the recording. The actual duration may vary."
+        },
+        "lookback": {
+          "name": "Lookback",
+          "description": "Planned lookback period to include in the recording (in addition to the duration). Only available if there is currently an active HLS stream. The actual length of the lookback period may vary."
+        }
+      }
     }
-  }
+  },
+  "selector": {}
 }

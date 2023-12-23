@@ -7,6 +7,7 @@ from unittest.mock import patch
 import bleak
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
+from bleak.exc import BleakError
 import pytest
 
 from homeassistant.components.bluetooth import (
@@ -364,5 +365,27 @@ async def test_we_switch_adapters_on_failure(
         return_value=FakeBleakClientFailsHCI0Only,
     ):
         assert await client.connect() is False
+    cancel_hci0()
+    cancel_hci1()
+
+
+async def test_raise_after_shutdown(
+    hass: HomeAssistant,
+    two_adapters: None,
+    enable_bluetooth: None,
+    install_bleak_catcher,
+    mock_platform_client_that_raises_on_connect,
+) -> None:
+    """Ensure the slot gets released on connection exception."""
+    manager = _get_manager()
+    hci0_device_advs, cancel_hci0, cancel_hci1 = _generate_scanners_with_fake_devices(
+        hass
+    )
+    # hci0 has 2 slots, hci1 has 1 slot
+    with patch.object(manager, "shutdown", True):
+        ble_device = hci0_device_advs["00:00:00:00:00:01"][0]
+        client = bleak.BleakClient(ble_device)
+        with pytest.raises(BleakError, match="shutdown"):
+            await client.connect()
     cancel_hci0()
     cancel_hci1()

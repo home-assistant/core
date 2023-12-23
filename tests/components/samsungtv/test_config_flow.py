@@ -1,4 +1,6 @@
 """Tests for Samsung TV config flow."""
+from copy import deepcopy
+from ipaddress import ip_address
 from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 import pytest
@@ -130,8 +132,8 @@ MOCK_DHCP_DATA = dhcp.DhcpServiceInfo(
 )
 EXISTING_IP = "192.168.40.221"
 MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
-    host="fake_host",
-    addresses=["fake_host"],
+    ip_address=ip_address("127.0.0.1"),
+    ip_addresses=[ip_address("127.0.0.1")],
     hostname="mock_hostname",
     name="mock_name",
     port=1234,
@@ -163,14 +165,6 @@ MOCK_DEVICE_INFO = {
         "modelName": "fake_model",
     },
     "id": "123",
-}
-MOCK_DEVICE_INFO_2 = {
-    "device": {
-        "type": "Samsung SmartTV",
-        "name": "fake2_name",
-        "modelName": "fake2_model",
-    },
-    "id": "345",
 }
 
 AUTODETECT_LEGACY = {
@@ -975,7 +969,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     )
     assert result["type"] == "create_entry"
     assert result["title"] == "Living Room (82GXARRS)"
-    assert result["data"][CONF_HOST] == "fake_host"
+    assert result["data"][CONF_HOST] == "127.0.0.1"
     assert result["data"][CONF_NAME] == "Living Room"
     assert result["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
@@ -1273,7 +1267,9 @@ async def test_update_missing_mac_unique_id_added_from_zeroconf(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test missing mac and unique id added."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_OLD_ENTRY, unique_id=None)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={**MOCK_OLD_ENTRY, "host": "127.0.0.1"}, unique_id=None
+    )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -1539,7 +1535,7 @@ async def test_update_missing_mac_added_unique_id_preserved_from_zeroconf(
     """Test missing mac and unique id added."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=MOCK_OLD_ENTRY,
+        data={**MOCK_OLD_ENTRY, "host": "127.0.0.1"},
         unique_id="0d1cef00-00dc-1000-9c80-4844f7b172de",
     )
     entry.add_to_hass(hass)
@@ -1965,3 +1961,56 @@ async def test_no_update_incorrect_udn_not_matching_mac_from_dhcp(
     assert result["step_id"] == "confirm"
     assert entry.data[CONF_MAC] == "aa:bb:ss:ss:dd:pp"
     assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
+
+
+@pytest.mark.usefixtures("remotews", "remoteencws_failing")
+async def test_ssdp_update_mac(hass: HomeAssistant) -> None:
+    """Ensure that MAC address is correctly updated from SSDP."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
+        return_value=MOCK_DEVICE_INFO,
+    ):
+        # entry was added
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
+        )
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        entry = result["result"]
+        assert entry.data[CONF_MANUFACTURER] == DEFAULT_MANUFACTURER
+        assert entry.data[CONF_MODEL] == "fake_model"
+        assert entry.data[CONF_MAC] is None
+        assert entry.unique_id == "123"
+
+    device_info = deepcopy(MOCK_DEVICE_INFO)
+    device_info["device"]["wifiMac"] = "none"
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
+        return_value=device_info,
+    ):
+        # Updated
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        )
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == RESULT_ALREADY_CONFIGURED
+
+        # ensure mac wasn't updated with "none"
+        assert entry.data[CONF_MAC] is None
+        assert entry.unique_id == "123"
+
+    device_info = deepcopy(MOCK_DEVICE_INFO)
+    device_info["device"]["wifiMac"] = "aa:bb:cc:dd:ee:ff"
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
+        return_value=device_info,
+    ):
+        # Updated
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        )
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == RESULT_ALREADY_CONFIGURED
+
+        # ensure mac was updated with new wifiMac value
+        assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+        assert entry.unique_id == "123"

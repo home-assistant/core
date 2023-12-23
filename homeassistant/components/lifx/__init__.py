@@ -30,7 +30,7 @@ from .coordinator import LIFXUpdateCoordinator
 from .discovery import async_discover_devices, async_trigger_discovery
 from .manager import LIFXManager
 from .migration import async_migrate_entities_devices, async_migrate_legacy_entries
-from .util import async_entry_is_legacy, async_get_legacy_entry
+from .util import async_entry_is_legacy, async_get_legacy_entry, formatted_serial
 
 CONF_SERVER = "server"
 CONF_BROADCAST = "broadcast"
@@ -218,6 +218,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         connection.async_stop()
         raise
 
+    serial = formatted_serial(coordinator.serial_number)
+    if serial != entry.unique_id:
+        # If the serial number of the device does not match the unique_id
+        # of the config entry, it likely means the DHCP lease has expired
+        # and the device has been assigned a new IP address. We need to
+        # wait for the next discovery to find the device at its new address
+        # and update the config entry so we do not mix up devices.
+        raise ConfigEntryNotReady(
+            f"Unexpected device found at {host}; expected {entry.unique_id}, found {serial}"
+        )
     domain_data[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

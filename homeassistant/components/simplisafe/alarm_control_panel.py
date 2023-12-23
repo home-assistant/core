@@ -127,6 +127,7 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
+    _attr_name = None
 
     def __init__(self, simplisafe: SimpliSafe, system: SystemType) -> None:
         """Initialize the SimpliSafe alarm."""

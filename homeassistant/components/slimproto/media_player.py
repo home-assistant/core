@@ -20,7 +20,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
@@ -90,6 +90,7 @@ class SlimProtoPlayer(MediaPlayerEntity):
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
+    _attr_name = None
 
     def __init__(self, slimserver: SlimServer, player: SlimClient) -> None:
         """Initialize MediaPlayer entity."""

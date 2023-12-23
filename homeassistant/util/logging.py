@@ -16,21 +16,6 @@ from homeassistant.core import HomeAssistant, callback, is_callback
 _T = TypeVar("_T")
 
 
-class HideSensitiveDataFilter(logging.Filter):
-    """Filter API password calls."""
-
-    def __init__(self, text: str) -> None:
-        """Initialize sensitive data filter."""
-        super().__init__()
-        self.text = text
-
-    def filter(self, record: logging.LogRecord) -> bool:
-        """Hide sensitive data in messages."""
-        record.msg = record.msg.replace(self.text, "*******")
-
-        return True
-
-
 class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
     """Process the log in another thread."""
 

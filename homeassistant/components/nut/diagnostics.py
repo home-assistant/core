@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import PyNUTData
-from .const import DOMAIN, PYNUT_DATA, PYNUT_UNIQUE_ID
+from .const import DOMAIN, PYNUT_DATA, PYNUT_UNIQUE_ID, USER_AVAILABLE_COMMANDS
 
 TO_REDACT = {CONF_PASSWORD, CONF_USERNAME}
 
@@ -26,7 +26,12 @@ async def async_get_config_entry_diagnostics(
 
     # Get information from Nut library
     nut_data: PyNUTData = hass_data[PYNUT_DATA]
-    data["nut_data"] = {"ups_list": nut_data.ups_list, "status": nut_data.status}
+    nut_cmd: set[str] = hass_data[USER_AVAILABLE_COMMANDS]
+    data["nut_data"] = {
+        "ups_list": nut_data.ups_list,
+        "status": nut_data.status,
+        "commands": nut_cmd,
+    }
 
     # Gather information how this Nut device is represented in Home Assistant
     device_registry = dr.async_get(hass)
