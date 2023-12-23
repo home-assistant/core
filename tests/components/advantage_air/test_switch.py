@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+from syrupy import SnapshotAssertion
+
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -19,6 +21,7 @@ async def test_cover_async_setup_entry(
     entity_registry: er.EntityRegistry,
     mock_get: AsyncMock,
     mock_update: AsyncMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test switch platform."""
 
@@ -56,9 +59,7 @@ async def test_cover_async_setup_entry(
 
     # Test MyFan Switch Entity
     entity_id = "switch.myzone_myfan"
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OFF
+    assert hass.states.get(entity_id) == snapshot(name=entity_id)
 
     entry = registry.async_get(entity_id)
     assert entry
@@ -72,6 +73,7 @@ async def test_cover_async_setup_entry(
     )
     mock_update.assert_called_once()
     mock_update.reset_mock()
+    assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-turnon")
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -80,6 +82,7 @@ async def test_cover_async_setup_entry(
         blocking=True,
     )
     mock_update.assert_called_once()
+    assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-turnoff")
 
 
 async def test_things_switch(
