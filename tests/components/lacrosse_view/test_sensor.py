@@ -20,6 +20,7 @@ from . import (
     TEST_SENSOR,
     TEST_STRING_SENSOR,
     TEST_UNSUPPORTED_SENSOR,
+    TEST_UNITS_OVERRIDE_SENSOR,
 )
 
 from tests.common import MockConfigEntry
@@ -94,6 +95,7 @@ async def test_field_not_supported(
         (TEST_STRING_SENSOR, "dry", "wet_dry"),
         (TEST_ALREADY_FLOAT_SENSOR, "-16.5", "heat_index"),
         (TEST_ALREADY_INT_SENSOR, "2", "wind_speed"),
+        (TEST_UNITS_OVERRIDE_SENSOR, "-16.6", "temperature"),
     ],
 )
 async def test_field_types(
