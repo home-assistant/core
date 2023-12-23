@@ -40,9 +40,13 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
     async def _async_update_data(self) -> CCM15DeviceState:
         """Fetch data from Rain Bird device."""
         try:
-            return await self._ccm15.get_status_async()
+            return await self._fetch_data()
         except httpx.RequestError as err:  # pragma: no cover
             raise UpdateFailed("Error communicating with Device") from err
+
+    async def _fetch_data(self) -> CCM15DeviceState:
+        """Get the current status of all AC devices."""
+        return await self._ccm15.get_status_async()
 
     async def async_set_state(self, ac_index: int, state: str, value: int) -> None:
         """Set new target states."""
@@ -51,6 +55,9 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
 
     def get_ac_data(self, ac_index: int) -> CCM15SlaveDevice | None:
         """Get ac data from the ac_index."""
+        if ac_index < 0 or ac_index >= len(self.data.devices):
+            # Network latency may return an empty or incomplete array
+            return None
         return self.data.devices[ac_index]
 
     async def async_set_hvac_mode(self, ac_index, hvac_mode: HVACMode) -> None:
