@@ -50,6 +50,4 @@ class DROPDeviceDataUpdateCoordinator(DataUpdateCoordinator):
             self.hass,
             self.config_entry.data[CONF_COMMAND_TOPIC],
             payload,
-            qos=0,
-            retain=False,
         )
