@@ -3,11 +3,11 @@
 TEST_DATA_HUB_TOPIC = "drop_connect/DROP-1_C0FFEE/255"
 TEST_DATA_HUB = (
     '{"curFlow":5.77,"peakFlow":13.8,"usedToday":232.77,"avgUsed":76,"psi":62.2,"psiLow":61,"psiHigh":62,'
-    '"water":1,"bypass":0,"pMode":"HOME","battery":50,"notif":1,"leak":0}'
+    '"water":1,"bypass":0,"pMode":"home","battery":50,"notif":1,"leak":0}'
 )
 TEST_DATA_HUB_RESET = (
     '{"curFlow":0,"peakFlow":0,"usedToday":0,"avgUsed":0,"psi":0,"psiLow":0,"psiHigh":0,'
-    '"water":0,"bypass":1,"pMode":"AWAY","battery":0,"notif":0,"leak":0}'
+    '"water":0,"bypass":1,"pMode":"away","battery":0,"notif":0,"leak":0}'
 )
 
 TEST_DATA_SALT_TOPIC = "drop_connect/DROP-1_C0FFEE/8"
