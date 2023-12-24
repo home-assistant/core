@@ -225,7 +225,7 @@ class MatrixBot:
             # Set the command for all listening_rooms, unless otherwise specified.
             command.setdefault(CONF_ROOMS, list(self._listening_rooms.values()))
 
-            # COMMAND_SCHEMA guarantees that exactly one of CONF_WORD and CONF_expression are set.
+            # COMMAND_SCHEMA guarantees that exactly one of CONF_WORD and CONF_EXPRESSION are set.
             if (word_command := command.get(CONF_WORD)) is not None:
                 for room_id in command[CONF_ROOMS]:
                     self._word_commands.setdefault(room_id, {})

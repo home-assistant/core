@@ -1,5 +1,6 @@
 """Configure and test MatrixBot."""
 from nio import MatrixRoom, RoomMessageText
+import pytest
 
 from homeassistant.components.matrix import (
     DOMAIN as MATRIX_DOMAIN,
@@ -10,10 +11,10 @@ from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
-    MOCK_EXPRESSION_COMMANDS,
-    MOCK_WORD_COMMANDS,
+    MOCK_EXPRESSION_COMMANDS_PARSED,
+    MOCK_WORD_COMMANDS_PARSED,
     TEST_NOTIFIER_NAME,
-    TEST_ROOM_A_ID,
+    TEST_ROOM_B_ID,
 )
 
 
@@ -31,16 +32,24 @@ async def test_services(hass: HomeAssistant, matrix_bot: MatrixBot):
     assert TEST_NOTIFIER_NAME in notify_service
 
 
-async def test_commands(hass, matrix_bot: MatrixBot, command_events):
+@pytest.mark.parametrize(
+    "room_id",
+    [
+        # TEST_ROOM_A_ID,
+        TEST_ROOM_B_ID,
+    ],
+)
+async def test_commands(
+    hass: HomeAssistant, matrix_bot: MatrixBot, command_events, room_id
+):
     """Test that the configured commands were parsed correctly."""
 
     await hass.async_start()
     assert len(command_events) == 0
 
-    assert matrix_bot._word_commands == MOCK_WORD_COMMANDS
-    assert matrix_bot._expression_commands == MOCK_EXPRESSION_COMMANDS
+    assert matrix_bot._word_commands == MOCK_WORD_COMMANDS_PARSED
+    assert matrix_bot._expression_commands == MOCK_EXPRESSION_COMMANDS_PARSED
 
-    room_id = TEST_ROOM_A_ID
     room = MatrixRoom(room_id=room_id, own_user_id=matrix_bot._mx_id)
 
     # Test single-word command.
