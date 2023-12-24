@@ -55,6 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_HOST],
         entry.data[CONF_API_SECRET_KEY],
         entry.data[CONF_API_AUTH_KEY],
+        False,
     )
     serial_number: str = entry.data[CONF_SERIAL_NUMBER]
 
@@ -66,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass_data[REMOOTIO_CLIENT] = remootio_client
     hass_data[EVENT_HANDLER_CALLBACK] = handle_event
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -86,7 +87,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry, PLATFORMS
     )
 
-    if platforms_unloaded and DOMAIN in hass.data.keys():
+    if platforms_unloaded and DOMAIN in hass.data:
         hass_data = hass.data[DOMAIN].pop(entry.entry_id, {})
         if REMOOTIO_CLIENT in hass_data:
             remootio_client: RemootioClient = hass_data.pop(REMOOTIO_CLIENT, None)

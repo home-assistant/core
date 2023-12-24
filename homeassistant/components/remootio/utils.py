@@ -5,11 +5,20 @@ import asyncio
 import logging
 from logging import Logger
 
-from aioremootio import ConnectionOptions, LoggerConfiguration, RemootioClient
+from aioremootio import (
+    ConnectionOptions,
+    LoggerConfiguration,
+    RemootioClient,
+    RemootioClientAuthenticationError,
+)
 from aioremootio.enums import State
-import async_timeout
 
 from homeassistant import core
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import aiohttp_client
 
 from .const import EXPECTED_MINIMUM_API_VERSION, REMOOTIO_DELAY, REMOOTIO_TIMEOUT
@@ -55,17 +64,29 @@ async def get_serial_number(
     """Connect to a Remootio device based on the given connection options and retrieve its serial number."""
     result: str = ""
 
-    async with async_timeout.timeout(REMOOTIO_TIMEOUT):
-        async with RemootioClient(
-            connection_options,
-            aiohttp_client.async_get_clientsession(hass),
-            LoggerConfiguration(logger=logger),
-        ) as remootio_client:
-            if await _wait_for_connected(remootio_client):
-                await _check_sensor_installed(remootio_client)
-                await _check_api_version(remootio_client)
+    async with asyncio.timeout(REMOOTIO_TIMEOUT):
+        remootio_client: RemootioClient = None
 
-                result = remootio_client.serial_number
+        if not connection_options.connect_automatically:
+            remootio_client = await RemootioClient(
+                connection_options,
+                aiohttp_client.async_get_clientsession(hass),
+                LoggerConfiguration(logger=logger),
+            )
+
+            await remootio_client.connect()
+        else:
+            remootio_client = await RemootioClient(
+                connection_options,
+                aiohttp_client.async_get_clientsession(hass),
+                LoggerConfiguration(logger=logger),
+            )
+
+        if await _wait_for_connected(remootio_client):
+            await _check_sensor_installed(remootio_client)
+            await _check_api_version(remootio_client)
+
+            result = remootio_client.serial_number
 
     return result
 
@@ -79,21 +100,50 @@ async def create_client(
     """Create an Remootio client based on the given data."""
     result: RemootioClient = None
 
-    async with async_timeout.timeout(REMOOTIO_TIMEOUT):
-        result = await RemootioClient(
-            connection_options,
-            aiohttp_client.async_get_clientsession(hass),
-            LoggerConfiguration(logger=logger),
-        )
+    try:
+        async with asyncio.timeout(REMOOTIO_TIMEOUT):
+            if not connection_options.connect_automatically:
+                try:
+                    result = await RemootioClient(
+                        connection_options,
+                        aiohttp_client.async_get_clientsession(hass),
+                        LoggerConfiguration(logger=logger),
+                    )
+                except BaseException as ex:
+                    raise ConfigEntryError(
+                        f'Failed to create client for Remootio device "{connection_options.host}"'
+                    ) from ex
 
-        if await _wait_for_connected(result):
-            await _check_sensor_installed(result, False)
-            await _check_api_version(result)
+            try:
+                if connection_options.connect_automatically:
+                    result = await RemootioClient(
+                        connection_options,
+                        aiohttp_client.async_get_clientsession(hass),
+                        LoggerConfiguration(logger=logger),
+                    )
+                else:
+                    await result.connect()
 
-            if expected_serial_number is not None:
-                serial_number: str = result.serial_number
-                assert (
-                    expected_serial_number == serial_number
-                ), f"Serial number of the Remootio device isn't the expected. Actual [{serial_number}] Expected [{expected_serial_number}]"
+                if await _wait_for_connected(result):
+                    await _check_sensor_installed(result, False)
+                    await _check_api_version(result)
+
+                    if expected_serial_number is not None:
+                        serial_number: str = result.serial_number
+                        assert (
+                            expected_serial_number == serial_number
+                        ), f"Serial number of the Remootio device isn't the expected. Actual [{serial_number}] Expected [{expected_serial_number}]"
+            except RemootioClientAuthenticationError as ex:
+                raise ConfigEntryAuthFailed(
+                    f'Authentication has been failed for Remootio device "{result.host}"'
+                ) from ex
+            except BaseException as ex:
+                raise ConfigEntryError(
+                    f'Connecting to Remootio device "{result.host}" has been failed'
+                ) from ex
+    except asyncio.TimeoutError as ex:
+        raise ConfigEntryNotReady(
+            f'Timed out while connecting to Remootio device "{result.host}"'
+        ) from ex
 
     return result

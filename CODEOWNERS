@@ -1092,6 +1092,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/refoss/ @ashionky
 /tests/components/refoss/ @ashionky
 /homeassistant/components/rejseplanen/ @DarkFox
+/homeassistant/components/remootio/ @ivgg-me
+/tests/components/remootio/ @ivgg-me
 /homeassistant/components/remote/ @home-assistant/core
 /tests/components/remote/ @home-assistant/core
 /homeassistant/components/renault/ @epenet
@@ -1157,8 +1159,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/schlage/ @dknowles2
 /tests/components/schlage/ @dknowles2
 /homeassistant/components/schluter/ @prairieapps
-/homeassistant/components/scrape/ @fabaff @gjohansson-ST @epenet
-/tests/components/scrape/ @fabaff @gjohansson-ST @epenet
+/homeassistant/components/scrape/ @fabaff @gjohansson-ST
+/tests/components/scrape/ @fabaff @gjohansson-ST
 /homeassistant/components/screenlogic/ @dieselrabbit @bdraco
 /tests/components/screenlogic/ @dieselrabbit @bdraco
 /homeassistant/components/script/ @home-assistant/core

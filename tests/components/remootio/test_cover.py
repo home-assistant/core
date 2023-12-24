@@ -35,7 +35,7 @@ TDV_HOST = "127.0.0.1"
 TDV_CREDENTIAL = "123456789A123456789B123456789C123456789D123456789E123456789FVXYZ"
 TDV_SERIAL_NUMBER = "1234567890"
 TDV_TITLE = "remootio"
-TDV_ENTITY_ID = "cover.remootio"
+TDV_ENTITY_ID = "cover.remootio_none"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -267,7 +267,7 @@ async def test_event_left_open(remootio_create_client: Mock, hass: HomeAssistant
     assert hass.states.get(TDV_ENTITY_ID).state == STATE_OPEN
 
     await _remootio_client_trigger_event(
-        Event(EventSource.DEVICE_OVER_WIFI, EventType.LEFT_OPEN, None)
+        Event(EventSource.DEVICE_OVER_WIFI, EventType.LEFT_OPEN, None), remootio_client
     )
     await hass.async_block_till_done()
 
@@ -291,35 +291,32 @@ def _assert_state_changed_event(
     )
 
 
-async def _remootio_client_invoke_state_change_listeners(state_change: StateChange):
-    global remootio_client_state_change_listeners, remootio_client
-
-    if len(remootio_client_state_change_listeners) > 0:
+async def _remootio_client_invoke_state_change_listeners(
+    state_change: StateChange, remootio_client
+):
+    if len(remootio_client.state_change_listeners) > 0:
         for (
             remootio_client_state_change_listener
-        ) in remootio_client_state_change_listeners:
+        ) in remootio_client.state_change_listeners:
             _LOGGER.debug(
-                f"Invoking state change listener {type(remootio_client_state_change_listener)}..."
+                "Invoking state change listener %s...",
+                type(remootio_client_state_change_listener),
             )
             await remootio_client_state_change_listener.execute(
                 remootio_client, state_change
             )
 
 
-async def _remootio_client_invoke_event_listeners(event: Event):
-    global remootio_client_event_listeners, remootio_client
-
-    if len(remootio_client_event_listeners) > 0:
-        for remootio_client_event_listener in remootio_client_event_listeners:
+async def _remootio_client_invoke_event_listeners(event: Event, remootio_client):
+    if len(remootio_client.event_listeners) > 0:
+        for remootio_client_event_listener in remootio_client.event_listeners:
             _LOGGER.debug(
-                f"Invoking event listener {type(remootio_client_event_listener)}..."
+                "Invoking event listener %s...", type(remootio_client_event_listener)
             )
             await remootio_client_event_listener.execute(remootio_client, event)
 
 
-async def _remootio_client_change_state(new_state: State):
-    global remootio_client
-
+async def _remootio_client_change_state(new_state: State, remootio_client):
     old_state: State = remootio_client.state
 
     do_change_state: bool = False
@@ -338,7 +335,7 @@ async def _remootio_client_change_state(new_state: State):
         )
 
         if new_state == State.CLOSING:
-            await _remootio_client_change_state(State.UNKNOWN)
+            await _remootio_client_change_state(State.UNKNOWN, remootio_client)
             old_state = remootio_client.state
             do_change_state = True
     elif old_state == State.OPEN:
@@ -350,7 +347,7 @@ async def _remootio_client_change_state(new_state: State):
         )
 
         if new_state == State.OPENING:
-            await _remootio_client_change_state(State.UNKNOWN)
+            await _remootio_client_change_state(State.UNKNOWN, remootio_client)
             old_state = remootio_client.state
             do_change_state = True
     elif old_state == State.CLOSING:
@@ -361,11 +358,11 @@ async def _remootio_client_change_state(new_state: State):
         )
 
         if new_state == State.OPENING:
-            await _remootio_client_change_state(State.UNKNOWN)
+            await _remootio_client_change_state(State.UNKNOWN, remootio_client)
             old_state = remootio_client.state
             do_change_state = True
         elif new_state == State.OPEN:
-            await _remootio_client_change_state(State.UNKNOWN)
+            await _remootio_client_change_state(State.UNKNOWN, remootio_client)
             old_state = remootio_client.state
             do_change_state = True
     elif old_state == State.OPENING:
@@ -376,11 +373,11 @@ async def _remootio_client_change_state(new_state: State):
         )
 
         if new_state == State.CLOSING:
-            await _remootio_client_change_state(State.UNKNOWN)
+            await _remootio_client_change_state(State.UNKNOWN, remootio_client)
             old_state = remootio_client.state
             do_change_state = True
         elif new_state == State.CLOSED:
-            await _remootio_client_change_state(State.UNKNOWN)
+            await _remootio_client_change_state(State.UNKNOWN, remootio_client)
             old_state = remootio_client.state
             do_change_state = True
 
@@ -388,12 +385,12 @@ async def _remootio_client_change_state(new_state: State):
         type(remootio_client).state = PropertyMock(return_value=new_state)
 
         await _remootio_client_invoke_state_change_listeners(
-            StateChange(old_state, new_state)
+            StateChange(old_state, new_state), remootio_client
         )
 
 
-async def _remootio_client_trigger_event(event: Event):
-    await _remootio_client_invoke_event_listeners(event)
+async def _remootio_client_trigger_event(event: Event, remootio_client):
+    await _remootio_client_invoke_event_listeners(event, remootio_client)
 
 
 def _initialize_remootio_client(
@@ -402,6 +399,10 @@ def _initialize_remootio_client(
 ) -> Mock:
     result: Mock = MagicMock(RemootioClient)
     type(result).state = PropertyMock(return_value=State.UNKNOWN)
+    type(result).state_change_listeners = PropertyMock(
+        return_value=state_change_listeners
+    )
+    type(result).event_listeners = PropertyMock(return_value=event_listeners)
 
     async def add_state_change_listener(state_change_listener: Listener[StateChange]):
         _LOGGER.debug("add_state_change_listener invoked.")
@@ -418,17 +419,17 @@ def _initialize_remootio_client(
     async def trigger_open():
         _LOGGER.debug("trigger_open invoked.")
         if result.state == State.CLOSED:
-            await _remootio_client_change_state(State.OPENING)
+            await _remootio_client_change_state(State.OPENING, result)
 
-        await _remootio_client_change_state(State.OPEN)
+        await _remootio_client_change_state(State.OPEN, result)
 
     async def trigger_close():
         _LOGGER.debug("trigger_close invoked.")
 
         if result.state == State.OPEN:
-            await _remootio_client_change_state(State.CLOSING)
+            await _remootio_client_change_state(State.CLOSING, result)
 
-        await _remootio_client_change_state(State.CLOSED)
+        await _remootio_client_change_state(State.CLOSED, result)
 
     result.trigger_state_update = AsyncMock(side_effect=trigger_state_update)
     result.trigger_open = AsyncMock(side_effect=trigger_open)

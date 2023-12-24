@@ -12,8 +12,9 @@ from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import UndefinedType
 
 from .const import CONF_SERIAL_NUMBER, DOMAIN, EVENT_HANDLER_CALLBACK, REMOOTIO_CLIENT
 
@@ -64,7 +65,9 @@ class RemootioCover(cover.CoverEntity):
     _event_handler_callback: Callable[[RemootioCoverEvent], None]
     _attr_has_entity_name: bool = True
     _attr_should_poll: bool = False
-    _attr_supported_features: int = cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE
+    _attr_supported_features: cover.CoverEntityFeature = (
+        cover.CoverEntityFeature.OPEN | cover.CoverEntityFeature.CLOSE
+    )
 
     def __init__(
         self,
@@ -83,6 +86,8 @@ class RemootioCover(cover.CoverEntity):
         self._attr_device_info = DeviceInfo(
             name=name,
             manufacturer="Assemblabs Ltd",
+            identifiers={(DOMAIN, unique_id)},
+            serial_number=unique_id,
         )
 
     async def async_added_to_hass(self) -> None:
@@ -184,14 +189,14 @@ class RemootioCoverEvent:
 
     _type: str
     _entity_id: str
-    _entity_name: str | None
+    _entity_name: str | UndefinedType | None
     _device_serial_number: str | None
 
     def __init__(
         self,
         client_event_type: EventType,
         entity_id: str,
-        entity_name: str | None,
+        entity_name: str | UndefinedType | None,
         device_serial_number: str | None,
     ) -> None:
         """Initialize an instance of this class."""
@@ -211,7 +216,7 @@ class RemootioCoverEvent:
         return self._entity_id
 
     @property
-    def entity_name(self) -> str | None:
+    def entity_name(self) -> str | UndefinedType | None:
         """Name of the entity which has triggered the event."""
         return self._entity_name
 

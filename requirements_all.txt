@@ -353,10 +353,7 @@ aioraven==0.5.0
 aiorecollect==2023.09.0
 
 # homeassistant.components.remootio
-aioremootio==1.0.0a19
-
-# homeassistant.components.remootio
-aioremootio==1.0.0a19
+aioremootio==1.0.0a20
 
 # homeassistant.components.ridwell
 aioridwell==2024.01.0
