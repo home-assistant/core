@@ -301,11 +301,13 @@ class RainMachineActivitySwitch(RainMachineBaseSwitch):
         The only way this could occur is if someone rapidly turns a disabled activity
         off right after turning it on.
         """
-        if self._entry.options[CONF_ALLOW_INACTIVE_ZONES_TO_RUN] is False:
-            if not self.coordinator.data[self.entity_description.uid]["active"]:
-                raise HomeAssistantError(
-                    f"Cannot turn off an inactive program/zone: {self.name}"
-                )
+        if (
+            not self._entry.options[CONF_ALLOW_INACTIVE_ZONES_TO_RUN]
+            and not self.coordinator.data[self.entity_description.uid]["active"]
+        ):
+            raise HomeAssistantError(
+                f"Cannot turn off an inactive program/zone: {self.name}"
+            )
 
         await self.async_turn_off_when_active(**kwargs)
 
@@ -316,13 +318,15 @@ class RainMachineActivitySwitch(RainMachineBaseSwitch):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        if self._entry.options[CONF_ALLOW_INACTIVE_ZONES_TO_RUN] is False:
-            if not self.coordinator.data[self.entity_description.uid]["active"]:
-                self._attr_is_on = False
-                self.async_write_ha_state()
-                raise HomeAssistantError(
-                    f"Cannot turn on an inactive program/zone: {self.name}"
-                )
+        if (
+            not self._entry.options[CONF_ALLOW_INACTIVE_ZONES_TO_RUN]
+            and not self.coordinator.data[self.entity_description.uid]["active"]
+        ):
+            self._attr_is_on = False
+            self.async_write_ha_state()
+            raise HomeAssistantError(
+                f"Cannot turn on an inactive program/zone: {self.name}"
+            )
 
         await self.async_turn_on_when_active(**kwargs)
 
