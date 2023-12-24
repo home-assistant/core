@@ -1,8 +1,11 @@
 """Tessie parent entity class."""
 
-
+from collections.abc import Awaitable, Callable
 from typing import Any
 
+from aiohttp import ClientResponseError
+
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -25,7 +28,7 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
         self.vin = coordinator.vin
         self.key = key
 
-        car_type = coordinator.data["vehicle_config-car_type"]
+        car_type = coordinator.data["vehicle_config_car_type"]
 
         self._attr_translation_key = key
         self._attr_unique_id = f"{self.vin}-{key}"
@@ -35,11 +38,35 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
             configuration_url="https://my.tessie.com/",
             name=coordinator.data["display_name"],
             model=MODELS.get(car_type, car_type),
-            sw_version=coordinator.data["vehicle_state-car_version"],
-            hw_version=coordinator.data["vehicle_config-driver_assist"],
+            sw_version=coordinator.data["vehicle_state_car_version"],
+            hw_version=coordinator.data["vehicle_config_driver_assist"],
         )
 
     @property
-    def value(self) -> Any:
+    def _value(self) -> Any:
         """Return value from coordinator data."""
         return self.coordinator.data[self.key]
+
+    def get(self, key: str | None = None, default: Any | None = None) -> Any:
+        """Return a specific value from coordinator data."""
+        return self.coordinator.data.get(key or self.key, default)
+
+    async def run(
+        self, func: Callable[..., Awaitable[dict[str, bool]]], **kargs: Any
+    ) -> None:
+        """Run a tessie_api function and handle exceptions."""
+        try:
+            await func(
+                session=self.coordinator.session,
+                vin=self.vin,
+                api_key=self.coordinator.api_key,
+                **kargs,
+            )
+        except ClientResponseError as e:
+            raise HomeAssistantError from e
+
+    def set(self, *args: Any) -> None:
+        """Set a value in coordinator data."""
+        for key, value in args:
+            self.coordinator.data[key] = value
+        self.async_write_ha_state()
