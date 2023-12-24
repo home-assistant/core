@@ -584,88 +584,125 @@ async def test_startstop_vacuum(hass: HomeAssistant) -> None:
     assert unpause_calls[0].data == {ATTR_ENTITY_ID: "vacuum.bla"}
 
 
-async def test_startstop_cover(hass: HomeAssistant) -> None:
-    """Test startStop trait support for cover domain."""
-    assert helpers.get_google_type(cover.DOMAIN, None) is not None
-    assert trait.StartStopTrait.supported(
-        cover.DOMAIN, CoverEntityFeature.STOP, None, None
-    )
-
-    state = State(
-        "cover.bla",
-        cover.STATE_CLOSED,
-        {ATTR_SUPPORTED_FEATURES: CoverEntityFeature.STOP},
-    )
-
-    trt = trait.StartStopTrait(
-        hass,
-        state,
-        BASIC_CONFIG,
-    )
-
-    assert trt.sync_attributes() == {}
-
-    for state_value in (cover.STATE_CLOSING, cover.STATE_OPENING):
-        state.state = state_value
-        assert trt.query_attributes() == {"isRunning": True}
-
-    stop_calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_STOP_COVER)
-    await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
-    assert len(stop_calls) == 1
-    assert stop_calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
-
-    for state_value in (cover.STATE_CLOSED, cover.STATE_OPEN):
-        state.state = state_value
-        assert trt.query_attributes() == {"isRunning": False}
-
-    with pytest.raises(SmartHomeError, match="Cover is already stopped"):
-        await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
-
-    with pytest.raises(SmartHomeError, match="Starting a cover is not supported"):
-        await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": True}, {})
-
-    with pytest.raises(
-        SmartHomeError,
-        match="Command action.devices.commands.PauseUnpause is not supported",
-    ):
-        await trt.execute(trait.COMMAND_PAUSEUNPAUSE, BASIC_DATA, {"start": True}, {})
-
-
-async def test_startstop_cover_assumed(hass: HomeAssistant) -> None:
-    """Test startStop trait support for cover domain of assumed state."""
+@pytest.mark.parametrize(
+    (
+        "domain",
+        "stop_feature",
+        "set_position_feature",
+        "state_closed",
+        "state_open",
+        "state_closing",
+        "state_opening",
+        "service_stop",
+    ),
+    [
+        (
+            cover.DOMAIN,
+            CoverEntityFeature.STOP,
+            CoverEntityFeature.SET_POSITION,
+            cover.STATE_CLOSED,
+            cover.STATE_OPEN,
+            cover.STATE_CLOSING,
+            cover.STATE_OPENING,
+            cover.SERVICE_STOP_COVER,
+        ),
+        (
+            valve.DOMAIN,
+            ValveEntityFeature.STOP,
+            ValveEntityFeature.SET_POSITION,
+            valve.STATE_CLOSED,
+            valve.STATE_OPEN,
+            valve.STATE_CLOSING,
+            valve.STATE_OPENING,
+            valve.SERVICE_STOP_VALVE,
+        ),
+    ],
+)
+async def test_startstop_cover_valve_assumed(
+    hass: HomeAssistant,
+    domain: str,
+    stop_feature: int,
+    set_position_feature: int,
+    state_closed: str,
+    state_open: str,
+    state_closing: str,
+    state_opening: str,
+    service_stop: str,
+) -> None:
+    """Test startStop trait support with an assumed state."""
     trt = trait.StartStopTrait(
         hass,
         State(
-            "cover.bla",
+            f"{domain}.bla",
             cover.STATE_CLOSED,
             {
-                ATTR_SUPPORTED_FEATURES: CoverEntityFeature.STOP,
+                ATTR_SUPPORTED_FEATURES: stop_feature,
                 ATTR_ASSUMED_STATE: True,
             },
         ),
         BASIC_CONFIG,
     )
 
-    stop_calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_STOP_COVER)
+    stop_calls = async_mock_service(hass, domain, service_stop)
     await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
     assert len(stop_calls) == 1
-    assert stop_calls[0].data == {ATTR_ENTITY_ID: "cover.bla"}
+    assert stop_calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
 
 
-async def test_startstop_valve(hass: HomeAssistant) -> None:
-    """Test startStop trait support for valve domain."""
+@pytest.mark.parametrize(
+    (
+        "domain",
+        "stop_feature",
+        "set_position_feature",
+        "state_closed",
+        "state_open",
+        "state_closing",
+        "state_opening",
+        "service_stop",
+    ),
+    [
+        (
+            cover.DOMAIN,
+            CoverEntityFeature.STOP,
+            CoverEntityFeature.SET_POSITION,
+            cover.STATE_CLOSED,
+            cover.STATE_OPEN,
+            cover.STATE_CLOSING,
+            cover.STATE_OPENING,
+            cover.SERVICE_STOP_COVER,
+        ),
+        (
+            valve.DOMAIN,
+            ValveEntityFeature.STOP,
+            ValveEntityFeature.SET_POSITION,
+            valve.STATE_CLOSED,
+            valve.STATE_OPEN,
+            valve.STATE_CLOSING,
+            valve.STATE_OPENING,
+            valve.SERVICE_STOP_VALVE,
+        ),
+    ],
+)
+async def test_startstop_cover_valve(
+    hass: HomeAssistant,
+    domain: str,
+    stop_feature: int,
+    set_position_feature: int,
+    state_closed: str,
+    state_open: str,
+    state_closing: str,
+    state_opening: str,
+    service_stop: str,
+) -> None:
+    """Test startStop trait support."""
     assert helpers.get_google_type(valve.DOMAIN, None) is not None
-    assert trait.StartStopTrait.supported(
-        valve.DOMAIN, ValveEntityFeature.STOP, None, None
-    )
-    assert not trait.StartStopTrait.supported(
-        valve.DOMAIN, ValveEntityFeature.SET_POSITION, None, None
-    )
+    assert trait.StartStopTrait.supported(domain, stop_feature, None, None)
+    assert not trait.StartStopTrait.supported(domain, set_position_feature, None, None)
 
     state = State(
-        "valve.water",
-        valve.STATE_CLOSED,
-        {ATTR_SUPPORTED_FEATURES: ValveEntityFeature.STOP},
+        f"{domain}.bla",
+        state_closed,
+        {ATTR_SUPPORTED_FEATURES: stop_feature},
     )
 
     trt = trait.StartStopTrait(
@@ -677,20 +714,20 @@ async def test_startstop_valve(hass: HomeAssistant) -> None:
     assert trt.sync_attributes() == {}
 
     for state_value in (
-        valve.STATE_CLOSED,
-        valve.STATE_CLOSING,
-        valve.STATE_OPENING,
-        valve.STATE_OPEN,
+        state_closed,
+        state_closing,
+        state_opening,
+        state_open,
     ):
         state.state = state_value
         assert trt.query_attributes() == {"isRunning": True}
 
-    stop_calls = async_mock_service(hass, valve.DOMAIN, valve.SERVICE_STOP_VALVE)
+    stop_calls = async_mock_service(hass, domain, service_stop)
     await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": False}, {})
     assert len(stop_calls) == 1
-    assert stop_calls[0].data == {ATTR_ENTITY_ID: "valve.water"}
+    assert stop_calls[0].data == {ATTR_ENTITY_ID: f"{domain}.bla"}
 
-    with pytest.raises(SmartHomeError, match="Starting a valve is not supported"):
+    with pytest.raises(SmartHomeError, match=f"Starting a {domain} is not supported"):
         await trt.execute(trait.COMMAND_STARTSTOP, BASIC_DATA, {"start": True}, {})
 
 

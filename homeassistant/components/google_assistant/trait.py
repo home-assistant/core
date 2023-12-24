@@ -95,7 +95,6 @@ from .const import (
     CHALLENGE_PIN_NEEDED,
     ERR_ALREADY_ARMED,
     ERR_ALREADY_DISARMED,
-    ERR_ALREADY_STOPPED,
     ERR_CHALLENGE_NOT_SETUP,
     ERR_FUNCTION_NOT_SUPPORTED,
     ERR_NO_AVAILABLE_CHANNEL,
@@ -877,9 +876,7 @@ class StartStopTrait(_Trait):
                 "isPaused": state == vacuum.STATE_PAUSED,
             }
 
-        if domain == cover.DOMAIN:
-            return {"isRunning": state in (cover.STATE_CLOSING, cover.STATE_OPENING)}
-        if domain == valve.DOMAIN:
+        if domain in COVER_VALVE_DOMAINS:
             return {"isRunning": True}
 
     async def execute(self, command, data, params, challenge):
@@ -932,27 +929,13 @@ class StartStopTrait(_Trait):
         domain = self.state.domain
         if command == COMMAND_STARTSTOP:
             if params["start"] is False:
-                if (
-                    self.state.state
-                    in (
-                        COVER_VALVE_STATES[domain]["closing"],
-                        COVER_VALVE_STATES[domain]["opening"],
-                    )
-                    or domain == valve.DOMAIN
-                    or self.state.attributes.get(ATTR_ASSUMED_STATE)
-                ):
-                    await self.hass.services.async_call(
-                        domain,
-                        SERVICE_STOP_COVER_VALVE[domain],
-                        {ATTR_ENTITY_ID: self.state.entity_id},
-                        blocking=not self.config.should_report_state,
-                        context=data.context,
-                    )
-                else:
-                    raise SmartHomeError(
-                        ERR_ALREADY_STOPPED,
-                        f"{FRIENDLY_DOMAIN[domain]} is already stopped",
-                    )
+                await self.hass.services.async_call(
+                    domain,
+                    SERVICE_STOP_COVER_VALVE[domain],
+                    {ATTR_ENTITY_ID: self.state.entity_id},
+                    blocking=not self.config.should_report_state,
+                    context=data.context,
+                )
             else:
                 raise SmartHomeError(
                     ERR_NOT_SUPPORTED, f"Starting a {domain} is not supported"
