@@ -782,7 +782,7 @@ def _statistic_by_id_from_metadata(
 
 
 def _flatten_list_statistic_ids_metadata_result(
-    result: dict[str, dict[str, Any]]
+    result: dict[str, dict[str, Any]],
 ) -> list[dict]:
     """Return a flat dict of metadata."""
     return [

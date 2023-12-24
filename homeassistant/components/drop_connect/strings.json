@@ -1,0 +1,51 @@
+{
+  "config": {
+    "abort": {
+      "not_supported": "Configuration for DROP is through MQTT discovery. Use the DROP Connect app to connect your DROP Hub to your MQTT broker."
+    },
+    "step": {
+      "confirm": {
+        "title": "Confirm association",
+        "description": "Do you want to configure the DROP {device_type} named {device_name}?'"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_flow_rate": { "name": "Water flow rate" },
+      "peak_flow_rate": { "name": "Peak water flow rate today" },
+      "water_used_today": { "name": "Total water used today" },
+      "average_water_used": { "name": "Average daily water usage" },
+      "capacity_remaining": { "name": "Capacity remaining" },
+      "current_system_pressure": { "name": "Current water pressure" },
+      "high_system_pressure": { "name": "High water pressure today" },
+      "low_system_pressure": { "name": "Low water pressure today" },
+      "inlet_tds": { "name": "Inlet TDS" },
+      "outlet_tds": { "name": "Outlet TDS" },
+      "cart1": { "name": "Cartridge 1 life remaining" },
+      "cart2": { "name": "Cartridge 2 life remaining" },
+      "cart3": { "name": "Cartridge 3 life remaining" }
+    },
+    "binary_sensor": {
+      "leak": { "name": "Leak detected" },
+      "pending_notification": { "name": "Notification unread" },
+      "reserve_in_use": { "name": "Reserve capacity in use" },
+      "salt": { "name": "Salt low" },
+      "pump": { "name": "Pump status" }
+    },
+    "select": {
+      "protect_mode": {
+        "name": "Protect mode",
+        "state": {
+          "away": "Away",
+          "home": "Home",
+          "schedule": "Schedule"
+        }
+      }
+    },
+    "switch": {
+      "water": { "name": "Water supply" },
+      "bypass": { "name": "Treatment bypass" }
+    }
+  }
+}

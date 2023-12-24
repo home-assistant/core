@@ -4,6 +4,9 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your V2C Trydan EVSE."
         }
       }
     },
@@ -49,6 +52,18 @@
     "switch": {
       "paused": {
         "name": "Pause session"
+      },
+      "locked": {
+        "name": "Lock EVSE"
+      },
+      "timer": {
+        "name": "Charge point timer"
+      },
+      "dynamic": {
+        "name": "Dynamic intensity modulation"
+      },
+      "pause_dynamic": {
+        "name": "Pause dynamic control modulation"
       }
     }
   }

@@ -157,14 +157,13 @@ MOCK_CONFIG = {
     "sys": {
         "ui_data": {},
         "device": {"name": "Test name"},
-        "wakeup_period": 0,
     },
 }
 
 MOCK_SHELLY_COAP = {
     "mac": MOCK_MAC,
     "auth": False,
-    "fw": "20201124-092854/v1.9.0@57ac4ad8",
+    "fw": "20210715-092854/v1.11.0@57ac4ad8",
     "num_outputs": 2,
 }
 
@@ -174,8 +173,8 @@ MOCK_SHELLY_RPC = {
     "mac": MOCK_MAC,
     "model": MODEL_PLUS_2PM,
     "gen": 2,
-    "fw_id": "20220830-130540/0.11.0-gfa1bc37",
-    "ver": "0.11.0",
+    "fw_id": "20230803-130540/1.0.0-gfa1bc37",
+    "ver": "1.0.0",
     "app": "Plus2PM",
     "auth_en": False,
     "auth_domain": None,
@@ -290,7 +289,7 @@ async def mock_block_device():
             blocks=MOCK_BLOCKS,
             settings=MOCK_SETTINGS,
             shelly=MOCK_SHELLY_COAP,
-            version="0.10.0",
+            version="1.11.0",
             status=MOCK_STATUS_COAP,
             firmware_version="some fw string",
             initialized=True,
@@ -314,7 +313,7 @@ def _mock_rpc_device(version: str | None = None):
         config=MOCK_CONFIG,
         event={},
         shelly=MOCK_SHELLY_RPC,
-        version=version or "0.12.0",
+        version=version or "1.0.0",
         hostname="test-host",
         status=MOCK_STATUS_RPC,
         firmware_version="some fw string",
@@ -322,23 +321,6 @@ def _mock_rpc_device(version: str | None = None):
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
-
-
-@pytest.fixture
-async def mock_pre_ble_rpc_device():
-    """Mock rpc (Gen2, Websocket) device pre BLE."""
-    with patch("aioshelly.rpc_device.RpcDevice.create") as rpc_device_mock:
-
-        def update():
-            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
-                {}, RpcUpdateType.STATUS
-            )
-
-        device = _mock_rpc_device("0.11.0")
-        rpc_device_mock.return_value = device
-        rpc_device_mock.return_value.mock_update = Mock(side_effect=update)
-
-        yield rpc_device_mock.return_value
 
 
 @pytest.fixture
@@ -363,7 +345,7 @@ async def mock_rpc_device():
                 {}, RpcUpdateType.DISCONNECTED
             )
 
-        device = _mock_rpc_device("0.12.0")
+        device = _mock_rpc_device()
         rpc_device_mock.return_value = device
         rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=disconnected)
         rpc_device_mock.return_value.mock_update = Mock(side_effect=update)

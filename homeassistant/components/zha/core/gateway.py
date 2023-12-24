@@ -46,7 +46,6 @@ from .const import (
     ATTR_SIGNATURE,
     ATTR_TYPE,
     CONF_RADIO_TYPE,
-    CONF_USE_THREAD,
     CONF_ZIGPY,
     DEBUG_COMP_BELLOWS,
     DEBUG_COMP_ZHA,
@@ -157,15 +156,6 @@ class ZHAGateway:
 
         if CONF_NWK_VALIDATE_SETTINGS not in app_config:
             app_config[CONF_NWK_VALIDATE_SETTINGS] = True
-
-        # The bellows UART thread sometimes propagates a cancellation into the main Core
-        # event loop, when a connection to a TCP coordinator fails in a specific way
-        if (
-            CONF_USE_THREAD not in app_config
-            and radio_type is RadioType.ezsp
-            and app_config[CONF_DEVICE][CONF_DEVICE_PATH].startswith("socket://")
-        ):
-            app_config[CONF_USE_THREAD] = False
 
         # Local import to avoid circular dependencies
         # pylint: disable-next=import-outside-toplevel
