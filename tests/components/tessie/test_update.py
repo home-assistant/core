@@ -21,7 +21,8 @@ async def test_updates(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_all("update")) == 1
 
-    state = hass.states.get("update.test")
+    entity_id = "update.test"
+    state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_IN_PROGRESS) is False
 
@@ -31,11 +32,11 @@ async def test_updates(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             UPDATE_DOMAIN,
             SERVICE_INSTALL,
-            {ATTR_ENTITY_ID: ["update.test"]},
+            {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
         mock_update.assert_called_once()
 
-    state = hass.states.get("update.test")
+    state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_IN_PROGRESS) == 1
