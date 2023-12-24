@@ -36,15 +36,8 @@ class QBittorrentDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(seconds=30),
         )
 
-    def update(self) -> SessionStats:
-        """Get the latest data from QBittorrent instance."""
+    async def _async_update_data(self) -> dict[str, Any]:
         try:
-            data = self.client.sync_main_data()
+            return await self.hass.async_add_executor_job(self.client.sync_main_data)
         except LoginRequired as exc:
             raise ConfigEntryError("Invalid authentication") from exc
-
-        return data
-
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Update QBittorrent data"""
-        return await self.hass.async_add_executor_job(self.update)
