@@ -2,6 +2,8 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun import freeze_time
+
 from homeassistant.components.cert_expiry.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -73,8 +75,8 @@ async def test_update_unique_id(hass: HomeAssistant) -> None:
     assert entry.unique_id == f"{HOST}:{PORT}"
 
 
-@patch("homeassistant.util.dt.utcnow", return_value=static_datetime())
-async def test_unload_config_entry(mock_now, hass: HomeAssistant) -> None:
+@freeze_time(static_datetime())
+async def test_unload_config_entry(hass: HomeAssistant) -> None:
     """Test unloading a config entry."""
     assert hass.state is CoreState.running
 

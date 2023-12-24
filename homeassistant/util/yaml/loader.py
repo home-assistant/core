@@ -36,6 +36,10 @@ _DictT = TypeVar("_DictT", bound=dict)
 _LOGGER = logging.getLogger(__name__)
 
 
+class YamlTypeError(HomeAssistantError):
+    """Raised by load_yaml_dict if top level data is not a dict."""
+
+
 class Secrets:
     """Store secrets while loading YAML."""
 
@@ -211,7 +215,7 @@ class SafeLineLoader(PythonSafeLoader):
 LoaderType = FastSafeLoader | PythonSafeLoader
 
 
-def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE:
+def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE | None:
     """Load a YAML file."""
     try:
         with open(fname, encoding="utf-8") as conf_file:
@@ -219,6 +223,20 @@ def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE:
     except UnicodeDecodeError as exc:
         _LOGGER.error("Unable to read file %s: %s", fname, exc)
         raise HomeAssistantError(exc) from exc
+
+
+def load_yaml_dict(fname: str, secrets: Secrets | None = None) -> dict:
+    """Load a YAML file and ensure the top level is a dict.
+
+    Raise if the top level is not a dict.
+    Return an empty dict if the file is empty.
+    """
+    loaded_yaml = load_yaml(fname, secrets)
+    if loaded_yaml is None:
+        loaded_yaml = {}
+    if not isinstance(loaded_yaml, dict):
+        raise YamlTypeError(f"YAML file {fname} does not contain a dict")
+    return loaded_yaml
 
 
 def parse_yaml(
@@ -255,12 +273,7 @@ def _parse_yaml(
     secrets: Secrets | None = None,
 ) -> JSON_TYPE:
     """Load a YAML file."""
-    # If configuration file is empty YAML returns None
-    # We convert that to an empty dict
-    return (
-        yaml.load(content, Loader=lambda stream: loader(stream, secrets))  # type: ignore[arg-type]
-        or NodeDictClass()
-    )
+    return yaml.load(content, Loader=lambda stream: loader(stream, secrets))  # type: ignore[arg-type]
 
 
 @overload
@@ -309,7 +322,10 @@ def _include_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
     """
     fname = os.path.join(os.path.dirname(loader.get_name()), node.value)
     try:
-        return _add_reference(load_yaml(fname, loader.secrets), loader, node)
+        loaded_yaml = load_yaml(fname, loader.secrets)
+        if loaded_yaml is None:
+            loaded_yaml = NodeDictClass()
+        return _add_reference(loaded_yaml, loader, node)
     except FileNotFoundError as exc:
         raise HomeAssistantError(
             f"{node.start_mark}: Unable to read file {fname}."
@@ -339,7 +355,10 @@ def _include_dir_named_yaml(loader: LoaderType, node: yaml.nodes.Node) -> NodeDi
         filename = os.path.splitext(os.path.basename(fname))[0]
         if os.path.basename(fname) == SECRET_YAML:
             continue
-        mapping[filename] = load_yaml(fname, loader.secrets)
+        loaded_yaml = load_yaml(fname, loader.secrets)
+        if loaded_yaml is None:
+            continue
+        mapping[filename] = loaded_yaml
     return _add_reference(mapping, loader, node)
 
 
@@ -364,9 +383,10 @@ def _include_dir_list_yaml(
     """Load multiple files from directory as a list."""
     loc = os.path.join(os.path.dirname(loader.get_name()), node.value)
     return [
-        load_yaml(f, loader.secrets)
+        loaded_yaml
         for f in _find_files(loc, "*.yaml")
         if os.path.basename(f) != SECRET_YAML
+        and (loaded_yaml := load_yaml(f, loader.secrets)) is not None
     ]
 
 

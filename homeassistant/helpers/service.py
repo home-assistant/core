@@ -42,7 +42,7 @@ from homeassistant.exceptions import (
     UnknownUser,
 )
 from homeassistant.loader import Integration, async_get_integrations, bind_hass
-from homeassistant.util.yaml import load_yaml
+from homeassistant.util.yaml import load_yaml_dict
 from homeassistant.util.yaml.loader import JSON_TYPE
 
 from . import (
@@ -88,6 +88,7 @@ def _base_components() -> dict[str, ModuleType]:
         media_player,
         remote,
         siren,
+        todo,
         update,
         vacuum,
         water_heater,
@@ -106,6 +107,7 @@ def _base_components() -> dict[str, ModuleType]:
         "media_player": media_player,
         "remote": remote,
         "siren": siren,
+        "todo": todo,
         "update": update,
         "vacuum": vacuum,
         "water_heater": water_heater,
@@ -542,7 +544,9 @@ def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_T
     try:
         return cast(
             JSON_TYPE,
-            _SERVICES_SCHEMA(load_yaml(str(integration.file_path / "services.yaml"))),
+            _SERVICES_SCHEMA(
+                load_yaml_dict(str(integration.file_path / "services.yaml"))
+            ),
         )
     except FileNotFoundError:
         _LOGGER.warning(
@@ -996,7 +1000,7 @@ def verify_domain_control(
     """Ensure permission to access any entity under domain in service call."""
 
     def decorator(
-        service_handler: Callable[[ServiceCall], Any]
+        service_handler: Callable[[ServiceCall], Any],
     ) -> Callable[[ServiceCall], Any]:
         """Decorate."""
         if not asyncio.iscoroutinefunction(service_handler):

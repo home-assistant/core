@@ -5,13 +5,12 @@ from aiohttp import web
 
 from homeassistant.components import cloud, webhook
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import URL_API
+from homeassistant.const import CONF_WEBHOOK_ID, URL_API
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     CONF_CLOUDHOOK_URL,
-    CONF_WEBHOOK_ID,
     DOMAIN,
     KEY_EXTERNAL_ID,
     KEY_TYPE,

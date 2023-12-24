@@ -28,14 +28,14 @@ from .util import generate_unique_id
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScreenLogicEntityRequiredKeyMixin:
     """Mixin for required ScreenLogic entity data_path."""
 
     data_root: ScreenLogicDataPath
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScreenLogicEntityDescription(
     EntityDescription, ScreenLogicEntityRequiredKeyMixin
 ):
@@ -103,14 +103,14 @@ class ScreenlogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
             raise HomeAssistantError(f"Data not found: {self._data_path}") from ke
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScreenLogicPushEntityRequiredKeyMixin:
     """Mixin for required key for ScreenLogic push entities."""
 
     subscription_code: CODE
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScreenLogicPushEntityDescription(
     ScreenLogicEntityDescription,
     ScreenLogicPushEntityRequiredKeyMixin,

@@ -21,21 +21,12 @@ from .const import COORDINATORS, DISPATCH_DEVICE_DISCOVERED, DOMAIN
 from .entity import GreeEntity
 
 
-@dataclass
-class GreeRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(kw_only=True, frozen=True)
+class GreeSwitchEntityDescription(SwitchEntityDescription):
+    """Describes a Gree switch entity."""
 
     get_value_fn: Callable[[Device], bool]
     set_value_fn: Callable[[Device, bool], None]
-
-
-@dataclass
-class GreeSwitchEntityDescription(SwitchEntityDescription, GreeRequiredKeysMixin):
-    """Describes Gree switch entity."""
-
-    # GreeSwitch does not support UNDEFINED or None,
-    # restrict the type to str.
-    name: str = ""
 
 
 def _set_light(device: Device, value: bool) -> None:
@@ -66,33 +57,33 @@ def _set_anion(device: Device, value: bool) -> None:
 GREE_SWITCHES: tuple[GreeSwitchEntityDescription, ...] = (
     GreeSwitchEntityDescription(
         icon="mdi:lightbulb",
-        name="Panel Light",
-        key="light",
+        key="Panel Light",
+        translation_key="light",
         get_value_fn=lambda d: d.light,
         set_value_fn=_set_light,
     ),
     GreeSwitchEntityDescription(
-        name="Quiet",
-        key="quiet",
+        key="Quiet",
+        translation_key="quiet",
         get_value_fn=lambda d: d.quiet,
         set_value_fn=_set_quiet,
     ),
     GreeSwitchEntityDescription(
-        name="Fresh Air",
-        key="fresh_air",
+        key="Fresh Air",
+        translation_key="fresh_air",
         get_value_fn=lambda d: d.fresh_air,
         set_value_fn=_set_fresh_air,
     ),
     GreeSwitchEntityDescription(
-        name="XFan",
-        key="xfan",
+        key="XFan",
+        translation_key="xfan",
         get_value_fn=lambda d: d.xfan,
         set_value_fn=_set_xfan,
     ),
     GreeSwitchEntityDescription(
         icon="mdi:pine-tree",
-        name="Health mode",
-        key="anion",
+        key="Health mode",
+        translation_key="health_mode",
         get_value_fn=lambda d: d.anion,
         set_value_fn=_set_anion,
         entity_registry_enabled_default=False,
@@ -134,7 +125,7 @@ class GreeSwitch(GreeEntity, SwitchEntity):
         """Initialize the Gree device."""
         self.entity_description = description
 
-        super().__init__(coordinator, description.name)
+        super().__init__(coordinator, description.key)
 
     @property
     def is_on(self) -> bool:

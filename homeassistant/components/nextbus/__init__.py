@@ -1,10 +1,10 @@
 """NextBus platform."""
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_STOP, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_AGENCY, CONF_ROUTE, CONF_STOP, DOMAIN
+from .const import CONF_AGENCY, CONF_ROUTE, DOMAIN
 from .coordinator import NextBusDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
