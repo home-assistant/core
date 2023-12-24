@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from functools import partial
 import logging
+import mimetypes
 from pathlib import Path
 from typing import Literal
 
@@ -53,15 +54,24 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up OpenAI Conversation."""
+    """Set up Google Generative AI Conversation."""
 
     async def generate_content(call: ServiceCall) -> ServiceResponse:
         """Generate content from text and optionally images."""
         prompt_parts = [call.data[CONF_PROMPT]]
         image_filenames = call.data[CONF_IMAGE_FILENAME]
         for image_filename in image_filenames:
+            if not hass.config.is_allowed_path(image_filename):
+                raise HomeAssistantError(
+                    f"Cannot read `{image_filename}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+                )
+            if not Path(image_filename).exists():
+                raise HomeAssistantError(f"`{image_filename}` does not exist")
+            mime_type, _ = mimetypes.guess_type(image_filename)
+            if mime_type is None or not mime_type.startswith("image"):
+                raise HomeAssistantError(f"`{image_filename}` is not an image")
             prompt_parts.append(
-                {"mime_type": "image/jpeg", "data": Path(image_filename).read_bytes()}
+                {"mime_type": mime_type, "data": Path(image_filename).read_bytes()}
             )
 
         model_name = "gemini-pro-vision" if image_filenames else "gemini-pro"

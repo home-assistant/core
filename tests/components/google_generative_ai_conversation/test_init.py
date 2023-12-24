@@ -200,6 +200,8 @@ async def test_generate_content_service_with_image(
     with patch("google.generativeai.GenerativeModel") as mock_model, patch(
         "homeassistant.components.google_generative_ai_conversation.Path.read_bytes",
         return_value=b"image bytes",
+    ), patch("pathlib.Path.exists", return_value=True), patch.object(
+        hass.config, "is_allowed_path", return_value=True
     ):
         mock_response = MagicMock()
         mock_response.text = stubbed_generated_content
