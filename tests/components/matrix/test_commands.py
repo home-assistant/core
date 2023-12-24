@@ -29,14 +29,21 @@ class CommandTestParameters:
 
     @property
     def expected_event_data(self) -> dict[str, Any] | None:
-        """Fully-constructed expected event data."""
-        if self.expected_event_data_extra is not None:
-            return {
-                "sender": "@SomeUser:example.com",
-                "room": self.room_id,
-            } | self.expected_event_data_extra
-        else:
+        """Fully-constructed expected event data.
+
+        Commands that are named with 'Subset' are expected not to be read from Room A.
+        """
+
+        if (
+            self.expected_event_data_extra is None
+            or "Subset" in self.expected_event_data_extra["command"]
+            and self.room_id == TEST_ROOM_A_ID
+        ):
             return None
+        return {
+            "sender": "@SomeUser:example.com",
+            "room": self.room_id,
+        } | self.expected_event_data_extra
 
 
 room_message_base = partial(
@@ -57,7 +64,7 @@ word_command_global = partial(
         "args": ["arg1", "arg2"],
     },
 )
-expr_command_global = partial(
+expression_command_global = partial(
     CommandTestParameters,
     room_message=room_message_base(body="My name is FakeName"),
     expected_event_data_extra={
@@ -81,27 +88,26 @@ expr_command_subset = partial(
         "args": {"name": "FakeName"},
     },
 )
+fake_command_global = partial(
+    CommandTestParameters,
+    room_message=room_message_base(body="This is not a real command!"),
+    expected_event_data_extra=None,
+)
 
 
+@pytest.mark.parametrize("room_id", [TEST_ROOM_A_ID, TEST_ROOM_B_ID, TEST_ROOM_C_ID])
 @pytest.mark.parametrize(
-    "params",
+    "command_partial",
     [
-        word_command_global(room_id=TEST_ROOM_A_ID),
-        word_command_global(room_id=TEST_ROOM_B_ID),
-        word_command_global(room_id=TEST_ROOM_C_ID),
-        expr_command_global(room_id=TEST_ROOM_A_ID),
-        expr_command_global(room_id=TEST_ROOM_B_ID),
-        expr_command_global(room_id=TEST_ROOM_C_ID),
-        word_command_subset(room_id=TEST_ROOM_A_ID, expected_event_data_extra=None),
-        word_command_subset(room_id=TEST_ROOM_B_ID),
-        word_command_subset(room_id=TEST_ROOM_C_ID),
-        expr_command_subset(room_id=TEST_ROOM_A_ID, expected_event_data_extra=None),
-        expr_command_subset(room_id=TEST_ROOM_B_ID),
-        expr_command_subset(room_id=TEST_ROOM_C_ID),
+        word_command_global,
+        expression_command_global,
+        word_command_subset,
+        expr_command_subset,
+        fake_command_global,
     ],
 )
 async def test_commands(
-    hass: HomeAssistant, matrix_bot: MatrixBot, command_events, params
+    hass: HomeAssistant, matrix_bot: MatrixBot, command_events, command_partial, room_id
 ):
     """Test that the configured commands were parsed and used correctly."""
     await hass.async_start()
@@ -110,13 +116,15 @@ async def test_commands(
     assert matrix_bot._word_commands == MOCK_WORD_COMMANDS
     assert matrix_bot._expression_commands == MOCK_EXPRESSION_COMMANDS
 
-    room = MatrixRoom(room_id=params.room_id, own_user_id=matrix_bot._mx_id)
-    await matrix_bot._handle_room_message(room, params.room_message)
+    command_param: CommandTestParameters = command_partial(room_id=room_id)
+
+    room = MatrixRoom(room_id=command_param.room_id, own_user_id=matrix_bot._mx_id)
+    await matrix_bot._handle_room_message(room, command_param.room_message)
     await hass.async_block_till_done()
     match command_events:
-        case [Event() as event] if params.expected_event_data is not None:
-            assert event.data == params.expected_event_data
-        case [] if params.expected_event_data is None:
+        case [Event() as event] if command_param.expected_event_data is not None:
+            assert event.data == command_param.expected_event_data
+        case [] if command_param.expected_event_data is None:
             pass
         case _:
             pytest.fail(f"Unexpected data in {command_events=}")
