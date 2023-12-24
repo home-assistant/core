@@ -64,29 +64,33 @@ async def get_serial_number(
     """Connect to a Remootio device based on the given connection options and retrieve its serial number."""
     result: str = ""
 
-    async with asyncio.timeout(REMOOTIO_TIMEOUT):
-        remootio_client: RemootioClient = None
+    remootio_client: RemootioClient = None
 
-        if not connection_options.connect_automatically:
-            remootio_client = await RemootioClient(
-                connection_options,
-                aiohttp_client.async_get_clientsession(hass),
-                LoggerConfiguration(logger=logger),
-            )
+    try:
+        async with asyncio.timeout(REMOOTIO_TIMEOUT):
+            if not connection_options.connect_automatically:
+                remootio_client = await RemootioClient(
+                    connection_options,
+                    aiohttp_client.async_get_clientsession(hass),
+                    LoggerConfiguration(logger=logger),
+                )
 
-            await remootio_client.connect()
-        else:
-            remootio_client = await RemootioClient(
-                connection_options,
-                aiohttp_client.async_get_clientsession(hass),
-                LoggerConfiguration(logger=logger),
-            )
+                await remootio_client.connect()
+            else:
+                remootio_client = await RemootioClient(
+                    connection_options,
+                    aiohttp_client.async_get_clientsession(hass),
+                    LoggerConfiguration(logger=logger),
+                )
 
-        if await _wait_for_connected(remootio_client):
-            await _check_sensor_installed(remootio_client)
-            await _check_api_version(remootio_client)
+            if await _wait_for_connected(remootio_client):
+                await _check_sensor_installed(remootio_client)
+                await _check_api_version(remootio_client)
 
-            result = remootio_client.serial_number
+                result = remootio_client.serial_number
+    finally:
+        if remootio_client is not None:
+            await remootio_client.terminate()
 
     return result
 

@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Device is already configured",
             "no_devices_found": "No devices found on the network",
             "single_instance_allowed": "Already configured. Only a single configuration possible.",
             "unsupported_device": "Your Remootio device isn't supported. Please update the software on your device at least to v2.21 and install the sensor for detecting if your gate is open or closed."
