@@ -8,7 +8,6 @@ from typing import Any
 from qbittorrent import Client
 from qbittorrent.client import LoginRequired
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
@@ -22,11 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 class QBittorrentDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for updating QBittorrent data."""
 
-    config_entry: ConfigEntry
-
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, client: Client) -> None:
+    def __init__(self, hass: HomeAssistant, client: Client) -> None:
         """Initialize coordinator."""
-        self.config_entry = entry
         self.client = client
 
         super().__init__(
