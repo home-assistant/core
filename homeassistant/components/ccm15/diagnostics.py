@@ -16,10 +16,8 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator: CCM15Coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    response = {}
-
-    for device_id, device in coordinator.data.devices.items():
-        response[str(device_id)] = {
+    return {
+        str(device_id): {
             "is_celsius": device.is_celsius,
             "locked_cool_temperature": device.locked_cool_temperature,
             "locked_heat_temperature": device.locked_heat_temperature,
@@ -33,5 +31,5 @@ async def async_get_config_entry_diagnostics(
             "is_remote_locked": device.is_remote_locked,
             "temperature": device.temperature,
         }
-
-    return response
+        for device_id, device in coordinator.data.devices.items()
+    }
