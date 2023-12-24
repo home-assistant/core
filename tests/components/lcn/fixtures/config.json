@@ -1,6 +1,6 @@
 {
   "lcn": {
-    "connections": [
+    "connection": [
       {
         "host": "192.168.2.41",
         "port": 4114,
@@ -20,7 +20,7 @@
         "dim_mode": "steps200"
       }
     ],
-    "lights": [
+    "light": [
       {
         "name": "Light_Output1",
         "address": "pchk.s0.m7",
@@ -51,7 +51,7 @@
         "output": "relay4"
       }
     ],
-    "switches": [
+    "switch": [
       {
         "name": "Switch_Output1",
         "address": "s0.m7",
@@ -78,7 +78,7 @@
         "output": "relay1"
       }
     ],
-    "covers": [
+    "cover": [
       {
         "name": "Cover_Ouputs",
         "address": "s0.m7",
@@ -91,7 +91,7 @@
         "motor": "motor1"
       }
     ],
-    "binary_sensors": [
+    "binary_sensor": [
       {
         "name": "Sensor_LockRegulator1",
         "address": "s0.m7",
@@ -108,7 +108,7 @@
         "source": "a5"
       }
     ],
-    "sensors": [
+    "sensor": [
       {
         "name": "Sensor_Var1",
         "address": "s0.m7",
