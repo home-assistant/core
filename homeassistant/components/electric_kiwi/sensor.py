@@ -37,14 +37,14 @@ ATTR_NEXT_BILLING_DATE = "next_billing_date"
 ATTR_HOP_PERCENTAGE = "hop_percentage"
 
 
-@dataclass
+@dataclass(frozen=True)
 class ElectricKiwiAccountRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_func: Callable[[AccountBalance], str | datetime]
 
 
-@dataclass
+@dataclass(frozen=True)
 class ElectricKiwiAccountSensorEntityDescription(
     SensorEntityDescription, ElectricKiwiAccountRequiredKeysMixin
 ):
