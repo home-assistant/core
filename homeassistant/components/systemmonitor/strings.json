@@ -19,10 +19,10 @@
       },
       "add_process": {
         "data": {
-          "process": "Process"
+          "process": "Process to add as sensor"
         },
         "data_description": {
-          "process": "Binary, as example `octave-cli`"
+          "process": "Select current running process from list to add as sensor"
         }
       },
       "remove_process": {

@@ -30,3 +30,13 @@ def get_all_network_interfaces() -> list[str]:
         interfaces.append(interface)
     _LOGGER.debug("Adding interfaces: %s", ", ".join(interfaces))
     return interfaces
+
+
+def get_all_running_processes() -> list[str]:
+    """Return all running processes on system."""
+    processes: list[str] = []
+    for proc in psutil.process_iter(["name"]):
+        if proc.name() not in processes:
+            processes.append(proc.name())
+    _LOGGER.debug("Running processes: %s", ", ".join(processes))
+    return processes

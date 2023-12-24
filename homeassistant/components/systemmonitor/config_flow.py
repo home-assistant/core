@@ -18,10 +18,15 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
 )
-from homeassistant.helpers.selector import TextSelector
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 from homeassistant.util import slugify
 
 from .const import CONF_INDEX, CONF_PROCESS, DOMAIN
+from .util import get_all_running_processes
 
 
 async def get_remove_sensor_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
@@ -100,11 +105,22 @@ async def validate_remove_sensor(
     return {}
 
 
-SENSOR_SETUP = vol.Schema(
-    {
-        vol.Required(CONF_PROCESS): TextSelector(),
-    }
-)
+async def get_sensor_setup_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    """Return process sensor setup schema."""
+    hass = handler.parent_handler.hass
+    processes = await hass.async_add_executor_job(get_all_running_processes)
+    return vol.Schema(
+        {
+            vol.Required(CONF_PROCESS): SelectSelector(
+                SelectSelectorConfig(
+                    options=processes,
+                    mode=SelectSelectorMode.DROPDOWN,
+                    sort=True,
+                )
+            )
+        }
+    )
+
 
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(schema=vol.Schema({})),
@@ -116,7 +132,7 @@ CONFIG_FLOW = {
 OPTIONS_FLOW = {
     "init": SchemaFlowMenuStep(["add_process", "remove_process"]),
     "add_process": SchemaFlowFormStep(
-        SENSOR_SETUP,
+        get_sensor_setup_schema,
         suggested_values=None,
         validate_user_input=validate_sensor_setup,
     ),
