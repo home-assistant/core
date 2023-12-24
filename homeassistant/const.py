@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Final
+from typing import Any, Final
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
@@ -307,34 +307,147 @@ EVENT_SHOPPING_LIST_UPDATED: Final = "shopping_list_updated"
 # #### DEVICE CLASSES ####
 # DEVICE_CLASS_* below are deprecated as of 2021.12
 # use the SensorDeviceClass enum instead.
-DEVICE_CLASS_AQI: Final = "aqi"
-DEVICE_CLASS_BATTERY: Final = "battery"
-DEVICE_CLASS_CO: Final = "carbon_monoxide"
-DEVICE_CLASS_CO2: Final = "carbon_dioxide"
-DEVICE_CLASS_CURRENT: Final = "current"
-DEVICE_CLASS_DATE: Final = "date"
-DEVICE_CLASS_ENERGY: Final = "energy"
-DEVICE_CLASS_FREQUENCY: Final = "frequency"
-DEVICE_CLASS_GAS: Final = "gas"
-DEVICE_CLASS_HUMIDITY: Final = "humidity"
-DEVICE_CLASS_ILLUMINANCE: Final = "illuminance"
-DEVICE_CLASS_MONETARY: Final = "monetary"
-DEVICE_CLASS_NITROGEN_DIOXIDE = "nitrogen_dioxide"
-DEVICE_CLASS_NITROGEN_MONOXIDE = "nitrogen_monoxide"
-DEVICE_CLASS_NITROUS_OXIDE = "nitrous_oxide"
-DEVICE_CLASS_OZONE: Final = "ozone"
-DEVICE_CLASS_PM1: Final = "pm1"
-DEVICE_CLASS_PM10: Final = "pm10"
-DEVICE_CLASS_PM25: Final = "pm25"
-DEVICE_CLASS_POWER_FACTOR: Final = "power_factor"
-DEVICE_CLASS_POWER: Final = "power"
-DEVICE_CLASS_PRESSURE: Final = "pressure"
-DEVICE_CLASS_SIGNAL_STRENGTH: Final = "signal_strength"
-DEVICE_CLASS_SULPHUR_DIOXIDE = "sulphur_dioxide"
-DEVICE_CLASS_TEMPERATURE: Final = "temperature"
-DEVICE_CLASS_TIMESTAMP: Final = "timestamp"
-DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
-DEVICE_CLASS_VOLTAGE: Final = "voltage"
+_DEPRECATED_DEVICE_CLASS_AQI: Final = ("aqi", "SensorDeviceClass.AQI", "2025.1")
+_DEPRECATED_DEVICE_CLASS_BATTERY: Final = (
+    "battery",
+    "SensorDeviceClass.BATTERY",
+    "2025.1",
+)
+_DEPRECATED_DEVICE_CLASS_CO: Final = (
+    "carbon_monoxide",
+    "SensorDeviceClass.CO",
+    "2025.1",
+)
+_DEPRECATED_DEVICE_CLASS_CO2: Final = (
+    "carbon_dioxide",
+    "SensorDeviceClass.CO2",
+    "2025.1",
+)
+_DEPRECATED_DEVICE_CLASS_CURRENT: Final = (
+    "current",
+    "SensorDeviceClass.CURRENT",
+    "2025.1",
+)
+_DEPRECATED_DEVICE_CLASS_DATE: Final = ("date", "SensorDeviceClass.DATE", "2025.1")
+_DEPRECATED_DEVICE_CLASS_ENERGY: Final = (
+    "energy",
+    "SensorDeviceClass.ENERGY",
+    "2025.1",
+)
+_DEPRECATED_DEVICE_CLASS_FREQUENCY: Final = (
+    "frequency",
+    "SensorDeviceClass.FREQUENCY",
+    "2025.1",
+)
+_DEPRECATED_DEVICE_CLASS_GAS: Final = ("gas", "SensorDeviceClass.GAS", "2025.1")
+_DEPRECATED_DEVICE_CLASS_HUMIDITY: Final = (
+    "humidity",
+    "SensorDeviceClass.HUMIDITY",
+    "2025.1",
+)
+_DEPRECATED_DEVICE_CLASS_ILLUMINANCE: Final = (
+    "illuminance",
+    "SensorDeviceClass.ILLUMINANCE",
+    "2025.1",
+)
+_DEPRECATED_DEVICE_CLASS_MONETARY: Final = (
+    "monetary",
+    "SensorDeviceClass.MONETARY",
+    "2025.1",
+)
+_DEPRECATED_DEVICE_CLASS_NITROGEN_DIOXIDE = (
+    "nitrogen_dioxide",
+    "SensorDeviceClass.NITROGEN_DIOXIDE",
+    "2025.1",
+)
+_DEPRECATED_DEVICE_CLASS_NITROGEN_MONOXIDE = (
+    "nitrogen_monoxide",
+    "SensorDeviceClass.NITROGEN_MONOXIDE",
+    "2025.1",
+)
+_DEPRECATED_DEVICE_CLASS_NITROUS_OXIDE = (
+    "nitrous_oxide",
+    "SensorDeviceClass.NITROUS_OXIDE",
+    "2025.1",
+)
+_DEPRECATED_DEVICE_CLASS_OZONE: Final = ("ozone", "SensorDeviceClass.OZONE", "2025.1")
+_DEPRECATED_DEVICE_CLASS_PM1: Final = ("pm1", "SensorDeviceClass.PM1", "2025.1")
+_DEPRECATED_DEVICE_CLASS_PM10: Final = ("pm10", "SensorDeviceClass.PM10", "2025.1")
+_DEPRECATED_DEVICE_CLASS_PM25: Final = ("pm25", "SensorDeviceClass.PM25", "2025.1")
+_DEPRECATED_DEVICE_CLASS_POWER_FACTOR: Final = (
+    "power_factor",
+    "SensorDeviceClass.POWER_FACTOR",
+    "2025.1",
+)
+_DEPRECATED_DEVICE_CLASS_POWER: Final = ("power", "SensorDeviceClass.POWER", "2025.1")
+_DEPRECATED_DEVICE_CLASS_PRESSURE: Final = (
+    "pressure",
+    "SensorDeviceClass.PRESSURE",
+    "2025.1",
+)
+_DEPRECATED_DEVICE_CLASS_SIGNAL_STRENGTH: Final = (
+    "signal_strength",
+    "SensorDeviceClass.SIGNAL_STRENGTH",
+    "2025.1",
+)
+_DEPRECATED_DEVICE_CLASS_SULPHUR_DIOXIDE = (
+    "sulphur_dioxide",
+    "SensorDeviceClass.SULPHUR_DIOXIDE",
+    "2025.1",
+)
+_DEPRECATED_DEVICE_CLASS_TEMPERATURE: Final = (
+    "temperature",
+    "SensorDeviceClass.TEMPERATURE",
+    "2025.1",
+)
+_DEPRECATED_DEVICE_CLASS_TIMESTAMP: Final = (
+    "timestamp",
+    "SensorDeviceClass.TIMESTAMP",
+    "2025.1",
+)
+_DEPRECATED_DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS = (
+    "volatile_organic_compounds",
+    "SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS",
+    "2025.1",
+)
+_DEPRECATED_DEVICE_CLASS_VOLTAGE: Final = (
+    "voltage",
+    "SensorDeviceClass.VOLTAGE",
+    "2025.1",
+)
+
+
+# Can be removed if no deprecated constant are in this module anymore
+def __getattr__(name: str) -> Any:
+    """Check if the not found name is a deprecated constant.
+
+    If it is, print a deprecation warning and return the value of the constant.
+    Otherwise raise AttributeError.
+    """
+    module_globals = globals()
+    if f"_DEPRECATED_{name}" not in module_globals:
+        raise AttributeError(f"Module {__name__} has no attribute {name!r}")
+
+    # Avoid circular import
+    from .helpers.deprecation import (  # pylint: disable=import-outside-toplevel
+        check_if_deprecated_constant,
+    )
+
+    return check_if_deprecated_constant(name, module_globals)
+
+
+# Can be removed if no deprecated constant are in this module anymore
+def __dir__() -> list[str]:
+    """Return dir() with deprecated constants."""
+    # Copied method from homeassistant.helpers.deprecattion#dir_with_deprecated_constants to avoid import cycle
+    module_globals = globals()
+
+    return list(module_globals) + [
+        name.removeprefix("_DEPRECATED_")
+        for name in module_globals
+        if name.startswith("_DEPRECATED_")
+    ]
+
 
 # #### STATES ####
 STATE_ON: Final = "on"
@@ -1168,30 +1281,6 @@ PRECISION_TENTHS: Final = 0.1
 # cloud, alexa, or google_home components
 CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 
-# ENTITY_CATEGOR* below are deprecated as of 2021.12
-# use the EntityCategory enum instead.
-ENTITY_CATEGORY_CONFIG: Final = "config"
-ENTITY_CATEGORY_DIAGNOSTIC: Final = "diagnostic"
-ENTITY_CATEGORIES: Final[list[str]] = [
-    ENTITY_CATEGORY_CONFIG,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-]
-
-# The ID of the Home Assistant Media Player Cast App
-CAST_APP_ID_HOMEASSISTANT_MEDIA: Final = "B45F4572"
-# The ID of the Home Assistant Lovelace Cast App
-CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
-
-# User used by Supervisor
-HASSIO_USER_NAME = "Supervisor"
-
-SIGNAL_BOOTSTRAP_INTEGRATIONS = "bootstrap_integrations"
-
-# Date/Time formats
-FORMAT_DATE: Final = "%Y-%m-%d"
-FORMAT_TIME: Final = "%H:%M:%S"
-FORMAT_DATETIME: Final = f"{FORMAT_DATE} {FORMAT_TIME}"
-
 
 class EntityCategory(StrEnum):
     """Category of an entity.
@@ -1207,3 +1296,25 @@ class EntityCategory(StrEnum):
     # Diagnostic: An entity exposing some configuration parameter,
     # or diagnostics of a device.
     DIAGNOSTIC = "diagnostic"
+
+
+# ENTITY_CATEGOR* below are deprecated as of 2021.12
+# use the EntityCategory enum instead.
+_DEPRECATED_ENTITY_CATEGORY_CONFIG: Final = (EntityCategory.CONFIG, "2025.1")
+_DEPRECATED_ENTITY_CATEGORY_DIAGNOSTIC: Final = (EntityCategory.DIAGNOSTIC, "2025.1")
+ENTITY_CATEGORIES: Final[list[str]] = [cls.value for cls in EntityCategory]
+
+# The ID of the Home Assistant Media Player Cast App
+CAST_APP_ID_HOMEASSISTANT_MEDIA: Final = "B45F4572"
+# The ID of the Home Assistant Lovelace Cast App
+CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
+
+# User used by Supervisor
+HASSIO_USER_NAME = "Supervisor"
+
+SIGNAL_BOOTSTRAP_INTEGRATIONS = "bootstrap_integrations"
+
+# Date/Time formats
+FORMAT_DATE: Final = "%Y-%m-%d"
+FORMAT_TIME: Final = "%H:%M:%S"
+FORMAT_DATETIME: Final = f"{FORMAT_DATE} {FORMAT_TIME}"

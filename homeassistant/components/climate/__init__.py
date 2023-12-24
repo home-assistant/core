@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import Any, final
+from typing import TYPE_CHECKING, Any, final
 
 import voluptuous as vol
 
@@ -107,6 +107,11 @@ from .const import (  # noqa: F401
     HVACAction,
     HVACMode,
 )
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 DEFAULT_MIN_TEMP = 7
 DEFAULT_MAX_TEMP = 35
@@ -217,7 +222,33 @@ class ClimateEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes climate entities."""
 
 
-class ClimateEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "temperature_unit",
+    "current_humidity",
+    "target_humidity",
+    "hvac_modes",
+    "hvac_action",
+    "current_temperature",
+    "target_temperature",
+    "target_temperature_step",
+    "target_temperature_high",
+    "target_temperature_low",
+    "preset_mode",
+    "preset_modes",
+    "is_aux_heat",
+    "fan_mode",
+    "fan_modes",
+    "swing_mode",
+    "swing_modes",
+    "supported_features",
+    "min_temp",
+    "max_temp",
+    "min_humidity",
+    "max_humidity",
+}
+
+
+class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for climate entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
@@ -367,17 +398,17 @@ class ClimateEntity(Entity):
 
         return data
 
-    @property
+    @cached_property
     def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
         return self._attr_temperature_unit
 
-    @property
+    @cached_property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self._attr_current_humidity
 
-    @property
+    @cached_property
     def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
         return self._attr_target_humidity
@@ -387,32 +418,32 @@ class ClimateEntity(Entity):
         """Return hvac operation ie. heat, cool mode."""
         return self._attr_hvac_mode
 
-    @property
+    @cached_property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
         return self._attr_hvac_modes
 
-    @property
+    @cached_property
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
         return self._attr_hvac_action
 
-    @property
+    @cached_property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._attr_current_temperature
 
-    @property
+    @cached_property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._attr_target_temperature
 
-    @property
+    @cached_property
     def target_temperature_step(self) -> float | None:
         """Return the supported step of target temperature."""
         return self._attr_target_temperature_step
 
-    @property
+    @cached_property
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach.
 
@@ -420,7 +451,7 @@ class ClimateEntity(Entity):
         """
         return self._attr_target_temperature_high
 
-    @property
+    @cached_property
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach.
 
@@ -428,7 +459,7 @@ class ClimateEntity(Entity):
         """
         return self._attr_target_temperature_low
 
-    @property
+    @cached_property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp.
 
@@ -436,7 +467,7 @@ class ClimateEntity(Entity):
         """
         return self._attr_preset_mode
 
-    @property
+    @cached_property
     def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes.
 
@@ -444,7 +475,7 @@ class ClimateEntity(Entity):
         """
         return self._attr_preset_modes
 
-    @property
+    @cached_property
     def is_aux_heat(self) -> bool | None:
         """Return true if aux heater.
 
@@ -452,7 +483,7 @@ class ClimateEntity(Entity):
         """
         return self._attr_is_aux_heat
 
-    @property
+    @cached_property
     def fan_mode(self) -> str | None:
         """Return the fan setting.
 
@@ -460,7 +491,7 @@ class ClimateEntity(Entity):
         """
         return self._attr_fan_mode
 
-    @property
+    @cached_property
     def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes.
 
@@ -468,7 +499,7 @@ class ClimateEntity(Entity):
         """
         return self._attr_fan_modes
 
-    @property
+    @cached_property
     def swing_mode(self) -> str | None:
         """Return the swing setting.
 
@@ -476,7 +507,7 @@ class ClimateEntity(Entity):
         """
         return self._attr_swing_mode
 
-    @property
+    @cached_property
     def swing_modes(self) -> list[str] | None:
         """Return the list of available swing modes.
 
@@ -581,12 +612,12 @@ class ClimateEntity(Entity):
         if HVACMode.OFF in self.hvac_modes:
             await self.async_set_hvac_mode(HVACMode.OFF)
 
-    @property
+    @cached_property
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
 
-    @property
+    @cached_property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         if not hasattr(self, "_attr_min_temp"):
@@ -595,7 +626,7 @@ class ClimateEntity(Entity):
             )
         return self._attr_min_temp
 
-    @property
+    @cached_property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         if not hasattr(self, "_attr_max_temp"):
@@ -604,12 +635,12 @@ class ClimateEntity(Entity):
             )
         return self._attr_max_temp
 
-    @property
+    @cached_property
     def min_humidity(self) -> int:
         """Return the minimum humidity."""
         return self._attr_min_humidity
 
-    @property
+    @cached_property
     def max_humidity(self) -> int:
         """Return the maximum humidity."""
         return self._attr_max_humidity
