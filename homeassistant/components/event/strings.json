@@ -24,7 +24,7 @@
   },
   "exceptions": {
     "invalid_event_type": {
-      "message": "Invalid event type {event_type} for {self.entity_id}, valid types are: {event_types}."
+      "message": "Invalid event type {event_type} for {entity_id}, valid types are: {event_types}."
     }
   }
 }
