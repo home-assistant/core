@@ -176,7 +176,7 @@ class TvOverlayNotificationService(BaseNotificationService):
         visible = cv.boolean(data.get(ATTR_VISIBLE, True))
 
         if is_persistent:
-            _LOGGER.info("Sending TvOverlay persistent notification")
+            _LOGGER.debug("Sending TvOverlay persistent notification")
             await self.notify.async_send_fixed(
                 message,
                 id=message_id,
@@ -190,7 +190,7 @@ class TvOverlayNotificationService(BaseNotificationService):
                 visible=visible,
             )
         else:
-            _LOGGER.info("Sending TvOverlay notification")
+            _LOGGER.debug("Sending TvOverlay notification")
             await self.notify.async_send(
                 message,
                 id=message_id,
