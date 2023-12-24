@@ -182,7 +182,7 @@ class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 translation_domain=DOMAIN,
                 translation_key="not_valid_option",
                 translation_placeholders={
-                    "enity_id": self.entity_id,
+                    "entity_id": self.entity_id,
                     "option": option,
                     "options": friendly_options,
                 },
