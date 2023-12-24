@@ -16,6 +16,7 @@ from homeassistant.components.event import (
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_PLATFORM, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
@@ -90,7 +91,8 @@ async def test_event() -> None:
 
     # Test triggering an unknown event
     with pytest.raises(
-        ValueError, match="^Invalid event type unknown_event for event.doorbell$"
+        HomeAssistantError,
+        match="^Invalid event type unknown_event for event.doorbell$",
     ):
         event._trigger_event("unknown_event")
 

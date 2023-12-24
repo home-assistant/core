@@ -21,5 +21,10 @@
     "motion": {
       "name": "Motion"
     }
+  },
+  "exceptions": {
+    "invalid_event_type": {
+      "message": "Invalid event type {event_type} for {self.entity_id}, valid types are: {event_types}."
+    }
   }
 }
