@@ -92,5 +92,4 @@ class DROPSelect(DROPEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
-        if option in PROTECT_MODE_OPTIONS:
-            await self.entity_description.set_fn(self.coordinator, option)
+        await self.entity_description.set_fn(self.coordinator, option)
