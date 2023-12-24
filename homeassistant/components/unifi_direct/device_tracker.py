@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any  # noqa: F401
+from typing import Any
 
 from unifi_ap import UniFiAP, UniFiAPConnectionException, UniFiAPDataException
 import voluptuous as vol
@@ -42,7 +42,7 @@ class UnifiDeviceScanner(DeviceScanner):
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the scanner."""
-        self.clients = {}  # type: dict[str, dict[str, Any]]
+        self.clients: dict[str, dict[str, Any]] = {}
         self.ap = UniFiAP(
             target=config[CONF_HOST],
             username=config[CONF_USERNAME],
