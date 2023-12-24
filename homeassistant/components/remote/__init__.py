@@ -6,7 +6,7 @@ from datetime import timedelta
 from enum import IntFlag
 import functools as ft
 import logging
-from typing import Any, final
+from typing import TYPE_CHECKING, Any, final
 
 import voluptuous as vol
 
@@ -34,6 +34,12 @@ from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -174,7 +180,14 @@ class RemoteEntityDescription(ToggleEntityDescription, frozen_or_thawed=True):
     """A class that describes remote entities."""
 
 
-class RemoteEntity(ToggleEntity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "supported_features",
+    "current_activity",
+    "activity_list",
+}
+
+
+class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for remote entities."""
 
     entity_description: RemoteEntityDescription
@@ -182,17 +195,17 @@ class RemoteEntity(ToggleEntity):
     _attr_current_activity: str | None = None
     _attr_supported_features: RemoteEntityFeature = RemoteEntityFeature(0)
 
-    @property
+    @cached_property
     def supported_features(self) -> RemoteEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
 
-    @property
+    @cached_property
     def current_activity(self) -> str | None:
         """Active activity."""
         return self._attr_current_activity
 
-    @property
+    @cached_property
     def activity_list(self) -> list[str] | None:
         """List of available activities."""
         return self._attr_activity_list

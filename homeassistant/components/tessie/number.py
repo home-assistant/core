@@ -48,7 +48,7 @@ DESCRIPTIONS: tuple[TessieNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=NumberDeviceClass.CURRENT,
         max_key="charge_state_charge_current_request_max",
-        func=set_charging_amps,
+        func=lambda: set_charging_amps,
         arg="amps",
     ),
     TessieNumberEntityDescription(
@@ -60,7 +60,7 @@ DESCRIPTIONS: tuple[TessieNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.BATTERY,
         min_key="charge_state_charge_limit_soc_min",
         max_key="charge_state_charge_limit_soc_max",
-        func=set_charge_limit,
+        func=lambda: set_charge_limit,
         arg="percent",
     ),
     TessieNumberEntityDescription(
@@ -73,7 +73,7 @@ DESCRIPTIONS: tuple[TessieNumberEntityDescription, ...] = (
         mode=NumberMode.BOX,
         min_key="vehicle_state_speed_limit_mode_min_limit_mph",
         max_key="vehicle_state_speed_limit_mode_max_limit_mph",
-        func=set_speed_limit,
+        func=lambda: set_speed_limit,
         arg="mph",
     ),
 )
@@ -132,6 +132,6 @@ class TessieNumberEntity(TessieEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.run(
-            self.entity_description.func, **{self.entity_description.arg: value}
+            self.entity_description.func(), **{self.entity_description.arg: value}
         )
         self.set((self.key, value))
