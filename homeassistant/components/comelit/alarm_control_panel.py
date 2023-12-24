@@ -127,14 +127,12 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
                 return STATE_ALARM_ARMED_NIGHT
             return STATE_ALARM_ARMED_HOME
 
-        if self._area.human_status == AlarmAreaState.DISARMED:
-            return STATE_ALARM_DISARMED
-        if self._area.human_status == AlarmAreaState.ENTRY_DELAY:
-            return STATE_ALARM_DISARMING
-        if self._area.human_status == AlarmAreaState.EXIT_DELAY:
-            return STATE_ALARM_ARMING
-        if self._area.human_status == AlarmAreaState.TRIGGERED:
-            return STATE_ALARM_TRIGGERED
+        {
+            AlarmAreaState.DISARMED: STATE_ALARM_DISARMED,
+            AlarmAreaState.ENTRY_DELAY: STATE_ALARM_DISARMING,
+            AlarmAreaState.EXIT_DELAY: STATE_ALARM_ARMING,
+            AlarmAreaState.TRIGGERED: STATE_ALARM_TRIGGERED,
+        }.get(self._area.human_status)
 
         return None
 

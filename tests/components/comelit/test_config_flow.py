@@ -1,4 +1,5 @@
 """Tests for Comelit SimpleHome config flow."""
+from typing import Any
 from unittest.mock import patch
 
 from aiocomelit import CannotAuthenticate, CannotConnect
@@ -15,19 +16,22 @@ from .const import FAKE_PIN, MOCK_USER_BRIDGE_DATA, MOCK_USER_VEDO_DATA
 from tests.common import MockConfigEntry
 
 
-async def test_user_bridge(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("class_api", "user_input"),
+    [
+        ("ComeliteSerialBridgeApi", MOCK_USER_BRIDGE_DATA),
+        ("ComelitVedoApi", MOCK_USER_VEDO_DATA),
+    ],
+)
+async def test_full_flow(
+    hass: HomeAssistant, class_api: str, user_input: dict[str, Any]
+) -> None:
     """Test starting a flow by user."""
     with patch(
-        "aiocomelit.api.ComeliteSerialBridgeApi.login",
+        f"aiocomelit.api.{class_api}.login",
     ), patch(
-        "aiocomelit.api.ComeliteSerialBridgeApi.logout",
-    ), patch(
-        "homeassistant.components.comelit.async_setup_entry"
-    ) as mock_setup_entry, patch(
-        "requests.get",
-    ) as mock_request_get:
-        mock_request_get.return_value.status_code = 200
-
+        f"aiocomelit.api.{class_api}.logout",
+    ), patch("homeassistant.components.comelit.async_setup_entry") as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -35,44 +39,12 @@ async def test_user_bridge(hass: HomeAssistant) -> None:
         assert result["step_id"] == "user"
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=MOCK_USER_BRIDGE_DATA
+            result["flow_id"], user_input=user_input
         )
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["data"][CONF_HOST] == "fake_host"
-        assert result["data"][CONF_PORT] == 80
-        assert result["data"][CONF_PIN] == 1234
-        assert not result["result"].unique_id
-        await hass.async_block_till_done()
-
-    assert mock_setup_entry.called
-
-
-async def test_user_vedo(hass: HomeAssistant) -> None:
-    """Test starting a flow by user."""
-    with patch(
-        "aiocomelit.api.ComelitVedoApi.login",
-    ), patch(
-        "aiocomelit.api.ComelitVedoApi.logout",
-    ), patch(
-        "homeassistant.components.comelit.async_setup_entry"
-    ) as mock_setup_entry, patch(
-        "requests.get",
-    ) as mock_request_get:
-        mock_request_get.return_value.status_code = 200
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "user"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=MOCK_USER_VEDO_DATA
-        )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["data"][CONF_HOST] == "fake_vedo_host"
-        assert result["data"][CONF_PORT] == 8080
-        assert result["data"][CONF_PIN] == 1234
+        assert result["data"][CONF_HOST] == user_input[CONF_HOST]
+        assert result["data"][CONF_PORT] == user_input[CONF_PORT]
+        assert result["data"][CONF_PIN] == user_input[CONF_PIN]
         assert not result["result"].unique_id
         await hass.async_block_till_done()
 
