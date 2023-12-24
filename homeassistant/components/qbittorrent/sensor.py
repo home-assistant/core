@@ -38,7 +38,6 @@ class QBittorrentSensorEntityDescription(SensorEntityDescription):
     """Entity description class for qBittorent sensors."""
 
     value_fn: Callable[[QBittorrentDataCoordinator], StateType]
-    extra_state_attr_func: Callable[[Any], dict[str, str]] | None = None
 
 
 SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
@@ -116,7 +115,8 @@ async def async_setup_entry(
     coordinator: QBittorrentDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        QBittorrentSensor(coordinator, description) for description in SENSOR_TYPES
+        QBittorrentSensor(coordinator, config_entry, description)
+        for description in SENSOR_TYPES
     )
 
 
@@ -128,17 +128,16 @@ class QBittorrentSensor(CoordinatorEntity[QBittorrentDataCoordinator], SensorEnt
     def __init__(
         self,
         coordinator: QBittorrentDataCoordinator,
+        config_entry: ConfigEntry,
         entity_description: SensorEntityDescription,
     ) -> None:
         """Initialize the qBittorrent sensor."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.entry_id}-{entity_description.key}"
-        )
+        self._attr_unique_id = f"{config_entry.entry_id}-{entity_description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            identifiers={(DOMAIN, config_entry.entry_id)},
             manufacturer="QBittorrent",
         )
 
@@ -146,13 +145,6 @@ class QBittorrentSensor(CoordinatorEntity[QBittorrentDataCoordinator], SensorEnt
     def native_value(self) -> StateType:
         """Return the value of the sensor."""
         return self.entity_description.value_fn(self.coordinator)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes, if any."""
-        if attr_func := self.entity_description.extra_state_attr_func:
-            return attr_func(self.coordinator)
-        return None
 
 
 def get_state(coordinator: QBittorrentDataCoordinator) -> str:
