@@ -44,7 +44,7 @@ class ScreenLogicEntityDescription(
     enabled_lambda: Callable[..., bool] | None = None
 
 
-class ScreenlogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
+class ScreenLogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
     """Base class for all ScreenLogic entities."""
 
     entity_description: ScreenLogicEntityDescription
@@ -118,7 +118,7 @@ class ScreenLogicPushEntityDescription(
     """Base class for a ScreenLogic push entity description."""
 
 
-class ScreenLogicPushEntity(ScreenlogicEntity):
+class ScreenLogicPushEntity(ScreenLogicEntity):
     """Base class for all ScreenLogic push entities."""
 
     entity_description: ScreenLogicPushEntityDescription
