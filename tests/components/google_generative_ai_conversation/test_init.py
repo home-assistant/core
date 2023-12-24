@@ -226,7 +226,7 @@ async def test_generate_content_service_with_image(
 
 
 @pytest.mark.usefixtures("mock_init_component")
-async def test_generate_image_service_error(
+async def test_generate_content_service_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -241,6 +241,79 @@ async def test_generate_image_service_error(
             "google_generative_ai_conversation",
             "generate_content",
             {"prompt": "write a story about an epic fail"},
+            blocking=True,
+            return_response=True,
+        )
+
+
+async def test_generate_content_service_with_image_not_allowed_path(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test generate content service with an image in a not allowed path."""
+    with patch("pathlib.Path.exists", return_value=True), patch.object(
+        hass.config, "is_allowed_path", return_value=False
+    ), pytest.raises(
+        HomeAssistantError,
+        match="Cannot read `doorbell_snapshot.jpg`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`",
+    ):
+        await hass.services.async_call(
+            "google_generative_ai_conversation",
+            "generate_content",
+            {
+                "prompt": "Describe this image from my doorbell camera",
+                "image_filename": "doorbell_snapshot.jpg",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+
+async def test_generate_content_service_with_image_not_exists(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test generate content service with an image that does not exist."""
+    with patch("pathlib.Path.exists", return_value=True), patch.object(
+        hass.config, "is_allowed_path", return_value=True
+    ), patch("pathlib.Path.exists", return_value=False), pytest.raises(
+        HomeAssistantError, match="`doorbell_snapshot.jpg` does not exist"
+    ):
+        await hass.services.async_call(
+            "google_generative_ai_conversation",
+            "generate_content",
+            {
+                "prompt": "Describe this image from my doorbell camera",
+                "image_filename": "doorbell_snapshot.jpg",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+
+async def test_generate_content_service_with_non_image(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test generate content service with a non image."""
+    with patch("pathlib.Path.exists", return_value=True), patch.object(
+        hass.config, "is_allowed_path", return_value=True
+    ), patch("pathlib.Path.exists", return_value=True), pytest.raises(
+        HomeAssistantError, match="`doorbell_snapshot.mp4` is not an image"
+    ):
+        await hass.services.async_call(
+            "google_generative_ai_conversation",
+            "generate_content",
+            {
+                "prompt": "Describe this image from my doorbell camera",
+                "image_filename": "doorbell_snapshot.mp4",
+            },
             blocking=True,
             return_response=True,
         )
