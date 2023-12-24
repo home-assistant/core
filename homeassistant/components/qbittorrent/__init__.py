@@ -1,29 +1,23 @@
 """The qbittorrent component."""
 import logging
-import re
 
 from qbittorrent.client import LoginRequired
 from requests.exceptions import RequestException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import (
-    DOMAIN,
-)
+from .const import DOMAIN
 from .coordinator import QBittorrentDataCoordinator
-from .helpers import (
-    setup_client,
-)
+from .helpers import setup_client
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +52,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload qBittorrent config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS):
+    if unload_ok := await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    ):
         del hass.data[DOMAIN][config_entry.entry_id]
         if not hass.data[DOMAIN]:
             del hass.data[DOMAIN]

@@ -5,14 +5,11 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 from typing import Any
-from datetime import datetime, timezone
-
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
-    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, UnitOfDataRate
@@ -22,12 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    DOMAIN,
-    STATE_DOWNLOADING,
-    STATE_SEEDING,
-    STATE_UP_DOWN,
-)
+from .const import DOMAIN, STATE_DOWNLOADING, STATE_SEEDING, STATE_UP_DOWN
 from .coordinator import QBittorrentDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,7 +37,7 @@ SENSOR_TYPE_INACTIVE_TORRENTS = "inactive_torrents"
 class QBittorrentSensorEntityDescription(SensorEntityDescription):
     """Entity description class for qBittorent sensors."""
 
-    val_func: Callable[[QBittorrentDataCoordinator], StateType]
+    value_fn: Callable[[QBittorrentDataCoordinator], StateType]
     extra_state_attr_func: Callable[[Any], dict[str, str]] | None = None
 
 
@@ -55,7 +47,7 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         translation_key="current_status",
         device_class=SensorDeviceClass.ENUM,
         options=[STATE_IDLE, STATE_UP_DOWN, STATE_SEEDING, STATE_DOWNLOADING],
-        val_func=lambda coordinator: get_state(coordinator),
+        value_fn=lambda coordinator: get_state(coordinator),
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_DOWNLOAD_SPEED,
@@ -65,7 +57,9 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
-        val_func=lambda coordinator: float(coordinator.data["server_state"]["dl_info_speed"]),
+        value_fn=lambda coordinator: float(
+            coordinator.data["server_state"]["dl_info_speed"]
+        ),
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_UPLOAD_SPEED,
@@ -75,31 +69,39 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         suggested_display_precision=2,
         suggested_unit_of_measurement=UnitOfDataRate.MEGABYTES_PER_SECOND,
-        val_func=lambda coordinator: float(coordinator.data["server_state"]["up_info_speed"]),
+        value_fn=lambda coordinator: float(
+            coordinator.data["server_state"]["up_info_speed"]
+        ),
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_ALL_TORRENTS,
         translation_key="all_torrents",
         native_unit_of_measurement="torrents",
-        val_func=lambda coordinator: count_torrents_in_states(coordinator),
+        value_fn=lambda coordinator: count_torrents_in_states(coordinator, []),
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_ACTIVE_TORRENTS,
         translation_key="active_torrents",
         native_unit_of_measurement="torrents",
-        val_func=lambda coordinator: count_torrents_in_states(coordinator, ["downloading", "uploading"])
+        value_fn=lambda coordinator: count_torrents_in_states(
+            coordinator, ["downloading", "uploading"]
+        ),
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_INACTIVE_TORRENTS,
         translation_key="inactive_torrents",
         native_unit_of_measurement="torrents",
-        val_func=lambda coordinator: count_torrents_in_states(coordinator, ["stalledDL", "stalledUP"])
+        value_fn=lambda coordinator: count_torrents_in_states(
+            coordinator, ["stalledDL", "stalledUP"]
+        ),
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_PAUSED_TORRENTS,
         translation_key="paused_torrents",
         native_unit_of_measurement="torrents",
-        val_func=lambda coordinator: count_torrents_in_states(coordinator, ["pausedDL", "pausedUP"])
+        value_fn=lambda coordinator: count_torrents_in_states(
+            coordinator, ["pausedDL", "pausedUP"]
+        ),
     ),
 )
 
@@ -111,18 +113,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up qBittorrent sensor entries."""
 
-    coordinator: QBittorrentDataCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator: QBittorrentDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
         QBittorrentSensor(coordinator, description) for description in SENSOR_TYPES
     )
 
 
-class QBittorrentSensor(
-    CoordinatorEntity[QBittorrentDataCoordinator], SensorEntity
-):
+class QBittorrentSensor(CoordinatorEntity[QBittorrentDataCoordinator], SensorEntity):
     """Representation of a qBittorrent sensor."""
 
     _attr_has_entity_name = True
@@ -147,7 +145,7 @@ class QBittorrentSensor(
     @property
     def native_value(self) -> StateType:
         """Return the value of the sensor."""
-        return self.entity_description.val_func(self.coordinator)
+        return self.entity_description.value_fn(self.coordinator)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -169,11 +167,16 @@ def get_state(coordinator: QBittorrentDataCoordinator) -> str:
     if upload == 0 and download > 0:
         return STATE_DOWNLOADING
     return STATE_IDLE
-    
 
-def count_torrents_in_states(coordinator: Dict[str, Any], states: List[str] = []) -> int:
+
+def count_torrents_in_states(
+    coordinator: QBittorrentDataCoordinator, states: list[str]
+) -> int:
     """Count the number of torrents in specified states."""
-    return len([
-        torrent for torrent in coordinator.data["torrents"].values()
-        if torrent["state"] in states
-    ])
+    return len(
+        [
+            torrent
+            for torrent in coordinator.data["torrents"].values()
+            if torrent["state"] in states
+        ]
+    )
