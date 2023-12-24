@@ -2612,7 +2612,7 @@ tellduslive==0.10.11
 temescal==0.5
 
 # homeassistant.components.temper
-temperusb==1.6.0
+temperusb==1.6.1
 
 # homeassistant.components.tensorflow
 # tensorflow==2.5.0

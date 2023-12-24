@@ -1961,7 +1961,7 @@ tellduslive==0.10.11
 temescal==0.5
 
 # homeassistant.components.temper
-temperusb==1.6.0
+temperusb==1.6.1
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.3.19
