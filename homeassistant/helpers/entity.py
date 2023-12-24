@@ -958,7 +958,7 @@ class Entity(
             return name
 
         device_name = device_entry.name_by_user or device_entry.name
-        if self.use_device_name:
+        if name is None and self.use_device_name:
             return device_name
         return f"{device_name} {name}" if device_name else name
 
@@ -1496,7 +1496,12 @@ class ToggleEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes toggle entities."""
 
 
-class ToggleEntity(Entity):
+TOGGLE_ENTITY_CACHED_PROPERTIES_WITH_ATTR_ = {"is_on"}
+
+
+class ToggleEntity(
+    Entity, cached_properties=TOGGLE_ENTITY_CACHED_PROPERTIES_WITH_ATTR_
+):
     """An abstract class for entities that can be turned on and off."""
 
     entity_description: ToggleEntityDescription
@@ -1511,7 +1516,7 @@ class ToggleEntity(Entity):
             return None
         return STATE_ON if is_on else STATE_OFF
 
-    @property
+    @cached_property
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._attr_is_on
