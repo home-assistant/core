@@ -8,7 +8,8 @@ from typing import TYPE_CHECKING, Any, final
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
@@ -90,7 +91,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SELECT_OPTION,
         {vol.Required(ATTR_OPTION): cv.string},
-        async_select_option,
+        SelectEntity.async_handle_select_option.__name__,
     )
 
     component.async_register_entity_service(
@@ -100,14 +101,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     return True
-
-
-async def async_select_option(entity: SelectEntity, service_call: ServiceCall) -> None:
-    """Service call wrapper to set a new value."""
-    option = service_call.data[ATTR_OPTION]
-    if option not in entity.options:
-        raise ValueError(f"Option {option} not valid for {entity.entity_id}")
-    await entity.async_select_option(option)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -176,6 +169,30 @@ class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         return self._attr_current_option
+
+    @final
+    @callback
+    def _valid_option_or_raise(self, option: str) -> None:
+        """Raise ServiceValidationError on invalid option."""
+        options = self.options
+        if not options or option not in options:
+            friendly_options: str = ", ".join(options or [])
+            raise ServiceValidationError(
+                f"Option {option} is not valid for {self.entity_id}",
+                translation_domain=DOMAIN,
+                translation_key="not_valid_option",
+                translation_placeholders={
+                    "enity_id": self.entity_id,
+                    "option": option,
+                    "options": friendly_options,
+                },
+            )
+
+    @final
+    async def async_handle_select_option(self, option: str) -> None:
+        """Service call wrapper to set a new value."""
+        self._valid_option_or_raise(option)
+        await self.async_select_option(option)
 
     def select_option(self, option: str) -> None:
         """Change the selected option."""
