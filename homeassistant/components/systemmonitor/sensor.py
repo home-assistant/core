@@ -358,10 +358,13 @@ async def async_setup_entry(
     """Set up System Montor sensors based on a config entry."""
     entities = []
     sensor_registry: dict[tuple[str, str], SensorData] = {}
+    disk_arguments = await hass.async_add_executor_job(get_all_disk_mounts)
+    network_arguments = await hass.async_add_executor_job(get_all_network_interfaces)
+    cpu_temperature = await hass.async_add_executor_job(_read_cpu_temperature)
+
     for _type, sensor_description in SENSOR_TYPES.items():
         if _type.startswith("disk_"):
-            arguments = await hass.async_add_executor_job(get_all_disk_mounts)
-            for argument in arguments:
+            for argument in disk_arguments:
                 sensor_registry[(_type, argument)] = SensorData(
                     argument, None, None, None, None
                 )
@@ -373,8 +376,7 @@ async def async_setup_entry(
             continue
 
         if _type in NETWORK_TYPES:
-            arguments = await hass.async_add_executor_job(get_all_network_interfaces)
-            for argument in arguments:
+            for argument in network_arguments:
                 sensor_registry[(_type, argument)] = SensorData(
                     argument, None, None, None, None
                 )
@@ -387,10 +389,7 @@ async def async_setup_entry(
 
         # Verify if we can retrieve CPU / processor temperatures.
         # If not, do not create the entity and add a warning to the log
-        if (
-            _type == "processor_temperature"
-            and await hass.async_add_executor_job(_read_cpu_temperature) is None
-        ):
+        if _type == "processor_temperature" and cpu_temperature is None:
             _LOGGER.warning("Cannot read CPU / processor temperature information")
             continue
 
