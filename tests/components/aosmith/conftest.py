@@ -54,10 +54,16 @@ async def mock_client(get_devices_fixture: str) -> Generator[MagicMock, None, No
     get_energy_use_fixture = load_json_object_fixture(
         "get_energy_use_data.json", DOMAIN
     )
+    get_all_device_info_fixture = load_json_object_fixture(
+        "get_all_device_info.json", DOMAIN
+    )
 
     client_mock = MagicMock(AOSmithAPIClient)
     client_mock.get_devices = AsyncMock(return_value=get_devices_fixture)
     client_mock.get_energy_use_data = AsyncMock(return_value=get_energy_use_fixture)
+    client_mock.get_all_device_info = AsyncMock(
+        return_value=get_all_device_info_fixture
+    )
 
     return client_mock
 
