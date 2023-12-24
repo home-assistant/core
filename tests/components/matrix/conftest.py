@@ -56,9 +56,11 @@ TEST_DEFAULT_ROOM = "!DefaultNotificationRoom:example.com"
 TEST_ROOM_A_ID = "!RoomA-ID:example.com"
 TEST_ROOM_B_ID = "!RoomB-ID:example.com"
 TEST_ROOM_B_ALIAS = "#RoomB-Alias:example.com"
+TEST_ROOM_C_ID = "!RoomC-ID:example.com"
 TEST_JOINABLE_ROOMS: dict[RoomAnyID, RoomID] = {
     TEST_ROOM_A_ID: TEST_ROOM_A_ID,
     TEST_ROOM_B_ALIAS: TEST_ROOM_B_ID,
+    TEST_ROOM_C_ID: TEST_ROOM_C_ID,
 }
 TEST_BAD_ROOM = "!UninvitedRoom:example.com"
 TEST_MXID = "@user:example.com"
@@ -151,6 +153,16 @@ MOCK_CONFIG_DATA = {
                 CONF_EXPRESSION: "My name is (?P<name>.*)",
                 CONF_NAME: "ExpressionTriggerEventName",
             },
+            {
+                CONF_WORD: "WordTriggerSubset",
+                CONF_NAME: "WordTriggerSubsetEventName",
+                CONF_ROOMS: [TEST_ROOM_B_ALIAS, TEST_ROOM_C_ID],
+            },
+            {
+                CONF_EXPRESSION: "Your name is (?P<name>.*)",
+                CONF_NAME: "ExpressionTriggerSubsetEventName",
+                CONF_ROOMS: [TEST_ROOM_B_ALIAS, TEST_ROOM_C_ID],
+            },
         ],
     },
     NOTIFY_DOMAIN: {
@@ -165,27 +177,33 @@ MOCK_WORD_COMMANDS = {
         "WordTrigger": {
             "word": "WordTrigger",
             "name": "WordTriggerEventName",
-            "rooms": [TEST_ROOM_A_ID, TEST_ROOM_B_ALIAS],
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
         }
     },
     TEST_ROOM_B_ID: {
         "WordTrigger": {
             "word": "WordTrigger",
             "name": "WordTriggerEventName",
-            "rooms": [TEST_ROOM_A_ID, TEST_ROOM_B_ALIAS],
-        }
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
+        },
+        "WordTriggerSubset": {
+            "word": "WordTriggerSubset",
+            "name": "WordTriggerSubsetEventName",
+            "rooms": [TEST_ROOM_B_ID, TEST_ROOM_C_ID],
+        },
     },
-}
-
-MOCK_WORD_COMMANDS_PARSED = {  # as parsed by the MatrixBot
-    room_id: {
-        trigger: {
-            **info,
-            "rooms": [TEST_JOINABLE_ROOMS[room] for room in info["rooms"]],
-        }
-        for trigger, info in triggers.items()
-    }
-    for room_id, triggers in MOCK_WORD_COMMANDS.items()
+    TEST_ROOM_C_ID: {
+        "WordTrigger": {
+            "word": "WordTrigger",
+            "name": "WordTriggerEventName",
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
+        },
+        "WordTriggerSubset": {
+            "word": "WordTriggerSubset",
+            "name": "WordTriggerSubsetEventName",
+            "rooms": [TEST_ROOM_B_ID, TEST_ROOM_C_ID],
+        },
+    },
 }
 
 MOCK_EXPRESSION_COMMANDS = {
@@ -193,24 +211,33 @@ MOCK_EXPRESSION_COMMANDS = {
         {
             "expression": re.compile("My name is (?P<name>.*)"),
             "name": "ExpressionTriggerEventName",
-            "rooms": [TEST_ROOM_A_ID, TEST_ROOM_B_ALIAS],
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
         }
     ],
     TEST_ROOM_B_ID: [
         {
             "expression": re.compile("My name is (?P<name>.*)"),
             "name": "ExpressionTriggerEventName",
-            "rooms": [TEST_ROOM_A_ID, TEST_ROOM_B_ALIAS],
-        }
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
+        },
+        {
+            "expression": re.compile("Your name is (?P<name>.*)"),
+            "name": "ExpressionTriggerSubsetEventName",
+            "rooms": [TEST_ROOM_B_ID, TEST_ROOM_C_ID],
+        },
     ],
-}
-
-MOCK_EXPRESSION_COMMANDS_PARSED = {  # as parsed by the MatrixBot
-    room_id: [
-        {**info, "rooms": [TEST_JOINABLE_ROOMS[room] for room in info["rooms"]]}
-        for info in triggers
-    ]
-    for room_id, triggers in MOCK_EXPRESSION_COMMANDS.items()
+    TEST_ROOM_C_ID: [
+        {
+            "expression": re.compile("My name is (?P<name>.*)"),
+            "name": "ExpressionTriggerEventName",
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
+        },
+        {
+            "expression": re.compile("Your name is (?P<name>.*)"),
+            "name": "ExpressionTriggerSubsetEventName",
+            "rooms": [TEST_ROOM_B_ID, TEST_ROOM_C_ID],
+        },
+    ],
 }
 
 

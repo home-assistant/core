@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 import logging
 import mimetypes
 import os
@@ -223,7 +223,12 @@ class MatrixBot:
     def _load_commands(self, commands: list[ConfigCommand]) -> None:
         for command in commands:
             # Set the command for all listening_rooms, unless otherwise specified.
-            command.setdefault(CONF_ROOMS, list(self._listening_rooms.values()))
+            command_rooms: Iterable[RoomAnyID] = command.get(
+                CONF_ROOMS, self._listening_rooms.keys()
+            )
+            command[CONF_ROOMS] = [
+                self._listening_rooms[room] for room in command_rooms
+            ]
 
             # COMMAND_SCHEMA guarantees that exactly one of CONF_WORD and CONF_EXPRESSION are set.
             if (word_command := command.get(CONF_WORD)) is not None:
