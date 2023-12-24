@@ -249,18 +249,13 @@ async def async_setup_entry(  # noqa: C901
             **entry.options,
             CONF_DEFAULT_ZONE_RUN_TIME: data.pop(CONF_DEFAULT_ZONE_RUN_TIME),
         }
+    entry_updates["options"] = {**entry.options}
     if CONF_USE_APP_RUN_TIMES not in entry.options:
-        entry_updates["options"] = {**entry.options, CONF_USE_APP_RUN_TIMES: False}
+        entry_updates["options"][CONF_USE_APP_RUN_TIMES] = False
     if CONF_DEFAULT_ZONE_RUN_TIME not in entry.options:
-        entry_updates["options"] = {
-            **entry.options,
-            CONF_DEFAULT_ZONE_RUN_TIME: DEFAULT_ZONE_RUN,
-        }
+        entry_updates["options"][CONF_DEFAULT_ZONE_RUN_TIME] = DEFAULT_ZONE_RUN
     if CONF_ALLOW_INACTIVE_ZONES_TO_RUN not in entry.options:
-        entry_updates["options"] = {
-            **entry.options,
-            CONF_ALLOW_INACTIVE_ZONES_TO_RUN: False,
-        }
+        entry_updates["options"][CONF_ALLOW_INACTIVE_ZONES_TO_RUN] = False
     if entry_updates:
         hass.config_entries.async_update_entry(entry, **entry_updates)
 
