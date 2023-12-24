@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any  # noqa: F401
 
 from unifi_ap import UniFiAP, UniFiAPConnectionException, UniFiAPDataException
 import voluptuous as vol
@@ -33,36 +34,35 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 def get_scanner(hass: HomeAssistant, config: ConfigType) -> UnifiDeviceScanner | None:
     """Validate the configuration and return a Unifi direct scanner."""
     scanner = UnifiDeviceScanner(config[DOMAIN])
-    return scanner if scanner.success_init else None
+    return scanner if scanner.update_clients() else None
 
 
 class UnifiDeviceScanner(DeviceScanner):
     """Class which queries Unifi wireless access point."""
 
-    def __init__(self, config):
+    def __init__(self, config: ConfigType) -> None:
         """Initialize the scanner."""
-        self.clients = {}
+        self.clients = {}  # type: dict[str, dict[str, Any]]
         self.ap = UniFiAP(
             target=config[CONF_HOST],
             username=config[CONF_USERNAME],
             password=config[CONF_PASSWORD],
             port=config[CONF_PORT],
         )
-        self.success_init = self._update_clients()
 
     def scan_devices(self) -> list[str]:
         """Scan for new devices and return a list with found device IDs."""
-        self._update_clients()
+        self.update_clients()
         return list(self.clients.keys())
 
-    def get_device_name(self, device) -> str | None:
+    def get_device_name(self, device: str) -> str | None:
         """Return the name of the given device or None if we don't know."""
         client_info = self.clients.get(device)
         if client_info:
             return client_info.get("hostname")
         return None
 
-    def _update_clients(self):
+    def update_clients(self) -> bool:
         """Update the client info from AP."""
         try:
             self.clients = self.ap.get_clients()
