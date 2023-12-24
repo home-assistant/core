@@ -8,7 +8,6 @@ from typing import Any
 from qbittorrent import Client
 from qbittorrent.client import LoginRequired
 
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
