@@ -1,10 +1,7 @@
 """Constants for the Remootio integration."""
 
 # Domain of the integration
-# Domain of the integration
 DOMAIN = "remootio"
-
-# Timeout used in methods of remootio.utils
 
 # Timeout used in methods of remootio.utils
 REMOOTIO_TIMEOUT = 60

@@ -5,8 +5,6 @@ import logging
 
 from aioremootio import ConnectionOptions, RemootioClient
 
-from aioremootio import ConnectionOptions, RemootioClient
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -88,32 +86,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     if platforms_unloaded and DOMAIN in hass.data:
-        hass_data = hass.data[DOMAIN].pop(entry.entry_id, {})
-        if REMOOTIO_CLIENT in hass_data:
-            remootio_client: RemootioClient = hass_data.pop(REMOOTIO_CLIENT, None)
-            if remootio_client is not None:
-                terminated: bool = await remootio_client.terminate()
-                if terminated:
-                    _LOGGER.debug(
-                        "Remootio client successfully terminated. entry [%s]",
-                        entry.as_dict(),
-                    )
-
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    _LOGGER.debug(
-        "Doing async_unload_entry. entry [%s] hass.data[%s][%s] [%s]",
-        entry.as_dict(),
-        DOMAIN,
-        entry.entry_id,
-        hass.data.get(DOMAIN, {}).get(entry.entry_id, {}),
-    )
-
-    platforms_unloaded = await hass.config_entries.async_unload_platforms(
-        entry, PLATFORMS
-    )
-
-    if platforms_unloaded and DOMAIN in hass.data.keys():
         hass_data = hass.data[DOMAIN].pop(entry.entry_id, {})
         if REMOOTIO_CLIENT in hass_data:
             remootio_client: RemootioClient = hass_data.pop(REMOOTIO_CLIENT, None)
