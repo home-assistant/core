@@ -10,17 +10,17 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODELS
-from .coordinator import TessieDataUpdateCoordinator
+from .coordinator import TessieStateUpdateCoordinator
 
 
-class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
+class TessieEntity(CoordinatorEntity[TessieStateUpdateCoordinator]):
     """Parent class for Tessie Entities."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: TessieDataUpdateCoordinator,
+        coordinator: TessieStateUpdateCoordinator,
         key: str,
     ) -> None:
         """Initialize common aspects of a Tessie entity."""
