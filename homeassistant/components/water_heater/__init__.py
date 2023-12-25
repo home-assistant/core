@@ -6,7 +6,7 @@ from datetime import timedelta
 from enum import IntFlag
 import functools as ft
 import logging
-from typing import Any, final
+from typing import TYPE_CHECKING, Any, final
 
 import voluptuous as vol
 
@@ -38,6 +38,12 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import TemperatureConverter
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
+
 
 DEFAULT_MIN_TEMP = 110
 DEFAULT_MAX_TEMP = 140
@@ -174,7 +180,19 @@ class WaterHeaterEntityEntityDescription(EntityDescription, frozen_or_thawed=Tru
     """A class that describes water heater entities."""
 
 
-class WaterHeaterEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "temperature_unit",
+    "current_operation",
+    "operation_list",
+    "current_temperature",
+    "target_temperature",
+    "target_temperature_high",
+    "target_temperature_low",
+    "is_away_mode_on",
+}
+
+
+class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for water heater entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
@@ -268,42 +286,42 @@ class WaterHeaterEntity(Entity):
 
         return data
 
-    @property
+    @cached_property
     def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
         return self._attr_temperature_unit
 
-    @property
+    @cached_property
     def current_operation(self) -> str | None:
         """Return current operation ie. eco, electric, performance, ..."""
         return self._attr_current_operation
 
-    @property
+    @cached_property
     def operation_list(self) -> list[str] | None:
         """Return the list of available operation modes."""
         return self._attr_operation_list
 
-    @property
+    @cached_property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._attr_current_temperature
 
-    @property
+    @cached_property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._attr_target_temperature
 
-    @property
+    @cached_property
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         return self._attr_target_temperature_high
 
-    @property
+    @cached_property
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         return self._attr_target_temperature_low
 
-    @property
+    @cached_property
     def is_away_mode_on(self) -> bool | None:
         """Return true if away mode is on."""
         return self._attr_is_away_mode_on
