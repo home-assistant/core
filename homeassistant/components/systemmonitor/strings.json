@@ -18,6 +18,7 @@
         }
       },
       "add_process": {
+        "description": "Configure a sensor to monitor a process",
         "data": {
           "process": "Process to add as sensor"
         },
@@ -26,7 +27,7 @@
         }
       },
       "remove_process": {
-        "description": "Select the processes to be removed"
+        "description": "Select previously configured process sensors to remove"
       }
     }
   }
