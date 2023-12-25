@@ -134,20 +134,8 @@ def async_device_outlet_supported_fn(controller: UniFiController, obj_id: str) -
 
 @callback
 def async_client_is_connected_fn(controller: UniFiController, obj_id: str) -> bool:
-    """Check if device object is disabled."""
+    """Check if client was last seen recently."""
     client = controller.api.clients[obj_id]
-
-    if controller.wireless_clients.is_wireless(client) and client.is_wired:
-        if not controller.option_ignore_wired_bug:
-            return False  # Wired bug in action
-
-    if (
-        not client.is_wired
-        and client.essid
-        and controller.option_ssid_filter
-        and client.essid not in controller.option_ssid_filter
-    ):
-        return False
 
     if (
         dt_util.utcnow() - dt_util.utc_from_timestamp(client.last_seen or 0)
@@ -163,7 +151,7 @@ class UnifiSensorEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
     """Validate and load entities from different UniFi handlers."""
 
     value_fn: Callable[[UniFiController, ApiItemT], datetime | float | str | None]
-    heartbeat_timedelta_fn: Callable[[UniFiController, str], timedelta]
+    should_check_heartbeat: bool
     is_connected_fn: Callable[[UniFiController, str], bool]
 
 
@@ -190,7 +178,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_client_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        heartbeat_timedelta_fn=lambda controller, _: controller.option_detection_time,
+        should_check_heartbeat=True,
         is_connected_fn=async_client_is_connected_fn,
         name_fn=lambda _: "RX",
         object_fn=lambda api, obj_id: api.clients[obj_id],
@@ -212,7 +200,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_client_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        heartbeat_timedelta_fn=lambda controller, _: controller.option_detection_time,
+        should_check_heartbeat=True,
         is_connected_fn=async_client_is_connected_fn,
         name_fn=lambda _: "TX",
         object_fn=lambda api, obj_id: api.clients[obj_id],
@@ -234,7 +222,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        heartbeat_timedelta_fn=lambda controller, _: timedelta(0),
+        should_check_heartbeat=False,
         is_connected_fn=lambda controller, _: False,
         name_fn=lambda port: f"{port.name} PoE Power",
         object_fn=lambda api, obj_id: api.ports[obj_id],
@@ -255,7 +243,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_client_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        heartbeat_timedelta_fn=lambda controller, _: timedelta(0),
+        should_check_heartbeat=False,
         is_connected_fn=lambda controller, _: False,
         name_fn=lambda client: "Uptime",
         object_fn=lambda api, obj_id: api.clients[obj_id],
@@ -274,7 +262,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_wlan_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        heartbeat_timedelta_fn=lambda controller, _: timedelta(0),
+        should_check_heartbeat=False,
         is_connected_fn=lambda controller, _: False,
         name_fn=lambda wlan: None,
         object_fn=lambda api, obj_id: api.wlans[obj_id],
@@ -295,7 +283,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        heartbeat_timedelta_fn=lambda controller, _: timedelta(0),
+        should_check_heartbeat=False,
         is_connected_fn=lambda controller, _: False,
         name_fn=lambda outlet: f"{outlet.name} Outlet Power",
         object_fn=lambda api, obj_id: api.outlets[obj_id],
@@ -317,7 +305,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        heartbeat_timedelta_fn=lambda controller, _: timedelta(0),
+        should_check_heartbeat=False,
         is_connected_fn=lambda controller, _: False,
         name_fn=lambda device: "AC Power Budget",
         object_fn=lambda api, obj_id: api.devices[obj_id],
@@ -339,7 +327,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        heartbeat_timedelta_fn=lambda controller, _: timedelta(0),
+        should_check_heartbeat=False,
         is_connected_fn=lambda controller, _: False,
         name_fn=lambda device: "AC Power Consumption",
         object_fn=lambda api, obj_id: api.devices[obj_id],
@@ -359,7 +347,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        heartbeat_timedelta_fn=lambda controller, _: timedelta(0),
+        should_check_heartbeat=False,
         is_connected_fn=lambda controller, _: False,
         name_fn=lambda device: "Uptime",
         object_fn=lambda api, obj_id: api.devices[obj_id],
@@ -380,7 +368,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        heartbeat_timedelta_fn=lambda controller, _: timedelta(0),
+        should_check_heartbeat=False,
         is_connected_fn=lambda controller, _: False,
         name_fn=lambda device: "Temperature",
         object_fn=lambda api, obj_id: api.devices[obj_id],
@@ -408,18 +396,12 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
 
     entity_description: UnifiSensorEntityDescription[HandlerT, ApiItemT]
 
-    _check_is_connected: bool
     _is_connected: bool
 
     @property
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self._is_connected
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._attr_unique_id
 
     @callback
     def _make_disconnected(self, *_: core_Event) -> None:
@@ -436,11 +418,6 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
 
         Initiate is_connected.
         """
-        description = self.entity_description
-        heartbeat_timedelta = description.heartbeat_timedelta_fn(
-            self.controller, self._obj_id
-        )
-        self._check_is_connected = heartbeat_timedelta != 0
         self._is_connected = False
 
         # Update initial state
@@ -457,16 +434,15 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
         if (value := description.value_fn(self.controller, obj)) != self.native_value:
             self._attr_native_value = value
 
-        if self._check_is_connected:
+        if description.should_check_heartbeat:
             # Send heartbeat if client is connected
             if is_connected := description.is_connected_fn(
                 self.controller, self._obj_id
             ):
                 self._is_connected = is_connected
                 self.controller.async_heartbeat(
-                    self.unique_id,
-                    dt_util.utcnow()
-                    + description.heartbeat_timedelta_fn(self.controller, self._obj_id),
+                    self._attr_unique_id,
+                    dt_util.utcnow() + self.controller.option_detection_time,
                 )
 
     async def async_added_to_hass(self) -> None:
@@ -485,4 +461,4 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
         """Disconnect object when removed."""
         await super().async_will_remove_from_hass()
         # Remove heartbeat registration
-        self.controller.async_heartbeat(self.unique_id)
+        self.controller.async_heartbeat(self._attr_unique_id)
