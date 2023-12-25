@@ -6,7 +6,7 @@ from typing import Any
 
 import sqlalchemy
 from sqlalchemy.engine import Result
-from sqlalchemy.exc import NoSuchColumnError, SQLAlchemyError
+from sqlalchemy.exc import MultipleResultsFound, NoSuchColumnError, SQLAlchemyError
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 import sqlparse
 from sqlparse.exceptions import SQLParseError
@@ -84,9 +84,10 @@ CONFIG_SCHEMA: vol.Schema = vol.Schema(
 
 def validate_sql_select(value: str) -> str | None:
     """Validate that value is a SQL SELECT query."""
-    query_type = sqlparse.parse(value)[0].get_type().upper()
-    _LOGGER.debug("The SQL query is of type %s", query_type)
-    if not query_type == "SELECT":
+    if len(sqlparse.parse(value)) > 1:
+        raise MultipleResultsFound
+    if (query_type := sqlparse.parse(value)[0].get_type()) != "SELECT":
+        _LOGGER.debug("The SQL query is of type %s", query_type)
         raise SQLParseError
     return value
 
@@ -160,6 +161,8 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except NoSuchColumnError:
                 errors["column"] = "column_invalid"
                 description_placeholders = {"column": column}
+            except MultipleResultsFound:
+                errors["query"] = "multiple_queries"
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
             except SQLParseError:
@@ -224,6 +227,8 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             except NoSuchColumnError:
                 errors["column"] = "column_invalid"
                 description_placeholders = {"column": column}
+            except MultipleResultsFound:
+                errors["query"] = "multiple_queries"
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
             except SQLParseError:

@@ -18,6 +18,8 @@ from . import (
     ENTRY_CONFIG_INVALID_COLUMN_NAME_OPT,
     ENTRY_CONFIG_INVALID_QUERY,
     ENTRY_CONFIG_INVALID_QUERY_OPT,
+    ENTRY_CONFIG_MULTIPLE_QUERIES,
+    ENTRY_CONFIG_MULTIPLE_QUERIES_OPT,
     ENTRY_CONFIG_NO_RESULTS,
     ENTRY_CONFIG_QUERY_NO_READ_ONLY,
     ENTRY_CONFIG_QUERY_NO_READ_ONLY_CTE_OPT,
@@ -153,6 +155,16 @@ async def test_flow_fails_invalid_query(
     assert result6["type"] == FlowResultType.FORM
     assert result6["errors"] == {
         "query": "query_no_read_only",
+    }
+
+    result6 = await hass.config_entries.flow.async_configure(
+        result4["flow_id"],
+        user_input=ENTRY_CONFIG_MULTIPLE_QUERIES,
+    )
+
+    assert result6["type"] == FlowResultType.FORM
+    assert result6["errors"] == {
+        "query": "multiple_queries",
     }
 
     result5 = await hass.config_entries.flow.async_configure(
@@ -421,6 +433,16 @@ async def test_options_flow_fails_invalid_query(
     assert result3["type"] == FlowResultType.FORM
     assert result3["errors"] == {
         "query": "query_no_read_only",
+    }
+
+    result3 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=ENTRY_CONFIG_MULTIPLE_QUERIES_OPT,
+    )
+
+    assert result3["type"] == FlowResultType.FORM
+    assert result3["errors"] == {
+        "query": "multiple_queries",
     }
 
     result4 = await hass.config_entries.options.async_configure(

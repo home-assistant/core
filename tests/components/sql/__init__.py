@@ -73,7 +73,7 @@ ENTRY_CONFIG_QUERY_NO_READ_ONLY = {
 
 ENTRY_CONFIG_QUERY_NO_READ_ONLY_CTE = {
     CONF_NAME: "Get Value",
-    CONF_QUERY: "UPDATE states s JOIN (WITH test AS(SELECT state_id, state AS value, metadata_id FROM states WHERE metadata_id = 10 LIMIT 1) SELECT * FROM test) subquery ON s.state_id = subquery.state_id SET state = 999999",
+    CONF_QUERY: "WITH test AS (SELECT etate FROM state) UPDATE states SET states.state = test.state;",
     CONF_COLUMN_NAME: "size",
     CONF_UNIT_OF_MEASUREMENT: "MiB",
 }
@@ -91,10 +91,26 @@ ENTRY_CONFIG_QUERY_NO_READ_ONLY_OPT = {
 }
 
 ENTRY_CONFIG_QUERY_NO_READ_ONLY_CTE_OPT = {
-    CONF_QUERY: "UPDATE states s JOIN (WITH test AS(SELECT state_id, state AS value, metadata_id FROM states WHERE metadata_id = 10 LIMIT 1) SELECT * FROM test) subquery ON s.state_id = subquery.state_id SET state = 999999",
+    CONF_QUERY: "WITH test AS (SELECT etate FROM state) UPDATE states SET states.state = test.state;",
     CONF_COLUMN_NAME: "size",
     CONF_UNIT_OF_MEASUREMENT: "MiB",
 }
+
+
+ENTRY_CONFIG_MULTIPLE_QUERIES = {
+    CONF_NAME: "Get Value",
+    CONF_QUERY: "SELECT 5 as state; UPDATE states SET state = 10;",
+    CONF_COLUMN_NAME: "state",
+    CONF_UNIT_OF_MEASUREMENT: "MiB",
+}
+
+
+ENTRY_CONFIG_MULTIPLE_QUERIES_OPT = {
+    CONF_QUERY: "SELECT 5 as state; UPDATE states SET state = 10;",
+    CONF_COLUMN_NAME: "state",
+    CONF_UNIT_OF_MEASUREMENT: "MiB",
+}
+
 
 ENTRY_CONFIG_INVALID_COLUMN_NAME = {
     CONF_NAME: "Get Value",

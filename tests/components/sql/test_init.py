@@ -69,8 +69,14 @@ async def test_query_no_read_only_cte(hass: HomeAssistant) -> None:
     """Test query no read only CTE."""
     with pytest.raises(vol.Invalid):
         validate_sql_select(
-            "UPDATE states s JOIN (WITH test AS(SELECT state_id, state AS value, metadata_id FROM states WHERE metadata_id = 10 LIMIT 1) SELECT * FROM test) subquery ON s.state_id = subquery.state_id SET state = 999999"
+            "WITH test AS (SELECT etate FROM state) UPDATE states SET states.state = test.state;"
         )
+
+
+async def test_miltiple_queries(hass: HomeAssistant) -> None:
+    """Test multiple queries."""
+    with pytest.raises(vol.Invalid):
+        validate_sql_select("SELECT 5 as value; UPDATE states SET state = 10;")
 
 
 async def test_remove_configured_db_url_if_not_needed_when_not_needed(
