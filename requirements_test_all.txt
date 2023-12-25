@@ -723,7 +723,7 @@ georss-qld-bushfire-alert-client==0.5
 # homeassistant.components.nmap_tracker
 # homeassistant.components.samsungtv
 # homeassistant.components.upnp
-getmac==0.8.2
+getmac==0.9.4
 
 # homeassistant.components.gios
 gios==3.2.2
