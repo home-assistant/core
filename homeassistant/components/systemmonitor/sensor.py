@@ -447,16 +447,13 @@ async def async_setup_entry(
                     sensor_registry[(_type, argument)] = SensorData(
                         argument, None, None, None, None
                     )
-                    is_enabled = check_legacy_resource(
-                        f"{_type}_{argument}", legacy_resources
-                    )
                     entities.append(
                         SystemMonitorSensor(
                             sensor_registry,
                             sensor_description,
                             entry.entry_id,
                             argument,
-                            is_enabled,
+                            True,
                         )
                     )
             continue
