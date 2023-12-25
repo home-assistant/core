@@ -1,4 +1,4 @@
-"""Test the Scrape config flow."""
+"""Test the System Monitor config flow."""
 from __future__ import annotations
 
 from unittest.mock import AsyncMock
@@ -171,7 +171,7 @@ async def test_import_already_configured(
 async def test_add_and_remove_processes(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test abort when already configured."""
+    """Test adding and removing process sensors."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         source=config_entries.SOURCE_USER,
