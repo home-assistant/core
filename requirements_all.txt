@@ -903,7 +903,7 @@ georss-qld-bushfire-alert-client==0.5
 # homeassistant.components.nmap_tracker
 # homeassistant.components.samsungtv
 # homeassistant.components.upnp
-getmac==0.8.2
+getmac==0.9.4
 
 # homeassistant.components.gios
 gios==3.2.2
@@ -1425,7 +1425,7 @@ openhomedevice==2.2.0
 opensensemap-api==0.2.0
 
 # homeassistant.components.enigma2
-openwebifpy==4.0.0
+openwebifpy==4.0.2
 
 # homeassistant.components.luci
 openwrt-luci-rpc==1.1.16
@@ -1531,7 +1531,7 @@ proxmoxer==2.0.1
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==5.9.6
+psutil==5.9.7
 
 # homeassistant.components.pulseaudio_loopback
 pulsectl==23.5.2
@@ -1553,6 +1553,9 @@ py-aosmith==1.0.1
 
 # homeassistant.components.canary
 py-canary==0.5.3
+
+# homeassistant.components.ccm15
+py-ccm15==0.0.9
 
 # homeassistant.components.cpuspeed
 py-cpuinfo==9.0.0
@@ -2612,7 +2615,7 @@ tellduslive==0.10.11
 temescal==0.5
 
 # homeassistant.components.temper
-temperusb==1.6.0
+temperusb==1.6.1
 
 # homeassistant.components.tensorflow
 # tensorflow==2.5.0

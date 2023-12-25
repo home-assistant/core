@@ -18,36 +18,36 @@ from homeassistant.config_entries import ConfigEntry
 
 # pylint: disable-next=hass-deprecated-import
 from homeassistant.const import (  # noqa: F401
+    _DEPRECATED_DEVICE_CLASS_AQI,
+    _DEPRECATED_DEVICE_CLASS_BATTERY,
+    _DEPRECATED_DEVICE_CLASS_CO,
+    _DEPRECATED_DEVICE_CLASS_CO2,
+    _DEPRECATED_DEVICE_CLASS_CURRENT,
+    _DEPRECATED_DEVICE_CLASS_DATE,
+    _DEPRECATED_DEVICE_CLASS_ENERGY,
+    _DEPRECATED_DEVICE_CLASS_FREQUENCY,
+    _DEPRECATED_DEVICE_CLASS_GAS,
+    _DEPRECATED_DEVICE_CLASS_HUMIDITY,
+    _DEPRECATED_DEVICE_CLASS_ILLUMINANCE,
+    _DEPRECATED_DEVICE_CLASS_MONETARY,
+    _DEPRECATED_DEVICE_CLASS_NITROGEN_DIOXIDE,
+    _DEPRECATED_DEVICE_CLASS_NITROGEN_MONOXIDE,
+    _DEPRECATED_DEVICE_CLASS_NITROUS_OXIDE,
+    _DEPRECATED_DEVICE_CLASS_OZONE,
+    _DEPRECATED_DEVICE_CLASS_PM1,
+    _DEPRECATED_DEVICE_CLASS_PM10,
+    _DEPRECATED_DEVICE_CLASS_PM25,
+    _DEPRECATED_DEVICE_CLASS_POWER,
+    _DEPRECATED_DEVICE_CLASS_POWER_FACTOR,
+    _DEPRECATED_DEVICE_CLASS_PRESSURE,
+    _DEPRECATED_DEVICE_CLASS_SIGNAL_STRENGTH,
+    _DEPRECATED_DEVICE_CLASS_SULPHUR_DIOXIDE,
+    _DEPRECATED_DEVICE_CLASS_TEMPERATURE,
+    _DEPRECATED_DEVICE_CLASS_TIMESTAMP,
+    _DEPRECATED_DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+    _DEPRECATED_DEVICE_CLASS_VOLTAGE,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_AQI,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_DATE,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_FREQUENCY,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_MONETARY,
-    DEVICE_CLASS_NITROGEN_DIOXIDE,
-    DEVICE_CLASS_NITROGEN_MONOXIDE,
-    DEVICE_CLASS_NITROUS_OXIDE,
-    DEVICE_CLASS_OZONE,
-    DEVICE_CLASS_PM1,
-    DEVICE_CLASS_PM10,
-    DEVICE_CLASS_PM25,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_POWER_FACTOR,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_SULPHUR_DIOXIDE,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
-    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
-    DEVICE_CLASS_VOLTAGE,
     EntityCategory,
     UnitOfTemperature,
 )
@@ -511,7 +511,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if (
             native_unit_of_measurement
             in {UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT}
-            and self.device_class == SensorDeviceClass.TEMPERATURE
+            and self.device_class is SensorDeviceClass.TEMPERATURE
         ):
             return self.hass.config.units.temperature_unit
 
@@ -572,7 +572,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return None
 
         # Received a datetime
-        if device_class == SensorDeviceClass.TIMESTAMP:
+        if device_class is SensorDeviceClass.TIMESTAMP:
             try:
                 # We cast the value, to avoid using isinstance, but satisfy
                 # typechecking. The errors are guarded in this try.
@@ -594,7 +594,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 ) from err
 
         # Received a date value
-        if device_class == SensorDeviceClass.DATE:
+        if device_class is SensorDeviceClass.DATE:
             try:
                 # We cast the value, to avoid using isinstance, but satisfy
                 # typechecking. The errors are guarded in this try.
@@ -609,8 +609,8 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # Enum checks
         if (
             options := self.options
-        ) is not None or device_class == SensorDeviceClass.ENUM:
-            if device_class != SensorDeviceClass.ENUM:
+        ) is not None or device_class is SensorDeviceClass.ENUM:
+            if device_class is not SensorDeviceClass.ENUM:
                 reason = "is missing the enum device class"
                 if device_class is not None:
                     reason = f"has device class '{device_class}' instead of 'enum'"

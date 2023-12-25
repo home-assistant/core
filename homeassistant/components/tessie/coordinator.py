@@ -20,7 +20,7 @@ TESSIE_SYNC_INTERVAL = 10
 _LOGGER = logging.getLogger(__name__)
 
 
-class TessieDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Tessie API."""
 
     def __init__(
