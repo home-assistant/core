@@ -13,7 +13,9 @@ from homeassistant.components.climate import (
     PLATFORM_SCHEMA,
     PRESET_ACTIVITY,
     PRESET_AWAY,
+    PRESET_BOOST,
     PRESET_COMFORT,
+    PRESET_ECO,
     PRESET_HOME,
     PRESET_NONE,
     PRESET_SLEEP,
@@ -82,7 +84,9 @@ CONF_PRESETS = {
     p: f"{p}_temp"
     for p in (
         PRESET_AWAY,
+        PRESET_BOOST,
         PRESET_COMFORT,
+        PRESET_ECO,
         PRESET_HOME,
         PRESET_SLEEP,
         PRESET_ACTIVITY,
