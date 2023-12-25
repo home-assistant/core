@@ -34,9 +34,12 @@ from homeassistant.helpers import (
 
 from .const import (
     ATTR_DELETE_DATA,
+    ATTR_DOWNLOAD_DIR,
+    ATTR_PAUSED,
     ATTR_TORRENT,
     CONF_ENTRY_ID,
     DEFAULT_DELETE_DATA,
+    DEFAULT_PAUSED,
     DOMAIN,
     SERVICE_ADD_TORRENT,
     SERVICE_REMOVE_TORRENT,
@@ -72,7 +75,13 @@ SERVICE_BASE_SCHEMA = vol.Schema(
 )
 
 SERVICE_ADD_TORRENT_SCHEMA = vol.All(
-    SERVICE_BASE_SCHEMA.extend({vol.Required(ATTR_TORRENT): cv.string}),
+    SERVICE_BASE_SCHEMA.extend(
+        {
+            vol.Required(ATTR_TORRENT): cv.string,
+            vol.Optional(ATTR_DOWNLOAD_DIR): cv.string,
+            vol.Optional(ATTR_PAUSED, default=DEFAULT_PAUSED): cv.boolean,
+        }
+    ),
 )
 
 
@@ -136,11 +145,20 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     async def add_torrent(service: ServiceCall) -> None:
         """Add new torrent to download."""
-        torrent = service.data[ATTR_TORRENT]
+        torrent: str = service.data[ATTR_TORRENT]
+        paused: bool = service.data[ATTR_PAUSED]
+        download_dir: str | None = service.data.get(ATTR_DOWNLOAD_DIR)
         if torrent.startswith(
             ("http", "ftp:", "magnet:")
         ) or hass.config.is_allowed_path(torrent):
-            await hass.async_add_executor_job(coordinator.api.add_torrent, torrent)
+            await hass.async_add_executor_job(
+                partial(
+                    coordinator.api.add_torrent,
+                    torrent,
+                    paused=paused,
+                    download_dir=download_dir,
+                )
+            )
             await coordinator.async_request_refresh()
         else:
             _LOGGER.warning("Could not add torrent: unsupported type or no permission")

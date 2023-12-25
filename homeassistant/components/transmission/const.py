@@ -27,6 +27,7 @@ CONF_LIMIT = "limit"
 CONF_ORDER = "order"
 
 DEFAULT_DELETE_DATA = False
+DEFAULT_PAUSED = False
 DEFAULT_LIMIT = 10
 DEFAULT_ORDER = ORDER_OLDEST_FIRST
 DEFAULT_NAME = "Transmission"
@@ -37,6 +38,8 @@ STATE_ATTR_TORRENT_INFO = "torrent_info"
 
 ATTR_DELETE_DATA = "delete_data"
 ATTR_TORRENT = "torrent"
+ATTR_PAUSED = "paused"
+ATTR_DOWNLOAD_DIR = "download_dir"
 
 SERVICE_ADD_TORRENT = "add_torrent"
 SERVICE_REMOVE_TORRENT = "remove_torrent"

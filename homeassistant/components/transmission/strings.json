@@ -91,6 +91,14 @@
         "torrent": {
           "name": "Torrent",
           "description": "URL, magnet link or Base64 encoded file."
+        },
+        "paused": {
+          "name": "Paused",
+          "description": "Add torrent in paused state."
+        },
+        "download_dir": {
+          "name": "Download directory",
+          "description": "The directory where the contents will be saved (relative to the transmission server). "
         }
       }
     },
