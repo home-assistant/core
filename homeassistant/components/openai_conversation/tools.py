@@ -141,6 +141,8 @@ async def entity_registry_inquiry(
         error_text += (
             ". Please note that not all entities have device_class set up,"
             " so you may want to repeat the function call without device_class parameter"
-            " if the expected entities were not found."
+            " if the expected entities were not found"
         )
+    if domain:
+        error_text += ". You may want to check different domains as well"
     return {"error": error_text}

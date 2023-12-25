@@ -463,7 +463,8 @@ async def test_function_call_no_entities(
         "name": "entity_registry_inquiry",
         "content": '{"error": "Entities matching the criteria are not found or not exposed. '
         "Please note that not all entities have device_class set up, so you may want to repeat "
-        'the function call without device_class parameter if the expected entities were not found."}',
+        "the function call without device_class parameter if the expected entities were not found. "
+        'You may want to check different domains as well"}',
     }
 
 
