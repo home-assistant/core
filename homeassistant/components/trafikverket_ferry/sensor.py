@@ -32,7 +32,7 @@ ICON = "mdi:ferry"
 SCAN_INTERVAL = timedelta(minutes=5)
 
 
-@dataclass
+@dataclass(frozen=True)
 class TrafikverketRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -40,7 +40,7 @@ class TrafikverketRequiredKeysMixin:
     info_fn: Callable[[dict[str, Any]], StateType | list] | None
 
 
-@dataclass
+@dataclass(frozen=True)
 class TrafikverketSensorEntityDescription(
     SensorEntityDescription, TrafikverketRequiredKeysMixin
 ):

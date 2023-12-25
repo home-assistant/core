@@ -23,7 +23,7 @@ from .entity import HomeWizardEntity
 from .helpers import homewizard_exception_handler
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class HomeWizardSwitchEntityDescription(SwitchEntityDescription):
     """Class describing HomeWizard switch entities."""
 

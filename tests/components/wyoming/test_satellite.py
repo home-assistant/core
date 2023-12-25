@@ -8,6 +8,7 @@ import wave
 
 from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioStart, AudioStop
+from wyoming.error import Error
 from wyoming.event import Event
 from wyoming.pipeline import PipelineStage, RunPipeline
 from wyoming.satellite import RunSatellite
@@ -96,6 +97,9 @@ class SatelliteAsyncTcpClient(MockAsyncTcpClient):
         self.tts_audio_stop_event = asyncio.Event()
         self.tts_audio_chunk: AudioChunk | None = None
 
+        self.error_event = asyncio.Event()
+        self.error: Error | None = None
+
         self._mic_audio_chunk = AudioChunk(
             rate=16000, width=2, channels=1, audio=b"chunk"
         ).event()
@@ -135,6 +139,9 @@ class SatelliteAsyncTcpClient(MockAsyncTcpClient):
             self.tts_audio_chunk_event.set()
         elif AudioStop.is_type(event.type):
             self.tts_audio_stop_event.set()
+        elif Error.is_type(event.type):
+            self.error = Error.from_event(event)
+            self.error_event.set()
 
     async def read_event(self) -> Event | None:
         """Receive."""
@@ -175,8 +182,9 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
             await mock_client.connect_event.wait()
             await mock_client.run_satellite_event.wait()
 
-        mock_run_pipeline.assert_called()
+        mock_run_pipeline.assert_called_once()
         event_callback = mock_run_pipeline.call_args.kwargs["event_callback"]
+        assert mock_run_pipeline.call_args.kwargs.get("device_id") == device.device_id
 
         # Start detecting wake word
         event_callback(
@@ -188,7 +196,7 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
             await mock_client.detect_event.wait()
 
         assert not device.is_active
-        assert device.is_enabled
+        assert not device.is_muted
 
         # Wake word is detected
         event_callback(
@@ -304,35 +312,36 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
 
-async def test_satellite_disabled(hass: HomeAssistant) -> None:
-    """Test callback for a satellite that has been disabled."""
-    on_disabled_event = asyncio.Event()
+async def test_satellite_muted(hass: HomeAssistant) -> None:
+    """Test callback for a satellite that has been muted."""
+    on_muted_event = asyncio.Event()
 
     original_make_satellite = wyoming._make_satellite
 
-    def make_disabled_satellite(
+    def make_muted_satellite(
         hass: HomeAssistant, config_entry: ConfigEntry, service: WyomingService
     ):
         satellite = original_make_satellite(hass, config_entry, service)
-        satellite.device.is_enabled = False
+        satellite.device.set_is_muted(True)
 
         return satellite
 
-    async def on_disabled(self):
-        on_disabled_event.set()
+    async def on_muted(self):
+        self.device.set_is_muted(False)
+        on_muted_event.set()
 
     with patch(
         "homeassistant.components.wyoming.data.load_wyoming_info",
         return_value=SATELLITE_INFO,
     ), patch(
-        "homeassistant.components.wyoming._make_satellite", make_disabled_satellite
+        "homeassistant.components.wyoming._make_satellite", make_muted_satellite
     ), patch(
-        "homeassistant.components.wyoming.satellite.WyomingSatellite.on_disabled",
-        on_disabled,
+        "homeassistant.components.wyoming.satellite.WyomingSatellite.on_muted",
+        on_muted,
     ):
         await setup_config_entry(hass)
         async with asyncio.timeout(1):
-            await on_disabled_event.wait()
+            await on_muted_event.wait()
 
 
 async def test_satellite_restart(hass: HomeAssistant) -> None:
@@ -360,11 +369,19 @@ async def test_satellite_restart(hass: HomeAssistant) -> None:
 
 async def test_satellite_reconnect(hass: HomeAssistant) -> None:
     """Test satellite reconnect call after connection refused."""
-    on_reconnect_event = asyncio.Event()
+    num_reconnects = 0
+    reconnect_event = asyncio.Event()
+    stopped_event = asyncio.Event()
 
     async def on_reconnect(self):
-        self.stop()
-        on_reconnect_event.set()
+        nonlocal num_reconnects
+        num_reconnects += 1
+        if num_reconnects >= 2:
+            reconnect_event.set()
+            self.stop()
+
+    async def on_stopped(self):
+        stopped_event.set()
 
     with patch(
         "homeassistant.components.wyoming.data.load_wyoming_info",
@@ -375,10 +392,14 @@ async def test_satellite_reconnect(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.wyoming.satellite.WyomingSatellite.on_reconnect",
         on_reconnect,
+    ), patch(
+        "homeassistant.components.wyoming.satellite.WyomingSatellite.on_stopped",
+        on_stopped,
     ):
         await setup_config_entry(hass)
         async with asyncio.timeout(1):
-            await on_reconnect_event.wait()
+            await reconnect_event.wait()
+            await stopped_event.wait()
 
 
 async def test_satellite_disconnect_before_pipeline(hass: HomeAssistant) -> None:
@@ -458,3 +479,43 @@ async def test_satellite_disconnect_during_pipeline(hass: HomeAssistant) -> None
 
         # Sensor should have been turned off
         assert not device.is_active
+
+
+async def test_satellite_error_during_pipeline(hass: HomeAssistant) -> None:
+    """Test satellite error occurring during pipeline run."""
+    events = [
+        RunPipeline(
+            start_stage=PipelineStage.WAKE, end_stage=PipelineStage.TTS
+        ).event(),
+    ]  # no audio chunks after RunPipeline
+
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=SATELLITE_INFO,
+    ), patch(
+        "homeassistant.components.wyoming.satellite.AsyncTcpClient",
+        SatelliteAsyncTcpClient(events),
+    ) as mock_client, patch(
+        "homeassistant.components.wyoming.satellite.assist_pipeline.async_pipeline_from_audio_stream",
+    ) as mock_run_pipeline:
+        await setup_config_entry(hass)
+
+        async with asyncio.timeout(1):
+            await mock_client.connect_event.wait()
+            await mock_client.run_satellite_event.wait()
+
+        mock_run_pipeline.assert_called_once()
+        event_callback = mock_run_pipeline.call_args.kwargs["event_callback"]
+        event_callback(
+            assist_pipeline.PipelineEvent(
+                assist_pipeline.PipelineEventType.ERROR,
+                {"code": "test code", "message": "test message"},
+            )
+        )
+
+        async with asyncio.timeout(1):
+            await mock_client.error_event.wait()
+
+        assert mock_client.error is not None
+        assert mock_client.error.text == "test message"
+        assert mock_client.error.code == "test code"
