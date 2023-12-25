@@ -22,7 +22,7 @@
           "process": "Process to add as sensor"
         },
         "data_description": {
-          "process": "Select current running process from list to add as sensor"
+          "process": "Select a running process from list or specify your own process to add as sensor"
         }
       },
       "remove_process": {

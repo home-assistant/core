@@ -116,6 +116,7 @@ async def get_sensor_setup_schema(handler: SchemaCommonFlowHandler) -> vol.Schem
             vol.Required(CONF_PROCESS): SelectSelector(
                 SelectSelectorConfig(
                     options=processes,
+                    custom_value=True,
                     mode=SelectSelectorMode.DROPDOWN,
                     sort=True,
                 )
