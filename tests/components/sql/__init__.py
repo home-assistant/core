@@ -73,7 +73,7 @@ ENTRY_CONFIG_QUERY_NO_READ_ONLY = {
 
 ENTRY_CONFIG_QUERY_NO_READ_ONLY_CTE = {
     CONF_NAME: "Get Value",
-    CONF_QUERY: "WITH test AS (SELECT etate FROM state) UPDATE states SET states.state = test.state;",
+    CONF_QUERY: "WITH test AS (SELECT state FROM state) UPDATE states SET states.state = test.state;",
     CONF_COLUMN_NAME: "size",
     CONF_UNIT_OF_MEASUREMENT: "MiB",
 }
