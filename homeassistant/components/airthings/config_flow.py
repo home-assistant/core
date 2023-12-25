@@ -8,10 +8,11 @@ import airthings
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_ID
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_ID, CONF_SECRET, DOMAIN
+from .const import CONF_SECRET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -17,14 +17,14 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from .const import DISPATCHER_KAITERRA, DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class KaiterraSensorRequiredKeysMixin:
     """Mixin for required keys."""
 
     suffix: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class KaiterraSensorEntityDescription(
     SensorEntityDescription, KaiterraSensorRequiredKeysMixin
 ):

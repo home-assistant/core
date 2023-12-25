@@ -157,7 +157,7 @@ class Device:
         _LOGGER.debug("Getting data for device: %s", self)
         igd_state = await self._igd_device.async_get_traffic_and_status_data()
         status_info = igd_state.status_info
-        if status_info is not None and not isinstance(status_info, Exception):
+        if status_info is not None and not isinstance(status_info, BaseException):
             wan_status = status_info.connection_status
             router_uptime = status_info.uptime
         else:
@@ -165,7 +165,7 @@ class Device:
             router_uptime = None
 
         def get_value(value: Any) -> Any:
-            if value is None or isinstance(value, Exception):
+            if value is None or isinstance(value, BaseException):
                 return None
 
             return value

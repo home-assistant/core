@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.fastdotcom.const import DOMAIN
+from homeassistant.components.fastdotcom.const import DEFAULT_NAME, DOMAIN
 from homeassistant.components.fastdotcom.coordinator import DEFAULT_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -19,6 +19,7 @@ async def test_fastdotcom_data_update_coordinator(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="UNIQUE_TEST_ID",
+        title=DEFAULT_NAME,
     )
     config_entry.add_to_hass(hass)
 

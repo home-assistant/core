@@ -10,7 +10,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, PERCENTAGE, UnitOfMass
+from homeassistant.const import (
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    CONF_SHOW_ON_MAP,
+    PERCENTAGE,
+    UnitOfMass,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -20,12 +26,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import (
-    CONF_BALANCING_AUTHORITY,
-    CONF_BALANCING_AUTHORITY_ABBREV,
-    CONF_SHOW_ON_MAP,
-    DOMAIN,
-)
+from .const import CONF_BALANCING_AUTHORITY, CONF_BALANCING_AUTHORITY_ABBREV, DOMAIN
 
 ATTR_BALANCING_AUTHORITY = "balancing_authority"
 

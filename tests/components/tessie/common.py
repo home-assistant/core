@@ -15,6 +15,7 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 TEST_STATE_OF_ALL_VEHICLES = load_json_object_fixture("vehicles.json", DOMAIN)
 TEST_VEHICLE_STATE_ONLINE = load_json_object_fixture("online.json", DOMAIN)
 TEST_VEHICLE_STATE_ASLEEP = load_json_object_fixture("asleep.json", DOMAIN)
+TEST_RESPONSE = {"result": True}
 
 TEST_CONFIG = {CONF_ACCESS_TOKEN: "1234567890"}
 TESSIE_URL = "https://api.tessie.com/"
@@ -31,6 +32,11 @@ ERROR_TIMEOUT = ClientResponseError(
 )
 ERROR_UNKNOWN = ClientResponseError(
     request_info=TEST_REQUEST_INFO, history=None, status=HTTPStatus.BAD_REQUEST
+)
+ERROR_VIRTUAL_KEY = ClientResponseError(
+    request_info=TEST_REQUEST_INFO,
+    history=None,
+    status=HTTPStatus.INTERNAL_SERVER_ERROR,
 )
 ERROR_CONNECTION = ClientConnectionError()
 

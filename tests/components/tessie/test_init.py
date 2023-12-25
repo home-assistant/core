@@ -17,21 +17,21 @@ async def test_load_unload(hass: HomeAssistant) -> None:
 
 
 async def test_auth_failure(hass: HomeAssistant) -> None:
-    """Test init with an authentication failure."""
+    """Test init with an authentication error."""
 
     entry = await setup_platform(hass, side_effect=ERROR_AUTH)
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_unknown_failure(hass: HomeAssistant) -> None:
-    """Test init with an authentication failure."""
+    """Test init with an client response error."""
 
     entry = await setup_platform(hass, side_effect=ERROR_UNKNOWN)
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_connection_failure(hass: HomeAssistant) -> None:
-    """Test init with a network connection failure."""
+    """Test init with a network connection error."""
 
     entry = await setup_platform(hass, side_effect=ERROR_CONNECTION)
     assert entry.state is ConfigEntryState.SETUP_RETRY
