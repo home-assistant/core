@@ -9,6 +9,7 @@ from prayer_times_calculator import PrayerTimesCalculator, exceptions
 from requests.exceptions import ConnectionError as ConnError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later, async_track_point_in_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -36,12 +37,14 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Islamic Prayer client."""
-        self.event_unsub: CALLBACK_TYPE | None = None
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
         )
+        self.latitude = self.config_entry.data[CONF_LATITUDE]
+        self.longitude = self.config_entry.data[CONF_LONGITUDE]
+        self.event_unsub: CALLBACK_TYPE | None = None
 
     @property
     def calc_method(self) -> str:
@@ -70,13 +73,14 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
     def get_new_prayer_times(self) -> dict[str, Any]:
         """Fetch prayer times for today."""
         calc = PrayerTimesCalculator(
-            latitude=self.hass.config.latitude,
-            longitude=self.hass.config.longitude,
+            latitude=self.latitude,
+            longitude=self.longitude,
             calculation_method=self.calc_method,
             latitudeAdjustmentMethod=self.lat_adj_method,
             midnightMode=self.midnight_mode,
             school=self.school,
             date=str(dt_util.now().date()),
+            iso8601=True,
         )
         return cast(dict[str, Any], calc.fetch_prayer_times())
 
@@ -145,9 +149,12 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
             async_call_later(self.hass, 60, self.async_request_update)
             raise UpdateFailed from err
 
+        # introduced in prayer-times-calculator 0.0.8
+        prayer_times.pop("date", None)
+
         prayer_times_info: dict[str, datetime] = {}
         for prayer, time in prayer_times.items():
-            if prayer_time := dt_util.parse_datetime(f"{dt_util.now().date()} {time}"):
+            if prayer_time := dt_util.parse_datetime(time):
                 prayer_times_info[prayer] = dt_util.as_utc(prayer_time)
 
         self.async_schedule_future_update(prayer_times_info["Midnight"])

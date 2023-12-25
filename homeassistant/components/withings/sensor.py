@@ -58,7 +58,7 @@ from .coordinator import (
 from .entity import WithingsEntity
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WithingsMeasurementSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
@@ -236,7 +236,7 @@ MEASUREMENT_SENSORS: dict[
 }
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WithingsSleepSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
@@ -396,7 +396,7 @@ SLEEP_SENSORS = [
 ]
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WithingsActivitySensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
@@ -424,10 +424,11 @@ ACTIVITY_SENSORS = [
     ),
     WithingsActivitySensorEntityDescription(
         key="activity_floors_climbed_today",
-        value_fn=lambda activity: activity.floors_climbed,
-        translation_key="activity_floors_climbed_today",
+        value_fn=lambda activity: activity.elevation,
+        translation_key="activity_elevation_today",
         icon="mdi:stairs-up",
-        native_unit_of_measurement="floors",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL,
     ),
     WithingsActivitySensorEntityDescription(
@@ -493,7 +494,7 @@ SLEEP_GOAL = "sleep"
 WEIGHT_GOAL = "weight"
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WithingsGoalsSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
@@ -530,7 +531,7 @@ GOALS_SENSORS: dict[str, WithingsGoalsSensorEntityDescription] = {
 }
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WithingsWorkoutSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
@@ -568,10 +569,11 @@ WORKOUT_SENSORS = [
     ),
     WithingsWorkoutSensorEntityDescription(
         key="workout_floors_climbed",
-        value_fn=lambda workout: workout.floors_climbed,
-        translation_key="workout_floors_climbed",
+        value_fn=lambda workout: workout.elevation,
+        translation_key="workout_elevation",
         icon="mdi:stairs-up",
-        native_unit_of_measurement="floors",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        device_class=SensorDeviceClass.DISTANCE,
     ),
     WithingsWorkoutSensorEntityDescription(
         key="workout_intensity",

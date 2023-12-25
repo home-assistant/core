@@ -39,14 +39,14 @@ BINARY_SENSOR_DESCRIPTION_CONNECTED = BinarySensorEntityDescription(
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class FlumeBinarySensorRequiredKeysMixin:
     """Mixin for required keys."""
 
     event_rule: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class FlumeBinarySensorEntityDescription(
     BinarySensorEntityDescription, FlumeBinarySensorRequiredKeysMixin
 ):

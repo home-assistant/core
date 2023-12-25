@@ -48,6 +48,7 @@ from . import (
     inject_bluetooth_service_info,
     inject_bluetooth_service_info_bleak,
     patch_all_discovered_devices,
+    patch_bluetooth_time,
 )
 
 from tests.common import (
@@ -471,9 +472,8 @@ async def test_unavailable_after_no_data(
     assert processor.available is True
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now,
+    with patch_bluetooth_time(
+        monotonic_now,
     ), patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -490,9 +490,8 @@ async def test_unavailable_after_no_data(
 
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 2
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now,
+    with patch_bluetooth_time(
+        monotonic_now,
     ), patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)

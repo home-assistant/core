@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Coroutine, Iterable
 from datetime import timedelta
 from typing import Any, cast
 
@@ -336,7 +336,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
-    def extract_system(func: Callable) -> Callable:
+    def extract_system(
+        func: Callable[[ServiceCall, SystemType], Coroutine[Any, Any, None]],
+    ) -> Callable[[ServiceCall], Coroutine[Any, Any, None]]:
         """Define a decorator to get the correct system for a service call."""
 
         async def wrapper(call: ServiceCall) -> None:
