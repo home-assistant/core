@@ -116,5 +116,6 @@ EXPORTED_ATTRIBUTES = [
     "wind_speed_unit",
     "dew_point",
     "cloud_coverage",
+    "forecast",
     "persons",
 ]
