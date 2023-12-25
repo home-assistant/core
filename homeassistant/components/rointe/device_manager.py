@@ -291,7 +291,12 @@ class RointeDeviceManager:
     ) -> bool:
         """Send command to the device."""
 
-        LOGGER.debug("Sending command [%s] to device ID [%s]", command, device.name)
+        LOGGER.debug(
+            "Sending command [%s] to device ID [%s]. Args: %s",
+            command,
+            device.name,
+            arg,
+        )
 
         if command == RointeCommand.SET_TEMP:
             return await self._set_device_temp(device, arg)
@@ -313,8 +318,11 @@ class RointeDeviceManager:
         )
 
         if not result.success:
+            LOGGER.debug("_set_device_temp failed: %s", result.error_message)
+
             # Set the device as unavailable.
             device.hass_available = False
+
             return False
 
         # Update the device internal status
@@ -341,6 +349,7 @@ class RointeDeviceManager:
         )
 
         if not result.success:
+            LOGGER.debug("_set_device_mode failed: %s", result.error_message)
             # Set the device as unavailable.
             device.hass_available = False
             return False
@@ -388,6 +397,8 @@ class RointeDeviceManager:
         )
 
         if not result.success:
+            LOGGER.debug("_set_device_preset failed: %s", result.error_message)
+
             # Set the device as unavailable.
             device.hass_available = False
             return False

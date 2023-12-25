@@ -22,10 +22,6 @@ RADIATOR_DEFAULT_TEMPERATURE = 20
 
 PRESET_ROINTE_ICE = "ice"
 
-RADIATOR_TEMP_STEP = 0.5
-RADIATOR_TEMP_MIN = 7.0
-RADIATOR_TEMP_MAX = 30.0
-
 
 class RointePreset(StrEnum):
     """Rointe radiators preset modes."""

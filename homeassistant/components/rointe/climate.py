@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from rointesdk.device import RointeDevice
 
 from homeassistant.components.climate import (
@@ -19,16 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    DOMAIN,
-    LOGGER,
-    RADIATOR_TEMP_MAX,
-    RADIATOR_TEMP_MIN,
-    RADIATOR_TEMP_STEP,
-    RointeCommand,
-    RointeOperationMode,
-    RointePreset,
-)
+from .const import DOMAIN, LOGGER, RointeCommand, RointeOperationMode, RointePreset
 from .coordinator import RointeDataUpdateCoordinator
 from .entity import RointeRadiatorEntity
 
@@ -44,6 +37,10 @@ ROINTE_HASS_MAP = {
     RointePreset.COMFORT: PRESET_COMFORT,
     RointePreset.ICE: RointePreset.ICE,
 }
+
+RADIATOR_TEMP_STEP = 0.5
+RADIATOR_TEMP_MIN = 7.0
+RADIATOR_TEMP_MAX = 30.0
 
 
 async def async_setup_entry(
@@ -171,14 +168,16 @@ class RointeHaClimate(RointeRadiatorEntity, ClimateEntity):
         # Also captures "none" (man mode, temperature outside presets)
         return ROINTE_HASS_MAP.get(self._radiator.preset, None)
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
 
         target_temperature = kwargs["temperature"]
 
+        LOGGER.debug("Setting temperature to %s", target_temperature)
+
         if not RADIATOR_TEMP_MIN <= target_temperature <= RADIATOR_TEMP_MAX:
             raise ValueError(
-                f"Invalid set_humidity value (must be in range 7.0, 30.0): {target_temperature}"
+                f"Invalid set_temperature value (must be in range {RADIATOR_TEMP_MIN}, {RADIATOR_TEMP_MAX}): {target_temperature}"
             )
 
         # Round to the nearest half value.
@@ -188,12 +187,12 @@ class RointeHaClimate(RointeRadiatorEntity, ClimateEntity):
             self._radiator, RointeCommand.SET_TEMP, rounded_temp
         ):
             raise HomeAssistantError(
-                f"Failed to set HVAC mode for {self._radiator.name}"
+                f"Failed to set temperature for {self._radiator.name}"
             )
 
         await self._signal_thermostat_update()
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
 
         LOGGER.debug("Setting HVAC mode to %s", hvac_mode)
@@ -207,7 +206,7 @@ class RointeHaClimate(RointeRadiatorEntity, ClimateEntity):
 
         await self._signal_thermostat_update()
 
-    async def async_set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         LOGGER.debug("Setting preset mode: %s", preset_mode)
 
@@ -215,7 +214,7 @@ class RointeHaClimate(RointeRadiatorEntity, ClimateEntity):
             self._radiator, RointeCommand.SET_PRESET, preset_mode
         ):
             raise HomeAssistantError(
-                f"Failed to set HVAC mode for {self._radiator.name}"
+                f"Failed to set HVAC preset for {self._radiator.name}"
             )
 
         await self._signal_thermostat_update()
