@@ -64,6 +64,8 @@ async def validate_import_sensor_setup(
     import_processes: list[str] = user_input["processes"]
     for process in import_processes:
         sensors.append({CONF_PROCESS: process})
+    legacy_resources: list[str] = handler.options.setdefault("resources", [])
+    legacy_resources.extend(user_input["legacy_resources"])
 
     async_create_issue(
         handler.parent_handler.hass,
