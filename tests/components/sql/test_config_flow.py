@@ -22,6 +22,7 @@ from . import (
     ENTRY_CONFIG_MULTIPLE_QUERIES_OPT,
     ENTRY_CONFIG_NO_RESULTS,
     ENTRY_CONFIG_QUERY_NO_READ_ONLY,
+    ENTRY_CONFIG_QUERY_NO_READ_ONLY_CTE,
     ENTRY_CONFIG_QUERY_NO_READ_ONLY_CTE_OPT,
     ENTRY_CONFIG_QUERY_NO_READ_ONLY_OPT,
     ENTRY_CONFIG_WITH_VALUE_TEMPLATE,
@@ -149,7 +150,7 @@ async def test_flow_fails_invalid_query(
 
     result6 = await hass.config_entries.flow.async_configure(
         result4["flow_id"],
-        user_input=ENTRY_CONFIG_QUERY_NO_READ_ONLY_CTE_OPT,
+        user_input=ENTRY_CONFIG_QUERY_NO_READ_ONLY_CTE,
     )
 
     assert result6["type"] == FlowResultType.FORM

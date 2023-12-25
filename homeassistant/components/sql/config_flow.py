@@ -157,7 +157,10 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 validate_sql_select(query)
                 db_url_for_validation = resolve_db_url(self.hass, db_url)
                 await self.hass.async_add_executor_job(
-                    validate_query, db_url_for_validation, query, column
+                    validate_query,
+                    db_url_for_validation,
+                    query.lstrip().lstrip(";"),
+                    column,
                 )
             except NoSuchColumnError:
                 errors["column"] = "column_invalid"
@@ -173,7 +176,7 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["query"] = "query_invalid"
 
             options = {
-                CONF_QUERY: query,
+                CONF_QUERY: query.lstrip().lstrip(";"),
                 CONF_COLUMN_NAME: column,
                 CONF_NAME: user_input[CONF_NAME],
             }
@@ -223,7 +226,10 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 validate_sql_select(query)
                 db_url_for_validation = resolve_db_url(self.hass, db_url)
                 await self.hass.async_add_executor_job(
-                    validate_query, db_url_for_validation, query, column
+                    validate_query,
+                    db_url_for_validation,
+                    query.lstrip().lstrip(";"),
+                    column,
                 )
             except NoSuchColumnError:
                 errors["column"] = "column_invalid"
@@ -247,7 +253,7 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 )
 
                 options = {
-                    CONF_QUERY: query,
+                    CONF_QUERY: validate_sql_select(query),
                     CONF_COLUMN_NAME: column,
                     CONF_NAME: name,
                 }
