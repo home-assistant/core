@@ -48,7 +48,16 @@ async def test_import(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
-        data={"processes": ["systemd", "octave-cli"]},
+        data={
+            "processes": ["systemd", "octave-cli"],
+            "legacy_resources": [
+                "disk_use_percent_/",
+                "memory_free_",
+                "network_out_eth0",
+                "process_systemd",
+                "process_octave-cli",
+            ],
+        },
     )
     await hass.async_block_till_done()
 
@@ -61,6 +70,13 @@ async def test_import(
             {
                 CONF_PROCESS: "octave-cli",
             },
+        ],
+        "resources": [
+            "disk_use_percent_/",
+            "memory_free_",
+            "network_out_eth0",
+            "process_systemd",
+            "process_octave-cli",
         ],
     }
 
@@ -112,6 +128,13 @@ async def test_import_already_configured(
         source=config_entries.SOURCE_USER,
         options={
             "sensor": [{CONF_PROCESS: "systemd"}],
+            "resources": [
+                "disk_use_percent_/",
+                "memory_free_",
+                "network_out_eth0",
+                "process_systemd",
+                "process_octave-cli",
+            ],
         },
     )
     config_entry.add_to_hass(hass)
@@ -119,7 +142,16 @@ async def test_import_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
-        data={"processes": ["systemd", "octave-cli"]},
+        data={
+            "processes": ["systemd", "octave-cli"],
+            "legacy_resources": [
+                "disk_use_percent_/",
+                "memory_free_",
+                "network_out_eth0",
+                "process_systemd",
+                "process_octave-cli",
+            ],
+        },
     )
     await hass.async_block_till_done()
 
