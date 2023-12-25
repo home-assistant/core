@@ -85,9 +85,12 @@ CONFIG_SCHEMA: vol.Schema = vol.Schema(
 def validate_sql_select(value: str) -> str | None:
     """Validate that value is a SQL SELECT query."""
     query = value.lstrip().lstrip(";")
+    query_type = sqlparse.parse(query)[0].get_type()
     if len(sqlparse.parse(query)) > 1:
         raise MultipleResultsFound
-    if (query_type := sqlparse.parse(query)[0].get_type()) != "SELECT":
+    if query_type == "UNKNOWN":
+        raise ValueError
+    if query_type != "SELECT":
         _LOGGER.debug("The SQL query is of type %s", query_type)
         raise SQLParseError
     return query
@@ -253,7 +256,7 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 )
 
                 options = {
-                    CONF_QUERY: validate_sql_select(query),
+                    CONF_QUERY: query.lstrip().lstrip(";"),
                     CONF_COLUMN_NAME: column,
                     CONF_NAME: name,
                 }

@@ -59,6 +59,12 @@ async def test_invalid_query(hass: HomeAssistant) -> None:
         validate_sql_select("DROP TABLE *")
 
 
+async def test_invalid_query_2(hass: HomeAssistant) -> None:
+    """Test invalid query."""
+    with pytest.raises(vol.Invalid):
+        validate_sql_select("SELECT5 as value")
+
+
 async def test_query_no_read_only(hass: HomeAssistant) -> None:
     """Test query no read only."""
     with pytest.raises(vol.Invalid):
