@@ -712,7 +712,7 @@ async def test_state_updates_zone(
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.temper_temperature").state == "32.0"
+    assert hass.states.get("sensor.temper_temperature").state == "32"
 
     resp = await client.post(
         "/api/konnected/device/112233445566",
@@ -869,7 +869,7 @@ async def test_state_updates_pin(
     result = await resp.json()
     assert result == {"message": "ok"}
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.temper_temperature").state == "32.0"
+    assert hass.states.get("sensor.temper_temperature").state == "32"
 
     resp = await client.post(
         "/api/konnected/device/112233445566",
