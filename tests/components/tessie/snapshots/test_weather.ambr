@@ -1,26 +1,28 @@
 # serializer version: 1
 # name: test_weather
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'apparent_temperature': 23.5,
-      'cloud_coverage': 100,
-      'friendly_name': 'Test',
-      'humidity': 83,
-      'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
-      'pressure': 1010.0,
-      'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
-      'temperature': 23.0,
-      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
-      'visibility': 10.0,
-      'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
-      'wind_bearing': 165,
-      'wind_speed': 0.45,
-      'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'apparent_temperature': 23.5,
+        'cloud_coverage': 100,
+        'friendly_name': 'Test',
+        'humidity': 83,
+        'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+        'pressure': 1010.0,
+        'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
+        'temperature': 23.0,
+        'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
+        'visibility': 10.0,
+        'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
+        'wind_bearing': 165,
+        'wind_speed': 0.45,
+        'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'weather.test',
+      'last_changed': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'Rain',
     }),
-    'context': <ANY>,
-    'entity_id': 'weather.test',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Rain',
-  })
+  ])
 # ---

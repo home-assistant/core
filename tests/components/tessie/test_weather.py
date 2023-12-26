@@ -3,7 +3,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
-from .common import TEST_WEATHER, setup_platform
+from .common import setup_platform
 
 
 async def test_weather(
@@ -15,9 +15,5 @@ async def test_weather(
 
     await setup_platform(hass)
 
-    assert len(hass.states.async_all("weather")) == 1
-
     mock_get_weather.assert_called_once()
-    state = hass.states.get("weather.test")
-    assert state.state == TEST_WEATHER["condition"]
-    assert state == snapshot
+    assert hass.states.async_all("weather") == snapshot
