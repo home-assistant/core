@@ -123,6 +123,8 @@ async def test_provider_properties(
     supported_voices = engine.async_get_supported_voices("nl-NL")
     assert supported_voices is not None
     assert tts.Voice("ColetteNeural", "ColetteNeural") in supported_voices
+    supported_voices = engine.async_get_supported_voices("missing_language")
+    assert supported_voices is None
 
 
 @pytest.mark.parametrize(
