@@ -536,7 +536,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             translation_key = "not_valid_fan_mode"
         raise ServiceValidationError(
             f"The {mode_type}_mode {mode} is not a valid {mode_type}_mode:"
-            f" {', '.join(modes) if modes else ''}",
+            f" {modes_str}",
             translation_domain=DOMAIN,
             translation_key=translation_key,
             translation_placeholders={
