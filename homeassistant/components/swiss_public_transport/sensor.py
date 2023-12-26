@@ -22,7 +22,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from .const import CONF_DESTINATION, CONF_START, DEFAULT_NAME, DOMAIN
+from .const import CONF_DESTINATION, CONF_START, DEFAULT_NAME, DOMAIN, PLACEHOLDERS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,11 +104,12 @@ async def async_setup_platform(
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
             translation_key=f"deprecated_yaml_import_issue_${result['reason']}",
+            translation_placeholders=PLACEHOLDERS,
         )
 
 
 class SwissPublicTransportSensor(SensorEntity):
-    """Implementation of an Swiss public transport sensor."""
+    """Implementation of a Swiss public transport sensor."""
 
     _attr_attribution = "Data provided by transport.opendata.ch"
     _attr_icon = "mdi:bus"
