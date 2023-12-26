@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODELS
-from .coordinator import TessieDataUpdateCoordinator, TessieWeatherDataCoordinator
+from .coordinator import TessieStateUpdateCoordinator, TessieWeatherDataCoordinator
 
 
 async def async_setup_entry(
@@ -45,7 +45,7 @@ class TessieWeatherEntity(
 
     def __init__(
         self,
-        vehiclecoordinator: TessieDataUpdateCoordinator,
+        vehiclecoordinator: TessieStateUpdateCoordinator,
         weathercoordinator: TessieWeatherDataCoordinator,
     ) -> None:
         """Initialize the data coordinator."""
