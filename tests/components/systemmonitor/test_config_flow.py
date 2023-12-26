@@ -5,11 +5,7 @@ from unittest.mock import AsyncMock
 
 from homeassistant import config_entries
 from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
-from homeassistant.components.systemmonitor.const import (
-    CONF_INDEX,
-    CONF_PROCESS,
-    DOMAIN,
-)
+from homeassistant.components.systemmonitor.const import CONF_PROCESS, DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -63,14 +59,7 @@ async def test_import(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["options"] == {
-        "sensor": [
-            {
-                CONF_PROCESS: "systemd",
-            },
-            {
-                CONF_PROCESS: "octave-cli",
-            },
-        ],
+        "sensor": {"process": ["systemd", "octave-cli"]},
         "resources": [
             "disk_use_percent_/",
             "memory_free_",
@@ -182,66 +171,43 @@ async def test_add_and_remove_processes(
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        {"next_step_id": "add_process"},
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "add_process"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
         user_input={
-            CONF_PROCESS: "systemd",
+            CONF_PROCESS: ["systemd"],
         },
     )
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "sensor": [
-            {
-                CONF_PROCESS: "systemd",
-            }
-        ],
+        "sensor": {
+            CONF_PROCESS: ["systemd"],
+        }
     }
 
     # Add another
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        {"next_step_id": "add_process"},
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "add_process"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
         user_input={
-            CONF_PROCESS: "octave-cli",
+            CONF_PROCESS: ["systemd", "octave-cli"],
         },
     )
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "sensor": [
-            {
-                CONF_PROCESS: "systemd",
-            },
-            {
-                CONF_PROCESS: "octave-cli",
-            },
-        ],
+        "sensor": {
+            CONF_PROCESS: ["systemd", "octave-cli"],
+        },
     }
 
     entity_reg = er.async_get(hass)
@@ -263,59 +229,41 @@ async def test_add_and_remove_processes(
     # Remove one
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        {"next_step_id": "remove_process"},
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "remove_process"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
         user_input={
-            CONF_INDEX: ["0"],
+            CONF_PROCESS: ["systemd"],
         },
     )
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "sensor": [
-            {
-                CONF_PROCESS: "octave-cli",
-            },
-        ],
+        "sensor": {
+            CONF_PROCESS: ["systemd"],
+        },
     }
 
     # Remove last
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == FlowResultType.MENU
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        {"next_step_id": "remove_process"},
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "remove_process"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
         user_input={
-            CONF_INDEX: ["0"],
+            CONF_PROCESS: [],
         },
     )
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "sensor": [],
+        "sensor": {CONF_PROCESS: []},
     }
 
     assert entity_reg.async_get("sensor.systemmonitor_process_systemd") is None
