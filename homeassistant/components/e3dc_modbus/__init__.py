@@ -4,15 +4,16 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import threading
-from typing import Any
+from typing import Any, Optional
 
 from pymodbus.client import ModbusTcpClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -141,9 +142,49 @@ class E3DCModbusHub:
         self._sensors = []
         self.data = {}
         # Modbus register offset
-        self.modbus_register_offset = None
-        self._sensors.append(DemoSensor(self))
+        self._modbus_register_offset = None
+        # self._sensors.append(DemoSensor(self))
         # self._sensors.append()
+
+    @callback
+    def async_add_e3dc_sensor(self, update_callback):
+        """Listen for data updates."""
+        # This is the first sensor, set up interval.
+        if not self._sensors:
+            self.connect()
+            self._unsub_interval_method = async_track_time_interval(
+                self._hass, self.async_refresh_modbus_data, self._scan_interval
+            )
+
+        # self._sensors.append(update_callback)
+        self._sensors.append(DemoSensor(self))
+
+    @callback
+    def async_remove_e3dc_sensor(self, update_callback):
+        """Remove data update."""
+        self._sensors.remove(update_callback)
+
+        if not self._sensors:
+            # Stop the interval timer upon removal of last sensor.
+            self._unsub_interval_method()
+            self._unsub_interval_method = None
+            self.close()
+
+    async def async_refresh_modbus_data(self, _now: Optional[int] = None) -> None:
+        """Time to update Modbus Data."""
+        if not self._sensors:
+            return
+
+        # try:
+        #    update_result = self.read_modbus_data()
+        # except Exception as e:
+        #    _LOGGER.exception("Error reading modbus data")
+        #    update_result = False
+
+        # if update_result:
+        #    for update_callback in self._sensors:
+        #        update_callback()
+        self.data["e3dc_demo_sensor_name"] = 88.4
 
     @property
     def name(self):
@@ -154,3 +195,35 @@ class E3DCModbusHub:
         """Disconnect client."""
         with self._lock:
             self._client.close()
+
+    def connect(self):
+        """Connect client."""
+        result = False
+        with self._lock:
+            result = self._client.connect()
+
+        if result:
+            _LOGGER.info(
+                "Successfully connected to %s:%s",
+                self._client.comm_params.host,
+                self._client.comm_params.port,
+            )
+        else:
+            _LOGGER.warning(
+                "Not able to connect to %s:%s",
+                self._client.comm_params.host,
+                self._client.comm_params.port,
+            )
+        return result
+
+    # def device_info(self) -> DeviceInfo:
+    #    """Return default device info structure."""
+    #    return DeviceInfo(
+    #        manufacturer="E3DC",
+    #        model=self.e3dc.model,
+    #        name=self.e3dc.model,
+    #        connections={(dr.CONNECTION_NETWORK_MAC, self.e3dc.macAddress)},
+    #        identifiers={(DOMAIN, self.uid)},
+    #        sw_version=self._sw_version,
+    #        configuration_url="https://s10.e3dc.com/",
+    #    )

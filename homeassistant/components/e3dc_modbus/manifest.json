@@ -6,6 +6,7 @@
   "dependencies": [],
   "documentation": "https://github.com/bany08/e3dc_modbus",
   "homekit": {},
+  "integration_type": "device",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/bany08/e3dc_modbus/issues",
   "requirements": ["pymodbus==3.5.4"],
