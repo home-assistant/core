@@ -1,28 +1,35 @@
 """Tests for cloud tts."""
 from collections.abc import Callable, Coroutine
+from http import HTTPStatus
 from typing import Any
-from unittest.mock import MagicMock, Mock
+from unittest.mock import AsyncMock, MagicMock
 
-from hass_nabucasa import voice
+from hass_nabucasa.voice import MAP_VOICE, VoiceError
 import pytest
 import voluptuous as vol
 
 from homeassistant.components.cloud import DOMAIN, const, tts
 from homeassistant.components.tts import DOMAIN as TTS_DOMAIN
 from homeassistant.components.tts.helper import get_engine_instance
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.typing import ClientSessionGenerator
 
-@pytest.fixture
-def cloud_with_prefs(cloud_prefs):
-    """Return a cloud mock with prefs."""
-    return Mock(client=Mock(prefs=cloud_prefs))
+
+@pytest.fixture(autouse=True)
+async def internal_url_mock(hass: HomeAssistant) -> None:
+    """Mock internal URL of the instance."""
+    await async_process_ha_core_config(
+        hass,
+        {"internal_url": "http://example.local:8123"},
+    )
 
 
 def test_default_exists() -> None:
     """Test our default language exists."""
-    assert const.DEFAULT_TTS_DEFAULT_VOICE in voice.MAP_VOICE
+    assert const.DEFAULT_TTS_DEFAULT_VOICE in MAP_VOICE
 
 
 def test_schema() -> None:
@@ -118,11 +125,65 @@ async def test_provider_properties(
     assert tts.Voice("ColetteNeural", "ColetteNeural") in supported_voices
 
 
-async def test_get_tts_audio(cloud_with_prefs) -> None:
+@pytest.mark.parametrize(
+    ("data", "expected_url_suffix"),
+    [
+        ({"platform": DOMAIN}, DOMAIN),
+        ({"engine_id": DOMAIN}, DOMAIN),
+    ],
+)
+@pytest.mark.parametrize(
+    ("mock_process_tts_return_value", "mock_process_tts_side_effect"),
+    [
+        (b"", None),
+        (None, VoiceError("Boom!")),
+    ],
+)
+async def test_get_tts_audio(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    cloud: MagicMock,
+    data: dict[str, Any],
+    expected_url_suffix: str,
+    mock_process_tts_return_value: bytes | None,
+    mock_process_tts_side_effect: Exception | None,
+) -> None:
     """Test cloud provider."""
-    tts_info = {"platform_loaded": Mock()}
-    provider = await tts.async_get_engine(
-        Mock(data={const.DOMAIN: cloud_with_prefs}), None, tts_info
+    mock_process_tts = AsyncMock(
+        return_value=mock_process_tts_return_value,
+        side_effect=mock_process_tts_side_effect,
     )
-    assert provider.supported_options == ["gender", "voice", "audio_output"]
-    assert "nl-NL" in provider.supported_languages
+    cloud.voice.process_tts = mock_process_tts
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+    on_start_callback = cloud.register_on_start.call_args[0][0]
+    await on_start_callback()
+    client = await hass_client()
+
+    url = "/api/tts_get_url"
+    data |= {"message": "There is someone at the door."}
+
+    req = await client.post(url, json=data)
+    assert req.status == HTTPStatus.OK
+    response = await req.json()
+
+    assert response == {
+        "url": (
+            "http://example.local:8123/api/tts_proxy/"
+            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
+            f"_en-us_e09b5a0968_{expected_url_suffix}.mp3"
+        ),
+        "path": (
+            "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
+            f"_en-us_e09b5a0968_{expected_url_suffix}.mp3"
+        ),
+    }
+    await hass.async_block_till_done()
+
+    assert mock_process_tts.call_count == 1
+    assert mock_process_tts.call_args is not None
+    assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
+    assert mock_process_tts.call_args.kwargs["language"] == "en-US"
+    assert mock_process_tts.call_args.kwargs["gender"] == "female"
+    assert mock_process_tts.call_args.kwargs["output"] == "mp3"
