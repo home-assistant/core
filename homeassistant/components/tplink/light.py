@@ -183,11 +183,11 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         else:
             self._attr_unique_id = device.mac.replace(":", "").upper()
         modes: set[ColorMode] = set()
-        if self.device.is_variable_color_temp:
+        if device.is_variable_color_temp:
             modes.add(ColorMode.COLOR_TEMP)
-        if self.device.is_color:
+        if device.is_color:
             modes.add(ColorMode.HS)
-        if self.device.is_dimmable:
+        if device.is_dimmable:
             modes.add(ColorMode.BRIGHTNESS)
         if not modes:
             modes.add(ColorMode.ONOFF)
