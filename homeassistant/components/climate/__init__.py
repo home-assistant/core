@@ -525,24 +525,25 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         modes: list[str] | None,
     ) -> None:
         """Raise ServiceValidationError on invalid modes."""
-        if not modes or mode not in modes:
-            modes_str: str = ", ".join(modes) if modes else ""
-            if mode_type == "preset":
-                translation_key = "not_valid_preset_mode"
-            elif mode_type == "swing":
-                translation_key = "not_valid_swing_mode"
-            elif mode_type == "fan":
-                translation_key = "not_valid_fan_mode"
-            raise ServiceValidationError(
-                f"The {mode_type}_mode {mode} is not a valid {mode_type}_mode:"
-                f" {', '.join(modes) if modes else ''}",
-                translation_domain=DOMAIN,
-                translation_key=translation_key,
-                translation_placeholders={
-                    "mode": mode,
-                    "modes": modes_str,
-                },
-            )
+        if modes and mode in modes:
+            return
+        modes_str: str = ", ".join(modes) if modes else ""
+        if mode_type == "preset":
+            translation_key = "not_valid_preset_mode"
+        elif mode_type == "swing":
+            translation_key = "not_valid_swing_mode"
+        elif mode_type == "fan":
+            translation_key = "not_valid_fan_mode"
+        raise ServiceValidationError(
+            f"The {mode_type}_mode {mode} is not a valid {mode_type}_mode:"
+            f" {', '.join(modes) if modes else ''}",
+            translation_domain=DOMAIN,
+            translation_key=translation_key,
+            translation_placeholders={
+                "mode": mode,
+                "modes": modes_str,
+            },
+        )
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
