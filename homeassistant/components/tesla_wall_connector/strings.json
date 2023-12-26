@@ -58,7 +58,7 @@
         "name": "Phase C voltage"
       },
       "session_energy_wh": {
-        "name": "Session Energy"
+        "name": "Session energy"
       }
     }
   }
