@@ -39,16 +39,14 @@ _LOGGER = logging.getLogger(__name__)
 
 def validate_sql_select(value: str) -> str:
     """Validate that value is a SQL SELECT query."""
-    query = value.lstrip().lstrip(";")
-    query_type = sqlparse.parse(query)[0].get_type()
-    if len(sqlparse.parse(query)) > 1:
+    if len(query := sqlparse.parse(value.lstrip().lstrip(";"))) > 1:
         raise vol.Invalid("Multiple SQL queries are not supported")
-    if query_type == "UNKNOWN":
+    if len(query) == 0 or (query_type := query[0].get_type()) == "UNKNOWN":
         raise vol.Invalid("Invalid SQL query")
     if query_type != "SELECT":
         _LOGGER.debug("The SQL query is of type %s", query_type)
         raise vol.Invalid("Only SELECT queries allowed")
-    return query
+    return value.lstrip().lstrip(";")
 
 
 QUERY_SCHEMA = vol.Schema(

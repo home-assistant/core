@@ -84,10 +84,9 @@ CONFIG_SCHEMA: vol.Schema = vol.Schema(
 
 def validate_sql_select(value: str) -> str | None:
     """Validate that value is a SQL SELECT query."""
-    query_type = sqlparse.parse(value)[0].get_type()
-    if len(sqlparse.parse(value)) > 1:
+    if len(query := sqlparse.parse(value)) > 1:
         raise MultipleResultsFound
-    if query_type == "UNKNOWN":
+    if len(query) == 0 or (query_type := query[0].get_type()) == "UNKNOWN":
         raise ValueError
     if query_type != "SELECT":
         _LOGGER.debug("The SQL query is of type %s", query_type)

@@ -108,7 +108,7 @@ async def async_setup_entry(
 
     db_url: str = resolve_db_url(hass, entry.options.get(CONF_DB_URL))
     name: str = entry.options[CONF_NAME]
-    query_str: str = entry.options[CONF_QUERY].lstrip().lstrip(";")
+    query_str: str = entry.options[CONF_QUERY]
     template: str | None = entry.options.get(CONF_VALUE_TEMPLATE)
     column_name: str = entry.options[CONF_COLUMN_NAME]
 
