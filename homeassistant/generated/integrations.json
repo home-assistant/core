@@ -5234,6 +5234,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "sipcall": {
+      "name": "SIP Call",
+      "integration_type": "hub",
+      "config_flow": false,
+      "iot_class": "local_polling"
+    },
     "sisyphus": {
       "name": "Sisyphus",
       "integration_type": "hub",
