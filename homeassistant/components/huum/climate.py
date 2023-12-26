@@ -14,7 +14,8 @@ from homeassistant.components.climate.const import ClimateEntityFeature, HVACMod
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -44,7 +45,7 @@ class HuumDevice(ClimateEntity):
     _attr_min_temp = 40
     _attr_has_entity_name = True
     _attr_name = None
-    self._attr_device_info = DeviceInfo(
+    _attr_device_info = DeviceInfo(
         name="Huum Sauna",
         manufacturer="Huum",
     )
