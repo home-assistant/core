@@ -329,17 +329,17 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if target_temperature_step := self.target_temperature_step:
             data[ATTR_TARGET_TEMP_STEP] = target_temperature_step
 
-        if supported_features & ClimateEntityFeature.TARGET_HUMIDITY:
+        if ClimateEntityFeature.TARGET_HUMIDITY in supported_features:
             data[ATTR_MIN_HUMIDITY] = self.min_humidity
             data[ATTR_MAX_HUMIDITY] = self.max_humidity
 
-        if supported_features & ClimateEntityFeature.FAN_MODE:
+        if ClimateEntityFeature.FAN_MODE in supported_features:
             data[ATTR_FAN_MODES] = self.fan_modes
 
-        if supported_features & ClimateEntityFeature.PRESET_MODE:
+        if ClimateEntityFeature.PRESET_MODE in supported_features:
             data[ATTR_PRESET_MODES] = self.preset_modes
 
-        if supported_features & ClimateEntityFeature.SWING_MODE:
+        if ClimateEntityFeature.SWING_MODE in supported_features:
             data[ATTR_SWING_MODES] = self.swing_modes
 
         return data
