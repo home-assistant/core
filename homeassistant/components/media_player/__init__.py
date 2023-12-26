@@ -911,81 +911,79 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def support_pause(self) -> bool:
         """Boolean if pause is supported."""
-        return bool(MediaPlayerEntityFeature.PAUSE in self.supported_features)
+        return MediaPlayerEntityFeature.PAUSE in self.supported_features
 
     @final
     @property
     def support_stop(self) -> bool:
         """Boolean if stop is supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.STOP)
+        return MediaPlayerEntityFeature.STOP in self.supported_features
 
     @final
     @property
     def support_seek(self) -> bool:
         """Boolean if seek is supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.SEEK)
+        return MediaPlayerEntityFeature.SEEK in self.supported_features
 
     @final
     @property
     def support_volume_set(self) -> bool:
         """Boolean if setting volume is supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.VOLUME_SET)
+        return MediaPlayerEntityFeature.VOLUME_SET in self.supported_features
 
     @final
     @property
     def support_volume_mute(self) -> bool:
         """Boolean if muting volume is supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.VOLUME_MUTE)
+        return MediaPlayerEntityFeature.VOLUME_MUTE in self.supported_features
 
     @final
     @property
     def support_previous_track(self) -> bool:
         """Boolean if previous track command supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.PREVIOUS_TRACK)
+        return MediaPlayerEntityFeature.PREVIOUS_TRACK in self.supported_features
 
     @final
     @property
     def support_next_track(self) -> bool:
         """Boolean if next track command supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.NEXT_TRACK)
+        return MediaPlayerEntityFeature.NEXT_TRACK in self.supported_features
 
     @final
     @property
     def support_play_media(self) -> bool:
         """Boolean if play media command supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.PLAY_MEDIA)
+        return MediaPlayerEntityFeature.PLAY_MEDIA in self.supported_features
 
     @final
     @property
     def support_select_source(self) -> bool:
         """Boolean if select source command supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.SELECT_SOURCE)
+        return MediaPlayerEntityFeature.SELECT_SOURCE in self.supported_features
 
     @final
     @property
     def support_select_sound_mode(self) -> bool:
         """Boolean if select sound mode command supported."""
-        return bool(
-            self.supported_features & MediaPlayerEntityFeature.SELECT_SOUND_MODE
-        )
+        return MediaPlayerEntityFeature.SELECT_SOUND_MODE in self.supported_features
 
     @final
     @property
     def support_clear_playlist(self) -> bool:
         """Boolean if clear playlist command supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.CLEAR_PLAYLIST)
+        return MediaPlayerEntityFeature.CLEAR_PLAYLIST in self.supported_features
 
     @final
     @property
     def support_shuffle_set(self) -> bool:
         """Boolean if shuffle is supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.SHUFFLE_SET)
+        return MediaPlayerEntityFeature.SHUFFLE_SET in self.supported_features
 
     @final
     @property
     def support_grouping(self) -> bool:
         """Boolean if player grouping is supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.GROUPING)
+        return MediaPlayerEntityFeature.GROUPING in self.supported_features
 
     async def async_toggle(self) -> None:
         """Toggle the power on the media player."""
@@ -1014,7 +1012,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if (
             self.volume_level is not None
             and self.volume_level < 1
-            and self.supported_features & MediaPlayerEntityFeature.VOLUME_SET
+            and MediaPlayerEntityFeature.VOLUME_SET in self.supported_features
         ):
             await self.async_set_volume_level(
                 min(1, self.volume_level + self.volume_step)
@@ -1032,7 +1030,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if (
             self.volume_level is not None
             and self.volume_level > 0
-            and self.supported_features & MediaPlayerEntityFeature.VOLUME_SET
+            and MediaPlayerEntityFeature.VOLUME_SET in self.supported_features
         ):
             await self.async_set_volume_level(
                 max(0, self.volume_level - self.volume_step)
@@ -1077,14 +1075,14 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         data: dict[str, Any] = {}
         supported_features = self.supported_features
 
-        if supported_features & MediaPlayerEntityFeature.SELECT_SOURCE and (
+        if (
             source_list := self.source_list
-        ):
+        ) and MediaPlayerEntityFeature.SELECT_SOURCE in supported_features:
             data[ATTR_INPUT_SOURCE_LIST] = source_list
 
-        if supported_features & MediaPlayerEntityFeature.SELECT_SOUND_MODE and (
+        if (
             sound_mode_list := self.sound_mode_list
-        ):
+        ) and MediaPlayerEntityFeature.SELECT_SOUND_MODE in supported_features:
             data[ATTR_SOUND_MODE_LIST] = sound_mode_list
 
         return data
@@ -1282,7 +1280,7 @@ async def websocket_browse_media(
         connection.send_error(msg["id"], "entity_not_found", "Entity not found")
         return
 
-    if not player.supported_features & MediaPlayerEntityFeature.BROWSE_MEDIA:
+    if MediaPlayerEntityFeature.BROWSE_MEDIA not in player.supported_features:
         connection.send_message(
             websocket_api.error_message(
                 msg["id"], ERR_NOT_SUPPORTED, "Player does not support browsing media"
