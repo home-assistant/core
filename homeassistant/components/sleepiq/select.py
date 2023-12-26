@@ -98,14 +98,14 @@ class SleepIQFootWarmingTempSelectEntity(
         """Update entity attributes."""
         self._attr_current_option = FootWarmingTemps(
             self.foot_warmer.temperature
-        ).name.title()
+        ).name.lower()
 
     async def async_select_option(self, option: str) -> None:
         """Change the current preset."""
         temperature = FootWarmingTemps[option.upper()]
         timer = self.foot_warmer.timer or 120
 
-        if option == FootWarmingTemps.OFF.name.title():
+        if temperature == 0:
             await self.foot_warmer.turn_off()
         else:
             await self.foot_warmer.turn_on(temperature, timer)
