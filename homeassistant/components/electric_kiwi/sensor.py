@@ -28,14 +28,14 @@ ATTR_EK_HOP_START = "hop_sensor_start"
 ATTR_EK_HOP_END = "hop_sensor_end"
 
 
-@dataclass
+@dataclass(frozen=True)
 class ElectricKiwiHOPRequiredKeysMixin:
     """Mixin for required HOP keys."""
 
     value_func: Callable[[Hop], datetime]
 
 
-@dataclass
+@dataclass(frozen=True)
 class ElectricKiwiHOPSensorEntityDescription(
     SensorEntityDescription,
     ElectricKiwiHOPRequiredKeysMixin,

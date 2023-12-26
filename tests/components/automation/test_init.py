@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -46,6 +47,7 @@ from homeassistant.helpers.script import (
     SCRIPT_MODE_SINGLE,
     _async_stop_scripts_at_shutdown,
 )
+from homeassistant.helpers.trigger import TriggerActionType, TriggerData, TriggerInfo
 from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml
 import homeassistant.util.dt as dt_util
@@ -57,6 +59,7 @@ from tests.common import (
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
+    import_and_test_deprecated_constant,
     mock_restore_cache,
 )
 from tests.components.logbook.common import MockRow, mock_humanify
@@ -1102,7 +1105,7 @@ async def test_reload_automation_when_blueprint_changes(
             autospec=True,
             return_value=config,
         ), patch(
-            "homeassistant.components.blueprint.models.yaml.load_yaml",
+            "homeassistant.components.blueprint.models.yaml.load_yaml_dict",
             autospec=True,
             return_value=blueprint_config,
         ):
@@ -2564,3 +2567,22 @@ async def test_websocket_config(
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"]["code"] == "not_found"
+
+
+@pytest.mark.parametrize(
+    ("constant_name", "replacement"),
+    [
+        ("AutomationActionType", TriggerActionType),
+        ("AutomationTriggerData", TriggerData),
+        ("AutomationTriggerInfo", TriggerInfo),
+    ],
+)
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    constant_name: str,
+    replacement: Any,
+) -> None:
+    """Test deprecated automation constants."""
+    import_and_test_deprecated_constant(
+        caplog, automation, constant_name, replacement.__name__, replacement, "2025.1"
+    )

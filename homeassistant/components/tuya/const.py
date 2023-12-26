@@ -36,9 +36,6 @@ CONF_PROJECT_TYPE = "tuya_project_type"
 CONF_ENDPOINT = "endpoint"
 CONF_ACCESS_ID = "access_id"
 CONF_ACCESS_SECRET = "access_secret"
-CONF_USERNAME = "username"
-CONF_PASSWORD = "password"
-CONF_COUNTRY_CODE = "country_code"
 CONF_APP_TYPE = "tuya_app_type"
 
 TUYA_DISCOVERY_NEW = "tuya_discovery_new"
@@ -338,6 +335,7 @@ class DPCode(StrEnum):
     TEMP_VALUE_V2 = "temp_value_v2"
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
     TIME_TOTAL = "time_total"
+    TIME_USE = "time_use"  # Total seconds of irrigation
     TOTAL_CLEAN_AREA = "total_clean_area"
     TOTAL_CLEAN_COUNT = "total_clean_count"
     TOTAL_CLEAN_TIME = "total_clean_time"
@@ -362,6 +360,7 @@ class DPCode(StrEnum):
     WATER_RESET = "water_reset"  # Resetting of water usage days
     WATER_SET = "water_set"  # Water level
     WATERSENSOR_STATE = "watersensor_state"
+    WEATHER_DELAY = "weather_delay"
     WET = "wet"  # Humidification
     WINDOW_CHECK = "window_check"
     WINDOW_STATE = "window_state"

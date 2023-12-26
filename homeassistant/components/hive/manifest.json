@@ -9,5 +9,5 @@
   },
   "iot_class": "cloud_polling",
   "loggers": ["apyhiveapi"],
-  "requirements": ["pyhiveapi==0.5.14"]
+  "requirements": ["pyhiveapi==0.5.16"]
 }

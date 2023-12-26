@@ -358,7 +358,7 @@ def async_validate_entity_schema(
 
 
 def handle_device_errors(
-    func: Callable[[HomeAssistant, ActiveConnection, dict[str, Any]], Awaitable[None]]
+    func: Callable[[HomeAssistant, ActiveConnection, dict[str, Any]], Awaitable[None]],
 ) -> Callable[
     [HomeAssistant, ActiveConnection, dict[str, Any]], Coroutine[Any, Any, None]
 ]:

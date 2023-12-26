@@ -24,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     HassJob,
+    HassJobType,
     HomeAssistant,
     State,
     callback,
@@ -135,7 +136,7 @@ class EventStateChangedData(TypedDict):
 
 
 def threaded_listener_factory(
-    async_factory: Callable[Concatenate[HomeAssistant, _P], Any]
+    async_factory: Callable[Concatenate[HomeAssistant, _P], Any],
 ) -> Callable[Concatenate[HomeAssistant, _P], CALLBACK_TYPE]:
     """Convert an async event helper to a threaded one."""
 
@@ -250,7 +251,9 @@ def async_track_state_change(
         return async_track_state_change_event(hass, entity_ids, state_change_listener)
 
     return hass.bus.async_listen(
-        EVENT_STATE_CHANGED, state_change_dispatcher, event_filter=state_change_filter  # type: ignore[arg-type]
+        EVENT_STATE_CHANGED,
+        state_change_dispatcher,  # type: ignore[arg-type]
+        event_filter=state_change_filter,  # type: ignore[arg-type]
     )
 
 
@@ -394,8 +397,8 @@ def _async_track_event(
     if listeners_key not in hass_data:
         hass_data[listeners_key] = hass.bus.async_listen(
             event_type,
-            callback(ft.partial(dispatcher_callable, hass, callbacks)),
-            event_filter=callback(ft.partial(filter_callable, hass, callbacks)),
+            ft.partial(dispatcher_callable, hass, callbacks),
+            event_filter=ft.partial(filter_callable, hass, callbacks),
         )
 
     job = HassJob(action, f"track {event_type} event {keys}")
@@ -760,7 +763,8 @@ class _TrackStateChangeFiltered:
     @callback
     def _setup_all_listener(self) -> None:
         self._listeners[_ALL_LISTENER] = self.hass.bus.async_listen(
-            EVENT_STATE_CHANGED, self._action  # type: ignore[arg-type]
+            EVENT_STATE_CHANGED,
+            self._action,  # type: ignore[arg-type]
         )
 
 
@@ -1334,7 +1338,8 @@ def async_track_same_state(
 
     if entity_ids == MATCH_ALL:
         async_remove_state_for_cancel = hass.bus.async_listen(
-            EVENT_STATE_CHANGED, state_for_cancel_listener  # type: ignore[arg-type]
+            EVENT_STATE_CHANGED,
+            state_for_cancel_listener,  # type: ignore[arg-type]
         )
     else:
         async_remove_state_for_cancel = async_track_state_change_event(
@@ -1376,6 +1381,7 @@ def async_track_point_in_time(
         utc_converter,
         name=f"{job.name} UTC converter",
         cancel_on_shutdown=job.cancel_on_shutdown,
+        job_type=HassJobType.Callback,
     )
     return async_track_point_in_utc_time(hass, track_job, point_in_time)
 
@@ -1531,7 +1537,10 @@ def async_track_time_interval(
         job_name = f"track time interval {interval} {action}"
 
     interval_listener_job = HassJob(
-        interval_listener, job_name, cancel_on_shutdown=cancel_on_shutdown
+        interval_listener,
+        job_name,
+        cancel_on_shutdown=cancel_on_shutdown,
+        job_type=HassJobType.Callback,
     )
     remove = async_call_later(hass, interval_seconds, interval_listener_job)
 
@@ -1703,6 +1712,7 @@ def async_track_utc_time_change(
     pattern_time_change_listener_job = HassJob(
         pattern_time_change_listener,
         f"time change listener {hour}:{minute}:{second} {action}",
+        job_type=HassJobType.Callback,
     )
     time_listener = async_track_point_in_utc_time(
         hass, pattern_time_change_listener_job, calculate_next(dt_util.utcnow())

@@ -194,6 +194,42 @@ async def test_fails_on_punctuation(hass: HomeAssistant, command: str) -> None:
         )
 
 
+@pytest.mark.parametrize(
+    "command",
+    [""],
+)
+async def test_fails_on_empty(hass: HomeAssistant, command: str) -> None:
+    """Test that validation fails when sentences are empty."""
+    with pytest.raises(vol.Invalid):
+        await trigger.async_validate_trigger_config(
+            hass,
+            [
+                {
+                    "id": "trigger1",
+                    "platform": "conversation",
+                    "command": [
+                        command,
+                    ],
+                },
+            ],
+        )
+
+
+async def test_fails_on_no_sentences(hass: HomeAssistant) -> None:
+    """Test that validation fails when no sentences are provided."""
+    with pytest.raises(vol.Invalid):
+        await trigger.async_validate_trigger_config(
+            hass,
+            [
+                {
+                    "id": "trigger1",
+                    "platform": "conversation",
+                    "command": [],
+                },
+            ],
+        )
+
+
 async def test_wildcards(hass: HomeAssistant, calls, setup_comp) -> None:
     """Test wildcards in trigger sentences."""
     assert await async_setup_component(

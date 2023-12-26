@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components import binary_sensor
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -14,10 +14,12 @@ from tests.common import (
     MockConfigEntry,
     MockModule,
     MockPlatform,
+    import_and_test_deprecated_constant_enum,
     mock_config_flow,
     mock_integration,
     mock_platform,
 )
+from tests.testing_config.custom_components.test.binary_sensor import MockBinarySensor
 
 TEST_DOMAIN = "test"
 
@@ -101,7 +103,7 @@ async def test_name(hass: HomeAssistant) -> None:
         config_entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
-        """Set up test stt platform via config entry."""
+        """Set up test binary_sensor platform via config entry."""
         async_add_entities([entity1, entity2, entity3, entity4])
 
     mock_platform(
@@ -126,3 +128,84 @@ async def test_name(hass: HomeAssistant) -> None:
 
     state = hass.states.get(entity4.entity_id)
     assert state.attributes == {"device_class": "battery", "friendly_name": "Battery"}
+
+
+async def test_entity_category_config_raises_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test error is raised when entity category is set to config."""
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setup(
+            config_entry, binary_sensor.DOMAIN
+        )
+        return True
+
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+    mock_integration(
+        hass,
+        MockModule(
+            TEST_DOMAIN,
+            async_setup_entry=async_setup_entry_init,
+        ),
+    )
+
+    description1 = binary_sensor.BinarySensorEntityDescription(
+        "diagnostic", entity_category=EntityCategory.DIAGNOSTIC
+    )
+    entity1 = MockBinarySensor()
+    entity1.entity_description = description1
+    entity1.entity_id = "binary_sensor.test1"
+
+    description2 = binary_sensor.BinarySensorEntityDescription(
+        "config", entity_category=EntityCategory.CONFIG
+    )
+    entity2 = MockBinarySensor()
+    entity2.entity_description = description2
+    entity2.entity_id = "binary_sensor.test2"
+
+    async def async_setup_entry_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Set up test binary_sensor platform via config entry."""
+        async_add_entities([entity1, entity2])
+
+    mock_platform(
+        hass,
+        f"{TEST_DOMAIN}.{binary_sensor.DOMAIN}",
+        MockPlatform(async_setup_entry=async_setup_entry_platform),
+    )
+
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state1 = hass.states.get("binary_sensor.test1")
+    assert state1 is not None
+    state2 = hass.states.get("binary_sensor.test2")
+    assert state2 is None
+    assert (
+        "Entity binary_sensor.test2 cannot be added as the entity category is set to config"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "device_class",
+    list(binary_sensor.BinarySensorDeviceClass),
+)
+def test_deprecated_constant_device_class(
+    caplog: pytest.LogCaptureFixture,
+    device_class: binary_sensor.BinarySensorDeviceClass,
+) -> None:
+    """Test deprecated binary sensor device classes."""
+    import_and_test_deprecated_constant_enum(
+        caplog, binary_sensor, device_class, "DEVICE_CLASS_", "2025.1"
+    )

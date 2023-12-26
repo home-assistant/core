@@ -79,7 +79,7 @@ def catch_request_errors() -> (
     """Catch asyncio.TimeoutError, aiohttp.ClientError, UpnpError errors."""
 
     def call_wrapper(
-        func: _FuncType[_OpenhomeDeviceT, _P, _R]
+        func: _FuncType[_OpenhomeDeviceT, _P, _R],
     ) -> _ReturnFuncType[_OpenhomeDeviceT, _P, _R]:
         """Call wrapper for decorator."""
 

@@ -385,6 +385,12 @@ def climate_eurotronic_spirit_z_state_fixture():
     return json.loads(load_fixture("zwave_js/climate_eurotronic_spirit_z_state.json"))
 
 
+@pytest.fixture(name="climate_heatit_z_trm6_state", scope="session")
+def climate_heatit_z_trm6_state_fixture():
+    """Load the climate HEATIT Z-TRM6 thermostat node state fixture data."""
+    return json.loads(load_fixture("zwave_js/climate_heatit_z_trm6_state.json"))
+
+
 @pytest.fixture(name="climate_heatit_z_trm3_state", scope="session")
 def climate_heatit_z_trm3_state_fixture():
     """Load the climate HEATIT Z-TRM3 thermostat node state fixture data."""
@@ -662,12 +668,6 @@ def logic_group_zdb5100_state_fixture():
     return json.loads(load_fixture("zwave_js/logic_group_zdb5100_state.json"))
 
 
-@pytest.fixture(name="climate_intermatic_pe653_state", scope="session")
-def climate_intermatic_pe653_state_fixture():
-    """Load Intermatic PE653 Pool Control node state fixture data."""
-    return json.loads(load_fixture("zwave_js/climate_intermatic_pe653_state.json"))
-
-
 @pytest.fixture(name="central_scene_node_state", scope="session")
 def central_scene_node_state_fixture():
     """Load node with Central Scene CC node state fixture data."""
@@ -899,6 +899,14 @@ def climate_danfoss_lc_13_fixture(client, climate_danfoss_lc_13_state):
 def climate_eurotronic_spirit_z_fixture(client, climate_eurotronic_spirit_z_state):
     """Mock a climate radio danfoss LC-13 node."""
     node = Node(client, climate_eurotronic_spirit_z_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="climate_heatit_z_trm6")
+def climate_heatit_z_trm6_fixture(client, climate_heatit_z_trm6_state):
+    """Mock a climate radio HEATIT Z-TRM6 node."""
+    node = Node(client, copy.deepcopy(climate_heatit_z_trm6_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
@@ -1308,14 +1316,6 @@ def nice_ibt4zwave_fixture(client, nice_ibt4zwave_state):
 def logic_group_zdb5100_fixture(client, logic_group_zdb5100_state):
     """Mock a ZDB5100 light node."""
     node = Node(client, copy.deepcopy(logic_group_zdb5100_state))
-    client.driver.controller.nodes[node.node_id] = node
-    return node
-
-
-@pytest.fixture(name="climate_intermatic_pe653")
-def climate_intermatic_pe653_fixture(client, climate_intermatic_pe653_state):
-    """Mock an Intermatic PE653 node."""
-    node = Node(client, copy.deepcopy(climate_intermatic_pe653_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 

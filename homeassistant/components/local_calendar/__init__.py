@@ -7,9 +7,10 @@ from pathlib import Path
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.util import slugify
 
-from .const import CONF_CALENDAR_NAME, DOMAIN
+from .const import CONF_CALENDAR_NAME, CONF_STORAGE_KEY, DOMAIN
 from .store import LocalCalendarStore
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,9 +25,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Local Calendar from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    key = slugify(entry.data[CONF_CALENDAR_NAME])
-    path = Path(hass.config.path(STORAGE_PATH.format(key=key)))
-    hass.data[DOMAIN][entry.entry_id] = LocalCalendarStore(hass, path)
+    if CONF_STORAGE_KEY not in entry.data:
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                **entry.data,
+                CONF_STORAGE_KEY: slugify(entry.data[CONF_CALENDAR_NAME]),
+            },
+        )
+
+    path = Path(hass.config.path(STORAGE_PATH.format(key=entry.data[CONF_STORAGE_KEY])))
+    store = LocalCalendarStore(hass, path)
+    try:
+        await store.async_load()
+    except OSError as err:
+        raise ConfigEntryNotReady("Failed to load file {path}: {err}") from err
+
+    hass.data[DOMAIN][entry.entry_id] = store
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

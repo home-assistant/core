@@ -55,12 +55,9 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            for entry in self._async_current_entries():
-                if (
-                    entry.data[CONF_HOST] == user_input[CONF_HOST]
-                    and entry.data[CONF_PORT] == user_input[CONF_PORT]
-                ):
-                    return self.async_abort(reason="already_configured")
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
             try:
                 await get_api(self.hass, user_input)
 

@@ -3,6 +3,7 @@
   dict({
     'has_cloudhooks': True,
     'has_valid_external_webhook_url': True,
+    'received_activity_data': False,
     'received_measurements': list([
       1,
       8,
@@ -26,6 +27,7 @@
       169,
     ]),
     'received_sleep_data': True,
+    'received_workout_data': True,
     'webhooks_connected': True,
   })
 # ---
@@ -33,6 +35,7 @@
   dict({
     'has_cloudhooks': False,
     'has_valid_external_webhook_url': False,
+    'received_activity_data': False,
     'received_measurements': list([
       1,
       8,
@@ -56,6 +59,7 @@
       169,
     ]),
     'received_sleep_data': True,
+    'received_workout_data': True,
     'webhooks_connected': False,
   })
 # ---
@@ -63,6 +67,7 @@
   dict({
     'has_cloudhooks': False,
     'has_valid_external_webhook_url': True,
+    'received_activity_data': False,
     'received_measurements': list([
       1,
       8,
@@ -86,6 +91,7 @@
       169,
     ]),
     'received_sleep_data': True,
+    'received_workout_data': True,
     'webhooks_connected': True,
   })
 # ---

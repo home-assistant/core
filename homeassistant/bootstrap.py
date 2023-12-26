@@ -27,6 +27,7 @@ from .const import (
 from .exceptions import HomeAssistantError
 from .helpers import (
     area_registry,
+    config_validation as cv,
     device_registry,
     entity,
     entity_registry,
@@ -41,6 +42,7 @@ from .setup import (
     DATA_SETUP,
     DATA_SETUP_STARTED,
     DATA_SETUP_TIME,
+    async_notify_setup_error,
     async_set_domains_to_be_loaded,
     async_setup_component,
 )
@@ -292,7 +294,8 @@ async def async_from_config_dict(
     try:
         await conf_util.async_process_ha_core_config(hass, core_config)
     except vol.Invalid as config_err:
-        conf_util.async_log_exception(config_err, "homeassistant", core_config, hass)
+        conf_util.async_log_schema_error(config_err, core.DOMAIN, core_config, hass)
+        async_notify_setup_error(hass, core.DOMAIN)
         return None
     except HomeAssistantError:
         _LOGGER.error(
@@ -398,7 +401,7 @@ def async_enable_logging(
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
     sys.excepthook = lambda *args: logging.getLogger(None).exception(
-        "Uncaught exception", exc_info=args  # type: ignore[arg-type]
+        "Uncaught exception", exc_info=args
     )
     threading.excepthook = lambda args: logging.getLogger(None).exception(
         "Uncaught thread exception",
@@ -471,7 +474,9 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
 def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     """Get domains of components to set up."""
     # Filter out the repeating and common config section [homeassistant]
-    domains = {key.partition(" ")[0] for key in config if key != core.DOMAIN}
+    domains = {
+        domain for key in config if (domain := cv.domain_key(key)) != core.DOMAIN
+    }
 
     # Add config entry domains
     if not hass.config.recovery_mode:

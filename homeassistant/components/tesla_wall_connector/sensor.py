@@ -30,7 +30,7 @@ from .const import DOMAIN, WALLCONNECTOR_DATA_LIFETIME, WALLCONNECTOR_DATA_VITAL
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class WallConnectorSensorDescription(
     SensorEntityDescription, WallConnectorLambdaValueGetterMixin
 ):

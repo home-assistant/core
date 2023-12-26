@@ -151,8 +151,11 @@ async def _async_get_handle_dhcp_packet(hass, integration_matchers):
     with patch(
         "homeassistant.components.dhcp._verify_l2socket_setup",
     ), patch(
-        "scapy.arch.common.compile_filter"
-    ), patch("scapy.sendrecv.AsyncSniffer", _mock_sniffer):
+        "scapy.arch.common.compile_filter",
+    ), patch(
+        "scapy.sendrecv.AsyncSniffer",
+        _mock_sniffer,
+    ):
         await dhcp_watcher.async_start()
 
     return async_handle_dhcp_packet
@@ -213,7 +216,9 @@ async def test_dhcp_renewal_match_hostname_and_macaddress(hass: HomeAssistant) -
     )
 
 
-async def test_registered_devices(hass: HomeAssistant) -> None:
+async def test_registered_devices(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test discovery flows are created for registered devices."""
     integration_matchers = [
         {"domain": "not-matching", "registered_devices": True},
@@ -222,10 +227,9 @@ async def test_registered_devices(hass: HomeAssistant) -> None:
 
     packet = Ether(RAW_DHCP_RENEWAL)
 
-    registry = dr.async_get(hass)
     config_entry = MockConfigEntry(domain="mock-domain", data={})
     config_entry.add_to_hass(hass)
-    registry.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "50147903852c")},
         name="name",
@@ -233,7 +237,7 @@ async def test_registered_devices(hass: HomeAssistant) -> None:
     # Not enabled should not get flows
     config_entry2 = MockConfigEntry(domain="mock-domain-2", data={})
     config_entry2.add_to_hass(hass)
-    registry.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=config_entry2.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "50147903852c")},
         name="name",
@@ -821,6 +825,36 @@ async def test_device_tracker_hostname_and_macaddress_after_start_hostname_missi
         await device_tracker_watcher.async_stop()
         await hass.async_block_till_done()
 
+    assert len(mock_init.mock_calls) == 0
+
+
+async def test_device_tracker_invalid_ip_address(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test an invalid ip address."""
+
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
+        device_tracker_watcher = dhcp.DeviceTrackerWatcher(
+            hass,
+            {},
+            [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
+        )
+        await device_tracker_watcher.async_start()
+        await hass.async_block_till_done()
+        hass.states.async_set(
+            "device_tracker.august_connect",
+            STATE_HOME,
+            {
+                ATTR_IP: "invalid",
+                ATTR_SOURCE_TYPE: SourceType.ROUTER,
+                ATTR_MAC: "B8:B7:F1:6D:B5:33",
+            },
+        )
+        await hass.async_block_till_done()
+        await device_tracker_watcher.async_stop()
+        await hass.async_block_till_done()
+
+    assert "Ignoring invalid IP Address: invalid" in caplog.text
     assert len(mock_init.mock_calls) == 0
 
 
