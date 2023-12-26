@@ -209,6 +209,10 @@ SERVICE_CLOSE_COVER_VALVE = {
     cover.DOMAIN: cover.SERVICE_CLOSE_COVER,
     valve.DOMAIN: valve.SERVICE_CLOSE_VALVE,
 }
+SERVICE_TOGGLE_COVER_VALVE = {
+    cover.DOMAIN: cover.SERVICE_TOGGLE,
+    valve.DOMAIN: valve.SERVICE_TOGGLE,
+}
 SERVICE_SET_POSITION_COVER_VALVE = {
     cover.DOMAIN: cover.SERVICE_SET_COVER_POSITION,
     valve.DOMAIN: valve.SERVICE_SET_VALVE_POSITION,
@@ -227,6 +231,10 @@ COVER_VALVE_POSITION = {
 COVER_VALVE_SET_POSITION_FEATURE = {
     cover.DOMAIN: CoverEntityFeature.SET_POSITION,
     valve.DOMAIN: ValveEntityFeature.SET_POSITION,
+}
+COVER_VALVE_STOP_FEATURE = {
+    cover.DOMAIN: CoverEntityFeature.STOP,
+    valve.DOMAIN: ValveEntityFeature.STOP,
 }
 
 COVER_VALVE_DOMAINS = {cover.DOMAIN, valve.DOMAIN}
@@ -846,10 +854,10 @@ class StartStopTrait(_Trait):
         if domain == vacuum.DOMAIN:
             return True
 
-        if domain == cover.DOMAIN and features & CoverEntityFeature.STOP:
-            return True
-
-        if domain == valve.DOMAIN and features & ValveEntityFeature.STOP:
+        if (
+            domain in COVER_VALVE_DOMAINS
+            and features & COVER_VALVE_STOP_FEATURE[domain]
+        ):
             return True
 
         return False
@@ -877,10 +885,14 @@ class StartStopTrait(_Trait):
                 "isPaused": state == vacuum.STATE_PAUSED,
             }
 
-        if domain == cover.DOMAIN:
-            return {"isRunning": state in (cover.STATE_CLOSING, cover.STATE_OPENING)}
-        if domain == valve.DOMAIN:
-            return {"isRunning": True}
+        if domain in COVER_VALVE_DOMAINS:
+            return {
+                "isRunning": state
+                in (
+                    COVER_VALVE_STATES[domain]["closing"],
+                    COVER_VALVE_STATES[domain]["opening"],
+                )
+            }
 
     async def execute(self, command, data, params, challenge):
         """Execute a StartStop command."""
@@ -932,15 +944,10 @@ class StartStopTrait(_Trait):
         domain = self.state.domain
         if command == COMMAND_STARTSTOP:
             if params["start"] is False:
-                if (
-                    self.state.state
-                    in (
-                        COVER_VALVE_STATES[domain]["closing"],
-                        COVER_VALVE_STATES[domain]["opening"],
-                    )
-                    or domain == valve.DOMAIN
-                    or self.state.attributes.get(ATTR_ASSUMED_STATE)
-                ):
+                if self.state.state in (
+                    COVER_VALVE_STATES[domain]["closing"],
+                    COVER_VALVE_STATES[domain]["opening"],
+                ) or self.state.attributes.get(ATTR_ASSUMED_STATE):
                     await self.hass.services.async_call(
                         domain,
                         SERVICE_STOP_COVER_VALVE[domain],
@@ -954,8 +961,12 @@ class StartStopTrait(_Trait):
                         f"{FRIENDLY_DOMAIN[domain]} is already stopped",
                     )
             else:
-                raise SmartHomeError(
-                    ERR_NOT_SUPPORTED, f"Starting a {domain} is not supported"
+                await self.hass.services.async_call(
+                    domain,
+                    SERVICE_TOGGLE_COVER_VALVE[domain],
+                    {ATTR_ENTITY_ID: self.state.entity_id},
+                    blocking=not self.config.should_report_state,
+                    context=data.context,
                 )
         else:
             raise SmartHomeError(

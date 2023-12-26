@@ -227,6 +227,9 @@ class EntityPlatformState(Enum):
     REMOVED = auto()
 
 
+_SENTINEL = object()
+
+
 class EntityDescription(metaclass=FrozenOrThawed, frozen_or_thawed=True):
     """A class that describes Home Assistant entities."""
 
@@ -346,6 +349,8 @@ class CachedProperties(type):
                 Also invalidates the corresponding cached_property by calling
                 delattr on it.
                 """
+                if getattr(o, private_attr_name, _SENTINEL) == val:
+                    return
                 setattr(o, private_attr_name, val)
                 try:  # noqa: SIM105  suppress is much slower
                     delattr(o, name)
