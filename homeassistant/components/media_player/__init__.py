@@ -8,6 +8,7 @@ from contextlib import suppress
 import datetime as dt
 from enum import StrEnum
 import functools as ft
+from functools import lru_cache
 import hashlib
 from http import HTTPStatus
 import logging
@@ -496,6 +497,12 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
 }
 
 
+@lru_cache
+def _url_hash(url: str) -> str:
+    """Create hash for media image url."""
+    return hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
+
+
 class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """ABC for media player entities."""
 
@@ -636,7 +643,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return self._attr_media_image_hash
 
         if (url := self.media_image_url) is not None:
-            return hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
+            return _url_hash(url)
 
         return None
 
