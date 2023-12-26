@@ -30,9 +30,8 @@ async def test_switches(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.tessie.entity.TessieEntity.run",
-        return_value=True,
-    ) as mock_run:
+        "homeassistant.components.tessie.switch.start_charging",
+    ) as mock_start_charging:
         # Test Switch On
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -40,9 +39,10 @@ async def test_switches(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: ["switch.test_charge"]},
             blocking=True,
         )
-        mock_run.assert_called_once()
-        mock_run.reset_mock()
-
+        mock_start_charging.assert_called_once()
+    with patch(
+        "homeassistant.components.tessie.switch.stop_charging",
+    ) as mock_stop_charging:
         # Test Switch Off
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -50,4 +50,4 @@ async def test_switches(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: ["switch.test_charge"]},
             blocking=True,
         )
-        mock_run.assert_called_once()
+        mock_stop_charging.assert_called_once()

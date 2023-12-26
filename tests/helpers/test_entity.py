@@ -13,6 +13,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
@@ -1905,3 +1906,122 @@ async def test_update_capabilities_too_often_cooldown(
     assert entry.supported_features == supported_features + 1
 
     assert capabilities_too_often_warning not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("property", "default_value", "values"), [("attribution", None, ["abcd", "efgh"])]
+)
+async def test_cached_entity_properties(
+    hass: HomeAssistant, property: str, default_value: Any, values: Any
+) -> None:
+    """Test entity properties are cached."""
+    ent1 = entity.Entity()
+    ent2 = entity.Entity()
+    assert getattr(ent1, property) == default_value
+    assert getattr(ent2, property) == default_value
+
+    # Test set
+    setattr(ent1, f"_attr_{property}", values[0])
+    assert getattr(ent1, property) == values[0]
+    assert getattr(ent2, property) == default_value
+
+    # Test update
+    setattr(ent1, f"_attr_{property}", values[1])
+    assert getattr(ent1, property) == values[1]
+    assert getattr(ent2, property) == default_value
+
+    # Test delete
+    delattr(ent1, f"_attr_{property}")
+    assert getattr(ent1, property) == default_value
+    assert getattr(ent2, property) == default_value
+
+
+async def test_cached_entity_property_delete_attr(hass: HomeAssistant) -> None:
+    """Test deleting an _attr corresponding to a cached property."""
+    property = "has_entity_name"
+
+    ent = entity.Entity()
+    assert not hasattr(ent, f"_attr_{property}")
+    with pytest.raises(AttributeError):
+        delattr(ent, f"_attr_{property}")
+    assert getattr(ent, property) is False
+
+    with pytest.raises(AttributeError):
+        delattr(ent, f"_attr_{property}")
+    assert not hasattr(ent, f"_attr_{property}")
+    assert getattr(ent, property) is False
+
+    setattr(ent, f"_attr_{property}", True)
+    assert getattr(ent, property) is True
+
+    delattr(ent, f"_attr_{property}")
+    assert not hasattr(ent, f"_attr_{property}")
+    assert getattr(ent, property) is False
+
+
+async def test_cached_entity_property_class_attribute(hass: HomeAssistant) -> None:
+    """Test entity properties on class level work in derived classes."""
+    property = "attribution"
+    values = ["abcd", "efgh"]
+
+    class EntityWithClassAttribute1(entity.Entity):
+        """A derived class which overrides an _attr_ from a parent."""
+
+        _attr_attribution = values[0]
+
+    class EntityWithClassAttribute2(entity.Entity, cached_properties={property}):
+        """A derived class which overrides an _attr_ from a parent.
+
+        This class also redundantly marks the overridden _attr_ as cached.
+        """
+
+        _attr_attribution = values[0]
+
+    class EntityWithClassAttribute3(entity.Entity, cached_properties={property}):
+        """A derived class which overrides an _attr_ from a parent.
+
+        This class overrides the attribute property.
+        """
+
+        def __init__(self):
+            self._attr_attribution = values[0]
+
+        @cached_property
+        def attribution(self) -> str | None:
+            """Return the attribution."""
+            return self._attr_attribution
+
+    class EntityWithClassAttribute4(entity.Entity, cached_properties={property}):
+        """A derived class which overrides an _attr_ from a parent.
+
+        This class overrides the attribute property and the _attr_.
+        """
+
+        _attr_attribution = values[0]
+
+        @cached_property
+        def attribution(self) -> str | None:
+            """Return the attribution."""
+            return self._attr_attribution
+
+    classes = (
+        EntityWithClassAttribute1,
+        EntityWithClassAttribute2,
+        EntityWithClassAttribute3,
+        EntityWithClassAttribute4,
+    )
+
+    entities: list[tuple[entity.Entity, entity.Entity]] = []
+    for cls in classes:
+        entities.append((cls(), cls()))
+
+    for ent in entities:
+        assert getattr(ent[0], property) == values[0]
+        assert getattr(ent[1], property) == values[0]
+
+    # Test update
+    for ent in entities:
+        setattr(ent[0], f"_attr_{property}", values[1])
+    for ent in entities:
+        assert getattr(ent[0], property) == values[1]
+        assert getattr(ent[1], property) == values[0]

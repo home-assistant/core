@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, final
+from typing import TYPE_CHECKING, Any, final
 
 import voluptuous as vol
 
@@ -29,6 +29,11 @@ from .const import (
     SERVICE_SELECT_OPTION,
     SERVICE_SELECT_PREVIOUS,
 )
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -123,7 +128,13 @@ class SelectEntityDescription(EntityDescription, frozen_or_thawed=True):
     options: list[str] | None = None
 
 
-class SelectEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "current_option",
+    "options",
+}
+
+
+class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Select entity."""
 
     _entity_component_unrecorded_attributes = frozenset({ATTR_OPTIONS})
@@ -149,7 +160,7 @@ class SelectEntity(Entity):
             return None
         return current_option
 
-    @property
+    @cached_property
     def options(self) -> list[str]:
         """Return a set of selectable options."""
         if hasattr(self, "_attr_options"):
@@ -161,7 +172,7 @@ class SelectEntity(Entity):
             return self.entity_description.options
         raise AttributeError()
 
-    @property
+    @cached_property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         return self._attr_current_option

@@ -28,7 +28,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
-from .coordinator import TessieDataUpdateCoordinator
+from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
 
@@ -205,7 +205,7 @@ class TessieSensorEntity(TessieEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: TessieDataUpdateCoordinator,
+        coordinator: TessieStateUpdateCoordinator,
         description: TessieSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""

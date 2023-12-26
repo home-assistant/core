@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import TessieDataUpdateCoordinator
+from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
 STATES = {
@@ -38,7 +38,7 @@ class TessieMediaEntity(TessieEntity, MediaPlayerEntity):
 
     def __init__(
         self,
-        coordinator: TessieDataUpdateCoordinator,
+        coordinator: TessieStateUpdateCoordinator,
     ) -> None:
         """Initialize the media player entity."""
         super().__init__(coordinator, "media")

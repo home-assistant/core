@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, TessieUpdateStatus
-from .coordinator import TessieDataUpdateCoordinator
+from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
 
@@ -30,7 +30,7 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
 
     def __init__(
         self,
-        coordinator: TessieDataUpdateCoordinator,
+        coordinator: TessieStateUpdateCoordinator,
     ) -> None:
         """Initialize the Update."""
         super().__init__(coordinator, "update")

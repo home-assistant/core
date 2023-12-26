@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN as SL_DOMAIN
 from .coordinator import ScreenlogicDataUpdateCoordinator
 from .entity import (
-    ScreenlogicEntity,
+    ScreenLogicEntity,
     ScreenLogicEntityDescription,
     ScreenLogicPushEntity,
     ScreenLogicPushEntityDescription,
@@ -295,7 +295,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ScreenLogicSensor(ScreenlogicEntity, SensorEntity):
+class ScreenLogicSensor(ScreenLogicEntity, SensorEntity):
     """Representation of a ScreenLogic sensor entity."""
 
     entity_description: ScreenLogicSensorDescription

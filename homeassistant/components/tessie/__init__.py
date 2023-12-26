@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .coordinator import TessieDataUpdateCoordinator, TessieWeatherDataCoordinator
+from .coordinator import TessieStateUpdateCoordinator, TessieWeatherDataCoordinator
 from .models import TessieVehicle
 
 PLATFORMS = [
@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     data = [
         TessieVehicle(
-            state_coordinator=TessieDataUpdateCoordinator(
+            state_coordinator=TessieStateUpdateCoordinator(
                 hass,
                 api_key=api_key,
                 vin=vehicle["vin"],

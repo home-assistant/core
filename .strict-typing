@@ -48,6 +48,7 @@ homeassistant.components.adguard.*
 homeassistant.components.aftership.*
 homeassistant.components.air_quality.*
 homeassistant.components.airly.*
+homeassistant.components.airnow.*
 homeassistant.components.airvisual.*
 homeassistant.components.airvisual_pro.*
 homeassistant.components.airzone.*
@@ -81,6 +82,7 @@ homeassistant.components.bayesian.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bitcoin.*
 homeassistant.components.blockchain.*
+homeassistant.components.blue_current.*
 homeassistant.components.bluetooth.*
 homeassistant.components.bluetooth_tracker.*
 homeassistant.components.bmw_connected_drive.*
@@ -123,6 +125,7 @@ homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
 homeassistant.components.emulated_hue.*
 homeassistant.components.energy.*
+homeassistant.components.enigma2.*
 homeassistant.components.esphome.*
 homeassistant.components.event.*
 homeassistant.components.evil_genius_labs.*

@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, TessieClimateKeeper
-from .coordinator import TessieDataUpdateCoordinator
+from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
 
@@ -56,7 +56,7 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
 
     def __init__(
         self,
-        coordinator: TessieDataUpdateCoordinator,
+        coordinator: TessieStateUpdateCoordinator,
     ) -> None:
         """Initialize the Climate entity."""
         super().__init__(coordinator, "primary")

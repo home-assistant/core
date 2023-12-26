@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .coordinator import TessieDataUpdateCoordinator, TessieWeatherDataCoordinator
+from .coordinator import TessieStateUpdateCoordinator, TessieWeatherDataCoordinator
 
 
 @dataclass
 class TessieVehicle:
     """Data for the Tessie integration."""
 
-    state_coordinator: TessieDataUpdateCoordinator
+    state_coordinator: TessieStateUpdateCoordinator
     weather_coordinator: TessieWeatherDataCoordinator

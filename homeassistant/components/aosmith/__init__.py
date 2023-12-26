@@ -8,10 +8,10 @@ from py_aosmith import AOSmithAPIClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, device_registry as dr
 
 from .const import DOMAIN
-from .coordinator import AOSmithCoordinator
+from .coordinator import AOSmithEnergyCoordinator, AOSmithStatusCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.WATER_HEATER]
 
@@ -20,8 +20,9 @@ PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.WATER_HEATER]
 class AOSmithData:
     """Data for the A. O. Smith integration."""
 
-    coordinator: AOSmithCoordinator
     client: AOSmithAPIClient
+    status_coordinator: AOSmithStatusCoordinator
+    energy_coordinator: AOSmithEnergyCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -31,13 +32,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     session = aiohttp_client.async_get_clientsession(hass)
     client = AOSmithAPIClient(email, password, session)
-    coordinator = AOSmithCoordinator(hass, client)
 
-    # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_config_entry_first_refresh()
+    status_coordinator = AOSmithStatusCoordinator(hass, client)
+    await status_coordinator.async_config_entry_first_refresh()
+
+    device_registry = dr.async_get(hass)
+    for junction_id, status_data in status_coordinator.data.items():
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, junction_id)},
+            manufacturer="A. O. Smith",
+            name=status_data.get("name"),
+            model=status_data.get("model"),
+            serial_number=status_data.get("serial"),
+            suggested_area=status_data.get("install", {}).get("location"),
+            sw_version=status_data.get("data", {}).get("firmwareVersion"),
+        )
+
+    energy_coordinator = AOSmithEnergyCoordinator(
+        hass, client, list(status_coordinator.data)
+    )
+    await energy_coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = AOSmithData(
-        coordinator=coordinator, client=client
+        client,
+        status_coordinator,
+        energy_coordinator,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

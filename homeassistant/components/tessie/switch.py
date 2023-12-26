@@ -28,7 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import TessieDataUpdateCoordinator
+from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
 
@@ -43,32 +43,32 @@ class TessieSwitchEntityDescription(SwitchEntityDescription):
 DESCRIPTIONS: tuple[TessieSwitchEntityDescription, ...] = (
     TessieSwitchEntityDescription(
         key="charge_state_charge_enable_request",
-        on_func=start_charging,
-        off_func=stop_charging,
+        on_func=lambda: start_charging,
+        off_func=lambda: stop_charging,
         icon="mdi:ev-station",
     ),
     TessieSwitchEntityDescription(
         key="climate_state_defrost_mode",
-        on_func=start_defrost,
-        off_func=stop_defrost,
+        on_func=lambda: start_defrost,
+        off_func=lambda: stop_defrost,
         icon="mdi:snowflake",
     ),
     TessieSwitchEntityDescription(
         key="vehicle_state_sentry_mode",
-        on_func=enable_sentry_mode,
-        off_func=disable_sentry_mode,
+        on_func=lambda: enable_sentry_mode,
+        off_func=lambda: disable_sentry_mode,
         icon="mdi:shield-car",
     ),
     TessieSwitchEntityDescription(
         key="vehicle_state_valet_mode",
-        on_func=enable_valet_mode,
-        off_func=disable_valet_mode,
+        on_func=lambda: enable_valet_mode,
+        off_func=lambda: disable_valet_mode,
         icon="mdi:car-key",
     ),
     TessieSwitchEntityDescription(
         key="climate_state_steering_wheel_heater",
-        on_func=start_steering_wheel_heater,
-        off_func=stop_steering_wheel_heater,
+        on_func=lambda: start_steering_wheel_heater,
+        off_func=lambda: stop_steering_wheel_heater,
         icon="mdi:steering",
     ),
 )
@@ -98,7 +98,7 @@ class TessieSwitchEntity(TessieEntity, SwitchEntity):
 
     def __init__(
         self,
-        coordinator: TessieDataUpdateCoordinator,
+        coordinator: TessieStateUpdateCoordinator,
         description: TessieSwitchEntityDescription,
     ) -> None:
         """Initialize the Switch."""
@@ -112,10 +112,10 @@ class TessieSwitchEntity(TessieEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Switch."""
-        await self.run(self.entity_description.on_func)
+        await self.run(self.entity_description.on_func())
         self.set((self.entity_description.key, True))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Switch."""
-        await self.run(self.entity_description.off_func)
+        await self.run(self.entity_description.off_func())
         self.set((self.entity_description.key, False))

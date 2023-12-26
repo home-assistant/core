@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import TessieDataUpdateCoordinator
+from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
 
@@ -46,7 +46,7 @@ class TessieWindowEntity(TessieEntity, CoverEntity):
     _attr_device_class = CoverDeviceClass.WINDOW
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
-    def __init__(self, coordinator: TessieDataUpdateCoordinator) -> None:
+    def __init__(self, coordinator: TessieStateUpdateCoordinator) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, "windows")
 
@@ -87,7 +87,7 @@ class TessieChargePortEntity(TessieEntity, CoverEntity):
     _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
-    def __init__(self, coordinator: TessieDataUpdateCoordinator) -> None:
+    def __init__(self, coordinator: TessieStateUpdateCoordinator) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, "charge_state_charge_port_door_open")
 

@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import TessieDataUpdateCoordinator
+from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
 
@@ -33,21 +33,27 @@ class TessieButtonEntityDescription(ButtonEntityDescription):
 
 
 DESCRIPTIONS: tuple[TessieButtonEntityDescription, ...] = (
-    TessieButtonEntityDescription(key="wake", func=wake, icon="mdi:sleep-off"),
+    TessieButtonEntityDescription(key="wake", func=lambda: wake, icon="mdi:sleep-off"),
     TessieButtonEntityDescription(
-        key="flash_lights", func=flash_lights, icon="mdi:flashlight"
+        key="flash_lights", func=lambda: flash_lights, icon="mdi:flashlight"
     ),
     TessieButtonEntityDescription(key="honk", func=honk, icon="mdi:bullhorn"),
     TessieButtonEntityDescription(
-        key="trigger_homelink", func=trigger_homelink, icon="mdi:garage"
+        key="trigger_homelink", func=lambda: trigger_homelink, icon="mdi:garage"
     ),
     TessieButtonEntityDescription(
-        key="enable_keyless_driving", func=enable_keyless_driving, icon="mdi:car-key"
+        key="enable_keyless_driving",
+        func=lambda: enable_keyless_driving,
+        icon="mdi:car-key",
     ),
-    TessieButtonEntityDescription(key="boombox", func=boombox, icon="mdi:volume-high"),
-    TessieButtonEntityDescription(key="frunk", func=open_front_trunk, icon="mdi:car"),
     TessieButtonEntityDescription(
-        key="trunk", func=open_close_rear_trunk, icon="mdi:car-back"
+        key="boombox", func=lambda: boombox, icon="mdi:volume-high"
+    ),
+    TessieButtonEntityDescription(
+        key="frunk", func=lambda: open_front_trunk, icon="mdi:car"
+    ),
+    TessieButtonEntityDescription(
+        key="trunk", func=lambda: open_close_rear_trunk, icon="mdi:car-back"
     ),
 )
 
@@ -72,7 +78,7 @@ class TessieButtonEntity(TessieEntity, ButtonEntity):
 
     def __init__(
         self,
-        coordinator: TessieDataUpdateCoordinator,
+        coordinator: TessieStateUpdateCoordinator,
         description: TessieButtonEntityDescription,
     ) -> None:
         """Initialize the Button."""
@@ -81,4 +87,4 @@ class TessieButtonEntity(TessieEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self.run(self.entity_description.func)
+        await self.run(self.entity_description.func())
