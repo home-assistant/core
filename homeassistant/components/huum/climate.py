@@ -49,6 +49,10 @@ class HuumDevice(ClimateEntity):
     _attr_min_temp = 40
     _attr_has_entity_name = True
     _attr_name = None
+    self._attr_device_info = DeviceInfo(
+        name="Huum Sauna",
+        manufacturer="Huum",
+    )
 
     _target_temperature = 40
 
@@ -56,11 +60,6 @@ class HuumDevice(ClimateEntity):
         """Initialize the heater."""
         self._status = status
         self._huum_handler = huum_handler
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device, if any."""
-        return "Huum Sauna"
 
     @property
     def hvac_mode(self) -> str:
