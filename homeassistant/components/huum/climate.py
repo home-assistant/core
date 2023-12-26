@@ -54,6 +54,7 @@ class HuumDevice(ClimateEntity):
 
     def __init__(self, huum_handler: Huum) -> None:
         """Initialize the heater."""
+        self.unique_id = self.entity_id
         self._huum_handler = huum_handler
 
     @property
