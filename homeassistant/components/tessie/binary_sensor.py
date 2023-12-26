@@ -110,6 +110,26 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_fd_window",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_fp_window",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_rd_window",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_rp_window",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 )
 
 
