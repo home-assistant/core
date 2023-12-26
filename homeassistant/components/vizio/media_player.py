@@ -175,9 +175,7 @@ class VizioDevice(MediaPlayerEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             manufacturer="VIZIO",
-            # model=await self._device.get_model_name(log_api_exception=False),
             name=name,
-            # sw_version=await self._device.get_version(log_api_exception=False),
         )
 
     def _apps_list(self, apps: list[str]) -> list[str]:
