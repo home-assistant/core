@@ -84,16 +84,15 @@ CONFIG_SCHEMA: vol.Schema = vol.Schema(
 
 def validate_sql_select(value: str) -> str | None:
     """Validate that value is a SQL SELECT query."""
-    query = value.lstrip().lstrip(";")
-    query_type = sqlparse.parse(query)[0].get_type()
-    if len(sqlparse.parse(query)) > 1:
+    query_type = sqlparse.parse(value)[0].get_type()
+    if len(sqlparse.parse(value)) > 1:
         raise MultipleResultsFound
     if query_type == "UNKNOWN":
         raise ValueError
     if query_type != "SELECT":
         _LOGGER.debug("The SQL query is of type %s", query_type)
         raise SQLParseError
-    return query
+    return value
 
 
 def validate_query(db_url: str, query: str, column: str) -> bool:
@@ -152,7 +151,7 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             db_url = user_input.get(CONF_DB_URL)
-            query = user_input[CONF_QUERY]
+            query = user_input[CONF_QUERY].lstrip().lstrip(";")
             column = user_input[CONF_COLUMN_NAME]
             db_url_for_validation = None
 
@@ -162,7 +161,7 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(
                     validate_query,
                     db_url_for_validation,
-                    query.lstrip().lstrip(";"),
+                    query,
                     column,
                 )
             except NoSuchColumnError:
@@ -179,7 +178,7 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["query"] = "query_invalid"
 
             options = {
-                CONF_QUERY: query.lstrip().lstrip(";"),
+                CONF_QUERY: query,
                 CONF_COLUMN_NAME: column,
                 CONF_NAME: user_input[CONF_NAME],
             }
@@ -221,7 +220,7 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
 
         if user_input is not None:
             db_url = user_input.get(CONF_DB_URL)
-            query = user_input[CONF_QUERY]
+            query = user_input[CONF_QUERY].lstrip().lstrip(";")
             column = user_input[CONF_COLUMN_NAME]
             name = self.options.get(CONF_NAME, self.config_entry.title)
 
@@ -231,7 +230,7 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 await self.hass.async_add_executor_job(
                     validate_query,
                     db_url_for_validation,
-                    query.lstrip().lstrip(";"),
+                    query,
                     column,
                 )
             except NoSuchColumnError:
@@ -256,7 +255,7 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 )
 
                 options = {
-                    CONF_QUERY: query.lstrip().lstrip(";"),
+                    CONF_QUERY: query,
                     CONF_COLUMN_NAME: column,
                     CONF_NAME: name,
                 }
