@@ -128,7 +128,7 @@ class QBittorrentSensor(CoordinatorEntity[QBittorrentDataCoordinator], SensorEnt
         self,
         coordinator: QBittorrentDataCoordinator,
         config_entry: ConfigEntry,
-        entity_description: SensorEntityDescription,
+        entity_description: QBittorrentSensorEntityDescription,
     ) -> None:
         """Initialize the qBittorrent sensor."""
         super().__init__(coordinator)
