@@ -122,6 +122,13 @@ class MqttEvent(MqttEntity, EventEntity):
         @log_messages(self.hass, self.entity_id)
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
+            if msg.retain:
+                _LOGGER.debug(
+                    "Ignoring event trigger from replayed retained payload '%s' on topic %s",
+                    msg.payload,
+                    msg.topic,
+                )
+                return
             event_attributes: dict[str, Any] = {}
             event_type: str
             payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
