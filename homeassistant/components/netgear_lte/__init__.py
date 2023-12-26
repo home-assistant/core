@@ -25,7 +25,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from . import sensor_types
 from .const import (
     ATTR_FROM,
     ATTR_HOST,
@@ -45,6 +44,28 @@ SCAN_INTERVAL = timedelta(seconds=10)
 
 EVENT_SMS = "netgear_lte_sms"
 
+ALL_SENSORS = [
+    "sms",
+    "sms_total",
+    "usage",
+    "radio_quality",
+    "rx_level",
+    "tx_level",
+    "upstream",
+    "connection_text",
+    "connection_type",
+    "current_ps_service_type",
+    "register_network_display",
+    "current_band",
+    "cell_id",
+]
+
+ALL_BINARY_SENSORS = [
+    "roaming",
+    "wire_connected",
+    "mobile_connected",
+]
+
 
 NOTIFY_SCHEMA = vol.Schema(
     {
@@ -55,17 +76,17 @@ NOTIFY_SCHEMA = vol.Schema(
 
 SENSOR_SCHEMA = vol.Schema(
     {
-        vol.Optional(
-            CONF_MONITORED_CONDITIONS, default=sensor_types.DEFAULT_SENSORS
-        ): vol.All(cv.ensure_list, [vol.In(sensor_types.ALL_SENSORS)])
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=["usage"]): vol.All(
+            cv.ensure_list, [vol.In(ALL_SENSORS)]
+        )
     }
 )
 
 BINARY_SENSOR_SCHEMA = vol.Schema(
     {
-        vol.Optional(
-            CONF_MONITORED_CONDITIONS, default=sensor_types.DEFAULT_BINARY_SENSORS
-        ): vol.All(cv.ensure_list, [vol.In(sensor_types.ALL_BINARY_SENSORS)])
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=["mobile_connected"]): vol.All(
+            cv.ensure_list, [vol.In(ALL_BINARY_SENSORS)]
+        )
     }
 )
 
