@@ -1,23 +1,26 @@
 """Tessie parent entity class."""
 
-
+from collections.abc import Awaitable, Callable
 from typing import Any
 
+from aiohttp import ClientResponseError
+
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODELS
-from .coordinator import TessieDataUpdateCoordinator
+from .coordinator import TessieStateUpdateCoordinator
 
 
-class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
+class TessieEntity(CoordinatorEntity[TessieStateUpdateCoordinator]):
     """Parent class for Tessie Entities."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: TessieDataUpdateCoordinator,
+        coordinator: TessieStateUpdateCoordinator,
         key: str,
     ) -> None:
         """Initialize common aspects of a Tessie entity."""
@@ -43,3 +46,27 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
     def _value(self) -> Any:
         """Return value from coordinator data."""
         return self.coordinator.data[self.key]
+
+    def get(self, key: str | None = None, default: Any | None = None) -> Any:
+        """Return a specific value from coordinator data."""
+        return self.coordinator.data.get(key or self.key, default)
+
+    async def run(
+        self, func: Callable[..., Awaitable[dict[str, bool]]], **kargs: Any
+    ) -> None:
+        """Run a tessie_api function and handle exceptions."""
+        try:
+            await func(
+                session=self.coordinator.session,
+                vin=self.vin,
+                api_key=self.coordinator.api_key,
+                **kargs,
+            )
+        except ClientResponseError as e:
+            raise HomeAssistantError from e
+
+    def set(self, *args: Any) -> None:
+        """Set a value in coordinator data."""
+        for key, value in args:
+            self.coordinator.data[key] = value
+        self.async_write_ha_state()

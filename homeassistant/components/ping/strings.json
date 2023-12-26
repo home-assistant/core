@@ -5,8 +5,7 @@
         "title": "Add Ping",
         "description": "Ping allows you to check the availability of a host.",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "count": "Ping count"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
           "host": "The hostname or IP address of the device you want to ping."
@@ -23,7 +22,11 @@
       "init": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "count": "[%key:component::ping::config::step::user::data::count%]"
+          "count": "Ping count",
+          "consider_home": "Consider home interval"
+        },
+        "data_description": {
+          "consider_home": "Seconds to wait till marking a device tracker as not home after not being seen."
         }
       }
     },
