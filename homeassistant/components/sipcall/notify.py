@@ -44,8 +44,6 @@ class SIPCallNotificationService(BaseNotificationService):
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Make a short call and hang up."""
 
-        logging.warning("SIPCall kwargs: %s", str(kwargs))
-
         # A callee must be specified through the notification target
         try:
             callee = kwargs["target"]
