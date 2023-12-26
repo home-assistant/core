@@ -1,4 +1,8 @@
 """The tests for Cover."""
+from enum import Enum
+
+import pytest
+
 import homeassistant.components.cover as cover
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -11,6 +15,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from tests.common import import_and_test_deprecated_constant_enum
 
 
 async def test_services(hass: HomeAssistant, enable_custom_integrations: None) -> None:
@@ -112,3 +118,26 @@ def is_closed(hass, ent):
 def is_closing(hass, ent):
     """Return if the cover is closed based on the statemachine."""
     return hass.states.is_state(ent.entity_id, STATE_CLOSING)
+
+
+def _create_tuples(enum: Enum, constant_prefix: str) -> list[tuple[Enum, str]]:
+    result = []
+    for enum in enum:
+        result.append((enum, constant_prefix))
+    return result
+
+
+@pytest.mark.parametrize(
+    ("enum", "constant_prefix"),
+    _create_tuples(cover.CoverEntityFeature, "SUPPORT_")
+    + _create_tuples(cover.CoverDeviceClass, "DEVICE_CLASS_"),
+)
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: Enum,
+    constant_prefix: str,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, cover, enum, constant_prefix, "2025.1"
+    )

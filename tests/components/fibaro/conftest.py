@@ -16,6 +16,7 @@ TEST_URL = "http://192.168.1.1/api/"
 TEST_USERNAME = "user"
 TEST_PASSWORD = "password"
 TEST_VERSION = "4.360"
+TEST_MODEL = "HC3"
 
 
 @pytest.fixture
@@ -70,6 +71,7 @@ def mock_fibaro_client() -> Generator[Mock, None, None]:
     info_mock.serial_number = TEST_SERIALNUMBER
     info_mock.hc_name = TEST_NAME
     info_mock.current_version = TEST_VERSION
+    info_mock.platform = TEST_MODEL
 
     with patch(
         "homeassistant.components.fibaro.FibaroClient", autospec=True

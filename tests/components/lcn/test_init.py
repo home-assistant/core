@@ -48,20 +48,23 @@ async def test_async_setup_multiple_entries(hass: HomeAssistant, entry, entry2) 
     assert not hass.data.get(DOMAIN)
 
 
-async def test_async_setup_entry_update(hass: HomeAssistant, entry) -> None:
+async def test_async_setup_entry_update(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    entry,
+) -> None:
     """Test a successful setup entry if entry with same id already exists."""
     # setup first entry
     entry.source = config_entries.SOURCE_IMPORT
     entry.add_to_hass(hass)
 
     # create dummy entity for LCN platform as an orphan
-    entity_registry = er.async_get(hass)
     dummy_entity = entity_registry.async_get_or_create(
         "switch", DOMAIN, "dummy", config_entry=entry
     )
 
     # create dummy device for LCN platform as an orphan
-    device_registry = dr.async_get(hass)
     dummy_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id, 0, 7, False)},

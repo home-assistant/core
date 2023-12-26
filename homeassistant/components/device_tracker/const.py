@@ -3,8 +3,15 @@ from __future__ import annotations
 
 from datetime import timedelta
 from enum import StrEnum
+from functools import partial
 import logging
 from typing import Final
+
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstantEnum,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 
 LOGGER: Final = logging.getLogger(__package__)
 
@@ -13,13 +20,6 @@ ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
 PLATFORM_TYPE_LEGACY: Final = "legacy"
 PLATFORM_TYPE_ENTITY: Final = "entity_platform"
-
-# SOURCE_TYPE_* below are deprecated as of 2022.9
-# use the SourceType enum instead.
-SOURCE_TYPE_GPS: Final = "gps"
-SOURCE_TYPE_ROUTER: Final = "router"
-SOURCE_TYPE_BLUETOOTH: Final = "bluetooth"
-SOURCE_TYPE_BLUETOOTH_LE: Final = "bluetooth_le"
 
 
 class SourceType(StrEnum):
@@ -30,6 +30,23 @@ class SourceType(StrEnum):
     BLUETOOTH = "bluetooth"
     BLUETOOTH_LE = "bluetooth_le"
 
+
+# SOURCE_TYPE_* below are deprecated as of 2022.9
+# use the SourceType enum instead.
+_DEPRECATED_SOURCE_TYPE_GPS: Final = DeprecatedConstantEnum(SourceType.GPS, "2025.1")
+_DEPRECATED_SOURCE_TYPE_ROUTER: Final = DeprecatedConstantEnum(
+    SourceType.ROUTER, "2025.1"
+)
+_DEPRECATED_SOURCE_TYPE_BLUETOOTH: Final = DeprecatedConstantEnum(
+    SourceType.BLUETOOTH, "2025.1"
+)
+_DEPRECATED_SOURCE_TYPE_BLUETOOTH_LE: Final = DeprecatedConstantEnum(
+    SourceType.BLUETOOTH_LE, "2025.1"
+)
+
+# Both can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 CONF_SCAN_INTERVAL: Final = "interval_seconds"
 SCAN_INTERVAL: Final = timedelta(seconds=12)

@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .entity import BasePrivateDeviceEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class PrivateDeviceSensorEntityDescriptionRequired:
     """Required domain specific fields for sensor entity."""
 
@@ -35,7 +35,7 @@ class PrivateDeviceSensorEntityDescriptionRequired:
     ]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PrivateDeviceSensorEntityDescription(
     SensorEntityDescription, PrivateDeviceSensorEntityDescriptionRequired
 ):
@@ -83,13 +83,17 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda hass, service_info: bluetooth.async_get_learned_advertising_interval(
-            hass, service_info.address
-        )
-        or bluetooth.async_get_fallback_availability_interval(
-            hass, service_info.address
-        )
-        or bluetooth.FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+        value_fn=(
+            lambda hass, service_info: (
+                bluetooth.async_get_learned_advertising_interval(
+                    hass, service_info.address
+                )
+                or bluetooth.async_get_fallback_availability_interval(
+                    hass, service_info.address
+                )
+                or bluetooth.FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+            )
+        ),
         suggested_display_precision=1,
     ),
 )

@@ -48,6 +48,7 @@ from . import (
     inject_bluetooth_service_info,
     inject_bluetooth_service_info_bleak,
     patch_all_discovered_devices,
+    patch_bluetooth_time,
 )
 
 from tests.common import (
@@ -471,9 +472,8 @@ async def test_unavailable_after_no_data(
     assert processor.available is True
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now,
+    with patch_bluetooth_time(
+        monotonic_now,
     ), patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -490,9 +490,8 @@ async def test_unavailable_after_no_data(
 
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 2
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now,
+    with patch_bluetooth_time(
+        monotonic_now,
     ), patch_all_discovered_devices([MagicMock(address="44:44:33:11:23:45")]):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=UNAVAILABLE_TRACK_SECONDS)
@@ -1208,6 +1207,7 @@ async def test_integration_with_entity_without_a_device(
     assert entity_one.unique_id == "aa:bb:cc:dd:ee:ff-temperature"
     assert entity_one.device_info == {
         "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
         "name": "Generic",
     }
     assert entity_one.entity_key == PassiveBluetoothEntityKey(
@@ -1396,6 +1396,7 @@ async def test_integration_multiple_entity_platforms(
     assert sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-pressure"
     assert sensor_entity_one.device_info == {
         "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
         "manufacturer": "Test Manufacturer",
         "model": "Test Model",
         "name": "Test Device",
@@ -1412,6 +1413,7 @@ async def test_integration_multiple_entity_platforms(
     assert binary_sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-motion"
     assert binary_sensor_entity_one.device_info == {
         "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
         "manufacturer": "Test Manufacturer",
         "model": "Test Model",
         "name": "Test Device",
@@ -1556,6 +1558,7 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
     assert sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-pressure"
     assert sensor_entity_one.device_info == {
         "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
         "manufacturer": "Test Manufacturer",
         "model": "Test Model",
         "name": "Test Device",
@@ -1572,6 +1575,7 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
     assert binary_sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-motion"
     assert binary_sensor_entity_one.device_info == {
         "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
         "manufacturer": "Test Manufacturer",
         "model": "Test Model",
         "name": "Test Device",
@@ -1636,6 +1640,7 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
     assert sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-pressure"
     assert sensor_entity_one.device_info == {
         "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
         "manufacturer": "Test Manufacturer",
         "model": "Test Model",
         "name": "Test Device",
@@ -1652,6 +1657,7 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
     assert binary_sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-motion"
     assert binary_sensor_entity_one.device_info == {
         "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
         "manufacturer": "Test Manufacturer",
         "model": "Test Model",
         "name": "Test Device",
@@ -1730,6 +1736,7 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
     assert sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-pressure"
     assert sensor_entity_one.device_info == {
         "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
         "manufacturer": "Test Manufacturer",
         "model": "Test Model",
         "name": "Test Device",
@@ -1746,6 +1753,7 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
     assert binary_sensor_entity_one.unique_id == "aa:bb:cc:dd:ee:ff-motion"
     assert binary_sensor_entity_one.device_info == {
         "identifiers": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
+        "connections": {("bluetooth", "aa:bb:cc:dd:ee:ff")},
         "manufacturer": "Test Manufacturer",
         "model": "Test Model",
         "name": "Test Device",

@@ -782,7 +782,7 @@ def _statistic_by_id_from_metadata(
 
 
 def _flatten_list_statistic_ids_metadata_result(
-    result: dict[str, dict[str, Any]]
+    result: dict[str, dict[str, Any]],
 ) -> list[dict]:
     """Return a flat dict of metadata."""
     return [
@@ -1088,10 +1088,7 @@ def _generate_statistics_during_period_stmt(
         end_time_ts = end_time.timestamp()
         stmt += lambda q: q.filter(table.start_ts < end_time_ts)
     if metadata_ids:
-        stmt += lambda q: q.filter(
-            # https://github.com/python/mypy/issues/2608
-            table.metadata_id.in_(metadata_ids)  # type:ignore[arg-type]
-        )
+        stmt += lambda q: q.filter(table.metadata_id.in_(metadata_ids))
     stmt += lambda q: q.order_by(table.metadata_id, table.start_ts)
     return stmt
 

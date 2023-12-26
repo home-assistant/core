@@ -39,6 +39,22 @@ _LOGGER = logging.getLogger(__name__)
 CONF_MAP = "map"
 
 
+async def get_by_station_number(
+    client: WAQIClient, station_number: int
+) -> tuple[WAQIAirQuality | None, dict[str, str]]:
+    """Get measuring station by station number."""
+    errors: dict[str, str] = {}
+    measuring_station: WAQIAirQuality | None = None
+    try:
+        measuring_station = await client.get_by_station_number(station_number)
+    except WAQIConnectionError:
+        errors["base"] = "cannot_connect"
+    except Exception as exc:  # pylint: disable=broad-except
+        _LOGGER.exception(exc)
+        errors["base"] = "unknown"
+    return measuring_station, errors
+
+
 class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for World Air Quality Index (WAQI)."""
 
@@ -141,16 +157,16 @@ class WAQIConfigFlow(ConfigFlow, domain=DOMAIN):
                 session=async_get_clientsession(self.hass)
             ) as waqi_client:
                 waqi_client.authenticate(self.data[CONF_API_KEY])
-                try:
-                    measuring_station = await waqi_client.get_by_station_number(
-                        user_input[CONF_STATION_NUMBER]
+                station_number = user_input[CONF_STATION_NUMBER]
+                measuring_station, errors = await get_by_station_number(
+                    waqi_client, abs(station_number)
+                )
+                if not measuring_station:
+                    measuring_station, _ = await get_by_station_number(
+                        waqi_client,
+                        abs(station_number) - station_number - station_number,
                     )
-                except WAQIConnectionError:
-                    errors["base"] = "cannot_connect"
-                except Exception as exc:  # pylint: disable=broad-except
-                    _LOGGER.exception(exc)
-                    errors["base"] = "unknown"
-                else:
+                if measuring_station:
                     return await self._async_create_entry(measuring_station)
         return self.async_show_form(
             step_id=CONF_STATION_NUMBER,
