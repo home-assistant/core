@@ -30,7 +30,7 @@ FLOOD_ICON = "mdi:home-flood"
 class DROPSelectEntityDescription(SelectEntityDescription):
     """Describes DROP select entity."""
 
-    value_fn: Callable[[DROPDeviceDataUpdateCoordinator], str | None]
+    value_fn: Callable[[DROPDeviceDataUpdateCoordinator], int | None]
     set_fn: Callable[[DROPDeviceDataUpdateCoordinator, str], Awaitable[Any]]
 
 
@@ -88,7 +88,8 @@ class DROPSelect(DROPEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the current selected option."""
-        return self.entity_description.value_fn(self.coordinator)
+        val = self.entity_description.value_fn(self.coordinator)
+        return str(val) if val else None
 
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
