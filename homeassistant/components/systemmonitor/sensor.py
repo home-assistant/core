@@ -49,7 +49,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, NETWORK_TYPES
+from .const import CONF_PROCESS, DOMAIN, NETWORK_TYPES
 from .util import get_all_disk_mounts, get_all_network_interfaces
 
 _LOGGER = logging.getLogger(__name__)
@@ -388,7 +388,7 @@ async def async_setup_entry(
     """Set up System Montor sensors based on a config entry."""
     entities = []
     sensor_registry: dict[tuple[str, str], SensorData] = {}
-    legacy_resources = entry.options["resources"]
+    legacy_resources: list[str] = entry.options.get("resources", [])
     disk_arguments = await hass.async_add_executor_job(get_all_disk_mounts)
     network_arguments = await hass.async_add_executor_job(get_all_network_interfaces)
     cpu_temperature = await hass.async_add_executor_job(_read_cpu_temperature)
@@ -441,21 +441,20 @@ async def async_setup_entry(
             continue
 
         if _type == "process":
-            entries: list[dict[str, str]] = entry.options.get(SENSOR_DOMAIN, [])
-            for _entry in entries:
-                for _, argument in _entry.items():
-                    sensor_registry[(_type, argument)] = SensorData(
-                        argument, None, None, None, None
+            _entry: dict[str, list] = entry.options.get(SENSOR_DOMAIN, {})
+            for argument in _entry.get(CONF_PROCESS, []):
+                sensor_registry[(_type, argument)] = SensorData(
+                    argument, None, None, None, None
+                )
+                entities.append(
+                    SystemMonitorSensor(
+                        sensor_registry,
+                        sensor_description,
+                        entry.entry_id,
+                        argument,
+                        True,
                     )
-                    entities.append(
-                        SystemMonitorSensor(
-                            sensor_registry,
-                            sensor_description,
-                            entry.entry_id,
-                            argument,
-                            True,
-                        )
-                    )
+                )
             continue
 
         sensor_registry[(_type, "")] = SensorData("", None, None, None, None)

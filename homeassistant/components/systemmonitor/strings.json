@@ -12,22 +12,13 @@
   "options": {
     "step": {
       "init": {
-        "menu_options": {
-          "add_process": "Add sensor for process",
-          "remove_process": "Remove sensor for process"
-        }
-      },
-      "add_process": {
         "description": "Configure a monitoring sensor for a running process",
         "data": {
-          "process": "Process to add as sensor"
+          "process": "Processes to add as sensor(s)"
         },
         "data_description": {
-          "process": "Select a running process from list or specify your own process to add as sensor"
+          "process": "Select a running process from the list or add a custom value. Multiple selections/custom values are supported"
         }
-      },
-      "remove_process": {
-        "description": "Select previously configured sensor(s) to be removed"
       }
     }
   }

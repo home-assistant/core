@@ -10,13 +10,12 @@ from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAI
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
-    SchemaFlowMenuStep,
 )
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -25,24 +24,8 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.util import slugify
 
-from .const import CONF_INDEX, CONF_PROCESS, DOMAIN
+from .const import CONF_PROCESS, DOMAIN
 from .util import get_all_running_processes
-
-
-async def get_remove_sensor_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
-    """Return schema for sensor removal."""
-    if not handler.options[SENSOR_DOMAIN]:
-        return None
-    return vol.Schema(
-        {
-            vol.Required(CONF_INDEX): cv.multi_select(
-                {
-                    str(index): config[CONF_PROCESS]
-                    for index, config in enumerate(handler.options[SENSOR_DOMAIN])
-                },
-            )
-        }
-    )
 
 
 async def validate_sensor_setup(
@@ -51,8 +34,21 @@ async def validate_sensor_setup(
     """Validate sensor input."""
     # Standard behavior is to merge the result with the options.
     # In this case, we want to add a sub-item so we update the options directly.
-    sensors: list[dict[str, Any]] = handler.options.setdefault(SENSOR_DOMAIN, [])
-    sensors.append(user_input)
+    sensors: dict[str, list] = handler.options.setdefault(SENSOR_DOMAIN, {})
+    processes = sensors.setdefault(CONF_PROCESS, [])
+    previous_processes = processes.copy()
+    processes.clear()
+    processes.extend(user_input[CONF_PROCESS])
+
+    entity_registry = er.async_get(handler.parent_handler.hass)
+    for process in previous_processes:
+        if process not in processes and (
+            entity_id := entity_registry.async_get_entity_id(
+                SENSOR_DOMAIN, DOMAIN, slugify(f"process_{process}")
+            )
+        ):
+            entity_registry.async_remove(entity_id)
+
     return {}
 
 
@@ -62,10 +58,10 @@ async def validate_import_sensor_setup(
     """Validate sensor input."""
     # Standard behavior is to merge the result with the options.
     # In this case, we want to add a sub-item so we update the options directly.
-    sensors: list[dict[str, Any]] = handler.options.setdefault(SENSOR_DOMAIN, [])
+    sensors: dict[str, list] = handler.options.setdefault(SENSOR_DOMAIN, {})
     import_processes: list[str] = user_input["processes"]
-    for process in import_processes:
-        sensors.append({CONF_PROCESS: process})
+    processes = sensors.setdefault(CONF_PROCESS, [])
+    processes.extend(import_processes)
     legacy_resources: list[str] = handler.options.setdefault("resources", [])
     legacy_resources.extend(user_input["legacy_resources"])
 
@@ -87,28 +83,6 @@ async def validate_import_sensor_setup(
     return {}
 
 
-async def validate_remove_sensor(
-    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
-) -> dict[str, Any]:
-    """Validate remove sensor."""
-    removed_indexes: set[str] = set(user_input[CONF_INDEX])
-
-    # Standard behavior is to merge the result with the options.
-    # In this case, we want to remove sub-items so we update the options directly.
-    entity_registry = er.async_get(handler.parent_handler.hass)
-    sensors: list[dict[str, Any]] = []
-    sensor: dict[str, Any]
-    for index, sensor in enumerate(handler.options[SENSOR_DOMAIN]):
-        if str(index) not in removed_indexes:
-            sensors.append(sensor)
-        elif entity_id := entity_registry.async_get_entity_id(
-            SENSOR_DOMAIN, DOMAIN, slugify(f"process_{sensor[CONF_PROCESS]}")
-        ):
-            entity_registry.async_remove(entity_id)
-    handler.options[SENSOR_DOMAIN] = sensors
-    return {}
-
-
 async def get_sensor_setup_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     """Return process sensor setup schema."""
     hass = handler.parent_handler.hass
@@ -118,6 +92,7 @@ async def get_sensor_setup_schema(handler: SchemaCommonFlowHandler) -> vol.Schem
             vol.Required(CONF_PROCESS): SelectSelector(
                 SelectSelectorConfig(
                     options=processes,
+                    multiple=True,
                     custom_value=True,
                     mode=SelectSelectorMode.DROPDOWN,
                     sort=True,
@@ -125,6 +100,13 @@ async def get_sensor_setup_schema(handler: SchemaCommonFlowHandler) -> vol.Schem
             )
         }
     )
+
+
+async def get_suggested_value(handler: SchemaCommonFlowHandler) -> dict[str, Any]:
+    """Return suggested values for sensor setup."""
+    sensors: dict[str, list] = handler.options.get(SENSOR_DOMAIN, {})
+    processes: list[str] = sensors.get(CONF_PROCESS, [])
+    return {CONF_PROCESS: processes}
 
 
 CONFIG_FLOW = {
@@ -135,17 +117,11 @@ CONFIG_FLOW = {
     ),
 }
 OPTIONS_FLOW = {
-    "init": SchemaFlowMenuStep(["add_process", "remove_process"]),
-    "add_process": SchemaFlowFormStep(
+    "init": SchemaFlowFormStep(
         get_sensor_setup_schema,
-        suggested_values=None,
+        suggested_values=get_suggested_value,
         validate_user_input=validate_sensor_setup,
-    ),
-    "remove_process": SchemaFlowFormStep(
-        get_remove_sensor_schema,
-        suggested_values=None,
-        validate_user_input=validate_remove_sensor,
-    ),
+    )
 }
 
 
