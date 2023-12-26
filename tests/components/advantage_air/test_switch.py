@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.advantage_air.const import ADVANTAGE_AIR_AUTOFAN_ENABLED
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -72,8 +73,11 @@ async def test_cover_async_setup_entry(
         blocking=True,
     )
     mock_update.assert_called_once()
+    assert (
+        mock_update.call_args[0][0]["ac1"]["info"][ADVANTAGE_AIR_AUTOFAN_ENABLED]
+        is True
+    )
     mock_update.reset_mock()
-    assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-turnon")
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -82,7 +86,10 @@ async def test_cover_async_setup_entry(
         blocking=True,
     )
     mock_update.assert_called_once()
-    assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-turnoff")
+    assert (
+        mock_update.call_args[0][0]["ac1"]["info"][ADVANTAGE_AIR_AUTOFAN_ENABLED]
+        is False
+    )
 
 
 async def test_things_switch(

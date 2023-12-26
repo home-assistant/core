@@ -1,32 +1,4 @@
 # serializer version: 1
-# name: test_cover_async_setup_entry[switch.myzone_myfan-turnoff]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'myzone MyFan',
-      'icon': 'mdi:fan-auto',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.myzone_myfan',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_cover_async_setup_entry[switch.myzone_myfan-turnon]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'myzone MyFan',
-      'icon': 'mdi:fan-auto',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.myzone_myfan',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_cover_async_setup_entry[switch.myzone_myfan]
   StateSnapshot({
     'attributes': ReadOnlyDict({
