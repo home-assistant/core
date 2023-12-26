@@ -24,13 +24,16 @@
       }
     }
   },
-  "selector": {
-    "foot_warmer_temp": {
-      "options": {
-        "off": "Off",
-        "low": "Low",
-        "medium": "Medium",
-        "high": "High"
+  "entity": {
+    "select": {
+      "foot_warmer_temp": {
+        "name": "Foot Warmer Temperature",
+        "state": {
+          "off": "Off",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
       }
     }
   }
