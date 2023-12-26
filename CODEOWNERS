@@ -1180,6 +1180,7 @@ build.json @home-assistant/supervisor
 /tests/components/simplisafe/ @bachya
 /homeassistant/components/sinch/ @bendikrb
 /homeassistant/components/sipcall/ @philipp-fischer
+/tests/components/sipcall/ @philipp-fischer
 /homeassistant/components/siren/ @home-assistant/core @raman325
 /tests/components/siren/ @home-assistant/core @raman325
 /homeassistant/components/sisyphus/ @jkeljo
