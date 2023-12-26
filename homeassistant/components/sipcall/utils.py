@@ -319,10 +319,8 @@ class TransactionProcessor:
             while True:
                 next_req = self.transaction.get_next_request()
                 if isinstance(next_req, str):
-                    # print("Send: ", next_req)
                     self.transport.sendto(next_req.encode())
                 elif next_req is Transaction.TerminationMarker:
-                    # print("Terminating transaction.")
                     self.transport.close()
                     break
                 else:
@@ -337,7 +335,6 @@ class TransactionProcessor:
         def datagram_received(self, data, addr):
             """Handle any response we receive."""
 
-            # print("Received:", data.decode())
             self.transaction.handle_response(data.decode())
 
             self.maybe_send_new_requests()
