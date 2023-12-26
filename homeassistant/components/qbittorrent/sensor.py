@@ -32,6 +32,20 @@ SENSOR_TYPE_ACTIVE_TORRENTS = "active_torrents"
 SENSOR_TYPE_INACTIVE_TORRENTS = "inactive_torrents"
 
 
+def get_state(coordinator: QBittorrentDataCoordinator) -> str:
+    """Get current download/upload state."""
+    upload = coordinator.data["server_state"]["up_info_speed"]
+    download = coordinator.data["server_state"]["dl_info_speed"]
+
+    if upload > 0 and download > 0:
+        return STATE_UP_DOWN
+    if upload > 0 and download == 0:
+        return STATE_SEEDING
+    if upload == 0 and download > 0:
+        return STATE_DOWNLOADING
+    return STATE_IDLE
+
+
 @dataclass(frozen=True, kw_only=True)
 class QBittorrentSensorEntityDescription(SensorEntityDescription):
     """Entity description class for qBittorent sensors."""
@@ -45,7 +59,7 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         translation_key="current_status",
         device_class=SensorDeviceClass.ENUM,
         options=[STATE_IDLE, STATE_UP_DOWN, STATE_SEEDING, STATE_DOWNLOADING],
-        value_fn=lambda coordinator: get_state(coordinator),
+        value_fn=get_state,
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_DOWNLOAD_SPEED,
@@ -144,20 +158,6 @@ class QBittorrentSensor(CoordinatorEntity[QBittorrentDataCoordinator], SensorEnt
     def native_value(self) -> StateType:
         """Return the value of the sensor."""
         return self.entity_description.value_fn(self.coordinator)
-
-
-def get_state(coordinator: QBittorrentDataCoordinator) -> str:
-    """Get current download/upload state."""
-    upload = coordinator.data["server_state"]["up_info_speed"]
-    download = coordinator.data["server_state"]["dl_info_speed"]
-
-    if upload > 0 and download > 0:
-        return STATE_UP_DOWN
-    if upload > 0 and download == 0:
-        return STATE_SEEDING
-    if upload == 0 and download > 0:
-        return STATE_DOWNLOADING
-    return STATE_IDLE
 
 
 def count_torrents_in_states(
