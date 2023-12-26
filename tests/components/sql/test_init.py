@@ -75,7 +75,7 @@ async def test_query_no_read_only_cte(hass: HomeAssistant) -> None:
     """Test query no read only CTE."""
     with pytest.raises(vol.Invalid):
         validate_sql_select(
-            "WITH test AS (SELECT state FROM state) UPDATE states SET states.state = test.state;"
+            "WITH test AS (SELECT state FROM states) UPDATE states SET states.state = test.state;"
         )
 
 
