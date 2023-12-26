@@ -7,7 +7,6 @@ from typing import Any
 from huum.const import SaunaStatus
 from huum.exceptions import SafetyException
 from huum.huum import Huum
-from huum.schemas import HuumStatusResponse
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
