@@ -81,7 +81,9 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
         data = self.coordinator.data
 
         # Speed as a percentage
-        if not data.power or data.speed is None:
+        if not data.power:
+            self._attr_percentage = 0
+        elif data.speed is None:
             self._attr_percentage = None
         elif data.speed is Speed.SuperSilent:
             self._attr_percentage = 1
@@ -113,7 +115,7 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
             self._attr_percentage = percentage
         else:
             await self._set_state(power=False)
-            self._attr_percentage = None
+            self._attr_percentage = 0
             self._attr_preset_mode = None
         self.async_write_ha_state()
 
@@ -140,6 +142,6 @@ class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self._set_state(power=False)
-        self._attr_percentage = None
+        self._attr_percentage = 0
         self._attr_preset_mode = None
         self.async_write_ha_state()
