@@ -27,7 +27,6 @@
   "entity": {
     "select": {
       "foot_warmer_temp": {
-        "name": "Foot Warmer Temperature",
         "state": {
           "off": "Off",
           "low": "Low",
