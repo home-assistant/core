@@ -58,7 +58,6 @@ class HuumDevice(ClimateEntity):
 
         self._huum_handler = huum_handler
 
-
     @property
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
