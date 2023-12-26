@@ -30,12 +30,7 @@ async def async_setup_entry(
     """Set up the Huum sauna with config flow."""
     huum_handler = hass.data.setdefault(DOMAIN, {})[entry.entry_id]
 
-    try:
-        entry_status = await huum_handler.status_from_status_or_stop()
-    except Exception as status_error:
-        raise PlatformNotReady(status_error) from status_error
-
-    async_add_entities([HuumDevice(entry_status, huum_handler)])
+    async_add_entities([HuumDevice(huum_handler)], True)
 
 
 class HuumDevice(ClimateEntity):
