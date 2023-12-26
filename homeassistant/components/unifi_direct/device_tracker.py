@@ -53,7 +53,7 @@ class UnifiDeviceScanner(DeviceScanner):
     def scan_devices(self) -> list[str]:
         """Scan for new devices and return a list with found device IDs."""
         self.update_clients()
-        return list(self.clients.keys())
+        return list(self.clients)
 
     def get_device_name(self, device: str) -> str | None:
         """Return the name of the given device or None if we don't know."""
@@ -66,10 +66,11 @@ class UnifiDeviceScanner(DeviceScanner):
         """Update the client info from AP."""
         try:
             self.clients = self.ap.get_clients()
-            return True
         except UniFiAPConnectionException:
             _LOGGER.error("Failed to connect to accesspoint")
             return False
         except UniFiAPDataException:
             _LOGGER.error("Failed to get proper response from accesspoint")
             return False
+
+        return True
