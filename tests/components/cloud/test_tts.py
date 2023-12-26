@@ -97,17 +97,25 @@ async def test_prefs_default_voice(
     assert engine.default_options == {"gender": "male", "audio_output": "mp3"}
 
 
-async def test_provider_properties(cloud_with_prefs) -> None:
+async def test_provider_properties(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+) -> None:
     """Test cloud provider."""
-    tts_info = {"platform_loaded": Mock()}
-    provider = await tts.async_get_engine(
-        Mock(data={const.DOMAIN: cloud_with_prefs}), None, tts_info
-    )
-    assert provider.supported_options == ["gender", "voice", "audio_output"]
-    assert "nl-NL" in provider.supported_languages
-    assert tts.Voice(
-        "ColetteNeural", "ColetteNeural"
-    ) in provider.async_get_supported_voices("nl-NL")
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+    on_start_callback = cloud.register_on_start.call_args[0][0]
+    await on_start_callback()
+
+    engine = get_engine_instance(hass, DOMAIN)
+
+    assert engine is not None
+    assert engine.supported_options == ["gender", "voice", "audio_output"]
+    assert "nl-NL" in engine.supported_languages
+    supported_voices = engine.async_get_supported_voices("nl-NL")
+    assert supported_voices is not None
+    assert tts.Voice("ColetteNeural", "ColetteNeural") in supported_voices
 
 
 async def test_get_tts_audio(cloud_with_prefs) -> None:
