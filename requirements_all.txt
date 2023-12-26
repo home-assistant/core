@@ -1305,6 +1305,9 @@ mypermobil==0.1.6
 # homeassistant.components.nad
 nad-receiver==0.3.0
 
+# homeassistant.components.sipcall
+nanosip==0.0.4
+
 # homeassistant.components.keenetic_ndms2
 ndms2-client==0.1.2
 

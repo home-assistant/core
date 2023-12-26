@@ -1,54 +1,40 @@
-"""Support for SIP Call notification."""
+"""Discord platform for notify component."""
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-import voluptuous as vol
+from nanosip import Invite, SIPAuthCreds, async_call_and_cancel
 
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.components.notify import BaseNotificationService
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .utils import Invite, SIPAuthCreds, call_and_cancel
+from .const import CONF_SIP_DOMAIN, CONF_SIP_SERVER, DEFAULT_DURATION
 
-CONF_URI_FROM = "uri_from"
-CONF_URI_VIA = "uri_via"
-CONF_URI_TO = "uri_to"
-CONF_DURATION = "duration"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_URI_FROM): cv.string,
-        vol.Required(CONF_URI_VIA): cv.string,
-        vol.Required(CONF_URI_TO): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_DURATION, default=2): cv.positive_int,
-    }
-)
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> SIPCallNotificationService:
+) -> SIPCallNotificationService | None:
     """Get the SIPCall notification service."""
-    return SIPCallNotificationService(config)
+    if discovery_info is None:
+        return None
+
+    return SIPCallNotificationService(discovery_info)
 
 
 class SIPCallNotificationService(BaseNotificationService):
-    """Implement the notification service for the File service."""
+    """Implement the notification service for SIP Call."""
 
-    def __init__(self, config: ConfigType) -> None:
+    def __init__(self, config: dict) -> None:
         """Initialize the service."""
-        self.uri_from: str = config[CONF_URI_FROM]
-        self.uri_via: str = config[CONF_URI_VIA]
-        self.uri_to: str = config[CONF_URI_TO]
-        self.duration: int = config[CONF_DURATION]
+
+        self.config = config
 
         self.auth_creds = SIPAuthCreds(
             username=config[CONF_USERNAME],
@@ -56,15 +42,37 @@ class SIPCallNotificationService(BaseNotificationService):
         )
 
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
-        """Make a short call."""
+        """Make a short call and hang up."""
 
-        logging.warning("SIPCall: To %s", self.uri_to)
+        logging.warning("SIPCall kwargs: %s", str(kwargs))
 
-        inv = Invite(
-            uri_from=self.uri_from,
-            uri_to=self.uri_to,
-            uri_via=self.uri_via,
-            auth_creds=self.auth_creds,
+        # A callee must be specified through the notification target
+        try:
+            callee = kwargs["target"]
+        except (TypeError, KeyError):
+            _LOGGER.error(
+                "Notifications using sipcall require a 'target' (i.e. the callee) to be specified"
+            )
+            return
+
+        if isinstance(callee, list):
+            callee = callee[0]
+
+        # A duration in seconds is optional under 'data'
+        try:
+            duration = kwargs["data"]["duration"]
+        except (TypeError, KeyError):
+            duration = DEFAULT_DURATION
+
+        auth_creds = SIPAuthCreds(
+            username=self.config[CONF_USERNAME], password=self.config[CONF_PASSWORD]
         )
 
-        await call_and_cancel(inv, self.duration)
+        inv = Invite(
+            uri_from=f"sip:{self.config[CONF_USERNAME]}@{self.config[CONF_SIP_DOMAIN]}",
+            uri_to=f"sip:{callee}@{self.config[CONF_SIP_SERVER]}",
+            uri_via=self.config[CONF_SIP_SERVER],
+            auth_creds=auth_creds,
+        )
+
+        await async_call_and_cancel(inv, duration)
