@@ -134,7 +134,7 @@ async def test_foot_warmer(hass: HomeAssistant, mock_asyncsleepiq: MagicMock) ->
     state = hass.states.get(
         f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_foot_warmer"
     )
-    assert state.state == FootWarmingTemps.MEDIUM.name.title()
+    assert state.state == FootWarmingTemps.MEDIUM.name.lower()
     assert state.attributes.get(ATTR_ICON) == "mdi:heat-wave"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
@@ -152,7 +152,7 @@ async def test_foot_warmer(hass: HomeAssistant, mock_asyncsleepiq: MagicMock) ->
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_foot_warmer",
-            ATTR_OPTION: "Off",
+            ATTR_OPTION: "off",
         },
         blocking=True,
     )
@@ -165,7 +165,7 @@ async def test_foot_warmer(hass: HomeAssistant, mock_asyncsleepiq: MagicMock) ->
     state = hass.states.get(
         f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_foot_warmer"
     )
-    assert state.state == FootWarmingTemps.OFF.name.title()
+    assert state.state == FootWarmingTemps.OFF.name.lower()
     assert state.attributes.get(ATTR_ICON) == "mdi:heat-wave"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
@@ -183,7 +183,7 @@ async def test_foot_warmer(hass: HomeAssistant, mock_asyncsleepiq: MagicMock) ->
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: f"select.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_foot_warmer",
-            ATTR_OPTION: "High",
+            ATTR_OPTION: "high",
         },
         blocking=True,
     )

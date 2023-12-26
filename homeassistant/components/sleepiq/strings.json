@@ -23,5 +23,15 @@
         }
       }
     }
+  },
+  "selector": {
+    "foot_warmer_temp": {
+      "options": {
+        "off": "Off",
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      }
+    }
   }
 }
