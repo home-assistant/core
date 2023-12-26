@@ -8,10 +8,10 @@ from hko import HKO, LOCATIONS, HKOError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_LOCATION, Platform
+from homeassistant.const import CONF_LOCATION
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import selector
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import API_RHRREAD, DEFAULT_LOCATION, DOMAIN, KEY_LOCATION
 
@@ -23,13 +23,8 @@ def get_loc_name(item):
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_LOCATION, default=DEFAULT_LOCATION): selector(
-            {
-                Platform.SELECT: {
-                    "options": list(map(get_loc_name, LOCATIONS)),
-                    "sort": True,
-                }
-            }
+        vol.Required(CONF_LOCATION, default=DEFAULT_LOCATION): SelectSelector(
+            SelectSelectorConfig(options=list(map(get_loc_name, LOCATIONS)), sort=True)
         )
     }
 )
@@ -59,6 +54,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         except HKOError:
             errors["base"] = "cannot_connect"
+        except Exception:  # pylint: disable=broad-except
+            errors["base"] = "unknown"
         else:
             await self.async_set_unique_id(
                 user_input[CONF_LOCATION], raise_on_progress=False

@@ -5,7 +5,7 @@ from homeassistant.components.weather import (
     WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LOCATION, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,6 +22,7 @@ from .const import (
     API_TEMPERATURE,
     ATTRIBUTION,
     DOMAIN,
+    MANUFACTURER,
 )
 
 
@@ -31,10 +32,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add a HKO weather entity from a config_entry."""
-    name = config_entry.data[CONF_LOCATION]
     unique_id = config_entry.unique_id
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([HKOEntity(name, unique_id, coordinator)], False)
+    async_add_entities([HKOEntity(unique_id, coordinator)], False)
 
 
 class HKOEntity(CoordinatorEntity, WeatherEntity):
@@ -46,25 +46,15 @@ class HKOEntity(CoordinatorEntity, WeatherEntity):
     _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
     _attr_attribution = ATTRIBUTION
 
-    def __init__(self, name, unique_id, coordinator: DataUpdateCoordinator) -> None:
+    def __init__(self, unique_id_str, coordinator: DataUpdateCoordinator) -> None:
         """Initialise the weather platform."""
         super().__init__(coordinator)
-        self._name = name
-        self._attr_unique_id = unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, str(self.unique_id))},
-            name=self.name,
+        self._attr_unique_id = unique_id_str
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id_str)},
+            manufacturer=MANUFACTURER,
             entry_type=DeviceEntryType.SERVICE,
         )
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self._name
 
     @property
     def condition(self) -> str:

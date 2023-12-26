@@ -25,6 +25,7 @@ DEFAULT_LOCATION = LOCATIONS[0][KEY_LOCATION]
 DEFAULT_DISTRICT = LOCATIONS[0][KEY_DISTRICT]
 
 ATTRIBUTION = "Data provided by the Hong Kong Observatory"
+MANUFACTURER = "Hong Kong Observatory"
 
 API_CURRENT = "current"
 API_FORECAST = "forecast"

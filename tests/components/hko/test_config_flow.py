@@ -1,5 +1,6 @@
 """Test the Hong Kong Observatory config flow."""
 
+from asyncio import TimeoutError
 from unittest.mock import patch
 
 from hko import HKOError
@@ -34,10 +35,8 @@ async def test_config_flow_default(hass: HomeAssistant) -> None:
 
 async def test_config_flow_cannot_connect(hass: HomeAssistant) -> None:
     """Test user config flow without connection to the API."""
-    with patch(
-        "homeassistant.components.hko.config_flow.HKO.weather",
-        side_effect=HKOError,
-    ):
+    with patch("homeassistant.components.hko.config_flow.HKO.weather") as client_mock:
+        client_mock.side_effect = HKOError()
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -46,6 +45,42 @@ async def test_config_flow_cannot_connect(hass: HomeAssistant) -> None:
 
         assert result["type"] == FlowResultType.FORM
         assert result["errors"]["base"] == "cannot_connect"
+
+        client_mock.side_effect = None
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_LOCATION: DEFAULT_LOCATION},
+        )
+
+        assert result["result"].unique_id == DEFAULT_LOCATION
+        assert result["data"][CONF_LOCATION] == DEFAULT_LOCATION
+
+
+async def test_config_flow_timedout(hass: HomeAssistant) -> None:
+    """Test user config flow with timedout connection to the API."""
+    with patch("homeassistant.components.hko.config_flow.HKO.weather") as client_mock:
+        client_mock.side_effect = TimeoutError()
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_LOCATION: DEFAULT_LOCATION},
+        )
+
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"]["base"] == "unknown"
+
+        client_mock.side_effect = None
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_LOCATION: DEFAULT_LOCATION},
+        )
+
+        assert result["result"].unique_id == DEFAULT_LOCATION
+        assert result["data"][CONF_LOCATION] == DEFAULT_LOCATION
 
 
 async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
