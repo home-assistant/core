@@ -728,7 +728,33 @@ class Thermostat(ClimateEntity):
         self.update_without_throttle = True
 
     def hold_preference(self):
-        """Return user preference setting for hold time."""
+        """Return user preference setting for hold type."""
+        # Currently supported pyecobee holdTypes:
+        #   dateTime, nextTransition, indefinite, holdHours
+        ecobee_hold_mode_map = {
+            "2 hours": "holdHours",
+            "4 hours": "holdHours",
+            "Until the next scheduled activity": "nextTransition",
+            "Until you change it": "indefinite",
+        }
+        # First check to see if thermostat-specific hold mode is defined in configuration.yaml.
+        # Values returned from configuration.yaml are:
+        #   "2 hours", "4 hours",
+        #   "Until the next scheduled activity",
+        #   "Until you change it"
+        hold_mode = self.hass.states.get(
+            "input_select.ecobee_hold_mode_"
+            + self.thermostat.get("name").lower().replace(" ", "_")
+        )
+        if hold_mode is not None and hold_mode.state != "unavailable":
+            return ecobee_hold_mode_map.get(hold_mode.state, "nextTransition")
+
+        # Else check to see if the default Ecobee hold mode is defined in configuration.yaml.
+        hold_mode = self.hass.states.get("input_select.ecobee_hold_mode")
+        if hold_mode is not None and hold_mode.state != "unavailable":
+            return ecobee_hold_mode_map.get(hold_mode.state, "nextTransition")
+
+        # Else use value returned from thermostat.
         # Values returned from thermostat are:
         #   "useEndTime2hour", "useEndTime4hour"
         #   "nextPeriod", "askMe"
@@ -745,6 +771,30 @@ class Thermostat(ClimateEntity):
 
     def hold_hours(self):
         """Return user preference setting for hold duration in hours."""
+        # Only the "2 hours" and "4 hours" hold types need a number of hours specified.
+        # Any other hold type will default to None and not be used by the thermostat.
+        ecobee_hold_mode_map = {
+            "2 hours": 2,
+            "4 hours": 4,
+        }
+        # First check to see if thermostat-specific hold mode is defined in configuration.yaml.
+        # Values returned from configuration.yaml are:
+        #   "2 hours", "4 hours",
+        #   "Until the next scheduled activity", "askMe"
+        #   "Until you change it"
+        hold_mode = self.hass.states.get(
+            "input_select.ecobee_hold_mode_"
+            + self.thermostat.get("name").lower().replace(" ", "_")
+        )
+        if hold_mode is not None and hold_mode.state != "unavailable":
+            return ecobee_hold_mode_map.get(hold_mode.state)
+
+        # Else check to see if the default Ecobee hold mode is defined in configuration.yaml.
+        hold_mode = self.hass.states.get("input_select.ecobee_hold_mode")
+        if hold_mode is not None and hold_mode.state != "unavailable":
+            return ecobee_hold_mode_map.get(hold_mode.state)
+
+        # Else use value returned from thermostat.
         # Values returned from thermostat are:
         #   "useEndTime2hour", "useEndTime4hour"
         #   "nextPeriod", "askMe"
