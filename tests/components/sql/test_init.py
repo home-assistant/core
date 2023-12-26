@@ -75,11 +75,11 @@ async def test_query_no_read_only_cte(hass: HomeAssistant) -> None:
     """Test query no read only CTE."""
     with pytest.raises(vol.Invalid):
         validate_sql_select(
-            "WITH test AS (SELECT etate FROM state) UPDATE states SET states.state = test.state;"
+            "WITH test AS (SELECT state FROM state) UPDATE states SET states.state = test.state;"
         )
 
 
-async def test_miltiple_queries(hass: HomeAssistant) -> None:
+async def test_multiple_queries(hass: HomeAssistant) -> None:
     """Test multiple queries."""
     with pytest.raises(vol.Invalid):
         validate_sql_select("SELECT 5 as value; UPDATE states SET state = 10;")
