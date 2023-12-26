@@ -641,6 +641,9 @@ epson-projector==0.5.1
 # homeassistant.components.esphome
 esphome-dashboard-api==1.2.3
 
+# homeassistant.components.netgear_lte
+eternalegypt==0.0.16
+
 # homeassistant.components.eufylife_ble
 eufylife-ble-client==0.1.8
 
@@ -723,7 +726,7 @@ georss-qld-bushfire-alert-client==0.5
 # homeassistant.components.nmap_tracker
 # homeassistant.components.samsungtv
 # homeassistant.components.upnp
-getmac==0.8.2
+getmac==0.9.4
 
 # homeassistant.components.gios
 gios==3.2.2
@@ -1138,12 +1141,6 @@ peco==0.0.29
 
 # homeassistant.components.escea
 pescea==1.0.12
-
-# homeassistant.components.aruba
-# homeassistant.components.cisco_ios
-# homeassistant.components.pandora
-# homeassistant.components.unifi_direct
-pexpect==4.6.0
 
 # homeassistant.components.modem_callerid
 phone-modem==0.1.1
@@ -2180,7 +2177,7 @@ zigpy-znp==0.12.1
 zigpy==0.60.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.54.0
+zwave-js-server-python==0.55.1
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3

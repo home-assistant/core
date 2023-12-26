@@ -903,7 +903,7 @@ georss-qld-bushfire-alert-client==0.5
 # homeassistant.components.nmap_tracker
 # homeassistant.components.samsungtv
 # homeassistant.components.upnp
-getmac==0.8.2
+getmac==0.9.4
 
 # homeassistant.components.gios
 gios==3.2.2
@@ -1478,7 +1478,6 @@ pescea==1.0.12
 # homeassistant.components.aruba
 # homeassistant.components.cisco_ios
 # homeassistant.components.pandora
-# homeassistant.components.unifi_direct
 pexpect==4.6.0
 
 # homeassistant.components.modem_callerid
@@ -2698,6 +2697,9 @@ ultraheat-api==0.5.7
 # homeassistant.components.unifiprotect
 unifi-discovery==1.1.7
 
+# homeassistant.components.unifi_direct
+unifi_ap==0.0.1
+
 # homeassistant.components.unifiled
 unifiled==0.11
 
@@ -2888,7 +2890,7 @@ zigpy==0.60.2
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.54.0
+zwave-js-server-python==0.55.1
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
