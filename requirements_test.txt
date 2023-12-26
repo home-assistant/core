@@ -32,6 +32,7 @@ pytest-xdist==3.3.1
 pytest==7.4.3
 requests-mock==1.11.0
 respx==0.20.2
+sqlalchemy
 syrupy==4.6.0
 tqdm==4.66.1
 types-aiofiles==23.2.0.0
