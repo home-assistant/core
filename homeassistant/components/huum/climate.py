@@ -30,7 +30,7 @@ async def async_setup_entry(
     """Set up the Huum sauna with config flow."""
     huum_handler = hass.data.setdefault(DOMAIN, {})[entry.entry_id]
 
-    async_add_entities([HuumDevice(huum_handler)], True)
+    async_add_entities([HuumDevice(huum_handler, entry.entry_id)], True)
 
 
 class HuumDevice(ClimateEntity):
@@ -44,17 +44,20 @@ class HuumDevice(ClimateEntity):
     _attr_min_temp = 40
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_device_info = DeviceInfo(
-        name="Huum Sauna",
-        manufacturer="Huum",
-    )
 
     _target_temperature = 40
 
-    def __init__(self, huum_handler: Huum) -> None:
+    def __init__(self, huum_handler: Huum, unique_id: str) -> None:
         """Initialize the heater."""
-        self.unique_id = self.entity_id
+        self._attr_unique_id = unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            name="Huum sauna",
+            manufacturer="Huum",
+        )
+
         self._huum_handler = huum_handler
+
 
     @property
     def hvac_mode(self) -> str:
