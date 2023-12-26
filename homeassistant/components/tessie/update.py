@@ -1,6 +1,10 @@
 """Update platform for Tessie integration."""
 from __future__ import annotations
 
+from typing import Any
+
+from tessie_api import schedule_software_update
+
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -36,6 +40,16 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
         super().__init__(coordinator, "update")
 
     @property
+    def supported_features(self) -> UpdateEntityFeature:
+        """Flag supported features."""
+        if self.get("vehicle_state_software_update_status") in (
+            TessieUpdateStatus.AVAILABLE,
+            TessieUpdateStatus.SCHEDULED,
+        ):
+            return self._attr_supported_features | UpdateEntityFeature.INSTALL
+        return self._attr_supported_features
+
+    @property
     def installed_version(self) -> str:
         """Return the current app version."""
         # Discard build from version number
@@ -63,3 +77,12 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
         ):
             return self.get("vehicle_state_software_update_install_perc")
         return False
+
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
+    ) -> None:
+        """Install an update."""
+        await self.run(schedule_software_update, in_seconds=0)
+        self.set(
+            ("vehicle_state_software_update_status", TessieUpdateStatus.INSTALLING)
+        )
