@@ -641,6 +641,9 @@ epson-projector==0.5.1
 # homeassistant.components.esphome
 esphome-dashboard-api==1.2.3
 
+# homeassistant.components.netgear_lte
+eternalegypt==0.0.16
+
 # homeassistant.components.eufylife_ble
 eufylife-ble-client==0.1.8
 
