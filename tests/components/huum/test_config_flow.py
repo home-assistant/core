@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import aiohttp
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.huum.config_flow import CannotConnect
@@ -47,29 +48,18 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.huum.config_flow.Huum.status",
-        side_effect=aiohttp.ClientError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "username": TEST_USERNAME,
-                "password": TEST_PASSWORD,
-            },
-        )
-
-    assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
-
-
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "raises",
+    "error_base",
+    (
+        (Exception, "unknown"),
+        (CannotConnect, "cannot_connect"),
+        (aiohttp.ClientError, "invalid_auth"),
+    ),
+)
+async def test_huum_errors(
+    hass: HomeAssistant, raises: Exception, error_base: str
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -77,7 +67,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.huum.config_flow.Huum.status",
-        side_effect=CannotConnect,
+        side_effect=raises,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -88,26 +78,4 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_form_unknown_error(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.huum.config_flow.Huum.status",
-        side_effect=Exception,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "username": TEST_USERNAME,
-                "password": TEST_PASSWORD,
-            },
-        )
-
-    assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result2["errors"] == {"base": error_base}
