@@ -109,6 +109,14 @@ async def test_sensor_platform(
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z02-signal"
 
+
+async def test_sensor_platform_disabled_entity(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_get: AsyncMock
+) -> None:
+    """Test sensor platform disabled entity."""
+
+    await add_mock_config(hass)
+
     # Test First Zone Temp Sensor (disabled by default)
     entity_id = "sensor.myzone_zone_open_with_sensor_temperature"
 

@@ -9,7 +9,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
-from .coordinator import TessieDataUpdateCoordinator
+from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
 
@@ -17,15 +17,15 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Tessie device tracker platform from a config entry."""
-    coordinators = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        klass(coordinator)
+        klass(vehicle.state_coordinator)
         for klass in (
             TessieDeviceTrackerLocationEntity,
             TessieDeviceTrackerRouteEntity,
         )
-        for coordinator in coordinators
+        for vehicle in data
     )
 
 
@@ -34,7 +34,7 @@ class TessieDeviceTrackerEntity(TessieEntity, TrackerEntity):
 
     def __init__(
         self,
-        coordinator: TessieDataUpdateCoordinator,
+        coordinator: TessieStateUpdateCoordinator,
     ) -> None:
         """Initialize the device tracker."""
         super().__init__(coordinator, self.key)

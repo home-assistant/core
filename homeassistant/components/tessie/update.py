@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, TessieUpdateStatus
-from .coordinator import TessieDataUpdateCoordinator
+from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
 
@@ -15,9 +15,11 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Tessie Update platform from a config entry."""
-    coordinators = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(TessieUpdateEntity(coordinator) for coordinator in coordinators)
+    async_add_entities(
+        TessieUpdateEntity(vehicle.state_coordinator) for vehicle in data
+    )
 
 
 class TessieUpdateEntity(TessieEntity, UpdateEntity):
@@ -28,7 +30,7 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
 
     def __init__(
         self,
-        coordinator: TessieDataUpdateCoordinator,
+        coordinator: TessieStateUpdateCoordinator,
     ) -> None:
         """Initialize the Update."""
         super().__init__(coordinator, "update")
