@@ -261,6 +261,8 @@ def test_deprecated_function_called_from_custom_integration(
 class TestDeprecatedConstantEnum(StrEnum):
     """Test deprecated constant enum."""
 
+    __test__ = False  # prevent test collection of class by pytest
+
     TEST = "value"
 
 

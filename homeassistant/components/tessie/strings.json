@@ -247,6 +247,18 @@
       },
       "vehicle_state_tpms_soft_warning_rr": {
         "name": "Tire pressure warning rear right"
+      },
+      "vehicle_state_fd_window": {
+        "name": "Front driver window"
+      },
+      "vehicle_state_fp_window": {
+        "name": "Front passenger window"
+      },
+      "vehicle_state_rd_window": {
+        "name": "Rear driver window"
+      },
+      "vehicle_state_rp_window": {
+        "name": "Rear passenger window"
       }
     },
     "button": {
@@ -255,7 +267,9 @@
       "honk": { "name": "Honk horn" },
       "trigger_homelink": { "name": "Homelink" },
       "enable_keyless_driving": { "name": "Keyless driving" },
-      "boombox": { "name": "Play fart" }
+      "boombox": { "name": "Play fart" },
+      "frunk": { "name": "Open frunk" },
+      "trunk": { "name": "Open/Close trunk" }
     },
     "switch": {
       "charge_state_charge_enable_request": {

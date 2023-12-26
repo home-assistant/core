@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, TessieStatus
-from .coordinator import TessieDataUpdateCoordinator
+from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
 
@@ -110,6 +110,26 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_fd_window",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_fp_window",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_rd_window",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieBinarySensorEntityDescription(
+        key="vehicle_state_rp_window",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 )
 
 
@@ -117,13 +137,13 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Tessie binary sensor platform from a config entry."""
-    coordinators = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        TessieBinarySensorEntity(coordinator, description)
-        for coordinator in coordinators
+        TessieBinarySensorEntity(vehicle.state_coordinator, description)
+        for vehicle in data
         for description in DESCRIPTIONS
-        if description.key in coordinator.data
+        if description.key in vehicle.state_coordinator.data
     )
 
 
@@ -134,7 +154,7 @@ class TessieBinarySensorEntity(TessieEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        coordinator: TessieDataUpdateCoordinator,
+        coordinator: TessieStateUpdateCoordinator,
         description: TessieBinarySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""

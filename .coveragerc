@@ -173,6 +173,7 @@ omit =
     homeassistant/components/coinbase/sensor.py
     homeassistant/components/comed_hourly_pricing/sensor.py
     homeassistant/components/comelit/__init__.py
+    homeassistant/components/comelit/alarm_control_panel.py
     homeassistant/components/comelit/const.py
     homeassistant/components/comelit/cover.py
     homeassistant/components/comelit/coordinator.py
@@ -363,8 +364,6 @@ omit =
     homeassistant/components/faa_delays/binary_sensor.py
     homeassistant/components/faa_delays/coordinator.py
     homeassistant/components/familyhub/camera.py
-    homeassistant/components/fastdotcom/sensor.py
-    homeassistant/components/fastdotcom/__init__.py
     homeassistant/components/ffmpeg/camera.py
     homeassistant/components/fibaro/__init__.py
     homeassistant/components/fibaro/binary_sensor.py
@@ -806,7 +805,8 @@ omit =
     homeassistant/components/netgear/sensor.py
     homeassistant/components/netgear/switch.py
     homeassistant/components/netgear/update.py
-    homeassistant/components/netgear_lte/*
+    homeassistant/components/netgear_lte/__init__.py
+    homeassistant/components/netgear_lte/notify.py
     homeassistant/components/netio/switch.py
     homeassistant/components/neurio_energy/sensor.py
     homeassistant/components/nexia/climate.py
@@ -1243,7 +1243,10 @@ omit =
     homeassistant/components/stream/fmp4utils.py
     homeassistant/components/stream/hls.py
     homeassistant/components/stream/worker.py
-    homeassistant/components/streamlabswater/*
+    homeassistant/components/streamlabswater/__init__.py
+    homeassistant/components/streamlabswater/binary_sensor.py
+    homeassistant/components/streamlabswater/coordinator.py
+    homeassistant/components/streamlabswater/sensor.py
     homeassistant/components/suez_water/__init__.py
     homeassistant/components/suez_water/sensor.py
     homeassistant/components/supervisord/sensor.py
@@ -1305,7 +1308,9 @@ omit =
     homeassistant/components/system_bridge/notify.py
     homeassistant/components/system_bridge/sensor.py
     homeassistant/components/system_bridge/update.py
+    homeassistant/components/systemmonitor/__init__.py
     homeassistant/components/systemmonitor/sensor.py
+    homeassistant/components/systemmonitor/util.py
     homeassistant/components/tado/__init__.py
     homeassistant/components/tado/binary_sensor.py
     homeassistant/components/tado/climate.py
@@ -1428,6 +1433,8 @@ omit =
     homeassistant/components/ukraine_alarm/__init__.py
     homeassistant/components/ukraine_alarm/binary_sensor.py
     homeassistant/components/unifiled/*
+    homeassistant/components/unifi_direct/__init__.py
+    homeassistant/components/unifi_direct/device_tracker.py
     homeassistant/components/upb/__init__.py
     homeassistant/components/upb/light.py
     homeassistant/components/upc_connect/*
