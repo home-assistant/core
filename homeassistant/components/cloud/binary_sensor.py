@@ -27,7 +27,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Home Assistant Cloud speech platform via config entry."""
+    """Set up the Home Assistant Cloud binary sensors."""
     cloud: Cloud[CloudClient] = hass.data[DOMAIN]
     async_add_entities([CloudRemoteBinary(cloud)])
 
