@@ -44,7 +44,7 @@ def validate_sql_select(value: str) -> str:
     if len(query) == 0 or (query_type := query[0].get_type()) == "UNKNOWN":
         raise vol.Invalid("Invalid SQL query")
     if query_type != "SELECT":
-        _LOGGER.debug("The SQL query is of type %s", query_type)
+        _LOGGER.debug("The SQL query %s is of type %s", query, query_type)
         raise vol.Invalid("Only SELECT queries allowed")
     return value.lstrip().lstrip(";")
 
