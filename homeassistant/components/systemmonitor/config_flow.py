@@ -31,6 +31,8 @@ from .util import get_all_running_processes
 
 async def get_remove_sensor_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     """Return schema for sensor removal."""
+    if not handler.options[SENSOR_DOMAIN]:
+        return None
     return vol.Schema(
         {
             vol.Required(CONF_INDEX): cv.multi_select(
