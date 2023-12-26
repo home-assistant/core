@@ -905,13 +905,13 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def support_play(self) -> bool:
         """Boolean if play is supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.PLAY)
+        return MediaPlayerEntityFeature.PLAY in self.supported_features
 
     @final
     @property
     def support_pause(self) -> bool:
         """Boolean if pause is supported."""
-        return bool(self.supported_features & MediaPlayerEntityFeature.PAUSE)
+        return bool(MediaPlayerEntityFeature.PAUSE in self.supported_features)
 
     @final
     @property
