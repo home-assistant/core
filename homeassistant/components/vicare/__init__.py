@@ -104,7 +104,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 def get_supported_devices(
-    devices: list[PyViCareDeviceConfig]
+    devices: list[PyViCareDeviceConfig],
 ) -> list[PyViCareDeviceConfig]:
     """Remove unsupported devices from the list."""
     return [
