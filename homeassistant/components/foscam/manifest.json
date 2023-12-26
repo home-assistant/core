@@ -1,7 +1,7 @@
 {
   "domain": "foscam",
   "name": "Foscam",
-  "codeowners": ["@skgsergio"],
+  "codeowners": ["@skgsergio", "@krmarien"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/foscam",
   "iot_class": "local_polling",

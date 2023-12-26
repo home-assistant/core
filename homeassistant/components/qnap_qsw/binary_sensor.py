@@ -30,7 +30,7 @@ from .coordinator import QswDataCoordinator
 from .entity import QswEntityDescription, QswEntityType, QswSensorEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class QswBinarySensorEntityDescription(
     BinarySensorEntityDescription, QswEntityDescription
 ):
