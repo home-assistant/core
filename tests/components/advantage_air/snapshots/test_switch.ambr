@@ -1,4 +1,22 @@
 # serializer version: 1
+# name: test_cover_async_setup_entry[switch.myzone_myfan-turnoff]
+  dict({
+    'ac1': dict({
+      'info': dict({
+        'aaAutoFanModeEnabled': False,
+      }),
+    }),
+  })
+# ---
+# name: test_cover_async_setup_entry[switch.myzone_myfan-turnon]
+  dict({
+    'ac1': dict({
+      'info': dict({
+        'aaAutoFanModeEnabled': True,
+      }),
+    }),
+  })
+# ---
 # name: test_cover_async_setup_entry[switch.myzone_myfan]
   StateSnapshot({
     'attributes': ReadOnlyDict({

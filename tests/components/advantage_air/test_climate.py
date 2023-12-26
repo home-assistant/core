@@ -209,8 +209,8 @@ async def test_climate_myauto_main(
         blocking=True,
     )
     mock_update.assert_called_once()
+    assert mock_update.call_args[0][0] == snapshot(name=f"{entity_id}-settemp")
     mock_update.reset_mock()
-    assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-settemp")
 
     # Test AutoFanMode
     await hass.services.async_call(
@@ -220,7 +220,7 @@ async def test_climate_myauto_main(
         blocking=True,
     )
     mock_update.assert_called_once()
-    assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-fanmode")
+    assert mock_update.call_args[0][0] == snapshot(name=f"{entity_id}-fanmode")
 
 
 async def test_climate_async_failed_update(
