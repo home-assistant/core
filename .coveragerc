@@ -1128,6 +1128,7 @@ omit =
     homeassistant/components/sia/hub.py
     homeassistant/components/sia/sia_entity_base.py
     homeassistant/components/sia/utils.py
+    homeassistant/components/sipcall/notify.py
     homeassistant/components/simplepush/__init__.py
     homeassistant/components/simplepush/notify.py
     homeassistant/components/simplisafe/__init__.py
