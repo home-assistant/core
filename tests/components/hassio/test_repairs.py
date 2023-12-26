@@ -100,6 +100,7 @@ async def test_supervisor_issue_repair_flow(
         "handler": "hassio",
         "description": None,
         "description_placeholders": None,
+        "minor_version": 1,
     }
 
     assert not issue_registry.async_get_issue(domain="hassio", issue_id="1234")
@@ -195,6 +196,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions(
         "handler": "hassio",
         "description": None,
         "description_placeholders": None,
+        "minor_version": 1,
     }
 
     assert not issue_registry.async_get_issue(domain="hassio", issue_id="1234")
@@ -309,6 +311,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions_and_confir
         "handler": "hassio",
         "description": None,
         "description_placeholders": None,
+        "minor_version": 1,
     }
 
     assert not issue_registry.async_get_issue(domain="hassio", issue_id="1234")
@@ -389,6 +392,7 @@ async def test_supervisor_issue_repair_flow_skip_confirmation(
         "handler": "hassio",
         "description": None,
         "description_placeholders": None,
+        "minor_version": 1,
     }
 
     assert not issue_registry.async_get_issue(domain="hassio", issue_id="1234")
@@ -488,6 +492,7 @@ async def test_mount_failed_repair_flow(
         "handler": "hassio",
         "description": None,
         "description_placeholders": None,
+        "minor_version": 1,
     }
 
     assert not issue_registry.async_get_issue(domain="hassio", issue_id="1234")
@@ -599,6 +604,7 @@ async def test_supervisor_issue_docker_config_repair_flow(
         "handler": "hassio",
         "description": None,
         "description_placeholders": None,
+        "minor_version": 1,
     }
 
     assert not issue_registry.async_get_issue(domain="hassio", issue_id="1234")

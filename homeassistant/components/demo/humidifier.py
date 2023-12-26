@@ -12,18 +12,16 @@ from homeassistant.components.humidifier import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 SUPPORT_FLAGS = HumidifierEntityFeature(0)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Demo humidifier devices."""
+    """Set up the Demo humidifier devices config entry."""
     async_add_entities(
         [
             DemoHumidifier(
@@ -50,15 +48,6 @@ async def async_setup_platform(
             ),
         ]
     )
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the Demo humidifier devices config entry."""
-    await async_setup_platform(hass, {}, async_add_entities)
 
 
 class DemoHumidifier(HumidifierEntity):

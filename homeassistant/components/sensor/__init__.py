@@ -7,51 +7,60 @@ from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
+from functools import partial
 import logging
 from math import ceil, floor, isfinite, log10
-from typing import Any, Final, Self, cast, final
+from typing import TYPE_CHECKING, Any, Final, Self, cast, final
+
+from typing_extensions import override
 
 from homeassistant.config_entries import ConfigEntry
 
 # pylint: disable-next=hass-deprecated-import
 from homeassistant.const import (  # noqa: F401
+    _DEPRECATED_DEVICE_CLASS_AQI,
+    _DEPRECATED_DEVICE_CLASS_BATTERY,
+    _DEPRECATED_DEVICE_CLASS_CO,
+    _DEPRECATED_DEVICE_CLASS_CO2,
+    _DEPRECATED_DEVICE_CLASS_CURRENT,
+    _DEPRECATED_DEVICE_CLASS_DATE,
+    _DEPRECATED_DEVICE_CLASS_ENERGY,
+    _DEPRECATED_DEVICE_CLASS_FREQUENCY,
+    _DEPRECATED_DEVICE_CLASS_GAS,
+    _DEPRECATED_DEVICE_CLASS_HUMIDITY,
+    _DEPRECATED_DEVICE_CLASS_ILLUMINANCE,
+    _DEPRECATED_DEVICE_CLASS_MONETARY,
+    _DEPRECATED_DEVICE_CLASS_NITROGEN_DIOXIDE,
+    _DEPRECATED_DEVICE_CLASS_NITROGEN_MONOXIDE,
+    _DEPRECATED_DEVICE_CLASS_NITROUS_OXIDE,
+    _DEPRECATED_DEVICE_CLASS_OZONE,
+    _DEPRECATED_DEVICE_CLASS_PM1,
+    _DEPRECATED_DEVICE_CLASS_PM10,
+    _DEPRECATED_DEVICE_CLASS_PM25,
+    _DEPRECATED_DEVICE_CLASS_POWER,
+    _DEPRECATED_DEVICE_CLASS_POWER_FACTOR,
+    _DEPRECATED_DEVICE_CLASS_PRESSURE,
+    _DEPRECATED_DEVICE_CLASS_SIGNAL_STRENGTH,
+    _DEPRECATED_DEVICE_CLASS_SULPHUR_DIOXIDE,
+    _DEPRECATED_DEVICE_CLASS_TEMPERATURE,
+    _DEPRECATED_DEVICE_CLASS_TIMESTAMP,
+    _DEPRECATED_DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+    _DEPRECATED_DEVICE_CLASS_VOLTAGE,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_AQI,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_DATE,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_FREQUENCY,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_MONETARY,
-    DEVICE_CLASS_NITROGEN_DIOXIDE,
-    DEVICE_CLASS_NITROGEN_MONOXIDE,
-    DEVICE_CLASS_NITROUS_OXIDE,
-    DEVICE_CLASS_OZONE,
-    DEVICE_CLASS_PM1,
-    DEVICE_CLASS_PM10,
-    DEVICE_CLASS_PM25,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_POWER_FACTOR,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_SULPHUR_DIOXIDE,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
-    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
-    DEVICE_CLASS_VOLTAGE,
+    EntityCategory,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
+)
+from homeassistant.helpers.deprecation import (
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
@@ -62,6 +71,9 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
 from .const import (  # noqa: F401
+    _DEPRECATED_STATE_CLASS_MEASUREMENT,
+    _DEPRECATED_STATE_CLASS_TOTAL,
+    _DEPRECATED_STATE_CLASS_TOTAL_INCREASING,
     ATTR_LAST_RESET,
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
@@ -72,9 +84,6 @@ from .const import (  # noqa: F401
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     NON_NUMERIC_DEVICE_CLASSES,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
     STATE_CLASSES,
     STATE_CLASSES_SCHEMA,
     UNIT_CONVERTERS,
@@ -82,6 +91,11 @@ from .const import (  # noqa: F401
     SensorStateClass,
 )
 from .websocket_api import async_setup as async_setup_ws_api
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -105,6 +119,12 @@ __all__ = [
     "SensorExtraStoredData",
     "SensorStateClass",
 ]
+
+# As we import deprecated constants from the const module, we need to add these two functions
+# otherwise this module will be logged for using deprecated constants and not the custom component
+# Both can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 # mypy: disallow-any-generics
 
@@ -132,8 +152,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class SensorEntityDescription(EntityDescription):
+class SensorEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes sensor entities."""
 
     device_class: SensorDeviceClass | None = None
@@ -146,8 +165,46 @@ class SensorEntityDescription(EntityDescription):
     unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
 
 
-class SensorEntity(Entity):
+def _numeric_state_expected(
+    device_class: SensorDeviceClass | None,
+    state_class: SensorStateClass | str | None,
+    native_unit_of_measurement: str | None,
+    suggested_display_precision: int | None,
+) -> bool:
+    """Return true if the sensor must be numeric."""
+    # Note: the order of the checks needs to be kept aligned
+    # with the checks in `state` property.
+    if device_class in NON_NUMERIC_DEVICE_CLASSES:
+        return False
+    if (
+        state_class is not None
+        or native_unit_of_measurement is not None
+        or suggested_display_precision is not None
+    ):
+        return True
+    # Sensors with custom device classes will have the device class
+    # converted to None and are not considered numeric
+    return device_class is not None
+
+
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "device_class",
+    "last_reset",
+    "native_unit_of_measurement",
+    "native_value",
+    "options",
+    "state_class",
+    "suggested_display_precision",
+    "suggested_unit_of_measurement",
+}
+
+TEMPERATURE_UNITS = {UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT}
+
+
+class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for sensor entities."""
+
+    _entity_component_unrecorded_attributes = frozenset({ATTR_OPTIONS})
 
     entity_description: SensorEntityDescription
     _attr_device_class: SensorDeviceClass | None
@@ -247,6 +304,11 @@ class SensorEntity(Entity):
     async def async_internal_added_to_hass(self) -> None:
         """Call when the sensor entity is added to hass."""
         await super().async_internal_added_to_hass()
+        if self.entity_category == EntityCategory.CONFIG:
+            raise HomeAssistantError(
+                f"Entity {self.entity_id} cannot be added as the entity category is set to config"
+            )
+
         if not self.registry_entry:
             return
         self._async_read_entity_options()
@@ -259,7 +321,8 @@ class SensorEntity(Entity):
         """
         return self.device_class not in (None, SensorDeviceClass.ENUM)
 
-    @property
+    @cached_property
+    @override
     def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -272,22 +335,14 @@ class SensorEntity(Entity):
     @property
     def _numeric_state_expected(self) -> bool:
         """Return true if the sensor must be numeric."""
-        # Note: the order of the checks needs to be kept aligned
-        # with the checks in `state` property.
-        device_class = try_parse_enum(SensorDeviceClass, self.device_class)
-        if device_class in NON_NUMERIC_DEVICE_CLASSES:
-            return False
-        if (
-            self.state_class is not None
-            or self.native_unit_of_measurement is not None
-            or self.suggested_display_precision is not None
-        ):
-            return True
-        # Sensors with custom device classes will have the device class
-        # converted to None and are not considered numeric
-        return device_class is not None
+        return _numeric_state_expected(
+            try_parse_enum(SensorDeviceClass, self.device_class),
+            self.state_class,
+            self.native_unit_of_measurement,
+            self.suggested_display_precision,
+        )
 
-    @property
+    @cached_property
     def options(self) -> list[str] | None:
         """Return a set of possible options."""
         if hasattr(self, "_attr_options"):
@@ -296,7 +351,7 @@ class SensorEntity(Entity):
             return self.entity_description.options
         return None
 
-    @property
+    @cached_property
     def state_class(self) -> SensorStateClass | str | None:
         """Return the state class of this entity, if any."""
         if hasattr(self, "_attr_state_class"):
@@ -305,7 +360,7 @@ class SensorEntity(Entity):
             return self.entity_description.state_class
         return None
 
-    @property
+    @cached_property
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
         if hasattr(self, "_attr_last_reset"):
@@ -315,6 +370,7 @@ class SensorEntity(Entity):
         return None
 
     @property
+    @override
     def capability_attributes(self) -> Mapping[str, Any] | None:
         """Return the capability attributes."""
         if state_class := self.state_class:
@@ -345,7 +401,7 @@ class SensorEntity(Entity):
         """Return initial entity options.
 
         These will be stored in the entity registry the first time the entity is seen,
-        and then never updated.
+        and then only updated if the unit system is changed.
         """
         suggested_unit_of_measurement = self._get_initial_suggested_unit()
 
@@ -360,13 +416,12 @@ class SensorEntity(Entity):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
         if last_reset := self.last_reset:
-            if (
-                self.state_class != SensorStateClass.TOTAL
-                and not self._last_reset_reported
-            ):
+            state_class = self.state_class
+            if state_class != SensorStateClass.TOTAL and not self._last_reset_reported:
                 self._last_reset_reported = True
                 report_issue = self._suggest_report_issue()
                 # This should raise in Home Assistant Core 2022.5
@@ -379,21 +434,21 @@ class SensorEntity(Entity):
                     ),
                     self.entity_id,
                     type(self),
-                    self.state_class,
+                    state_class,
                     report_issue,
                 )
 
-            if self.state_class == SensorStateClass.TOTAL:
+            if state_class == SensorStateClass.TOTAL:
                 return {ATTR_LAST_RESET: last_reset.isoformat()}
 
         return None
 
-    @property
+    @cached_property
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
         return self._attr_native_value
 
-    @property
+    @cached_property
     def suggested_display_precision(self) -> int | None:
         """Return the suggested number of decimal digits for display."""
         if hasattr(self, "_attr_suggested_display_precision"):
@@ -402,7 +457,7 @@ class SensorEntity(Entity):
             return self.entity_description.suggested_display_precision
         return None
 
-    @property
+    @cached_property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor, if any."""
         if hasattr(self, "_attr_native_unit_of_measurement"):
@@ -411,7 +466,7 @@ class SensorEntity(Entity):
             return self.entity_description.native_unit_of_measurement
         return None
 
-    @property
+    @cached_property
     def suggested_unit_of_measurement(self) -> str | None:
         """Return the unit which should be used for the sensor's state.
 
@@ -437,6 +492,7 @@ class SensorEntity(Entity):
 
     @final
     @property
+    @override
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
         # Highest priority, for registered entities: unit set by user,with fallback to
@@ -455,9 +511,8 @@ class SensorEntity(Entity):
         native_unit_of_measurement = self.native_unit_of_measurement
 
         if (
-            self.device_class == SensorDeviceClass.TEMPERATURE
-            and native_unit_of_measurement
-            in {UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT}
+            native_unit_of_measurement in TEMPERATURE_UNITS
+            and self.device_class is SensorDeviceClass.TEMPERATURE
         ):
             return self.hass.config.units.temperature_unit
 
@@ -466,6 +521,7 @@ class SensorEntity(Entity):
 
     @final
     @property
+    @override
     def state(self) -> Any:
         """Return the state of the sensor and perform unit conversions, if needed."""
         native_unit_of_measurement = self.native_unit_of_measurement
@@ -517,7 +573,7 @@ class SensorEntity(Entity):
             return None
 
         # Received a datetime
-        if device_class == SensorDeviceClass.TIMESTAMP:
+        if device_class is SensorDeviceClass.TIMESTAMP:
             try:
                 # We cast the value, to avoid using isinstance, but satisfy
                 # typechecking. The errors are guarded in this try.
@@ -539,7 +595,7 @@ class SensorEntity(Entity):
                 ) from err
 
         # Received a date value
-        if device_class == SensorDeviceClass.DATE:
+        if device_class is SensorDeviceClass.DATE:
             try:
                 # We cast the value, to avoid using isinstance, but satisfy
                 # typechecking. The errors are guarded in this try.
@@ -554,8 +610,8 @@ class SensorEntity(Entity):
         # Enum checks
         if (
             options := self.options
-        ) is not None or device_class == SensorDeviceClass.ENUM:
-            if device_class != SensorDeviceClass.ENUM:
+        ) is not None or device_class is SensorDeviceClass.ENUM:
+            if device_class is not SensorDeviceClass.ENUM:
                 reason = "is missing the enum device class"
                 if device_class is not None:
                     reason = f"has device class '{device_class}' instead of 'enum'"
@@ -574,7 +630,9 @@ class SensorEntity(Entity):
 
         # If the sensor has neither a device class, a state class, a unit of measurement
         # nor a precision then there are no further checks or conversions
-        if not self._numeric_state_expected:
+        if not _numeric_state_expected(
+            device_class, state_class, native_unit_of_measurement, suggested_precision
+        ):
             return value
 
         # From here on a numerical value is expected
@@ -783,7 +841,7 @@ class SensorEntity(Entity):
             registry = er.async_get(self.hass)
             initial_options = self.get_initial_entity_options() or {}
             registry.async_update_entity_options(
-                self.entity_id,
+                self.registry_entry.entity_id,
                 f"{DOMAIN}.private",
                 initial_options.get(f"{DOMAIN}.private"),
             )

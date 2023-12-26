@@ -6,6 +6,16 @@ import struct
 from typing import Any, cast
 
 from homeassistant.components.climate import (
+    FAN_AUTO,
+    FAN_DIFFUSE,
+    FAN_FOCUS,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+    FAN_MIDDLE,
+    FAN_OFF,
+    FAN_ON,
+    FAN_TOP,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -31,6 +41,18 @@ from .const import (
     CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
+    CONF_FAN_MODE_AUTO,
+    CONF_FAN_MODE_DIFFUSE,
+    CONF_FAN_MODE_FOCUS,
+    CONF_FAN_MODE_HIGH,
+    CONF_FAN_MODE_LOW,
+    CONF_FAN_MODE_MEDIUM,
+    CONF_FAN_MODE_MIDDLE,
+    CONF_FAN_MODE_OFF,
+    CONF_FAN_MODE_ON,
+    CONF_FAN_MODE_REGISTER,
+    CONF_FAN_MODE_TOP,
+    CONF_FAN_MODE_VALUES,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
     CONF_HVAC_MODE_DRY,
@@ -67,7 +89,7 @@ async def async_setup_platform(
     entities = []
     for entity in discovery_info[CONF_CLIMATES]:
         hub: ModbusHub = get_hub(hass, discovery_info[CONF_NAME])
-        entities.append(ModbusThermostat(hub, entity))
+        entities.append(ModbusThermostat(hass, hub, entity))
 
     async_add_entities(entities)
 
@@ -79,11 +101,12 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         hub: ModbusHub,
         config: dict[str, Any],
     ) -> None:
         """Initialize the modbus thermostat."""
-        super().__init__(hub, config)
+        super().__init__(hass, hub, config)
         self._target_temperature_register = config[CONF_TARGET_TEMP]
         self._target_temperature_write_registers = config[
             CONF_TARGET_TEMP_WRITE_REGISTERS
@@ -136,6 +159,42 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._hvac_mode_register = None
             self._attr_hvac_mode = HVACMode.AUTO
             self._attr_hvac_modes = [HVACMode.AUTO]
+
+        if CONF_FAN_MODE_REGISTER in config:
+            self._attr_supported_features = (
+                self._attr_supported_features | ClimateEntityFeature.FAN_MODE
+            )
+            mode_config = config[CONF_FAN_MODE_REGISTER]
+            self._fan_mode_register = mode_config[CONF_ADDRESS]
+            self._attr_fan_modes = cast(list[str], [])
+            self._attr_fan_mode = None
+            self._fan_mode_mapping_to_modbus: dict[str, int] = {}
+            self._fan_mode_mapping_from_modbus: dict[int, str] = {}
+            mode_value_config = mode_config[CONF_FAN_MODE_VALUES]
+
+            for fan_mode_kw, fan_mode in (
+                (CONF_FAN_MODE_ON, FAN_ON),
+                (CONF_FAN_MODE_OFF, FAN_OFF),
+                (CONF_FAN_MODE_AUTO, FAN_AUTO),
+                (CONF_FAN_MODE_LOW, FAN_LOW),
+                (CONF_FAN_MODE_MEDIUM, FAN_MEDIUM),
+                (CONF_FAN_MODE_HIGH, FAN_HIGH),
+                (CONF_FAN_MODE_TOP, FAN_TOP),
+                (CONF_FAN_MODE_MIDDLE, FAN_MIDDLE),
+                (CONF_FAN_MODE_FOCUS, FAN_FOCUS),
+                (CONF_FAN_MODE_DIFFUSE, FAN_DIFFUSE),
+            ):
+                if fan_mode_kw in mode_value_config:
+                    value = mode_value_config[fan_mode_kw]
+                    self._fan_mode_mapping_from_modbus[value] = fan_mode
+                    self._fan_mode_mapping_to_modbus[fan_mode] = value
+                    self._attr_fan_modes.append(fan_mode)
+
+        else:
+            # No HVAC modes defined
+            self._fan_mode_register = None
+            self._attr_fan_mode = FAN_AUTO
+            self._attr_fan_modes = [FAN_AUTO]
 
         if CONF_HVAC_ONOFF_REGISTER in config:
             self._hvac_onoff_register = config[CONF_HVAC_ONOFF_REGISTER]
@@ -190,6 +249,21 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                             CALL_TYPE_WRITE_REGISTER,
                         )
                     break
+
+        await self.async_update()
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
+
+        if self._fan_mode_register is not None:
+            # Write a value to the mode register for the desired mode.
+            value = self._fan_mode_mapping_to_modbus[fan_mode]
+            await self._hub.async_pb_call(
+                self._slave,
+                self._fan_mode_register,
+                value,
+                CALL_TYPE_WRITE_REGISTER,
+            )
 
         await self.async_update()
 
@@ -254,7 +328,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._input_type, self._address
         )
 
-        # Read the mode register if defined
+        # Read the HVAC mode register if defined
         if self._hvac_mode_register is not None:
             hvac_mode = await self._async_read_register(
                 CALL_TYPE_REGISTER_HOLDING, self._hvac_mode_register, raw=True
@@ -268,7 +342,17 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                         self._attr_hvac_mode = mode
                         break
 
-        # Read th on/off register if defined. If the value in this
+        # Read the Fan mode register if defined
+        if self._fan_mode_register is not None:
+            fan_mode = await self._async_read_register(
+                CALL_TYPE_REGISTER_HOLDING, self._fan_mode_register, raw=True
+            )
+
+            # Translate the value received
+            if fan_mode is not None:
+                self._attr_fan_mode = self._fan_mode_mapping_from_modbus[int(fan_mode)]
+
+        # Read the on/off register if defined. If the value in this
         # register is "OFF", it will take precedence over the value
         # in the mode register.
         if self._hvac_onoff_register is not None:
@@ -288,14 +372,8 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._slave, register, self._count, register_type
         )
         if result is None:
-            if self._lazy_errors:
-                self._lazy_errors -= 1
-                return -1
-            self._lazy_errors = self._lazy_error_count
             self._attr_available = False
             return -1
-
-        self._lazy_errors = self._lazy_error_count
 
         if raw:
             # Return the raw value read from the register, do not change

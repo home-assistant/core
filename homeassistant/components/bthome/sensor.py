@@ -228,6 +228,10 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=UnitOfPressure.MBAR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    # Raw (-)
+    (BTHomeExtendedSensorDeviceClass.RAW, None): SensorEntityDescription(
+        key=str(BTHomeExtendedSensorDeviceClass.RAW),
+    ),
     # Rotation (°)
     (BTHomeSensorDeviceClass.ROTATION, Units.DEGREE): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.ROTATION}_{Units.DEGREE}",

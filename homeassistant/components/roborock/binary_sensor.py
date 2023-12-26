@@ -22,14 +22,14 @@ from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoborockBinarySensorDescriptionMixin:
     """A class that describes binary sensor entities."""
 
-    value_fn: Callable[[DeviceProp], bool]
+    value_fn: Callable[[DeviceProp], bool | int | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoborockBinarySensorDescription(
     BinarySensorEntityDescription, RoborockBinarySensorDescriptionMixin
 ):
@@ -60,6 +60,22 @@ BINARY_SENSOR_DESCRIPTIONS = [
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status.water_box_status,
+    ),
+    RoborockBinarySensorDescription(
+        key="water_shortage",
+        translation_key="water_shortage",
+        icon="mdi:water",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.status.water_shortage_status,
+    ),
+    RoborockBinarySensorDescription(
+        key="in_cleaning",
+        translation_key="in_cleaning",
+        icon="mdi:vacuum",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.status.in_cleaning,
     ),
 ]
 

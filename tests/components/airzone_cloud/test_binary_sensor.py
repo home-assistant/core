@@ -22,6 +22,14 @@ async def test_airzone_create_binary_sensors(hass: HomeAssistant) -> None:
     state = hass.states.get("binary_sensor.bron_running")
     assert state.state == STATE_OFF
 
+    state = hass.states.get("binary_sensor.bron_pro_problem")
+    assert state.state == STATE_OFF
+    assert state.attributes.get("errors") is None
+    assert state.attributes.get("warnings") is None
+
+    state = hass.states.get("binary_sensor.bron_pro_running")
+    assert state.state == STATE_ON
+
     # Systems
     state = hass.states.get("binary_sensor.system_1_problem")
     assert state.state == STATE_ON

@@ -293,7 +293,9 @@ async def test_attach_entity_component_collection(hass: HomeAssistant) -> None:
     assert hass.states.get("test.mock_1") is None
 
 
-async def test_entity_component_collection_abort(hass: HomeAssistant) -> None:
+async def test_entity_component_collection_abort(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test aborted entity adding is handled."""
     ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
     await ent_comp.async_setup({})
@@ -318,7 +320,6 @@ async def test_entity_component_collection_abort(hass: HomeAssistant) -> None:
     collection.sync_entity_lifecycle(
         hass, "test", "test", ent_comp, coll, MockMockEntity
     )
-    entity_registry = er.async_get(hass)
     entity_registry.async_get_or_create(
         "test",
         "test",
@@ -360,7 +361,9 @@ async def test_entity_component_collection_abort(hass: HomeAssistant) -> None:
     assert len(async_remove_calls) == 0
 
 
-async def test_entity_component_collection_entity_removed(hass: HomeAssistant) -> None:
+async def test_entity_component_collection_entity_removed(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test entity removal is handled."""
     ent_comp = entity_component.EntityComponent(_LOGGER, "test", hass)
     await ent_comp.async_setup({})
@@ -385,7 +388,6 @@ async def test_entity_component_collection_entity_removed(hass: HomeAssistant) -
     collection.sync_entity_lifecycle(
         hass, "test", "test", ent_comp, coll, MockMockEntity
     )
-    entity_registry = er.async_get(hass)
     entity_registry.async_get_or_create(
         "test", "test", "mock_id", suggested_object_id="mock_1"
     )

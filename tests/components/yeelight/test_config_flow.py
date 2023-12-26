@@ -1,4 +1,5 @@
 """Test the Yeelight config flow."""
+from ipaddress import ip_address
 from unittest.mock import patch
 
 import pytest
@@ -439,9 +440,11 @@ async def test_manual_no_capabilities(hass: HomeAssistant) -> None:
     ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
         f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
     ), patch(
-        f"{MODULE}.async_setup", return_value=True
+        f"{MODULE}.async_setup",
+        return_value=True,
     ), patch(
-        f"{MODULE}.async_setup_entry", return_value=True
+        f"{MODULE}.async_setup_entry",
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
@@ -465,8 +468,8 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_HOMEKIT},
             data=zeroconf.ZeroconfServiceInfo(
-                host=IP_ADDRESS,
-                addresses=[IP_ADDRESS],
+                ip_address=ip_address(IP_ADDRESS),
+                ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -535,8 +538,8 @@ async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
         (
             config_entries.SOURCE_HOMEKIT,
             zeroconf.ZeroconfServiceInfo(
-                host=IP_ADDRESS,
-                addresses=[IP_ADDRESS],
+                ip_address=ip_address(IP_ADDRESS),
+                ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -603,8 +606,8 @@ async def test_discovered_by_dhcp_or_homekit(hass: HomeAssistant, source, data) 
         (
             config_entries.SOURCE_HOMEKIT,
             zeroconf.ZeroconfServiceInfo(
-                host=IP_ADDRESS,
-                addresses=[IP_ADDRESS],
+                ip_address=ip_address(IP_ADDRESS),
+                ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -827,8 +830,8 @@ async def test_discovery_adds_missing_ip_id_only(hass: HomeAssistant) -> None:
         (
             config_entries.SOURCE_HOMEKIT,
             zeroconf.ZeroconfServiceInfo(
-                host=IP_ADDRESS,
-                addresses=[IP_ADDRESS],
+                ip_address=ip_address(IP_ADDRESS),
+                ip_addresses=[ip_address(IP_ADDRESS)],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,

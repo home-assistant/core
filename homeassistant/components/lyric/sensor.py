@@ -41,7 +41,7 @@ LYRIC_SETPOINT_STATUS_NAMES = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class LyricSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -49,7 +49,7 @@ class LyricSensorEntityDescriptionMixin:
     suitable_fn: Callable[[LyricDevice], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class LyricSensorEntityDescription(
     SensorEntityDescription, LyricSensorEntityDescriptionMixin
 ):
@@ -98,8 +98,9 @@ DEVICE_SENSORS: list[LyricSensorEntityDescription] = [
         value_fn=lambda device: get_datetime_from_future_time(
             device.changeableValues.nextPeriodTime
         ),
-        suitable_fn=lambda device: device.changeableValues
-        and device.changeableValues.nextPeriodTime,
+        suitable_fn=lambda device: (
+            device.changeableValues and device.changeableValues.nextPeriodTime
+        ),
     ),
     LyricSensorEntityDescription(
         key="setpoint_status",
@@ -109,8 +110,9 @@ DEVICE_SENSORS: list[LyricSensorEntityDescription] = [
             device.changeableValues.thermostatSetpointStatus,
             device.changeableValues.nextPeriodTime,
         ),
-        suitable_fn=lambda device: device.changeableValues
-        and device.changeableValues.thermostatSetpointStatus,
+        suitable_fn=lambda device: (
+            device.changeableValues and device.changeableValues.thermostatSetpointStatus
+        ),
     ),
 ]
 
@@ -119,7 +121,7 @@ def get_setpoint_status(status: str, time: str) -> str | None:
     """Get status of the setpoint."""
     if status == PRESET_HOLD_UNTIL:
         return f"Held until {time}"
-    return LYRIC_SETPOINT_STATUS_NAMES.get(status, None)
+    return LYRIC_SETPOINT_STATUS_NAMES.get(status)
 
 
 def get_datetime_from_future_time(time_str: str) -> datetime:

@@ -10,11 +10,16 @@ import logging
 import os
 from typing import Any, Self
 
-from bellows.config import CONF_USE_THREAD
 import voluptuous as vol
 from zigpy.application import ControllerApplication
 import zigpy.backups
-from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH, CONF_NWK_BACKUP_ENABLED
+from zigpy.config import (
+    CONF_DATABASE,
+    CONF_DEVICE,
+    CONF_DEVICE_PATH,
+    CONF_NWK_BACKUP_ENABLED,
+    SCHEMA_DEVICE,
+)
 from zigpy.exceptions import NetworkNotFormed
 
 from homeassistant import config_entries
@@ -23,7 +28,6 @@ from homeassistant.core import HomeAssistant
 
 from . import repairs
 from .core.const import (
-    CONF_DATABASE,
     CONF_RADIO_TYPE,
     CONF_ZIGPY,
     DEFAULT_DATABASE_NAME,
@@ -54,10 +58,21 @@ RETRY_DELAY_S = 1.0
 BACKUP_RETRIES = 5
 MIGRATION_RETRIES = 100
 
+
+DEVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required("path"): str,
+        vol.Optional("baudrate", default=115200): int,
+        vol.Optional("flow_control", default=None): vol.In(
+            ["hardware", "software", None]
+        ),
+    }
+)
+
 HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
     {
         vol.Required("name"): str,
-        vol.Required("port"): dict,
+        vol.Required("port"): DEVICE_SCHEMA,
         vol.Required("radio_type"): str,
     }
 )
@@ -159,7 +174,6 @@ class ZhaRadioManager:
         app_config[CONF_DATABASE] = database_path
         app_config[CONF_DEVICE] = self.device_settings
         app_config[CONF_NWK_BACKUP_ENABLED] = False
-        app_config[CONF_USE_THREAD] = False
         app_config = self.radio_type.controller.SCHEMA(app_config)
 
         app = await self.radio_type.controller.new(
@@ -200,9 +214,7 @@ class ZhaRadioManager:
         for radio in AUTOPROBE_RADIOS:
             _LOGGER.debug("Attempting to probe radio type %s", radio)
 
-            dev_config = radio.controller.SCHEMA_DEVICE(
-                {CONF_DEVICE_PATH: self.device_path}
-            )
+            dev_config = SCHEMA_DEVICE({CONF_DEVICE_PATH: self.device_path})
             probe_result = await radio.controller.probe(dev_config)
 
             if not probe_result:
@@ -218,8 +230,10 @@ class ZhaRadioManager:
             repairs.async_delete_blocking_issues(self.hass)
             return ProbeResult.RADIO_TYPE_DETECTED
 
-        with suppress(repairs.AlreadyRunningEZSP):
-            if await repairs.warn_on_wrong_silabs_firmware(self.hass, self.device_path):
+        with suppress(repairs.wrong_silabs_firmware.AlreadyRunningEZSP):
+            if await repairs.wrong_silabs_firmware.warn_on_wrong_silabs_firmware(
+                self.hass, self.device_path
+            ):
                 return ProbeResult.WRONG_FIRMWARE_INSTALLED
 
         return ProbeResult.PROBING_FAILED
@@ -351,7 +365,7 @@ class ZhaMultiPANMigrationHelper:
             migration_data["new_discovery_info"]["radio_type"]
         )
 
-        new_device_settings = new_radio_type.controller.SCHEMA_DEVICE(
+        new_device_settings = SCHEMA_DEVICE(
             migration_data["new_discovery_info"]["port"]
         )
 

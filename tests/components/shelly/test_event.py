@@ -1,6 +1,7 @@
 """Tests for Shelly button platform."""
 from __future__ import annotations
 
+from aioshelly.const import MODEL_I3
 from pytest_unordered import unordered
 
 from homeassistant.components.event import (
@@ -14,6 +15,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_get
 
 from . import init_integration, inject_rpc_device_event, register_entity
+
+DEVICE_BLOCK_ID = 4
 
 
 async def test_rpc_button(hass: HomeAssistant, mock_rpc_device, monkeypatch) -> None:
@@ -68,3 +71,45 @@ async def test_rpc_event_removal(
     await init_integration(hass, 2)
 
     assert registry.async_get(entity_id) is None
+
+
+async def test_block_event(hass: HomeAssistant, monkeypatch, mock_block_device) -> None:
+    """Test block device event."""
+    await init_integration(hass, 1)
+    entity_id = "event.test_name_channel_1"
+    registry = async_get(hass)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(["single", "long"])
+    assert state.attributes.get(ATTR_EVENT_TYPE) is None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == EventDeviceClass.BUTTON
+
+    entry = registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-relay_0-1"
+
+    monkeypatch.setattr(
+        mock_block_device.blocks[DEVICE_BLOCK_ID],
+        "sensor_ids",
+        {"inputEvent": "L", "inputEventCnt": 0},
+    )
+    monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "inputEvent", "L")
+    mock_block_device.mock_update()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.attributes.get(ATTR_EVENT_TYPE) == "long"
+
+
+async def test_block_event_shix3_1(hass: HomeAssistant, mock_block_device) -> None:
+    """Test block device event for SHIX3-1."""
+    await init_integration(hass, 1, model=MODEL_I3)
+    entity_id = "event.test_name_channel_1"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(
+        ["double", "long", "long_single", "single", "single_long", "triple"]
+    )

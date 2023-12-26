@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
@@ -258,6 +259,8 @@ class DemoClimate(ClimateEntity):
         ):
             self._target_temperature_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
             self._target_temperature_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+            self._hvac_mode = hvac_mode
         self.async_write_ha_state()
 
     async def async_set_humidity(self, humidity: int) -> None:

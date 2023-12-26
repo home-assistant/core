@@ -48,7 +48,7 @@ def component_translation_path(
     If component is just a single file, will return None.
     """
     parts = component.split(".")
-    domain = parts[-1]
+    domain = parts[0]
     is_platform = len(parts) == 2
 
     # If it's a component that is just one file, we don't support translations
@@ -57,7 +57,7 @@ def component_translation_path(
         return None
 
     if is_platform:
-        filename = f"{parts[0]}.{language}.json"
+        filename = f"{parts[1]}.{language}.json"
     else:
         filename = f"{language}.json"
 
@@ -67,7 +67,7 @@ def component_translation_path(
 
 
 def load_translations_files(
-    translation_files: dict[str, str]
+    translation_files: dict[str, str],
 ) -> dict[str, dict[str, Any]]:
     """Load and parse translation.json files."""
     loaded = {}
@@ -96,7 +96,7 @@ def _merge_resources(
     # Build response
     resources: dict[str, dict[str, Any]] = {}
     for component in components:
-        domain = component.partition(".")[0]
+        domain = component.rpartition(".")[-1]
 
         domain_resources = resources.setdefault(domain, {})
 
@@ -154,7 +154,7 @@ async def _async_get_component_strings(
     # Determine paths of missing components/platforms
     files_to_load = {}
     for loaded in components:
-        domain = loaded.rpartition(".")[-1]
+        domain = loaded.partition(".")[0]
         integration = integrations[domain]
 
         path = component_translation_path(loaded, language, integration)
@@ -225,7 +225,7 @@ class _TranslationCache:
         languages = [LOCALE_EN] if language == LOCALE_EN else [LOCALE_EN, language]
 
         integrations: dict[str, Integration] = {}
-        domains = list({loaded.rpartition(".")[-1] for loaded in components})
+        domains = list({loaded.partition(".")[0] for loaded in components})
         ints_or_excs = await async_get_integrations(self.hass, domains)
         for domain, int_or_exc in ints_or_excs.items():
             if isinstance(int_or_exc, Exception):

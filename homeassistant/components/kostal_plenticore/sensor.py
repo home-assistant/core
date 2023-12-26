@@ -33,7 +33,7 @@ from .helper import PlenticoreDataFormatter, ProcessDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class PlenticoreRequiredKeysMixin:
     """A class that describes required properties for plenticore sensor entities."""
 
@@ -41,7 +41,7 @@ class PlenticoreRequiredKeysMixin:
     formatter: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class PlenticoreSensorEntityDescription(
     SensorEntityDescription, PlenticoreRequiredKeysMixin
 ):
@@ -651,6 +651,39 @@ SENSOR_PROCESS_DATA = [
     ),
     PlenticoreSensorEntityDescription(
         module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyDischarge:Day",
+        name="Battery Discharge Day",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyDischarge:Month",
+        name="Battery Discharge Month",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyDischarge:Year",
+        name="Battery Discharge Year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
+        key="Statistic:EnergyDischarge:Total",
+        name="Battery Discharge Total",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyDischargeGrid:Day",
         name="Energy Discharge to Grid Day",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -677,6 +710,52 @@ SENSOR_PROCESS_DATA = [
         module_id="scb:statistic:EnergyFlow",
         key="Statistic:EnergyDischargeGrid:Total",
         name="Energy Discharge to Grid Total",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="_virt_",
+        key="pv_P",
+        name="Sum power of all PV DC inputs",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=True,
+        state_class=SensorStateClass.MEASUREMENT,
+        formatter="format_round",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="_virt_",
+        key="Statistic:EnergyGrid:Total",
+        name="Energy to Grid Total",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="_virt_",
+        key="Statistic:EnergyGrid:Year",
+        name="Energy to Grid Year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="_virt_",
+        key="Statistic:EnergyGrid:Month",
+        name="Energy to Grid Month",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        formatter="format_energy",
+    ),
+    PlenticoreSensorEntityDescription(
+        module_id="_virt_",
+        key="Statistic:EnergyGrid:Day",
+        name="Energy to Grid Day",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,

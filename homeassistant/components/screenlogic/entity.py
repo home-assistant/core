@@ -1,11 +1,16 @@
 """Base ScreenLogicEntity definitions."""
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
 from typing import Any
 
 from screenlogicpy import ScreenLogicGateway
-from screenlogicpy.const.common import ON_OFF
+from screenlogicpy.const.common import (
+    ON_OFF,
+    ScreenLogicCommunicationError,
+    ScreenLogicError,
+)
 from screenlogicpy.const.data import ATTR
 from screenlogicpy.const.msg import CODE
 
@@ -18,25 +23,28 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ScreenLogicDataPath
 from .coordinator import ScreenlogicDataUpdateCoordinator
+from .util import generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScreenLogicEntityRequiredKeyMixin:
-    """Mixin for required ScreenLogic entity key."""
+    """Mixin for required ScreenLogic entity data_path."""
 
-    data_path: ScreenLogicDataPath
+    data_root: ScreenLogicDataPath
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScreenLogicEntityDescription(
     EntityDescription, ScreenLogicEntityRequiredKeyMixin
 ):
     """Base class for a ScreenLogic entity description."""
 
+    enabled_lambda: Callable[..., bool] | None = None
 
-class ScreenlogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
+
+class ScreenLogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
     """Base class for all ScreenLogic entities."""
 
     entity_description: ScreenLogicEntityDescription
@@ -50,10 +58,11 @@ class ScreenlogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
         """Initialize of the entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._data_path = self.entity_description.data_path
-        self._data_key = self._data_path[-1]
-        self._attr_unique_id = f"{self.mac}_{self.entity_description.key}"
+        self._data_key = self.entity_description.key
+        self._data_path = (*self.entity_description.data_root, self._data_key)
         mac = self.mac
+        self._attr_unique_id = f"{mac}_{generate_unique_id(*self._data_path)}"
+        self._attr_name = self.entity_data[ATTR.NAME]
         assert mac is not None
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, mac)},
@@ -88,19 +97,20 @@ class ScreenlogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
     @property
     def entity_data(self) -> dict:
         """Shortcut to the data for this entity."""
-        if (data := self.gateway.get_data(*self._data_path)) is None:
-            raise KeyError(f"Data not found: {self._data_path}")
-        return data
+        try:
+            return self.gateway.get_data(*self._data_path, strict=True)
+        except KeyError as ke:
+            raise HomeAssistantError(f"Data not found: {self._data_path}") from ke
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScreenLogicPushEntityRequiredKeyMixin:
     """Mixin for required key for ScreenLogic push entities."""
 
     subscription_code: CODE
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScreenLogicPushEntityDescription(
     ScreenLogicEntityDescription,
     ScreenLogicPushEntityRequiredKeyMixin,
@@ -108,7 +118,7 @@ class ScreenLogicPushEntityDescription(
     """Base class for a ScreenLogic push entity description."""
 
 
-class ScreenLogicPushEntity(ScreenlogicEntity):
+class ScreenLogicPushEntity(ScreenLogicEntity):
     """Base class for all ScreenLogic push entities."""
 
     entity_description: ScreenLogicPushEntityDescription
@@ -120,6 +130,7 @@ class ScreenLogicPushEntity(ScreenlogicEntity):
     ) -> None:
         """Initialize of the entity."""
         super().__init__(coordinator, entity_description)
+        self._subscription_code = entity_description.subscription_code
         self._last_update_success = True
 
     @callback
@@ -134,7 +145,7 @@ class ScreenLogicPushEntity(ScreenlogicEntity):
         self.async_on_remove(
             await self.gateway.async_subscribe_client(
                 self._async_data_updated,
-                self.entity_description.subscription_code,
+                self._subscription_code,
             )
         )
 
@@ -146,8 +157,8 @@ class ScreenLogicPushEntity(ScreenlogicEntity):
             self._async_data_updated()
 
 
-class ScreenLogicCircuitEntity(ScreenLogicPushEntity):
-    """Base class for all ScreenLogic switch and light entities."""
+class ScreenLogicSwitchingEntity(ScreenLogicEntity):
+    """Base class for all switchable entities."""
 
     @property
     def is_on(self) -> bool:
@@ -156,15 +167,24 @@ class ScreenLogicCircuitEntity(ScreenLogicPushEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Send the ON command."""
-        await self._async_set_circuit(ON_OFF.ON)
+        await self._async_set_state(ON_OFF.ON)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the OFF command."""
-        await self._async_set_circuit(ON_OFF.OFF)
+        await self._async_set_state(ON_OFF.OFF)
 
-    async def _async_set_circuit(self, state: ON_OFF) -> None:
-        if not await self.gateway.async_set_circuit(self._data_key, state.value):
+    async def _async_set_state(self, state: ON_OFF) -> None:
+        raise NotImplementedError()
+
+
+class ScreenLogicCircuitEntity(ScreenLogicSwitchingEntity, ScreenLogicPushEntity):
+    """Base class for all ScreenLogic circuit switch and light entities."""
+
+    async def _async_set_state(self, state: ON_OFF) -> None:
+        try:
+            await self.gateway.async_set_circuit(self._data_key, state.value)
+        except (ScreenLogicCommunicationError, ScreenLogicError) as sle:
             raise HomeAssistantError(
-                f"Failed to set_circuit {self._data_key} {state.value}"
-            )
+                f"Failed to set_circuit {self._data_key} {state.value}: {sle.msg}"
+            ) from sle
         _LOGGER.debug("Set circuit %s %s", self._data_key, state.value)

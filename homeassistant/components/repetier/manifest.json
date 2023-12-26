@@ -1,7 +1,7 @@
 {
   "domain": "repetier",
   "name": "Repetier-Server",
-  "codeowners": ["@MTrab", "@ShadowBr0ther"],
+  "codeowners": ["@ShadowBr0ther"],
   "documentation": "https://www.home-assistant.io/integrations/repetier",
   "iot_class": "local_polling",
   "loggers": ["pyrepetierng"],
