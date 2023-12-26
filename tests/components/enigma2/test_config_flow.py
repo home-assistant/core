@@ -1,4 +1,5 @@
 """Test the Enigma2 config flow."""
+from typing import Any
 from unittest.mock import patch
 
 from aiohttp.client_exceptions import ClientError
@@ -30,8 +31,14 @@ async def user_flow(hass):
     return result["flow_id"]
 
 
-async def test_full_user_flow(hass: HomeAssistant, user_flow):
-    """Test a successful user initiated flow with full config."""
+@pytest.mark.parametrize(
+    ("test_config", "expected_title"),
+    [(TEST_FULL, TEST_FULL[CONF_NAME]), (TEST_REQUIRED, TEST_REQUIRED[CONF_HOST])],
+)
+async def test_form_user(
+    hass: HomeAssistant, user_flow, test_config: dict[str, Any], expected_title: str
+):
+    """Test a successful user initiated flow."""
     with patch(
         "openwebif.api.OpenWebIfDevice.__new__",
         return_value=MockDevice(),
@@ -39,79 +46,52 @@ async def test_full_user_flow(hass: HomeAssistant, user_flow):
         "homeassistant.components.enigma2.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(user_flow, TEST_FULL)
+        result = await hass.config_entries.flow.async_configure(user_flow, test_config)
         await hass.async_block_till_done()
     assert result["type"] == "create_entry"
-    assert result["title"] == TEST_FULL[CONF_NAME]
-    assert result["options"] == TEST_FULL
+    assert result["title"] == expected_title
+    assert result["options"] == test_config
 
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_required_user_flow(hass: HomeAssistant, user_flow) -> None:
-    """Test a successful user initiated flow with only required options."""
+@pytest.mark.parametrize(
+    ("exception", "error_type"),
+    [
+        (InvalidAuthError, "invalid_auth"),
+        (ClientError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_form_user_errors(
+    hass: HomeAssistant, user_flow, exception: Exception, error_type: str
+) -> None:
+    """Test we handle errors."""
     with patch(
         "openwebif.api.OpenWebIfDevice.__new__",
-        return_value=MockDevice(),
-    ), patch(
-        "homeassistant.components.enigma2.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            user_flow, TEST_REQUIRED
-        )
-        await hass.async_block_till_done()
-    assert result["type"] == "create_entry"
-    assert result["title"] == TEST_REQUIRED[CONF_HOST]
-    assert result["options"] == TEST_REQUIRED
-
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_invalid_auth(hass: HomeAssistant, user_flow) -> None:
-    """Test we handle invalid auth."""
-    with patch(
-        "openwebif.api.OpenWebIfDevice.__new__",
-        side_effect=InvalidAuthError(),
+        side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_configure(user_flow, TEST_FULL)
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"base": error_type}
 
 
-async def test_form_cannot_connect_http(hass: HomeAssistant, user_flow) -> None:
-    """Test we handle cannot connect over HTTP error."""
-    with patch(
-        "tests.components.enigma2.util.MockDevice.get_about",
-        side_effect=ClientError(),
-    ), patch(
-        "openwebif.api.OpenWebIfDevice.__new__",
-        return_value=MockDevice(),
-    ):
-        result = await hass.config_entries.flow.async_configure(user_flow, TEST_FULL)
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_form_exception_http(hass: HomeAssistant, user_flow) -> None:
-    """Test we handle generic exception over HTTP."""
-    with patch(
-        "openwebif.api.OpenWebIfDevice.__new__",
-        side_effect=Exception,
-    ):
-        result = await hass.config_entries.flow.async_configure(user_flow, TEST_FULL)
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "unknown"}
-
-
-async def test_form_import_full(hass: HomeAssistant) -> None:
-    """Test we get the form with import source, fully configured."""
+@pytest.mark.parametrize(
+    ("test_config", "expected_title", "expected_options"),
+    [
+        (TEST_IMPORT_FULL, TEST_IMPORT_FULL[CONF_NAME], TEST_IMPORT_FULL),
+        (TEST_IMPORT_REQUIRED, TEST_REQUIRED[CONF_HOST], TEST_REQUIRED),
+    ],
+)
+async def test_form_import(
+    hass: HomeAssistant,
+    test_config: dict[str, Any],
+    expected_title: str,
+    expected_options: dict[str, Any],
+) -> None:
+    """Test we get the form with import source."""
     with patch(
         "openwebif.api.OpenWebIfDevice.__new__",
         return_value=MockDevice(),
@@ -122,45 +102,32 @@ async def test_form_import_full(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data=TEST_IMPORT_FULL,
+            data=test_config,
         )
         await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
-    assert result["title"] == TEST_IMPORT_FULL[CONF_NAME]
-    assert result["options"] == TEST_IMPORT_FULL
+    assert result["title"] == expected_title
+    assert result["options"] == expected_options
 
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_import_required(hass: HomeAssistant) -> None:
-    """Test we get the form with import source with only required values."""
+@pytest.mark.parametrize(
+    ("exception", "error_type"),
+    [
+        (InvalidAuthError, "invalid_auth"),
+        (ClientError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_form_import_errors(
+    hass: HomeAssistant, exception: Exception, error_type: str
+) -> None:
+    """Test we handle errors on import."""
     with patch(
         "openwebif.api.OpenWebIfDevice.__new__",
-        return_value=MockDevice(),
-    ), patch(
-        "homeassistant.components.enigma2.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=TEST_IMPORT_REQUIRED,
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == TEST_REQUIRED[CONF_HOST]
-    assert result["options"] == TEST_REQUIRED
-
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_import_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth on import."""
-    with patch(
-        "openwebif.api.OpenWebIfDevice.__new__",
-        side_effect=InvalidAuthError(),
+        side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -169,39 +136,4 @@ async def test_form_import_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == "form"
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_form_import_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect on import."""
-    with patch(
-        "tests.components.enigma2.util.MockDevice.get_about",
-        side_effect=ClientError(),
-    ), patch(
-        "openwebif.api.OpenWebIfDevice.__new__",
-        return_value=MockDevice(),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=TEST_IMPORT_FULL,
-        )
-
-    assert result["type"] == "form"
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_form_import_exception(hass: HomeAssistant) -> None:
-    """Test we handle unknown exception on import."""
-    with patch(
-        "openwebif.api.OpenWebIfDevice.__new__",
-        side_effect=Exception,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=TEST_IMPORT_FULL,
-        )
-
-    assert result["type"] == "form"
-    assert result["errors"] == {"base": "unknown"}
+    assert result["errors"] == {"base": error_type}
