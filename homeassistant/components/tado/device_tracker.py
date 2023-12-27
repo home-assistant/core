@@ -8,9 +8,10 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
+    DeviceScanner,
     SourceType,
+    TrackerEntity,
 )
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant, callback
@@ -34,7 +35,9 @@ PLATFORM_SCHEMA = BASE_PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> None:
+async def async_get_scanner(
+    hass: HomeAssistant, config: ConfigType
+) -> DeviceScanner | None:
     """Configure the Tado device scanner."""
     device_config = config["device_tracker"]
     import_result = await hass.config_entries.flow.async_init(
