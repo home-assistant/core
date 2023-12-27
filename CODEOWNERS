@@ -1297,8 +1297,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/synology_srm/ @aerialls
 /homeassistant/components/system_bridge/ @timmo001
 /tests/components/system_bridge/ @timmo001
-/homeassistant/components/tado/ @michaelarnauts @chiefdragon @erwindouna
-/tests/components/tado/ @michaelarnauts @chiefdragon @erwindouna
 /homeassistant/components/systemmonitor/ @gjohansson-ST
 /tests/components/systemmonitor/ @gjohansson-ST
 /homeassistant/components/tado/ @michaelarnauts @chiefdragon
