@@ -19,36 +19,42 @@ async def test_sensor_states(hass: HomeAssistant) -> None:
 
     assert await hass.config_entries.async_setup(entry.entry_id)
 
-    if state := hass.states.get("sensor.0_0_0_0_ssl_used"):
-        assert state.state == str(HA_SENSOR_DATA["fs"]["/ssl"]["disk_use"])
-    if state := hass.states.get("sensor.0_0_0_0_cpu_thermal_1_temperature"):
-        assert state.state == str(
-            HA_SENSOR_DATA["sensors"]["cpu_thermal 1"]["temperature_core"]
-        )
-    if state := hass.states.get("sensor.0_0_0_0_err_temp_temperature"):
-        assert state.state == str(
-            HA_SENSOR_DATA["sensors"]["err_temp"]["temperature_hdd"]
-        )
-    if state := hass.states.get("sensor.0_0_0_0_na_temp_temperature"):
-        assert state.state == str(
-            HA_SENSOR_DATA["sensors"]["na_temp"]["temperature_hdd"]
-        )
-    if state := hass.states.get("sensor.0_0_0_0_ram_used_percent"):
-        assert state.state == str(HA_SENSOR_DATA["mem"]["memory_use_percent"])
-    if state := hass.states.get("sensor.0_0_0_0_containers_active"):
-        assert state.state == str(HA_SENSOR_DATA["docker"]["docker_active"])
-    if state := hass.states.get("sensor.0_0_0_0_containers_cpu_used"):
-        assert state.state == str(HA_SENSOR_DATA["docker"]["docker_cpu_use"])
-    if state := hass.states.get("sensor.0_0_0_0_containers_ram_used"):
-        assert state.state == str(HA_SENSOR_DATA["docker"]["docker_memory_use"])
-    if state := hass.states.get("sensor.0_0_0_0_md3_raid_available"):
-        assert state.state == str(HA_SENSOR_DATA["raid"]["md3"]["available"])
-    if state := hass.states.get("sensor.0_0_0_0_md3_raid_used"):
-        assert state.state == str(HA_SENSOR_DATA["raid"]["md3"]["used"])
-    if state := hass.states.get("sensor.0_0_0_0_md1_raid_available"):
-        assert state.state == str(HA_SENSOR_DATA["raid"]["md1"]["available"])
-    if state := hass.states.get("sensor.0_0_0_0_md1_raid_used"):
-        assert state.state == str(HA_SENSOR_DATA["raid"]["md1"]["used"])
+    assert hass.states.get("sensor.0_0_0_0_ssl_used").state == str(
+        HA_SENSOR_DATA["fs"]["/ssl"]["disk_use"]
+    )
+    assert hass.states.get("sensor.0_0_0_0_cpu_thermal_1_temperature").state == str(
+        HA_SENSOR_DATA["sensors"]["cpu_thermal 1"]["temperature_core"]
+    )
+    assert hass.states.get("sensor.0_0_0_0_err_temp_temperature").state == str(
+        HA_SENSOR_DATA["sensors"]["err_temp"]["temperature_hdd"]
+    )
+    assert hass.states.get("sensor.0_0_0_0_na_temp_temperature").state == str(
+        HA_SENSOR_DATA["sensors"]["na_temp"]["temperature_hdd"]
+    )
+    assert hass.states.get("sensor.0_0_0_0_ram_used_percent").state == str(
+        HA_SENSOR_DATA["mem"]["memory_use_percent"]
+    )
+    assert hass.states.get("sensor.0_0_0_0_containers_active").state == str(
+        HA_SENSOR_DATA["docker"]["docker_active"]
+    )
+    assert hass.states.get("sensor.0_0_0_0_containers_cpu_used").state == str(
+        HA_SENSOR_DATA["docker"]["docker_cpu_use"]
+    )
+    assert hass.states.get("sensor.0_0_0_0_containers_ram_used").state == str(
+        HA_SENSOR_DATA["docker"]["docker_memory_use"]
+    )
+    assert hass.states.get("sensor.0_0_0_0_md3_raid_available").state == str(
+        HA_SENSOR_DATA["raid"]["md3"]["available"]
+    )
+    assert hass.states.get("sensor.0_0_0_0_md3_raid_used").state == str(
+        HA_SENSOR_DATA["raid"]["md3"]["used"]
+    )
+    assert hass.states.get("sensor.0_0_0_0_md1_raid_available").state == str(
+        HA_SENSOR_DATA["raid"]["md1"]["available"]
+    )
+    assert hass.states.get("sensor.0_0_0_0_md1_raid_used").state == str(
+        HA_SENSOR_DATA["raid"]["md1"]["used"]
+    )
 
 
 @pytest.mark.parametrize(
