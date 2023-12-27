@@ -2833,6 +2833,9 @@ yt-dlp==2023.11.16
 # homeassistant.components.zamg
 zamg==0.3.3
 
+# homeassistant.components.zimi
+zcc-helper==3.2.1
+
 # homeassistant.components.zengge
 zengge==0.2
 
