@@ -14,6 +14,7 @@ FLOWS = {
         "template",
         "threshold",
         "tod",
+        "trend",
         "utility_meter",
     ],
     "integration": [
@@ -476,6 +477,7 @@ FLOWS = {
         "steamist",
         "stookalert",
         "stookwijzer",
+        "streamlabswater",
         "subaru",
         "suez_water",
         "sun",
@@ -490,6 +492,7 @@ FLOWS = {
         "syncthru",
         "synology_dsm",
         "system_bridge",
+        "systemmonitor",
         "tado",
         "tailscale",
         "tailwind",

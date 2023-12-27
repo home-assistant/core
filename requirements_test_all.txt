@@ -97,7 +97,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.7.1
 
 # homeassistant.components.vicare
-PyViCare==2.29.0
+PyViCare==2.32.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -164,7 +164,7 @@ aio-geojson-usgs-earthquakes==0.2
 aio-georss-gdacs==0.8
 
 # homeassistant.components.airq
-aioairq==0.3.1
+aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
 aioairzone-cloud==0.3.6
@@ -194,7 +194,7 @@ aiobafi6==0.9.0
 aiobotocore==2.6.0
 
 # homeassistant.components.comelit
-aiocomelit==0.6.2
+aiocomelit==0.7.0
 
 # homeassistant.components.dhcp
 aiodiscover==1.6.0
@@ -997,7 +997,7 @@ micloud==0.5
 mill-local==0.3.0
 
 # homeassistant.components.mill
-millheater==0.11.7
+millheater==0.11.8
 
 # homeassistant.components.minio
 minio==7.1.12
@@ -1175,6 +1175,9 @@ prometheus-client==0.17.1
 # homeassistant.components.hardware
 # homeassistant.components.recorder
 psutil-home-assistant==0.0.1
+
+# homeassistant.components.systemmonitor
+psutil==5.9.7
 
 # homeassistant.components.androidtv
 pure-python-adb[async]==0.3.0.dev0
@@ -1807,7 +1810,7 @@ rokuecp==0.18.1
 roombapy==1.6.8
 
 # homeassistant.components.roon
-roonapi==0.1.5
+roonapi==0.1.6
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
@@ -1926,6 +1929,9 @@ stookalert==0.1.4
 
 # homeassistant.components.stookwijzer
 stookwijzer==1.3.0
+
+# homeassistant.components.streamlabswater
+streamlabswater==1.0.1
 
 # homeassistant.components.huawei_lte
 # homeassistant.components.solaredge

@@ -12,6 +12,7 @@ from functools import partial
 import logging
 import os
 from random import SystemRandom
+import time
 from typing import TYPE_CHECKING, Any, Final, cast, final
 
 from aiohttp import hdrs, web
@@ -233,7 +234,7 @@ async def _async_get_stream_image(
     height: int | None = None,
     wait_for_next_keyframe: bool = False,
 ) -> bytes | None:
-    if not camera.stream and camera.supported_features & CameraEntityFeature.STREAM:
+    if not camera.stream and CameraEntityFeature.STREAM in camera.supported_features:
         camera.stream = await camera.async_create_stream()
     if camera.stream:
         return await camera.stream.async_get_image(
@@ -294,6 +295,7 @@ async def async_get_still_stream(
     last_image = None
 
     while True:
+        last_fetch = time.monotonic()
         img_bytes = await image_cb()
         if not img_bytes:
             break
@@ -307,7 +309,11 @@ async def async_get_still_stream(
                 await write_to_mjpeg_stream(img_bytes)
             last_image = img_bytes
 
-        await asyncio.sleep(interval)
+        next_fetch = last_fetch + interval
+        now = time.monotonic()
+        if next_fetch > now:
+            sleep_time = next_fetch - now
+            await asyncio.sleep(sleep_time)
 
     return response
 
@@ -411,7 +417,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, preload_stream)
 
     @callback
-    def update_tokens(time: datetime) -> None:
+    def update_tokens(t: datetime) -> None:
         """Update tokens of the entities."""
         for entity in component.entities:
             entity.async_update_token()
@@ -564,7 +570,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         if hasattr(self, "_attr_frontend_stream_type"):
             return self._attr_frontend_stream_type
-        if not self.supported_features & CameraEntityFeature.STREAM:
+        if CameraEntityFeature.STREAM not in self.supported_features:
             return None
         if self._rtsp_to_webrtc:
             return StreamType.WEB_RTC
@@ -752,7 +758,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     async def _async_use_rtsp_to_webrtc(self) -> bool:
         """Determine if a WebRTC provider can be used for the camera."""
-        if not self.supported_features & CameraEntityFeature.STREAM:
+        if CameraEntityFeature.STREAM not in self.supported_features:
             return False
         if DATA_RTSP_TO_WEB_RTC not in self.hass.data:
             return False
