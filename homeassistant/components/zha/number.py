@@ -956,7 +956,6 @@ class ThermostatLocalTempCalibration(ZHANumberConfigurationEntity):
     """Local temperature calibration."""
 
     _unique_id_suffix = "local_temperature_calibration"
-    _attr_entity_category = EntityCategory.CONFIG
     _attr_native_min_value: float = -2.5
     _attr_native_max_value: float = 2.5
     _attr_native_step: float = 0.1
