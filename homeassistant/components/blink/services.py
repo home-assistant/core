@@ -4,7 +4,7 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PIN
+from homeassistant.const import ATTR_DEVICE_ID, CONF_PIN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
@@ -13,7 +13,7 @@ from .const import ATTR_CONFIG_ENTRY_ID, DOMAIN, SERVICE_REFRESH, SERVICE_SEND_P
 
 SERVICE_UPDATE_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): vol.All(cv.ensure_list, [cv.string]),
+        vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 SERVICE_SEND_PIN_SCHEMA = vol.Schema(
