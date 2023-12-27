@@ -119,12 +119,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ):
             await create_cloud_hook()
 
-    if cloud.async_active_subscription(hass):
-        if cloud.async_is_connected(hass) and CONF_CLOUDHOOK_URL not in registration:
-            await create_cloud_hook()
-        entry.async_on_unload(
-            cloud.async_listen_connection_change(hass, manage_cloudhook)
-        )
+    if (
+        CONF_CLOUDHOOK_URL not in registration
+        and cloud.async_active_subscription(hass)
+        and cloud.async_is_connected(hass)
+    ):
+        await create_cloud_hook()
+    entry.async_on_unload(cloud.async_listen_connection_change(hass, manage_cloudhook))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
