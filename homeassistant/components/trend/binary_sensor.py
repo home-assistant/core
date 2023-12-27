@@ -38,10 +38,12 @@ from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_change_event,
 )
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 from homeassistant.util.dt import utcnow
 
+from . import PLATFORMS
 from .const import (
     ATTR_GRADIENT,
     ATTR_INVERT,
@@ -57,6 +59,7 @@ from .const import (
     DEFAULT_MIN_GRADIENT,
     DEFAULT_MIN_SAMPLES,
     DEFAULT_SAMPLE_DURATION,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -101,6 +104,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the trend sensors."""
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     entities = []
     for sensor_name, sensor_config in config[CONF_SENSORS].items():

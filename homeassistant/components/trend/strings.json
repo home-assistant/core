@@ -1,4 +1,10 @@
 {
+  "services": {
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads trend sensors from the YAML-configuration."
+    }
+  },
   "config": {
     "step": {
       "user": {
