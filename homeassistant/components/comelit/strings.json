@@ -36,17 +36,17 @@
     "sensor": {
       "zone_status": {
         "state": {
-          "alarm": "alarm",
-          "armed": "armed",
-          "open": "open",
-          "excluded": "excluded",
-          "faulty": "faulty",
-          "inhibited": "inhibited",
-          "isolated": "isolated",
-          "rest": "rest",
-          "sabotated": "sabotated",
-          "unavailable": "unavailable",
-          "unknown": "unknown"
+          "alarm": "Alarm",
+          "armed": "Armed",
+          "open": "Open",
+          "excluded": "Excluded",
+          "faulty": "Faulty",
+          "inhibited": "Inhibited",
+          "isolated": "Isolated",
+          "rest": "Rest",
+          "sabotated": "Sabotated",
+          "unavailable": "Unavailable",
+          "unknown": "Unknown"
         }
       }
     }
