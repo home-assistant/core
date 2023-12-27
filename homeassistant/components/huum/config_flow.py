@@ -47,7 +47,7 @@ class HuumConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Could not log in to Huum with given credentials")
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.error("Unknown error")
+                _LOGGER.exception("Unknown error")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
