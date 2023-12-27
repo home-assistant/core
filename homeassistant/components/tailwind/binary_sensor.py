@@ -30,10 +30,10 @@ class TailwindDoorBinarySensorEntityDescription(BinarySensorEntityDescription):
 DESCRIPTIONS: tuple[TailwindDoorBinarySensorEntityDescription, ...] = (
     TailwindDoorBinarySensorEntityDescription(
         key="locked_out",
-        translation_key="operational_status",
+        translation_key="operational_problem",
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:garage-alert",
-        is_on_fn=lambda door: not door.locked_out,
+        is_on_fn=lambda door: door.locked_out,
     ),
 )
 
