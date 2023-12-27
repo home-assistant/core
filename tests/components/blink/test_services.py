@@ -97,7 +97,7 @@ async def test_service_pin_called_with_non_blink_device(
     mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test service calls with non blink device."""
+    """Test pin service calls with non blink device."""
 
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -134,7 +134,7 @@ async def test_service_update_called_with_non_blink_device(
     mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test service calls with non blink device."""
+    """Test update service calls with non blink device."""
 
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -174,7 +174,7 @@ async def test_service_pin_called_with_unloaded_entry(
     mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test service calls with not ready config entry."""
+    """Test pin service calls with not ready config entry."""
 
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -201,7 +201,7 @@ async def test_service_update_called_with_unloaded_entry(
     mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test service calls with not ready config entry."""
+    """Test update service calls with not ready config entry."""
 
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
