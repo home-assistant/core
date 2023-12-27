@@ -1,5 +1,4 @@
 """The tests for the REST switch platform."""
-import asyncio
 from http import HTTPStatus
 
 import httpx
@@ -84,7 +83,7 @@ async def test_setup_failed_connect(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup when connection error occurs."""
-    respx.get(RESOURCE).mock(side_effect=asyncio.TimeoutError())
+    respx.get(RESOURCE).mock(side_effect=httpx.ConnectError(""))
     config = {SWITCH_DOMAIN: {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: RESOURCE}}
     assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
@@ -98,7 +97,7 @@ async def test_setup_timeout(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup when connection timeout occurs."""
-    respx.get(RESOURCE).mock(side_effect=asyncio.TimeoutError())
+    respx.get(RESOURCE).mock(side_effect=httpx.TimeoutException(""))
     config = {SWITCH_DOMAIN: {CONF_PLATFORM: DOMAIN, CONF_RESOURCE: RESOURCE}}
     assert await async_setup_component(hass, SWITCH_DOMAIN, config)
     await hass.async_block_till_done()
@@ -304,7 +303,7 @@ async def test_turn_on_timeout(hass: HomeAssistant) -> None:
     """Test turn_on when timeout occurs."""
     await _async_setup_test_switch(hass)
 
-    respx.post(RESOURCE) % HTTPStatus.INTERNAL_SERVER_ERROR
+    respx.post(RESOURCE).mock(side_effect=httpx.TimeoutException(""))
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
@@ -364,7 +363,7 @@ async def test_turn_off_timeout(hass: HomeAssistant) -> None:
     """Test turn_off when timeout occurs."""
     await _async_setup_test_switch(hass)
 
-    respx.post(RESOURCE).mock(side_effect=asyncio.TimeoutError())
+    respx.post(RESOURCE).mock(side_effect=httpx.TimeoutException(""))
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
@@ -417,7 +416,7 @@ async def test_update_timeout(hass: HomeAssistant) -> None:
     """Test update when timeout occurs."""
     await _async_setup_test_switch(hass)
 
-    respx.get(RESOURCE).mock(side_effect=asyncio.TimeoutError())
+    respx.get(RESOURCE).mock(side_effect=httpx.TimeoutException(""))
     async_fire_time_changed(hass, utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
