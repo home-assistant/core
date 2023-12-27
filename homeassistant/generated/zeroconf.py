@@ -494,6 +494,12 @@ ZEROCONF = {
                 "vendor": "synology*",
             },
         },
+        {
+            "domain": "tailwind",
+            "properties": {
+                "vendor": "tailwind",
+            },
+        },
     ],
     "_hue._tcp.local.": [
         {
@@ -697,6 +703,11 @@ ZEROCONF = {
     "_touch-able._tcp.local.": [
         {
             "domain": "apple_tv",
+        },
+    ],
+    "_tvm._tcp.local.": [
+        {
+            "domain": "motionmount",
         },
     ],
     "_uzg-01._tcp.local.": [

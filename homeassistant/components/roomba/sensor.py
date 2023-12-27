@@ -21,14 +21,14 @@ from .irobot_base import IRobotEntity
 from .models import RoombaData
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoombaSensorEntityDescriptionMixin:
     """Mixin for describing Roomba data."""
 
     value_fn: Callable[[IRobotEntity], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoombaSensorEntityDescription(
     SensorEntityDescription, RoombaSensorEntityDescriptionMixin
 ):

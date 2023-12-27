@@ -32,14 +32,14 @@ _METER_DIRECTION_EXPORT = "export"
 _METER_DIRECTION_IMPORT = "import"
 
 
-@dataclass
+@dataclass(frozen=True)
 class PowerwallRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[Meter], float]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PowerwallSensorEntityDescription(
     SensorEntityDescription, PowerwallRequiredKeysMixin
 ):

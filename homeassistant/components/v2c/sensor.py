@@ -25,14 +25,14 @@ from .entity import V2CBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class V2CRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[TrydanData], float]
 
 
-@dataclass
+@dataclass(frozen=True)
 class V2CSensorEntityDescription(SensorEntityDescription, V2CRequiredKeysMixin):
     """Describes an EVSE Power sensor entity."""
 

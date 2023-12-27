@@ -662,15 +662,33 @@
 # ---
 # name: test_pipeline_empty_tts_output.1
   dict({
-    'engine': 'test',
-    'language': 'en-US',
-    'tts_input': '',
-    'voice': 'james_earl_jones',
+    'conversation_id': None,
+    'device_id': None,
+    'engine': 'homeassistant',
+    'intent_input': 'never mind',
+    'language': 'en',
   })
 # ---
 # name: test_pipeline_empty_tts_output.2
   dict({
-    'tts_output': dict({
+    'intent_output': dict({
+      'conversation_id': None,
+      'response': dict({
+        'card': dict({
+        }),
+        'data': dict({
+          'failed': list([
+          ]),
+          'success': list([
+          ]),
+          'targets': list([
+          ]),
+        }),
+        'language': 'en',
+        'response_type': 'action_done',
+        'speech': dict({
+        }),
+      }),
     }),
   })
 # ---

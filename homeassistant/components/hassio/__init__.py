@@ -270,6 +270,7 @@ HARDWARE_INTEGRATIONS = {
     "rpi3-64": "raspberry_pi",
     "rpi4": "raspberry_pi",
     "rpi4-64": "raspberry_pi",
+    "rpi5-64": "raspberry_pi",
     "yellow": "homeassistant_yellow",
 }
 
