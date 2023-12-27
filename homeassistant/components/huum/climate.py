@@ -49,6 +49,7 @@ class HuumDevice(ClimateEntity):
     _attr_name = None
 
     _target_temperature = 40
+    _status: HuumStatusResponse | None = None
 
     def __init__(self, huum_handler: Huum, unique_id: str) -> None:
         """Initialize the heater."""
@@ -60,7 +61,6 @@ class HuumDevice(ClimateEntity):
         )
 
         self._huum_handler = huum_handler
-        self._status = None
 
     @property
     def hvac_mode(self) -> HVACMode:
