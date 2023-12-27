@@ -5,7 +5,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from gotailwind import Tailwind
+from gotailwind import Tailwind, TailwindError
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -15,6 +15,7 @@ from homeassistant.components.button import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -62,4 +63,11 @@ class TailwindButtonEntity(TailwindEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Trigger button press on the Tailwind device."""
-        await self.entity_description.press_fn(self.coordinator.tailwind)
+        try:
+            await self.entity_description.press_fn(self.coordinator.tailwind)
+        except TailwindError as exc:
+            raise HomeAssistantError(
+                str(exc),
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from exc
