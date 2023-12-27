@@ -1,9 +1,7 @@
 """Support for sensors."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass
-from typing import Any, Final
+from typing import Final
 
 from aiocomelit import ComelitSerialBridgeObject, ComelitVedoZoneObject
 from aiocomelit.const import ALARM_ZONES, BRIDGE, OTHER, AlarmZoneState
@@ -23,29 +21,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import ComelitSerialBridge, ComelitVedoSystem
 
-
-@dataclass(frozen=True)
-class ComelitVedoBaseEntityDescription:
-    """Comelit VEDO entity base description."""
-
-    value: Callable[[Any, Any], Any] = (
-        lambda coordinator, key: coordinator.data.sensors[key]
-    )
-
-
-@dataclass(frozen=True)
-class ComelitVedoEntityDescription(
-    ComelitVedoBaseEntityDescription, SensorEntityDescription
-):
-    """Comelit VEDO entity description."""
-
-
-def _zone_state(coordinator: ComelitVedoSystem, zone_index: int) -> str:
-    """Return current zone state."""
-    zone: ComelitVedoZoneObject = coordinator.data[ALARM_ZONES][zone_index]
-    return zone.human_status.value
-
-
 SENSOR_BRIDGE_TYPES: Final = (
     SensorEntityDescription(
         key="power",
@@ -55,12 +30,11 @@ SENSOR_BRIDGE_TYPES: Final = (
 )
 
 SENSOR_VEDO_TYPES: Final = (
-    ComelitVedoEntityDescription(
+    SensorEntityDescription(
         key="human_status",
         device_class=SensorDeviceClass.ENUM,
         icon="mdi:shield-check",
         options=[zone_state.value for zone_state in AlarmZoneState],
-        value=_zone_state,
     ),
 )
 
@@ -157,14 +131,14 @@ class ComelitVedoSensorEntity(CoordinatorEntity[ComelitVedoSystem], SensorEntity
 
     _attr_has_entity_name = True
     _attr_name = None
-    entity_description: ComelitVedoEntityDescription
+    entity_description: SensorEntityDescription
 
     def __init__(
         self,
         coordinator: ComelitVedoSystem,
         zone: ComelitVedoZoneObject,
         config_entry_entry_id: str,
-        description: ComelitVedoEntityDescription,
+        description: SensorEntityDescription,
     ) -> None:
         """Init sensor entity."""
         self._api = coordinator.api
@@ -180,4 +154,7 @@ class ComelitVedoSensorEntity(CoordinatorEntity[ComelitVedoSystem], SensorEntity
     @property
     def native_value(self) -> StateType:
         """Sensor value."""
-        return self.entity_description.value(self.coordinator, self._zone.index)
+        zone: ComelitVedoZoneObject = self.coordinator.data[ALARM_ZONES][
+            self._zone.index
+        ]
+        return zone.human_status.value
