@@ -46,7 +46,7 @@ def validate_sql_select(value: str) -> str:
     if query_type != "SELECT":
         _LOGGER.debug("The SQL query %s is of type %s", query, query_type)
         raise vol.Invalid("Only SELECT queries allowed")
-    return value.lstrip().lstrip(";")
+    return query
 
 
 QUERY_SCHEMA = vol.Schema(
