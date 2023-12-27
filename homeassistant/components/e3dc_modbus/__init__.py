@@ -9,10 +9,12 @@ from typing import Any, Optional
 from pymodbus.client import ModbusTcpClient
 import voluptuous as vol
 
+# from homeassistant.components.e3dc_modbus import dr
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -216,14 +218,26 @@ class E3DCModbusHub:
             )
         return result
 
-    # def device_info(self) -> DeviceInfo:
-    #    """Return default device info structure."""
-    #    return DeviceInfo(
-    #        manufacturer="E3DC",
-    #        model=self.e3dc.model,
-    #        name=self.e3dc.model,
-    #        connections={(dr.CONNECTION_NETWORK_MAC, self.e3dc.macAddress)},
-    #        identifiers={(DOMAIN, self.uid)},
-    #        sw_version=self._sw_version,
-    #        configuration_url="https://s10.e3dc.com/",
-    #    )
+    def device_info(self) -> DeviceInfo:
+        """Return default device info structure."""
+        return DeviceInfo(
+            manufacturer="E3DC",
+            # model=self.e3dc.model,
+            # name=self.e3dc.model,
+            # connections={(dr.CONNECTION_NETWORK_MAC, self.e3dc.macAddress)},
+            # identifiers={(DOMAIN, self.uid)},
+            # sw_version=self._sw_version,
+            configuration_url="https://s10.e3dc.com/",
+        )
+
+    def read_register(self, register):
+        """Read a register from the E3DC Modbus."""
+        with self._lock:
+            result = self._client.read_holding_registers(register, 1)
+        return result
+
+    def write_register(self, register, value):
+        """Write a register to the E3DC Modbus."""
+        with self._lock:
+            result = self._client.write_register(register, value)
+        return result
