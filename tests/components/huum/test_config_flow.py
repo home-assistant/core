@@ -1,10 +1,8 @@
 """Test the huum config flow."""
 from unittest.mock import patch
 
-import aiohttp
-import pytest
-
 from huum.exceptions import Forbidden
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.huum.const import DOMAIN
@@ -53,10 +51,15 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 async def test_signup_flow_already_set_up(hass: HomeAssistant) -> None:
+    """Test that we handle already existing entities with same id."""
     mock_config_entry = MockConfigEntry(
         title="Huum Sauna",
         domain=DOMAIN,
         unique_id=TEST_USERNAME,
+        data={
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
     )
     mock_config_entry.add_to_hass(hass)
 
