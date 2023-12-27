@@ -40,16 +40,14 @@ def async_check_significant_change(
     **kwargs: Any,
 ) -> bool | None:
     """Test if state significantly changed."""
+    if (device_class := new_attrs.get(ATTR_DEVICE_CLASS)) is None:
+        return None
+
     absolute_change: float | None = None
     percentage_change: float | None = None
 
-    # default for non classified
-    if (device_class := new_attrs.get(ATTR_DEVICE_CLASS)) is None:
-        absolute_change = 1.0
-        percentage_change = 2.0
-
     # special for temperature
-    elif device_class == NumberDeviceClass.TEMPERATURE:
+    if device_class == NumberDeviceClass.TEMPERATURE:
         if new_attrs.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.FAHRENHEIT:
             absolute_change = 1.0
         else:

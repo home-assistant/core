@@ -44,8 +44,7 @@ VOLATILE_ORGANIC_COMPOUNDS_ATTRS = {
 @pytest.mark.parametrize(
     ("old_state", "new_state", "attrs", "result"),
     [
-        ("0", "1", {}, True),
-        ("0", "0.9", {}, False),
+        ("0", "0.9", {}, None),
         ("0", "1", AQI_ATTRS, True),
         ("1", "0", AQI_ATTRS, True),
         ("0.1", "0.5", AQI_ATTRS, False),
