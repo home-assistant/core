@@ -33,6 +33,7 @@ SENSOR_VEDO_TYPES: Final = (
     SensorEntityDescription(
         key="human_status",
         translation_key="zone_status",
+        name=None,
         device_class=SensorDeviceClass.ENUM,
         icon="mdi:shield-check",
         options=[zone_state.value for zone_state in AlarmZoneState],
@@ -130,7 +131,6 @@ class ComelitVedoSensorEntity(CoordinatorEntity[ComelitVedoSystem], SensorEntity
     """Sensor device."""
 
     _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(
         self,
@@ -151,9 +151,19 @@ class ComelitVedoSensorEntity(CoordinatorEntity[ComelitVedoSystem], SensorEntity
         self.entity_description = description
 
     @property
+    def _zone_object(self) -> ComelitVedoZoneObject:
+        """Zone object."""
+        return self.coordinator.data[ALARM_ZONES][self._zone.index]
+
+    @property
+    def available(self) -> bool:
+        """Sensor availability."""
+        return self._zone_object.human_status.value not in ["unavailable", "unknown"]
+
+    @property
     def native_value(self) -> StateType:
         """Sensor value."""
-        zone: ComelitVedoZoneObject = self.coordinator.data[ALARM_ZONES][
-            self._zone.index
-        ]
-        return zone.human_status.value
+        if self._zone_object.human_status.value == "unknown":
+            return None
+
+        return self._zone_object.human_status.value
