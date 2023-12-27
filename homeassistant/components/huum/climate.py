@@ -8,8 +8,11 @@ from huum.const import SaunaStatus
 from huum.exceptions import SafetyException
 from huum.huum import Huum
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
+from homeassistant.components.climate import (
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -57,11 +60,12 @@ class HuumDevice(ClimateEntity):
         )
 
         self._huum_handler = huum_handler
+        self._status = None
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
-        if self._status.status == SaunaStatus.ONLINE_HEATING:
+        if self._status and self._status.status == SaunaStatus.ONLINE_HEATING:
             return HVACMode.HEAT
         return HVACMode.OFF
 
@@ -75,15 +79,14 @@ class HuumDevice(ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return self._status.temperature
+        return getattr(self._status, "temperature", None) or self._attr_min_temp
 
     @property
     def target_temperature(self) -> int:
         """Return the temperature we try to reach."""
+        return getattr(self._status, "target_temperature", None) or self._target_temperature
 
-        return self._status.target_temperature or self._target_temperature
-
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVACMode.HEAT:
             temperature = max(self.min_temp, self.target_temperature)
