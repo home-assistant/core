@@ -5,10 +5,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components.cloud import (
-    SIGNAL_CLOUD_CONNECTION_STATE,
-    CloudConnectionState,
-)
 from homeassistant.components.mobile_app.const import (
     ATTR_DEVICE_NAME,
     CONF_CLOUDHOOK_URL,
@@ -20,11 +16,15 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import CALL_SERVICE, REGISTER_CLEARTEXT
 
-from tests.common import MockConfigEntry, MockUser, async_mock_service
+from tests.common import (
+    MockConfigEntry,
+    MockUser,
+    async_mock_cloud_connection_status,
+    async_mock_service,
+)
 
 
 @pytest.mark.usefixtures("create_registrations")
@@ -146,9 +146,7 @@ async def test_create_cloud_hook_after_connection(
         assert CONF_CLOUDHOOK_URL not in config_entry.data
         mock_create_cloudhook.assert_not_called()
 
-        async_dispatcher_send(
-            hass, SIGNAL_CLOUD_CONNECTION_STATE, CloudConnectionState.CLOUD_CONNECTED
-        )
+        async_mock_cloud_connection_status(hass, True)
         await hass.async_block_till_done()
         assert config_entry.data[CONF_CLOUDHOOK_URL] == cloud_hook
         mock_create_cloudhook.assert_called_once_with(
