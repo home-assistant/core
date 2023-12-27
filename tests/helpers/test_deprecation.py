@@ -1,4 +1,5 @@
 """Test deprecation helpers."""
+from enum import StrEnum
 import logging
 import sys
 from typing import Any
@@ -257,6 +258,28 @@ def test_deprecated_function_called_from_custom_integration(
     ) in caplog.text
 
 
+class TestDeprecatedConstantEnum(StrEnum):
+    """Test deprecated constant enum."""
+
+    __test__ = False  # prevent test collection of class by pytest
+
+    TEST = "value"
+
+
+def _get_value(obj: DeprecatedConstant | DeprecatedConstantEnum | tuple) -> Any:
+    if isinstance(obj, tuple):
+        if len(obj) == 2:
+            return obj[0].value
+
+        return obj[0]
+
+    if isinstance(obj, DeprecatedConstant):
+        return obj.value
+
+    if isinstance(obj, DeprecatedConstantEnum):
+        return obj.enum.value
+
+
 @pytest.mark.parametrize(
     ("deprecated_constant", "extra_msg"),
     [
@@ -267,6 +290,30 @@ def test_deprecated_function_called_from_custom_integration(
         (
             DeprecatedConstant(1, "NEW_CONSTANT", "2099.1"),
             " which will be removed in HA Core 2099.1. Use NEW_CONSTANT instead",
+        ),
+        (
+            DeprecatedConstantEnum(TestDeprecatedConstantEnum.TEST, None),
+            ". Use TestDeprecatedConstantEnum.TEST instead",
+        ),
+        (
+            DeprecatedConstantEnum(TestDeprecatedConstantEnum.TEST, "2099.1"),
+            " which will be removed in HA Core 2099.1. Use TestDeprecatedConstantEnum.TEST instead",
+        ),
+        (
+            ("value", "NEW_CONSTANT", None),
+            ". Use NEW_CONSTANT instead",
+        ),
+        (
+            (1, "NEW_CONSTANT", "2099.1"),
+            " which will be removed in HA Core 2099.1. Use NEW_CONSTANT instead",
+        ),
+        (
+            (TestDeprecatedConstantEnum.TEST, None),
+            ". Use TestDeprecatedConstantEnum.TEST instead",
+        ),
+        (
+            (TestDeprecatedConstantEnum.TEST, "2099.1"),
+            " which will be removed in HA Core 2099.1. Use TestDeprecatedConstantEnum.TEST instead",
         ),
     ],
 )
@@ -282,7 +329,7 @@ def test_deprecated_function_called_from_custom_integration(
 )
 def test_check_if_deprecated_constant(
     caplog: pytest.LogCaptureFixture,
-    deprecated_constant: DeprecatedConstant | DeprecatedConstantEnum,
+    deprecated_constant: DeprecatedConstant | DeprecatedConstantEnum | tuple,
     extra_msg: str,
     module_name: str,
     extra_extra_msg: str,
@@ -316,7 +363,7 @@ def test_check_if_deprecated_constant(
         ],
     ):
         value = check_if_deprecated_constant("TEST_CONSTANT", module_globals)
-        assert value == deprecated_constant.value
+        assert value == _get_value(deprecated_constant)
 
     assert (
         module_name,
@@ -336,6 +383,30 @@ def test_check_if_deprecated_constant(
             DeprecatedConstant(1, "NEW_CONSTANT", "2099.1"),
             " which will be removed in HA Core 2099.1. Use NEW_CONSTANT instead",
         ),
+        (
+            DeprecatedConstantEnum(TestDeprecatedConstantEnum.TEST, None),
+            ". Use TestDeprecatedConstantEnum.TEST instead",
+        ),
+        (
+            DeprecatedConstantEnum(TestDeprecatedConstantEnum.TEST, "2099.1"),
+            " which will be removed in HA Core 2099.1. Use TestDeprecatedConstantEnum.TEST instead",
+        ),
+        (
+            ("value", "NEW_CONSTANT", None),
+            ". Use NEW_CONSTANT instead",
+        ),
+        (
+            (1, "NEW_CONSTANT", "2099.1"),
+            " which will be removed in HA Core 2099.1. Use NEW_CONSTANT instead",
+        ),
+        (
+            (TestDeprecatedConstantEnum.TEST, None),
+            ". Use TestDeprecatedConstantEnum.TEST instead",
+        ),
+        (
+            (TestDeprecatedConstantEnum.TEST, "2099.1"),
+            " which will be removed in HA Core 2099.1. Use TestDeprecatedConstantEnum.TEST instead",
+        ),
     ],
 )
 @pytest.mark.parametrize(
@@ -347,7 +418,7 @@ def test_check_if_deprecated_constant(
 )
 def test_check_if_deprecated_constant_integration_not_found(
     caplog: pytest.LogCaptureFixture,
-    deprecated_constant: DeprecatedConstant | DeprecatedConstantEnum,
+    deprecated_constant: DeprecatedConstant | DeprecatedConstantEnum | tuple,
     extra_msg: str,
     module_name: str,
 ) -> None:
@@ -361,7 +432,7 @@ def test_check_if_deprecated_constant_integration_not_found(
         "homeassistant.helpers.frame.extract_stack", side_effect=MissingIntegrationFrame
     ):
         value = check_if_deprecated_constant("TEST_CONSTANT", module_globals)
-        assert value == deprecated_constant.value
+        assert value == _get_value(deprecated_constant)
 
     assert (
         module_name,
@@ -379,7 +450,7 @@ def test_test_check_if_deprecated_constant_invalid(
     name = "TEST_CONSTANT"
 
     excepted_msg = (
-        f"Value of _DEPRECATED_{name!r} is an instance of <class 'int'> "
+        f"Value of _DEPRECATED_{name} is an instance of <class 'int'> "
         "but an instance of DeprecatedConstant or DeprecatedConstantEnum is required"
     )
 
