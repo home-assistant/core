@@ -73,9 +73,9 @@ async def test_hop_sensors(
     ("sensor", "sensor_state"),
     [
         ("sensor.total_running_balance", "184.09"),
-        ("sensor.total_account_balance", "-102.22"),
+        ("sensor.total_current_balance", "-102.22"),
         ("sensor.next_billing_date", "2020-11-03T00:00:00"),
-        ("sensor.hop_percentage", "3.5"),
+        ("sensor.hour_of_power_savings", "3.5"),
     ],
 )
 async def test_account_sensors(
