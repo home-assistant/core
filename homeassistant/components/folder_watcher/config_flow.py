@@ -1,4 +1,4 @@
-"""Adds config flow for System Monitor."""
+"""Adds config flow for Folder watcher."""
 from __future__ import annotations
 
 from collections.abc import Mapping

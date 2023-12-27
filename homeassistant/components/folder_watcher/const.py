@@ -1,4 +1,4 @@
-"""Constants for System Monitor."""
+"""Constants for Folder watcher."""
 
 CONF_FOLDER = "folder"
 CONF_PATTERNS = "patterns"
