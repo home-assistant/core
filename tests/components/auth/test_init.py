@@ -631,7 +631,7 @@ async def test_ws_delete_all_refresh_tokens_filtered(
     hass_ws_client: WebSocketGenerator,
     hass_access_token: str,
 ) -> None:
-    """Test deleting all refresh tokens."""
+    """Test deleting all refresh tokens of a specific type."""
     assert await async_setup_component(hass, "auth", {"http": {}})
 
     # one token already exists
