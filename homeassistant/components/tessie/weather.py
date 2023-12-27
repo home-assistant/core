@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
-    ATTR_CONDITION_EXCEPTIONAL,
     ATTR_CONDITION_FOG,
     ATTR_CONDITION_HAIL,
     ATTR_CONDITION_LIGHTNING,
@@ -31,7 +31,8 @@ from .const import DOMAIN, MODELS
 from .coordinator import TessieStateUpdateCoordinator, TessieWeatherDataCoordinator
 
 CONDITIONS = {
-    "Clear": ATTR_CONDITION_EXCEPTIONAL,
+    "Clear": ATTR_CONDITION_SUNNY,
+    "Night": ATTR_CONDITION_CLEAR_NIGHT,
     "Clouds": ATTR_CONDITION_CLOUDY,
     "Fog": ATTR_CONDITION_FOG,
     "Hail": ATTR_CONDITION_HAIL,
@@ -40,7 +41,6 @@ CONDITIONS = {
     "Pouring": ATTR_CONDITION_POURING,
     "Rain": ATTR_CONDITION_RAINY,
     "Snow": ATTR_CONDITION_SNOWY,
-    "Sunny": ATTR_CONDITION_SUNNY,
     "Windy": ATTR_CONDITION_WINDY,
 }
 
