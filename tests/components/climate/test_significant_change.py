@@ -6,6 +6,7 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
+    ATTR_FAN_MODES,
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
     ATTR_PRESET_MODE,
@@ -112,6 +113,12 @@ async def test_significant_state_change(hass: HomeAssistant) -> None:
         # insignificant attributes
         (METRIC, {"unknown_attr": "old_value"}, {"unknown_attr": "old_value"}, False),
         (METRIC, {"unknown_attr": "old_value"}, {"unknown_attr": "new_value"}, False),
+        (
+            METRIC,
+            {ATTR_FAN_MODES: ["Auto", "Low"]},
+            {ATTR_FAN_MODES: ["Auto", "Low"]},
+            False,
+        ),
     ],
 )
 async def test_significant_atributes_change(

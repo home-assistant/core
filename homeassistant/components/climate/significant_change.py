@@ -52,8 +52,13 @@ def async_check_significant_change(
     if old_state != new_state:
         return True
 
-    old_attrs_s = set(old_attrs.items())
-    new_attrs_s = set(new_attrs.items())
+    # remove list attributes from comparison: fan_modes, hvac_modes, preset_modes, etc.
+    old_attrs_s = set(
+        {item for item in old_attrs.items() if not isinstance(item[1], list)}
+    )
+    new_attrs_s = set(
+        {item for item in new_attrs.items() if not isinstance(item[1], list)}
+    )
     changed_attrs: set[str] = {item[0] for item in old_attrs_s ^ new_attrs_s}
     ha_unit = hass.config.units.temperature_unit
 
