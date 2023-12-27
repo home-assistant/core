@@ -455,7 +455,7 @@ class AqaraT2RelayStartupOnOff(ZCLEnumSelectEntity):
     _unique_id_suffix = "startup_on_off"
     _attribute_name = "startup_on_off"
     _enum = T2RelayOppleCluster.StartupOnOff
-    _attr_translation_key: str = "startup_on_off"
+    _attr_translation_key: str = "start_up_on_off"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
