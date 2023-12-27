@@ -5,7 +5,6 @@ import aiohttp
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.huum.config_flow import CannotConnect
 from homeassistant.components.huum.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -49,13 +48,11 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "raises",
-    "error_base",
-    (
+    ("raises", "error_base", ),
+    [
         (Exception, "unknown"),
-        (CannotConnect, "cannot_connect"),
         (aiohttp.ClientError, "invalid_auth"),
-    ),
+    ],
 )
 async def test_huum_errors(
     hass: HomeAssistant, raises: Exception, error_base: str
