@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.huum.const import DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -32,8 +33,8 @@ async def test_form(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": TEST_USERNAME,
-                "password": TEST_PASSWORD,
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
             },
         )
         await hass.async_block_till_done()
@@ -41,8 +42,8 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_USERNAME
     assert result2["data"] == {
-        "username": TEST_USERNAME,
-        "password": TEST_PASSWORD,
+        CONF_USERNAME: TEST_USERNAME,
+        CONF_PASSWORD: TEST_PASSWORD,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -72,8 +73,8 @@ async def test_huum_errors(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": TEST_USERNAME,
-                "password": TEST_PASSWORD,
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
             },
         )
 
@@ -90,8 +91,8 @@ async def test_huum_errors(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "username": TEST_USERNAME,
-                "password": TEST_PASSWORD,
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
             },
         )
         assert result2["type"] == FlowResultType.CREATE_ENTRY
