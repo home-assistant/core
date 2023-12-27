@@ -21,7 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, TessieCoverStates
 from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
@@ -58,30 +58,30 @@ class TessieWindowEntity(TessieEntity, CoverEntity):
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         return (
-            self.get("vehicle_state_fd_window") == 0
-            and self.get("vehicle_state_fp_window") == 0
-            and self.get("vehicle_state_rd_window") == 0
-            and self.get("vehicle_state_rp_window") == 0
+            self.get("vehicle_state_fd_window") == TessieCoverStates.CLOSED
+            and self.get("vehicle_state_fp_window") == TessieCoverStates.CLOSED
+            and self.get("vehicle_state_rd_window") == TessieCoverStates.CLOSED
+            and self.get("vehicle_state_rp_window") == TessieCoverStates.CLOSED
         )
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open windows."""
         await self.run(vent_windows)
         self.set(
-            ("vehicle_state_fd_window", 1),
-            ("vehicle_state_fp_window", 1),
-            ("vehicle_state_rd_window", 1),
-            ("vehicle_state_rp_window", 1),
+            ("vehicle_state_fd_window", TessieCoverStates.OPEN),
+            ("vehicle_state_fp_window", TessieCoverStates.OPEN),
+            ("vehicle_state_rd_window", TessieCoverStates.OPEN),
+            ("vehicle_state_rp_window", TessieCoverStates.OPEN),
         )
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close windows."""
         await self.run(close_windows)
         self.set(
-            ("vehicle_state_fd_window", 0),
-            ("vehicle_state_fp_window", 0),
-            ("vehicle_state_rd_window", 0),
-            ("vehicle_state_rp_window", 0),
+            ("vehicle_state_fd_window", TessieCoverStates.CLOSED),
+            ("vehicle_state_fp_window", TessieCoverStates.CLOSED),
+            ("vehicle_state_rd_window", TessieCoverStates.CLOSED),
+            ("vehicle_state_rp_window", TessieCoverStates.CLOSED),
         )
 
 
@@ -124,12 +124,12 @@ class TessieFrontTrunkEntity(TessieEntity, CoverEntity):
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
-        return self._value == 0
+        return self._value == TessieCoverStates.CLOSED
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open front trunk."""
         await self.run(open_front_trunk)
-        self.set((self.key, 1))
+        self.set((self.key, TessieCoverStates.OPEN))
 
 
 class TessieRearTrunkEntity(TessieEntity, CoverEntity):
@@ -145,16 +145,16 @@ class TessieRearTrunkEntity(TessieEntity, CoverEntity):
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
-        return self._value == 0
+        return self._value == TessieCoverStates.CLOSED
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open rear trunk."""
-        if self._value == 0:
+        if self._value == TessieCoverStates.CLOSED:
             await self.run(open_close_rear_trunk)
-            self.set((self.key, 1))
+            self.set((self.key, TessieCoverStates.OPEN))
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close rear trunk."""
-        if self._value == 1:
+        if self._value == TessieCoverStates.OPEN:
             await self.run(open_close_rear_trunk)
-            self.set((self.key, 0))
+            self.set((self.key, TessieCoverStates.CLOSED))

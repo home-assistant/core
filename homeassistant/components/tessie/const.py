@@ -46,3 +46,10 @@ class TessieUpdateStatus(StrEnum):
     INSTALLING = "installing"
     WIFI_WAIT = "downloading_wifi_wait"
     SCHEDULED = "scheduled"
+
+
+class TessieCoverStates(StrEnum):
+    """Tessie Cover states."""
+
+    CLOSED = 0
+    OPEN = 1
