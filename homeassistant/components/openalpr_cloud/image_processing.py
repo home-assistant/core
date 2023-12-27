@@ -29,7 +29,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,9 +119,7 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
 
     def process_plates(self, plates: dict[str, float], vehicles: int) -> None:
         """Send event with new plates and store data."""
-        run_callback_threadsafe(
-            self.hass.loop, self.async_process_plates, plates, vehicles
-        ).result()
+        self.hass.loop.call_soon_threadsafe(self.async_process_plates, plates, vehicles)
 
     @callback
     def async_process_plates(self, plates: dict[str, float], vehicles: int) -> None:
@@ -141,8 +138,7 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
 
         # Send events
         for i_plate in new_plates:
-            self.hass.async_add_job(
-                self.hass.bus.async_fire,
+            self.hass.bus.async_fire(
                 EVENT_FOUND_PLATE,
                 {
                     ATTR_PLATE: i_plate,
