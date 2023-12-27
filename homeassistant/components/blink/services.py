@@ -98,7 +98,7 @@ def setup_services(hass: HomeAssistant) -> None:
             hass,
             DOMAIN,
             "service_deprecation",
-            breaks_in_ha_version="2024.6.0",
+            breaks_in_ha_version="2024.7.0",
             is_fixable=True,
             is_persistent=True,
             severity=ir.IssueSeverity.WARNING,
@@ -109,7 +109,7 @@ def setup_services(hass: HomeAssistant) -> None:
             await coordinator.api.refresh(force_cache=True)
 
     # Register all the above services
-    # Refresh service is deprecated and will be removed in 6/2024
+    # Refresh service is deprecated and will be removed in 7/2024
     service_mapping = [
         (blink_refresh, SERVICE_REFRESH, SERVICE_UPDATE_SCHEMA),
         (send_pin, SERVICE_SEND_PIN, SERVICE_SEND_PIN_SCHEMA),
