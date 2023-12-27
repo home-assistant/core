@@ -119,7 +119,7 @@ class HuumDevice(ClimateEntity):
         """
         self._status = await self._huum_handler.status_from_status_or_stop()
 
-    async def _turn_on(self, temperature) -> None:
+    async def _turn_on(self, temperature: int) -> None:
         try:
             await self._huum_handler.turn_on(temperature)
         except (ValueError, SafetyException) as err:
