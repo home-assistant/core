@@ -9,10 +9,7 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     API_CONDITION,
@@ -24,6 +21,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
 )
+from .data_coordinator import HKOUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -32,12 +30,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add a HKO weather entity from a config_entry."""
+    assert config_entry.unique_id is not None
     unique_id = config_entry.unique_id
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities([HKOEntity(unique_id, coordinator)], False)
 
 
-class HKOEntity(CoordinatorEntity, WeatherEntity):
+class HKOEntity(CoordinatorEntity[HKOUpdateCoordinator], WeatherEntity):
     """Define a HKO entity."""
 
     _attr_has_entity_name = True
@@ -46,7 +45,7 @@ class HKOEntity(CoordinatorEntity, WeatherEntity):
     _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
     _attr_attribution = ATTRIBUTION
 
-    def __init__(self, unique_id_str, coordinator: DataUpdateCoordinator) -> None:
+    def __init__(self, unique_id_str, coordinator: HKOUpdateCoordinator) -> None:
         """Initialise the weather platform."""
         super().__init__(coordinator)
         self._attr_unique_id = unique_id_str

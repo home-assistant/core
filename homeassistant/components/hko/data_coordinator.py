@@ -1,9 +1,10 @@
 """Weather data coordinator for the HKO API."""
-
 from asyncio import timeout
 from datetime import timedelta
 import logging
+from typing import Any
 
+from aiohttp import ClientSession
 from hko import HKO, HKOError
 
 from homeassistant.components.weather import (
@@ -64,10 +65,12 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class HKOUpdateCoordinator(DataUpdateCoordinator):
+class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """HKO Update Coordinator."""
 
-    def __init__(self, hass: HomeAssistant, session, district, location) -> None:
+    def __init__(
+        self, hass: HomeAssistant, session: ClientSession, district: str, location: Any
+    ) -> None:
         """Update data via library."""
         self.location = location
         self.district = district
@@ -80,7 +83,7 @@ class HKOUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=15),
         )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update data via HKO library."""
         try:
             async with timeout(60):
@@ -95,7 +98,7 @@ class HKOUpdateCoordinator(DataUpdateCoordinator):
             ],
         }
 
-    def _convert_current(self, data):
+    def _convert_current(self, data: dict[str, Any]) -> dict[str, Any]:
         """Return temperature and humidity in the appropriate format."""
         current = {
             API_HUMIDITY: data[API_HUMIDITY][API_DATA][0][API_VALUE],
@@ -110,7 +113,7 @@ class HKOUpdateCoordinator(DataUpdateCoordinator):
         }
         return current
 
-    def _convert_forecast(self, data):
+    def _convert_forecast(self, data: dict[str, Any]) -> dict[str, Any]:
         """Return daily forecast in the appropriate format."""
         date = data[API_FORECAST_DATE]
         forecast = {
@@ -123,14 +126,14 @@ class HKOUpdateCoordinator(DataUpdateCoordinator):
         }
         return forecast
 
-    def _convert_icon_condition(self, icon_code, info):
+    def _convert_icon_condition(self, icon_code: int, info: str) -> str:
         """Return the condition corresponding to an icon code."""
         for condition, codes in ICON_CONDITION_MAP.items():
             if icon_code in codes:
                 return condition
         return self._convert_info_condition(info)
 
-    def _convert_info_condition(self, info):
+    def _convert_info_condition(self, info: str) -> str:
         """Return the condition corresponding to the weather info."""
         info = info.lower()
         if WEATHER_INFO_RAIN in info:
