@@ -21,7 +21,7 @@ async def test_updates(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_all("update")) == 1
 
-    entity_id = "update.test"
+    entity_id = "update.test_update"
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_IN_PROGRESS) is False
