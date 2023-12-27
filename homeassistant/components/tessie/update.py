@@ -29,6 +29,7 @@ async def async_setup_entry(
 class TessieUpdateEntity(TessieEntity, UpdateEntity):
     """Tessie Updates entity."""
 
+    _attr_name = None
     _attr_supported_features = UpdateEntityFeature.PROGRESS
 
     def __init__(
