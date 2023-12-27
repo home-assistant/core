@@ -125,7 +125,7 @@
         "step": {
           "confirm": {
             "title": "[%key:component::blink::issues::service_depreciation::title%]",
-            "description": "Blink update service is deprecated and will be removed.\nUse Home Assistant Core Integration: Update entity."
+            "description": "Blink update service is deprecated and will be removed.\nUse `Home Assistant Core Integration: Update entity`."
           }
         }
       }
