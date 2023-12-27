@@ -55,7 +55,7 @@ from tests.common import async_fire_time_changed, load_fixture
 def register_hci0_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
     """Register an hci0 scanner."""
     hci0_scanner = FakeScanner("hci0", "hci0")
-    cancel = bluetooth.async_register_scanner(hass, hci0_scanner, True)
+    cancel = bluetooth.async_register_scanner(hass, hci0_scanner)
     yield
     cancel()
 
@@ -64,7 +64,7 @@ def register_hci0_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
 def register_hci1_scanner(hass: HomeAssistant) -> Generator[None, None, None]:
     """Register an hci1 scanner."""
     hci1_scanner = FakeScanner("hci1", "hci1")
-    cancel = bluetooth.async_register_scanner(hass, hci1_scanner, True)
+    cancel = bluetooth.async_register_scanner(hass, hci1_scanner)
     yield
     cancel()
 
@@ -559,9 +559,7 @@ async def test_switching_adapters_when_one_goes_away(
     hass: HomeAssistant, enable_bluetooth: None, register_hci0_scanner: None
 ) -> None:
     """Test switching adapters when one goes away."""
-    cancel_hci2 = bluetooth.async_register_scanner(
-        hass, FakeScanner("hci2", "hci2"), True
-    )
+    cancel_hci2 = bluetooth.async_register_scanner(hass, FakeScanner("hci2", "hci2"))
 
     address = "44:44:33:11:23:45"
 
@@ -611,7 +609,7 @@ async def test_switching_adapters_when_one_stop_scanning(
 ) -> None:
     """Test switching adapters when stops scanning."""
     hci2_scanner = FakeScanner("hci2", "hci2")
-    cancel_hci2 = bluetooth.async_register_scanner(hass, hci2_scanner, True)
+    cancel_hci2 = bluetooth.async_register_scanner(hass, hci2_scanner)
 
     address = "44:44:33:11:23:45"
 
@@ -730,7 +728,7 @@ async def test_goes_unavailable_connectable_only_and_recovers(
     )
     unsetup_connectable_scanner = connectable_scanner.async_setup()
     cancel_connectable_scanner = _get_manager().async_register_scanner(
-        connectable_scanner, True
+        connectable_scanner
     )
     connectable_scanner.inject_advertisement(
         switchbot_device_connectable, switchbot_device_adv
@@ -752,7 +750,7 @@ async def test_goes_unavailable_connectable_only_and_recovers(
     )
     unsetup_not_connectable_scanner = not_connectable_scanner.async_setup()
     cancel_not_connectable_scanner = _get_manager().async_register_scanner(
-        not_connectable_scanner, False
+        not_connectable_scanner
     )
     not_connectable_scanner.inject_advertisement(
         switchbot_device_non_connectable, switchbot_device_adv
@@ -801,7 +799,7 @@ async def test_goes_unavailable_connectable_only_and_recovers(
     )
     unsetup_connectable_scanner_2 = connectable_scanner_2.async_setup()
     cancel_connectable_scanner_2 = _get_manager().async_register_scanner(
-        connectable_scanner, True
+        connectable_scanner
     )
     connectable_scanner_2.inject_advertisement(
         switchbot_device_connectable, switchbot_device_adv
@@ -902,7 +900,7 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
     )
     unsetup_connectable_scanner = non_connectable_scanner.async_setup()
     cancel_connectable_scanner = _get_manager().async_register_scanner(
-        non_connectable_scanner, True
+        non_connectable_scanner
     )
     with patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
         non_connectable_scanner.inject_advertisement(
@@ -914,7 +912,7 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
     assert mock_config_flow.mock_calls[0][1][0] == "switchbot"
 
     assert async_ble_device_from_address(hass, "44:44:33:11:23:45", False) is not None
-    assert async_scanner_count(hass, connectable=True) == 1
+    assert async_scanner_count(hass, connectable=False) == 1
     assert len(callbacks) == 1
 
     assert (

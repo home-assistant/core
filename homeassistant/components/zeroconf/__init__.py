@@ -33,6 +33,7 @@ from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import (
     HomeKitDiscoveredIntegration,
+    ZeroconfMatcher,
     async_get_homekit,
     async_get_zeroconf,
     bind_hass,
@@ -54,9 +55,6 @@ HOMEKIT_TYPES = [
 ]
 _HOMEKIT_MODEL_SPLITS = (None, " ", "-")
 
-# Top level keys we support matching against in properties that are always matched in
-# lower case. ex: ZeroconfServiceInfo.name
-LOWER_MATCH_ATTRS = {"name"}
 
 CONF_DEFAULT_INTERFACE = "default_interface"
 CONF_IPV6 = "ipv6"
@@ -74,6 +72,8 @@ MAX_PROPERTY_VALUE_LEN = 230
 # Dns label max length
 MAX_NAME_LEN = 63
 
+ATTR_DOMAIN: Final = "domain"
+ATTR_NAME: Final = "name"
 ATTR_PROPERTIES: Final = "properties"
 
 # Attributes for ZeroconfServiceInfo[ATTR_PROPERTIES]
@@ -248,7 +248,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 def _build_homekit_model_lookups(
-    homekit_models: dict[str, HomeKitDiscoveredIntegration]
+    homekit_models: dict[str, HomeKitDiscoveredIntegration],
 ) -> tuple[
     dict[str, HomeKitDiscoveredIntegration],
     dict[re.Pattern, HomeKitDiscoveredIntegration],
@@ -319,24 +319,6 @@ async def _async_register_hass_zc_service(
     await aio_zc.async_register_service(info, allow_name_change=True)
 
 
-def _match_against_data(
-    matcher: dict[str, str | dict[str, str]], match_data: dict[str, str]
-) -> bool:
-    """Check a matcher to ensure all values in match_data match."""
-    for key in LOWER_MATCH_ATTRS:
-        if key not in matcher:
-            continue
-        if key not in match_data:
-            return False
-        match_val = matcher[key]
-        if TYPE_CHECKING:
-            assert isinstance(match_val, str)
-
-        if not _memorized_fnmatch(match_data[key], match_val):
-            return False
-    return True
-
-
 def _match_against_props(matcher: dict[str, str], props: dict[str, str | None]) -> bool:
     """Check a matcher to ensure all values in props."""
     return not any(
@@ -365,7 +347,7 @@ class ZeroconfDiscovery:
         self,
         hass: HomeAssistant,
         zeroconf: HaZeroconf,
-        zeroconf_types: dict[str, list[dict[str, str | dict[str, str]]]],
+        zeroconf_types: dict[str, list[ZeroconfMatcher]],
         homekit_model_lookups: dict[str, HomeKitDiscoveredIntegration],
         homekit_model_matchers: dict[re.Pattern, HomeKitDiscoveredIntegration],
     ) -> None:
@@ -496,27 +478,23 @@ class ZeroconfDiscovery:
                 # discover it, we can stop here.
                 return
 
-        match_data: dict[str, str] = {}
-        for key in LOWER_MATCH_ATTRS:
-            attr_value: str = getattr(info, key)
-            match_data[key] = attr_value.lower()
+        if not (matchers := self.zeroconf_types.get(service_type)):
+            return
 
         # Not all homekit types are currently used for discovery
         # so not all service type exist in zeroconf_types
-        for matcher in self.zeroconf_types.get(service_type, []):
+        for matcher in matchers:
             if len(matcher) > 1:
-                if not _match_against_data(matcher, match_data):
+                if ATTR_NAME in matcher and not _memorized_fnmatch(
+                    info.name.lower(), matcher[ATTR_NAME]
+                ):
                     continue
-                if ATTR_PROPERTIES in matcher:
-                    matcher_props = matcher[ATTR_PROPERTIES]
-                    if TYPE_CHECKING:
-                        assert isinstance(matcher_props, dict)
-                    if not _match_against_props(matcher_props, props):
-                        continue
+                if ATTR_PROPERTIES in matcher and not _match_against_props(
+                    matcher[ATTR_PROPERTIES], props
+                ):
+                    continue
 
-            matcher_domain = matcher["domain"]
-            if TYPE_CHECKING:
-                assert isinstance(matcher_domain, str)
+            matcher_domain = matcher[ATTR_DOMAIN]
             context = {
                 "source": config_entries.SOURCE_ZEROCONF,
             }

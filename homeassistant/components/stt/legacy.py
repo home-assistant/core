@@ -29,9 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def async_default_provider(hass: HomeAssistant) -> str | None:
     """Return the domain of the default provider."""
-    if "cloud" in hass.data[DATA_PROVIDERS]:
-        return "cloud"
-
     return next(iter(hass.data[DATA_PROVIDERS]), None)
 
 

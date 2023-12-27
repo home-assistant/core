@@ -36,6 +36,7 @@ PLATFORMS_TO_TEST = (
     Platform.LIGHT,
     Platform.LOCK,
     Platform.SIREN,
+    Platform.VALVE,
 )
 
 
@@ -72,6 +73,7 @@ async def test_config_entry_unregistered_uuid(
         (Platform.LIGHT, STATE_ON, STATE_OFF),
         (Platform.LOCK, STATE_UNLOCKED, STATE_LOCKED),
         (Platform.SIREN, STATE_ON, STATE_OFF),
+        (Platform.VALVE, STATE_OPEN, STATE_CLOSED),
     ),
 )
 async def test_entity_registry_events(

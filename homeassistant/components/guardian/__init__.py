@@ -171,7 +171,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     @callback
     def call_with_data(
-        func: Callable[[ServiceCall, GuardianData], Coroutine[Any, Any, None]]
+        func: Callable[[ServiceCall, GuardianData], Coroutine[Any, Any, None]],
     ) -> Callable[[ServiceCall], Coroutine[Any, Any, None]]:
         """Hydrate a service call with the appropriate GuardianData object."""
 

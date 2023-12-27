@@ -5,8 +5,9 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
-from zhaquirks.quirk_ids import TUYA_PLUG_MANUFACTURER
+from zhaquirks.quirk_ids import TUYA_PLUG_MANUFACTURER, XIAOMI_AQARA_VIBRATION_AQ1
 import zigpy.zcl
+from zigpy.zcl.clusters.closures import DoorLock
 
 from homeassistant.core import callback
 
@@ -24,6 +25,7 @@ from ..const import (
     UNKNOWN,
 )
 from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
+from .general import MultistateInput
 
 if TYPE_CHECKING:
     from ..endpoint import Endpoint
@@ -146,6 +148,17 @@ class OppleRemote(ClusterHandler):
                 "buzzer_manual_alarm": True,
                 "buzzer": True,
                 "linkage_alarm": True,
+            }
+        elif self.cluster.endpoint.model == "lumi.magnet.ac01":
+            self.ZCL_INIT_ATTRS = {
+                "detection_distance": True,
+            }
+        elif self.cluster.endpoint.model == "lumi.switch.acn047":
+            self.ZCL_INIT_ATTRS = {
+                "switch_mode": True,
+                "switch_type": True,
+                "startup_on_off": True,
+                "decoupled_mode": True,
             }
 
     async def async_initialize_cluster_handler_specific(self, from_cache: bool) -> None:
@@ -403,3 +416,10 @@ class IkeaRemote(ClusterHandler):
     """Ikea Matter remote cluster handler."""
 
     REPORT_CONFIG = ()
+
+
+@registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(
+    DoorLock.cluster_id, XIAOMI_AQARA_VIBRATION_AQ1
+)
+class XiaomiVibrationAQ1ClusterHandler(MultistateInput):
+    """Xiaomi DoorLock Cluster is in fact a MultiStateInput Cluster."""
