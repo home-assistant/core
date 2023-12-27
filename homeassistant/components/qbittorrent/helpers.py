@@ -40,11 +40,11 @@ def format_progress(torrent):
     return progress
 
 
-def format_torrents(torrents: list[dict[str, Any]]) -> dict[str, Any]:
+def format_torrents(torrents: dict[str, Any]):
     """Format a list of torrents."""
     value = {}
-    for torrent in torrents:
-        value[torrent["name"]] = format_torrent(torrent)
+    for name, torrent in torrents.items():
+        value[name] = format_torrent(torrent)
 
     return value
 
