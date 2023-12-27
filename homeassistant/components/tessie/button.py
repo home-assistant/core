@@ -9,8 +9,6 @@ from tessie_api import (
     enable_keyless_driving,
     flash_lights,
     honk,
-    open_close_rear_trunk,
-    open_front_trunk,
     trigger_homelink,
     wake,
 )
@@ -48,12 +46,6 @@ DESCRIPTIONS: tuple[TessieButtonEntityDescription, ...] = (
     ),
     TessieButtonEntityDescription(
         key="boombox", func=lambda: boombox, icon="mdi:volume-high"
-    ),
-    TessieButtonEntityDescription(
-        key="frunk", func=lambda: open_front_trunk, icon="mdi:car"
-    ),
-    TessieButtonEntityDescription(
-        key="trunk", func=lambda: open_close_rear_trunk, icon="mdi:car-back"
     ),
 )
 

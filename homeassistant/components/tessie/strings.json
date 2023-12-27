@@ -123,7 +123,9 @@
       },
       "charge_state_charge_port_door_open": {
         "name": "Charge port door"
-      }
+      },
+      "vehicle_state_ft": { "name": "Frunk" },
+      "vehicle_state_rt": { "name": "Trunk" }
     },
     "select": {
       "climate_state_seat_heater_left": {
@@ -267,9 +269,7 @@
       "honk": { "name": "Honk horn" },
       "trigger_homelink": { "name": "Homelink" },
       "enable_keyless_driving": { "name": "Keyless driving" },
-      "boombox": { "name": "Play fart" },
-      "frunk": { "name": "Open frunk" },
-      "trunk": { "name": "Open/Close trunk" }
+      "boombox": { "name": "Play fart" }
     },
     "switch": {
       "charge_state_charge_enable_request": {
