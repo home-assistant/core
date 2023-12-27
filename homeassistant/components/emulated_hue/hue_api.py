@@ -57,6 +57,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_SET,
+    STATE_CLOSED,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -394,7 +395,7 @@ class HueOneLightChangeView(HomeAssistantView):
                 return self.json_message("Bad request", HTTPStatus.BAD_REQUEST)
             parsed[STATE_ON] = request_json[HUE_API_STATE_ON]
         else:
-            parsed[STATE_ON] = entity.state != STATE_OFF
+            parsed[STATE_ON] = _hass_to_hue_state(entity)
 
         for key, attr in (
             (HUE_API_STATE_BRI, STATE_BRIGHTNESS),
@@ -585,7 +586,7 @@ class HueOneLightChangeView(HomeAssistantView):
             )
 
         if service is not None:
-            state_will_change = parsed[STATE_ON] != (entity.state != STATE_OFF)
+            state_will_change = parsed[STATE_ON] != _hass_to_hue_state(entity)
 
             hass.async_create_task(
                 hass.services.async_call(domain, service, data, blocking=True)
@@ -643,7 +644,7 @@ def get_entity_state_dict(config: Config, entity: State) -> dict[str, Any]:
             cached_state = entry_state
         elif time.time() - entry_time < STATE_CACHED_TIMEOUT and entry_state[
             STATE_ON
-        ] == (entity.state != STATE_OFF):
+        ] == _hass_to_hue_state(entity):
             # We only want to use the cache if the actual state of the entity
             # is in sync so that it can be detected as an error by Alexa.
             cached_state = entry_state
@@ -676,7 +677,7 @@ def get_entity_state_dict(config: Config, entity: State) -> dict[str, Any]:
 @lru_cache(maxsize=512)
 def _build_entity_state_dict(entity: State) -> dict[str, Any]:
     """Build a state dict for an entity."""
-    is_on = entity.state != STATE_OFF
+    is_on = _hass_to_hue_state(entity)
     data: dict[str, Any] = {
         STATE_ON: is_on,
         STATE_BRIGHTNESS: None,
@@ -727,6 +728,13 @@ def _build_entity_state_dict(entity: State) -> dict[str, Any]:
         data[STATE_BRIGHTNESS] = round(level / 100 * HUE_API_STATE_BRI_MAX)
     _clamp_values(data)
     return data
+
+
+def _hass_to_hue_state(entity: State) -> bool:
+    if entity.domain == cover.DOMAIN:
+        return entity.state != STATE_CLOSED
+
+    return entity.state != STATE_OFF
 
 
 def _clamp_values(data: dict[str, Any]) -> None:
