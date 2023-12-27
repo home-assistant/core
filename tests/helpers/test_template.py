@@ -1351,30 +1351,53 @@ def test_median(hass: HomeAssistant) -> None:
         template.Template("{{ median('abcd') }}", hass).async_render()
 
 
-def test_mode(hass: HomeAssistant) -> None:
+def test_statistical_mode(hass: HomeAssistant) -> None:
     """Test the mode filter."""
-    assert template.Template("{{ [1, 2, 2, 3] | mode }}", hass).async_render() == 2
-    assert template.Template("{{ mode([1, 2, 3]) }}", hass).async_render() == 1
     assert (
-        template.Template("{{ mode('hello', 'bye', 'hello') }}", hass).async_render()
+        template.Template("{{ [1, 2, 2, 3] | statistical_mode }}", hass).async_render()
+        == 2
+    )
+    assert (
+        template.Template("{{ statistical_mode([1, 2, 3]) }}", hass).async_render() == 1
+    )
+    assert (
+        template.Template(
+            "{{ statistical_mode('hello', 'bye', 'hello') }}", hass
+        ).async_render()
         == "hello"
     )
-    assert template.Template("{{ mode('banana') }}", hass).async_render() == "a"
+    assert (
+        template.Template("{{ statistical_mode('banana') }}", hass).async_render()
+        == "a"
+    )
 
     # Testing of default values
-    assert template.Template("{{ mode([1, 2, 3], -1) }}", hass).async_render() == 1
-    assert template.Template("{{ mode([], -1) }}", hass).async_render() == -1
-    assert template.Template("{{ mode([], default=-1) }}", hass).async_render() == -1
-    assert template.Template("{{ mode([], 5, default=-1) }}", hass).async_render() == -1
+    assert (
+        template.Template("{{ statistical_mode([1, 2, 3], -1) }}", hass).async_render()
+        == 1
+    )
+    assert (
+        template.Template("{{ statistical_mode([], -1) }}", hass).async_render() == -1
+    )
+    assert (
+        template.Template("{{ statistical_mode([], default=-1) }}", hass).async_render()
+        == -1
+    )
+    assert (
+        template.Template(
+            "{{ statistical_mode([], 5, default=-1) }}", hass
+        ).async_render()
+        == -1
+    )
 
     with pytest.raises(TemplateError):
-        template.Template("{{ 1 | mode }}", hass).async_render()
+        template.Template("{{ 1 | statistical_mode }}", hass).async_render()
 
     with pytest.raises(TemplateError):
-        template.Template("{{ mode() }}", hass).async_render()
+        template.Template("{{ statistical_mode() }}", hass).async_render()
 
     with pytest.raises(TemplateError):
-        template.Template("{{ mode([]) }}", hass).async_render()
+        template.Template("{{ statistical_mode([]) }}", hass).async_render()
 
 
 def test_min(hass: HomeAssistant) -> None:
