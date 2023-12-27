@@ -1,7 +1,7 @@
 """Constants used by Tessie integration."""
 from __future__ import annotations
 
-from enum import StrEnum
+from enum import IntEnum, StrEnum
 
 DOMAIN = "tessie"
 
@@ -48,7 +48,7 @@ class TessieUpdateStatus(StrEnum):
     SCHEDULED = "scheduled"
 
 
-class TessieCoverStates(StrEnum):
+class TessieCoverStates(IntEnum):
     """Tessie Cover states."""
 
     CLOSED = 0
