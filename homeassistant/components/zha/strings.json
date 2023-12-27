@@ -778,8 +778,17 @@
       "feeding_mode": {
         "name": "Mode"
       },
-      "preset": {
-        "name": "Preset"
+      "detection_distance": {
+        "name": "Detection distance"
+      },
+      "switch_mode": {
+        "name": "Switch mode"
+      },
+      "startup_on_off": {
+        "name": "Startup on off"
+      },
+      "decoupled_mode": {
+        "name": "Decoupled mode"
       }
     },
     "sensor": {
