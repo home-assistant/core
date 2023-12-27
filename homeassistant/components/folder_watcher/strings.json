@@ -10,7 +10,15 @@
     },
     "step": {
       "user": {
-        "description": "Press submit for initial setup. On the created config entry, press configure to add sensors for selected processes"
+        "description": "Press submit for initial setup. On the created config entry, press configure to add sensors for selected processes",
+        "data": {
+          "folder": "Path to the watched folder",
+          "patterns": "Pattern(s) to monitor"
+        },
+        "data_description": {
+          "folder": "Path needs to be from root, as example `/config`",
+          "patterns": "Example is `*.yaml` to only see yaml files"
+        }
       }
     }
   },
