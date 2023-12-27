@@ -1,10 +1,6 @@
 """Make sure that ConnectSense Smart Outlet2 / In-Wall Outlet is enumerated properly."""
 from homeassistant.components.sensor import SensorStateClass
-from homeassistant.const import (
-    ELECTRIC_CURRENT_AMPERE,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-)
+from homeassistant.const import UnitOfElectricCurrent, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 
 from ..common import (
@@ -39,7 +35,7 @@ async def test_connectsense_setup(hass: HomeAssistant) -> None:
                     friendly_name="InWall Outlet-0394DE Current",
                     unique_id="00:00:00:00:00:00_1_13_18",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+                    unit_of_measurement=UnitOfElectricCurrent.AMPERE,
                     state="0.03",
                 ),
                 EntityTestInfo(
@@ -47,7 +43,7 @@ async def test_connectsense_setup(hass: HomeAssistant) -> None:
                     friendly_name="InWall Outlet-0394DE Power",
                     unique_id="00:00:00:00:00:00_1_13_19",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=POWER_WATT,
+                    unit_of_measurement=UnitOfPower.WATT,
                     state="0.8",
                 ),
                 EntityTestInfo(
@@ -55,7 +51,7 @@ async def test_connectsense_setup(hass: HomeAssistant) -> None:
                     friendly_name="InWall Outlet-0394DE Energy kWh",
                     unique_id="00:00:00:00:00:00_1_13_20",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+                    unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                     state="379.69299",
                 ),
                 EntityTestInfo(
@@ -69,7 +65,7 @@ async def test_connectsense_setup(hass: HomeAssistant) -> None:
                     friendly_name="InWall Outlet-0394DE Current",
                     unique_id="00:00:00:00:00:00_1_25_30",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+                    unit_of_measurement=UnitOfElectricCurrent.AMPERE,
                     state="0.05",
                 ),
                 EntityTestInfo(
@@ -77,7 +73,7 @@ async def test_connectsense_setup(hass: HomeAssistant) -> None:
                     friendly_name="InWall Outlet-0394DE Power",
                     unique_id="00:00:00:00:00:00_1_25_31",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=POWER_WATT,
+                    unit_of_measurement=UnitOfPower.WATT,
                     state="0.8",
                 ),
                 EntityTestInfo(
@@ -85,7 +81,7 @@ async def test_connectsense_setup(hass: HomeAssistant) -> None:
                     friendly_name="InWall Outlet-0394DE Energy kWh",
                     unique_id="00:00:00:00:00:00_1_25_32",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+                    unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                     state="175.85001",
                 ),
                 EntityTestInfo(
@@ -118,7 +114,7 @@ async def test_connectsense_setup(hass: HomeAssistant) -> None:
                     friendly_name="InWall Outlet-0394DE Current",
                     unique_id="00:00:00:00:00:00_1_13_18",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+                    unit_of_measurement=UnitOfElectricCurrent.AMPERE,
                     state="0.03",
                 ),
                 EntityTestInfo(
@@ -126,7 +122,7 @@ async def test_connectsense_setup(hass: HomeAssistant) -> None:
                     friendly_name="InWall Outlet-0394DE Power",
                     unique_id="00:00:00:00:00:00_1_13_19",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=POWER_WATT,
+                    unit_of_measurement=UnitOfPower.WATT,
                     state="0.8",
                 ),
                 EntityTestInfo(
@@ -134,7 +130,7 @@ async def test_connectsense_setup(hass: HomeAssistant) -> None:
                     friendly_name="InWall Outlet-0394DE Energy kWh",
                     unique_id="00:00:00:00:00:00_1_13_20",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+                    unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                     state="379.69299",
                 ),
                 EntityTestInfo(
@@ -148,7 +144,7 @@ async def test_connectsense_setup(hass: HomeAssistant) -> None:
                     friendly_name="InWall Outlet-0394DE Current",
                     unique_id="00:00:00:00:00:00_1_25_30",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+                    unit_of_measurement=UnitOfElectricCurrent.AMPERE,
                     state="0.05",
                 ),
                 EntityTestInfo(
@@ -156,7 +152,7 @@ async def test_connectsense_setup(hass: HomeAssistant) -> None:
                     friendly_name="InWall Outlet-0394DE Power",
                     unique_id="00:00:00:00:00:00_1_25_31",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=POWER_WATT,
+                    unit_of_measurement=UnitOfPower.WATT,
                     state="0.8",
                 ),
                 EntityTestInfo(
@@ -164,7 +160,7 @@ async def test_connectsense_setup(hass: HomeAssistant) -> None:
                     friendly_name="InWall Outlet-0394DE Energy kWh",
                     unique_id="00:00:00:00:00:00_1_25_32",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
-                    unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+                    unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                     state="175.85001",
                 ),
                 EntityTestInfo(
