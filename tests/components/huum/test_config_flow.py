@@ -4,11 +4,15 @@ from unittest.mock import patch
 import aiohttp
 import pytest
 
+from huum.exceptions import Forbidden
+
 from homeassistant import config_entries
 from homeassistant.components.huum.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
 
 TEST_USERNAME = "test-username"
 TEST_PASSWORD = "test-password"
@@ -48,6 +52,37 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_signup_flow_already_set_up(hass: HomeAssistant) -> None:
+    mock_config_entry = MockConfigEntry(
+        title="Huum Sauna",
+        domain=DOMAIN,
+        unique_id=TEST_USERNAME,
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.huum.config_flow.Huum.status",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.huum.async_setup_entry",
+        return_value=True,
+    ):
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+            },
+        )
+        await hass.async_block_till_done()
+        assert result2["type"] == FlowResultType.ABORT
+
+
 @pytest.mark.parametrize(
     (
         "raises",
@@ -55,7 +90,7 @@ async def test_form(hass: HomeAssistant) -> None:
     ),
     [
         (Exception, "unknown"),
-        (aiohttp.ClientError, "invalid_auth"),
+        (Forbidden, "invalid_auth"),
     ],
 )
 async def test_huum_errors(

@@ -51,6 +51,10 @@ class HuumConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unknown error")
                 errors["base"] = "unknown"
             else:
+                await self.async_set_unique_id(
+                    user_input[CONF_USERNAME], raise_on_progress=False
+                )
+                self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
