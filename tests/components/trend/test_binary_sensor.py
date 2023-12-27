@@ -7,10 +7,8 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import setup
-from homeassistant.components.trend.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, assert_setup_component, mock_restore_cache
@@ -313,23 +311,3 @@ async def test_invalid_min_sample(
         "Invalid config for 'binary_sensor' from integration 'trend': min_samples must "
         "be smaller than or equal to max_samples" in record.message
     )
-
-
-async def test_import_issue_creation(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-):
-    """Test if import issue is raised."""
-    await _setup_legacy_component(
-        hass,
-        {
-            "entity_id": "sensor.test_state",
-            "max_samples": 25,
-            "min_samples": 20,
-        },
-    )
-
-    issue = issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
-    )
-    assert issue

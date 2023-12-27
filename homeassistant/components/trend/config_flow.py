@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_ATTRIBUTE, CONF_ENTITY_ID, CONF_NAME, UnitOfTime
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -110,10 +109,3 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options[CONF_NAME])
-
-    async def async_step_import(self, import_config: Mapping[str, Any]) -> FlowResult:
-        """Import a sensor from YAML configuration."""
-        self._async_abort_entries_match({**import_config})
-        return self.async_create_entry(
-            data={**import_config},
-        )

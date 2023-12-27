@@ -7,15 +7,18 @@ import logging
 import math
 from typing import Any
 
+from helpers.entity import generate_entity_id
 import numpy as np
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
+    ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -23,20 +26,18 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
-    CONF_NAME,
     CONF_SENSORS,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_change_event,
 )
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 from homeassistant.util.dt import utcnow
@@ -56,7 +57,6 @@ from .const import (
     DEFAULT_MIN_GRADIENT,
     DEFAULT_MIN_SAMPLES,
     DEFAULT_SAMPLE_DURATION,
-    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,29 +102,26 @@ async def async_setup_platform(
 ) -> None:
     """Set up the trend sensors."""
 
+    entities = []
     for sensor_name, sensor_config in config[CONF_SENSORS].items():
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={CONF_NAME: sensor_name, **sensor_config},
+        entities.append(
+            SensorTrend(
+                name=sensor_config.get(CONF_FRIENDLY_NAME, sensor_name),
+                entity_id=sensor_config[CONF_ENTITY_ID],
+                attribute=sensor_config.get(CONF_ATTRIBUTE),
+                invert=sensor_config[CONF_INVERT],
+                sample_duration=sensor_config[CONF_SAMPLE_DURATION],
+                min_gradient=sensor_config[CONF_MIN_GRADIENT],
+                min_samples=sensor_config[CONF_MIN_SAMPLES],
+                max_samples=sensor_config[CONF_MAX_SAMPLES],
+                device_class=sensor_config.get(CONF_DEVICE_CLASS),
+                sensor_entity_id=generate_entity_id(
+                    ENTITY_ID_FORMAT, sensor_name, hass=hass
+                ),
             )
         )
 
-    async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2024.7.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "Trend",
-        },
-    )
+    async_add_entities(entities)
 
 
 async def async_setup_entry(
@@ -134,7 +131,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up trend sensor from config entry."""
 
-    async_add_entities([SensorTrend(entry)])
+    async_add_entities(
+        [
+            SensorTrend(
+                name=entry.title,
+                entity_id=entry.options[CONF_ENTITY_ID],
+                attribute=entry.options.get(CONF_ATTRIBUTE),
+                invert=entry.options[CONF_INVERT],
+                sample_duration=entry.options.get(
+                    CONF_SAMPLE_DURATION, DEFAULT_SAMPLE_DURATION
+                ),
+                min_gradient=entry.options.get(CONF_MIN_GRADIENT, DEFAULT_MIN_GRADIENT),
+                min_samples=entry.options.get(CONF_MIN_SAMPLES, DEFAULT_MIN_SAMPLES),
+                max_samples=entry.options.get(CONF_MAX_SAMPLES, DEFAULT_MAX_SAMPLES),
+                unique_id=entry.entry_id,
+            )
+        ]
+    )
 
 
 class SensorTrend(BinarySensorEntity, RestoreEntity):
@@ -146,31 +159,37 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        name: str,
+        entity_id: str,
+        attribute: str | None,
+        invert: bool,
+        sample_duration: int,
+        min_gradient: float,
+        min_samples: int,
+        max_samples: int,
+        unique_id: str | None = None,
+        device_class: BinarySensorDeviceClass | None = None,
+        sensor_entity_id: str | None = None,
     ) -> None:
         """Initialize the sensor."""
-        self._entity_id = config_entry.options[CONF_ENTITY_ID]
-        self._attribute = config_entry.options.get(CONF_ATTRIBUTE)
-        self._invert = config_entry.options[CONF_INVERT]
-        self._sample_duration = config_entry.options.get(
-            CONF_SAMPLE_DURATION, DEFAULT_SAMPLE_DURATION
-        )
-        self._min_gradient = config_entry.options.get(
-            CONF_MIN_GRADIENT, DEFAULT_MIN_GRADIENT
-        )
-        self._min_samples = config_entry.options.get(
-            CONF_MIN_SAMPLES, DEFAULT_MIN_SAMPLES
-        )
-        self.samples: deque = deque(
-            maxlen=int(config_entry.options.get(CONF_MAX_SAMPLES, DEFAULT_MAX_SAMPLES))
-        )
+        self._entity_id = entity_id
+        self._attribute = attribute
+        self._invert = invert
+        self._sample_duration = sample_duration
+        self._min_gradient = min_gradient
+        self._min_samples = min_samples
+        self.samples: deque = deque(maxlen=int(max_samples))
 
-        # this is only available if imported from YAML
-        # keep this for backwards compatibility
-        self._attr_device_class = config_entry.options.get(CONF_DEVICE_CLASS)
+        self._attr_name = name
 
-        self._attr_unique_id = config_entry.entry_id
-        self._attr_name = config_entry.title
+        if device_class:
+            self._attr_device_class = device_class
+
+        if unique_id:
+            self._attr_unique_id = unique_id
+
+        if sensor_entity_id:
+            self.entity_id = sensor_entity_id
 
     @property
     def is_on(self) -> bool | None:
