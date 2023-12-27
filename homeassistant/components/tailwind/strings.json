@@ -47,11 +47,11 @@
   },
   "entity": {
     "binary_sensor": {
-      "operational_status": {
-        "name": "Operational status",
+      "operational_problem": {
+        "name": "Operational problem",
         "state": {
-          "off": "Locked out",
-          "on": "Operational"
+          "off": "Operational",
+          "on": "Locked out"
         }
       }
     },
