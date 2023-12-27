@@ -243,7 +243,7 @@ async def test_login_view_create_pipeline(
     create_pipeline_mock.assert_awaited_once_with(
         hass,
         stt_engine_id="stt.home_assistant_cloud",
-        tts_engine_id="cloud",
+        tts_engine_id="tts.home_assistant_cloud",
         pipeline_name="Home Assistant Cloud",
     )
 
@@ -282,7 +282,7 @@ async def test_login_view_create_pipeline_fail(
     create_pipeline_mock.assert_awaited_once_with(
         hass,
         stt_engine_id="stt.home_assistant_cloud",
-        tts_engine_id="cloud",
+        tts_engine_id="tts.home_assistant_cloud",
         pipeline_name="Home Assistant Cloud",
     )
 

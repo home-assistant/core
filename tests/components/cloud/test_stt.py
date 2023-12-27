@@ -66,12 +66,6 @@ PIPELINE_DATA = {
 
 
 @pytest.fixture(autouse=True)
-async def load_homeassistant(hass: HomeAssistant) -> None:
-    """Load the homeassistant integration."""
-    assert await async_setup_component(hass, "homeassistant", {})
-
-
-@pytest.fixture(autouse=True)
 async def delay_save_fixture() -> AsyncGenerator[None, None]:
     """Load the homeassistant integration."""
     with patch("homeassistant.helpers.collection.SAVE_DELAY", new=0):

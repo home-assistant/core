@@ -12,7 +12,9 @@ from homeassistant.components.cloud import DOMAIN, const, tts
 from homeassistant.components.tts import DOMAIN as TTS_DOMAIN
 from homeassistant.components.tts.helper import get_engine_instance
 from homeassistant.config import async_process_ha_core_config
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 
 from tests.typing import ClientSessionGenerator
@@ -70,6 +72,10 @@ def test_schema() -> None:
                 "gender": "female",
             },
         ),
+        (
+            "tts.home_assistant_cloud",
+            None,
+        ),
     ],
 )
 async def test_prefs_default_voice(
@@ -104,9 +110,17 @@ async def test_prefs_default_voice(
     assert engine.default_options == {"gender": "male", "audio_output": "mp3"}
 
 
+@pytest.mark.parametrize(
+    "engine_id",
+    [
+        DOMAIN,
+        "tts.home_assistant_cloud",
+    ],
+)
 async def test_provider_properties(
     hass: HomeAssistant,
     cloud: MagicMock,
+    engine_id: str,
 ) -> None:
     """Test cloud provider."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -115,7 +129,7 @@ async def test_provider_properties(
     on_start_callback = cloud.register_on_start.call_args[0][0]
     await on_start_callback()
 
-    engine = get_engine_instance(hass, DOMAIN)
+    engine = get_engine_instance(hass, engine_id)
 
     assert engine is not None
     assert engine.supported_options == ["gender", "voice", "audio_output"]
@@ -132,6 +146,7 @@ async def test_provider_properties(
     [
         ({"platform": DOMAIN}, DOMAIN),
         ({"engine_id": DOMAIN}, DOMAIN),
+        ({"engine_id": "tts.home_assistant_cloud"}, "tts.home_assistant_cloud"),
     ],
 )
 @pytest.mark.parametrize(
@@ -241,3 +256,78 @@ async def test_get_tts_audio_logged_out(
     assert mock_process_tts.call_args.kwargs["language"] == "en-US"
     assert mock_process_tts.call_args.kwargs["gender"] == "female"
     assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+
+
+@pytest.mark.parametrize(
+    ("mock_process_tts_return_value", "mock_process_tts_side_effect"),
+    [
+        (b"", None),
+        (None, VoiceError("Boom!")),
+    ],
+)
+async def test_tts_entity(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: EntityRegistry,
+    cloud: MagicMock,
+    mock_process_tts_return_value: bytes | None,
+    mock_process_tts_side_effect: Exception | None,
+) -> None:
+    """Test text-to-speech entity."""
+    mock_process_tts = AsyncMock(
+        return_value=mock_process_tts_return_value,
+        side_effect=mock_process_tts_side_effect,
+    )
+    cloud.voice.process_tts = mock_process_tts
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+    on_start_callback = cloud.register_on_start.call_args[0][0]
+    await on_start_callback()
+    client = await hass_client()
+    entity_id = "tts.home_assistant_cloud"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+    url = "/api/tts_get_url"
+    data = {
+        "engine_id": entity_id,
+        "message": "There is someone at the door.",
+    }
+
+    req = await client.post(url, json=data)
+    assert req.status == HTTPStatus.OK
+    response = await req.json()
+
+    assert response == {
+        "url": (
+            "http://example.local:8123/api/tts_proxy/"
+            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
+            f"_en-us_e09b5a0968_{entity_id}.mp3"
+        ),
+        "path": (
+            "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
+            f"_en-us_e09b5a0968_{entity_id}.mp3"
+        ),
+    }
+    await hass.async_block_till_done()
+
+    assert mock_process_tts.call_count == 1
+    assert mock_process_tts.call_args is not None
+    assert mock_process_tts.call_args.kwargs["text"] == "There is someone at the door."
+    assert mock_process_tts.call_args.kwargs["language"] == "en-US"
+    assert mock_process_tts.call_args.kwargs["gender"] == "female"
+    assert mock_process_tts.call_args.kwargs["output"] == "mp3"
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+
+    # Test removing the entity
+    entity_registry.async_remove(entity_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is None
