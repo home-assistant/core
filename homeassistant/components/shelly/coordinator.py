@@ -182,16 +182,17 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
     async def action_change_button(self, target_state: str) -> bool:
         """Change the state of the shelly button."""
 
-        for relay in self.device.settings["relays"]:
-            LOGGER.debug(f"Button Type before: {relay['btn_type']}")
-            await self.device.http_request(
-                "get", "settings/relay/0", {"btn_type": target_state}
-            )
-            # asyncio.run(self.device.update_settings())
-            # LOGGER.debug(
-            #     f"Button Type after: {self.device.settings['relays'][device_id]['btn_type']}"
-            # )
-            LOGGER.debug(self.device.name)
+        assert self.device.blocks
+
+        for block in self.device.blocks:
+            if block.type != "device":
+                channel = int(block.channel or 0)
+                await self.device.http_request(
+                    "get", f"settings/relay/{channel}", {"btn_type": target_state}
+                )
+
+        # Updating the entry after changing button state
+        await self._async_reload_entry()
 
         return True
 
@@ -488,6 +489,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                 f"Error while trying to change the RPC shelly button state: {str(err)}"
             )
             return False
+
+        # Updating the entry after changing button state
+        await self._async_reload_entry()
 
         return True
 

@@ -331,6 +331,19 @@ SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         removal_condition=lambda _, block: block.valve == "not_connected",
     ),
+    ("settings", "btn_type"): BlockSensorDescription(
+        key="btn_type",
+        translation_key="button_state",
+        name="Button State",
+        value=None,
+        icon="mdi:button-pointer",
+        device_class=SensorDeviceClass.ENUM,
+        state_class=SensorStateClass.MEASUREMENT,
+        options=["toggle", "detached", "momentary", "edge"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_visible_default=True,
+        entity_registry_enabled_default=True,
+    ),
 }
 
 REST_SENSORS: Final = {
@@ -351,18 +364,6 @@ REST_SENSORS: Final = {
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    "buttonstate": RestSensorDescription(
-        key="switch",
-        # sub_key="btn_type",
-        name="Button State",
-        icon="mdi:button-pointer",
-        device_class=SensorDeviceClass.ENUM,
-        state_class=SensorStateClass.MEASUREMENT,
-        options=["toggle", "detached", "momentary", "edge"],
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_visible_default=True,
-        entity_registry_enabled_default=True,
     ),
 }
 

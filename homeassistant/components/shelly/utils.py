@@ -98,6 +98,24 @@ def get_block_entity_name(
     return channel_name
 
 
+def get_block_channel_setting(
+    device: BlockDevice, block: Block, settings_key: str
+) -> str | None:
+    """Get string setting based on device, block id and settings key."""
+    settings_result: str = ""
+
+    if not block or block.type == "device":
+        return settings_result
+
+    assert block.channel
+
+    mode = cast(str, block.type) + "s"
+    if mode in device.settings:
+        settings_result = device.settings[mode][int(block.channel)].get(settings_key)
+
+    return settings_result
+
+
 def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
     """Get name based on device and channel name."""
     entity_name = device.name

@@ -222,7 +222,6 @@ ALL_DEVICES_ATTR_NAME: Final = "all_devices"
 ALL_DEVICES_ATTR_DEFAULT_VALUE: Final = False
 
 # Services
-SERVICE_RELOAD = "reload"
 SERVICE_CHANGE_BUTTON_STATE = "change_button_state"
 
 

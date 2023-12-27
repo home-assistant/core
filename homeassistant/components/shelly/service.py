@@ -12,7 +12,6 @@ from .const import (
     DOMAIN,
     LOGGER,
     SERVICE_CHANGE_BUTTON_STATE,
-    SERVICE_RELOAD,
     TARGET_STATE_ATTR_DEFAULT_VALUE,
     TARGET_STATE_ATTR_NAME,
     ButtonType,
@@ -102,9 +101,6 @@ async def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         await shelly_device.action_change_button(target_state)
         return True
 
-    async def reload_service(call: ServiceCall) -> None:
-        LOGGER.error(f"reload_service {str(call.data)}")
-
     async def change_button_state_service(call: ServiceCall) -> None:
         """Handle service call."""
 
@@ -116,14 +112,12 @@ async def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
         shelly_devices: dict[str, ShellyEntryData] = get_entry_data(hass)
 
-        LOGGER.debug(f"Shelly devices config entry keys : {shelly_devices.keys()}")
-
         devices_to_change = get_devices_to_change(
             shelly_devices, change_all_devices, input_devices_to_change
         )
 
         if len(devices_to_change) == 0:
-            LOGGER.warning(f"Didn't find devices to change, the input {str(call.data)}")
+            LOGGER.error(f"Didn't find devices to change, the input {str(call.data)}")
             return
 
         for device_to_change in devices_to_change:
@@ -131,7 +125,6 @@ async def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
         return
 
-    hass.services.async_register(DOMAIN, SERVICE_RELOAD, reload_service)
     hass.services.async_register(
         DOMAIN, SERVICE_CHANGE_BUTTON_STATE, change_button_state_service
     )

@@ -26,6 +26,7 @@ from .const import CONF_SLEEP_PERIOD, LOGGER
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .utils import (
     async_remove_shelly_entity,
+    get_block_channel_setting,
     get_block_entity_name,
     get_rpc_entity_name,
     get_rpc_key_instances,
@@ -93,6 +94,19 @@ def async_setup_block_attribute_entities(
                 async_remove_shelly_entity(hass, domain, unique_id)
             else:
                 blocks.append((block, sensor_id, description))
+
+        # Filtering sensors for settings (since they are not part of sensor_ids from block status)
+        if block.type not in ("device", "sensor"):
+            device_settings_sensors = {
+                key: value for key, value in sensors.items() if key[0] == "settings"
+            }
+
+            for sensor_key1, sensor_key2 in device_settings_sensors:
+                description = cast(
+                    BlockEntityDescription,
+                    device_settings_sensors.get((sensor_key1, sensor_key2)),
+                )
+                blocks.append((block, sensor_key2, description))
 
     if not blocks:
         return
@@ -280,7 +294,7 @@ class BlockEntityDescription(EntityDescription):
 
     icon_fn: Callable[[dict], str] | None = None
     unit_fn: Callable[[dict], str] | None = None
-    value: Callable[[Any], Any] = lambda val: val
+    value: Callable[[Any], Any] | None = lambda val: val
     available: Callable[[Block], bool] | None = None
     # Callable (settings, block), return true if entity should be removed
     removal_condition: Callable[[dict, Block], bool] | None = None
@@ -443,10 +457,15 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, Entity):
     @property
     def attribute_value(self) -> StateType:
         """Value of sensor."""
-        if (value := getattr(self.block, self.attribute)) is None:
-            return None
+        if callable(self.entity_description.value):
+            if (value := getattr(self.block, self.attribute)) is None:
+                return None
 
-        return cast(StateType, self.entity_description.value(value))
+            return cast(StateType, self.entity_description.value(value))
+
+        return get_block_channel_setting(
+            self.coordinator.device, self.block, self.attribute
+        )
 
     @property
     def available(self) -> bool:

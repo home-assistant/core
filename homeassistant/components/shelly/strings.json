@@ -17,10 +17,6 @@
           "description": "This setting overrides the selected targets and changes the state for all Shelly device buttons."
         }
       }
-    },
-    "reload": {
-      "name": "Reload",
-      "description": "Reload the Component by loading again all Shelly devices."
     }
   },
   "config": {
