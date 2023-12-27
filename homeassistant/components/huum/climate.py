@@ -93,11 +93,12 @@ class HuumDevice(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
-        if not self.target_temperature:
-            raise HomeAssistantError("No target temperature set, can't turn on sauna")
-
         if hvac_mode == HVACMode.HEAT:
-            temperature = self.target_temperature
+            temperature = (
+                self.target_temperature
+                if self.target_temperature
+                else int(self.min_temp)
+            )
             await self._turn_on(temperature)
         elif hvac_mode == HVACMode.OFF:
             await self._huum_handler.turn_off()
