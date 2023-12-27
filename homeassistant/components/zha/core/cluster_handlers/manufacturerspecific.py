@@ -149,6 +149,17 @@ class OppleRemote(ClusterHandler):
                 "buzzer": True,
                 "linkage_alarm": True,
             }
+        elif self.cluster.endpoint.model == "lumi.magnet.ac01":
+            self.ZCL_INIT_ATTRS = {
+                "detection_distance": True,
+            }
+        elif self.cluster.endpoint.model == "lumi.switch.acn047":
+            self.ZCL_INIT_ATTRS = {
+                "switch_mode": True,
+                "switch_type": True,
+                "startup_on_off": True,
+                "decoupled_mode": True,
+            }
 
     async def async_initialize_cluster_handler_specific(self, from_cache: bool) -> None:
         """Initialize cluster handler specific."""
