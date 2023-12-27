@@ -44,9 +44,7 @@
           "inhibited": "Inhibited",
           "isolated": "Isolated",
           "rest": "Rest",
-          "sabotated": "Sabotated",
-          "unavailable": "Unavailable",
-          "unknown": "Unknown"
+          "sabotated": "Sabotated"
         }
       }
     }

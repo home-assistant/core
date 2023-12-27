@@ -158,12 +158,12 @@ class ComelitVedoSensorEntity(CoordinatorEntity[ComelitVedoSystem], SensorEntity
     @property
     def available(self) -> bool:
         """Sensor availability."""
-        return self._zone_object.human_status.value != str(AlarmZoneState.UNAVAILABLE)
+        return self._zone_object.human_status != AlarmZoneState.UNAVAILABLE
 
     @property
     def native_value(self) -> StateType:
         """Sensor value."""
-        if self._zone_object.human_status.value == "unknown":
+        if (status := self._zone_object.human_status) == AlarmZoneState.UNKNOWN:
             return None
 
-        return self._zone_object.human_status.value
+        return status.value
