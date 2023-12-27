@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections import UserDict
 from collections.abc import Coroutine, ValuesView
 from enum import StrEnum
+from functools import partial
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
@@ -21,6 +22,11 @@ import homeassistant.util.uuid as uuid_util
 
 from . import storage
 from .debounce import Debouncer
+from .deprecation import (
+    DeprecatedConstantEnum,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from .frame import report
 from .json import JSON_DUMP, find_paths_unserializable_data
 from .typing import UNDEFINED, UndefinedType
@@ -36,7 +42,7 @@ DATA_REGISTRY = "device_registry"
 EVENT_DEVICE_REGISTRY_UPDATED = "device_registry_updated"
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 3
+STORAGE_VERSION_MINOR = 4
 SAVE_DELAY = 10
 CLEANUP_DELAY = 10
 
@@ -61,9 +67,17 @@ class DeviceEntryDisabler(StrEnum):
 
 
 # DISABLED_* are deprecated, to be removed in 2022.3
-DISABLED_CONFIG_ENTRY = DeviceEntryDisabler.CONFIG_ENTRY.value
-DISABLED_INTEGRATION = DeviceEntryDisabler.INTEGRATION.value
-DISABLED_USER = DeviceEntryDisabler.USER.value
+_DEPRECATED_DISABLED_CONFIG_ENTRY = DeprecatedConstantEnum(
+    DeviceEntryDisabler.CONFIG_ENTRY, "2025.1"
+)
+_DEPRECATED_DISABLED_INTEGRATION = DeprecatedConstantEnum(
+    DeviceEntryDisabler.INTEGRATION, "2025.1"
+)
+_DEPRECATED_DISABLED_USER = DeprecatedConstantEnum(DeviceEntryDisabler.USER, "2025.1")
+
+# Both can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 
 class DeviceInfo(TypedDict, total=False):
@@ -79,6 +93,7 @@ class DeviceInfo(TypedDict, total=False):
     manufacturer: str | None
     model: str | None
     name: str | None
+    serial_number: str | None
     suggested_area: str | None
     sw_version: str | None
     hw_version: str | None
@@ -102,6 +117,7 @@ DEVICE_INFO_TYPES = {
         "manufacturer",
         "model",
         "name",
+        "serial_number",
         "suggested_area",
         "sw_version",
         "via_device",
@@ -229,6 +245,7 @@ class DeviceEntry:
     model: str | None = attr.ib(default=None)
     name_by_user: str | None = attr.ib(default=None)
     name: str | None = attr.ib(default=None)
+    serial_number: str | None = attr.ib(default=None)
     suggested_area: str | None = attr.ib(default=None)
     sw_version: str | None = attr.ib(default=None)
     via_device_id: str | None = attr.ib(default=None)
@@ -257,6 +274,7 @@ class DeviceEntry:
             "model": self.model,
             "name_by_user": self.name_by_user,
             "name": self.name,
+            "serial_number": self.serial_number,
             "sw_version": self.sw_version,
             "via_device_id": self.via_device_id,
         }
@@ -359,6 +377,10 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 # Version 1.3 adds hw_version
                 for device in old_data["devices"]:
                     device["hw_version"] = None
+            if old_minor_version < 4:
+                # Introduced in 2023.11
+                for device in old_data["devices"]:
+                    device["serial_number"] = None
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -490,6 +512,7 @@ class DeviceRegistry:
         manufacturer: str | None | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
+        serial_number: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
         via_device: tuple[str, str] | None | UndefinedType = UNDEFINED,
@@ -514,6 +537,7 @@ class DeviceRegistry:
             ("manufacturer", manufacturer),
             ("model", model),
             ("name", name),
+            ("serial_number", serial_number),
             ("suggested_area", suggested_area),
             ("sw_version", sw_version),
             ("via_device", via_device),
@@ -591,6 +615,7 @@ class DeviceRegistry:
             merge_identifiers=identifiers or UNDEFINED,
             model=model,
             name=name,
+            serial_number=serial_number,
             suggested_area=suggested_area,
             sw_version=sw_version,
             via_device_id=via_device_id,
@@ -620,6 +645,7 @@ class DeviceRegistry:
         name: str | None | UndefinedType = UNDEFINED,
         new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
+        serial_number: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
         via_device_id: str | None | UndefinedType = UNDEFINED,
@@ -709,6 +735,7 @@ class DeviceRegistry:
             ("model", model),
             ("name", name),
             ("name_by_user", name_by_user),
+            ("serial_number", serial_number),
             ("suggested_area", suggested_area),
             ("sw_version", sw_version),
             ("via_device_id", via_device_id),
@@ -802,6 +829,7 @@ class DeviceRegistry:
                     model=device["model"],
                     name_by_user=device["name_by_user"],
                     name=device["name"],
+                    serial_number=device["serial_number"],
                     sw_version=device["sw_version"],
                     via_device_id=device["via_device_id"],
                 )
@@ -809,15 +837,8 @@ class DeviceRegistry:
             for device in data["deleted_devices"]:
                 deleted_devices[device["id"]] = DeletedDeviceEntry(
                     config_entries=set(device["config_entries"]),
-                    # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
-                    connections={
-                        tuple(conn)  # type: ignore[misc]
-                        for conn in device["connections"]
-                    },
-                    identifiers={
-                        tuple(iden)  # type: ignore[misc]
-                        for iden in device["identifiers"]
-                    },
+                    connections={tuple(conn) for conn in device["connections"]},
+                    identifiers={tuple(iden) for iden in device["identifiers"]},
                     id=device["id"],
                     orphaned_timestamp=device["orphaned_timestamp"],
                 )
@@ -851,6 +872,7 @@ class DeviceRegistry:
                 "model": entry.model,
                 "name_by_user": entry.name_by_user,
                 "name": entry.name,
+                "serial_number": entry.serial_number,
                 "sw_version": entry.sw_version,
                 "via_device_id": entry.via_device_id,
             }

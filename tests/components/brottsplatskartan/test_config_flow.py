@@ -23,9 +23,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            CONF_AREA: "none",
-        },
+        {},
     )
     await hass.async_block_till_done()
 
@@ -51,7 +49,6 @@ async def test_form_location(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_AREA: "none",
             CONF_LOCATION: {
                 CONF_LATITUDE: 59.32,
                 CONF_LONGITUDE: 18.06,

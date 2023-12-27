@@ -7,7 +7,11 @@ from unittest import mock
 from urllib.parse import parse_qs
 
 from aiohttp import ClientSession
-from aiohttp.client_exceptions import ClientError, ClientResponseError
+from aiohttp.client_exceptions import (
+    ClientConnectionError,
+    ClientError,
+    ClientResponseError,
+)
 from aiohttp.streams import StreamReader
 from multidict import CIMultiDict
 from yarl import URL
@@ -53,6 +57,7 @@ class AiohttpClientMocker:
         exc=None,
         cookies=None,
         side_effect=None,
+        closing=None,
     ):
         """Mock a request."""
         if not isinstance(url, RETYPE):
@@ -72,6 +77,7 @@ class AiohttpClientMocker:
                 exc=exc,
                 headers=headers,
                 side_effect=side_effect,
+                closing=closing,
             )
         )
 
@@ -165,6 +171,7 @@ class AiohttpClientMockResponse:
         exc=None,
         headers=None,
         side_effect=None,
+        closing=None,
     ):
         """Initialize a fake response."""
         if json is not None:
@@ -178,9 +185,10 @@ class AiohttpClientMockResponse:
         self.method = method
         self._url = url
         self.status = status
-        self.response = response
+        self._response = response
         self.exc = exc
         self.side_effect = side_effect
+        self.closing = closing
         self._headers = CIMultiDict(headers or {})
         self._cookies = {}
 
@@ -271,6 +279,19 @@ class AiohttpClientMockResponse:
 
     def close(self):
         """Mock close."""
+
+    async def wait_for_close(self):
+        """Wait until all requests are done.
+
+        Do nothing as we are mocking.
+        """
+
+    @property
+    def response(self):
+        """Property method to expose the response to other read methods."""
+        if self.closing:
+            raise ClientConnectionError("Connection closed")
+        return self._response
 
 
 @contextmanager

@@ -24,7 +24,6 @@ from .const import (
 )
 
 UNIT_PREFIXES = [
-    selector.SelectOptionDict(value="none", label="none"),
     selector.SelectOptionDict(value="n", label="n (nano)"),
     selector.SelectOptionDict(value="µ", label="µ (micro)"),
     selector.SelectOptionDict(value="m", label="m (milli)"),
@@ -52,7 +51,7 @@ OPTIONS_SCHEMA = vol.Schema(
             ),
         ),
         vol.Required(CONF_TIME_WINDOW): selector.DurationSelector(),
-        vol.Required(CONF_UNIT_PREFIX, default="none"): selector.SelectSelector(
+        vol.Optional(CONF_UNIT_PREFIX): selector.SelectSelector(
             selector.SelectSelectorConfig(options=UNIT_PREFIXES),
         ),
         vol.Required(CONF_UNIT_TIME, default=UnitOfTime.HOURS): selector.SelectSelector(

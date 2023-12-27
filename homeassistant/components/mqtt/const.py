@@ -42,9 +42,18 @@ CONF_MODE_COMMAND_TOPIC = "mode_command_topic"
 CONF_MODE_LIST = "modes"
 CONF_MODE_STATE_TEMPLATE = "mode_state_template"
 CONF_MODE_STATE_TOPIC = "mode_state_topic"
+CONF_PAYLOAD_CLOSE = "payload_close"
+CONF_PAYLOAD_OPEN = "payload_open"
+CONF_PAYLOAD_STOP = "payload_stop"
+CONF_POSITION_CLOSED = "position_closed"
+CONF_POSITION_OPEN = "position_open"
 CONF_POWER_COMMAND_TOPIC = "power_command_topic"
 CONF_POWER_COMMAND_TEMPLATE = "power_command_template"
 CONF_PRECISION = "precision"
+CONF_STATE_CLOSED = "state_closed"
+CONF_STATE_CLOSING = "state_closing"
+CONF_STATE_OPEN = "state_open"
+CONF_STATE_OPENING = "state_opening"
 CONF_TEMP_COMMAND_TEMPLATE = "temperature_command_template"
 CONF_TEMP_COMMAND_TOPIC = "temperature_command_topic"
 CONF_TEMP_STATE_TEMPLATE = "temperature_state_template"
@@ -81,11 +90,16 @@ DEFAULT_ENCODING = "utf-8"
 DEFAULT_OPTIMISTIC = False
 DEFAULT_QOS = 0
 DEFAULT_PAYLOAD_AVAILABLE = "online"
+DEFAULT_PAYLOAD_CLOSE = "CLOSE"
 DEFAULT_PAYLOAD_NOT_AVAILABLE = "offline"
+DEFAULT_PAYLOAD_OPEN = "OPEN"
 DEFAULT_PORT = 1883
 DEFAULT_RETAIN = False
 DEFAULT_WS_HEADERS: dict[str, str] = {}
 DEFAULT_WS_PATH = "/"
+DEFAULT_POSITION_CLOSED = 0
+DEFAULT_POSITION_OPEN = 100
+DEFAULT_RETAIN = False
 
 PROTOCOL_31 = "3.1"
 PROTOCOL_311 = "3.1.1"
@@ -146,6 +160,7 @@ PLATFORMS = [
     Platform.TEXT,
     Platform.UPDATE,
     Platform.VACUUM,
+    Platform.VALVE,
     Platform.WATER_HEATER,
 ]
 
@@ -173,5 +188,6 @@ RELOADABLE_PLATFORMS = [
     Platform.TEXT,
     Platform.UPDATE,
     Platform.VACUUM,
+    Platform.VALVE,
     Platform.WATER_HEATER,
 ]

@@ -29,7 +29,7 @@ async def async_setup_platform(
     lights = []
     for entry in discovery_info[CONF_LIGHTS]:
         hub: ModbusHub = get_hub(hass, discovery_info[CONF_NAME])
-        lights.append(ModbusLight(hub, entry))
+        lights.append(ModbusLight(hass, hub, entry))
     async_add_entities(lights)
 
 

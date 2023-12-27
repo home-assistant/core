@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 import logging
 from typing import Any
 
@@ -10,6 +10,7 @@ from pyfibaro.fibaro_client import FibaroClient
 from pyfibaro.fibaro_device import DeviceModel
 from pyfibaro.fibaro_room import RoomModel
 from pyfibaro.fibaro_scene import SceneModel
+from pyfibaro.fibaro_state_resolver import FibaroEvent, FibaroStateResolver
 from requests.exceptions import HTTPError
 
 from homeassistant.config_entries import ConfigEntry
@@ -46,6 +47,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.LOCK,
     Platform.SWITCH,
+    Platform.EVENT,
 ]
 
 FIBARO_TYPEMAP = {
@@ -95,8 +97,11 @@ class FibaroController:
         # All scenes
         self._scenes: list[SceneModel] = []
         self._callbacks: dict[int, list[Any]] = {}  # Update value callbacks by deviceId
+        # Event callbacks by device id
+        self._event_callbacks: dict[int, list[Callable[[FibaroEvent], None]]] = {}
         self.hub_serial: str  # Unique serial number of the hub
         self.hub_name: str  # The friendly name of the hub
+        self.hub_model: str
         self.hub_software_version: str
         self.hub_api_url: str = config[CONF_URL]
         # Device infos by fibaro device id
@@ -109,6 +114,7 @@ class FibaroController:
         info = self._client.read_info()
         self.hub_serial = info.serial_number
         self.hub_name = info.hc_name
+        self.hub_model = info.platform
         self.hub_software_version = info.current_version
 
         if connected is False:
@@ -178,10 +184,31 @@ class FibaroController:
             for callback in self._callbacks[item]:
                 callback()
 
+        resolver = FibaroStateResolver(state)
+        for event in resolver.get_events():
+            # event does not always have a fibaro id, therefore it is
+            # essential that we first check for relevant event type
+            if (
+                event.event_type.lower() == "centralsceneevent"
+                and event.fibaro_id in self._event_callbacks
+            ):
+                for callback in self._event_callbacks[event.fibaro_id]:
+                    callback(event)
+
     def register(self, device_id: int, callback: Any) -> None:
         """Register device with a callback for updates."""
-        self._callbacks.setdefault(device_id, [])
-        self._callbacks[device_id].append(callback)
+        device_callbacks = self._callbacks.setdefault(device_id, [])
+        device_callbacks.append(callback)
+
+    def register_event(
+        self, device_id: int, callback: Callable[[FibaroEvent], None]
+    ) -> None:
+        """Register device with a callback for central scene events.
+
+        The callback receives one parameter with the event.
+        """
+        device_callbacks = self._event_callbacks.setdefault(device_id, [])
+        device_callbacks.append(callback)
 
     def get_children(self, device_id: int) -> list[DeviceModel]:
         """Get a list of child devices."""
@@ -203,11 +230,8 @@ class FibaroController:
     def get_siblings(self, device: DeviceModel) -> list[DeviceModel]:
         """Get the siblings of a device."""
         if device.has_endpoint_id:
-            return self.get_children2(
-                self._device_map[device.fibaro_id].parent_fibaro_id,
-                self._device_map[device.fibaro_id].endpoint_id,
-            )
-        return self.get_children(self._device_map[device.fibaro_id].parent_fibaro_id)
+            return self.get_children2(device.parent_fibaro_id, device.endpoint_id)
+        return self.get_children(device.parent_fibaro_id)
 
     @staticmethod
     def _map_device_to_platform(device: DeviceModel) -> Platform | None:
@@ -229,6 +253,8 @@ class FibaroController:
                 platform = Platform.COVER
             elif "secure" in device.actions:
                 platform = Platform.LOCK
+            elif device.has_central_scene_event:
+                platform = Platform.EVENT
             elif device.value.has_value:
                 if device.value.is_bool_value:
                     platform = Platform.BINARY_SENSOR
@@ -383,9 +409,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, controller.hub_serial)},
+        serial_number=controller.hub_serial,
         manufacturer="Fibaro",
         name=controller.hub_name,
-        model=controller.hub_serial,
+        model=controller.hub_model,
         sw_version=controller.hub_software_version,
         configuration_url=controller.hub_api_url.removesuffix("/api/"),
     )

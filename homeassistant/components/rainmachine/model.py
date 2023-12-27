@@ -4,28 +4,28 @@ from dataclasses import dataclass
 from homeassistant.helpers.entity import EntityDescription
 
 
-@dataclass
+@dataclass(frozen=True)
 class RainMachineEntityDescriptionMixinApiCategory:
     """Define an entity description mixin to include an API category."""
 
     api_category: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class RainMachineEntityDescriptionMixinDataKey:
     """Define an entity description mixin to include a data payload key."""
 
     data_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class RainMachineEntityDescriptionMixinUid:
     """Define an entity description mixin to include an activity UID."""
 
     uid: int
 
 
-@dataclass
+@dataclass(frozen=True)
 class RainMachineEntityDescription(
     EntityDescription, RainMachineEntityDescriptionMixinApiCategory
 ):

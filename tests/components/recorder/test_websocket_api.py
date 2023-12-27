@@ -14,11 +14,12 @@ from homeassistant.components.recorder.db_schema import Statistics, StatisticsSh
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
-    get_latest_short_term_statistics,
+    get_latest_short_term_statistics_with_session,
     get_metadata,
     get_short_term_statistics_run_cache,
     list_statistic_ids,
 )
+from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.recorder.websocket_api import UNIT_SCHEMA
 from homeassistant.components.sensor import UNIT_CONVERTERS
 from homeassistant.core import HomeAssistant
@@ -636,9 +637,13 @@ async def test_statistic_during_period(
         "change": (imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"])
         * 1000,
     }
-    stats = get_latest_short_term_statistics(
-        hass, {"sensor.test"}, {"last_reset", "max", "mean", "min", "state", "sum"}
-    )
+    with session_scope(hass=hass, read_only=True) as session:
+        stats = get_latest_short_term_statistics_with_session(
+            hass,
+            session,
+            {"sensor.test"},
+            {"last_reset", "max", "mean", "min", "state", "sum"},
+        )
     start = imported_stats_5min[-1]["start"].timestamp()
     end = start + (5 * 60)
     assert stats == {
@@ -2222,9 +2227,7 @@ async def test_recorder_info_migration_queue_exhausted(
     ), patch(
         "homeassistant.components.recorder.core.create_engine",
         new=create_engine_test,
-    ), patch.object(
-        recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1
-    ), patch.object(
+    ), patch.object(recorder.core, "MAX_QUEUE_BACKLOG_MIN_VALUE", 1), patch.object(
         recorder.core, "QUEUE_PERCENTAGE_ALLOWED_AVAILABLE_MEMORY", 0
     ), patch(
         "homeassistant.components.recorder.migration._apply_update",

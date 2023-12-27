@@ -33,7 +33,6 @@ from .const import (
     ATTR_LEVEL,
     ATTR_SERIAL,
     ATTR_SPEED,
-    ATTR_TYPE,
     CONF_FFMPEG_ARGUMENTS,
     DATA_COORDINATOR,
     DEFAULT_CAMERA_USERNAME,
@@ -45,7 +44,6 @@ from .const import (
     DOMAIN,
     SERVICE_ALARM_SOUND,
     SERVICE_ALARM_TRIGGER,
-    SERVICE_DETECTION_SENSITIVITY,
     SERVICE_PTZ,
     SERVICE_WAKE_DEVICE,
 )
@@ -155,15 +153,6 @@ async def async_setup_entry(
         SERVICE_ALARM_SOUND,
         {vol.Required(ATTR_LEVEL): cv.positive_int},
         "perform_alarm_sound",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_DETECTION_SENSITIVITY,
-        {
-            vol.Required(ATTR_LEVEL): cv.positive_int,
-            vol.Required(ATTR_TYPE): cv.positive_int,
-        },
-        "perform_set_alarm_detection_sensibility",
     )
 
 
@@ -329,25 +318,3 @@ class EzvizCamera(EzvizEntity, Camera):
             raise HTTPError(
                 "Cannot set alarm sound level for on movement detected"
             ) from err
-
-    def perform_set_alarm_detection_sensibility(
-        self, level: int, type_value: int
-    ) -> None:
-        """Set camera detection sensibility level service."""
-        try:
-            self.coordinator.ezviz_client.detection_sensibility(
-                self._serial, level, type_value
-            )
-        except (HTTPError, PyEzvizError) as err:
-            raise PyEzvizError("Cannot set detection sensitivity level") from err
-
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            "service_depreciation_detection_sensibility",
-            breaks_in_ha_version="2023.12.0",
-            is_fixable=True,
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="service_depreciation_detection_sensibility",
-        )

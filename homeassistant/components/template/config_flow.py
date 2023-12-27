@@ -37,8 +37,6 @@ from .const import DOMAIN
 from .sensor import async_create_preview_sensor
 from .template_entity import TemplateEntity
 
-NONE_SENTINEL = "none"
-
 
 def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
     """Generate schema."""
@@ -48,71 +46,50 @@ def generate_schema(domain: str, flow_type: str) -> dict[vol.Marker, Any]:
         schema = {
             vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
                 selector.SelectSelectorConfig(
-                    options=[
-                        NONE_SENTINEL,
-                        *sorted(
-                            [cls.value for cls in BinarySensorDeviceClass],
-                            key=str.casefold,
-                        ),
-                    ],
+                    options=[cls.value for cls in BinarySensorDeviceClass],
                     mode=selector.SelectSelectorMode.DROPDOWN,
                     translation_key="binary_sensor_device_class",
+                    sort=True,
                 ),
             )
         }
 
     if domain == Platform.SENSOR:
         schema = {
-            vol.Optional(
-                CONF_UNIT_OF_MEASUREMENT, default=NONE_SENTINEL
-            ): selector.SelectSelector(
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
                 selector.SelectSelectorConfig(
-                    options=[
-                        NONE_SENTINEL,
-                        *sorted(
-                            {
-                                str(unit)
-                                for units in DEVICE_CLASS_UNITS.values()
-                                for unit in units
-                                if unit is not None
-                            },
-                            key=str.casefold,
-                        ),
-                    ],
+                    options=list(
+                        {
+                            str(unit)
+                            for units in DEVICE_CLASS_UNITS.values()
+                            for unit in units
+                            if unit is not None
+                        }
+                    ),
                     mode=selector.SelectSelectorMode.DROPDOWN,
                     translation_key="sensor_unit_of_measurement",
                     custom_value=True,
+                    sort=True,
                 ),
             ),
-            vol.Optional(
-                CONF_DEVICE_CLASS, default=NONE_SENTINEL
-            ): selector.SelectSelector(
+            vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=[
-                        NONE_SENTINEL,
-                        *sorted(
-                            [
-                                cls.value
-                                for cls in SensorDeviceClass
-                                if cls != SensorDeviceClass.ENUM
-                            ],
-                            key=str.casefold,
-                        ),
+                        cls.value
+                        for cls in SensorDeviceClass
+                        if cls != SensorDeviceClass.ENUM
                     ],
                     mode=selector.SelectSelectorMode.DROPDOWN,
                     translation_key="sensor_device_class",
+                    sort=True,
                 ),
             ),
-            vol.Optional(
-                CONF_STATE_CLASS, default=NONE_SENTINEL
-            ): selector.SelectSelector(
+            vol.Optional(CONF_STATE_CLASS): selector.SelectSelector(
                 selector.SelectSelectorConfig(
-                    options=[
-                        NONE_SENTINEL,
-                        *sorted([cls.value for cls in SensorStateClass]),
-                    ],
+                    options=[cls.value for cls in SensorStateClass],
                     mode=selector.SelectSelectorMode.DROPDOWN,
                     translation_key="sensor_state_class",
+                    sort=True,
                 ),
             ),
         }
@@ -142,15 +119,6 @@ def config_schema(domain: str) -> vol.Schema:
 async def choose_options_step(options: dict[str, Any]) -> str:
     """Return next step_id for options flow according to template_type."""
     return cast(str, options["template_type"])
-
-
-def _strip_sentinel(options: dict[str, Any]) -> None:
-    """Convert sentinel to None."""
-    for key in (CONF_DEVICE_CLASS, CONF_STATE_CLASS, CONF_UNIT_OF_MEASUREMENT):
-        if key not in options:
-            continue
-        if options[key] == NONE_SENTINEL:
-            options.pop(key)
 
 
 def _validate_unit(options: dict[str, Any]) -> None:
@@ -208,8 +176,7 @@ def validate_user_input(
 ]:
     """Do post validation of user input.
 
-    For binary sensors: Strip none-sentinels.
-    For sensors: Strip none-sentinels and validate unit of measurement.
+    For sensors: Validate unit of measurement.
     For all domaines: Set template type.
     """
 
@@ -218,8 +185,6 @@ def validate_user_input(
         user_input: dict[str, Any],
     ) -> dict[str, Any]:
         """Add template type to user input."""
-        if template_type in (Platform.BINARY_SENSOR, Platform.SENSOR):
-            _strip_sentinel(user_input)
         if template_type == Platform.SENSOR:
             _validate_unit(user_input)
             _validate_state_class(user_input)
@@ -316,7 +281,6 @@ def ws_start_preview(
                 errors[key.schema] = str(ex.msg)
 
         if domain == Platform.SENSOR:
-            _strip_sentinel(user_input)
             try:
                 _validate_unit(user_input)
             except vol.Invalid as ex:
@@ -386,7 +350,6 @@ def ws_start_preview(
         )
         return
 
-    _strip_sentinel(msg["user_input"])
     preview_entity = CREATE_PREVIEW_ENTITY[template_type](hass, name, msg["user_input"])
     preview_entity.hass = hass
     preview_entity.registry_entry = entity_registry_entry

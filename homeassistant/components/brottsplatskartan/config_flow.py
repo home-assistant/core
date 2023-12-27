@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 import uuid
 
+from brottsplatskartan import AREAS
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -11,18 +12,17 @@ from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 
-from .const import AREAS, CONF_APP_ID, CONF_AREA, DEFAULT_NAME, DOMAIN
+from .const import CONF_APP_ID, CONF_AREA, DEFAULT_NAME, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_LOCATION): selector.LocationSelector(
             selector.LocationSelectorConfig(radius=False, icon="")
         ),
-        vol.Optional(CONF_AREA, default="none"): selector.SelectSelector(
+        vol.Optional(CONF_AREA): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=AREAS,
                 mode=selector.SelectSelectorMode.DROPDOWN,
-                translation_key="areas",
             )
         ),
     }
@@ -43,9 +43,7 @@ class BPKConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             latitude: float | None = None
             longitude: float | None = None
-            area: str | None = (
-                user_input[CONF_AREA] if user_input[CONF_AREA] != "none" else None
-            )
+            area: str | None = user_input.get(CONF_AREA)
 
             if area:
                 name = f"{DEFAULT_NAME} {area}"

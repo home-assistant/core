@@ -138,3 +138,43 @@ async def test_setting_rising(
     assert (
         solar_azimuth_state.state != hass.states.get("sensor.sun_solar_azimuth").state
     )
+
+    entity = entity_reg.async_get("sensor.sun_next_dusk")
+    assert entity
+    assert entity.entity_category is EntityCategory.DIAGNOSTIC
+    assert entity.unique_id == f"{entry_ids[0].entry_id}-next_dusk"
+
+    entity = entity_reg.async_get("sensor.sun_next_midnight")
+    assert entity
+    assert entity.entity_category is EntityCategory.DIAGNOSTIC
+    assert entity.unique_id == f"{entry_ids[0].entry_id}-next_midnight"
+
+    entity = entity_reg.async_get("sensor.sun_next_noon")
+    assert entity
+    assert entity.entity_category is EntityCategory.DIAGNOSTIC
+    assert entity.unique_id == f"{entry_ids[0].entry_id}-next_noon"
+
+    entity = entity_reg.async_get("sensor.sun_next_rising")
+    assert entity
+    assert entity.entity_category is EntityCategory.DIAGNOSTIC
+    assert entity.unique_id == f"{entry_ids[0].entry_id}-next_rising"
+
+    entity = entity_reg.async_get("sensor.sun_next_setting")
+    assert entity
+    assert entity.entity_category is EntityCategory.DIAGNOSTIC
+    assert entity.unique_id == f"{entry_ids[0].entry_id}-next_setting"
+
+    entity = entity_reg.async_get("sensor.sun_solar_elevation")
+    assert entity
+    assert entity.entity_category is EntityCategory.DIAGNOSTIC
+    assert entity.unique_id == f"{entry_ids[0].entry_id}-solar_elevation"
+
+    entity = entity_reg.async_get("sensor.sun_solar_azimuth")
+    assert entity
+    assert entity.entity_category is EntityCategory.DIAGNOSTIC
+    assert entity.unique_id == f"{entry_ids[0].entry_id}-solar_azimuth"
+
+    entity = entity_reg.async_get("sensor.sun_solar_rising")
+    assert entity
+    assert entity.entity_category is EntityCategory.DIAGNOSTIC
+    assert entity.unique_id == f"{entry_ids[0].entry_id}-solar_rising"

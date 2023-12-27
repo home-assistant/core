@@ -69,7 +69,7 @@ class FitbitApi(ABC):
             profile = response["user"]
             self._profile = FitbitProfile(
                 encoded_id=profile["encodedId"],
-                full_name=profile["fullName"],
+                display_name=profile["displayName"],
                 locale=profile.get("locale"),
             )
         return self._profile
@@ -134,10 +134,10 @@ class FitbitApi(ABC):
             return await self._hass.async_add_executor_job(func)
         except HTTPUnauthorized as err:
             _LOGGER.debug("Unauthorized error from fitbit API: %s", err)
-            raise FitbitAuthException from err
+            raise FitbitAuthException("Authentication error from fitbit API") from err
         except HTTPException as err:
             _LOGGER.debug("Error from fitbit API: %s", err)
-            raise FitbitApiException from err
+            raise FitbitApiException("Error from fitbit API") from err
 
 
 class OAuthFitbitApi(FitbitApi):

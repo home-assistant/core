@@ -1,7 +1,6 @@
 """Support for the Fitbit API."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
@@ -9,6 +8,8 @@ import logging
 import os
 from typing import Any, Final, cast
 
+from fitbit import Fitbit
+from oauthlib.oauth2.rfc6749.errors import OAuth2Error
 import voluptuous as vol
 
 from homeassistant.components.application_credentials import (
@@ -35,13 +36,15 @@ from homeassistant.const import (
     UnitOfTime,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.json import load_json_object
 
 from .api import FitbitApi
@@ -58,10 +61,12 @@ from .const import (
     DOMAIN,
     FITBIT_CONFIG_FILE,
     FITBIT_DEFAULT_RESOURCES,
+    FitbitScope,
     FitbitUnitSystem,
 )
-from .exceptions import FitbitApiException
-from .model import FitbitDevice
+from .coordinator import FitbitData, FitbitDeviceCoordinator
+from .exceptions import FitbitApiException, FitbitAuthException
+from .model import FitbitDevice, config_from_entry_data
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -130,14 +135,25 @@ def _water_unit(unit_system: FitbitUnitSystem) -> UnitOfVolume:
     return UnitOfVolume.MILLILITERS
 
 
-@dataclass
+def _int_value_or_none(field: str) -> Callable[[dict[str, Any]], int | None]:
+    """Value function that will parse the specified field if present."""
+
+    def convert(result: dict[str, Any]) -> int | None:
+        if (value := result["value"].get(field)) is not None:
+            return int(value)
+        return None
+
+    return convert
+
+
+@dataclass(frozen=True)
 class FitbitSensorEntityDescription(SensorEntityDescription):
     """Describes Fitbit sensor entity."""
 
     unit_type: str | None = None
     value_fn: Callable[[dict[str, Any]], Any] = _default_value_fn
     unit_fn: Callable[[FitbitUnitSystem], str | None] = lambda x: None
-    scope: str | None = None
+    scope: FitbitScope | None = None
 
 
 FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
@@ -146,7 +162,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         name="Activity Calories",
         native_unit_of_measurement="cal",
         icon="mdi:fire",
-        scope="activity",
+        scope=FitbitScope.ACTIVITY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -155,7 +171,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         name="Calories",
         native_unit_of_measurement="cal",
         icon="mdi:fire",
-        scope="activity",
+        scope=FitbitScope.ACTIVITY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
@@ -163,7 +179,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         name="Calories BMR",
         native_unit_of_measurement="cal",
         icon="mdi:fire",
-        scope="activity",
+        scope=FitbitScope.ACTIVITY,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -175,7 +191,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.DISTANCE,
         value_fn=_distance_value_fn,
         unit_fn=_distance_unit,
-        scope="activity",
+        scope=FitbitScope.ACTIVITY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
@@ -184,7 +200,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         icon="mdi:walk",
         device_class=SensorDeviceClass.DISTANCE,
         unit_fn=_elevation_unit,
-        scope="activity",
+        scope=FitbitScope.ACTIVITY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -193,7 +209,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         name="Floors",
         native_unit_of_measurement="floors",
         icon="mdi:walk",
-        scope="activity",
+        scope=FitbitScope.ACTIVITY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -202,8 +218,8 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         name="Resting Heart Rate",
         native_unit_of_measurement="bpm",
         icon="mdi:heart-pulse",
-        value_fn=lambda result: int(result["value"]["restingHeartRate"]),
-        scope="heartrate",
+        value_fn=_int_value_or_none("restingHeartRate"),
+        scope=FitbitScope.HEART_RATE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     FitbitSensorEntityDescription(
@@ -212,7 +228,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:walk",
         device_class=SensorDeviceClass.DURATION,
-        scope="activity",
+        scope=FitbitScope.ACTIVITY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -222,7 +238,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:walk",
         device_class=SensorDeviceClass.DURATION,
-        scope="activity",
+        scope=FitbitScope.ACTIVITY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -232,7 +248,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:seat-recline-normal",
         device_class=SensorDeviceClass.DURATION,
-        scope="activity",
+        scope=FitbitScope.ACTIVITY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -242,7 +258,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:run",
         device_class=SensorDeviceClass.DURATION,
-        scope="activity",
+        scope=FitbitScope.ACTIVITY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -251,7 +267,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         name="Steps",
         native_unit_of_measurement="steps",
         icon="mdi:walk",
-        scope="activity",
+        scope=FitbitScope.ACTIVITY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     FitbitSensorEntityDescription(
@@ -259,7 +275,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         name="Tracker Activity Calories",
         native_unit_of_measurement="cal",
         icon="mdi:fire",
-        scope="activity",
+        scope=FitbitScope.ACTIVITY,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -269,7 +285,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         name="Tracker Calories",
         native_unit_of_measurement="cal",
         icon="mdi:fire",
-        scope="activity",
+        scope=FitbitScope.ACTIVITY,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -281,7 +297,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.DISTANCE,
         value_fn=_distance_value_fn,
         unit_fn=_distance_unit,
-        scope="activity",
+        scope=FitbitScope.ACTIVITY,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -292,7 +308,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         icon="mdi:walk",
         device_class=SensorDeviceClass.DISTANCE,
         unit_fn=_elevation_unit,
-        scope="activity",
+        scope=FitbitScope.ACTIVITY,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -302,7 +318,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         name="Tracker Floors",
         native_unit_of_measurement="floors",
         icon="mdi:walk",
-        scope="activity",
+        scope=FitbitScope.ACTIVITY,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -313,7 +329,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:walk",
         device_class=SensorDeviceClass.DURATION,
-        scope="activity",
+        scope=FitbitScope.ACTIVITY,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -324,7 +340,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:walk",
         device_class=SensorDeviceClass.DURATION,
-        scope="activity",
+        scope=FitbitScope.ACTIVITY,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -335,7 +351,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:seat-recline-normal",
         device_class=SensorDeviceClass.DURATION,
-        scope="activity",
+        scope=FitbitScope.ACTIVITY,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -346,7 +362,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:run",
         device_class=SensorDeviceClass.DURATION,
-        scope="activity",
+        scope=FitbitScope.ACTIVITY,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -356,7 +372,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         name="Tracker Steps",
         native_unit_of_measurement="steps",
         icon="mdi:walk",
-        scope="activity",
+        scope=FitbitScope.ACTIVITY,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -368,7 +384,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         icon="mdi:human",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_body_value_fn,
-        scope="weight",
+        scope=FitbitScope.WEIGHT,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -379,7 +395,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         icon="mdi:human",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_body_value_fn,
-        scope="weight",
+        scope=FitbitScope.WEIGHT,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -391,14 +407,14 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.WEIGHT,
         value_fn=_body_value_fn,
         unit_fn=_weight_unit,
-        scope="weight",
+        scope=FitbitScope.WEIGHT,
     ),
     FitbitSensorEntityDescription(
         key="sleep/awakeningsCount",
         name="Awakenings Count",
         native_unit_of_measurement="times awaken",
         icon="mdi:sleep",
-        scope="sleep",
+        scope=FitbitScope.SLEEP,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -408,7 +424,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:sleep",
         state_class=SensorStateClass.MEASUREMENT,
-        scope="sleep",
+        scope=FitbitScope.SLEEP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     FitbitSensorEntityDescription(
@@ -417,7 +433,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:sleep",
         device_class=SensorDeviceClass.DURATION,
-        scope="sleep",
+        scope=FitbitScope.SLEEP,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -427,7 +443,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:sleep",
         device_class=SensorDeviceClass.DURATION,
-        scope="sleep",
+        scope=FitbitScope.SLEEP,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -437,7 +453,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:sleep",
         device_class=SensorDeviceClass.DURATION,
-        scope="sleep",
+        scope=FitbitScope.SLEEP,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -447,7 +463,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:sleep",
         device_class=SensorDeviceClass.DURATION,
-        scope="sleep",
+        scope=FitbitScope.SLEEP,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -457,7 +473,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:hotel",
         device_class=SensorDeviceClass.DURATION,
-        scope="sleep",
+        scope=FitbitScope.SLEEP,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -467,7 +483,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         native_unit_of_measurement="cal",
         icon="mdi:food-apple",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        scope="nutrition",
+        scope=FitbitScope.NUTRITION,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     FitbitSensorEntityDescription(
@@ -476,7 +492,7 @@ FITBIT_RESOURCES_LIST: Final[tuple[FitbitSensorEntityDescription, ...]] = (
         icon="mdi:cup-water",
         unit_fn=_water_unit,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        scope="nutrition",
+        scope=FitbitScope.NUTRITION,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -486,7 +502,7 @@ SLEEP_START_TIME = FitbitSensorEntityDescription(
     key="sleep/startTime",
     name="Sleep Start Time",
     icon="mdi:clock",
-    scope="sleep",
+    scope=FitbitScope.SLEEP,
     entity_category=EntityCategory.DIAGNOSTIC,
 )
 SLEEP_START_TIME_12HR = FitbitSensorEntityDescription(
@@ -494,16 +510,26 @@ SLEEP_START_TIME_12HR = FitbitSensorEntityDescription(
     name="Sleep Start Time",
     icon="mdi:clock",
     value_fn=_clock_format_12h,
-    scope="sleep",
+    scope=FitbitScope.SLEEP,
     entity_category=EntityCategory.DIAGNOSTIC,
 )
 
 FITBIT_RESOURCE_BATTERY = FitbitSensorEntityDescription(
     key="devices/battery",
-    name="Battery",
+    translation_key="battery",
     icon="mdi:battery",
-    scope="settings",
+    scope=FitbitScope.DEVICE,
     entity_category=EntityCategory.DIAGNOSTIC,
+    has_entity_name=True,
+)
+FITBIT_RESOURCE_BATTERY_LEVEL = FitbitSensorEntityDescription(
+    key="devices/battery_level",
+    translation_key="battery_level",
+    scope=FitbitScope.DEVICE,
+    entity_category=EntityCategory.DIAGNOSTIC,
+    has_entity_name=True,
+    device_class=SensorDeviceClass.BATTERY,
+    native_unit_of_measurement=PERCENTAGE,
 )
 
 FITBIT_RESOURCES_KEYS: Final[list[str]] = [
@@ -565,34 +591,54 @@ async def async_setup_platform(
 
     if config_file is not None:
         _LOGGER.debug("Importing existing fitbit.conf application credentials")
-        await async_import_client_credential(
-            hass,
-            DOMAIN,
-            ClientCredential(
-                config_file[CONF_CLIENT_ID], config_file[CONF_CLIENT_SECRET]
-            ),
+
+        # Refresh the token before importing to ensure it is working and not
+        # expired on first initialization.
+        authd_client = Fitbit(
+            config_file[CONF_CLIENT_ID],
+            config_file[CONF_CLIENT_SECRET],
+            access_token=config_file[ATTR_ACCESS_TOKEN],
+            refresh_token=config_file[ATTR_REFRESH_TOKEN],
+            expires_at=config_file[ATTR_LAST_SAVED_AT],
+            refresh_cb=lambda x: None,
         )
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                "auth_implementation": DOMAIN,
-                CONF_TOKEN: {
-                    ATTR_ACCESS_TOKEN: config_file[ATTR_ACCESS_TOKEN],
-                    ATTR_REFRESH_TOKEN: config_file[ATTR_REFRESH_TOKEN],
-                    "expires_at": config_file[ATTR_LAST_SAVED_AT],
-                },
-                CONF_CLOCK_FORMAT: config[CONF_CLOCK_FORMAT],
-                CONF_UNIT_SYSTEM: config[CONF_UNIT_SYSTEM],
-                CONF_MONITORED_RESOURCES: config[CONF_MONITORED_RESOURCES],
-            },
-        )
-        translation_key = "deprecated_yaml_import"
-        if (
-            result.get("type") == FlowResultType.ABORT
-            and result.get("reason") == "cannot_connect"
-        ):
+        try:
+            updated_token = await hass.async_add_executor_job(
+                authd_client.client.refresh_token
+            )
+        except OAuth2Error as err:
+            _LOGGER.debug("Unable to import fitbit OAuth2 credentials: %s", err)
             translation_key = "deprecated_yaml_import_issue_cannot_connect"
+        else:
+            await async_import_client_credential(
+                hass,
+                DOMAIN,
+                ClientCredential(
+                    config_file[CONF_CLIENT_ID], config_file[CONF_CLIENT_SECRET]
+                ),
+            )
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={
+                    "auth_implementation": DOMAIN,
+                    CONF_TOKEN: {
+                        ATTR_ACCESS_TOKEN: updated_token[ATTR_ACCESS_TOKEN],
+                        ATTR_REFRESH_TOKEN: updated_token[ATTR_REFRESH_TOKEN],
+                        "expires_at": updated_token["expires_at"],
+                        "scope": " ".join(updated_token.get("scope", [])),
+                    },
+                    CONF_CLOCK_FORMAT: config[CONF_CLOCK_FORMAT],
+                    CONF_UNIT_SYSTEM: config[CONF_UNIT_SYSTEM],
+                    CONF_MONITORED_RESOURCES: config[CONF_MONITORED_RESOURCES],
+                },
+            )
+            translation_key = "deprecated_yaml_import"
+            if (
+                result.get("type") == FlowResultType.ABORT
+                and result.get("reason") == "cannot_connect"
+            ):
+                translation_key = "deprecated_yaml_import_issue_cannot_connect"
     else:
         translation_key = "deprecated_yaml_no_import"
 
@@ -614,41 +660,34 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Fitbit sensor platform."""
 
-    api: FitbitApi = hass.data[DOMAIN][entry.entry_id]
+    data: FitbitData = hass.data[DOMAIN][entry.entry_id]
+    api = data.api
 
-    # Note: This will only be one rpc since it will cache the user profile
-    (user_profile, unit_system) = await asyncio.gather(
-        api.async_get_user_profile(), api.async_get_unit_system()
-    )
+    # These are run serially to reuse the cached user profile, not gathered
+    # to avoid two racing requests.
+    user_profile = await api.async_get_user_profile()
+    unit_system = await api.async_get_unit_system()
 
-    clock_format = entry.data.get(CONF_CLOCK_FORMAT)
-
-    # Originally entities were configured explicitly from yaml config. Newer
-    # configurations will infer which entities to enable based on the allowed
-    # scopes the user selected during OAuth. When creating entities based on
-    # scopes, some entities are disabled by default.
-    monitored_resources = entry.data.get(CONF_MONITORED_RESOURCES)
-    scopes = entry.data["token"].get("scope", "").split(" ")
+    fitbit_config = config_from_entry_data(entry.data)
 
     def is_explicit_enable(description: FitbitSensorEntityDescription) -> bool:
         """Determine if entity is enabled by default."""
-        if monitored_resources is not None:
-            return description.key in monitored_resources
-        return False
+        return fitbit_config.is_explicit_enable(description.key)
 
     def is_allowed_resource(description: FitbitSensorEntityDescription) -> bool:
         """Determine if an entity is allowed to be created."""
-        if is_explicit_enable(description):
-            return True
-        return description.scope in scopes
+        return fitbit_config.is_allowed_resource(description.scope, description.key)
 
     resource_list = [
         *FITBIT_RESOURCES_LIST,
-        SLEEP_START_TIME_12HR if clock_format == "12H" else SLEEP_START_TIME,
+        SLEEP_START_TIME_12HR
+        if fitbit_config.clock_format == "12H"
+        else SLEEP_START_TIME,
     ]
 
     entities = [
         FitbitSensor(
+            entry,
             api,
             user_profile.encoded_id,
             description,
@@ -658,21 +697,29 @@ async def async_setup_entry(
         for description in resource_list
         if is_allowed_resource(description)
     ]
-    if is_allowed_resource(FITBIT_RESOURCE_BATTERY):
-        devices = await api.async_get_devices()
-        entities.extend(
-            [
-                FitbitSensor(
-                    api,
-                    user_profile.encoded_id,
-                    FITBIT_RESOURCE_BATTERY,
-                    device=device,
-                    enable_default_override=is_explicit_enable(FITBIT_RESOURCE_BATTERY),
-                )
-                for device in devices
-            ]
+    async_add_entities(entities)
+
+    if data.device_coordinator and is_allowed_resource(FITBIT_RESOURCE_BATTERY):
+        battery_entities: list[SensorEntity] = [
+            FitbitBatterySensor(
+                data.device_coordinator,
+                user_profile.encoded_id,
+                FITBIT_RESOURCE_BATTERY,
+                device=device,
+                enable_default_override=is_explicit_enable(FITBIT_RESOURCE_BATTERY),
+            )
+            for device in data.device_coordinator.data.values()
+        ]
+        battery_entities.extend(
+            FitbitBatteryLevelSensor(
+                data.device_coordinator,
+                user_profile.encoded_id,
+                FITBIT_RESOURCE_BATTERY_LEVEL,
+                device=device,
+            )
+            for device in data.device_coordinator.data.values()
         )
-    async_add_entities(entities, True)
+        async_add_entities(battery_entities)
 
 
 class FitbitSensor(SensorEntity):
@@ -683,22 +730,19 @@ class FitbitSensor(SensorEntity):
 
     def __init__(
         self,
+        config_entry: ConfigEntry,
         api: FitbitApi,
         user_profile_id: str,
         description: FitbitSensorEntityDescription,
-        device: FitbitDevice | None = None,
-        units: str | None = None,
-        enable_default_override: bool = False,
+        units: str | None,
+        enable_default_override: bool,
     ) -> None:
         """Initialize the Fitbit sensor."""
+        self.config_entry = config_entry
         self.entity_description = description
         self.api = api
-        self.device = device
 
         self._attr_unique_id = f"{user_profile_id}_{description.key}"
-        if device is not None:
-            self._attr_name = f"{device.device_version} Battery"
-            self._attr_unique_id = f"{self._attr_unique_id}_{device.id}"
 
         if units is not None:
             self._attr_native_unit_of_measurement = units
@@ -706,50 +750,120 @@ class FitbitSensor(SensorEntity):
         if enable_default_override:
             self._attr_entity_registry_enabled_default = True
 
+    async def async_update(self) -> None:
+        """Get the latest data from the Fitbit API and update the states."""
+        try:
+            result = await self.api.async_get_latest_time_series(
+                self.entity_description.key
+            )
+        except FitbitAuthException:
+            self._attr_available = False
+            self.config_entry.async_start_reauth(self.hass)
+        except FitbitApiException:
+            self._attr_available = False
+        else:
+            self._attr_available = True
+            self._attr_native_value = self.entity_description.value_fn(result)
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+
+        # We do not ask for an update with async_add_entities()
+        # because it will update disabled entities.
+        self.async_schedule_update_ha_state(force_refresh=True)
+
+
+class FitbitBatterySensor(CoordinatorEntity[FitbitDeviceCoordinator], SensorEntity):
+    """Implementation of a Fitbit battery sensor."""
+
+    entity_description: FitbitSensorEntityDescription
+    _attr_attribution = ATTRIBUTION
+
+    def __init__(
+        self,
+        coordinator: FitbitDeviceCoordinator,
+        user_profile_id: str,
+        description: FitbitSensorEntityDescription,
+        device: FitbitDevice,
+        enable_default_override: bool,
+    ) -> None:
+        """Initialize the Fitbit sensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self.device = device
+        self._attr_unique_id = f"{user_profile_id}_{description.key}_{device.id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{user_profile_id}_{device.id}")},
+            name=device.device_version,
+            model=device.device_version,
+        )
+
+        if enable_default_override:
+            self._attr_entity_registry_enabled_default = True
+
     @property
     def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
-        if (
-            self.entity_description.key == "devices/battery"
-            and self.device is not None
-            and (battery_level := BATTERY_LEVELS.get(self.device.battery)) is not None
-        ):
+        if battery_level := BATTERY_LEVELS.get(self.device.battery):
             return icon_for_battery_level(battery_level=battery_level)
         return self.entity_description.icon
 
     @property
     def extra_state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
-        attrs: dict[str, str | None] = {}
+        return {
+            "model": self.device.device_version,
+            "type": self.device.type.lower() if self.device.type is not None else None,
+        }
 
-        if self.device is not None:
-            attrs["model"] = self.device.device_version
-            device_type = self.device.type
-            attrs["type"] = device_type.lower() if device_type is not None else None
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass update state from existing coordinator data."""
+        await super().async_added_to_hass()
+        self._handle_coordinator_update()
 
-        return attrs
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.device = self.coordinator.data[self.device.id]
+        self._attr_native_value = self.device.battery
+        self.async_write_ha_state()
 
-    async def async_update(self) -> None:
-        """Get the latest data from the Fitbit API and update the states."""
-        resource_type = self.entity_description.key
-        if resource_type == "devices/battery" and self.device is not None:
-            device_id = self.device.id
-            try:
-                registered_devs: list[FitbitDevice] = await self.api.async_get_devices()
-            except FitbitApiException:
-                self._attr_available = False
-            else:
-                self._attr_available = True
-                self.device = next(
-                    device for device in registered_devs if device.id == device_id
-                )
-                self._attr_native_value = self.device.battery
-            return
 
-        try:
-            result = await self.api.async_get_latest_time_series(resource_type)
-        except FitbitApiException:
-            self._attr_available = False
-        else:
-            self._attr_available = True
-            self._attr_native_value = self.entity_description.value_fn(result)
+class FitbitBatteryLevelSensor(
+    CoordinatorEntity[FitbitDeviceCoordinator], SensorEntity
+):
+    """Implementation of a Fitbit battery level sensor."""
+
+    entity_description: FitbitSensorEntityDescription
+    _attr_attribution = ATTRIBUTION
+
+    def __init__(
+        self,
+        coordinator: FitbitDeviceCoordinator,
+        user_profile_id: str,
+        description: FitbitSensorEntityDescription,
+        device: FitbitDevice,
+    ) -> None:
+        """Initialize the Fitbit sensor."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self.device = device
+        self._attr_unique_id = f"{user_profile_id}_{description.key}_{device.id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{user_profile_id}_{device.id}")},
+            name=device.device_version,
+            model=device.device_version,
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass update state from existing coordinator data."""
+        await super().async_added_to_hass()
+        self._handle_coordinator_update()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.device = self.coordinator.data[self.device.id]
+        self._attr_native_value = self.device.battery_level
+        self.async_write_ha_state()

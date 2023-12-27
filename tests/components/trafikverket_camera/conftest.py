@@ -32,8 +32,9 @@ async def load_integration_from_entry(
         source=SOURCE_USER,
         data=ENTRY_CONFIG,
         entry_id="1",
-        unique_id="123",
-        title="Test location",
+        version=3,
+        unique_id="trafikverket_camera-1234",
+        title="Test Camera",
     )
 
     config_entry.add_to_hass(hass)
@@ -53,7 +54,7 @@ def fixture_get_camera() -> CameraInfo:
     """Construct Camera Mock."""
 
     return CameraInfo(
-        camera_name="Test_camera",
+        camera_name="Test Camera",
         camera_id="1234",
         active=True,
         deleted=False,

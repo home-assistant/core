@@ -26,17 +26,12 @@ from .const import DOMAIN, SIGNAL_EVENTS_CHANGED, SIGNAL_POSITION_CHANGED
 ENTITY_ID_SENSOR_FORMAT = SENSOR_DOMAIN + ".sun_{}"
 
 
-@dataclass
-class SunEntityDescriptionMixin:
-    """Mixin for required Sun base description keys."""
+@dataclass(kw_only=True, frozen=True)
+class SunSensorEntityDescription(SensorEntityDescription):
+    """Describes a Sun sensor entity."""
 
     value_fn: Callable[[Sun], StateType | datetime]
     signal: str
-
-
-@dataclass
-class SunSensorEntityDescription(SensorEntityDescription, SunEntityDescriptionMixin):
-    """Describes Sun sensor entity."""
 
 
 SENSOR_TYPES: tuple[SunSensorEntityDescription, ...] = (
@@ -107,6 +102,14 @@ SENSOR_TYPES: tuple[SunSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=DEGREE,
         signal=SIGNAL_POSITION_CHANGED,
+    ),
+    SunSensorEntityDescription(
+        key="solar_rising",
+        translation_key="solar_rising",
+        icon="mdi:sun-clock",
+        value_fn=lambda data: data.rising,
+        entity_registry_enabled_default=False,
+        signal=SIGNAL_EVENTS_CHANGED,
     ),
 )
 
