@@ -14,7 +14,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .common import ERROR_UNKNOWN, TEST_RESPONSE, setup_platform
+from .common import ERROR_UNKNOWN, TEST_RESPONSE, TEST_RESPONSE_ERROR, setup_platform
 
 
 async def test_window(hass: HomeAssistant) -> None:
@@ -110,3 +110,24 @@ async def test_errors(hass: HomeAssistant) -> None:
         )
         mock_set.assert_called_once()
         assert error.from_exception == ERROR_UNKNOWN
+
+
+async def test_response_error(hass: HomeAssistant) -> None:
+    """Tests response errors are handled."""
+
+    await setup_platform(hass)
+    entity_id = "cover.test_charge_port_door"
+
+    # Test setting cover open with unknown error
+    with patch(
+        "homeassistant.components.tessie.cover.open_unlock_charge_port",
+        return_value=TEST_RESPONSE_ERROR,
+    ) as mock_set, pytest.raises(HomeAssistantError) as error:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: [entity_id]},
+            blocking=True,
+        )
+        mock_set.assert_called_once()
+        assert str(error) == TEST_RESPONSE_ERROR["reason"]

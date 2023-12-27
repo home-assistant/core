@@ -6,7 +6,7 @@ from datetime import timedelta
 from enum import IntFlag, StrEnum
 import functools as ft
 import logging
-from typing import Any, ParamSpec, TypeVar, final
+from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, final
 
 import voluptuous as vol
 
@@ -41,6 +41,11 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -252,7 +257,17 @@ class CoverEntityDescription(EntityDescription, frozen_or_thawed=True):
     device_class: CoverDeviceClass | None = None
 
 
-class CoverEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "current_cover_position",
+    "current_cover_tilt_position",
+    "device_class",
+    "is_opening",
+    "is_closing",
+    "is_closed",
+}
+
+
+class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for cover entities."""
 
     entity_description: CoverEntityDescription
@@ -267,7 +282,7 @@ class CoverEntity(Entity):
 
     _cover_is_last_toggle_direction_open = True
 
-    @property
+    @cached_property
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
@@ -275,7 +290,7 @@ class CoverEntity(Entity):
         """
         return self._attr_current_cover_position
 
-    @property
+    @cached_property
     def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt.
 
@@ -283,7 +298,7 @@ class CoverEntity(Entity):
         """
         return self._attr_current_cover_tilt_position
 
-    @property
+    @cached_property
     def device_class(self) -> CoverDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -345,17 +360,17 @@ class CoverEntity(Entity):
 
         return supported_features
 
-    @property
+    @cached_property
     def is_opening(self) -> bool | None:
         """Return if the cover is opening or not."""
         return self._attr_is_opening
 
-    @property
+    @cached_property
     def is_closing(self) -> bool | None:
         """Return if the cover is closing or not."""
         return self._attr_is_closing
 
-    @property
+    @cached_property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         return self._attr_is_closed

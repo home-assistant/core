@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import TessieDataUpdateCoordinator
+from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
 
 
@@ -19,9 +19,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Tessie sensor platform from a config entry."""
-    coordinators = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(TessieLockEntity(coordinator) for coordinator in coordinators)
+    async_add_entities(TessieLockEntity(vehicle.state_coordinator) for vehicle in data)
 
 
 class TessieLockEntity(TessieEntity, LockEntity):
@@ -29,7 +29,7 @@ class TessieLockEntity(TessieEntity, LockEntity):
 
     def __init__(
         self,
-        coordinator: TessieDataUpdateCoordinator,
+        coordinator: TessieStateUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, "vehicle_state_locked")

@@ -197,6 +197,8 @@ build.json @home-assistant/supervisor
 /tests/components/camera/ @home-assistant/core
 /homeassistant/components/cast/ @emontnemery
 /tests/components/cast/ @emontnemery
+/homeassistant/components/ccm15/ @ocalvo
+/tests/components/ccm15/ @ocalvo
 /homeassistant/components/cert_expiry/ @jjlawren
 /tests/components/cert_expiry/ @jjlawren
 /homeassistant/components/circuit/ @braam
@@ -845,6 +847,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/netgear/ @hacf-fr @Quentame @starkillerOG
 /tests/components/netgear/ @hacf-fr @Quentame @starkillerOG
 /homeassistant/components/netgear_lte/ @tkdrob
+/tests/components/netgear_lte/ @tkdrob
 /homeassistant/components/network/ @home-assistant/core
 /tests/components/network/ @home-assistant/core
 /homeassistant/components/nexia/ @bdraco
@@ -1294,6 +1297,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/synology_srm/ @aerialls
 /homeassistant/components/system_bridge/ @timmo001
 /tests/components/system_bridge/ @timmo001
+/homeassistant/components/systemmonitor/ @gjohansson-ST
+/tests/components/systemmonitor/ @gjohansson-ST
 /homeassistant/components/tado/ @michaelarnauts @chiefdragon
 /tests/components/tado/ @michaelarnauts @chiefdragon
 /homeassistant/components/tag/ @balloob @dmulcahey
@@ -1386,6 +1391,7 @@ build.json @home-assistant/supervisor
 /tests/components/ukraine_alarm/ @PaulAnnekov
 /homeassistant/components/unifi/ @Kane610
 /tests/components/unifi/ @Kane610
+/homeassistant/components/unifi_direct/ @tofuSCHNITZEL
 /homeassistant/components/unifiled/ @florisvdk
 /homeassistant/components/unifiprotect/ @AngellusMortis @bdraco
 /tests/components/unifiprotect/ @AngellusMortis @bdraco

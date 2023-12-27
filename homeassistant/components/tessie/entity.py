@@ -10,17 +10,17 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODELS
-from .coordinator import TessieDataUpdateCoordinator
+from .coordinator import TessieStateUpdateCoordinator
 
 
-class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
+class TessieEntity(CoordinatorEntity[TessieStateUpdateCoordinator]):
     """Parent class for Tessie Entities."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: TessieDataUpdateCoordinator,
+        coordinator: TessieStateUpdateCoordinator,
         key: str,
     ) -> None:
         """Initialize common aspects of a Tessie entity."""
@@ -56,7 +56,7 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
     ) -> None:
         """Run a tessie_api function and handle exceptions."""
         try:
-            await func(
+            response = await func(
                 session=self.coordinator.session,
                 vin=self.vin,
                 api_key=self.coordinator.api_key,
@@ -64,6 +64,10 @@ class TessieEntity(CoordinatorEntity[TessieDataUpdateCoordinator]):
             )
         except ClientResponseError as e:
             raise HomeAssistantError from e
+        if response["result"] is False:
+            raise HomeAssistantError(
+                response.get("reason"), "An unknown issue occurred"
+            )
 
     def set(self, *args: Any) -> None:
         """Set a value in coordinator data."""
