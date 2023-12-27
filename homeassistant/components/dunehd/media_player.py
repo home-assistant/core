@@ -9,6 +9,8 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    BrowseMedia,
+    MediaType,
     async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
