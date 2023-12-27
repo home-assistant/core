@@ -7,13 +7,15 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components import automation
 from homeassistant.components.blueprint import models
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, yaml
 
-from tests.common import async_fire_time_changed, async_mock_service
+from tests.common import MockConfigEntry, async_fire_time_changed, async_mock_service
 
 BUILTIN_BLUEPRINT_FOLDER = pathlib.Path(automation.__file__).parent / "blueprints"
 
@@ -40,8 +42,18 @@ def patch_blueprint(blueprint_path: str, data_path):
         yield
 
 
-async def test_notify_leaving_zone(hass: HomeAssistant) -> None:
+async def test_notify_leaving_zone(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test notifying leaving a zone blueprint."""
+    config_entry = MockConfigEntry(domain="fake_integration", data={})
+    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:01")},
+    )
 
     def set_person_state(state, extra={}):
         hass.states.async_set(
@@ -68,7 +80,7 @@ async def test_notify_leaving_zone(hass: HomeAssistant) -> None:
                         "input": {
                             "person_entity": "person.test_person",
                             "zone_entity": "zone.school",
-                            "notify_device": "abcdefgh",
+                            "notify_device": device.id,
                         },
                     }
                 }
@@ -89,7 +101,7 @@ async def test_notify_leaving_zone(hass: HomeAssistant) -> None:
             "alias": "Notify that a person has left the zone",
             "domain": "mobile_app",
             "type": "notify",
-            "device_id": "abcdefgh",
+            "device_id": device.id,
         }
         message_tpl.hass = hass
         assert message_tpl.async_render(variables) == "Paulus has left School"

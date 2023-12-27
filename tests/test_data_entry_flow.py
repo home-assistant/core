@@ -10,7 +10,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import HomeAssistant
 from homeassistant.util.decorator import Registry
 
-from .common import async_capture_events
+from .common import async_capture_events, import_and_test_deprecated_constant_enum
 
 
 @pytest.fixture
@@ -621,6 +621,35 @@ async def test_move_to_unknown_step_raises_and_removes_from_in_progress(
     assert manager.async_progress() == []
 
 
+@pytest.mark.parametrize(
+    ("result_type", "params"),
+    [
+        ("async_external_step_done", {"next_step_id": "does_not_exist"}),
+        ("async_external_step", {"step_id": "does_not_exist", "url": "blah"}),
+        ("async_show_form", {"step_id": "does_not_exist"}),
+        ("async_show_menu", {"step_id": "does_not_exist", "menu_options": []}),
+        ("async_show_progress_done", {"next_step_id": "does_not_exist"}),
+        ("async_show_progress", {"step_id": "does_not_exist", "progress_action": ""}),
+    ],
+)
+async def test_next_step_unknown_step_raises_and_removes_from_in_progress(
+    manager, result_type: str, params: dict[str, str]
+) -> None:
+    """Test that moving to an unknown step raises and removes the flow from in progress."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 1
+
+        async def async_step_init(self, user_input=None):
+            return getattr(self, result_type)(**params)
+
+    with pytest.raises(data_entry_flow.UnknownStep):
+        await manager.async_init("test", context={"init_step": "init"})
+
+    assert manager.async_progress() == []
+
+
 async def test_configure_raises_unknown_flow_if_not_in_progress(manager) -> None:
     """Test configure raises UnknownFlow if the flow is not in progress."""
     with pytest.raises(data_entry_flow.UnknownFlow):
@@ -773,3 +802,14 @@ async def test_find_flows_by_init_data_type(
     )
     assert len(wifi_flows) == 0
     assert len(manager.async_progress()) == 0
+
+
+@pytest.mark.parametrize(("enum"), list(data_entry_flow.FlowResultType))
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: data_entry_flow.FlowResultType,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, data_entry_flow, enum, "RESULT_TYPE_", "2025.1"
+    )

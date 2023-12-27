@@ -116,6 +116,10 @@ async def async_setup_entry(
     else:
         device_info = None
 
+    if (unit_prefix := config_entry.options.get(CONF_UNIT_PREFIX)) == "none":
+        # Before we had support for optional selectors, "none" was used for selecting nothing
+        unit_prefix = None
+
     derivative_sensor = DerivativeSensor(
         name=config_entry.title,
         round_digits=int(config_entry.options[CONF_ROUND_DIGITS]),
@@ -123,7 +127,7 @@ async def async_setup_entry(
         time_window=cv.time_period_dict(config_entry.options[CONF_TIME_WINDOW]),
         unique_id=config_entry.entry_id,
         unit_of_measurement=None,
-        unit_prefix=config_entry.options.get(CONF_UNIT_PREFIX),
+        unit_prefix=unit_prefix,
         unit_time=config_entry.options[CONF_UNIT_TIME],
         device_info=device_info,
     )

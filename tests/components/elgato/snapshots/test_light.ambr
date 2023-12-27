@@ -101,6 +101,7 @@
     'model': 'Elgato Key Light',
     'name': 'Frenck',
     'name_by_user': None,
+    'serial_number': 'CN11A1A00001',
     'suggested_area': None,
     'sw_version': '1.0.3 (192)',
     'via_device_id': None,
@@ -210,6 +211,7 @@
     'model': 'Elgato Key Light',
     'name': 'Frenck',
     'name_by_user': None,
+    'serial_number': 'CN11A1A00001',
     'suggested_area': None,
     'sw_version': '1.0.3 (192)',
     'via_device_id': None,
@@ -220,6 +222,8 @@
     'attributes': ReadOnlyDict({
       'brightness': 128,
       'color_mode': <ColorMode.HS: 'hs'>,
+      'color_temp': None,
+      'color_temp_kelvin': None,
       'friendly_name': 'Frenck',
       'hs_color': tuple(
         358.0,
@@ -317,6 +321,7 @@
     'model': 'Elgato Key Light',
     'name': 'Frenck',
     'name_by_user': None,
+    'serial_number': 'CN11A1A00001',
     'suggested_area': None,
     'sw_version': '1.0.3 (192)',
     'via_device_id': None,

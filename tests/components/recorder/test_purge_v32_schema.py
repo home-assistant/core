@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 import json
 import sqlite3
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
@@ -27,6 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from .common import (
+    async_attach_db_engine,
     async_recorder_block_till_done,
     async_wait_purge_done,
     async_wait_recording_done,
@@ -64,25 +65,12 @@ def mock_use_sqlite(request):
         yield
 
 
-async def _async_attach_db_engine(hass: HomeAssistant) -> None:
-    """Attach a database engine to the recorder."""
-    instance = recorder.get_instance(hass)
-
-    def _mock_setup_recorder_connection():
-        with instance.engine.connect() as connection:
-            instance._setup_recorder_connection(
-                connection._dbapi_connection, MagicMock()
-            )
-
-    await instance.async_add_executor_job(_mock_setup_recorder_connection)
-
-
 async def test_purge_old_states(
     async_setup_recorder_instance: RecorderInstanceGenerator, hass: HomeAssistant
 ) -> None:
     """Test deleting old states."""
     instance = await async_setup_recorder_instance(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await _add_test_states(hass)
 
@@ -178,7 +166,7 @@ async def test_purge_old_states_encouters_database_corruption(
         return
 
     await async_setup_recorder_instance(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await _add_test_states(hass)
     await async_wait_recording_done(hass)
@@ -211,7 +199,7 @@ async def test_purge_old_states_encounters_temporary_mysql_error(
 ) -> None:
     """Test retry on specific mysql operational errors."""
     instance = await async_setup_recorder_instance(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await _add_test_states(hass)
     await async_wait_recording_done(hass)
@@ -224,9 +212,7 @@ async def test_purge_old_states_encounters_temporary_mysql_error(
     ) as sleep_mock, patch(
         "homeassistant.components.recorder.purge._purge_old_recorder_runs",
         side_effect=[mysql_exception, None],
-    ), patch.object(
-        instance.engine.dialect, "name", "mysql"
-    ):
+    ), patch.object(instance.engine.dialect, "name", "mysql"):
         await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, {"keep_days": 0})
         await hass.async_block_till_done()
         await async_wait_recording_done(hass)
@@ -243,7 +229,7 @@ async def test_purge_old_states_encounters_operational_error(
 ) -> None:
     """Test error on operational errors that are not mysql does not retry."""
     await async_setup_recorder_instance(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await _add_test_states(hass)
     await async_wait_recording_done(hass)
@@ -268,7 +254,7 @@ async def test_purge_old_events(
 ) -> None:
     """Test deleting old events."""
     instance = await async_setup_recorder_instance(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await _add_test_events(hass)
 
@@ -306,7 +292,7 @@ async def test_purge_old_recorder_runs(
 ) -> None:
     """Test deleting old recorder runs keeps current run."""
     instance = await async_setup_recorder_instance(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await _add_test_recorder_runs(hass)
 
@@ -343,7 +329,7 @@ async def test_purge_old_statistics_runs(
 ) -> None:
     """Test deleting old statistics runs keeps the latest run."""
     instance = await async_setup_recorder_instance(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await _add_test_statistics_runs(hass)
 
@@ -384,7 +370,7 @@ async def test_purge_method(
         assert run1.start == run2.start
 
     await async_setup_recorder_instance(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     service_data = {"keep_days": 4}
     await _add_test_events(hass)
@@ -522,7 +508,7 @@ async def test_purge_edge_case(
             )
 
     await async_setup_recorder_instance(hass, None)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await async_wait_purge_done(hass)
 
@@ -621,7 +607,7 @@ async def test_purge_cutoff_date(
                 )
 
     instance = await async_setup_recorder_instance(hass, None)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await async_wait_purge_done(hass)
 
@@ -948,7 +934,7 @@ async def test_purge_many_old_events(
 ) -> None:
     """Test deleting old events."""
     instance = await async_setup_recorder_instance(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     old_events_count = 5
     with patch.object(instance, "max_bind_vars", old_events_count), patch.object(
@@ -1001,7 +987,7 @@ async def test_purge_can_mix_legacy_and_new_format(
 ) -> None:
     """Test purging with legacy and new events."""
     instance = await async_setup_recorder_instance(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await async_wait_recording_done(hass)
     # New databases are no longer created with the legacy events index
@@ -1114,7 +1100,7 @@ async def test_purge_can_mix_legacy_and_new_format_with_detached_state(
         return pytest.skip("This tests disables foreign key checks on SQLite")
 
     instance = await async_setup_recorder_instance(hass)
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await async_wait_recording_done(hass)
     # New databases are no longer created with the legacy events index
@@ -1254,7 +1240,7 @@ async def test_purge_entities_keep_days(
 ) -> None:
     """Test purging states with an entity filter and keep_days."""
     instance = await async_setup_recorder_instance(hass, {})
-    await _async_attach_db_engine(hass)
+    await async_attach_db_engine(hass)
 
     await hass.async_block_till_done()
     await async_wait_recording_done(hass)

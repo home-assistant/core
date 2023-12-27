@@ -142,7 +142,9 @@ async def async_attach_trigger(
         )
 
     removes = [
-        hass.bus.async_listen(event_type, handle_event, event_filter=filter_event)
+        hass.bus.async_listen(
+            event_type, handle_event, event_filter=filter_event, run_immediately=True
+        )
         for event_type in event_types
     ]
 

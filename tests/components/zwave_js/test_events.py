@@ -1,4 +1,4 @@
-"""Test Z-Wave JS (value notification) events."""
+"""Test Z-Wave JS events."""
 from unittest.mock import AsyncMock
 
 import pytest

@@ -72,10 +72,10 @@ async def test_setup(hass: HomeAssistant) -> None:
             == 4
         )
 
-        state = hass.states.get("sensor.gdacs_32_87336_117_22743")
+        state = hass.states.get("sensor.32_87336_117_22743")
         assert state is not None
         assert int(state.state) == 3
-        assert state.name == "GDACS (32.87336, -117.22743)"
+        assert state.name == "32.87336, -117.22743"
         attributes = state.attributes
         assert attributes[ATTR_STATUS] == "OK"
         assert attributes[ATTR_CREATED] == 3
@@ -96,7 +96,7 @@ async def test_setup(hass: HomeAssistant) -> None:
             == 4
         )
 
-        state = hass.states.get("sensor.gdacs_32_87336_117_22743")
+        state = hass.states.get("sensor.32_87336_117_22743")
         attributes = state.attributes
         assert attributes[ATTR_CREATED] == 1
         assert attributes[ATTR_UPDATED] == 2
@@ -125,6 +125,6 @@ async def test_setup(hass: HomeAssistant) -> None:
             == 1
         )
 
-        state = hass.states.get("sensor.gdacs_32_87336_117_22743")
+        state = hass.states.get("sensor.32_87336_117_22743")
         attributes = state.attributes
         assert attributes[ATTR_REMOVED] == 3

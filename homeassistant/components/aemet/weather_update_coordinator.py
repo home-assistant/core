@@ -4,7 +4,7 @@ from __future__ import annotations
 from asyncio import timeout
 from datetime import timedelta
 import logging
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from aemet_opendata.const import (
     AEMET_ATTR_DATE,
@@ -31,17 +31,24 @@ from aemet_opendata.const import (
     AEMET_ATTR_TEMPERATURE,
     AEMET_ATTR_WIND,
     AEMET_ATTR_WIND_GUST,
+    AOD_CONDITION,
+    AOD_FORECAST,
+    AOD_FORECAST_DAILY,
+    AOD_FORECAST_HOURLY,
+    AOD_TOWN,
     ATTR_DATA,
 )
 from aemet_opendata.exceptions import AemetError
 from aemet_opendata.forecast import ForecastValue
 from aemet_opendata.helpers import (
+    dict_nested_value,
     get_forecast_day_value,
     get_forecast_hour_value,
     get_forecast_interval_value,
 )
 from aemet_opendata.interface import AEMET
 
+from homeassistant.components.weather import Forecast
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -79,6 +86,7 @@ from .const import (
     ATTR_API_WIND_SPEED,
     CONDITIONS_MAP,
     DOMAIN,
+    FORECAST_MAP,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -239,6 +247,12 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             weather_response, now
         )
 
+        data = self.aemet.data()
+        forecasts: list[dict[str, Forecast]] = {
+            AOD_FORECAST_DAILY: self.aemet_forecast(data, AOD_FORECAST_DAILY),
+            AOD_FORECAST_HOURLY: self.aemet_forecast(data, AOD_FORECAST_HOURLY),
+        }
+
         return {
             ATTR_API_CONDITION: condition,
             ATTR_API_FORECAST_DAILY: forecast_daily,
@@ -261,7 +275,28 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_WIND_BEARING: wind_bearing,
             ATTR_API_WIND_MAX_SPEED: wind_max_speed,
             ATTR_API_WIND_SPEED: wind_speed,
+            "forecast": forecasts,
+            "lib": data,
         }
+
+    def aemet_forecast(
+        self,
+        data: dict[str, Any],
+        forecast_mode: str,
+    ) -> list[Forecast]:
+        """Return the forecast array."""
+        forecasts = dict_nested_value(data, [AOD_TOWN, forecast_mode, AOD_FORECAST])
+        forecast_map = FORECAST_MAP[forecast_mode]
+        forecast_list: list[dict[str, Any]] = []
+        for forecast in forecasts:
+            cur_forecast: dict[str, Any] = {}
+            for api_key, ha_key in forecast_map.items():
+                value = forecast[api_key]
+                if api_key == AOD_CONDITION:
+                    value = CONDITIONS_MAP.get(value)
+                cur_forecast[ha_key] = value
+            forecast_list += [cur_forecast]
+        return cast(list[Forecast], forecast_list)
 
     def _get_daily_forecast_from_weather_response(self, weather_response, now):
         if weather_response.daily:

@@ -51,7 +51,7 @@ async def async_init_integration(
     ) as update_patch, patch(
         "homeassistant.components.anova.AnovaApi.authenticate"
     ), patch(
-        "homeassistant.components.anova.AnovaApi.get_devices"
+        "homeassistant.components.anova.AnovaApi.get_devices",
     ) as device_patch:
         update_patch.return_value = ONLINE_UPDATE
         device_patch.return_value = [

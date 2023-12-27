@@ -77,9 +77,9 @@ def patch_file_upload(return_value=FIXTURE_KEYRING, side_effect=None):
         return_value=return_value,
         side_effect=side_effect,
     ), patch(
-        "pathlib.Path.mkdir"
+        "pathlib.Path.mkdir",
     ) as mkdir_mock, patch(
-        "shutil.move"
+        "shutil.move",
     ) as shutil_move_mock:
         file_upload_mock.return_value.__enter__.return_value = Mock()
         yield return_value
@@ -302,7 +302,7 @@ async def test_routing_secure_manual_setup(
         },
     )
     assert result3["type"] == FlowResultType.MENU
-    assert result3["step_id"] == "secure_key_source"
+    assert result3["step_id"] == "secure_key_source_menu_routing"
 
     result4 = await hass.config_entries.flow.async_configure(
         result3["flow_id"],
@@ -392,7 +392,7 @@ async def test_routing_secure_keyfile(
         },
     )
     assert result3["type"] == FlowResultType.MENU
-    assert result3["step_id"] == "secure_key_source"
+    assert result3["step_id"] == "secure_key_source_menu_routing"
 
     result4 = await hass.config_entries.flow.async_configure(
         result3["flow_id"],
@@ -948,7 +948,7 @@ async def _get_menu_step_secure_tunnel(hass: HomeAssistant) -> FlowResult:
         {CONF_KNX_GATEWAY: str(gateway)},
     )
     assert result3["type"] == FlowResultType.MENU
-    assert result3["step_id"] == "secure_key_source"
+    assert result3["step_id"] == "secure_key_source_menu_tunnel"
     return result3
 
 
@@ -1008,7 +1008,7 @@ async def test_get_secure_menu_step_manual_tunnelling(
         },
     )
     assert result3["type"] == FlowResultType.MENU
-    assert result3["step_id"] == "secure_key_source"
+    assert result3["step_id"] == "secure_key_source_menu_tunnel"
 
 
 async def test_configure_secure_tunnel_manual(hass: HomeAssistant, knx_setup) -> None:
@@ -1272,7 +1272,7 @@ async def test_options_flow_secure_manual_to_keyfile(
         {CONF_KNX_GATEWAY: str(gateway)},
     )
     assert result3["type"] == FlowResultType.MENU
-    assert result3["step_id"] == "secure_key_source"
+    assert result3["step_id"] == "secure_key_source_menu_tunnel"
 
     result4 = await hass.config_entries.options.async_configure(
         result3["flow_id"],

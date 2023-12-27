@@ -66,7 +66,7 @@ async def handle_add_product(
     product_id = call.data.get("product_id")
     if not product_id:
         product_id = await hass.async_add_executor_job(
-            _product_search, api_client, cast(str, call.data["product_name"])
+            product_search, api_client, cast(str, call.data["product_name"])
         )
 
     if not product_id:
@@ -77,8 +77,11 @@ async def handle_add_product(
     )
 
 
-def _product_search(api_client: PicnicAPI, product_name: str) -> None | str:
+def product_search(api_client: PicnicAPI, product_name: str | None) -> None | str:
     """Query the api client for the product name."""
+    if product_name is None:
+        return None
+
     search_result = api_client.search(product_name)
 
     if not search_result or "items" not in search_result[0]:

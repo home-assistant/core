@@ -1,11 +1,10 @@
 """Comelit constants."""
 import logging
 
+from aiocomelit.const import BRIDGE, VEDO
+
 _LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "comelit"
 DEFAULT_PORT = 80
-
-# Entity states
-STATE_OFF = 0
-STATE_ON = 1
+DEVICE_TYPE_LIST = [BRIDGE, VEDO]

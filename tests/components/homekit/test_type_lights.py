@@ -576,14 +576,16 @@ async def test_light_rgb_color(
     assert events[-1].data[ATTR_VALUE] == "set color at (145, 75)"
 
 
-async def test_light_restore(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_light_restore(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
+) -> None:
     """Test setting up an entity from state in the event registry."""
     hass.state = CoreState.not_running
 
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create("light", "hue", "1234", suggested_object_id="simple")
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
+        "light", "hue", "1234", suggested_object_id="simple"
+    )
+    entity_registry.async_get_or_create(
         "light",
         "hue",
         "9012",
@@ -1028,6 +1030,40 @@ async def test_light_rgb_with_white_switch_to_temp(
     assert call_turn_on[-1].data[ATTR_COLOR_TEMP_KELVIN] == 2000
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] == "color temperature at 500"
+    assert acc.char_brightness.value == 100
+
+
+async def test_light_rgb_with_hs_color_none(
+    hass: HomeAssistant,
+    hk_driver,
+    events,
+) -> None:
+    """Test lights hs color set to None."""
+    entity_id = "light.demo"
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGB],
+            ATTR_RGBWW_COLOR: (128, 50, 0, 255, 255),
+            ATTR_RGB_COLOR: (128, 50, 0),
+            ATTR_HS_COLOR: None,
+            ATTR_BRIGHTNESS: 255,
+            ATTR_COLOR_MODE: ColorMode.RGB,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Light(hass, hk_driver, "Light", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    assert acc.char_hue.value == 0
+    assert acc.char_saturation.value == 75
+
+    await acc.run()
+    await hass.async_block_till_done()
+    assert acc.char_hue.value == 0
+    assert acc.char_saturation.value == 75
     assert acc.char_brightness.value == 100
 
 

@@ -144,7 +144,7 @@ async def test_devices(
         _, platform, entity_cls, unique_id, cluster_handlers = call[0]
         # the factory can return None. We filter these out to get an accurate created entity count
         response = entity_cls.create_entity(unique_id, zha_dev, cluster_handlers)
-        if response and not contains_ignored_suffix(response.name):
+        if response and not contains_ignored_suffix(response.unique_id):
             created_entity_count += 1
             unique_id_head = UNIQUE_ID_HD.match(unique_id).group(
                 0

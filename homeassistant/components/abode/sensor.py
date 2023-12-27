@@ -27,7 +27,7 @@ ABODE_TEMPERATURE_UNIT_HA_UNIT = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class AbodeSensorDescriptionMixin:
     """Mixin for Abode sensor."""
 
@@ -35,7 +35,7 @@ class AbodeSensorDescriptionMixin:
     native_unit_of_measurement_fn: Callable[[AbodeSense], str]
 
 
-@dataclass
+@dataclass(frozen=True)
 class AbodeSensorDescription(SensorEntityDescription, AbodeSensorDescriptionMixin):
     """Class describing Abode sensor entities."""
 

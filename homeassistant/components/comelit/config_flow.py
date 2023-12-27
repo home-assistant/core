@@ -4,19 +4,25 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from aiocomelit import ComeliteSerialBridgeApi, exceptions as aiocomelit_exceptions
+from aiocomelit import (
+    ComeliteSerialBridgeApi,
+    ComelitVedoApi,
+    exceptions as aiocomelit_exceptions,
+)
+from aiocomelit.api import ComelitCommonApi
+from aiocomelit.const import BRIDGE
 import voluptuous as vol
 
 from homeassistant import core, exceptions
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from .const import _LOGGER, DEFAULT_PORT, DOMAIN
+from .const import _LOGGER, DEFAULT_PORT, DEVICE_TYPE_LIST, DOMAIN
 
 DEFAULT_HOST = "192.168.1.252"
-DEFAULT_PIN = "111111"
+DEFAULT_PIN = 111111
 
 
 def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
@@ -27,11 +33,12 @@ def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
             vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
             vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
             vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.positive_int,
+            vol.Required(CONF_TYPE, default=BRIDGE): vol.In(DEVICE_TYPE_LIST),
         }
     )
 
 
-STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PIN): str})
+STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PIN): cv.positive_int})
 
 
 async def validate_input(
@@ -39,7 +46,11 @@ async def validate_input(
 ) -> dict[str, str]:
     """Validate the user input allows us to connect."""
 
-    api = ComeliteSerialBridgeApi(data[CONF_HOST], data[CONF_PORT], data[CONF_PIN])
+    api: ComelitCommonApi
+    if data.get(CONF_TYPE, BRIDGE) == BRIDGE:
+        api = ComeliteSerialBridgeApi(data[CONF_HOST], data[CONF_PORT], data[CONF_PIN])
+    else:
+        api = ComelitVedoApi(data[CONF_HOST], data[CONF_PORT], data[CONF_PIN])
 
     try:
         await api.login()

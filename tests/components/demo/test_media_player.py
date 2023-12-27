@@ -16,7 +16,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import DATA_CLIENTSESSION
+from homeassistant.helpers.aiohttp_client import DATA_CLIENTSESSION, _make_key
 from homeassistant.setup import async_setup_component
 
 from tests.typing import ClientSessionGenerator
@@ -483,7 +483,7 @@ async def test_media_image_proxy(
         def detach(self):
             """Test websession detach."""
 
-    hass.data[DATA_CLIENTSESSION] = MockWebsession()
+    hass.data[DATA_CLIENTSESSION] = {_make_key(): MockWebsession()}
 
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_PLAYING

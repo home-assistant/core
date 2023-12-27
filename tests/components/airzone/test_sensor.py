@@ -34,7 +34,7 @@ async def test_airzone_create_sensors(
     assert state.state == "43"
 
     # WebServer
-    state = hass.states.get("sensor.webserver_rssi")
+    state = hass.states.get("sensor.airzone_webserver_rssi")
     assert state.state == "-42"
 
     # Zones

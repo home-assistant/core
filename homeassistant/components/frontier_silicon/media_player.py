@@ -126,7 +126,8 @@ class AFSAPIDevice(MediaPlayerEntity):
 
         if not self._attr_source_list:
             self.__modes_by_label = {
-                mode.label: mode.key for mode in await afsapi.get_modes()
+                (mode.label if mode.label else mode.id): mode.key
+                for mode in await afsapi.get_modes()
             }
             self._attr_source_list = list(self.__modes_by_label)
 
@@ -150,6 +151,9 @@ class AFSAPIDevice(MediaPlayerEntity):
         # If call to get_volume fails set to 0 and try again next time.
         if not self._max_volume:
             self._max_volume = int(await afsapi.get_volume_steps() or 1) - 1
+
+        if self._max_volume:
+            self._attr_volume_step = 1 / self._max_volume
 
         if self._attr_state != MediaPlayerState.OFF:
             info_name = await afsapi.get_play_name()
@@ -238,18 +242,6 @@ class AFSAPIDevice(MediaPlayerEntity):
         await self.fs_device.set_mute(mute)
 
     # volume
-    async def async_volume_up(self) -> None:
-        """Send volume up command."""
-        volume = await self.fs_device.get_volume()
-        volume = int(volume or 0) + 1
-        await self.fs_device.set_volume(min(volume, self._max_volume))
-
-    async def async_volume_down(self) -> None:
-        """Send volume down command."""
-        volume = await self.fs_device.get_volume()
-        volume = int(volume or 0) - 1
-        await self.fs_device.set_volume(max(volume, 0))
-
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume command."""
         if self._max_volume:  # Can't do anything sensible if not set

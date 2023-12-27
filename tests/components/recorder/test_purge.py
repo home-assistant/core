@@ -74,16 +74,16 @@ async def test_purge_big_database(
 
     instance = await async_setup_recorder_instance(hass)
 
-    for _ in range(25):
+    for _ in range(12):
         await _add_test_states(hass, wait_recording_done=False)
     await async_wait_recording_done(hass)
 
-    with patch.object(instance, "max_bind_vars", 100), patch.object(
-        instance.database_engine, "max_bind_vars", 100
+    with patch.object(instance, "max_bind_vars", 72), patch.object(
+        instance.database_engine, "max_bind_vars", 72
     ), session_scope(hass=hass) as session:
         states = session.query(States)
         state_attributes = session.query(StateAttributes)
-        assert states.count() == 150
+        assert states.count() == 72
         assert state_attributes.count() == 3
 
         purge_before = dt_util.utcnow() - timedelta(days=4)
@@ -96,7 +96,7 @@ async def test_purge_big_database(
             repack=False,
         )
         assert not finished
-        assert states.count() == 50
+        assert states.count() == 24
         assert state_attributes.count() == 1
 
 
@@ -244,9 +244,7 @@ async def test_purge_old_states_encounters_temporary_mysql_error(
     ) as sleep_mock, patch(
         "homeassistant.components.recorder.purge._purge_old_recorder_runs",
         side_effect=[mysql_exception, None],
-    ), patch.object(
-        instance.engine.dialect, "name", "mysql"
-    ):
+    ), patch.object(instance.engine.dialect, "name", "mysql"):
         await hass.services.async_call(recorder.DOMAIN, SERVICE_PURGE, {"keep_days": 0})
         await hass.async_block_till_done()
         await async_wait_recording_done(hass)

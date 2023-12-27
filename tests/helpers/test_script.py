@@ -9,11 +9,12 @@ from types import MappingProxyType
 from unittest import mock
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
 # Otherwise can't test just this file (import order issue)
-from homeassistant import exceptions
+from homeassistant import config_entries, exceptions
 import homeassistant.components.scene as scene
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -33,6 +34,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import ConditionError, HomeAssistantError, ServiceNotFound
 from homeassistant.helpers import (
     config_validation as cv,
+    device_registry as dr,
     entity_registry as er,
     script,
     template,
@@ -43,6 +45,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
+    MockConfigEntry,
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
@@ -1344,13 +1347,13 @@ async def test_wait_template_with_utcnow(hass: HomeAssistant) -> None:
 
     try:
         non_matching_time = start_time.replace(hour=3)
-        with patch("homeassistant.util.dt.utcnow", return_value=non_matching_time):
+        with freeze_time(non_matching_time):
             hass.async_create_task(script_obj.async_run(context=Context()))
             await asyncio.wait_for(wait_started_flag.wait(), 1)
             assert script_obj.is_running
 
         match_time = start_time.replace(hour=12)
-        with patch("homeassistant.util.dt.utcnow", return_value=match_time):
+        with freeze_time(match_time):
             async_fire_time_changed(hass, match_time)
     except (AssertionError, asyncio.TimeoutError):
         await script_obj.async_stop()
@@ -1376,15 +1379,13 @@ async def test_wait_template_with_utcnow_no_match(hass: HomeAssistant) -> None:
 
     try:
         non_matching_time = start_time.replace(hour=3)
-        with patch("homeassistant.util.dt.utcnow", return_value=non_matching_time):
+        with freeze_time(non_matching_time):
             hass.async_create_task(script_obj.async_run(context=Context()))
             await asyncio.wait_for(wait_started_flag.wait(), 1)
             assert script_obj.is_running
 
         second_non_matching_time = start_time.replace(hour=4)
-        with patch(
-            "homeassistant.util.dt.utcnow", return_value=second_non_matching_time
-        ):
+        with freeze_time(second_non_matching_time):
             async_fire_time_changed(hass, second_non_matching_time)
 
         async with asyncio.timeout(0.1):
@@ -1786,11 +1787,12 @@ async def test_shorthand_template_condition(
 
 
 async def test_condition_validation(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if we can use conditions which validate late in a script."""
-    registry = er.async_get(hass)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "test", "hue", "1234", suggested_object_id="entity"
     )
     assert entry.entity_id == "test.entity"
@@ -2383,11 +2385,12 @@ async def test_repeat_conditional(
 
 
 async def test_repeat_until_condition_validation(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if we can use conditions in repeat until conditions which validate late."""
-    registry = er.async_get(hass)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "test", "hue", "1234", suggested_object_id="entity"
     )
     assert entry.entity_id == "test.entity"
@@ -2445,11 +2448,12 @@ async def test_repeat_until_condition_validation(
 
 
 async def test_repeat_while_condition_validation(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if we can use conditions in repeat while conditions which validate late."""
-    registry = er.async_get(hass)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "test", "hue", "1234", suggested_object_id="entity"
     )
     assert entry.entity_id == "test.entity"
@@ -2866,11 +2870,12 @@ async def test_choose(
 
 
 async def test_choose_condition_validation(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if we can use conditions in choose actions which validate late."""
-    registry = er.async_get(hass)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "test", "hue", "1234", suggested_object_id="entity"
     )
     assert entry.entity_id == "test.entity"
@@ -3110,11 +3115,12 @@ async def test_if_disabled(
 
 
 async def test_if_condition_validation(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test if we can use conditions in if actions which validate late."""
-    registry = er.async_get(hass)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "test", "hue", "1234", suggested_object_id="entity"
     )
     assert entry.entity_id == "test.entity"
@@ -4532,12 +4538,23 @@ async def test_set_redefines_variable(
     assert_action_trace(expected_trace)
 
 
-async def test_validate_action_config(hass: HomeAssistant) -> None:
+async def test_validate_action_config(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Validate action config."""
+
+    config_entry = MockConfigEntry(domain="fake_integration", data={})
+    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.add_to_hass(hass)
+
+    mock_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:02")},
+    )
 
     def templated_device_action(message):
         return {
-            "device_id": "abcd",
+            "device_id": mock_device.id,
             "domain": "mobile_app",
             "message": f"{message} {{{{ 5 + 5}}}}",
             "type": "notify",

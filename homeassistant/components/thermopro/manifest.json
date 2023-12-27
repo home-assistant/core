@@ -16,5 +16,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/thermopro",
   "iot_class": "local_push",
-  "requirements": ["thermopro-ble==0.4.5"]
+  "requirements": ["thermopro-ble==0.5.0"]
 }
