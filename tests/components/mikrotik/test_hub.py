@@ -11,6 +11,7 @@ import pytest
 from homeassistant.components import mikrotik
 from homeassistant.components.mikrotik.const import ATTR_FIRMWARE, ATTR_MODEL
 from homeassistant.components.mikrotik.hub import MikrotikData
+from homeassistant.core import HomeAssistant
 
 from . import MOCK_DATA
 
@@ -18,13 +19,13 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def api():
+def api() -> Api:
     """Mock Mikrotik Api."""
     return MagicMock(Api)
 
 
 @pytest.fixture
-def mikrotik_data(hass, api):
+def mikrotik_data(hass: HomeAssistant, api: Api) -> MikrotikData:
     """Create MikrotikData."""
     entry_id = "mikrotik_entry_id"
     options: dict[str, Any] = {}
