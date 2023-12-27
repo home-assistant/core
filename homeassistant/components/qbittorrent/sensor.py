@@ -137,6 +137,7 @@ class QBittorrentSensor(CoordinatorEntity[QBittorrentDataCoordinator], SensorEnt
     """Representation of a qBittorrent sensor."""
 
     _attr_has_entity_name = True
+    entity_description: QBittorrentSensorEntityDescription
 
     def __init__(
         self,
