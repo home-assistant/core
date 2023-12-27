@@ -26,10 +26,7 @@ from .const import (
 
 
 def _parse_datetime(dt_str: str | None) -> str | None:
-    if dt_str is None:
-        return None
-    parsed = dt_util.parse_datetime(dt_str)
-    if parsed is None:
+    if dt_str is None or (parsed := dt_util.parse_datetime(dt_str)) is None:
         return None
     return parsed.replace(tzinfo=dt_util.UTC).isoformat()
 
