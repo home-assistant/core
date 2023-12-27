@@ -76,3 +76,19 @@ async def test_huum_errors(
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": error_base}
+
+    with patch(
+        "homeassistant.components.huum.config_flow.Huum.status",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.huum.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": TEST_USERNAME,
+                "password": TEST_PASSWORD,
+            },
+        )
+        assert result2["type"] == FlowResultType.CREATE_ENTRY
