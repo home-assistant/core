@@ -281,7 +281,7 @@ class _BaseVacuum(Entity, cached_properties=BASE_CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def capability_attributes(self) -> Mapping[str, Any] | None:
         """Return capability attributes."""
-        if self.supported_features & VacuumEntityFeature.FAN_SPEED:
+        if VacuumEntityFeature.FAN_SPEED in self.supported_features:
             return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
         return None
 
@@ -289,12 +289,13 @@ class _BaseVacuum(Entity, cached_properties=BASE_CACHED_PROPERTIES_WITH_ATTR_):
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the vacuum cleaner."""
         data: dict[str, Any] = {}
+        supported_features = self.supported_features
 
-        if self.supported_features & VacuumEntityFeature.BATTERY:
+        if VacuumEntityFeature.BATTERY in supported_features:
             data[ATTR_BATTERY_LEVEL] = self.battery_level
             data[ATTR_BATTERY_ICON] = self.battery_icon
 
-        if self.supported_features & VacuumEntityFeature.FAN_SPEED:
+        if VacuumEntityFeature.FAN_SPEED in supported_features:
             data[ATTR_FAN_SPEED] = self.fan_speed
 
         return data
@@ -470,7 +471,7 @@ class VacuumEntity(
         """Return the state attributes of the vacuum cleaner."""
         data = super().state_attributes
 
-        if self.supported_features & VacuumEntityFeature.STATUS:
+        if VacuumEntityFeature.STATUS in self.supported_features:
             data[ATTR_STATUS] = self.status
 
         return data
