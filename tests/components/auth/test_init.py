@@ -583,55 +583,18 @@ async def test_ws_delete_all_refresh_tokens_error(
         assert refresh_token is None
 
 
+@pytest.mark.parametrize(
+    ("delete_token_type"), [None, TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN, TOKEN_TYPE_NORMAL]
+)
 async def test_ws_delete_all_refresh_tokens(
     hass: HomeAssistant,
     hass_admin_user: MockUser,
     hass_admin_credential: Credentials,
     hass_ws_client: WebSocketGenerator,
     hass_access_token: str,
+    delete_token_type: str | None,
 ) -> None:
-    """Test deleting all refresh tokens."""
-    assert await async_setup_component(hass, "auth", {"http": {}})
-
-    # one token already exists
-    await hass.auth.async_create_refresh_token(
-        hass_admin_user, CLIENT_ID, credential=hass_admin_credential
-    )
-    await hass.auth.async_create_refresh_token(
-        hass_admin_user, CLIENT_ID + "_1", credential=hass_admin_credential
-    )
-
-    ws_client = await hass_ws_client(hass, hass_access_token)
-
-    # get all tokens
-    await ws_client.send_json({"id": 5, "type": "auth/refresh_tokens"})
-    result = await ws_client.receive_json()
-    assert result["success"], result
-
-    tokens = result["result"]
-
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "auth/delete_all_refresh_tokens",
-        }
-    )
-
-    result = await ws_client.receive_json()
-    assert result, result["success"]
-    for token in tokens:
-        refresh_token = await hass.auth.async_get_refresh_token(token["id"])
-        assert refresh_token is None
-
-
-async def test_ws_delete_all_refresh_tokens_filtered(
-    hass: HomeAssistant,
-    hass_admin_user: MockUser,
-    hass_admin_credential: Credentials,
-    hass_ws_client: WebSocketGenerator,
-    hass_access_token: str,
-) -> None:
-    """Test deleting all refresh tokens of a specific type."""
+    """Test deleting all or some refresh tokens."""
     assert await async_setup_component(hass, "auth", {"http": {}})
 
     # one token already exists
@@ -642,14 +605,14 @@ async def test_ws_delete_all_refresh_tokens_filtered(
     # create a long lived token
     await hass.auth.async_create_refresh_token(
         hass_admin_user,
-        CLIENT_ID + "_LL",
+        f"{CLIENT_ID}_LL",
         client_name="client_ll",
         credential=hass_admin_credential,
         token_type=TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
     )
 
     await hass.auth.async_create_refresh_token(
-        hass_admin_user, CLIENT_ID + "_1", credential=hass_admin_credential
+        hass_admin_user, f"{CLIENT_ID}_1", credential=hass_admin_credential
     )
 
     ws_client = await hass_ws_client(hass, hass_access_token)
@@ -661,13 +624,14 @@ async def test_ws_delete_all_refresh_tokens_filtered(
 
     tokens = result["result"]
 
-    await ws_client.send_json(
-        {
-            "id": 6,
-            "type": "auth/delete_all_refresh_tokens",
-            "token_type": TOKEN_TYPE_NORMAL,
-        }
-    )
+    ws_json = {
+        "id": 6,
+        "type": "auth/delete_all_refresh_tokens",
+    }
+    if delete_token_type:
+        ws_json["token_type"] = delete_token_type
+
+    await ws_client.send_json(ws_json)
 
     result = await ws_client.receive_json()
     assert result, result["success"]
@@ -677,12 +641,17 @@ async def test_ws_delete_all_refresh_tokens_filtered(
         if refresh_token is not None:
             remaining_tokens += 1
 
-        if token["type"] == TOKEN_TYPE_NORMAL:
+        if delete_token_type is None or token["type"] == delete_token_type:
             assert refresh_token is None
         else:
             assert refresh_token.client_id == token["client_id"]
 
-    assert remaining_tokens == 1
+    if delete_token_type == TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN:
+        assert remaining_tokens == 3
+    elif delete_token_type == TOKEN_TYPE_NORMAL:
+        assert remaining_tokens == 1
+    else:
+        assert remaining_tokens == 0
 
 
 async def test_ws_sign_path(
