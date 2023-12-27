@@ -778,6 +778,9 @@
       "feeding_mode": {
         "name": "Mode"
       },
+      "preset": {
+        "name": "Preset"
+      },
       "detection_distance": {
         "name": "Detection distance"
       },
