@@ -185,12 +185,8 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
         self.samples: deque = deque(maxlen=int(max_samples))
 
         self._attr_name = name
-
-        if device_class:
-            self._attr_device_class = device_class
-
-        if unique_id:
-            self._attr_unique_id = unique_id
+        self._attr_device_class = device_class
+        self._attr_unique_id = unique_id
 
         if sensor_entity_id:
             self.entity_id = sensor_entity_id
