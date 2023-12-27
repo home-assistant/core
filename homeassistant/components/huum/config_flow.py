@@ -46,7 +46,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         raise InvalidAuth from client_error
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class HuumConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for huum."""
 
     VERSION = 1
