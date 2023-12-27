@@ -67,10 +67,10 @@ from .const import (
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
-    LENGTH_METERS,
     MATCH_ALL,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_STATE_STATE,
+    UnitOfLength,
     __version__,
 )
 from .exceptions import (
@@ -2242,7 +2242,8 @@ class Config:
         Async friendly.
         """
         return self.units.length(
-            location.distance(self.latitude, self.longitude, lat, lon), LENGTH_METERS
+            location.distance(self.latitude, self.longitude, lat, lon),
+            UnitOfLength.METERS,
         )
 
     def path(self, *path: str) -> str:
