@@ -48,7 +48,10 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("raises", "error_base", ),
+    (
+        "raises",
+        "error_base",
+    ),
     [
         (Exception, "unknown"),
         (aiohttp.ClientError, "invalid_auth"),

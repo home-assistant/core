@@ -84,7 +84,10 @@ class HuumDevice(ClimateEntity):
     @property
     def target_temperature(self) -> int:
         """Return the temperature we try to reach."""
-        return getattr(self._status, "target_temperature", None) or self._target_temperature
+        return (
+            getattr(self._status, "target_temperature", None)
+            or self._target_temperature
+        )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
