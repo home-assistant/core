@@ -92,14 +92,8 @@
       "vascular_age": {
         "name": "Vascular age"
       },
-      "visceral_fat": {
-        "name": "Visceral fat"
-      },
-      "fat_mass_for_segments": {
-        "name": "Fat mass for segments"
-      },
-      "muscle_mass_for_segments": {
-        "name": "Muscle mass for segments"
+      "visceral_fat_index": {
+        "name": "Visceral fat index"
       },
       "electrodermal_activity_feet": {
         "name": "Electrodermal activity feet"
