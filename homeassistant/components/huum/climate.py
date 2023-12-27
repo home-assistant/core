@@ -7,6 +7,7 @@ from typing import Any
 from huum.const import SaunaStatus
 from huum.exceptions import SafetyException
 from huum.huum import Huum
+from huum.schemas import HuumStatusResponse
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -77,22 +78,22 @@ class HuumDevice(ClimateEntity):
         return "mdi:radiator-off"
 
     @property
-    def current_temperature(self) -> float | None:
+    def current_temperature(self) -> int | None:
         """Return the current temperature."""
-        return getattr(self._status, "temperature", None) or self._attr_min_temp
+        return getattr(self._status, "temperature", None)
 
     @property
-    def target_temperature(self) -> int:
+    def target_temperature(self) -> int | None:
         """Return the temperature we try to reach."""
-        return (
-            getattr(self._status, "target_temperature", None)
-            or self._target_temperature
-        )
+        return getattr(self._status, "target_temperature", None)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
+        if not self.target_temperature:
+            raise HomeAssistantError("No target temperature set, can't turn on sauna")
+
         if hvac_mode == HVACMode.HEAT:
-            temperature = max(self.min_temp, self.target_temperature)
+            temperature = self.target_temperature
             await self._turn_on(temperature)
         elif hvac_mode == HVACMode.OFF:
             await self._huum_handler.turn_off()
