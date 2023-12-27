@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import TYPE_CHECKING, Any, final
+from typing import TYPE_CHECKING, Any, Literal, final
 
 import voluptuous as vol
 
@@ -19,7 +19,8 @@ from homeassistant.const import (
     STATE_ON,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -166,7 +167,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SET_PRESET_MODE,
         {vol.Required(ATTR_PRESET_MODE): cv.string},
-        "async_set_preset_mode",
+        "async_handle_set_preset_mode_service",
         [ClimateEntityFeature.PRESET_MODE],
     )
     component.async_register_entity_service(
@@ -193,13 +194,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SET_FAN_MODE,
         {vol.Required(ATTR_FAN_MODE): cv.string},
-        "async_set_fan_mode",
+        "async_handle_set_fan_mode_service",
         [ClimateEntityFeature.FAN_MODE],
     )
     component.async_register_entity_service(
         SERVICE_SET_SWING_MODE,
         {vol.Required(ATTR_SWING_MODE): cv.string},
-        "async_set_swing_mode",
+        "async_handle_set_swing_mode_service",
         [ClimateEntityFeature.SWING_MODE],
     )
 
@@ -329,17 +330,17 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if target_temperature_step := self.target_temperature_step:
             data[ATTR_TARGET_TEMP_STEP] = target_temperature_step
 
-        if supported_features & ClimateEntityFeature.TARGET_HUMIDITY:
+        if ClimateEntityFeature.TARGET_HUMIDITY in supported_features:
             data[ATTR_MIN_HUMIDITY] = self.min_humidity
             data[ATTR_MAX_HUMIDITY] = self.max_humidity
 
-        if supported_features & ClimateEntityFeature.FAN_MODE:
+        if ClimateEntityFeature.FAN_MODE in supported_features:
             data[ATTR_FAN_MODES] = self.fan_modes
 
-        if supported_features & ClimateEntityFeature.PRESET_MODE:
+        if ClimateEntityFeature.PRESET_MODE in supported_features:
             data[ATTR_PRESET_MODES] = self.preset_modes
 
-        if supported_features & ClimateEntityFeature.SWING_MODE:
+        if ClimateEntityFeature.SWING_MODE in supported_features:
             data[ATTR_SWING_MODES] = self.swing_modes
 
         return data
@@ -359,7 +360,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ),
         }
 
-        if supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
+        if ClimateEntityFeature.TARGET_TEMPERATURE in supported_features:
             data[ATTR_TEMPERATURE] = show_temp(
                 hass,
                 self.target_temperature,
@@ -367,7 +368,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 precision,
             )
 
-        if supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
+        if ClimateEntityFeature.TARGET_TEMPERATURE_RANGE in supported_features:
             data[ATTR_TARGET_TEMP_HIGH] = show_temp(
                 hass, self.target_temperature_high, temperature_unit, precision
             )
@@ -378,22 +379,22 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if (current_humidity := self.current_humidity) is not None:
             data[ATTR_CURRENT_HUMIDITY] = current_humidity
 
-        if supported_features & ClimateEntityFeature.TARGET_HUMIDITY:
+        if ClimateEntityFeature.TARGET_HUMIDITY in supported_features:
             data[ATTR_HUMIDITY] = self.target_humidity
 
-        if supported_features & ClimateEntityFeature.FAN_MODE:
+        if ClimateEntityFeature.FAN_MODE in supported_features:
             data[ATTR_FAN_MODE] = self.fan_mode
 
         if hvac_action := self.hvac_action:
             data[ATTR_HVAC_ACTION] = hvac_action
 
-        if supported_features & ClimateEntityFeature.PRESET_MODE:
+        if ClimateEntityFeature.PRESET_MODE in supported_features:
             data[ATTR_PRESET_MODE] = self.preset_mode
 
-        if supported_features & ClimateEntityFeature.SWING_MODE:
+        if ClimateEntityFeature.SWING_MODE in supported_features:
             data[ATTR_SWING_MODE] = self.swing_mode
 
-        if supported_features & ClimateEntityFeature.AUX_HEAT:
+        if ClimateEntityFeature.AUX_HEAT in supported_features:
             data[ATTR_AUX_HEAT] = STATE_ON if self.is_aux_heat else STATE_OFF
 
         return data
@@ -515,6 +516,35 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         return self._attr_swing_modes
 
+    @final
+    @callback
+    def _valid_mode_or_raise(
+        self,
+        mode_type: Literal["preset", "swing", "fan"],
+        mode: str,
+        modes: list[str] | None,
+    ) -> None:
+        """Raise ServiceValidationError on invalid modes."""
+        if modes and mode in modes:
+            return
+        modes_str: str = ", ".join(modes) if modes else ""
+        if mode_type == "preset":
+            translation_key = "not_valid_preset_mode"
+        elif mode_type == "swing":
+            translation_key = "not_valid_swing_mode"
+        elif mode_type == "fan":
+            translation_key = "not_valid_fan_mode"
+        raise ServiceValidationError(
+            f"The {mode_type}_mode {mode} is not a valid {mode_type}_mode:"
+            f" {modes_str}",
+            translation_domain=DOMAIN,
+            translation_key=translation_key,
+            translation_placeholders={
+                "mode": mode,
+                "modes": modes_str,
+            },
+        )
+
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         raise NotImplementedError()
@@ -533,6 +563,12 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Set new target humidity."""
         await self.hass.async_add_executor_job(self.set_humidity, humidity)
 
+    @final
+    async def async_handle_set_fan_mode_service(self, fan_mode: str) -> None:
+        """Validate and set new preset mode."""
+        self._valid_mode_or_raise("fan", fan_mode, self.fan_modes)
+        await self.async_set_fan_mode(fan_mode)
+
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         raise NotImplementedError()
@@ -549,6 +585,12 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Set new target hvac mode."""
         await self.hass.async_add_executor_job(self.set_hvac_mode, hvac_mode)
 
+    @final
+    async def async_handle_set_swing_mode_service(self, swing_mode: str) -> None:
+        """Validate and set new preset mode."""
+        self._valid_mode_or_raise("swing", swing_mode, self.swing_modes)
+        await self.async_set_swing_mode(swing_mode)
+
     def set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
         raise NotImplementedError()
@@ -556,6 +598,12 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
         await self.hass.async_add_executor_job(self.set_swing_mode, swing_mode)
+
+    @final
+    async def async_handle_set_preset_mode_service(self, preset_mode: str) -> None:
+        """Validate and set new preset mode."""
+        self._valid_mode_or_raise("preset", preset_mode, self.preset_modes)
+        await self.async_set_preset_mode(preset_mode)
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""

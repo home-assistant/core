@@ -166,6 +166,9 @@ class ZHADevice(LogMixin):
 
         if not self.is_coordinator:
             keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
+            self.debug(
+                "starting availability checks - interval: %s", keep_alive_interval
+            )
             self.unsubs.append(
                 async_track_time_interval(
                     self.hass,
@@ -447,35 +450,36 @@ class ZHADevice(LogMixin):
             self._checkins_missed_count = 0
             return
 
-        if (
-            self._checkins_missed_count >= _CHECKIN_GRACE_PERIODS
-            or self.manufacturer == "LUMI"
-            or not self._endpoints
-        ):
-            self.debug(
-                (
-                    "last_seen is %s seconds ago and ping attempts have been exhausted,"
-                    " marking the device unavailable"
-                ),
-                difference,
-            )
-            self.update_available(False)
-            return
+        if self.hass.data[const.DATA_ZHA].allow_polling:
+            if (
+                self._checkins_missed_count >= _CHECKIN_GRACE_PERIODS
+                or self.manufacturer == "LUMI"
+                or not self._endpoints
+            ):
+                self.debug(
+                    (
+                        "last_seen is %s seconds ago and ping attempts have been exhausted,"
+                        " marking the device unavailable"
+                    ),
+                    difference,
+                )
+                self.update_available(False)
+                return
 
-        self._checkins_missed_count += 1
-        self.debug(
-            "Attempting to checkin with device - missed checkins: %s",
-            self._checkins_missed_count,
-        )
-        if not self.basic_ch:
-            self.debug("does not have a mandatory basic cluster")
-            self.update_available(False)
-            return
-        res = await self.basic_ch.get_attribute_value(
-            ATTR_MANUFACTURER, from_cache=False
-        )
-        if res is not None:
-            self._checkins_missed_count = 0
+            self._checkins_missed_count += 1
+            self.debug(
+                "Attempting to checkin with device - missed checkins: %s",
+                self._checkins_missed_count,
+            )
+            if not self.basic_ch:
+                self.debug("does not have a mandatory basic cluster")
+                self.update_available(False)
+                return
+            res = await self.basic_ch.get_attribute_value(
+                ATTR_MANUFACTURER, from_cache=False
+            )
+            if res is not None:
+                self._checkins_missed_count = 0
 
     def update_available(self, available: bool) -> None:
         """Update device availability and signal entities."""

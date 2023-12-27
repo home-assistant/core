@@ -400,10 +400,11 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def capability_attributes(self) -> dict[str, list[str] | None]:
         """Return capability attributes."""
         attrs = {}
+        supported_features = self.supported_features
 
         if (
-            self.supported_features & FanEntityFeature.SET_SPEED
-            or self.supported_features & FanEntityFeature.PRESET_MODE
+            FanEntityFeature.SET_SPEED in supported_features
+            or FanEntityFeature.PRESET_MODE in supported_features
         ):
             attrs[ATTR_PRESET_MODES] = self.preset_modes
 
@@ -416,20 +417,19 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         data: dict[str, float | str | None] = {}
         supported_features = self.supported_features
 
-        if supported_features & FanEntityFeature.DIRECTION:
+        if FanEntityFeature.DIRECTION in supported_features:
             data[ATTR_DIRECTION] = self.current_direction
 
-        if supported_features & FanEntityFeature.OSCILLATE:
+        if FanEntityFeature.OSCILLATE in supported_features:
             data[ATTR_OSCILLATING] = self.oscillating
 
-        if supported_features & FanEntityFeature.SET_SPEED:
+        has_set_speed = FanEntityFeature.SET_SPEED in supported_features
+
+        if has_set_speed:
             data[ATTR_PERCENTAGE] = self.percentage
             data[ATTR_PERCENTAGE_STEP] = self.percentage_step
 
-        if (
-            supported_features & FanEntityFeature.PRESET_MODE
-            or supported_features & FanEntityFeature.SET_SPEED
-        ):
+        if has_set_speed or FanEntityFeature.PRESET_MODE in supported_features:
             data[ATTR_PRESET_MODE] = self.preset_mode
 
         return data

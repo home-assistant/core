@@ -241,7 +241,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ),
         }
 
-        if self.supported_features & WaterHeaterEntityFeature.OPERATION_MODE:
+        if WaterHeaterEntityFeature.OPERATION_MODE in self.supported_features:
             data[ATTR_OPERATION_LIST] = self.operation_list
 
         return data
@@ -277,10 +277,12 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ),
         }
 
-        if self.supported_features & WaterHeaterEntityFeature.OPERATION_MODE:
+        supported_features = self.supported_features
+
+        if WaterHeaterEntityFeature.OPERATION_MODE in supported_features:
             data[ATTR_OPERATION_MODE] = self.current_operation
 
-        if self.supported_features & WaterHeaterEntityFeature.AWAY_MODE:
+        if WaterHeaterEntityFeature.AWAY_MODE in supported_features:
             is_away = self.is_away_mode_on
             data[ATTR_AWAY_MODE] = STATE_ON if is_away else STATE_OFF
 

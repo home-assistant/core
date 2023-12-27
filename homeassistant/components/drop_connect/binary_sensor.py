@@ -49,7 +49,7 @@ SALT_LOW = "salt"
 class DROPBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes DROP binary sensor entity."""
 
-    value_fn: Callable[[DROPDeviceDataUpdateCoordinator], bool | None]
+    value_fn: Callable[[DROPDeviceDataUpdateCoordinator], int | None]
 
 
 BINARY_SENSORS: list[DROPBinarySensorEntityDescription] = [
