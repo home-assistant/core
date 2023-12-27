@@ -11,6 +11,7 @@ APPLICATION_CREDENTIALS = [
     "google_assistant_sdk",
     "google_mail",
     "google_sheets",
+    "google_tasks",
     "home_connect",
     "lametric",
     "lyric",

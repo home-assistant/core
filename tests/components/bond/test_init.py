@@ -12,7 +12,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ASSUMED_STATE, CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -82,6 +81,7 @@ async def test_async_setup_raises_fails_if_auth_fails(hass: HomeAssistant) -> No
 
 async def test_async_setup_entry_sets_up_hub_and_supported_domains(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that configuring entry sets up cover domain."""
     config_entry = MockConfigEntry(
@@ -112,7 +112,6 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(
     assert config_entry.unique_id == "ZXXX12345"
 
     # verify hub device is registered correctly
-    device_registry = dr.async_get(hass)
     hub = device_registry.async_get_device(identifiers={(DOMAIN, "ZXXX12345")})
     assert hub.name == "bond-name"
     assert hub.manufacturer == "Olibra"
@@ -153,7 +152,9 @@ async def test_unload_config_entry(hass: HomeAssistant) -> None:
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_old_identifiers_are_removed(hass: HomeAssistant) -> None:
+async def test_old_identifiers_are_removed(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test we remove the old non-unique identifiers."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -163,7 +164,6 @@ async def test_old_identifiers_are_removed(hass: HomeAssistant) -> None:
 
     old_identifers = (DOMAIN, "device_id")
     new_identifiers = (DOMAIN, "ZXXX12345", "device_id")
-    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={old_identifers},
@@ -184,9 +184,7 @@ async def test_old_identifiers_are_removed(hass: HomeAssistant) -> None:
             "name": "test1",
             "type": DeviceType.GENERIC_DEVICE,
         }
-    ), patch_bond_device_properties(
-        return_value={}
-    ), patch_bond_device_state(
+    ), patch_bond_device_properties(return_value={}), patch_bond_device_state(
         return_value={}
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
@@ -201,7 +199,9 @@ async def test_old_identifiers_are_removed(hass: HomeAssistant) -> None:
     assert device_registry.async_get_device(identifiers={new_identifiers}) is not None
 
 
-async def test_smart_by_bond_device_suggested_area(hass: HomeAssistant) -> None:
+async def test_smart_by_bond_device_suggested_area(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test we can setup a smart by bond device and get the suggested area."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -226,9 +226,7 @@ async def test_smart_by_bond_device_suggested_area(hass: HomeAssistant) -> None:
             "type": DeviceType.GENERIC_DEVICE,
             "location": "Den",
         }
-    ), patch_bond_device_properties(
-        return_value={}
-    ), patch_bond_device_state(
+    ), patch_bond_device_properties(return_value={}), patch_bond_device_state(
         return_value={}
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
@@ -238,13 +236,14 @@ async def test_smart_by_bond_device_suggested_area(hass: HomeAssistant) -> None:
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == "KXXX12345"
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, "KXXX12345")})
     assert device is not None
     assert device.suggested_area == "Den"
 
 
-async def test_bridge_device_suggested_area(hass: HomeAssistant) -> None:
+async def test_bridge_device_suggested_area(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test we can setup a bridge bond device and get the suggested area."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -272,9 +271,7 @@ async def test_bridge_device_suggested_area(hass: HomeAssistant) -> None:
             "type": DeviceType.GENERIC_DEVICE,
             "location": "Bathroom",
         }
-    ), patch_bond_device_properties(
-        return_value={}
-    ), patch_bond_device_state(
+    ), patch_bond_device_properties(return_value={}), patch_bond_device_state(
         return_value={}
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
@@ -284,14 +281,16 @@ async def test_bridge_device_suggested_area(hass: HomeAssistant) -> None:
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == "ZXXX12345"
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, "ZXXX12345")})
     assert device is not None
     assert device.suggested_area == "Office"
 
 
 async def test_device_remove_devices(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we can only remove a device that no longer exists."""
     assert await async_setup_component(hass, "config", {})
@@ -304,11 +303,9 @@ async def test_device_remove_devices(
         bond_device_id="test-device-id",
     )
 
-    registry: EntityRegistry = er.async_get(hass)
-    entity = registry.entities["fan.name_1"]
+    entity = entity_registry.entities["fan.name_1"]
     assert entity.unique_id == "test-hub-id_test-device-id"
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get(entity.device_id)
     assert (
         await remove_device(

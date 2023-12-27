@@ -1,0 +1,13 @@
+[
+  {
+    "type": "Scale",
+    "battery": "high",
+    "model": "Body+",
+    "model_id": 5,
+    "timezone": "Europe/Amsterdam",
+    "first_session_date": null,
+    "last_session_date": 1693867179,
+    "deviceid": "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d",
+    "hash_deviceid": "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d"
+  }
+]

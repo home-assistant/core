@@ -26,11 +26,23 @@ def has_no_punctuation(value: list[str]) -> list[str]:
     return value
 
 
+def has_one_non_empty_item(value: list[str]) -> list[str]:
+    """Validate result has at least one item."""
+    if len(value) < 1:
+        raise vol.Invalid("at least one sentence is required")
+
+    for sentence in value:
+        if not sentence:
+            raise vol.Invalid(f"sentence too short: '{sentence}'")
+
+    return value
+
+
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): DOMAIN,
         vol.Required(CONF_COMMAND): vol.All(
-            cv.ensure_list, [cv.string], has_no_punctuation
+            cv.ensure_list, [cv.string], has_one_non_empty_item, has_no_punctuation
         ),
     }
 )

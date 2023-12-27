@@ -26,7 +26,7 @@ from .helper import PlenticoreDataFormatter, SettingDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class PlenticoreNumberEntityDescriptionMixin:
     """Define an entity description mixin for number entities."""
 
@@ -36,7 +36,7 @@ class PlenticoreNumberEntityDescriptionMixin:
     fmt_to: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class PlenticoreNumberEntityDescription(
     NumberEntityDescription, PlenticoreNumberEntityDescriptionMixin
 ):

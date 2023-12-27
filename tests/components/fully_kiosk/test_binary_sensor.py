@@ -22,14 +22,13 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 async def test_binary_sensors(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
     mock_fully_kiosk: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test standard Fully Kiosk binary sensors."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
     state = hass.states.get("binary_sensor.amazon_fire_plugged_in")
     assert state
     assert state.state == STATE_ON

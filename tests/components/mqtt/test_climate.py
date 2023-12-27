@@ -139,7 +139,7 @@ async def test_preset_none_in_preset_modes(
 ) -> None:
     """Test the preset mode payload reset configuration."""
     assert await mqtt_mock_entry()
-    assert "not a valid value" in caplog.text
+    assert "preset_modes must not include preset mode 'none'" in caplog.text
 
 
 @pytest.mark.parametrize(

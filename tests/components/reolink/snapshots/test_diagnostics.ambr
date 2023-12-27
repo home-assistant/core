@@ -1,0 +1,50 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'HTTP(S) port': 1234,
+    'HTTPS': True,
+    'IPC cams': dict({
+      '0': dict({
+        'firmware version': 'v1.1.0.0.0.0000',
+        'model': 'RLC-123',
+      }),
+    }),
+    'ONVIF enabled': True,
+    'RTMP enabled': True,
+    'RTSP enabled': True,
+    'WiFi connection': False,
+    'WiFi signal': None,
+    'abilities': dict({
+      'abilityChn': list([
+        dict({
+          'aiTrack': dict({
+            'permit': 0,
+            'ver': 0,
+          }),
+        }),
+      ]),
+    }),
+    'api versions': dict({
+      'GetEvents': 1,
+    }),
+    'capabilities': dict({
+      '0': list([
+        'motion_detection',
+      ]),
+      'Host': list([
+        'RTSP',
+      ]),
+    }),
+    'channels': list([
+      0,
+    ]),
+    'event connection': 'Fast polling',
+    'firmware version': 'v1.0.0.0.0.0000',
+    'hardware version': 'IPC_00000',
+    'model': 'RLN8-410',
+    'stream channels': list([
+      0,
+    ]),
+    'stream protocol': 'rtsp',
+  })
+# ---

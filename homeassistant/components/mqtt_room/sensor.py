@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
-).extend(mqtt.config.MQTT_RO_SCHEMA.schema)
+).extend(mqtt.MQTT_RO_SCHEMA.schema)
 
 
 @lru_cache(maxsize=256)

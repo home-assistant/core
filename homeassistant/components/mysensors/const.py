@@ -11,7 +11,6 @@ ATTR_GATEWAY_ID: Final = "gateway_id"
 ATTR_NODE_ID: Final = "node_id"
 
 CONF_BAUD_RATE: Final = "baud_rate"
-CONF_DEVICE: Final = "device"
 CONF_PERSISTENCE_FILE: Final = "persistence_file"
 CONF_RETAIN: Final = "retain"
 CONF_TCP_PORT: Final = "tcp_port"

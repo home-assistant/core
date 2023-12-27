@@ -122,7 +122,7 @@ class ProbeEndpoint:
                 endpoint.device.manufacturer,
                 endpoint.device.model,
                 cluster_handlers,
-                endpoint.device.quirk_class,
+                endpoint.device.quirk_id,
             )
             if platform_entity_class is None:
                 return
@@ -181,7 +181,7 @@ class ProbeEndpoint:
             endpoint.device.manufacturer,
             endpoint.device.model,
             cluster_handler_list,
-            endpoint.device.quirk_class,
+            endpoint.device.quirk_id,
         )
         if entity_class is None:
             return
@@ -226,14 +226,14 @@ class ProbeEndpoint:
                 endpoint.device.manufacturer,
                 endpoint.device.model,
                 list(endpoint.all_cluster_handlers.values()),
-                endpoint.device.quirk_class,
+                endpoint.device.quirk_id,
             )
         else:
             matches, claimed = zha_regs.ZHA_ENTITIES.get_multi_entity(
                 endpoint.device.manufacturer,
                 endpoint.device.model,
                 endpoint.unclaimed_cluster_handlers(),
-                endpoint.device.quirk_class,
+                endpoint.device.quirk_id,
             )
 
         endpoint.claim_cluster_handlers(claimed)

@@ -5,8 +5,7 @@ from http import HTTPStatus
 from ipaddress import ip_network
 import logging
 from pathlib import Path
-import time
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -21,7 +20,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import server_context_intermediate, server_context_modern
 
 from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMockResponse
 from tests.typing import ClientSessionGenerator
 
 
@@ -289,7 +287,7 @@ async def test_emergency_ssl_certificate_when_invalid(
         _setup_broken_ssl_pem_files, tmp_path
     )
 
-    hass.config.safe_mode = True
+    hass.config.recovery_mode = True
     assert (
         await async_setup_component(
             hass,
@@ -304,17 +302,17 @@ async def test_emergency_ssl_certificate_when_invalid(
     await hass.async_start()
     await hass.async_block_till_done()
     assert (
-        "Home Assistant is running in safe mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
+        "Home Assistant is running in recovery mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
         in caplog.text
     )
 
     assert hass.http.site is not None
 
 
-async def test_emergency_ssl_certificate_not_used_when_not_safe_mode(
+async def test_emergency_ssl_certificate_not_used_when_not_recovery_mode(
     hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test an emergency cert is only used in safe mode."""
+    """Test an emergency cert is only used in recovery mode."""
 
     cert_path, key_path = await hass.async_add_executor_job(
         _setup_broken_ssl_pem_files, tmp_path
@@ -338,7 +336,7 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
     cert_path, key_path = await hass.async_add_executor_job(
         _setup_broken_ssl_pem_files, tmp_path
     )
-    hass.config.safe_mode = True
+    hass.config.recovery_mode = True
 
     with patch(
         "homeassistant.components.http.get_url", side_effect=NoURLAvailableError
@@ -358,7 +356,7 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
 
     assert len(mock_get_url.mock_calls) == 1
     assert (
-        "Home Assistant is running in safe mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
+        "Home Assistant is running in recovery mode with an emergency self signed ssl certificate because the configured SSL certificate was not usable"
         in caplog.text
     )
 
@@ -373,7 +371,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert(
     cert_path, key_path = await hass.async_add_executor_job(
         _setup_broken_ssl_pem_files, tmp_path
     )
-    hass.config.safe_mode = True
+    hass.config.recovery_mode = True
 
     with patch(
         "homeassistant.components.http.x509.CertificateBuilder", side_effect=OSError
@@ -410,7 +408,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
     cert_path, key_path = await hass.async_add_executor_job(
         _setup_broken_ssl_pem_files, tmp_path
     )
-    hass.config.safe_mode = True
+    hass.config.recovery_mode = True
 
     with patch(
         "homeassistant.components.http.x509.CertificateBuilder", side_effect=OSError
@@ -501,22 +499,3 @@ async def test_logging(
     response = await client.get("/api/states/logging.entity")
     assert response.status == HTTPStatus.OK
     assert "GET /api/states/logging.entity" not in caplog.text
-
-
-async def test_hass_access_logger_at_info_level(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test that logging happens at info level."""
-    test_logger = logging.getLogger("test.aiohttp.logger")
-    logger = http.HomeAssistantAccessLogger(test_logger)
-    mock_request = MagicMock()
-    response = AiohttpClientMockResponse(
-        "POST", "http://127.0.0.1", status=HTTPStatus.OK
-    )
-    setattr(response, "body_length", 42)
-    logger.log(mock_request, response, time.time())
-    assert "42" in caplog.text
-    caplog.clear()
-    test_logger.setLevel(logging.WARNING)
-    logger.log(mock_request, response, time.time())
-    assert "42" not in caplog.text

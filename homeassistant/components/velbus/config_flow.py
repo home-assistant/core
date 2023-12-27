@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import velbusaio
+import velbusaio.controller
 from velbusaio.exceptions import VelbusConnectionFailed
 import voluptuous as vol
 

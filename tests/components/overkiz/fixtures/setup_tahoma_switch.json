@@ -1,0 +1,891 @@
+{
+  "creationTime": 1665238624000,
+  "lastUpdateTime": 1665238624000,
+  "id": "SETUP-****-****-6867",
+  "location": {
+    "creationTime": 1665238624000,
+    "lastUpdateTime": 1667054735000,
+    "city": "** **",
+    "country": "**",
+    "postalCode": "** **",
+    "addressLine1": "** **",
+    "addressLine2": "*",
+    "timezone": "Europe/Amsterdam",
+    "longitude": "**",
+    "latitude": "**",
+    "twilightMode": 2,
+    "twilightAngle": "SOLAR",
+    "twilightCity": "amsterdam",
+    "summerSolsticeDuskMinutes": 1290,
+    "winterSolsticeDuskMinutes": 990,
+    "twilightOffsetEnabled": false,
+    "dawnOffset": 0,
+    "duskOffset": 0,
+    "countryCode": "NL"
+  },
+  "gateways": [
+    {
+      "gatewayId": "****-****-6867",
+      "type": 98,
+      "subType": 1,
+      "placeOID": "41d63e43-bfa8-4e24-8c16-4faae0448cab",
+      "autoUpdateEnabled": true,
+      "alive": true,
+      "timeReliable": true,
+      "connectivity": {
+        "status": "OK",
+        "protocolVersion": "2023.4.4"
+      },
+      "upToDate": true,
+      "updateStatus": "UP_TO_DATE",
+      "syncInProgress": false,
+      "mode": "ACTIVE",
+      "functions": "INTERNET_AUTHORIZATION,SCENARIO_DOWNLOAD,SCENARIO_AUTO_LAUNCHING,SCENARIO_TELECO_LAUNCHING,INTERNET_UPLOAD,INTERNET_UPDATE,TRIGGERS_SENSORS"
+    }
+  ],
+  "devices": [
+    {
+      "creationTime": 1665238630000,
+      "lastUpdateTime": 1665238630000,
+      "label": "** *(**)*",
+      "deviceURL": "homekit://****-****-6867/stack",
+      "shortcut": false,
+      "controllableName": "homekit:StackComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "deleteControllers",
+            "nparams": 0
+          }
+        ],
+        "states": [],
+        "dataProperties": [],
+        "widgetName": "HomekitStack",
+        "uiProfiles": ["Specific"],
+        "uiClass": "ProtocolGateway",
+        "qualifiedName": "homekit:StackComponent",
+        "type": "PROTOCOL_GATEWAY"
+      },
+      "attributes": [
+        {
+          "name": "homekit:SetupPayload",
+          "type": 3,
+          "value": "**:*/*/**"
+        },
+        {
+          "name": "homekit:SetupCode",
+          "type": 3,
+          "value": "**"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "41d63e43-bfa8-4e24-8c16-4faae0448cab",
+      "type": 5,
+      "widget": "HomekitStack",
+      "oid": "ab964849-56ca-4e9c-a58c-33ce5e341b68",
+      "uiClass": "ProtocolGateway"
+    },
+    {
+      "creationTime": 1665238630000,
+      "lastUpdateTime": 1665238630000,
+      "label": "**",
+      "deviceURL": "internal://****-****-6867/pod/0",
+      "shortcut": false,
+      "controllableName": "internal:PodV3Component",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "update",
+            "nparams": 0
+          },
+          {
+            "commandName": "setCountryCode",
+            "nparams": 1
+          },
+          {
+            "commandName": "activateCalendar",
+            "nparams": 0
+          },
+          {
+            "commandName": "deactivateCalendar",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPodMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshUpdateStatus",
+            "nparams": 0
+          },
+          {
+            "commandName": "setCalendar",
+            "nparams": 1
+          },
+          {
+            "commandName": "setLightingLedPodMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setPodLedOff",
+            "nparams": 0
+          },
+          {
+            "commandName": "setPodLedOn",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["offline", "online"],
+            "qualifiedName": "core:ConnectivityState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:CountryCodeState"
+          },
+          {
+            "eventBased": true,
+            "type": "DataState",
+            "qualifiedName": "core:LocalAccessProofState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:LocalIPv4AddressState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "eventBased": true,
+            "type": "DiscreteState",
+            "values": ["pressed", "stop"],
+            "qualifiedName": "internal:Button1State"
+          },
+          {
+            "eventBased": true,
+            "type": "DiscreteState",
+            "values": ["pressed", "stop"],
+            "qualifiedName": "internal:Button2State"
+          },
+          {
+            "eventBased": true,
+            "type": "DiscreteState",
+            "values": ["pressed", "stop"],
+            "qualifiedName": "internal:Button3State"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "internal:LightingLedPodModeState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "Pod",
+        "uiProfiles": ["UpdatableComponent"],
+        "uiClass": "Pod",
+        "qualifiedName": "internal:PodV3Component",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "internal:LightingLedPodModeState",
+          "type": 2,
+          "value": 1
+        },
+        {
+          "name": "core:CountryCodeState",
+          "type": 3,
+          "value": "NL"
+        },
+        {
+          "name": "internal:Button1State",
+          "type": 3,
+          "value": "pressed"
+        },
+        {
+          "name": "internal:Button3State",
+          "type": 3,
+          "value": "stop"
+        },
+        {
+          "name": "core:LocalAccessProofState",
+          "type": 3,
+          "value": "localAccessProof"
+        },
+        {
+          "name": "core:LocalIPv4AddressState",
+          "type": 3,
+          "value": "192.168.1.42"
+        },
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "**"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "41d63e43-bfa8-4e24-8c16-4faae0448cab",
+      "type": 1,
+      "widget": "Pod",
+      "oid": "c79a8bf6-59d6-434e-8cfd-97193541fa17",
+      "uiClass": "Pod"
+    },
+    {
+      "creationTime": 1665238630000,
+      "lastUpdateTime": 1665238630000,
+      "label": "** *(**/**)*",
+      "deviceURL": "internal://****-****-6867/wifi/0",
+      "shortcut": false,
+      "controllableName": "internal:WifiComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "clearCredentials",
+            "nparams": 0
+          },
+          {
+            "commandName": "setTargetInfraConfig",
+            "nparams": 2
+          },
+          {
+            "commandName": "setWifiMode",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "internal:CurrentInfraConfigState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "internal:SignalStrengthState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "internal:WifiModeState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "Wifi",
+        "uiProfiles": ["Specific"],
+        "uiClass": "Wifi",
+        "qualifiedName": "internal:WifiComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "internal:WifiModeState",
+          "type": 3,
+          "value": "infrastructure"
+        },
+        {
+          "name": "internal:CurrentInfraConfigState",
+          "type": 3,
+          "value": "AM"
+        },
+        {
+          "name": "internal:SignalStrengthState",
+          "type": 1,
+          "value": 69
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "41d63e43-bfa8-4e24-8c16-4faae0448cab",
+      "type": 1,
+      "widget": "Wifi",
+      "oid": "4272c61b-5493-453c-8d87-a58e45ef60f8",
+      "uiClass": "Wifi"
+    },
+    {
+      "creationTime": 1665238924000,
+      "lastUpdateTime": 1665238924000,
+      "label": "** *(**)*",
+      "deviceURL": "io://****-****-6867/4167385",
+      "shortcut": false,
+      "controllableName": "io:StackComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedSomfyDiscover",
+            "nparams": 1
+          },
+          {
+            "commandName": "discover1WayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "discoverActuators",
+            "nparams": 1
+          },
+          {
+            "commandName": "discoverSensors",
+            "nparams": 1
+          },
+          {
+            "commandName": "discoverSomfyUnsetActuators",
+            "nparams": 0
+          },
+          {
+            "commandName": "joinNetwork",
+            "nparams": 0
+          },
+          {
+            "commandName": "resetNetworkSecurity",
+            "nparams": 0
+          },
+          {
+            "commandName": "shareNetwork",
+            "nparams": 0
+          }
+        ],
+        "states": [],
+        "dataProperties": [],
+        "widgetName": "IOStack",
+        "uiProfiles": ["Specific"],
+        "uiClass": "ProtocolGateway",
+        "qualifiedName": "io:StackComponent",
+        "type": "PROTOCOL_GATEWAY"
+      },
+      "available": true,
+      "enabled": true,
+      "placeOID": "41d63e43-bfa8-4e24-8c16-4faae0448cab",
+      "type": 5,
+      "widget": "IOStack",
+      "oid": "bb301e56-0957-417f-ba37-26efc11659aa",
+      "uiClass": "ProtocolGateway"
+    },
+    {
+      "creationTime": 1665238637000,
+      "lastUpdateTime": 1665238637000,
+      "label": "** ** **",
+      "deviceURL": "ogp://****-****-6867/00000BE8",
+      "shortcut": false,
+      "controllableName": "ogp:Bridge",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "sendPrivate",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:AvailabilityState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private10State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private1State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private2State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private3State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private4State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private5State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private6State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private7State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private8State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:Private9State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:RemovableState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "DynamicBridge",
+        "uiProfiles": ["Specific"],
+        "uiClass": "ProtocolGateway",
+        "qualifiedName": "ogp:Bridge",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "** ** **"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Technology",
+          "type": 3,
+          "value": "KNX"
+        },
+        {
+          "name": "core:ManufacturerReference",
+          "type": 3,
+          "value": "OGP KNX Bridge"
+        },
+        {
+          "name": "ogp:Features",
+          "type": 10,
+          "value": [
+            {
+              "name": "private"
+            },
+            {
+              "name": "identification"
+            }
+          ]
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Overkiz"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "41d63e43-bfa8-4e24-8c16-4faae0448cab",
+      "type": 1,
+      "widget": "DynamicBridge",
+      "oid": "e88717c3-02a9-49b6-a5a5-5adca558afe9",
+      "uiClass": "ProtocolGateway"
+    },
+    {
+      "creationTime": 1665238799000,
+      "lastUpdateTime": 1665238799000,
+      "label": "** ** **",
+      "deviceURL": "ogp://****-****-6867/0003FEF3",
+      "shortcut": false,
+      "controllableName": "ogp:Bridge",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "discover",
+            "nparams": 0
+          },
+          {
+            "commandName": "reset",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:AvailabilityState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:RemovableState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "DynamicBridge",
+        "uiProfiles": ["Specific"],
+        "uiClass": "ProtocolGateway",
+        "qualifiedName": "ogp:Bridge",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "** ** **"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:ManufacturerReference",
+          "type": 3,
+          "value": "OGP Sonos Bridge"
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Overkiz"
+        },
+        {
+          "name": "ogp:Features",
+          "type": 10,
+          "value": [
+            {
+              "name": "identification",
+              "commandLess": true
+            },
+            {
+              "name": "discovery"
+            },
+            {
+              "name": "reset"
+            }
+          ]
+        },
+        {
+          "name": "core:Technology",
+          "type": 3,
+          "value": "Sonos"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "41d63e43-bfa8-4e24-8c16-4faae0448cab",
+      "type": 1,
+      "widget": "DynamicBridge",
+      "oid": "4031915f-df40-4a70-a97f-64031182a507",
+      "uiClass": "ProtocolGateway"
+    },
+    {
+      "creationTime": 1665238637000,
+      "lastUpdateTime": 1665238637000,
+      "label": "** ** **",
+      "deviceURL": "ogp://****-****-6867/039575E9",
+      "shortcut": false,
+      "controllableName": "ogp:Bridge",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "discover",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:AvailabilityState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:RemovableState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "DynamicBridge",
+        "uiProfiles": ["Specific"],
+        "uiClass": "ProtocolGateway",
+        "qualifiedName": "ogp:Bridge",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "** ** **"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Overkiz"
+        },
+        {
+          "name": "ogp:Features",
+          "type": 10,
+          "value": [
+            {
+              "name": "discovery"
+            },
+            {
+              "name": "identification"
+            }
+          ]
+        },
+        {
+          "name": "core:ManufacturerReference",
+          "type": 3,
+          "value": "OGP Siegenia Bridge"
+        },
+        {
+          "name": "core:Technology",
+          "type": 3,
+          "value": "Siegenia"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "41d63e43-bfa8-4e24-8c16-4faae0448cab",
+      "type": 1,
+      "widget": "DynamicBridge",
+      "oid": "5cdf0023-2d7e-4e8e-bfb0-74ebb6ebe0eb",
+      "uiClass": "ProtocolGateway"
+    },
+    {
+      "creationTime": 1665238637000,
+      "lastUpdateTime": 1665238637000,
+      "label": "** ** **",
+      "deviceURL": "ogp://****-****-6867/09E45393",
+      "shortcut": false,
+      "controllableName": "ogp:Bridge",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "discover",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:AvailabilityState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:RemovableState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "DynamicBridge",
+        "uiProfiles": ["Specific"],
+        "uiClass": "ProtocolGateway",
+        "qualifiedName": "ogp:Bridge",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "** ** **"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:ManufacturerReference",
+          "type": 3,
+          "value": "OGP Intesis Bridge"
+        },
+        {
+          "name": "ogp:Features",
+          "type": 10,
+          "value": [
+            {
+              "name": "discovery"
+            },
+            {
+              "name": "identification"
+            }
+          ]
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Overkiz"
+        },
+        {
+          "name": "core:Technology",
+          "type": 3,
+          "value": "Intesis"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "41d63e43-bfa8-4e24-8c16-4faae0448cab",
+      "type": 1,
+      "widget": "DynamicBridge",
+      "oid": "b1f5dc24-058e-4cb2-a052-7b2d5a7de7a5",
+      "uiClass": "ProtocolGateway"
+    },
+    {
+      "creationTime": 1667840384000,
+      "lastUpdateTime": 1667840384000,
+      "label": "** ** **",
+      "deviceURL": "rts://****-****-6867/16756006",
+      "shortcut": false,
+      "controllableName": "rts:RollerShutterRTSComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "close",
+            "nparams": 1
+          },
+          {
+            "commandName": "down",
+            "nparams": 1
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "my",
+            "nparams": 1
+          },
+          {
+            "commandName": "open",
+            "nparams": 1
+          },
+          {
+            "commandName": "rest",
+            "nparams": 1
+          },
+          {
+            "commandName": "stop",
+            "nparams": 1
+          },
+          {
+            "commandName": "test",
+            "nparams": 0
+          },
+          {
+            "commandName": "up",
+            "nparams": 1
+          },
+          {
+            "commandName": "openConfiguration",
+            "nparams": 1
+          }
+        ],
+        "states": [],
+        "dataProperties": [
+          {
+            "value": "0",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "UpDownRollerShutter",
+        "uiProfiles": ["OpenCloseShutter", "OpenClose"],
+        "uiClass": "RollerShutter",
+        "qualifiedName": "rts:RollerShutterRTSComponent",
+        "type": "ACTUATOR"
+      },
+      "attributes": [
+        {
+          "name": "rts:diy",
+          "type": 6,
+          "value": true
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "9e3d6899-50bb-4869-9c5e-46c2b57f7c9e",
+      "type": 1,
+      "widget": "UpDownRollerShutter",
+      "oid": "1a10d6f6-9bc3-40f3-a33c-e383fd41d3e8",
+      "uiClass": "RollerShutter"
+    },
+    {
+      "creationTime": 1665238630000,
+      "lastUpdateTime": 1665238630000,
+      "label": "** *(**)*",
+      "deviceURL": "zigbee://****-****-6867/65535",
+      "shortcut": false,
+      "controllableName": "zigbee:TransceiverV3_0Component",
+      "definition": {
+        "commands": [],
+        "states": [],
+        "dataProperties": [],
+        "widgetName": "ZigbeeStack",
+        "uiProfiles": ["Specific"],
+        "uiClass": "ProtocolGateway",
+        "qualifiedName": "zigbee:TransceiverV3_0Component",
+        "type": "PROTOCOL_GATEWAY"
+      },
+      "available": true,
+      "enabled": true,
+      "placeOID": "41d63e43-bfa8-4e24-8c16-4faae0448cab",
+      "type": 5,
+      "widget": "ZigbeeStack",
+      "oid": "1629c223-d115-4aad-808a-373f428d9c27",
+      "uiClass": "ProtocolGateway"
+    }
+  ],
+  "zones": [],
+  "resellerDelegationType": "NEVER",
+  "disconnectionConfiguration": {
+    "notificationTitle": "[User] : Your Somfy box is disconnected",
+    "notificationText": "Your Somfy box is disconnected",
+    "targetPushSubscriptions": ["8849df9a-b61a-498f-ab81-67a767adba31"],
+    "notificationType": "PUSH"
+  },
+  "oid": "15eaf55a-8af9-483b-ae4a-ffd4254fd762",
+  "rootPlace": {
+    "creationTime": 1665238624000,
+    "lastUpdateTime": 1665238630000,
+    "label": "** **",
+    "type": 200,
+    "oid": "41d63e43-bfa8-4e24-8c16-4faae0448cab",
+    "subPlaces": [
+      {
+        "creationTime": 1667840432000,
+        "lastUpdateTime": 1667840432000,
+        "label": "**",
+        "type": 108,
+        "metadata": "{\"color\":\"#08C27F\"}",
+        "oid": "9e3d6899-50bb-4869-9c5e-46c2b57f7c9e",
+        "subPlaces": []
+      }
+    ]
+  },
+  "features": []
+}

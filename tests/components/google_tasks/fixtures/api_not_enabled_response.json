@@ -1,0 +1,15 @@
+{
+  "error": {
+    "code": 403,
+    "message": "Google Tasks API has not been used in project 0 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/tasks.googleapis.com/overview?project=0 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.",
+    "errors": [
+      {
+        "message": "Google Tasks API has not been used in project 0 before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/tasks.googleapis.com/overview?project=0 then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.",
+        "domain": "usageLimits",
+        "reason": "accessNotConfigured",
+        "extendedHelp": "https://console.developers.google.com"
+      }
+    ],
+    "status": "PERMISSION_DENIED"
+  }
+}

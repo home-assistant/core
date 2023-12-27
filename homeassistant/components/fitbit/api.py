@@ -69,7 +69,7 @@ class FitbitApi(ABC):
             profile = response["user"]
             self._profile = FitbitProfile(
                 encoded_id=profile["encodedId"],
-                full_name=profile["fullName"],
+                display_name=profile["displayName"],
                 locale=profile.get("locale"),
             )
         return self._profile

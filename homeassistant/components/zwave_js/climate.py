@@ -259,11 +259,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     def _current_mode_setpoint_enums(self) -> list[ThermostatSetpointType]:
         """Return the list of enums that are relevant to the current thermostat mode."""
         if self._current_mode is None or self._current_mode.value is None:
-            # Thermostat with no support for setting a mode is just a setpoint
-            if self.info.primary_value.property_key is None:
-                return []
-            return [ThermostatSetpointType(int(self.info.primary_value.property_key))]
-
+            # Thermostat(valve) with no support for setting a mode
+            # is considered heating-only
+            return [ThermostatSetpointType.HEATING]
         return THERMOSTAT_MODE_SETPOINT_MAP.get(int(self._current_mode.value), [])
 
     @property

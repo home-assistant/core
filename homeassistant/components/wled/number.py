@@ -39,16 +39,11 @@ async def async_setup_entry(
     update_segments()
 
 
-@dataclass
-class WLEDNumberDescriptionMixin:
-    """Mixin for WLED number."""
+@dataclass(frozen=True, kw_only=True)
+class WLEDNumberEntityDescription(NumberEntityDescription):
+    """Class describing WLED number entities."""
 
     value_fn: Callable[[Segment], float | None]
-
-
-@dataclass
-class WLEDNumberEntityDescription(NumberEntityDescription, WLEDNumberDescriptionMixin):
-    """Class describing WLED number entities."""
 
 
 NUMBERS = [

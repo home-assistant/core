@@ -52,26 +52,53 @@ def camera_client_fixture(hass, hass_client):
 async def test_get_clientsession_with_ssl(hass: HomeAssistant) -> None:
     """Test init clientsession with ssl."""
     client.async_get_clientsession(hass)
+    verify_ssl = True
+    family = 0
 
-    assert isinstance(hass.data[client.DATA_CLIENTSESSION], aiohttp.ClientSession)
-    assert isinstance(hass.data[client.DATA_CONNECTOR], aiohttp.TCPConnector)
+    client_session = hass.data[client.DATA_CLIENTSESSION][(verify_ssl, family)]
+    assert isinstance(client_session, aiohttp.ClientSession)
+    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, family)]
+    assert isinstance(connector, aiohttp.TCPConnector)
 
 
 async def test_get_clientsession_without_ssl(hass: HomeAssistant) -> None:
     """Test init clientsession without ssl."""
     client.async_get_clientsession(hass, verify_ssl=False)
+    verify_ssl = False
+    family = 0
 
-    assert isinstance(
-        hass.data[client.DATA_CLIENTSESSION_NOTVERIFY], aiohttp.ClientSession
-    )
-    assert isinstance(hass.data[client.DATA_CONNECTOR_NOTVERIFY], aiohttp.TCPConnector)
+    client_session = hass.data[client.DATA_CLIENTSESSION][(verify_ssl, family)]
+    assert isinstance(client_session, aiohttp.ClientSession)
+    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, family)]
+    assert isinstance(connector, aiohttp.TCPConnector)
+
+
+@pytest.mark.parametrize(
+    ("verify_ssl", "expected_family"),
+    [(True, 0), (False, 0), (True, 4), (False, 4), (True, 6), (False, 6)],
+)
+async def test_get_clientsession(
+    hass: HomeAssistant, verify_ssl: bool, expected_family: int
+) -> None:
+    """Test init clientsession combinations."""
+    client.async_get_clientsession(hass, verify_ssl=verify_ssl, family=expected_family)
+    client_session = hass.data[client.DATA_CLIENTSESSION][(verify_ssl, expected_family)]
+    assert isinstance(client_session, aiohttp.ClientSession)
+    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, expected_family)]
+    assert isinstance(connector, aiohttp.TCPConnector)
 
 
 async def test_create_clientsession_with_ssl_and_cookies(hass: HomeAssistant) -> None:
     """Test create clientsession with ssl."""
     session = client.async_create_clientsession(hass, cookies={"bla": True})
     assert isinstance(session, aiohttp.ClientSession)
-    assert isinstance(hass.data[client.DATA_CONNECTOR], aiohttp.TCPConnector)
+
+    verify_ssl = True
+    family = 0
+
+    assert client.DATA_CLIENTSESSION not in hass.data
+    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, family)]
+    assert isinstance(connector, aiohttp.TCPConnector)
 
 
 async def test_create_clientsession_without_ssl_and_cookies(
@@ -80,46 +107,53 @@ async def test_create_clientsession_without_ssl_and_cookies(
     """Test create clientsession without ssl."""
     session = client.async_create_clientsession(hass, False, cookies={"bla": True})
     assert isinstance(session, aiohttp.ClientSession)
-    assert isinstance(hass.data[client.DATA_CONNECTOR_NOTVERIFY], aiohttp.TCPConnector)
+
+    verify_ssl = False
+    family = 0
+
+    assert client.DATA_CLIENTSESSION not in hass.data
+    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, family)]
+    assert isinstance(connector, aiohttp.TCPConnector)
 
 
-async def test_get_clientsession_cleanup(hass: HomeAssistant) -> None:
-    """Test init clientsession with ssl."""
-    client.async_get_clientsession(hass)
+@pytest.mark.parametrize(
+    ("verify_ssl", "expected_family"),
+    [(True, 0), (False, 0), (True, 4), (False, 4), (True, 6), (False, 6)],
+)
+async def test_get_clientsession_cleanup(
+    hass: HomeAssistant, verify_ssl: bool, expected_family: int
+) -> None:
+    """Test init clientsession cleanup."""
+    client.async_get_clientsession(hass, verify_ssl=verify_ssl, family=expected_family)
 
-    assert isinstance(hass.data[client.DATA_CLIENTSESSION], aiohttp.ClientSession)
-    assert isinstance(hass.data[client.DATA_CONNECTOR], aiohttp.TCPConnector)
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
-    await hass.async_block_till_done()
-
-    assert hass.data[client.DATA_CLIENTSESSION].closed
-    assert hass.data[client.DATA_CONNECTOR].closed
-
-
-async def test_get_clientsession_cleanup_without_ssl(hass: HomeAssistant) -> None:
-    """Test init clientsession with ssl."""
-    client.async_get_clientsession(hass, verify_ssl=False)
-
-    assert isinstance(
-        hass.data[client.DATA_CLIENTSESSION_NOTVERIFY], aiohttp.ClientSession
-    )
-    assert isinstance(hass.data[client.DATA_CONNECTOR_NOTVERIFY], aiohttp.TCPConnector)
+    client_session = hass.data[client.DATA_CLIENTSESSION][(verify_ssl, expected_family)]
+    assert isinstance(client_session, aiohttp.ClientSession)
+    connector = hass.data[client.DATA_CONNECTOR][(verify_ssl, expected_family)]
+    assert isinstance(connector, aiohttp.TCPConnector)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
     await hass.async_block_till_done()
 
-    assert hass.data[client.DATA_CLIENTSESSION_NOTVERIFY].closed
-    assert hass.data[client.DATA_CONNECTOR_NOTVERIFY].closed
+    assert client_session.closed
+    assert connector.closed
 
 
 async def test_get_clientsession_patched_close(hass: HomeAssistant) -> None:
     """Test closing clientsession does not work."""
+
+    verify_ssl = True
+    family = 0
+
     with patch("aiohttp.ClientSession.close") as mock_close:
         session = client.async_get_clientsession(hass)
 
-        assert isinstance(hass.data[client.DATA_CLIENTSESSION], aiohttp.ClientSession)
-        assert isinstance(hass.data[client.DATA_CONNECTOR], aiohttp.TCPConnector)
+        assert isinstance(
+            hass.data[client.DATA_CLIENTSESSION][(verify_ssl, family)],
+            aiohttp.ClientSession,
+        )
+        assert isinstance(
+            hass.data[client.DATA_CONNECTOR][(verify_ssl, family)], aiohttp.TCPConnector
+        )
 
         with pytest.raises(RuntimeError):
             await session.close()
