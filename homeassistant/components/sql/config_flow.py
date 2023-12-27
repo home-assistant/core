@@ -82,7 +82,7 @@ CONFIG_SCHEMA: vol.Schema = vol.Schema(
 ).extend(OPTIONS_SCHEMA.schema)
 
 
-def validate_sql_select(value: str) -> str | None:
+def validate_sql_select(value: str) -> str:
     """Validate that value is a SQL SELECT query."""
     if len(query := sqlparse.parse(value.lstrip().lstrip(";"))) > 1:
         raise MultipleResultsFound
@@ -150,12 +150,12 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             db_url = user_input.get(CONF_DB_URL)
-            query = user_input[CONF_QUERY].lstrip().lstrip(";")
+            query = user_input[CONF_QUERY]
             column = user_input[CONF_COLUMN_NAME]
             db_url_for_validation = None
 
             try:
-                validate_sql_select(query)
+                query = validate_sql_select(query)
                 db_url_for_validation = resolve_db_url(self.hass, db_url)
                 await self.hass.async_add_executor_job(
                     validate_query, db_url_for_validation, query, column
@@ -216,12 +216,12 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
 
         if user_input is not None:
             db_url = user_input.get(CONF_DB_URL)
-            query = user_input[CONF_QUERY].lstrip().lstrip(";")
+            query = user_input[CONF_QUERY]
             column = user_input[CONF_COLUMN_NAME]
             name = self.options.get(CONF_NAME, self.config_entry.title)
 
             try:
-                validate_sql_select(query)
+                query = validate_sql_select(query)
                 db_url_for_validation = resolve_db_url(self.hass, db_url)
                 await self.hass.async_add_executor_job(
                     validate_query, db_url_for_validation, query, column
