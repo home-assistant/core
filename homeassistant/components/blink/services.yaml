@@ -2,10 +2,10 @@
 
 blink_update:
   fields:
-    config_entry_id:
+    device_id:
       required: true
       selector:
-        config_entry:
+        device:
           integration: blink
 
 trigger_camera:

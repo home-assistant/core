@@ -59,9 +59,9 @@
       "name": "Update",
       "description": "Forces a refresh.",
       "fields": {
-        "config_entry_id": {
-          "name": "Integration ID",
-          "description": "The Blink Integration id."
+        "device_id": {
+          "name": "Device ID",
+          "description": "The Blink device id."
         }
       }
     },
