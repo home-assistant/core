@@ -427,31 +427,19 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
 
     entity_description: UnifiSensorEntityDescription[HandlerT, ApiItemT]
 
-    _is_connected: bool
-
-    @property
-    def is_connected(self) -> bool:
-        """Return true if the device is connected to the network."""
-        return self._is_connected
-
     @callback
     def _make_disconnected(self, *_: core_Event) -> None:
-        """No heart beat by device."""
-        self._is_connected = False
-        # Reset sensor value to 0 when client device is disconnected
+        """No heart beat by device.
+
+        Reset sensor value to 0 when client device is disconnected
+        """
         if self._attr_native_value != 0:
             self._attr_native_value = 0
             self.async_write_ha_state()
 
     @callback
     def async_initiate_state(self) -> None:
-        """Initiate entity state.
-
-        Initiate is_connected.
-        """
-        self._is_connected = False
-
-        # Update initial state
+        """Initiate entity state."""
         self.async_update_state(ItemEvent.ADDED, self._obj_id)
 
     @callback
@@ -467,10 +455,7 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
 
         if description.should_check_heartbeat:
             # Send heartbeat if client is connected
-            if is_connected := description.is_connected_fn(
-                self.controller, self._obj_id
-            ):
-                self._is_connected = is_connected
+            if description.is_connected_fn(self.controller, self._obj_id):
                 self.controller.async_heartbeat(
                     self._attr_unique_id,
                     dt_util.utcnow() + self.controller.option_detection_time,
