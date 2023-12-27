@@ -302,7 +302,7 @@ async def _test_common_success_w_authorize(
     """Test bluetooth and user flow success paths."""
 
     async def subscribe_state_updates(
-        state_callback: Callable[[State], None]
+        state_callback: Callable[[State], None],
     ) -> Callable[[], None]:
         state_callback(State.AUTHORIZED)
         return lambda: None
@@ -612,7 +612,7 @@ async def test_provision_not_authorized(hass: HomeAssistant, exc, error) -> None
     """Test bluetooth flow with error."""
 
     async def subscribe_state_updates(
-        state_callback: Callable[[State], None]
+        state_callback: Callable[[State], None],
     ) -> Callable[[], None]:
         state_callback(State.AUTHORIZED)
         return lambda: None

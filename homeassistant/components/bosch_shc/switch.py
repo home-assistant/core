@@ -29,7 +29,7 @@ from .const import DATA_SESSION, DOMAIN
 from .entity import SHCEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class SHCSwitchRequiredKeysMixin:
     """Mixin for SHC switch required keys."""
 
@@ -38,7 +38,7 @@ class SHCSwitchRequiredKeysMixin:
     should_poll: bool
 
 
-@dataclass
+@dataclass(frozen=True)
 class SHCSwitchEntityDescription(
     SwitchEntityDescription,
     SHCSwitchRequiredKeysMixin,

@@ -731,7 +731,7 @@ async def test_zll_device_groups(
     mock.MagicMock(),
 )
 async def test_cluster_no_ep_attribute(
-    zha_device_mock: Callable[..., ZHADevice]
+    zha_device_mock: Callable[..., ZHADevice],
 ) -> None:
     """Test cluster handlers for clusters without ep_attribute."""
 

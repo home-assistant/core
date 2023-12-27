@@ -91,6 +91,7 @@ class GoogleTaskTodoListEntity(
         TodoListEntityFeature.CREATE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.DELETE_TODO_ITEM
+        | TodoListEntityFeature.MOVE_TODO_ITEM
         | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
@@ -136,6 +137,13 @@ class GoogleTaskTodoListEntity(
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete To-do items."""
         await self.coordinator.api.delete(self._task_list_id, uids)
+        await self.coordinator.async_refresh()
+
+    async def async_move_todo_item(
+        self, uid: str, previous_uid: str | None = None
+    ) -> None:
+        """Re-order a To-do item."""
+        await self.coordinator.api.move(self._task_list_id, uid, previous=previous_uid)
         await self.coordinator.async_refresh()
 
 

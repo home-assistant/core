@@ -29,7 +29,7 @@ from .const import DOMAIN, SERVICE_TYPE_DEVICE_NAMES
 from .coordinator import EasyEnergyData, EasyEnergyDataUpdateCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class EasyEnergySensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -37,7 +37,7 @@ class EasyEnergySensorEntityDescriptionMixin:
     service_type: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class EasyEnergySensorEntityDescription(
     SensorEntityDescription, EasyEnergySensorEntityDescriptionMixin
 ):

@@ -1,0 +1,46 @@
+get_gas_prices:
+  fields:
+    incl_vat:
+      required: true
+      default: true
+      selector:
+        boolean:
+    start:
+      required: false
+      example: "2024-01-01 00:00:00"
+      selector:
+        datetime:
+    end:
+      required: false
+      example: "2024-01-01 00:00:00"
+      selector:
+        datetime:
+get_energy_usage_prices:
+  fields:
+    incl_vat:
+      required: true
+      default: true
+      selector:
+        boolean:
+    start:
+      required: false
+      example: "2024-01-01 00:00:00"
+      selector:
+        datetime:
+    end:
+      required: false
+      example: "2024-01-01 00:00:00"
+      selector:
+        datetime:
+get_energy_return_prices:
+  fields:
+    start:
+      required: false
+      example: "2024-01-01 00:00:00"
+      selector:
+        datetime:
+    end:
+      required: false
+      example: "2024-01-01 00:00:00"
+      selector:
+        datetime:

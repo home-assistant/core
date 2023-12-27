@@ -22,13 +22,13 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_ON,
     STATE_UNAVAILABLE,
-    VOLUME_LITERS,
     UnitOfLength,
     UnitOfMass,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
@@ -60,7 +60,7 @@ def _set_up_units(hass: HomeAssistant) -> None:
         mass=UnitOfMass.GRAMS,
         pressure=UnitOfPressure.PA,
         temperature=UnitOfTemperature.CELSIUS,
-        volume=VOLUME_LITERS,
+        volume=UnitOfVolume.LITERS,
         wind_speed=UnitOfSpeed.KILOMETERS_PER_HOUR,
     )
 

@@ -39,7 +39,7 @@ async def async_setup_entry(
     update_segments()
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WLEDNumberEntityDescription(NumberEntityDescription):
     """Class describing WLED number entities."""
 

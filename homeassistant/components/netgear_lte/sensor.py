@@ -2,45 +2,37 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_SENSOR, DOMAIN
+from .const import DOMAIN
 from .entity import LTEEntity
-from .sensor_types import SENSOR_SMS, SENSOR_SMS_TOTAL, SENSOR_UNITS, SENSOR_USAGE
+from .sensor_types import (
+    ALL_SENSORS,
+    SENSOR_SMS,
+    SENSOR_SMS_TOTAL,
+    SENSOR_UNITS,
+    SENSOR_USAGE,
+)
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up Netgear LTE sensor devices."""
-    if discovery_info is None:
-        return
-
-    modem_data = hass.data[DOMAIN].get_modem_data(discovery_info)
-
-    if not modem_data or not modem_data.data:
-        raise PlatformNotReady
-
-    sensor_conf = discovery_info[CONF_SENSOR]
-    monitored_conditions = sensor_conf[CONF_MONITORED_CONDITIONS]
+    """Set up the Netgear LTE sensor."""
+    modem_data = hass.data[DOMAIN].get_modem_data(entry.data)
 
     sensors: list[SensorEntity] = []
-    for sensor_type in monitored_conditions:
-        if sensor_type == SENSOR_SMS:
-            sensors.append(SMSUnreadSensor(modem_data, sensor_type))
-        elif sensor_type == SENSOR_SMS_TOTAL:
-            sensors.append(SMSTotalSensor(modem_data, sensor_type))
-        elif sensor_type == SENSOR_USAGE:
-            sensors.append(UsageSensor(modem_data, sensor_type))
+    for sensor in ALL_SENSORS:
+        if sensor == SENSOR_SMS:
+            sensors.append(SMSUnreadSensor(modem_data, sensor))
+        elif sensor == SENSOR_SMS_TOTAL:
+            sensors.append(SMSTotalSensor(modem_data, sensor))
+        elif sensor == SENSOR_USAGE:
+            sensors.append(UsageSensor(modem_data, sensor))
         else:
-            sensors.append(GenericSensor(modem_data, sensor_type))
+            sensors.append(GenericSensor(modem_data, sensor))
 
     async_add_entities(sensors)
 

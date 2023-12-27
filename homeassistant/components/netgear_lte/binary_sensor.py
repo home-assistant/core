@@ -2,40 +2,24 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_BINARY_SENSOR, DOMAIN
+from .const import DOMAIN
 from .entity import LTEEntity
-from .sensor_types import BINARY_SENSOR_CLASSES
+from .sensor_types import ALL_BINARY_SENSORS, BINARY_SENSOR_CLASSES
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up Netgear LTE binary sensor devices."""
-    if discovery_info is None:
-        return
+    """Set up the Netgear LTE binary sensor."""
+    modem_data = hass.data[DOMAIN].get_modem_data(entry.data)
 
-    modem_data = hass.data[DOMAIN].get_modem_data(discovery_info)
-
-    if not modem_data or not modem_data.data:
-        raise PlatformNotReady
-
-    binary_sensor_conf = discovery_info[CONF_BINARY_SENSOR]
-    monitored_conditions = binary_sensor_conf[CONF_MONITORED_CONDITIONS]
-
-    binary_sensors = []
-    for sensor_type in monitored_conditions:
-        binary_sensors.append(LTEBinarySensor(modem_data, sensor_type))
-
-    async_add_entities(binary_sensors)
+    async_add_entities(
+        LTEBinarySensor(modem_data, sensor) for sensor in ALL_BINARY_SENSORS
+    )
 
 
 class LTEBinarySensor(LTEEntity, BinarySensorEntity):

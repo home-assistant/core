@@ -38,7 +38,7 @@ from .coordinator import MyPermobilCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class PermobilRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -46,7 +46,7 @@ class PermobilRequiredKeysMixin:
     available_fn: Callable[[Any], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PermobilSensorEntityDescription(
     SensorEntityDescription, PermobilRequiredKeysMixin
 ):

@@ -185,7 +185,7 @@ class IammeterSensor(update_coordinator.CoordinatorEntity, SensorEntity):
         return raw_attr
 
 
-@dataclass
+@dataclass(frozen=True)
 class IammeterSensorEntityDescription(SensorEntityDescription):
     """Describes Iammeter sensor entity."""
 

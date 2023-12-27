@@ -1135,7 +1135,7 @@ class MqttDiscoveryUpdate(Entity):
 
 
 def device_info_from_specifications(
-    specifications: dict[str, Any] | None
+    specifications: dict[str, Any] | None,
 ) -> DeviceInfo | None:
     """Return a device description for device registry."""
     if not specifications:

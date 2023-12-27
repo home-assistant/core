@@ -5,7 +5,7 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
-from collections.abc import Callable, Collection, Generator, Iterable, MutableMapping
+from collections.abc import Callable, Collection, Generator, Iterable
 from contextlib import AbstractContextManager, suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
@@ -40,7 +40,7 @@ from jinja2 import pass_context, pass_environment, pass_eval_context
 from jinja2.runtime import AsyncLoopContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
-from lru import LRU  # pylint: disable=no-name-in-module
+from lru import LRU
 import orjson
 import voluptuous as vol
 
@@ -147,10 +147,8 @@ EVAL_CACHE_SIZE = 512
 
 MAX_CUSTOM_TEMPLATE_SIZE = 5 * 1024 * 1024
 
-CACHED_TEMPLATE_LRU: MutableMapping[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
-CACHED_TEMPLATE_NO_COLLECT_LRU: MutableMapping[State, TemplateState] = LRU(
-    CACHED_TEMPLATE_STATES
-)
+CACHED_TEMPLATE_LRU: LRU[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
+CACHED_TEMPLATE_NO_COLLECT_LRU: LRU[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
 ENTITY_COUNT_GROWTH_FACTOR = 1.2
 
 ORJSON_PASSTHROUGH_OPTIONS = (
@@ -187,9 +185,9 @@ def async_setup(hass: HomeAssistant) -> bool:
         )
         for lru in (CACHED_TEMPLATE_LRU, CACHED_TEMPLATE_NO_COLLECT_LRU):
             # There is no typing for LRU
-            current_size = lru.get_size()  # type: ignore[attr-defined]
+            current_size = lru.get_size()
             if new_size > current_size:
-                lru.set_size(new_size)  # type: ignore[attr-defined]
+                lru.set_size(new_size)
 
     from .event import (  # pylint: disable=import-outside-toplevel
         async_track_time_interval,
