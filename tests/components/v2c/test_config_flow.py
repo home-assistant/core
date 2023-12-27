@@ -46,7 +46,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     ],
 )
 async def test_form_cannot_connect(
-    hass: HomeAssistant, side_effect: Exception, error: str
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, side_effect: Exception, error: str
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(

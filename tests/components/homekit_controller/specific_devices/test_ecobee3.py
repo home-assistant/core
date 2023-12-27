@@ -8,11 +8,7 @@ from unittest import mock
 from aiohomekit import AccessoryNotFoundError
 from aiohomekit.testing import FakePairing
 
-from homeassistant.components.climate import (
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
-)
+from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import UnitOfTemperature
@@ -108,9 +104,9 @@ async def test_ecobee3_setup(hass: HomeAssistant) -> None:
                     friendly_name="HomeW",
                     unique_id="00:00:00:00:00:00_1_16",
                     supported_features=(
-                        SUPPORT_TARGET_TEMPERATURE
-                        | SUPPORT_TARGET_TEMPERATURE_RANGE
-                        | SUPPORT_TARGET_HUMIDITY
+                        ClimateEntityFeature.TARGET_TEMPERATURE
+                        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+                        | ClimateEntityFeature.TARGET_HUMIDITY
                     ),
                     capabilities={
                         "hvac_modes": ["off", "heat", "cool", "heat_cool"],
@@ -142,7 +138,9 @@ async def test_ecobee3_setup(hass: HomeAssistant) -> None:
 
 
 async def test_ecobee3_setup_from_cache(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test that Ecbobee can be correctly setup from its cached entity map."""
     accessories = await setup_accessories_from_file(hass, "ecobee3.json")
@@ -163,8 +161,6 @@ async def test_ecobee3_setup_from_cache(
 
     await setup_test_accessories(hass, accessories)
 
-    entity_registry = er.async_get(hass)
-
     climate = entity_registry.async_get("climate.homew")
     assert climate.unique_id == "00:00:00:00:00:00_1_16"
 
@@ -178,11 +174,11 @@ async def test_ecobee3_setup_from_cache(
     assert occ3.unique_id == "00:00:00:00:00:00_4_56"
 
 
-async def test_ecobee3_setup_connection_failure(hass: HomeAssistant) -> None:
+async def test_ecobee3_setup_connection_failure(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that Ecbobee can be correctly setup from its cached entity map."""
     accessories = await setup_accessories_from_file(hass, "ecobee3.json")
-
-    entity_registry = er.async_get(hass)
 
     # Test that the connection fails during initial setup.
     # No entities should be created.
@@ -218,9 +214,10 @@ async def test_ecobee3_setup_connection_failure(hass: HomeAssistant) -> None:
     assert occ3.unique_id == "00:00:00:00:00:00_4_56"
 
 
-async def test_ecobee3_add_sensors_at_runtime(hass: HomeAssistant) -> None:
+async def test_ecobee3_add_sensors_at_runtime(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that new sensors are automatically added."""
-    entity_registry = er.async_get(hass)
 
     # Set up a base Ecobee 3 with no additional sensors.
     # There shouldn't be any entities but climate visible.
@@ -254,9 +251,10 @@ async def test_ecobee3_add_sensors_at_runtime(hass: HomeAssistant) -> None:
     assert occ3.unique_id == "00:00:00:00:00:00_4_56"
 
 
-async def test_ecobee3_remove_sensors_at_runtime(hass: HomeAssistant) -> None:
+async def test_ecobee3_remove_sensors_at_runtime(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that sensors are automatically removed."""
-    entity_registry = er.async_get(hass)
 
     # Set up a base Ecobee 3 with additional sensors.
     accessories = await setup_accessories_from_file(hass, "ecobee3.json")
@@ -307,10 +305,9 @@ async def test_ecobee3_remove_sensors_at_runtime(hass: HomeAssistant) -> None:
 
 
 async def test_ecobee3_services_and_chars_removed(
-    hass: HomeAssistant,
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test handling removal of some services and chars."""
-    entity_registry = er.async_get(hass)
 
     # Set up a base Ecobee 3 with additional sensors.
     accessories = await setup_accessories_from_file(hass, "ecobee3.json")

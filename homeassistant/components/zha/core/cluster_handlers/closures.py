@@ -1,6 +1,9 @@
 """Closures cluster handlers module for Zigbee Home Automation."""
-from typing import Any
+from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any
+
+import zigpy.zcl
 from zigpy.zcl.clusters import closures
 
 from homeassistant.core import callback
@@ -8,6 +11,9 @@ from homeassistant.core import callback
 from .. import registries
 from ..const import REPORT_CONFIG_IMMEDIATE, SIGNAL_ATTR_UPDATED
 from . import AttrReportConfig, ClientClusterHandler, ClusterHandler
+
+if TYPE_CHECKING:
+    from ..endpoint import Endpoint
 
 
 @registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.register(closures.DoorLock.cluster_id)
@@ -138,6 +144,14 @@ class WindowCovering(ClusterHandler):
             attr="current_position_tilt_percentage", config=REPORT_CONFIG_IMMEDIATE
         ),
     )
+
+    def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
+        """Initialize WindowCovering cluster handler."""
+        super().__init__(cluster, endpoint)
+
+        if self.cluster.endpoint.model == "lumi.curtain.agl001":
+            self.ZCL_INIT_ATTRS = self.ZCL_INIT_ATTRS.copy()
+            self.ZCL_INIT_ATTRS["window_covering_mode"] = True
 
     async def async_update(self):
         """Retrieve latest state."""

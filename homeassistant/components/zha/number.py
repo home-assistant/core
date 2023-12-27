@@ -629,7 +629,7 @@ class InovelliRemoteDimmingUpSpeed(ZHANumberConfigurationEntity):
 class InovelliButtonDelay(ZHANumberConfigurationEntity):
     """Inovelli button delay configuration entity."""
 
-    _unique_id_suffix = "dimming_speed_up_local"
+    _unique_id_suffix = "button_delay"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
@@ -776,6 +776,22 @@ class InovelliAutoShutoffTimer(ZHANumberConfigurationEntity):
     _attr_native_max_value: float = 32767
     _attribute_name = "auto_off_timer"
     _attr_translation_key: str = "auto_off_timer"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_INOVELLI, models={"VZM35-SN"}
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class InovelliQuickStartTime(ZHANumberConfigurationEntity):
+    """Inovelli fan quick start time configuration entity."""
+
+    _unique_id_suffix = "quick_start_time"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[3]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 10
+    _attribute_name = "quick_start_time"
+    _attr_translation_key: str = "quick_start_time"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)

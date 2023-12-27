@@ -38,7 +38,7 @@ from .const import (
 from .router import AsusWrtRouter
 
 
-@dataclass
+@dataclass(frozen=True)
 class AsusWrtSensorEntityDescription(SensorEntityDescription):
     """A class that describes AsusWrt sensor entities."""
 

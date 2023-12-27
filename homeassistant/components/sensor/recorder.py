@@ -497,19 +497,9 @@ def compile_statistics(  # noqa: C901
         # Make calculations
         stat: StatisticData = {"start": start}
         if "max" in wanted_statistics[entity_id]:
-            stat["max"] = max(
-                *itertools.islice(
-                    zip(*valid_float_states),  # type: ignore[typeddict-item]
-                    1,
-                )
-            )
+            stat["max"] = max(*itertools.islice(zip(*valid_float_states), 1))
         if "min" in wanted_statistics[entity_id]:
-            stat["min"] = min(
-                *itertools.islice(
-                    zip(*valid_float_states),  # type: ignore[typeddict-item]
-                    1,
-                )
-            )
+            stat["min"] = min(*itertools.islice(zip(*valid_float_states), 1))
 
         if "mean" in wanted_statistics[entity_id]:
             stat["mean"] = _time_weighted_average(valid_float_states, start, end)

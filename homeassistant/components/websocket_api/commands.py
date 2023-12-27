@@ -650,7 +650,7 @@ async def handle_render_template(
 
 
 def _serialize_entity_sources(
-    entity_infos: dict[str, entity.EntityInfo]
+    entity_infos: dict[str, entity.EntityInfo],
 ) -> dict[str, Any]:
     """Prepare a websocket response from a dict of entity sources."""
     return {
@@ -778,7 +778,22 @@ async def handle_execute_script(
 
     context = connection.context(msg)
     script_obj = Script(hass, script_config, f"{const.DOMAIN} script", const.DOMAIN)
-    script_result = await script_obj.async_run(msg.get("variables"), context=context)
+    try:
+        script_result = await script_obj.async_run(
+            msg.get("variables"), context=context
+        )
+    except ServiceValidationError as err:
+        connection.logger.error(err)
+        connection.logger.debug("", exc_info=err)
+        connection.send_error(
+            msg["id"],
+            const.ERR_SERVICE_VALIDATION_ERROR,
+            str(err),
+            translation_domain=err.translation_domain,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        )
+        return
     connection.send_result(
         msg["id"],
         {

@@ -24,14 +24,14 @@ from .const import DATA_PROVISION_SETTINGS, DOMAIN
 from .model import RainMachineEntityDescription
 
 
-@dataclass
+@dataclass(frozen=True)
 class RainMachineButtonDescriptionMixin:
     """Define an entity description mixin for RainMachine buttons."""
 
     push_action: Callable[[Controller], Awaitable]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RainMachineButtonDescription(
     ButtonEntityDescription,
     RainMachineEntityDescription,

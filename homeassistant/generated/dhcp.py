@@ -110,6 +110,10 @@ DHCP: list[dict[str, str | bool]] = [
         "macaddress": "EC0BAE*",
     },
     {
+        "domain": "broadlink",
+        "macaddress": "780F77*",
+    },
+    {
         "domain": "dlink",
         "hostname": "dsp-w215",
     },
@@ -566,6 +570,10 @@ DHCP: list[dict[str, str | bool]] = [
     {
         "domain": "tado",
         "hostname": "tado*",
+    },
+    {
+        "domain": "tailwind",
+        "registered_devices": True,
     },
     {
         "domain": "tesla_wall_connector",

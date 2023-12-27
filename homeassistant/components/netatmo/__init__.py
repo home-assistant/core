@@ -8,7 +8,6 @@ from typing import Any
 
 import aiohttp
 import pyatmo
-from pyatmo.const import ALL_SCOPES as NETATMO_SCOPES
 import voluptuous as vol
 
 from homeassistant.components import cloud
@@ -143,7 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await session.async_ensure_token_valid()
     except aiohttp.ClientResponseError as ex:
-        _LOGGER.debug("API error: %s (%s)", ex.status, ex.message)
+        _LOGGER.warning("API error: %s (%s)", ex.status, ex.message)
         if ex.status in (
             HTTPStatus.BAD_REQUEST,
             HTTPStatus.UNAUTHORIZED,
@@ -152,19 +151,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
         raise ConfigEntryNotReady from ex
 
-    if entry.data["auth_implementation"] == cloud.DOMAIN:
-        required_scopes = {
-            scope
-            for scope in NETATMO_SCOPES
-            if scope not in ("access_doorbell", "read_doorbell")
-        }
-    else:
-        required_scopes = set(NETATMO_SCOPES)
-
-    if not (set(session.token["scope"]) & required_scopes):
-        _LOGGER.debug(
+    required_scopes = api.get_api_scopes(entry.data["auth_implementation"])
+    if not (set(session.token["scope"]) & set(required_scopes)):
+        _LOGGER.warning(
             "Session is missing scopes: %s",
-            required_scopes - set(session.token["scope"]),
+            set(required_scopes) - set(session.token["scope"]),
         )
         raise ConfigEntryAuthFailed("Token scope not valid, trigger renewal")
 

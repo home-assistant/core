@@ -31,7 +31,7 @@ ATTR_PREV_MIC = "prev_mic_level"
 ATTR_PREV_RECORD = "prev_record_mode"
 
 
-@dataclass
+@dataclass(frozen=True)
 class ProtectSwitchEntityDescription(
     ProtectSetableKeysMixin[T], SwitchEntityDescription
 ):

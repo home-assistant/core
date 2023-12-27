@@ -1,5 +1,4 @@
 """Test fixtures for caldav."""
-from collections.abc import Awaitable, Callable
 from unittest.mock import Mock, patch
 
 import pytest
@@ -12,7 +11,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     Platform,
 )
-from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -25,6 +23,13 @@ TEST_PASSWORD = "password-1"
 def mock_platforms() -> list[Platform]:
     """Fixture to specify platforms to test."""
     return []
+
+
+@pytest.fixture(autouse=True)
+async def mock_patch_platforms(platforms: list[str]) -> None:
+    """Fixture to set up the integration."""
+    with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
+        yield
 
 
 @pytest.fixture(name="calendars")
@@ -57,21 +62,3 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_VERIFY_SSL: True,
         },
     )
-
-
-@pytest.fixture(name="setup_integration")
-async def mock_setup_integration(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    platforms: list[str],
-) -> Callable[[], Awaitable[bool]]:
-    """Fixture to set up the integration."""
-    config_entry.add_to_hass(hass)
-
-    async def run() -> bool:
-        with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
-            result = await hass.config_entries.async_setup(config_entry.entry_id)
-            await hass.async_block_till_done()
-            return result
-
-    return run

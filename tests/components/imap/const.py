@@ -18,16 +18,25 @@ TEST_MESSAGE_HEADERS1 = (
     b"for <notify@example.com>; Fri, 24 Mar 2023 13:52:01 +0100 (CET)\r\n"
 )
 TEST_MESSAGE_HEADERS2 = (
-    b"MIME-Version: 1.0\r\n"
     b"To: notify@example.com\r\n"
     b"From: John Doe <john.doe@example.com>\r\n"
     b"Subject: Test subject\r\n"
-    b"Message-ID: <N753P9hLvLw3lYGan11ji9WggPjxtLSpKvFOYgdnE@example.com>"
+    b"Message-ID: <N753P9hLvLw3lYGan11ji9WggPjxtLSpKvFOYgdnE@example.com>\r\n"
+    b"MIME-Version: 1.0\r\n"
+)
+
+TEST_MULTIPART_HEADER = (
+    b'Content-Type: multipart/related;\r\n\tboundary="Mark=_100584970350292485166"'
 )
 
 TEST_MESSAGE_HEADERS3 = b""
 
 TEST_MESSAGE = TEST_MESSAGE_HEADERS1 + DATE_HEADER1 + TEST_MESSAGE_HEADERS2
+
+TEST_MESSAGE_MULTIPART = (
+    TEST_MESSAGE_HEADERS1 + DATE_HEADER1 + TEST_MESSAGE_HEADERS2 + TEST_MULTIPART_HEADER
+)
+
 TEST_MESSAGE_NO_SUBJECT_TO_FROM = (
     TEST_MESSAGE_HEADERS1 + DATE_HEADER1 + TEST_MESSAGE_HEADERS3
 )
@@ -44,21 +53,27 @@ TEST_INVALID_DATE3 = (
 
 TEST_CONTENT_TEXT_BARE = b"\r\nTest body\r\n\r\n"
 
-TEST_CONTENT_BINARY = (
-    b"Content-Type: application/binary\r\n"
-    b"Content-Transfer-Encoding: base64\r\n"
-    b"\r\n"
-    b"VGVzdCBib2R5\r\n"
-)
+TEST_CONTENT_BINARY = b"Content-Type: application/binary\r\n\r\nTest body\r\n"
 
 TEST_CONTENT_TEXT_PLAIN = (
-    b"Content-Type: text/plain; charset=UTF-8; format=flowed\r\n"
-    b"Content-Transfer-Encoding: 7bit\r\n\r\nTest body\r\n\r\n"
+    b'Content-Type: text/plain; charset="utf-8"\r\n'
+    b"Content-Transfer-Encoding: 7bit\r\n\r\nTest body\r\n"
 )
+
+TEST_CONTENT_TEXT_BASE64 = (
+    b'Content-Type: text/plain; charset="utf-8"\r\n'
+    b"Content-Transfer-Encoding: base64\r\n\r\nVGVzdCBib2R5\r\n"
+)
+
+TEST_CONTENT_TEXT_BASE64_INVALID = (
+    b'Content-Type: text/plain; charset="utf-8"\r\n'
+    b"Content-Transfer-Encoding: base64\r\n\r\nVGVzdCBib2R5invalid\r\n"
+)
+TEST_BADLY_ENCODED_CONTENT = "VGVzdCBib2R5invalid\r\n"
 
 TEST_CONTENT_TEXT_OTHER = (
     b"Content-Type: text/other; charset=UTF-8\r\n"
-    b"Content-Transfer-Encoding: 7bit\r\n\r\nTest body\r\n\r\n"
+    b"Content-Transfer-Encoding: 7bit\r\n\r\nTest body\r\n"
 )
 
 TEST_CONTENT_HTML = (
@@ -76,14 +91,40 @@ TEST_CONTENT_HTML = (
     b"</html>\r\n"
     b"\r\n"
 )
+TEST_CONTENT_HTML_BASE64 = (
+    b"Content-Type: text/html; charset=UTF-8\r\n"
+    b"Content-Transfer-Encoding: base64\r\n\r\n"
+    b"PGh0bWw+CiAgICA8aGVhZD48bWV0YSBodHRwLWVxdW"
+    b"l2PSJjb250ZW50LXR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD1VVEYtOCI+PC9oZWFkPgog"
+    b"CAgPGJvZHk+CiAgICAgIDxwPlRlc3QgYm9keTxicj48L3A+CiAgICA8L2JvZHk+CjwvaHRtbD4=\r\n"
+)
+
 
 TEST_CONTENT_MULTIPART = (
     b"\r\nThis is a multi-part message in MIME format.\r\n"
-    + b"--------------McwBciN2C0o3rWeF1tmFo2oI\r\n"
+    + b"\r\n--Mark=_100584970350292485166\r\n"
     + TEST_CONTENT_TEXT_PLAIN
-    + b"--------------McwBciN2C0o3rWeF1tmFo2oI\r\n"
+    + b"\r\n--Mark=_100584970350292485166\r\n"
     + TEST_CONTENT_HTML
-    + b"--------------McwBciN2C0o3rWeF1tmFo2oI--\r\n"
+    + b"\r\n--Mark=_100584970350292485166--\r\n"
+)
+
+TEST_CONTENT_MULTIPART_BASE64 = (
+    b"\r\nThis is a multi-part message in MIME format.\r\n"
+    + b"\r\n--Mark=_100584970350292485166\r\n"
+    + TEST_CONTENT_TEXT_BASE64
+    + b"\r\n--Mark=_100584970350292485166\r\n"
+    + TEST_CONTENT_HTML_BASE64
+    + b"\r\n--Mark=_100584970350292485166--\r\n"
+)
+
+TEST_CONTENT_MULTIPART_BASE64_INVALID = (
+    b"\r\nThis is a multi-part message in MIME format.\r\n"
+    + b"\r\n--Mark=_100584970350292485166\r\n"
+    + TEST_CONTENT_TEXT_BASE64_INVALID
+    + b"\r\n--Mark=_100584970350292485166\r\n"
+    + TEST_CONTENT_HTML_BASE64
+    + b"\r\n--Mark=_100584970350292485166--\r\n"
 )
 
 EMPTY_SEARCH_RESPONSE = ("OK", [b"", b"Search completed (0.0001 + 0.000 secs)."])
@@ -202,14 +243,40 @@ TEST_FETCH_RESPONSE_MULTIPART = (
     "OK",
     [
         b"1 FETCH (BODY[] {"
-        + str(len(TEST_MESSAGE + TEST_CONTENT_MULTIPART)).encode("utf-8")
+        + str(len(TEST_MESSAGE_MULTIPART + TEST_CONTENT_MULTIPART)).encode("utf-8")
         + b"}",
-        bytearray(TEST_MESSAGE + TEST_CONTENT_MULTIPART),
+        bytearray(TEST_MESSAGE_MULTIPART + TEST_CONTENT_MULTIPART),
+        b")",
+        b"Fetch completed (0.0001 + 0.000 secs).",
+    ],
+)
+TEST_FETCH_RESPONSE_MULTIPART_BASE64 = (
+    "OK",
+    [
+        b"1 FETCH (BODY[] {"
+        + str(len(TEST_MESSAGE_MULTIPART + TEST_CONTENT_MULTIPART_BASE64)).encode(
+            "utf-8"
+        )
+        + b"}",
+        bytearray(TEST_MESSAGE_MULTIPART + TEST_CONTENT_MULTIPART_BASE64),
         b")",
         b"Fetch completed (0.0001 + 0.000 secs).",
     ],
 )
 
+TEST_FETCH_RESPONSE_MULTIPART_BASE64_INVALID = (
+    "OK",
+    [
+        b"1 FETCH (BODY[] {"
+        + str(
+            len(TEST_MESSAGE_MULTIPART + TEST_CONTENT_MULTIPART_BASE64_INVALID)
+        ).encode("utf-8")
+        + b"}",
+        bytearray(TEST_MESSAGE_MULTIPART + TEST_CONTENT_MULTIPART_BASE64_INVALID),
+        b")",
+        b"Fetch completed (0.0001 + 0.000 secs).",
+    ],
+)
 
 TEST_FETCH_RESPONSE_NO_SUBJECT_TO_FROM = (
     "OK",

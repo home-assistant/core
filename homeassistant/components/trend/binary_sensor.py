@@ -52,23 +52,39 @@ from .const import (
     CONF_INVERT,
     CONF_MAX_SAMPLES,
     CONF_MIN_GRADIENT,
+    CONF_MIN_SAMPLES,
     CONF_SAMPLE_DURATION,
     DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_ATTRIBUTE): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-        vol.Optional(CONF_INVERT, default=False): cv.boolean,
-        vol.Optional(CONF_MAX_SAMPLES, default=2): cv.positive_int,
-        vol.Optional(CONF_MIN_GRADIENT, default=0.0): vol.Coerce(float),
-        vol.Optional(CONF_SAMPLE_DURATION, default=0): cv.positive_int,
-    }
+
+def _validate_min_max(data: dict[str, Any]) -> dict[str, Any]:
+    if (
+        CONF_MIN_SAMPLES in data
+        and CONF_MAX_SAMPLES in data
+        and data[CONF_MAX_SAMPLES] < data[CONF_MIN_SAMPLES]
+    ):
+        raise vol.Invalid("min_samples must be smaller than or equal to max_samples")
+    return data
+
+
+SENSOR_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            vol.Optional(CONF_ATTRIBUTE): cv.string,
+            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+            vol.Optional(CONF_INVERT, default=False): cv.boolean,
+            vol.Optional(CONF_MAX_SAMPLES, default=2): cv.positive_int,
+            vol.Optional(CONF_MIN_GRADIENT, default=0.0): vol.Coerce(float),
+            vol.Optional(CONF_SAMPLE_DURATION, default=0): cv.positive_int,
+            vol.Optional(CONF_MIN_SAMPLES, default=2): cv.positive_int,
+        }
+    ),
+    _validate_min_max,
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -96,6 +112,7 @@ async def async_setup_platform(
         max_samples = device_config[CONF_MAX_SAMPLES]
         min_gradient = device_config[CONF_MIN_GRADIENT]
         sample_duration = device_config[CONF_SAMPLE_DURATION]
+        min_samples = device_config[CONF_MIN_SAMPLES]
 
         sensors.append(
             SensorTrend(
@@ -109,8 +126,10 @@ async def async_setup_platform(
                 max_samples,
                 min_gradient,
                 sample_duration,
+                min_samples,
             )
         )
+
     if not sensors:
         _LOGGER.error("No sensors added")
         return
@@ -137,6 +156,7 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
         max_samples: int,
         min_gradient: float,
         sample_duration: int,
+        min_samples: int,
     ) -> None:
         """Initialize the sensor."""
         self._hass = hass
@@ -148,6 +168,7 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
         self._invert = invert
         self._sample_duration = sample_duration
         self._min_gradient = min_gradient
+        self._min_samples = min_samples
         self.samples: deque = deque(maxlen=max_samples)
 
     @property
@@ -210,7 +231,7 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
             while self.samples and self.samples[0][0] < cutoff:
                 self.samples.popleft()
 
-        if len(self.samples) < 2:
+        if len(self.samples) < self._min_samples:
             return
 
         # Calculate gradient of linear trend

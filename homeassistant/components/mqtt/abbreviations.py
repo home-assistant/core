@@ -166,6 +166,7 @@ ABBREVIATIONS = {
     "pl_ton": "payload_turn_on",
     "pl_trig": "payload_trigger",
     "pl_unlk": "payload_unlock",
+    "pos": "reports_position",
     "pos_clsd": "position_closed",
     "pos_open": "position_open",
     "pow_cmd_t": "power_command_topic",

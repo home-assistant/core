@@ -46,14 +46,14 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-@dataclass
+@dataclass(frozen=True)
 class RequiredKeysMixin(Generic[_RobotT]):
     """A class that describes robot button entity required keys."""
 
     press_fn: Callable[[_RobotT], Coroutine[Any, Any, bool]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RobotButtonEntityDescription(ButtonEntityDescription, RequiredKeysMixin[_RobotT]):
     """A class that describes robot button entities."""
 

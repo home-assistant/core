@@ -55,7 +55,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
@@ -438,7 +438,7 @@ async def test_climate_temperature_is_none(
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
-    ), pytest.raises(ValueError):
+    ), pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
@@ -742,7 +742,7 @@ async def test_climate_set_timer(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
         return_value={"status": "failure"},
     ), pytest.raises(
-        MultipleInvalid
+        MultipleInvalid,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -761,7 +761,7 @@ async def test_climate_set_timer(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
         return_value={"status": "failure"},
     ), pytest.raises(
-        HomeAssistantError
+        HomeAssistantError,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -845,7 +845,7 @@ async def test_climate_pure_boost(
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_pureboost",
     ), pytest.raises(
-        MultipleInvalid
+        MultipleInvalid,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -947,7 +947,7 @@ async def test_climate_climate_react(
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_climate_react",
     ), pytest.raises(
-        MultipleInvalid
+        MultipleInvalid,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -1254,7 +1254,7 @@ async def test_climate_full_ac_state(
     ), patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_states",
     ), pytest.raises(
-        MultipleInvalid
+        MultipleInvalid,
     ):
         await hass.services.async_call(
             DOMAIN,

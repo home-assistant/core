@@ -38,7 +38,7 @@ HVAC_SETTINGS = [
     HVACMode.AUTO,
 ]
 
-ENTITY_CLIMATE = "climate.fakespa_climate"
+ENTITY_CLIMATE = "climate.fakespa"
 
 
 async def test_spa_defaults(
