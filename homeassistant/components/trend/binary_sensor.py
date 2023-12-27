@@ -7,7 +7,6 @@ import logging
 import math
 from typing import Any
 
-from helpers.entity import generate_entity_id
 import numpy as np
 import voluptuous as vol
 
@@ -33,6 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     EventStateChangedData,
