@@ -1,5 +1,7 @@
 """Tests for the mobile app integration."""
-from unittest.mock import patch
+from collections.abc import Awaitable, Callable
+from typing import Any
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -14,7 +16,7 @@ from homeassistant.components.mobile_app.const import (
     DATA_DELETED_IDS,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -59,11 +61,13 @@ async def test_remove_entry(
     assert len(entity_registry.entities) == 0
 
 
-async def test_create_cloud_hook_on_setup(
+async def _test_create_cloud_hook(
     hass: HomeAssistant,
     hass_admin_user: MockUser,
+    additional_config: dict[str, Any],
+    async_active_subscription_return_value: bool,
+    additional_steps: Callable[[ConfigEntry, Mock, str], Awaitable[None]],
 ) -> None:
-    """Test creating a cloud hook during setup."""
     config_entry = MockConfigEntry(
         data={
             **REGISTER_CLEARTEXT,
@@ -71,6 +75,7 @@ async def test_create_cloud_hook_on_setup(
             ATTR_DEVICE_NAME: "Test",
             ATTR_DEVICE_ID: "Test",
             CONF_USER_ID: hass_admin_user.id,
+            **additional_config,
         },
         domain=DOMAIN,
         title="Test",
@@ -78,7 +83,8 @@ async def test_create_cloud_hook_on_setup(
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.cloud.async_active_subscription", return_value=True
+        "homeassistant.components.cloud.async_active_subscription",
+        return_value=async_active_subscription_return_value,
     ), patch(
         "homeassistant.components.cloud.async_is_connected", return_value=True
     ), patch(
@@ -90,11 +96,42 @@ async def test_create_cloud_hook_on_setup(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.LOADED
+        await additional_steps(config_entry, mock_create_cloudhook, cloud_hook)
 
+
+async def test_create_cloud_hook_on_setup(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test creating a cloud hook during setup."""
+
+    async def additional_steps(
+        config_entry: ConfigEntry, mock_create_cloudhook: Mock, cloud_hook: str
+    ) -> None:
         assert config_entry.data[CONF_CLOUDHOOK_URL] == cloud_hook
         mock_create_cloudhook.assert_called_once_with(
             hass, config_entry.data[CONF_WEBHOOK_ID]
         )
+
+    await _test_create_cloud_hook(hass, hass_admin_user, {}, True, additional_steps)
+
+
+async def test_create_cloud_hook_aleady_exists(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test creating a cloud hook is not called, when a cloud hook already exists."""
+    cloud_hook = "https://hook-url-already-exists"
+
+    async def additional_steps(
+        config_entry: ConfigEntry, mock_create_cloudhook: Mock, _: str
+    ) -> None:
+        assert config_entry.data[CONF_CLOUDHOOK_URL] == cloud_hook
+        mock_create_cloudhook.assert_not_called()
+
+    await _test_create_cloud_hook(
+        hass, hass_admin_user, {CONF_CLOUDHOOK_URL: cloud_hook}, True, additional_steps
+    )
 
 
 async def test_create_cloud_hook_after_connection(
@@ -102,33 +139,10 @@ async def test_create_cloud_hook_after_connection(
     hass_admin_user: MockUser,
 ) -> None:
     """Test creating a cloud hook when connected to the cloud."""
-    config_entry = MockConfigEntry(
-        data={
-            **REGISTER_CLEARTEXT,
-            CONF_WEBHOOK_ID: "test-webhook-id",
-            ATTR_DEVICE_NAME: "Test",
-            ATTR_DEVICE_ID: "Test",
-            CONF_USER_ID: hass_admin_user.id,
-        },
-        domain=DOMAIN,
-        title="Test",
-    )
-    config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.cloud.async_active_subscription", return_value=False
-    ), patch(
-        "homeassistant.components.cloud.async_create_cloudhook", autospec=True
-    ) as mock_create_cloudhook:
-        cloud_hook = "https://hook-url"
-        mock_create_cloudhook.return_value = cloud_hook
-
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        assert config_entry.state is ConfigEntryState.LOADED
-        assert CONF_CLOUDHOOK_URL not in config_entry.data
-        mock_create_cloudhook.assert_not_called()
-
+    async def additional_steps(
+        config_entry: ConfigEntry, mock_create_cloudhook: Mock, cloud_hook: str
+    ) -> None:
         async_dispatcher_send(
             hass, SIGNAL_CLOUD_CONNECTION_STATE, CloudConnectionState.CLOUD_CONNECTED
         )
@@ -137,3 +151,5 @@ async def test_create_cloud_hook_after_connection(
         mock_create_cloudhook.assert_called_once_with(
             hass, config_entry.data[CONF_WEBHOOK_ID]
         )
+
+    await _test_create_cloud_hook(hass, hass_admin_user, {}, False, additional_steps)
