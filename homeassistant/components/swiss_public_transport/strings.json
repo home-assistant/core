@@ -6,7 +6,10 @@
       "unknown": "An unknown error was raised by python-opendata-transport"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "Cannot connect to server",
+      "bad_config": "Request failed due to bad config: Check the [stationboard]({stationboard_url}) for valid stations.",
+      "unknown": "An unknown error was raised by python-opendata-transport"
     },
     "step": {
       "user": {
