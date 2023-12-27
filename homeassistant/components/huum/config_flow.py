@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -25,25 +24,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): str,
     }
 )
-
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from DATA_SCHEMA with values provided by the user.
-    """
-
-    huum_handler = Huum(
-        data[CONF_USERNAME],
-        data[CONF_PASSWORD],
-        session=async_get_clientsession(hass),
-    )
-
-    try:
-        await huum_handler.status()
-    except aiohttp.ClientError as client_error:
-        _LOGGER.error("Could not log in to Huum with given credentials")
-        raise InvalidAuth from client_error
 
 
 class HuumConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -63,11 +43,17 @@ class HuumConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         try:
-            await validate_input(self.hass, user_input)
-        except InvalidAuth:
+            huum_handler = Huum(
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+                session=async_get_clientsession(self.hass),
+            )
+            await huum_handler.status()
+        except aiohttp.ClientError:
+            _LOGGER.error("Could not log in to Huum with given credentials")
             errors["base"] = "invalid_auth"
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.error(str(err))
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.error("Unknown error")
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(
