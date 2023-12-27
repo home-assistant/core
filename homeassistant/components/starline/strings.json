@@ -54,6 +54,15 @@
       },
       "doors": {
         "name": "Doors"
+      },
+      "handsfree": {
+        "name": "Handsfree"
+      },
+      "neutral": {
+        "name": "Programmable neutral"
+      },
+      "moving_ban": {
+        "name": "Moving ban"
       }
     },
     "device_tracker": {
@@ -104,6 +113,9 @@
       },
       "horn": {
         "name": "Horn"
+      },
+      "service_mode": {
+        "name": "Service mode"
       }
     },
     "button": {

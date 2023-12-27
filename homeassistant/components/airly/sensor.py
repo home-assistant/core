@@ -56,7 +56,7 @@ from .const import (
 PARALLEL_UPDATES = 1
 
 
-@dataclass
+@dataclass(frozen=True)
 class AirlySensorEntityDescription(SensorEntityDescription):
     """Class describing Airly sensor entities."""
 

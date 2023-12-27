@@ -65,6 +65,16 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "aepohio": {
+      "name": "AEP Ohio",
+      "integration_type": "virtual",
+      "supported_by": "opower"
+    },
+    "aeptexas": {
+      "name": "AEP Texas",
+      "integration_type": "virtual",
+      "supported_by": "opower"
+    },
     "aftership": {
       "name": "AfterShip",
       "integration_type": "hub",
@@ -303,6 +313,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "appalachianpower": {
+      "name": "Appalachian Power",
+      "integration_type": "virtual",
+      "supported_by": "opower"
     },
     "apple": {
       "name": "Apple",
@@ -635,6 +650,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "blue_current": {
+      "name": "Blue Current",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "bluemaestro": {
       "name": "BlueMaestro",
       "integration_type": "hub",
@@ -779,6 +800,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "ccm15": {
+      "name": "Midea ccm15 AC Controller",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "cert_expiry": {
       "integration_type": "hub",
@@ -1237,6 +1264,12 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "drop_connect": {
+      "name": "DROP",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "dsmr": {
       "name": "DSMR Slimme Meter",
@@ -2654,6 +2687,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "indianamichiganpower": {
+      "name": "Indiana Michigan Power",
+      "integration_type": "virtual",
+      "supported_by": "opower"
+    },
     "influxdb": {
       "name": "InfluxDB",
       "integration_type": "hub",
@@ -2854,6 +2892,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "kentuckypower": {
+      "name": "Kentucky Power",
+      "integration_type": "virtual",
+      "supported_by": "opower"
     },
     "keyboard": {
       "name": "Keyboard",
@@ -3588,6 +3631,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "motionmount": {
+      "name": "Vogel's MotionMount",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "mpd": {
       "name": "Music Player Daemon (MPD)",
       "integration_type": "hub",
@@ -3742,7 +3791,7 @@
         },
         "netgear_lte": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "local_polling",
           "name": "NETGEAR LTE"
         }
@@ -4476,6 +4525,11 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "psoklahoma": {
+      "name": "Public Service Company of Oklahoma (PSO)",
+      "integration_type": "virtual",
+      "supported_by": "opower"
+    },
     "pulseaudio_loopback": {
       "name": "PulseAudio Loopback",
       "integration_type": "hub",
@@ -4709,6 +4763,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "refoss": {
+      "name": "Refoss",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "rejseplanen": {
       "name": "Rejseplanen",
@@ -5525,7 +5585,7 @@
     "streamlabswater": {
       "name": "StreamLabs",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "subaru": {
@@ -5569,6 +5629,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "swepco": {
+      "name": "Southwestern Electric Power Company (SWEPCO)",
+      "integration_type": "virtual",
+      "supported_by": "opower"
+    },
     "swiss_hydrological_data": {
       "name": "Swiss Hydrological Data",
       "integration_type": "hub",
@@ -5578,7 +5643,7 @@
     "swiss_public_transport": {
       "name": "Swiss public transport",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "swisscom": {
@@ -5666,7 +5731,7 @@
     "systemmonitor": {
       "name": "System Monitor",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "tado": {
@@ -5684,6 +5749,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "tailwind": {
+      "name": "Tailwind",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "tami4": {
       "name": "Tami4 Edge / Edge+",
@@ -6711,7 +6782,7 @@
       "iot_class": "local_polling"
     },
     "zamg": {
-      "name": "Zentralanstalt f\u00fcr Meteorologie und Geodynamik (ZAMG)",
+      "name": "GeoSphere Austria",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"

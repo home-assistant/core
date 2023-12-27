@@ -4,7 +4,7 @@ from collections.abc import Callable, Iterable
 import dataclasses
 import datetime
 import logging
-from typing import Any, final
+from typing import TYPE_CHECKING, Any, final
 
 import voluptuous as vol
 
@@ -40,6 +40,12 @@ from .const import (
     TodoItemStatus,
     TodoListEntityFeature,
 )
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -226,7 +232,12 @@ class TodoItem:
     """
 
 
-class TodoListEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "todo_items",
+}
+
+
+class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """An entity that represents a To-do list."""
 
     _attr_todo_items: list[TodoItem] | None = None
@@ -240,7 +251,7 @@ class TodoListEntity(Entity):
             return None
         return sum([item.status == TodoItemStatus.NEEDS_ACTION for item in items])
 
-    @property
+    @cached_property
     def todo_items(self) -> list[TodoItem] | None:
         """Return the To-do items in the To-do list."""
         return self._attr_todo_items

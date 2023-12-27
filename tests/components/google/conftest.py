@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Generator
 import datetime
 import http
+import time
 from typing import Any, TypeVar
 from unittest.mock import Mock, mock_open, patch
 
@@ -189,9 +190,9 @@ def creds(
 
 
 @pytest.fixture
-def config_entry_token_expiry(token_expiry: datetime.datetime) -> float:
+def config_entry_token_expiry() -> float:
     """Fixture for token expiration value stored in the config entry."""
-    return token_expiry.timestamp()
+    return time.time() + 86400
 
 
 @pytest.fixture
@@ -260,7 +261,7 @@ def mock_events_list(
 
 @pytest.fixture
 def mock_events_list_items(
-    mock_events_list: Callable[[dict[str, Any]], None]
+    mock_events_list: Callable[[dict[str, Any]], None],
 ) -> Callable[[list[dict[str, Any]]], None]:
     """Fixture to construct an API response containing event items."""
 
