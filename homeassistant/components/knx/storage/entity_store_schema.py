@@ -5,11 +5,7 @@ from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 
-from ..validation import (
-    ga_list_validator,
-    ga_list_validator_optional,
-    sync_state_validator,
-)
+from ..validation import ga_validator, sync_state_validator
 
 BASE_ENTITY_SCHEMA = vol.Schema(
     {
@@ -21,12 +17,38 @@ BASE_ENTITY_SCHEMA = vol.Schema(
     }
 )
 
+
+def ga_schema(
+    send: bool = True,
+    read: bool = True,
+    passive: bool = True,
+    send_required: bool = False,
+    read_required: bool = False,
+) -> vol.Schema:
+    """Return a schema for a knx group address selector."""
+    schema = {}
+    _send_marker = vol.Required if send and send_required else vol.Optional
+    schema[_send_marker("send", default=None)] = (
+        None if not read else ga_validator if send_required else vol.Maybe(ga_validator)
+    )
+    _read_marker = vol.Required if read and read_required else vol.Optional
+    schema[_read_marker("read", default=None)] = (
+        None if not read else ga_validator if read_required else vol.Maybe(ga_validator)
+    )
+    schema[vol.Optional("passive", default=None)] = vol.All(
+        vol.Maybe([ga_validator]) if passive else vol.Any(None, []),
+        vol.Any(  # Coerce `None` to an empty list if passive is allowed
+            vol.IsTrue(), vol.SetTo([])
+        ),
+    )
+    return vol.Schema(schema)
+
+
 SWITCH_SCHEMA = vol.Schema(
     {
         vol.Required("entity"): BASE_ENTITY_SCHEMA,
         vol.Optional("invert", default=False): bool,
-        vol.Required("switch_address"): ga_list_validator,
-        vol.Required("switch_state_address"): ga_list_validator_optional,
+        vol.Required("ga_switch"): ga_schema(send_required=True),
         vol.Optional("respond_to_read", default=False): bool,
         vol.Optional("sync_state", default=True): sync_state_validator,
     }

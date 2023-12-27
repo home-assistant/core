@@ -56,6 +56,14 @@ ga_list_validator = vol.All(
     vol.IsTrue("value must be a group address or a list containing group addresses"),
 )
 
+ga_list_validator_optional = vol.Maybe(
+    vol.All(
+        cv.ensure_list,
+        [ga_validator],
+        vol.Any(vol.IsTrue(), vol.SetTo(None)),  # avoid empty lists -> None
+    )
+)
+
 ia_validator = vol.Any(
     vol.All(str, str.strip, cv.matches_regex(IndividualAddress.ADDRESS_RE.pattern)),
     vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),

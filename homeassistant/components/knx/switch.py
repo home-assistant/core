@@ -118,8 +118,11 @@ class KnxUiSwitch(_KnxSwitch):
             device=XknxSwitch(
                 knx_module.xknx,
                 name=config["entity"][CONF_NAME],
-                group_address=config["switch_address"],
-                group_address_state=config["switch_state_address"],
+                group_address=config["ga_switch"]["send"],
+                group_address_state=[
+                    config["ga_switch"]["read"],
+                    *config["ga_switch"]["passive"],
+                ],
                 respond_to_read=config[CONF_RESPOND_TO_READ],
                 invert=config["invert"],
             )
