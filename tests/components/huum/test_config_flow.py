@@ -8,7 +8,7 @@ from homeassistant import config_entries
 from homeassistant.components.huum.config_flow import CannotConnect
 from homeassistant.components.huum.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 TEST_USERNAME = "test-username"
 TEST_PASSWORD = "test-password"
@@ -20,7 +20,7 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
@@ -39,7 +39,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_USERNAME
     assert result2["data"] == {
         "username": TEST_USERNAME,
@@ -77,5 +77,5 @@ async def test_huum_errors(
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": error_base}
