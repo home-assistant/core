@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import aiohttp
+from huum.exceptions import Forbidden, NotAuthenticated
 from huum.huum import Huum
 import voluptuous as vol
 
@@ -43,7 +43,8 @@ class HuumConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     session=async_get_clientsession(self.hass),
                 )
                 await huum_handler.status()
-            except aiohttp.ClientError:
+            except (Forbidden, NotAuthenticated):
+                # Most likely Forbidden as that is what is returned from `.status()` with bad creds
                 _LOGGER.error("Could not log in to Huum with given credentials")
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except

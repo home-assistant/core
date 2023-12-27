@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-import aiohttp
+from huum.exceptions import Forbidden, NotAuthenticated
 from huum.huum import Huum
 
 from homeassistant.config_entries import ConfigEntry
@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await huum.status()
-    except aiohttp.ClientError as err:
+    except (Forbidden, NotAuthenticated) as err:
         _LOGGER.error("Could not log in to Huum with given credentials")
         raise ConfigEntryNotReady(
             "Could not log in to Huum with given credentials"
