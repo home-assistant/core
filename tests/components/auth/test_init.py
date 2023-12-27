@@ -584,7 +584,8 @@ async def test_ws_delete_all_refresh_tokens_error(
 
 
 @pytest.mark.parametrize(
-    ("delete_token_type"), [None, TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN, TOKEN_TYPE_NORMAL]
+    ("delete_token_type", "expected_remaining_tokens"),
+    [(None, 0), (TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN, 3), (TOKEN_TYPE_NORMAL, 1)],
 )
 async def test_ws_delete_all_refresh_tokens(
     hass: HomeAssistant,
@@ -593,6 +594,7 @@ async def test_ws_delete_all_refresh_tokens(
     hass_ws_client: WebSocketGenerator,
     hass_access_token: str,
     delete_token_type: str | None,
+    expected_remaining_tokens: int,
 ) -> None:
     """Test deleting all or some refresh tokens."""
     assert await async_setup_component(hass, "auth", {"http": {}})
@@ -646,12 +648,7 @@ async def test_ws_delete_all_refresh_tokens(
         else:
             assert refresh_token.client_id == token["client_id"]
 
-    if delete_token_type == TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN:
-        assert remaining_tokens == 3
-    elif delete_token_type == TOKEN_TYPE_NORMAL:
-        assert remaining_tokens == 1
-    else:
-        assert remaining_tokens == 0
+    assert remaining_tokens == expected_remaining_tokens
 
 
 async def test_ws_sign_path(
