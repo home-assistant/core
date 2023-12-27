@@ -105,8 +105,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def create_cloud_hook() -> None:
         """Create a cloud hook."""
-        if CONF_CLOUDHOOK_URL in entry.data:
-            return
         hook = await cloud.async_create_cloudhook(hass, webhook_id)
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_CLOUDHOOK_URL: hook}
