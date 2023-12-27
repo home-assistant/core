@@ -1,8 +1,8 @@
 """Helper functions for qBittorrent."""
-from qbittorrent.client import Client
-
+from datetime import UTC, datetime, timezone
 from typing import Any
-from datetime import datetime, timezone
+
+from qbittorrent.client import Client
 
 
 def setup_client(url: str, username: str, password: str, verify_ssl: bool) -> Client:
@@ -17,7 +17,7 @@ def setup_client(url: str, username: str, password: str, verify_ssl: bool) -> Cl
 def seconds_to_hhmmss(seconds):
     """Convert seconds to HH:MM:SS format."""
     if seconds == 8640000:
-        return 'None'
+        return "None"
     else:
         minutes, seconds = divmod(seconds, 60)
         hours, minutes = divmod(minutes, 60)
@@ -26,8 +26,7 @@ def seconds_to_hhmmss(seconds):
 
 def format_unix_timestamp(timestamp):
     """Format a UNIX timestamp to a human-readable date."""
-    # dt_object = datetime.utcfromtimestamp(timestamp).replace(tzinfo=timezone.UTC)
-    dt_object = datetime.fromtimestamp(timestamp, tz=timezone.UTC)
+    dt_object = datetime.fromtimestamp(timestamp, tz=UTC)
     formatted_date = dt_object.strftime("%Y-%m-%dT%H:%M:%S%z")
     return formatted_date
 
@@ -36,7 +35,7 @@ def format_progress(torrent):
     """Format the progress of a torrent."""
     progress = torrent["progress"]
     progress = float(progress) * 100
-    progress = '{:.2f}'.format(progress)
+    progress = f"{progress:.2f}"
 
     return progress
 
@@ -53,11 +52,11 @@ def format_torrents(torrents: dict[str, Any]):
 def format_torrent(torrent):
     """Format a single torrent."""
     value = {}
-    value['id'] = torrent["hash"]
-    value['added_date'] = format_unix_timestamp(torrent["added_on"])
-    value['percent_done'] = format_progress(torrent)
-    value['status'] = torrent["state"]
-    value['eta'] = seconds_to_hhmmss(torrent["eta"])
-    value['ratio'] = '{:.2f}'.format(float(torrent["ratio"]))
+    value["id"] = torrent["hash"]
+    value["added_date"] = format_unix_timestamp(torrent["added_on"])
+    value["percent_done"] = format_progress(torrent)
+    value["status"] = torrent["state"]
+    value["eta"] = seconds_to_hhmmss(torrent["eta"])
+    value["ratio"] = "{:.2f}".format(float(torrent["ratio"]))
 
     return value

@@ -13,4 +13,4 @@ STATE_SEEDING = "seeding"
 STATE_DOWNLOADING = "downloading"
 
 SERVICE_GET_TORRENTS = "get_torrents"
-FILTER = "filter"
+TORRENT_FILTER = "torrent_filter"
