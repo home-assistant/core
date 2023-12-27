@@ -53,12 +53,12 @@ def setup_services(hass: HomeAssistant) -> None:
         ir.async_create_issue(
             hass,
             DOMAIN,
-            "service_depreciation",
+            "service_deprecation",
             breaks_in_ha_version="2024.6.0",
             is_fixable=True,
             is_persistent=True,
             severity=ir.IssueSeverity.WARNING,
-            translation_key="service_depreciation",
+            translation_key="service_deprecation",
         )
 
         for entry_id in call.data[ATTR_CONFIG_ENTRY_ID]:
