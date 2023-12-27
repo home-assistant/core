@@ -62,6 +62,7 @@ async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> None:
         severity=IssueSeverity.WARNING,
         translation_key=translation_key,
     )
+    return None
 
 
 async def async_setup_entry(
