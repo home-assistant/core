@@ -12,7 +12,7 @@ from homeassistant.components.blink.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PIN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
 
@@ -120,7 +120,7 @@ async def test_service_called_with_non_blink_device(
     parameters = {ATTR_CONFIG_ENTRY_ID: [other_mock_config_entry.entry_id]}
     parameters.update(params)
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
             service,

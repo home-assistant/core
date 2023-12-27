@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PIN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 
 from .const import ATTR_CONFIG_ENTRY_ID, DOMAIN, SERVICE_REFRESH, SERVICE_SEND_PIN
 
@@ -30,21 +30,19 @@ def setup_services(hass: HomeAssistant) -> None:
     async def send_pin(call: ServiceCall):
         """Call blink to send new pin."""
         for entry_id in call.data[ATTR_CONFIG_ENTRY_ID]:
-            try:
-                coordinator = hass.data[DOMAIN][entry_id]
-            except KeyError as ex:
+            if not (config_entry := hass.config_entries.async_get_entry(entry_id)):
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="integration_not_found",
                     translation_placeholders={"target": DOMAIN},
-                ) from ex
-            if coordinator.config_entry.state != ConfigEntryState.LOADED:
+                )
+            if config_entry.state != ConfigEntryState.LOADED:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="not_loaded",
-                    translation_placeholders={"target": coordinator.config_entry.title},
+                    translation_placeholders={"target": config_entry.title},
                 )
-
+            coordinator = hass.data[DOMAIN][entry_id]
             await coordinator.api.auth.send_auth_key(
                 coordinator.api,
                 call.data[CONF_PIN],
@@ -52,25 +50,36 @@ def setup_services(hass: HomeAssistant) -> None:
 
     async def blink_refresh(call: ServiceCall):
         """Call blink to refresh info."""
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "service_depreciation",
+            breaks_in_ha_version="2024.6.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_depreciation",
+        )
+
         for entry_id in call.data[ATTR_CONFIG_ENTRY_ID]:
-            try:
-                coordinator = hass.data[DOMAIN][entry_id]
-            except KeyError as ex:
+            if not (config_entry := hass.config_entries.async_get_entry(entry_id)):
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="integration_not_found",
                     translation_placeholders={"target": DOMAIN},
-                ) from ex
-            if coordinator.config_entry.state != ConfigEntryState.LOADED:
+                )
+
+            if config_entry.state != ConfigEntryState.LOADED:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="not_loaded",
-                    translation_placeholders={"target": coordinator.config_entry.title},
+                    translation_placeholders={"target": config_entry.title},
                 )
+            coordinator = hass.data[DOMAIN][entry_id]
             await coordinator.api.refresh(force_cache=True)
 
     # Register all the above services
-    # Refresh service is depreciated and will be removed on 6/2024
+    # Refresh service is deprecated and will be removed in 6/2024
     service_mapping = [
         (blink_refresh, SERVICE_REFRESH, SERVICE_UPDATE_SCHEMA),
         (send_pin, SERVICE_SEND_PIN, SERVICE_SEND_PIN_SCHEMA),
