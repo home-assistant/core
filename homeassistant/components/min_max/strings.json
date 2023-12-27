@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "[%key:component::min_max::title%]",
-        "description": "Create a sensor that calculates a min, max, mean, median or sum from a list of input sensors.",
+        "description": "Create a sensor that calculates a min, max, mean, median or sum/substract from a list of input sensors.",
         "data": {
           "entity_ids": "Input entities",
           "name": "[%key:common::config_flow::data::name%]",
@@ -41,6 +41,7 @@
         "last": "Most recently updated",
         "range": "Statistical range",
         "sum": "Sum"
+        "substract": "Substract"
       }
     }
   },

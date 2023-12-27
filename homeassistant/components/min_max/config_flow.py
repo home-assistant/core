@@ -26,6 +26,7 @@ _STATISTIC_MEASURES = [
     "last",
     "range",
     "sum",
+    "substract",
 ]
 
 
