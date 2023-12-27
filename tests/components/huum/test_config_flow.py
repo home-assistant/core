@@ -74,7 +74,6 @@ async def test_signup_flow_already_set_up(hass: HomeAssistant) -> None:
         "homeassistant.components.huum.async_setup_entry",
         return_value=True,
     ):
-
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
