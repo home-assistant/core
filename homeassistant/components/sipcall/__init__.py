@@ -25,10 +25,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SIP Call from a config entry."""
 
-    hass.data.setdefault(DOMAIN, {})
-
-    # We simply store the config data. The actual connection will be made by notify
-    hass.data[DOMAIN][entry.entry_id] = entry.data
+    assert DATA_HASS_CONFIG in hass.data
 
     hass.async_create_task(
         discovery.async_load_platform(
@@ -37,11 +34,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     return True
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
