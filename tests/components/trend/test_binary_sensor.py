@@ -11,8 +11,9 @@ from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
+from .conftest import ComponentSetup
+
 from tests.common import MockConfigEntry, assert_setup_component, mock_restore_cache
-from tests.components.trend.conftest import ComponentSetup
 
 
 async def _setup_legacy_component(hass: HomeAssistant, params: dict[str, Any]) -> None:
@@ -42,6 +43,43 @@ async def _setup_legacy_component(hass: HomeAssistant, params: dict[str, Any]) -
     ],
     ids=["up", "down", "up inverted", "down inverted"],
 )
+async def test_basic_trend_setup_from_yaml(
+    hass: HomeAssistant,
+    states: list[str],
+    inverted: bool,
+    expected_state: str,
+) -> None:
+    """Test trend with a basic setup."""
+    await _setup_legacy_component(
+        hass,
+        {
+            "friendly_name": "Test state",
+            "entity_id": "sensor.cpu_temp",
+            "invert": inverted,
+            "max_samples": 2.0,
+            "min_gradient": 0.0,
+            "sample_duration": 0.0,
+        },
+    )
+
+    for state in states:
+        hass.states.async_set("sensor.cpu_temp", state)
+        await hass.async_block_till_done()
+
+    assert (sensor_state := hass.states.get("binary_sensor.test_trend_sensor"))
+    assert sensor_state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("states", "inverted", "expected_state"),
+    [
+        (["1", "2"], False, STATE_ON),
+        (["2", "1"], False, STATE_OFF),
+        (["1", "2"], True, STATE_OFF),
+        (["2", "1"], True, STATE_ON),
+    ],
+    ids=["up", "down", "up inverted", "down inverted"],
+)
 async def test_basic_trend(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -49,7 +87,7 @@ async def test_basic_trend(
     states: list[str],
     inverted: bool,
     expected_state: str,
-):
+) -> None:
     """Test trend with a basic setup."""
     await setup_component(
         {
@@ -94,7 +132,7 @@ async def test_using_trendline(
     state_series: list[list[str]],
     inverted: bool,
     expected_states: list[str],
-):
+) -> None:
     """Test uptrend using multiple samples and trendline calculation."""
     await setup_component(
         {
@@ -130,7 +168,7 @@ async def test_attribute_trend(
     setup_component: ComponentSetup,
     attr_values: list[str],
     expected_state: str,
-):
+) -> None:
     """Test attribute uptrend."""
     await setup_component(
         {
@@ -149,7 +187,7 @@ async def test_attribute_trend(
 
 async def test_max_samples(
     hass: HomeAssistant, config_entry: MockConfigEntry, setup_component: ComponentSetup
-):
+) -> None:
     """Test that sample count is limited correctly."""
     await setup_component(
         {
@@ -169,7 +207,7 @@ async def test_max_samples(
 
 async def test_non_numeric(
     hass: HomeAssistant, config_entry: MockConfigEntry, setup_component: ComponentSetup
-):
+) -> None:
     """Test for non-numeric sensor."""
     await setup_component({"entity_id": "sensor.test_state"})
 
@@ -183,7 +221,7 @@ async def test_non_numeric(
 
 async def test_missing_attribute(
     hass: HomeAssistant, config_entry: MockConfigEntry, setup_component: ComponentSetup
-):
+) -> None:
     """Test for missing attribute."""
     await setup_component(
         {
@@ -199,7 +237,7 @@ async def test_missing_attribute(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_invalid_name_does_not_create(hass: HomeAssistant):
+async def test_invalid_name_does_not_create(hass: HomeAssistant) -> None:
     """Test for invalid name."""
     with assert_setup_component(0):
         assert await setup.async_setup_component(
@@ -217,7 +255,7 @@ async def test_invalid_name_does_not_create(hass: HomeAssistant):
     assert hass.states.async_all("binary_sensor") == []
 
 
-async def test_invalid_sensor_does_not_create(hass: HomeAssistant):
+async def test_invalid_sensor_does_not_create(hass: HomeAssistant) -> None:
     """Test invalid sensor."""
     with assert_setup_component(0):
         assert await setup.async_setup_component(
@@ -235,7 +273,7 @@ async def test_invalid_sensor_does_not_create(hass: HomeAssistant):
     assert hass.states.async_all("binary_sensor") == []
 
 
-async def test_no_sensors_does_not_create(hass: HomeAssistant):
+async def test_no_sensors_does_not_create(hass: HomeAssistant) -> None:
     """Test no sensors."""
     with assert_setup_component(0):
         assert await setup.async_setup_component(
