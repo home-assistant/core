@@ -6,6 +6,8 @@ from typing import Any
 from tessie_api import (
     close_charge_port,
     close_windows,
+    open_close_rear_trunk,
+    open_front_trunk,
     open_unlock_charge_port,
     vent_windows,
 )
@@ -31,10 +33,12 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        Entity(vehicle.state_coordinator)
-        for Entity in (
+        klass(vehicle.state_coordinator)
+        for klass in (
             TessieWindowEntity,
             TessieChargePortEntity,
+            TessieFrontTrunkEntity,
+            TessieRearTrunkEntity,
         )
         for vehicle in data
     )
@@ -105,3 +109,52 @@ class TessieChargePortEntity(TessieEntity, CoverEntity):
         """Close windows."""
         await self.run(close_charge_port)
         self.set((self.key, False))
+
+
+class TessieFrontTrunkEntity(TessieEntity, CoverEntity):
+    """Cover entity for the charge port."""
+
+    _attr_device_class = CoverDeviceClass.DOOR
+    _attr_supported_features = CoverEntityFeature.OPEN
+
+    def __init__(self, coordinator: TessieStateUpdateCoordinator) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, "vehicle_state_ft")
+
+    @property
+    def is_closed(self) -> bool | None:
+        """Return if the cover is closed or not."""
+        return self._value == 0
+
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open front trunk."""
+        await self.run(open_front_trunk)
+        self.set((self.key, 1))
+
+
+class TessieRearTrunkEntity(TessieEntity, CoverEntity):
+    """Cover entity for the charge port."""
+
+    _attr_device_class = CoverDeviceClass.DOOR
+    _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+
+    def __init__(self, coordinator: TessieStateUpdateCoordinator) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, "vehicle_state_rt")
+
+    @property
+    def is_closed(self) -> bool | None:
+        """Return if the cover is closed or not."""
+        return self._value == 0
+
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open rear trunk."""
+        if self._value == 0:
+            await self.run(open_close_rear_trunk)
+            self.set((self.key, 1))
+
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close rear trunk."""
+        if self._value == 1:
+            await self.run(open_close_rear_trunk)
+            self.set((self.key, 0))
