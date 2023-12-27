@@ -32,6 +32,7 @@ class QBittorrentDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
+        """Async method to update QBittorrent data."""
         try:
             return await self.hass.async_add_executor_job(self.client.sync_main_data)
         except LoginRequired as exc:
