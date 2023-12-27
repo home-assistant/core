@@ -51,7 +51,6 @@ async def async_setup_entry(
 
     async_add_entities(
         [SwissPublicTransportSensor(coordinator, unique_id)],
-        True,
     )
 
 
