@@ -1,5 +1,5 @@
 """Helper functions for qBittorrent."""
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from qbittorrent.client import Client
@@ -18,10 +18,10 @@ def seconds_to_hhmmss(seconds):
     """Convert seconds to HH:MM:SS format."""
     if seconds == 8640000:
         return "None"
-    else:
-        minutes, seconds = divmod(seconds, 60)
-        hours, minutes = divmod(minutes, 60)
-        return f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}"
+
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    return f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}"
 
 
 def format_unix_timestamp(timestamp):
@@ -40,7 +40,7 @@ def format_progress(torrent):
     return progress
 
 
-def format_torrents(torrents: dict[str, Any]):
+def format_torrents(torrents: list[dict[str, Any]]) -> dict[str, Any]:
     """Format a list of torrents."""
     value = {}
     for torrent in torrents:
