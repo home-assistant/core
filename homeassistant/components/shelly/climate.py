@@ -419,7 +419,6 @@ class BlockSleepingClimate(
 class RpcClimate(ShellyRpcEntity, ClimateEntity):
     """Entity that controls a thermostat on RPC based Shelly devices."""
 
-    _attr_hvac_modes = [HVACMode.OFF]
     _attr_icon = "mdi:thermostat"
     _attr_max_temp = RPC_THERMOSTAT_SETTINGS["max"]
     _attr_min_temp = RPC_THERMOSTAT_SETTINGS["min"]
@@ -435,9 +434,9 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
             "type", "heating"
         )
         if self._thermostat_type == "cooling":
-            self._attr_hvac_modes.append(HVACMode.COOL)
+            self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL]
         else:
-            self._attr_hvac_modes.append(HVACMode.HEAT)
+            self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
 
     @property
     def target_temperature(self) -> float | None:
