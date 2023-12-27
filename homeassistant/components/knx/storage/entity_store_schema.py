@@ -19,28 +19,37 @@ BASE_ENTITY_SCHEMA = vol.Schema(
 
 
 def ga_schema(
-    send: bool = True,
-    read: bool = True,
+    write: bool = True,
+    state: bool = True,
     passive: bool = True,
-    send_required: bool = False,
-    read_required: bool = False,
+    write_required: bool = False,
+    state_required: bool = False,
 ) -> vol.Schema:
     """Return a schema for a knx group address selector."""
     schema = {}
-    _send_marker = vol.Required if send and send_required else vol.Optional
-    schema[_send_marker("send", default=None)] = (
-        None if not read else ga_validator if send_required else vol.Maybe(ga_validator)
-    )
-    _read_marker = vol.Required if read and read_required else vol.Optional
-    schema[_read_marker("read", default=None)] = (
-        None if not read else ga_validator if read_required else vol.Maybe(ga_validator)
-    )
-    schema[vol.Optional("passive", default=None)] = vol.All(
-        vol.Maybe([ga_validator]) if passive else vol.Any(None, []),
-        vol.Any(  # Coerce `None` to an empty list if passive is allowed
-            vol.IsTrue(), vol.SetTo([])
-        ),
-    )
+    if write:
+        _write_marker = vol.Required if write_required else vol.Optional
+        schema[_write_marker("write", default=None)] = (
+            ga_validator if write_required else vol.Maybe(ga_validator)
+        )
+    else:
+        schema[vol.Remove("write")] = object
+    if state:
+        _state_marker = vol.Required if state_required else vol.Optional
+        schema[_state_marker("state", default=None)] = (
+            ga_validator if state_required else vol.Maybe(ga_validator)
+        )
+    else:
+        schema[vol.Remove("state")] = object
+    if passive:
+        schema[vol.Optional("passive", default=list)] = vol.Any(
+            [ga_validator],
+            vol.All(  # Coerce `None` to an empty list if passive is allowed
+                vol.IsFalse(), vol.SetTo(list)
+            ),
+        )
+    else:
+        schema[vol.Remove("passive")] = object
     return vol.Schema(schema)
 
 
@@ -48,7 +57,7 @@ SWITCH_SCHEMA = vol.Schema(
     {
         vol.Required("entity"): BASE_ENTITY_SCHEMA,
         vol.Optional("invert", default=False): bool,
-        vol.Required("ga_switch"): ga_schema(send_required=True),
+        vol.Required("ga_switch"): ga_schema(write_required=True),
         vol.Optional("respond_to_read", default=False): bool,
         vol.Optional("sync_state", default=True): sync_state_validator,
     }
