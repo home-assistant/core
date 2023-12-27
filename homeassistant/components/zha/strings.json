@@ -780,6 +780,15 @@
       },
       "preset": {
         "name": "Preset"
+      },
+      "detection_distance": {
+        "name": "Detection distance"
+      },
+      "switch_mode": {
+        "name": "Switch mode"
+      },
+      "decoupled_mode": {
+        "name": "Decoupled mode"
       }
     },
     "sensor": {
