@@ -22,7 +22,7 @@ async def test_locks(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_all("lock")) == 1
 
-    entity_id = "lock.test"
+    entity_id = "lock.test_lock"
 
     assert (
         hass.states.get(entity_id).state == STATE_LOCKED

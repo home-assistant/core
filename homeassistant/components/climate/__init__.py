@@ -329,17 +329,17 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if target_temperature_step := self.target_temperature_step:
             data[ATTR_TARGET_TEMP_STEP] = target_temperature_step
 
-        if supported_features & ClimateEntityFeature.TARGET_HUMIDITY:
+        if ClimateEntityFeature.TARGET_HUMIDITY in supported_features:
             data[ATTR_MIN_HUMIDITY] = self.min_humidity
             data[ATTR_MAX_HUMIDITY] = self.max_humidity
 
-        if supported_features & ClimateEntityFeature.FAN_MODE:
+        if ClimateEntityFeature.FAN_MODE in supported_features:
             data[ATTR_FAN_MODES] = self.fan_modes
 
-        if supported_features & ClimateEntityFeature.PRESET_MODE:
+        if ClimateEntityFeature.PRESET_MODE in supported_features:
             data[ATTR_PRESET_MODES] = self.preset_modes
 
-        if supported_features & ClimateEntityFeature.SWING_MODE:
+        if ClimateEntityFeature.SWING_MODE in supported_features:
             data[ATTR_SWING_MODES] = self.swing_modes
 
         return data
@@ -359,7 +359,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ),
         }
 
-        if supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
+        if ClimateEntityFeature.TARGET_TEMPERATURE in supported_features:
             data[ATTR_TEMPERATURE] = show_temp(
                 hass,
                 self.target_temperature,
@@ -367,7 +367,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 precision,
             )
 
-        if supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
+        if ClimateEntityFeature.TARGET_TEMPERATURE_RANGE in supported_features:
             data[ATTR_TARGET_TEMP_HIGH] = show_temp(
                 hass, self.target_temperature_high, temperature_unit, precision
             )
@@ -378,22 +378,22 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if (current_humidity := self.current_humidity) is not None:
             data[ATTR_CURRENT_HUMIDITY] = current_humidity
 
-        if supported_features & ClimateEntityFeature.TARGET_HUMIDITY:
+        if ClimateEntityFeature.TARGET_HUMIDITY in supported_features:
             data[ATTR_HUMIDITY] = self.target_humidity
 
-        if supported_features & ClimateEntityFeature.FAN_MODE:
+        if ClimateEntityFeature.FAN_MODE in supported_features:
             data[ATTR_FAN_MODE] = self.fan_mode
 
         if hvac_action := self.hvac_action:
             data[ATTR_HVAC_ACTION] = hvac_action
 
-        if supported_features & ClimateEntityFeature.PRESET_MODE:
+        if ClimateEntityFeature.PRESET_MODE in supported_features:
             data[ATTR_PRESET_MODE] = self.preset_mode
 
-        if supported_features & ClimateEntityFeature.SWING_MODE:
+        if ClimateEntityFeature.SWING_MODE in supported_features:
             data[ATTR_SWING_MODE] = self.swing_mode
 
-        if supported_features & ClimateEntityFeature.AUX_HEAT:
+        if ClimateEntityFeature.AUX_HEAT in supported_features:
             data[ATTR_AUX_HEAT] = STATE_ON if self.is_aux_heat else STATE_OFF
 
         return data

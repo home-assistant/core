@@ -233,7 +233,7 @@ async def _async_get_stream_image(
     height: int | None = None,
     wait_for_next_keyframe: bool = False,
 ) -> bytes | None:
-    if not camera.stream and camera.supported_features & CameraEntityFeature.STREAM:
+    if not camera.stream and CameraEntityFeature.STREAM in camera.supported_features:
         camera.stream = await camera.async_create_stream()
     if camera.stream:
         return await camera.stream.async_get_image(
@@ -564,7 +564,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         if hasattr(self, "_attr_frontend_stream_type"):
             return self._attr_frontend_stream_type
-        if not self.supported_features & CameraEntityFeature.STREAM:
+        if CameraEntityFeature.STREAM not in self.supported_features:
             return None
         if self._rtsp_to_webrtc:
             return StreamType.WEB_RTC
@@ -752,7 +752,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     async def _async_use_rtsp_to_webrtc(self) -> bool:
         """Determine if a WebRTC provider can be used for the camera."""
-        if not self.supported_features & CameraEntityFeature.STREAM:
+        if CameraEntityFeature.STREAM not in self.supported_features:
             return False
         if DATA_RTSP_TO_WEB_RTC not in self.hass.data:
             return False

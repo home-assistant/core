@@ -15,7 +15,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_DESTINATION, CONF_START, DOMAIN
+from .const import CONF_DESTINATION, CONF_START, DOMAIN, PLACEHOLDERS
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -65,7 +65,10 @@ class SwissPublicTransportConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=DATA_SCHEMA,
+            errors=errors,
+            description_placeholders=PLACEHOLDERS,
         )
 
     async def async_step_import(self, import_input: dict[str, Any]) -> FlowResult:

@@ -140,7 +140,7 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
     # If version is specified, but not supported by the entity.
     if (
         version is not None
-        and not entity.supported_features & UpdateEntityFeature.SPECIFIC_VERSION
+        and UpdateEntityFeature.SPECIFIC_VERSION not in entity.supported_features
     ):
         raise HomeAssistantError(
             f"Installing a specific version is not supported for {entity.entity_id}"
@@ -149,7 +149,7 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
     # If backup is requested, but not supported by the entity.
     if (
         backup := service_call.data[ATTR_BACKUP]
-    ) and not entity.supported_features & UpdateEntityFeature.BACKUP:
+    ) and UpdateEntityFeature.BACKUP not in entity.supported_features:
         raise HomeAssistantError(f"Backup is not supported for {entity.entity_id}")
 
     # Update is already in progress.
@@ -263,7 +263,7 @@ class UpdateEntity(
             return self._attr_entity_category
         if hasattr(self, "entity_description"):
             return self.entity_description.entity_category
-        if self.supported_features & UpdateEntityFeature.INSTALL:
+        if UpdateEntityFeature.INSTALL in self.supported_features:
             return EntityCategory.CONFIG
         return EntityCategory.DIAGNOSTIC
 
@@ -408,7 +408,7 @@ class UpdateEntity(
 
         # If entity supports progress, return the in_progress value.
         # Otherwise, we use the internal progress value.
-        if self.supported_features & UpdateEntityFeature.PROGRESS:
+        if UpdateEntityFeature.PROGRESS in self.supported_features:
             in_progress = self.in_progress
         else:
             in_progress = self.__in_progress
@@ -444,7 +444,7 @@ class UpdateEntity(
         Handles setting the in_progress state in case the entity doesn't
         support it natively.
         """
-        if not self.supported_features & UpdateEntityFeature.PROGRESS:
+        if UpdateEntityFeature.PROGRESS not in self.supported_features:
             self.__in_progress = True
             self.async_write_ha_state()
 
@@ -490,7 +490,7 @@ async def websocket_release_notes(
         )
         return
 
-    if not entity.supported_features & UpdateEntityFeature.RELEASE_NOTES:
+    if UpdateEntityFeature.RELEASE_NOTES not in entity.supported_features:
         connection.send_error(
             msg["id"],
             websocket_api.const.ERR_NOT_SUPPORTED,

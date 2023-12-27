@@ -1243,7 +1243,10 @@ omit =
     homeassistant/components/stream/fmp4utils.py
     homeassistant/components/stream/hls.py
     homeassistant/components/stream/worker.py
-    homeassistant/components/streamlabswater/*
+    homeassistant/components/streamlabswater/__init__.py
+    homeassistant/components/streamlabswater/binary_sensor.py
+    homeassistant/components/streamlabswater/coordinator.py
+    homeassistant/components/streamlabswater/sensor.py
     homeassistant/components/suez_water/__init__.py
     homeassistant/components/suez_water/sensor.py
     homeassistant/components/supervisord/sensor.py

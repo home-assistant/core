@@ -214,7 +214,7 @@ class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     @property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return optional state attributes."""
-        if not self.supported_features & RemoteEntityFeature.ACTIVITY:
+        if RemoteEntityFeature.ACTIVITY not in self.supported_features:
             return None
 
         return {

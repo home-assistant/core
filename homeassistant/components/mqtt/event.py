@@ -16,6 +16,7 @@ from homeassistant.components.event import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
@@ -174,7 +175,7 @@ class MqttEvent(MqttEntity, EventEntity):
                 return
             try:
                 self._trigger_event(event_type, event_attributes)
-            except ValueError:
+            except HomeAssistantError:
                 _LOGGER.warning(
                     "Invalid event type %s for %s received on topic %s, payload %s",
                     event_type,
