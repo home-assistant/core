@@ -143,6 +143,9 @@ async def test_create_cloud_hook_after_connection(
     async def additional_steps(
         config_entry: ConfigEntry, mock_create_cloudhook: Mock, cloud_hook: str
     ) -> None:
+        assert CONF_CLOUDHOOK_URL not in config_entry.data
+        mock_create_cloudhook.assert_not_called()
+
         async_dispatcher_send(
             hass, SIGNAL_CLOUD_CONNECTION_STATE, CloudConnectionState.CLOUD_CONNECTED
         )
