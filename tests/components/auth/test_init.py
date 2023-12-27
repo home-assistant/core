@@ -585,7 +585,11 @@ async def test_ws_delete_all_refresh_tokens_error(
 
 @pytest.mark.parametrize(
     ("delete_token_type", "expected_remaining_tokens"),
-    [(None, 0), (TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN, 3), (TOKEN_TYPE_NORMAL, 1)],
+    [
+        ({}, 0),
+        ({"token_type": TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN}, 3),
+        ({"token_type": TOKEN_TYPE_NORMAL}, 1),
+    ],
 )
 async def test_ws_delete_all_refresh_tokens(
     hass: HomeAssistant,
@@ -593,7 +597,7 @@ async def test_ws_delete_all_refresh_tokens(
     hass_admin_credential: Credentials,
     hass_ws_client: WebSocketGenerator,
     hass_access_token: str,
-    delete_token_type: str | None,
+    delete_token_type: dict[str:str],
     expected_remaining_tokens: int,
 ) -> None:
     """Test deleting all or some refresh tokens."""
@@ -626,14 +630,9 @@ async def test_ws_delete_all_refresh_tokens(
 
     tokens = result["result"]
 
-    ws_json = {
-        "id": 6,
-        "type": "auth/delete_all_refresh_tokens",
-    }
-    if delete_token_type:
-        ws_json["token_type"] = delete_token_type
-
-    await ws_client.send_json(ws_json)
+    await ws_client.send_json(
+        {"id": 6, "type": "auth/delete_all_refresh_tokens", **delete_token_type}
+    )
 
     result = await ws_client.receive_json()
     assert result, result["success"]
@@ -643,7 +642,10 @@ async def test_ws_delete_all_refresh_tokens(
         if refresh_token is not None:
             remaining_tokens += 1
 
-        if delete_token_type is None or token["type"] == delete_token_type:
+        if (
+            "token_type" not in delete_token_type
+            or token["type"] == delete_token_type["token_type"]
+        ):
             assert refresh_token is None
         else:
             assert refresh_token.client_id == token["client_id"]
