@@ -21,12 +21,13 @@ def seconds_to_hhmmss(seconds):
     else:
         minutes, seconds = divmod(seconds, 60)
         hours, minutes = divmod(minutes, 60)
-        return "{:02}:{:02}:{:02}".format(int(hours), int(minutes), int(seconds))
+        return f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}"
 
 
 def format_unix_timestamp(timestamp):
     """Format a UNIX timestamp to a human-readable date."""
-    dt_object = datetime.utcfromtimestamp(timestamp).replace(tzinfo=timezone.utc)
+    # dt_object = datetime.utcfromtimestamp(timestamp).replace(tzinfo=timezone.UTC)
+    dt_object = datetime.fromtimestamp(timestamp, tz=timezone.UTC)
     formatted_date = dt_object.strftime("%Y-%m-%dT%H:%M:%S%z")
     return formatted_date
 

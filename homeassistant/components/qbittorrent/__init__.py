@@ -12,12 +12,20 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    SERVICE_GET_TORRENTS,
+    STATE_ATTR_TORRENT_INFO,
+    FILTER,
+)
 from .coordinator import QBittorrentDataCoordinator
-from .helpers import setup_client
+from .helpers import (
+    setup_client,
+    format_torrents,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +53,21 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    async def handle_get_torrents(service_call: ServiceCall):
+        coordinator: QBittorrentDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+        items = await coordinator.get_torrents(service_call.data[FILTER])
+        info = format_torrents(items)
+        return {
+            STATE_ATTR_TORRENT_INFO: info,
+        }
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_TORRENTS,
+        handle_get_torrents,
+        supports_response=SupportsResponse.ONLY
+    )
 
     return True
 
