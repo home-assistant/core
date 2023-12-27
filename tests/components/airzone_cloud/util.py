@@ -7,6 +7,7 @@ from aioairzone_cloud.common import OperationMode
 from aioairzone_cloud.const import (
     API_ACTIVE,
     API_AZ_AIDOO,
+    API_AZ_AIDOO_PRO,
     API_AZ_SYSTEM,
     API_AZ_ZONE,
     API_CELSIUS,
@@ -52,6 +53,9 @@ from aioairzone_cloud.const import (
     API_SP_AIR_HEAT,
     API_SP_AIR_STOP,
     API_SP_AIR_VENT,
+    API_SPEED_CONF,
+    API_SPEED_TYPE,
+    API_SPEED_VALUES,
     API_STAT_AP_MAC,
     API_STAT_CHANNEL,
     API_STAT_QUALITY,
@@ -79,6 +83,7 @@ from tests.common import MockConfigEntry
 
 WS_ID = "11:22:33:44:55:66"
 WS_ID_AIDOO = "11:22:33:44:55:67"
+WS_ID_AIDOO_PRO = "11:22:33:44:55:68"
 
 CONFIG = {
     CONF_ID: "inst1",
@@ -136,6 +141,18 @@ GET_INSTALLATION_MOCK = {
                 },
             ],
         },
+        {
+            API_GROUP_ID: "grp3",
+            API_NAME: "Aidoo Pro Group",
+            API_DEVICES: [
+                {
+                    API_DEVICE_ID: "aidoo_pro",
+                    API_NAME: "Bron Pro",
+                    API_TYPE: API_AZ_AIDOO_PRO,
+                    API_WS_ID: WS_ID_AIDOO_PRO,
+                },
+            ],
+        },
     ],
 }
 
@@ -147,6 +164,7 @@ GET_INSTALLATIONS_MOCK = {
             API_WS_IDS: [
                 WS_ID,
                 WS_ID_AIDOO,
+                WS_ID_AIDOO_PRO,
             ],
         },
     ],
@@ -186,6 +204,23 @@ GET_WEBSERVER_MOCK_AIDOO = {
     },
 }
 
+GET_WEBSERVER_MOCK_AIDOO_PRO = {
+    API_WS_TYPE: "ws_aidoo",
+    API_CONFIG: {
+        API_WS_FW: "4.01",
+        API_STAT_SSID: "Wifi",
+        API_STAT_CHANNEL: 6,
+        API_STAT_AP_MAC: "00:00:00:00:00:02",
+    },
+    API_STATUS: {
+        API_IS_CONNECTED: True,
+        API_STAT_QUALITY: 4,
+        API_STAT_RSSI: -67,
+        API_CONNECTION_DATE: "2023-11-05 17:00:52 +0200",
+        API_DISCONNECTION_DATE: "2023-11-05 17:00:25 +0200",
+    },
+}
+
 
 def mock_get_device_status(device: Device) -> dict[str, Any]:
     """Mock API device status."""
@@ -214,9 +249,44 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
             API_RANGE_SP_MIN_COOL_AIR: {API_CELSIUS: 18, API_FAH: 64},
             API_RANGE_SP_MIN_HOT_AIR: {API_CELSIUS: 16, API_FAH: 61},
             API_POWER: False,
+            API_SPEED_CONF: 6,
+            API_SPEED_VALUES: [2, 4, 6],
+            API_SPEED_TYPE: 0,
             API_IS_CONNECTED: True,
             API_WS_CONNECTED: True,
             API_LOCAL_TEMP: {API_CELSIUS: 21, API_FAH: 70},
+            API_WARNINGS: [],
+        }
+    if device.get_id() == "aidoo_pro":
+        return {
+            API_ACTIVE: True,
+            API_ERRORS: [],
+            API_MODE: OperationMode.COOLING.value,
+            API_MODE_AVAIL: [
+                OperationMode.AUTO.value,
+                OperationMode.COOLING.value,
+                OperationMode.HEATING.value,
+                OperationMode.VENTILATION.value,
+                OperationMode.DRY.value,
+            ],
+            API_SP_AIR_AUTO: {API_CELSIUS: 22, API_FAH: 72},
+            API_SP_AIR_COOL: {API_CELSIUS: 22, API_FAH: 72},
+            API_SP_AIR_HEAT: {API_CELSIUS: 22, API_FAH: 72},
+            API_RANGE_MAX_AIR: {API_CELSIUS: 30, API_FAH: 86},
+            API_RANGE_SP_MAX_AUTO_AIR: {API_CELSIUS: 30, API_FAH: 86},
+            API_RANGE_SP_MAX_COOL_AIR: {API_CELSIUS: 30, API_FAH: 86},
+            API_RANGE_SP_MAX_HOT_AIR: {API_CELSIUS: 30, API_FAH: 86},
+            API_RANGE_MIN_AIR: {API_CELSIUS: 15, API_FAH: 59},
+            API_RANGE_SP_MIN_AUTO_AIR: {API_CELSIUS: 18, API_FAH: 64},
+            API_RANGE_SP_MIN_COOL_AIR: {API_CELSIUS: 18, API_FAH: 64},
+            API_RANGE_SP_MIN_HOT_AIR: {API_CELSIUS: 16, API_FAH: 61},
+            API_POWER: True,
+            API_SPEED_CONF: 3,
+            API_SPEED_VALUES: [0, 1, 2, 3, 4, 5],
+            API_SPEED_TYPE: 0,
+            API_IS_CONNECTED: True,
+            API_WS_CONNECTED: True,
+            API_LOCAL_TEMP: {API_CELSIUS: 20, API_FAH: 68},
             API_WARNINGS: [],
         }
     if device.get_id() == "system1":
@@ -304,16 +374,19 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
             API_LOCAL_TEMP: {API_FAH: 77, API_CELSIUS: 25},
             API_WARNINGS: [],
         }
-    return None
+    return {}
 
 
 def mock_get_webserver(webserver: WebServer, devices: bool) -> dict[str, Any]:
     """Mock API get webserver."""
 
+    if webserver.get_id() == WS_ID:
+        return GET_WEBSERVER_MOCK
     if webserver.get_id() == WS_ID_AIDOO:
         return GET_WEBSERVER_MOCK_AIDOO
-
-    return GET_WEBSERVER_MOCK
+    if webserver.get_id() == WS_ID_AIDOO_PRO:
+        return GET_WEBSERVER_MOCK_AIDOO_PRO
+    return {}
 
 
 async def async_init_integration(

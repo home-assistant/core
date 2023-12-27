@@ -293,14 +293,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await _async_process_config(hass, config)
 
     async def reload_service_handler(service: ServiceCall) -> None:
-        """Remove all user-defined groups and load new ones from config."""
-        auto = [e for e in component.entities if e.created_by_service]
+        """Group reload handler.
 
-        if (conf := await component.async_prepare_reload()) is None:
+        - Remove group.group entities not created by service calls and set them up again
+        - Reload xxx.group platforms
+        """
+        if (conf := await component.async_prepare_reload(skip_reset=True)) is None:
             return
-        await _async_process_config(hass, conf)
 
-        await component.async_add_entities(auto)
+        # Simplified + modified version of EntityPlatform.async_reset:
+        # - group.group never retries setup
+        # - group.group never polls
+        # - We don't need to reset EntityPlatform._setup_complete
+        # - Only remove entities which were not created by service calls
+        tasks = [
+            entity.async_remove()
+            for entity in component.entities
+            if entity.entity_id.startswith("group.") and not entity.created_by_service
+        ]
+
+        if tasks:
+            await asyncio.gather(*tasks)
+
+        component.config = None
+
+        await _async_process_config(hass, conf)
 
         await async_reload_integration_platforms(hass, DOMAIN, PLATFORMS)
 
@@ -492,7 +509,8 @@ class GroupEntity(Entity):
                 self.async_update_supported_features(
                     event.data["entity_id"], event.data["new_state"]
                 )
-            preview_callback(*self._async_generate_attributes())
+            calculated_state = self._async_calculate_state()
+            preview_callback(calculated_state.state, calculated_state.attributes)
 
         async_state_changed_listener(None)
         return async_track_state_change_event(

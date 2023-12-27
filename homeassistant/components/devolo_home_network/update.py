@@ -26,7 +26,7 @@ from .const import DOMAIN, REGULAR_FIRMWARE
 from .entity import DevoloCoordinatorEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class DevoloUpdateRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -34,7 +34,7 @@ class DevoloUpdateRequiredKeysMixin:
     update_func: Callable[[Device], Awaitable[bool]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class DevoloUpdateEntityDescription(
     UpdateEntityDescription, DevoloUpdateRequiredKeysMixin
 ):

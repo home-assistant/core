@@ -66,7 +66,12 @@ async def test_broadcast_no_targets(
             "Anuncia en el salón Es hora de hacer los deberes",
         ),
         ("ko-KR", "숙제할 시간이야", "거실", "숙제할 시간이야 라고 거실에 방송해 줘"),
-        ("ja-JP", "宿題の時間だよ", "リビング", "宿題の時間だよとリビングにブロードキャストして"),
+        (
+            "ja-JP",
+            "宿題の時間だよ",
+            "リビング",
+            "宿題の時間だよとリビングにブロードキャストして",
+        ),
     ],
     ids=["english", "spanish", "korean", "japanese"],
 )

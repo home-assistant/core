@@ -249,7 +249,9 @@ async def test_state(hass: HomeAssistant, setup_comp) -> None:
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
-async def test_attributes(hass: HomeAssistant, setup_comp) -> None:
+async def test_attributes(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, setup_comp
+) -> None:
     """Test handling of state attributes."""
     state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_UNAVAILABLE
@@ -407,7 +409,6 @@ async def test_attributes(hass: HomeAssistant, setup_comp) -> None:
     assert ATTR_ASSUMED_STATE not in state.attributes
 
     # Test entity registry integration
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get(COVER_GROUP)
     assert entry
     assert entry.unique_id == "unique_identifier"

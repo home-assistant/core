@@ -232,16 +232,16 @@ TOPIC_KEYS = (
 def valid_preset_mode_configuration(config: ConfigType) -> ConfigType:
     """Validate that the preset mode reset payload is not one of the preset modes."""
     if PRESET_NONE in config[CONF_PRESET_MODES_LIST]:
-        raise ValueError("preset_modes must not include preset mode 'none'")
+        raise vol.Invalid("preset_modes must not include preset mode 'none'")
     return config
 
 
 def valid_humidity_range_configuration(config: ConfigType) -> ConfigType:
     """Validate a target_humidity range configuration, throws otherwise."""
     if config[CONF_HUMIDITY_MIN] >= config[CONF_HUMIDITY_MAX]:
-        raise ValueError("target_humidity_max must be > target_humidity_min")
+        raise vol.Invalid("target_humidity_max must be > target_humidity_min")
     if config[CONF_HUMIDITY_MAX] > 100:
-        raise ValueError("max_humidity must be <= 100")
+        raise vol.Invalid("max_humidity must be <= 100")
 
     return config
 
@@ -256,7 +256,7 @@ def valid_humidity_state_configuration(config: ConfigType) -> ConfigType:
         CONF_HUMIDITY_STATE_TOPIC in config
         and CONF_HUMIDITY_COMMAND_TOPIC not in config
     ):
-        raise ValueError(
+        raise vol.Invalid(
             f"{CONF_HUMIDITY_STATE_TOPIC} cannot be used without"
             f" {CONF_HUMIDITY_COMMAND_TOPIC}"
         )
@@ -417,8 +417,8 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
     climate and water_heater platforms.
     """
 
-    _attr_target_temperature_low: float | None = None
-    _attr_target_temperature_high: float | None = None
+    _attr_target_temperature_low: float | None
+    _attr_target_temperature_high: float | None
 
     _feature_preset_mode: bool = False
     _optimistic: bool
@@ -470,9 +470,10 @@ class MqttTemperatureControlEntity(MqttEntity, ABC):
         except ValueError:
             _LOGGER.error("Could not parse %s from %s", template_name, payload)
 
-    def prepare_subscribe_topics(
-        self, topics: dict[str, dict[str, Any]]
-    ) -> None:  # noqa: C901
+    def prepare_subscribe_topics(  # noqa: C901
+        self,
+        topics: dict[str, dict[str, Any]],
+    ) -> None:
         """(Re)Subscribe to topics."""
 
         @callback
@@ -607,6 +608,8 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     _default_name = DEFAULT_NAME
     _entity_id_format = climate.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_CLIMATE_ATTRIBUTES_BLOCKED
+    _attr_target_temperature_low: float | None = None
+    _attr_target_temperature_high: float | None = None
 
     @staticmethod
     def config_schema() -> vol.Schema:

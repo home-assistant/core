@@ -1,8 +1,7 @@
 """The tests for the geojson platform."""
 from datetime import timedelta
-from unittest.mock import ANY, call, patch
+from unittest.mock import patch
 
-from aio_geojson_generic_client import GenericFeed
 from freezegun import freeze_time
 
 from homeassistant.components.geo_json_events.const import (
@@ -21,11 +20,10 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
     CONF_URL,
-    LENGTH_KILOMETERS,
+    UnitOfLength,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -42,26 +40,6 @@ CONFIG_LEGACY = {
         }
     ]
 }
-
-
-async def test_setup_as_legacy_platform(hass: HomeAssistant) -> None:
-    """Test the setup with YAML legacy configuration."""
-    # Set up some mock feed entries for this test.
-    mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 20.5, (-31.1, 150.1))
-
-    with patch(
-        "aio_geojson_generic_client.feed_manager.GenericFeed",
-        wraps=GenericFeed,
-    ) as mock_feed, patch(
-        "aio_geojson_client.feed.GeoJsonFeed.update",
-        return_value=("OK", [mock_entry_1]),
-    ):
-        assert await async_setup_component(hass, GEO_LOCATION_DOMAIN, CONFIG_LEGACY)
-        await hass.async_block_till_done()
-
-        assert len(hass.states.async_entity_ids(GEO_LOCATION_DOMAIN)) == 1
-
-        assert mock_feed.call_args == call(ANY, ANY, URL, filter_radius=190.0)
 
 
 async def test_entity_lifecycle(
@@ -99,7 +77,7 @@ async def test_entity_lifecycle(
             ATTR_LATITUDE: -31.0,
             ATTR_LONGITUDE: 150.0,
             ATTR_FRIENDLY_NAME: "Title 1",
-            ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
             ATTR_SOURCE: "geo_json_events",
         }
         assert round(abs(float(state.state) - 15.5), 7) == 0
@@ -112,7 +90,7 @@ async def test_entity_lifecycle(
             ATTR_LATITUDE: -31.1,
             ATTR_LONGITUDE: 150.1,
             ATTR_FRIENDLY_NAME: "Title 2",
-            ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
             ATTR_SOURCE: "geo_json_events",
         }
         assert round(abs(float(state.state) - 20.5), 7) == 0
@@ -125,7 +103,7 @@ async def test_entity_lifecycle(
             ATTR_LATITUDE: -31.2,
             ATTR_LONGITUDE: 150.2,
             ATTR_FRIENDLY_NAME: "Title 3",
-            ATTR_UNIT_OF_MEASUREMENT: LENGTH_KILOMETERS,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
             ATTR_SOURCE: "geo_json_events",
         }
         assert round(abs(float(state.state) - 25.5), 7) == 0

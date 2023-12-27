@@ -38,7 +38,7 @@ from .const import (
 PARALLEL_UPDATES = 1
 
 
-@dataclass
+@dataclass(frozen=True)
 class NextDnsSensorRequiredKeysMixin(Generic[CoordinatorDataT]):
     """Class for NextDNS entity required keys."""
 
@@ -46,7 +46,7 @@ class NextDnsSensorRequiredKeysMixin(Generic[CoordinatorDataT]):
     value: Callable[[CoordinatorDataT], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class NextDnsSensorEntityDescription(
     SensorEntityDescription,
     NextDnsSensorRequiredKeysMixin[CoordinatorDataT],

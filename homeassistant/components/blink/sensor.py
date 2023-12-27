@@ -48,6 +48,7 @@ async def async_setup_entry(
     hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Initialize a Blink sensor."""
+
     coordinator: BlinkUpdateCoordinator = hass.data[DOMAIN][config.entry_id]
     entities = [
         BlinkSensor(coordinator, camera, description)

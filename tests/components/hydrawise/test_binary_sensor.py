@@ -1,8 +1,9 @@
 """Test Hydrawise binary_sensor."""
 
 from datetime import timedelta
-from unittest.mock import Mock
+from unittest.mock import AsyncMock
 
+from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.hydrawise.const import SCAN_INTERVAL
@@ -33,12 +34,13 @@ async def test_states(
 async def test_update_data_fails(
     hass: HomeAssistant,
     mock_added_config_entry: MockConfigEntry,
-    mock_pydrawise: Mock,
+    mock_pydrawise: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that no data from the API sets the correct connectivity."""
     # Make the coordinator refresh data.
-    mock_pydrawise.update_controller_info.return_value = None
+    mock_pydrawise.get_user.reset_mock(return_value=True)
+    mock_pydrawise.get_user.side_effect = ClientError
     freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

@@ -1,7 +1,9 @@
 """Support for IP Cameras."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
@@ -33,6 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -128,6 +131,8 @@ class GenericCamera(Camera):
     """A generic implementation of an IP camera."""
 
     _last_image: bytes | None
+    _last_update: datetime
+    _update_lock: asyncio.Lock
 
     def __init__(
         self,
@@ -171,6 +176,13 @@ class GenericCamera(Camera):
 
         self._last_url = None
         self._last_image = None
+        self._last_update = datetime.min
+        self._update_lock = asyncio.Lock()
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, identifier)},
+            manufacturer="Generic",
+        )
 
     @property
     def use_stream_for_stills(self) -> bool:
@@ -192,22 +204,39 @@ class GenericCamera(Camera):
         if url == self._last_url and self._limit_refetch:
             return self._last_image
 
-        try:
-            async_client = get_async_client(self.hass, verify_ssl=self.verify_ssl)
-            response = await async_client.get(
-                url, auth=self._auth, follow_redirects=True, timeout=GET_IMAGE_TIMEOUT
-            )
-            response.raise_for_status()
-            self._last_image = response.content
-        except httpx.TimeoutException:
-            _LOGGER.error("Timeout getting camera image from %s", self._name)
-            return self._last_image
-        except (httpx.RequestError, httpx.HTTPStatusError) as err:
-            _LOGGER.error("Error getting new camera image from %s: %s", self._name, err)
-            return self._last_image
+        async with self._update_lock:
+            if (
+                self._last_image is not None
+                and url == self._last_url
+                and self._last_update + timedelta(0, self._attr_frame_interval)
+                > datetime.now()
+            ):
+                return self._last_image
 
-        self._last_url = url
-        return self._last_image
+            try:
+                update_time = datetime.now()
+                async_client = get_async_client(self.hass, verify_ssl=self.verify_ssl)
+                response = await async_client.get(
+                    url,
+                    auth=self._auth,
+                    follow_redirects=True,
+                    timeout=GET_IMAGE_TIMEOUT,
+                )
+                response.raise_for_status()
+                self._last_image = response.content
+                self._last_update = update_time
+
+            except httpx.TimeoutException:
+                _LOGGER.error("Timeout getting camera image from %s", self._name)
+                return self._last_image
+            except (httpx.RequestError, httpx.HTTPStatusError) as err:
+                _LOGGER.error(
+                    "Error getting new camera image from %s: %s", self._name, err
+                )
+                return self._last_image
+
+            self._last_url = url
+            return self._last_image
 
     @property
     def name(self):

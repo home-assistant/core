@@ -2,7 +2,13 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, CONF_MODEL, CONF_NAME
+from homeassistant.const import (
+    ATTR_CONNECTIONS,
+    ATTR_IDENTIFIERS,
+    CONF_MAC,
+    CONF_MODEL,
+    CONF_NAME,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -28,8 +34,8 @@ class SamsungTVEntity(Entity):
             model=config_entry.data.get(CONF_MODEL),
         )
         if self.unique_id:
-            self._attr_device_info["identifiers"] = {(DOMAIN, self.unique_id)}
+            self._attr_device_info[ATTR_IDENTIFIERS] = {(DOMAIN, self.unique_id)}
         if self._mac:
-            self._attr_device_info["connections"] = {
+            self._attr_device_info[ATTR_CONNECTIONS] = {
                 (dr.CONNECTION_NETWORK_MAC, self._mac)
             }

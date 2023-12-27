@@ -63,14 +63,14 @@ def _retrieve_linked_keypad_battery_state(detail: KeypadDetail) -> int | None:
 _T = TypeVar("_T", LockDetail, KeypadDetail)
 
 
-@dataclass
+@dataclass(frozen=True)
 class AugustRequiredKeysMixin(Generic[_T]):
     """Mixin for required keys."""
 
     value_fn: Callable[[_T], int | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class AugustSensorEntityDescription(
     SensorEntityDescription, AugustRequiredKeysMixin[_T]
 ):

@@ -9,6 +9,7 @@ from unittest.mock import patch
 import urllib
 
 from aiohttp.client_exceptions import ClientError
+from freezegun.api import FrozenDateTimeFactory
 from gcal_sync.auth import API_BASE_URL
 import pytest
 
@@ -578,11 +579,13 @@ async def test_scan_calendar_error(
 
 
 async def test_future_event_update_behavior(
-    hass: HomeAssistant, mock_events_list_items, component_setup
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_events_list_items,
+    component_setup,
 ) -> None:
     """Test an future event that becomes active."""
     now = dt_util.now()
-    now_utc = dt_util.utcnow()
     one_hour_from_now = now + datetime.timedelta(minutes=60)
     end_event = one_hour_from_now + datetime.timedelta(minutes=90)
     event = {
@@ -600,12 +603,9 @@ async def test_future_event_update_behavior(
 
     # Advance time until event has started
     now += datetime.timedelta(minutes=60)
-    now_utc += datetime.timedelta(minutes=60)
-    with patch("homeassistant.util.dt.utcnow", return_value=now_utc), patch(
-        "homeassistant.util.dt.now", return_value=now
-    ):
-        async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
+    freezer.move_to(now)
+    async_fire_time_changed(hass, now)
+    await hass.async_block_till_done()
 
     # Event has started
     state = hass.states.get(TEST_ENTITY)
@@ -613,11 +613,13 @@ async def test_future_event_update_behavior(
 
 
 async def test_future_event_offset_update_behavior(
-    hass: HomeAssistant, mock_events_list_items, component_setup
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_events_list_items,
+    component_setup,
 ) -> None:
     """Test an future event that becomes active."""
     now = dt_util.now()
-    now_utc = dt_util.utcnow()
     one_hour_from_now = now + datetime.timedelta(minutes=60)
     end_event = one_hour_from_now + datetime.timedelta(minutes=90)
     event_summary = "Test Event in Progress"
@@ -638,12 +640,9 @@ async def test_future_event_offset_update_behavior(
 
     # Advance time until event has started
     now += datetime.timedelta(minutes=45)
-    now_utc += datetime.timedelta(minutes=45)
-    with patch("homeassistant.util.dt.utcnow", return_value=now_utc), patch(
-        "homeassistant.util.dt.now", return_value=now
-    ):
-        async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
+    freezer.move_to(now)
+    async_fire_time_changed(hass, now)
+    await hass.async_block_till_done()
 
     # Event has not started, but the offset was reached
     state = hass.states.get(TEST_ENTITY)
@@ -653,6 +652,7 @@ async def test_future_event_offset_update_behavior(
 
 async def test_unique_id(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_events_list_items,
     component_setup,
     config_entry,
@@ -661,7 +661,6 @@ async def test_unique_id(
     mock_events_list_items([])
     assert await component_setup()
 
-    entity_registry = er.async_get(hass)
     registry_entries = er.async_entries_for_config_entry(
         entity_registry, config_entry.entry_id
     )
@@ -675,14 +674,13 @@ async def test_unique_id(
 )
 async def test_unique_id_migration(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_events_list_items,
     component_setup,
     config_entry,
     old_unique_id,
 ) -> None:
     """Test that old unique id format is migrated to the new format that supports multiple accounts."""
-    entity_registry = er.async_get(hass)
-
     # Create an entity using the old unique id format
     entity_registry.async_get_or_create(
         DOMAIN,
@@ -730,14 +728,13 @@ async def test_unique_id_migration(
 )
 async def test_invalid_unique_id_cleanup(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_events_list_items,
     component_setup,
     config_entry,
     mock_calendars_yaml,
 ) -> None:
     """Test that old unique id format that is not actually unique is removed."""
-    entity_registry = er.async_get(hass)
-
     # Create an entity using the old unique id format
     entity_registry.async_get_or_create(
         DOMAIN,
@@ -1301,3 +1298,52 @@ async def test_event_differs_timezone(
         "description": event["description"],
         "supported_features": 3,
     }
+
+
+@pytest.mark.freeze_time("2023-11-30 12:15:00 +00:00")
+async def test_invalid_rrule_fix(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_events_list_items,
+    component_setup,
+) -> None:
+    """Test that an invalid RRULE returned from Google Calendar API is handled correctly end to end."""
+    week_from_today = dt_util.now().date() + datetime.timedelta(days=7)
+    end_event = week_from_today + datetime.timedelta(days=1)
+    event = {
+        **TEST_EVENT,
+        "start": {"date": week_from_today.isoformat()},
+        "end": {"date": end_event.isoformat()},
+        "recurrence": [
+            "RRULE:DATE;TZID=Europe/Warsaw:20230818T020000,20230915T020000,20231013T020000,20231110T010000,20231208T010000",
+        ],
+    }
+    mock_events_list_items([event])
+
+    assert await component_setup()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+
+    # Pick a date range that contains two instances of the event
+    web_client = await hass_client()
+    response = await web_client.get(
+        get_events_url(TEST_ENTITY, "2023-08-10T00:00:00Z", "2023-09-20T00:00:00Z")
+    )
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+
+    # Both instances are returned, however the RDATE rule is ignored by Home
+    # Assistant so they are just treateded as flattened events.
+    assert len(events) == 2
+
+    event = events[0]
+    assert event["uid"] == "cydrevtfuybguinhomj@google.com"
+    assert event["recurrence_id"] == "_c8rinwq863h45qnucyoi43ny8_20230818"
+    assert event["rrule"] is None
+
+    event = events[1]
+    assert event["uid"] == "cydrevtfuybguinhomj@google.com"
+    assert event["recurrence_id"] == "_c8rinwq863h45qnucyoi43ny8_20230915"
+    assert event["rrule"] is None

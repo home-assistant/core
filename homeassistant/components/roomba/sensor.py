@@ -21,14 +21,14 @@ from .irobot_base import IRobotEntity
 from .models import RoombaData
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoombaSensorEntityDescriptionMixin:
     """Mixin for describing Roomba data."""
 
     value_fn: Callable[[IRobotEntity], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoombaSensorEntityDescription(
     SensorEntityDescription, RoombaSensorEntityDescriptionMixin
 ):
@@ -106,7 +106,7 @@ SENSORS: list[RoombaSensorEntityDescription] = [
     ),
     RoombaSensorEntityDescription(
         key="scrubs_count",
-        translation_key="scrubs",
+        translation_key="scrubs_count",
         icon="mdi:counter",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="Scrubs",

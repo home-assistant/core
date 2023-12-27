@@ -5,7 +5,7 @@
         "data": {
           "token": "[%key:common::config_flow::data::api_token%]"
         },
-        "description": "Please entry your API token from your [Todoist Settings page]({settings_url})"
+        "description": "Please enter your API token from your [Todoist Settings page]({settings_url})"
       }
     },
     "error": {

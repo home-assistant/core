@@ -1,7 +1,7 @@
 """Support for Hydrawise sprinkler binary sensors."""
 from __future__ import annotations
 
-from pydrawise.legacy import LegacyHydrawise
+from pydrawise.schema import Zone
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -69,26 +69,16 @@ async def async_setup_entry(
     coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]
-    hydrawise: LegacyHydrawise = coordinator.api
-
-    entities = [
-        HydrawiseBinarySensor(
-            data=hydrawise.current_controller,
-            coordinator=coordinator,
-            description=BINARY_SENSOR_STATUS,
-            device_id_key="controller_id",
+    entities = []
+    for controller in coordinator.data.controllers:
+        entities.append(
+            HydrawiseBinarySensor(coordinator, BINARY_SENSOR_STATUS, controller)
         )
-    ]
-
-    # create a sensor for each zone
-    for zone in hydrawise.relays:
-        for description in BINARY_SENSOR_TYPES:
-            entities.append(
-                HydrawiseBinarySensor(
-                    data=zone, coordinator=coordinator, description=description
+        for zone in controller.zones:
+            for description in BINARY_SENSOR_TYPES:
+                entities.append(
+                    HydrawiseBinarySensor(coordinator, description, controller, zone)
                 )
-            )
-
     async_add_entities(entities)
 
 
@@ -100,5 +90,5 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorEntity):
         if self.entity_description.key == "status":
             self._attr_is_on = self.coordinator.last_update_success
         elif self.entity_description.key == "is_watering":
-            relay_data = self.coordinator.api.relays_by_zone_number[self.data["relay"]]
-            self._attr_is_on = relay_data["timestr"] == "Now"
+            zone: Zone = self.zone
+            self._attr_is_on = zone.scheduled_runs.current_run is not None
