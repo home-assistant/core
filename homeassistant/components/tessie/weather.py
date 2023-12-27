@@ -2,24 +2,19 @@
 from __future__ import annotations
 
 from homeassistant.components.weather import (
-    WeatherEntity,
-    ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_EXCEPTIONAL,
     ATTR_CONDITION_FOG,
     ATTR_CONDITION_HAIL,
-    ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_LIGHTNING,
     ATTR_CONDITION_PARTLYCLOUDY,
     ATTR_CONDITION_POURING,
     ATTR_CONDITION_RAINY,
     ATTR_CONDITION_SNOWY,
-    ATTR_CONDITION_SNOWY_RAINY,
     ATTR_CONDITION_SUNNY,
     ATTR_CONDITION_WINDY,
-    ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_NATIVE_TEMP,
-    ATTR_FORECAST_NATIVE_TEMP_LOW,
-    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TIME,
+    WeatherEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfLength,
@@ -36,7 +31,17 @@ from .const import DOMAIN, MODELS
 from .coordinator import TessieStateUpdateCoordinator, TessieWeatherDataCoordinator
 
 CONDITIONS = {
-    "clouds": ATTR_CONDITION_CLOUDY,
+    "Clear": ATTR_CONDITION_EXCEPTIONAL,
+    "Clouds": ATTR_CONDITION_CLOUDY,
+    "Fog": ATTR_CONDITION_FOG,
+    "Hail": ATTR_CONDITION_HAIL,
+    "Lightning": ATTR_CONDITION_LIGHTNING,
+    "Partlycloudy": ATTR_CONDITION_PARTLYCLOUDY,
+    "Pouring": ATTR_CONDITION_POURING,
+    "Rain": ATTR_CONDITION_RAINY,
+    "Snow": ATTR_CONDITION_SNOWY,
+    "Sunny": ATTR_CONDITION_SUNNY,
+    "Windy": ATTR_CONDITION_WINDY,
 }
 
 
@@ -127,7 +132,8 @@ class TessieWeatherEntity(
         return self.coordinator.data.get("visibility")
 
     @property
-    def condition(self) -> str | None:
+    def condition(self) -> str:
         """Return the current condition."""
-        return CONDITIONS.get(self.coordinator.data.get("condition")
-        return condition.lower() if condition else None
+        return CONDITIONS.get(
+            self.coordinator.data["condition"], self.coordinator.data["condition"]
+        )
