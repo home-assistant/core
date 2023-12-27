@@ -98,7 +98,6 @@ class ComelitBridgeSensorEntity(CoordinatorEntity[ComelitSerialBridge], SensorEn
 
     _attr_has_entity_name = True
     _attr_name = None
-    entity_description: SensorEntityDescription
 
     def __init__(
         self,
@@ -132,7 +131,6 @@ class ComelitVedoSensorEntity(CoordinatorEntity[ComelitVedoSystem], SensorEntity
 
     _attr_has_entity_name = True
     _attr_name = None
-    entity_description: SensorEntityDescription
 
     def __init__(
         self,
