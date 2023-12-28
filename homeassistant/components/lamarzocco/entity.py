@@ -24,7 +24,6 @@ class LaMarzoccoEntityDescription(EntityDescription):
     )
 
 
-@dataclass
 class LaMarzoccoEntity(CoordinatorEntity[LmApiCoordinator]):
     """Common elements for all entities."""
 
