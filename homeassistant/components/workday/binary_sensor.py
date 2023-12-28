@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LANGUAGE, CONF_NAME
+from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -21,12 +21,12 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
 )
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.util import dt as dt_util, slugify
 
 from .const import (
     ALLOWED_DAYS,
     CONF_ADD_HOLIDAYS,
-    CONF_COUNTRY,
     CONF_EXCLUDES,
     CONF_OFFSET,
     CONF_PROVINCE,
@@ -123,6 +123,25 @@ async def async_setup_entry(
                     LOGGER.debug("Removed %s by name '%s'", holiday, remove_holiday)
         except KeyError as unmatched:
             LOGGER.warning("No holiday found matching %s", unmatched)
+            async_create_issue(
+                hass,
+                DOMAIN,
+                f"bad_named_holiday-{entry.entry_id}-{slugify(remove_holiday)}",
+                is_fixable=True,
+                is_persistent=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="bad_named_holiday",
+                translation_placeholders={
+                    CONF_COUNTRY: country if country else "-",
+                    "title": entry.title,
+                    CONF_REMOVE_HOLIDAYS: remove_holiday,
+                },
+                data={
+                    "entry_id": entry.entry_id,
+                    "country": country,
+                    "named_holiday": remove_holiday,
+                },
+            )
 
     LOGGER.debug("Found the following holidays for your configuration:")
     for holiday_date, name in sorted(obj_holidays.items()):

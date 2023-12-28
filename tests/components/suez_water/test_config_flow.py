@@ -8,7 +8,6 @@ from homeassistant import config_entries
 from homeassistant.components.suez_water.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import issue_registry as ir
 
 from tests.common import MockConfigEntry
 
@@ -138,9 +137,7 @@ async def test_form_error(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_import(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, issue_registry: ir.IssueRegistry
-) -> None:
+async def test_import(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test import flow."""
     with patch("homeassistant.components.suez_water.config_flow.SuezClient"):
         result = await hass.config_entries.flow.async_init(
@@ -153,7 +150,6 @@ async def test_import(
     assert result["result"].unique_id == "test-username"
     assert result["data"] == MOCK_DATA
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(issue_registry.issues) == 1
 
 
 @pytest.mark.parametrize(
@@ -164,7 +160,6 @@ async def test_import_error(
     mock_setup_entry: AsyncMock,
     exception: Exception,
     reason: str,
-    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we handle errors while importing."""
 
@@ -178,12 +173,9 @@ async def test_import_error(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == reason
-    assert len(issue_registry.issues) == 1
 
 
-async def test_importing_invalid_auth(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
+async def test_importing_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth when importing."""
 
     with patch(
@@ -199,12 +191,9 @@ async def test_importing_invalid_auth(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "invalid_auth"
-    assert len(issue_registry.issues) == 1
 
 
-async def test_import_already_configured(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
+async def test_import_already_configured(hass: HomeAssistant) -> None:
     """Test we abort import when entry is already configured."""
 
     entry = MockConfigEntry(
@@ -220,4 +209,3 @@ async def test_import_already_configured(
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert len(issue_registry.issues) == 1

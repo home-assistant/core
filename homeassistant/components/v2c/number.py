@@ -24,7 +24,7 @@ MIN_INTENSITY = 6
 MAX_INTENSITY = 32
 
 
-@dataclass
+@dataclass(frozen=True)
 class V2CSettingsRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -32,7 +32,7 @@ class V2CSettingsRequiredKeysMixin:
     update_fn: Callable[[Trydan, int], Coroutine[Any, Any, None]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class V2CSettingsNumberEntityDescription(
     NumberEntityDescription, V2CSettingsRequiredKeysMixin
 ):
