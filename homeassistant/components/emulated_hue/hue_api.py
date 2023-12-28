@@ -74,6 +74,7 @@ from homeassistant.util.network import is_local
 from .config import Config
 
 _LOGGER = logging.getLogger(__name__)
+_OFF_STATES: dict[str, str] = {cover.DOMAIN: STATE_CLOSED}
 
 # How long to wait for a state change to happen
 STATE_CHANGE_WAIT_TIMEOUT = 5.0
@@ -730,13 +731,6 @@ def _build_entity_state_dict(entity: State) -> dict[str, Any]:
     return data
 
 
-def _hass_to_hue_state(entity: State) -> bool:
-    if entity.domain == cover.DOMAIN:
-        return entity.state != STATE_CLOSED
-
-    return entity.state != STATE_OFF
-
-
 def _clamp_values(data: dict[str, Any]) -> None:
     """Clamp brightness, hue, saturation, and color temp to valid values."""
     for key, v_min, v_max in (
@@ -897,6 +891,11 @@ def hue_brightness_to_hass(value: int) -> int:
 def hass_to_hue_brightness(value: int) -> int:
     """Convert hass brightness 0..255 to hue 1..254 scale."""
     return max(1, round((value / 255) * HUE_API_STATE_BRI_MAX))
+
+
+def _hass_to_hue_state(entity: State) -> bool:
+    """Convert hass entity states to simple True/False on/off state for Hue."""
+    return entity.state != _OFF_STATES.get(entity.domain, STATE_OFF)
 
 
 async def wait_for_state_change_or_timeout(
