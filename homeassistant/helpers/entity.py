@@ -1504,7 +1504,7 @@ class Entity(
         self, replacement: IntFlag
     ) -> None:
         """Report deprecated supported features constants."""
-        if self._deprecated_supported_features_reported is False:
+        if self._deprecated_supported_features_reported is True:
             return
         self._deprecated_supported_features_reported = True
         report_issue = self._suggest_report_issue()
@@ -1514,13 +1514,13 @@ class Entity(
         )
         _LOGGER.warning(
             (
-                "Entity %s (%s) is using deprecated supported features "
+                "Entity %s (%s) is using deprecated supported features"
                 " values. Instead it should use"
                 " %s, please %s"
             ),
             self.entity_id,
             type(self),
-            replacement,
+            repr(replacement),
             report_issue,
         )
 
