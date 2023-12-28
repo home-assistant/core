@@ -11,14 +11,16 @@ _LOGGER = logging.getLogger(__name__)
 def get_all_disk_mounts() -> list[str]:
     """Return all disk mount points on system."""
     disks: list[str] = []
-    for part in psutil.disk_partitions(all=False):
+    for part in psutil.disk_partitions(all=True):
         if os.name == "nt":
             if "cdrom" in part.opts or part.fstype == "":
                 # skip cd-rom drives with no disk in it; they may raise
                 # ENOENT, pop-up a Windows GUI error for a non-ready
                 # partition or just hang.
                 continue
-        disks.append(part.mountpoint)
+        usage = psutil.disk_usage(part.mountpoint)
+        if usage.total > 0 and part.device != "":
+            disks.append(part.mountpoint)
     _LOGGER.debug("Adding disks: %s", ", ".join(disks))
     return disks
 

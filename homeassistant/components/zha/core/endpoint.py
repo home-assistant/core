@@ -6,7 +6,6 @@ from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, Any, Final, TypeVar
 
-import zigpy
 from zigpy.typing import EndpointType as ZigpyEndpointType
 
 from homeassistant.const import Platform
@@ -15,7 +14,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import const, discovery, registries
 from .cluster_handlers import ClusterHandler
-from .cluster_handlers.general import MultistateInput
 from .helpers import get_zha_data
 
 if TYPE_CHECKING:
@@ -116,8 +114,16 @@ class Endpoint:
     def add_all_cluster_handlers(self) -> None:
         """Create and add cluster handlers for all input clusters."""
         for cluster_id, cluster in self.zigpy_endpoint.in_clusters.items():
-            cluster_handler_class = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
-                cluster_id, ClusterHandler
+            cluster_handler_classes = registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
+                cluster_id, {None: ClusterHandler}
+            )
+            quirk_id = (
+                self.device.quirk_id
+                if self.device.quirk_id in cluster_handler_classes
+                else None
+            )
+            cluster_handler_class = cluster_handler_classes.get(
+                quirk_id, ClusterHandler
             )
 
             # Allow cluster handler to filter out bad matches
@@ -129,15 +135,6 @@ class Endpoint:
                 cluster_id,
                 cluster_handler_class,
             )
-            # really ugly hack to deal with xiaomi using the door lock cluster
-            # incorrectly.
-            if (
-                hasattr(cluster, "ep_attribute")
-                and cluster_id == zigpy.zcl.clusters.closures.DoorLock.cluster_id
-                and cluster.ep_attribute == "multistate_input"
-            ):
-                cluster_handler_class = MultistateInput
-            # end of ugly hack
 
             try:
                 cluster_handler = cluster_handler_class(cluster, self)
