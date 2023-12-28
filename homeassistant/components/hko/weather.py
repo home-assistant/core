@@ -45,12 +45,12 @@ class HKOEntity(CoordinatorEntity[HKOUpdateCoordinator], WeatherEntity):
     _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
     _attr_attribution = ATTRIBUTION
 
-    def __init__(self, unique_id_str, coordinator: HKOUpdateCoordinator) -> None:
+    def __init__(self, unique_id: str, coordinator: HKOUpdateCoordinator) -> None:
         """Initialise the weather platform."""
         super().__init__(coordinator)
-        self._attr_unique_id = unique_id_str
+        self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id_str)},
+            identifiers={(DOMAIN, unique_id)},
             manufacturer=MANUFACTURER,
             entry_type=DeviceEntryType.SERVICE,
         )

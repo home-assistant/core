@@ -69,7 +69,7 @@ class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """HKO Update Coordinator."""
 
     def __init__(
-        self, hass: HomeAssistant, session: ClientSession, district: str, location: Any
+        self, hass: HomeAssistant, session: ClientSession, district: str, location: str
     ) -> None:
         """Update data via library."""
         self.location = location

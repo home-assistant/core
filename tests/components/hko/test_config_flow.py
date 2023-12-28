@@ -1,6 +1,5 @@
 """Test the Hong Kong Observatory config flow."""
 
-from asyncio import TimeoutError
 from unittest.mock import patch
 
 from hko import HKOError
@@ -54,11 +53,12 @@ async def test_config_flow_cannot_connect(hass: HomeAssistant) -> None:
             data={CONF_LOCATION: DEFAULT_LOCATION},
         )
 
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["result"].unique_id == DEFAULT_LOCATION
         assert result["data"][CONF_LOCATION] == DEFAULT_LOCATION
 
 
-async def test_config_flow_timedout(hass: HomeAssistant) -> None:
+async def test_config_flow_timeout(hass: HomeAssistant) -> None:
     """Test user config flow with timedout connection to the API."""
     with patch("homeassistant.components.hko.config_flow.HKO.weather") as client_mock:
         client_mock.side_effect = TimeoutError()
@@ -79,6 +79,7 @@ async def test_config_flow_timedout(hass: HomeAssistant) -> None:
             data={CONF_LOCATION: DEFAULT_LOCATION},
         )
 
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["result"].unique_id == DEFAULT_LOCATION
         assert result["data"][CONF_LOCATION] == DEFAULT_LOCATION
 
@@ -107,5 +108,5 @@ async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
         r2["flow_id"],
         user_input={CONF_LOCATION: DEFAULT_LOCATION},
     )
-    assert result2["type"] == "abort"
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
