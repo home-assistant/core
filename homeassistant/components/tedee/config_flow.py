@@ -41,8 +41,6 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(local_bridge.serial)
                 self._abort_if_unique_id_configured()
-
-            if not errors:
                 return self.async_create_entry(title=NAME, data=user_input)
 
         return self.async_show_form(
