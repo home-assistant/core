@@ -128,12 +128,14 @@ async def assert_request_calls_service(
 
 
 async def assert_request_fails(
-    namespace, name, endpoint, service_not_called, hass, payload=None
+    namespace, name, endpoint, service_not_called, hass, payload=None, instance=None
 ):
     """Assert an API request returns an ErrorResponse."""
     request = get_new_request(namespace, name, endpoint)
     if payload:
         request["directive"]["payload"] = payload
+    if instance:
+        request["directive"]["header"]["instance"] = instance
 
     domain, service_name = service_not_called.split(".")
     call = async_mock_service(hass, domain, service_name)

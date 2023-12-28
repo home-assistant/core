@@ -67,7 +67,7 @@ def component_translation_path(
 
 
 def load_translations_files(
-    translation_files: dict[str, str]
+    translation_files: dict[str, str],
 ) -> dict[str, dict[str, Any]]:
     """Load and parse translation.json files."""
     loaded = {}

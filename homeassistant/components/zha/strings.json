@@ -734,6 +734,9 @@
       "quick_start_time": {
         "name": "Quick start time"
       },
+      "local_temperature_calibration": {
+        "name": "Local temperature offset"
+      },
       "max_heat_setpoint_limit": {
         "name": "Max Heat Setpoint Limit"
       },
@@ -810,6 +813,15 @@
       },
       "preset": {
         "name": "Preset"
+      },
+      "detection_distance": {
+        "name": "Detection distance"
+      },
+      "switch_mode": {
+        "name": "Switch mode"
+      },
+      "decoupled_mode": {
+        "name": "Decoupled mode"
       },
       "keypad_lockout": {
         "name": "Keypad Lockout"

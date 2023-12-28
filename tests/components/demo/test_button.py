@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.button import DOMAIN, SERVICE_PRESS
@@ -37,20 +38,20 @@ def test_setup_params(hass: HomeAssistant) -> None:
     assert state.state == STATE_UNKNOWN
 
 
-async def test_press(hass: HomeAssistant) -> None:
+async def test_press(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """Test pressing the button."""
     state = hass.states.get(ENTITY_PUSH)
     assert state
     assert state.state == STATE_UNKNOWN
 
     now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: ENTITY_PUSH},
-            blocking=True,
-        )
+    freezer.move_to(now)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: ENTITY_PUSH},
+        blocking=True,
+    )
 
     state = hass.states.get(ENTITY_PUSH)
     assert state

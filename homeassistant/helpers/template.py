@@ -5,7 +5,7 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
-from collections.abc import Callable, Collection, Generator, Iterable, MutableMapping
+from collections.abc import Callable, Collection, Generator, Iterable
 from contextlib import AbstractContextManager, suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
@@ -40,7 +40,7 @@ from jinja2 import pass_context, pass_environment, pass_eval_context
 from jinja2.runtime import AsyncLoopContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
-from lru import LRU  # pylint: disable=no-name-in-module
+from lru import LRU
 import orjson
 import voluptuous as vol
 
@@ -147,10 +147,8 @@ EVAL_CACHE_SIZE = 512
 
 MAX_CUSTOM_TEMPLATE_SIZE = 5 * 1024 * 1024
 
-CACHED_TEMPLATE_LRU: MutableMapping[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
-CACHED_TEMPLATE_NO_COLLECT_LRU: MutableMapping[State, TemplateState] = LRU(
-    CACHED_TEMPLATE_STATES
-)
+CACHED_TEMPLATE_LRU: LRU[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
+CACHED_TEMPLATE_NO_COLLECT_LRU: LRU[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
 ENTITY_COUNT_GROWTH_FACTOR = 1.2
 
 ORJSON_PASSTHROUGH_OPTIONS = (
@@ -187,9 +185,9 @@ def async_setup(hass: HomeAssistant) -> bool:
         )
         for lru in (CACHED_TEMPLATE_LRU, CACHED_TEMPLATE_NO_COLLECT_LRU):
             # There is no typing for LRU
-            current_size = lru.get_size()  # type: ignore[attr-defined]
+            current_size = lru.get_size()
             if new_size > current_size:
-                lru.set_size(new_size)  # type: ignore[attr-defined]
+                lru.set_size(new_size)
 
     from .event import (  # pylint: disable=import-outside-toplevel
         async_track_time_interval,
@@ -1910,6 +1908,66 @@ def average(*args: Any, default: Any = _SENTINEL) -> Any:
         return default
 
 
+def median(*args: Any, default: Any = _SENTINEL) -> Any:
+    """Filter and function to calculate the median.
+
+    Calculates median of an iterable of two or more arguments.
+
+    The parameters may be passed as an iterable or as separate arguments.
+    """
+    if len(args) == 0:
+        raise TypeError("median expected at least 1 argument, got 0")
+
+    # If first argument is a list or tuple and more than 1 argument provided but not a named
+    # default, then use 2nd argument as default.
+    if isinstance(args[0], Iterable):
+        median_list = args[0]
+        if len(args) > 1 and default is _SENTINEL:
+            default = args[1]
+    elif len(args) == 1:
+        raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
+    else:
+        median_list = args
+
+    try:
+        return statistics.median(median_list)
+    except (TypeError, statistics.StatisticsError):
+        if default is _SENTINEL:
+            raise_no_default("median", args)
+        return default
+
+
+def statistical_mode(*args: Any, default: Any = _SENTINEL) -> Any:
+    """Filter and function to calculate the statistical mode.
+
+    Calculates mode of an iterable of two or more arguments.
+
+    The parameters may be passed as an iterable or as separate arguments.
+    """
+    if not args:
+        raise TypeError("statistical_mode expected at least 1 argument, got 0")
+
+    # If first argument is a list or tuple and more than 1 argument provided but not a named
+    # default, then use 2nd argument as default.
+    if len(args) == 1 and isinstance(args[0], Iterable):
+        mode_list = args[0]
+    elif isinstance(args[0], list | tuple):
+        mode_list = args[0]
+        if len(args) > 1 and default is _SENTINEL:
+            default = args[1]
+    elif len(args) == 1:
+        raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
+    else:
+        mode_list = args
+
+    try:
+        return statistics.mode(mode_list)
+    except (TypeError, statistics.StatisticsError):
+        if default is _SENTINEL:
+            raise_no_default("statistical_mode", args)
+        return default
+
+
 def forgiving_float(value, default=_SENTINEL):
     """Try to convert value to a float."""
     try:
@@ -2392,6 +2450,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["from_json"] = from_json
         self.filters["is_defined"] = fail_when_undefined
         self.filters["average"] = average
+        self.filters["median"] = median
+        self.filters["statistical_mode"] = statistical_mode
         self.filters["random"] = random_every_time
         self.filters["base64_encode"] = base64_encode
         self.filters["base64_decode"] = base64_decode
@@ -2414,6 +2474,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["bool"] = forgiving_boolean
         self.filters["version"] = version
         self.filters["contains"] = contains
+        self.filters["median"] = median
+        self.filters["statistical_mode"] = statistical_mode
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -2435,6 +2497,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["strptime"] = strptime
         self.globals["urlencode"] = urlencode
         self.globals["average"] = average
+        self.globals["median"] = median
+        self.globals["statistical_mode"] = statistical_mode
         self.globals["max"] = min_max_from_filter(self.filters["max"], "max")
         self.globals["min"] = min_max_from_filter(self.filters["min"], "min")
         self.globals["is_number"] = is_number
@@ -2447,6 +2511,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["iif"] = iif
         self.globals["bool"] = forgiving_boolean
         self.globals["version"] = version
+        self.globals["median"] = median
+        self.globals["statistical_mode"] = statistical_mode
         self.tests["is_number"] = is_number
         self.tests["list"] = _is_list
         self.tests["set"] = _is_set

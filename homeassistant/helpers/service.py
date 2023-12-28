@@ -88,6 +88,7 @@ def _base_components() -> dict[str, ModuleType]:
         media_player,
         remote,
         siren,
+        todo,
         update,
         vacuum,
         water_heater,
@@ -106,6 +107,7 @@ def _base_components() -> dict[str, ModuleType]:
         "media_player": media_player,
         "remote": remote,
         "siren": siren,
+        "todo": todo,
         "update": update,
         "vacuum": vacuum,
         "water_heater": water_heater,
@@ -998,7 +1000,7 @@ def verify_domain_control(
     """Ensure permission to access any entity under domain in service call."""
 
     def decorator(
-        service_handler: Callable[[ServiceCall], Any]
+        service_handler: Callable[[ServiceCall], Any],
     ) -> Callable[[ServiceCall], Any]:
         """Decorate."""
         if not asyncio.iscoroutinefunction(service_handler):

@@ -238,9 +238,6 @@
       "floodlight": {
         "name": "Floodlight"
       },
-      "ir_lights": {
-        "name": "Infra red lights in night mode"
-      },
       "status_led": {
         "name": "Status LED"
       }
@@ -373,6 +370,9 @@
       }
     },
     "switch": {
+      "ir_lights": {
+        "name": "Infra red lights in night mode"
+      },
       "record_audio": {
         "name": "Record audio"
       },

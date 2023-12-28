@@ -37,14 +37,14 @@ _LOGGER = logging.getLogger(__name__)
 _TOKEN_FILENAME = "vicare_token.save"
 
 
-@dataclass()
+@dataclass(frozen=True)
 class ViCareRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_getter: Callable[[Device], Any]
 
 
-@dataclass()
+@dataclass(frozen=True)
 class ViCareRequiredKeysMixinWithSet(ViCareRequiredKeysMixin):
     """Mixin for required keys with setter."""
 

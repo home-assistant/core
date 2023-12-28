@@ -45,7 +45,7 @@ async def test_esphome_device_with_old_bluetooth(
     await hass.async_block_till_done()
     issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(
-        "esphome", "ble_firmware_outdated-11:22:33:44:55:aa"
+        "esphome", "ble_firmware_outdated-11:22:33:44:55:AA"
     )
     assert (
         issue.learn_more_url
@@ -87,7 +87,10 @@ async def test_esphome_device_with_password(
     issue_registry = ir.async_get(hass)
     assert (
         issue_registry.async_get_issue(
-            "esphome", "api_password_deprecated-11:22:33:44:55:aa"
+            # This issue uses the ESPHome mac address which
+            # is always UPPER case
+            "esphome",
+            "api_password_deprecated-11:22:33:44:55:AA",
         )
         is not None
     )
@@ -118,8 +121,10 @@ async def test_esphome_device_with_current_bluetooth(
     await hass.async_block_till_done()
     issue_registry = ir.async_get(hass)
     assert (
+        # This issue uses the ESPHome device info mac address which
+        # is always UPPER case
         issue_registry.async_get_issue(
-            "esphome", "ble_firmware_outdated-11:22:33:44:55:aa"
+            "esphome", "ble_firmware_outdated-11:22:33:44:55:AA"
         )
         is None
     )
