@@ -236,6 +236,20 @@ class PollableSensor(Sensor):
             )
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class EnumSensor(Sensor):
+    """Sensor with value from enum."""
+
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENUM
+    _enum: type[enum.Enum] | None = None
+
+    def formatter(self, value: int) -> str | None:
+        """Use name of enum."""
+        if self._enum is None:
+            return None
+        return self._enum(value).name
+
+
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_ANALOG_INPUT,
     manufacturers="Digi",
@@ -1030,7 +1044,7 @@ class AqaraFeedingSource(types.enum8):
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class AqaraPetFeederLastFeedingSource(Sensor):
+class AqaraPetFeederLastFeedingSource(EnumSensor):
     """Sensor that displays the last feeding source of pet feeder."""
 
     _attribute_name = "last_feeding_source"
@@ -1038,9 +1052,7 @@ class AqaraPetFeederLastFeedingSource(Sensor):
     _attr_translation_key: str = "last_feeding_source"
     _attr_icon = "mdi:devices"
 
-    def formatter(self, value: int) -> int | float | None:
-        """Numeric pass-through formatter."""
-        return AqaraFeedingSource(value).name
+    _enum = AqaraFeedingSource
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
