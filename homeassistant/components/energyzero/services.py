@@ -109,7 +109,7 @@ def __get_coordinator(
             },
         )
 
-    return hass.data[DOMAIN].get(entry_id)
+    return hass.data[DOMAIN][entry_id]
 
 
 async def __get_prices(
