@@ -23,7 +23,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert state.state == "IPv4AndIPv6"
     state = hass.states.get("sensor.netgear_lm1200_current_band")
     assert state.state == "LTE B4"
-    state = hass.states.get("sensor.netgear_lm1200_current_ps_service_type")
+    state = hass.states.get("sensor.netgear_lm1200_service_type")
     assert state.state == "LTE"
     state = hass.states.get("sensor.netgear_lm1200_radio_quality")
     assert state.state == "52"

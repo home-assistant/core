@@ -116,7 +116,7 @@
         "name": "Rx level"
       },
       "service_type": {
-        "name": "Current PS service type"
+        "name": "Service type"
       },
       "sms": {
         "name": "SMS"
