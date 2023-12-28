@@ -22,6 +22,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -180,6 +181,31 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieSensorEntityDescription(
+        key="active_route_traffic_minutes_delay",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+    ),
+    TessieSensorEntityDescription(
+        key="active_route_energy_at_arrival",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TessieSensorEntityDescription(
+        key="active_route_miles_to_arrival",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfLength.MILES,
+        device_class=SensorDeviceClass.DISTANCE,
+    ),
+    TessieSensorEntityDescription(
+        key="active_route_minutes_to_arrival",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
     ),
 )
 

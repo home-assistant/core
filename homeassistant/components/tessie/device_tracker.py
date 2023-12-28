@@ -83,3 +83,10 @@ class TessieDeviceTrackerRouteEntity(TessieDeviceTrackerEntity):
     def latitude(self) -> float | None:
         """Return the latitude of the device tracker."""
         return self.get("drive_state_active_route_latitude")
+
+    @property
+    def extra_state_attributes(self) -> dict[str, StateType] | None:
+        """Return device state attributes."""
+        return {
+            "destination": self.get("active_route_destination"),
+        }
