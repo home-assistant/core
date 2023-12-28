@@ -58,7 +58,7 @@ class TessieLockEntity(TessieEntity, LockEntity):
 class TessieSpeedLimitEntity(TessieEntity, LockEntity):
     """Speed Limit with PIN entity for Tessie."""
 
-    _attr_code_format = r"^\d{4}$"
+    _attr_code_format = r"^\d\d\d\d$"
 
     def __init__(
         self,
