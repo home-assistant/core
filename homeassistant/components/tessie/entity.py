@@ -69,6 +69,7 @@ class TessieEntity(CoordinatorEntity[TessieStateUpdateCoordinator]):
                 response["reason"].replace("_", " "),
                 translation_domain=DOMAIN,
                 translation_key=response["reason"].replace(" ", "_"),
+                translation_placeholders={"name": self.entity_id},
             )
 
     def set(self, *args: Any) -> None:
