@@ -4,7 +4,6 @@ from __future__ import annotations
 import functools
 from typing import Any
 
-from zhaquirks.quirk_ids import DANFOSS_ALLY_THERMOSTAT
 import zigpy.types as t
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasZone
@@ -26,7 +25,6 @@ from .core.const import (
     CLUSTER_HANDLER_HUE_OCCUPANCY,
     CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_ON_OFF,
-    CLUSTER_HANDLER_THERMOSTAT,
     CLUSTER_HANDLER_ZONE,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
@@ -338,41 +336,3 @@ class AqaraLinkageAlarmState(BinarySensor):
     _unique_id_suffix = "linkage_alarm_state"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.SMOKE
     _attr_translation_key: str = "linkage_alarm_state"
-
-
-@MULTI_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
-)
-class DanfossMountingModeActive(BinarySensor):
-    """Danfoss TRV Proprietary attribute exposing whether in mounting mode."""
-
-    _unique_id_suffix = "mounting_mode_active"
-    _attribute_name = "mounting_mode_active"
-    _attr_translation_key: str = "mounting_mode_active"
-    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.OPENING
-
-
-@MULTI_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
-)
-class DanfossHeatRequired(BinarySensor):
-    """Danfoss TRV Proprietary attribute exposing whether heat is required."""
-
-    _unique_id_suffix = "heat_required"
-    _attribute_name = "heat_required"
-    _attr_translation_key: str = "heat_required"
-
-
-@MULTI_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
-)
-class DanfossPreheatStatus(BinarySensor):
-    """Danfoss TRV Proprietary attribute exposing whether in pre-heating mode."""
-
-    _unique_id_suffix = "preheat_status"
-    _attribute_name = "preheat_status"
-    _attr_translation_key: str = "preheat_status"
-    _attr_entity_registry_enabled_default = False

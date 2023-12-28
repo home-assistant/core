@@ -6,12 +6,7 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
-from zhaquirks.quirk_ids import (
-    DANFOSS_ALLY_THERMOSTAT,
-    TUYA_PLUG_MANUFACTURER,
-    TUYA_PLUG_ONOFF,
-)
-
+from zhaquirks.quirk_ids import TUYA_PLUG_MANUFACTURER, TUYA_PLUG_ONOFF
 from zhaquirks.xiaomi.aqara.magnet_ac01 import OppleCluster as MagnetAC01OppleCluster
 from zhaquirks.xiaomi.aqara.switch_acn047 import OppleCluster as T2RelayOppleCluster
 from zigpy import types
@@ -31,7 +26,6 @@ from .core.const import (
     CLUSTER_HANDLER_IAS_WD,
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_ON_OFF,
-    CLUSTER_HANDLER_THERMOSTAT,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     Strobe,
@@ -682,93 +676,3 @@ class KeypadLockout(ZCLEnumSelectEntity):
     _enum = KeypadLockoutEnum
     _attr_translation_key: str = "keypad_lockout"
     _attr_icon: str = "mdi:lock"
-
-
-class DanfossExerciseDayOfTheWeekEnum(types.enum8):
-    """Day of the Week."""
-
-    Sunday = 0
-    Monday = 1
-    Tuesday = 2
-    Wednesday = 3
-    Thursday = 4
-    Friday = 5
-    Saturday = 6
-
-
-@CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
-)
-class DanfossExerciseDayOfTheWeek(ZCLEnumSelectEntity):
-    """Danfoss Proprietary attribute for setting the day of the week for exercising."""
-
-    _unique_id_suffix = "exercise_day_of_week"
-    _attribute_name = "exercise_day_of_week"
-    _attr_translation_key: str = "exercise_day_of_week"
-    _enum = DanfossExerciseDayOfTheWeekEnum
-    _attr_icon: str = "mdi:wrench-clock"
-
-
-class DanfossOrientationEnum(types.enum8):
-    """Vertical or horizontal."""
-
-    Horizontal = 0x00
-    Vertical = 0x01
-
-
-@CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
-)
-class DanfossOrientation(ZCLEnumSelectEntity):
-    """Danfoss Proprietary attribute for setting the orientation of the valve.
-
-    needed for biasing the internal temperature sensor.
-    """
-
-    _unique_id_suffix = "orientation"
-    _attribute_name = "orientation"
-    _attr_translation_key: str = "valve_orientation"
-    _enum = DanfossOrientationEnum
-
-
-class DanfossAdaptationRunControlEnum(types.enum8):
-    """Initiate or Cancel Adaptation Run."""
-
-    Nothing = 0x00
-    Initiate = 0x01
-    Cancel = 0x02
-
-
-@CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
-)
-class DanfossAdaptationRunControl(ZCLEnumSelectEntity):
-    """Danfoss Proprietary attribute for controlling the current adaptation run."""
-
-    _unique_id_suffix = "adaptation_run_control"
-    _attribute_name = "adaptation_run_control"
-    _attr_translation_key: str = "adaptation_run_command"
-    _enum = DanfossAdaptationRunControlEnum
-
-
-class DanfossViewingDirectionEnum(types.enum8):
-    """Default (button above screen when looking at it) or Inverted (button below screen when looking at it)."""
-
-    Default = 0x00
-    Inverted = 0x01
-
-
-@CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="thermostat_ui",
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
-)
-class DanfossViewingDirection(ZCLEnumSelectEntity):
-    """Danfoss Proprietary attribute for setting the viewing direction of the screen."""
-
-    _unique_id_suffix = "viewing_direction"
-    _attribute_name = "viewing_direction"
-    _attr_translation_key: str = "viewing_direction"
-    _enum = DanfossViewingDirectionEnum

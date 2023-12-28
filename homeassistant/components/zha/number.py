@@ -6,8 +6,6 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
-from zhaquirks.quirk_ids import DANFOSS_ALLY_THERMOSTAT
-
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform, UnitOfMass, UnitOfTemperature
@@ -1037,91 +1035,3 @@ class MinHeatSetpointLimit(ZCLHeatSetpointLimitEntity):
     _attr_translation_key: str = "min_heat_setpoint_limit"
 
     _max_source = "max_heat_setpoint_limit"
-
-
-@CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
-)
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class DanfossExerciseTriggerTime(ZHANumberConfigurationEntity):
-    """Danfoss Proprietary Attribute to set the time to exercise the valve."""
-
-    _unique_id_suffix = "exercise_trigger_time"
-    _attribute_name: str = "exercise_trigger_time"
-    _attr_translation_key: str = "exercise_trigger_time"
-    _attr_native_min_value: int = 0
-    _attr_native_max_value: int = 1439
-    _attr_mode: NumberMode = NumberMode.BOX
-    _attr_native_unit_of_measurement: str = "Minutes"
-    _attr_icon: str = "mdi:clock"
-
-
-@CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
-)
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class DanfossExternalMeasuredRoomSensor(ZCLTemperatureEntity):
-    """Danfoss Proprietary Attribute to communicate the value of the external temperature sensor."""
-
-    _unique_id_suffix = "external_measured_room_sensor"
-    _attribute_name: str = "external_measured_room_sensor"
-    _attr_translation_key: str = "external_temperature_sensor"
-    _attr_native_min_value: float = -80
-    _attr_native_max_value: float = 35
-    _attr_icon: str = "mdi:thermometer"
-
-
-@CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
-)
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class DanfossLoadRoomMean(ZHANumberConfigurationEntity):
-    """Danfoss Proprietary Attribute to set a value for the load."""
-
-    _unique_id_suffix = "load_room_mean"
-    _attribute_name: str = "load_room_mean"
-    _attr_translation_key: str = "load_room_mean"
-    _attr_native_min_value: int = -8000
-    _attr_native_max_value: int = 2000
-    _attr_mode: NumberMode = NumberMode.BOX
-    _attr_icon: str = "mdi:scale-balance"
-
-
-@CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
-)
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class DanfossControlAlgorithmScaleFactor(ZHANumberConfigurationEntity):
-    """Danfoss Proprietary Attribute to configure the aggressiveness of the control algorithm."""
-
-    _unique_id_suffix = "control_algorithm_scale_factor"
-    _attribute_name: str = "control_algorithm_scale_factor"
-    _attr_translation_key: str = "control_algorithm_scale_factor"
-    _attr_native_min_value: int = 1
-    _attr_native_max_value: int = 10
-    _attr_mode: NumberMode = NumberMode.SLIDER
-    _attr_icon: str = "mdi:knob"
-
-
-@CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
-)
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class DanfossRegulationSetpointOffset(ZHANumberConfigurationEntity):
-    """Danfoss Proprietary Attribute to set the regulation setpoint offset."""
-
-    _unique_id_suffix = "regulation_setpoint_offset"
-    _attribute_name: str = "regulation_setpoint_offset"
-    _attr_translation_key: str = "regulation_setpoint_offset"
-    _attr_mode: NumberMode = NumberMode.BOX
-    _attr_native_unit_of_measurement: str = "°C"
-    _attr_icon: str = "mdi:thermostat"
-    _attr_native_min_value: float = -2.5
-    _attr_native_max_value: float = 2.5
-    _attr_native_step: float = 0.1
-    _attr_multiplier = 1 / 10
