@@ -97,7 +97,7 @@ async def test_form_cannot_connect_wrong_param(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_form_service_error(hass: HomeAssistant) -> None:

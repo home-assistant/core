@@ -47,10 +47,7 @@ async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> Non
     if data.get("errors"):
         _LOGGER.warning(data["errors"])
 
-    try:
-        data["data"]["Catalog"]["searchStore"]["elements"]
-    except Exception:  # pylint: disable=broad-except
-        raise CannotConnect
+    assert data["data"]["Catalog"]["searchStore"]["elements"]
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -76,8 +73,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await validate_input(self.hass, user_input)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
