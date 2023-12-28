@@ -41,10 +41,7 @@ async def test_lock(
     mock_tedee.open.return_value = None
 
     state = hass.states.get("lock.lock_1a2b")
-    assert state
-    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Lock-1A2B"
-    assert state.state == STATE_UNLOCKED
+    assert state == snapshot
 
     entry = entity_registry.async_get(state.entity_id)
     assert entry == snapshot
