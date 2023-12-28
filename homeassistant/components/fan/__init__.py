@@ -400,7 +400,7 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def capability_attributes(self) -> dict[str, list[str] | None]:
         """Return capability attributes."""
         attrs = {}
-        supported_features = self.supported_features
+        supported_features = self.supported_features_compat
 
         if (
             FanEntityFeature.SET_SPEED in supported_features
@@ -415,7 +415,7 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def state_attributes(self) -> dict[str, float | str | None]:
         """Return optional state attributes."""
         data: dict[str, float | str | None] = {}
-        supported_features = self.supported_features
+        supported_features = self.supported_features_compat
 
         if FanEntityFeature.DIRECTION in supported_features:
             data[ATTR_DIRECTION] = self.current_direction
@@ -438,6 +438,19 @@ class FanEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
+
+    @property
+    def supported_features_compat(self) -> FanEntityFeature:
+        """Return the supported features as FanEntityFeature.
+
+        Remove this compatibility shim in 2025.1 or later.
+        """
+        features = self.supported_features
+        if type(features) is int:  # noqa: E721
+            new_features = FanEntityFeature(features)
+            self._report_deprecated_supported_features_values(new_features)
+            return new_features
+        return features
 
     @cached_property
     def preset_mode(self) -> str | None:
