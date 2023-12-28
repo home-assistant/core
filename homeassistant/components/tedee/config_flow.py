@@ -1,5 +1,4 @@
 """Config flow for Tedee integration."""
-from collections.abc import Mapping
 from typing import Any
 
 from pytedee_async import (
@@ -93,47 +92,6 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_HOST): str,
                     vol.Required(CONF_LOCAL_ACCESS_TOKEN): str,
                     vol.Optional(CONF_HOME_ASSISTANT_ACCESS_TOKEN): str,
-                }
-            ),
-            errors=errors,
-        )
-
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
-        """Perform reauth upon an API authentication error."""
-        self._config = dict(entry_data)
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Dialog that informs the user that reauth is required."""
-        errors = {}
-
-        if user_input is not None:
-            try:
-                await validate_input(self._config | user_input)
-            except InvalidAuth:
-                errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_api_key"
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-
-            if not errors:
-                entry = self.hass.config_entries.async_get_entry(
-                    self.context["entry_id"]
-                )
-                self._config |= user_input
-                self.hass.config_entries.async_update_entry(entry, data=self._config)  # type: ignore[arg-type]
-                await self.hass.config_entries.async_reload(self.context["entry_id"])
-                return self.async_abort(reason="reauth_successful")
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_LOCAL_ACCESS_TOKEN,
-                        default=self._config.get(CONF_LOCAL_ACCESS_TOKEN),
-                    ): str
                 }
             ),
             errors=errors,

@@ -12,17 +12,9 @@
           "local_access_token": "You can find it in the tedee app under \"Bridge Settings\" -> \"Local API\".",
           "home_assistant_access_token": "Used to allow bridge to push data to Home Assistant. You can find it in the Home Assistant UI under \"Profile\" -> \"Long-Lived Access Tokens\"."
         }
-      },
-      "reauth_confirm": {
-        "title": "Update of Access Keys required",
-        "description": "tedee needs an updated access key, because the existing one is invalid or might have expired.",
-        "data": {
-          "local_access_token": "[%key:component::tedee::config::step::user::data::local_access_token%]"
-        }
       }
     },
     "abort": {
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {

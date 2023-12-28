@@ -13,21 +13,8 @@ from homeassistant.components.lock import (
     STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
-from homeassistant.components.tedee.const import (
-    ATTR_CONNECTED,
-    ATTR_DURATION_PULLSPRING,
-    ATTR_NUMERIC_STATE,
-    ATTR_SEMI_LOCKED,
-    ATTR_SUPPORT_PULLSPING,
-    DOMAIN,
-)
-from homeassistant.const import (
-    ATTR_BATTERY_CHARGING,
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
-)
+from homeassistant.components.tedee.const import DOMAIN
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -50,16 +37,7 @@ async def test_lock(
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Lock-1A2B Lock"
-    assert state.attributes.get(ATTR_ICON) == "mdi:lock"
     assert state.state == STATE_UNLOCKED
-
-    # test extra attributes
-    assert state.attributes.get(ATTR_CONNECTED) is True
-    assert state.attributes.get(ATTR_DURATION_PULLSPRING) == 2
-    assert state.attributes.get(ATTR_NUMERIC_STATE) == 2
-    assert state.attributes.get(ATTR_SEMI_LOCKED) is False
-    assert state.attributes.get(ATTR_SUPPORT_PULLSPING) is True
-    assert state.attributes.get(ATTR_BATTERY_CHARGING) is False
 
     entry = entity_registry.async_get(state.entity_id)
     assert entry
@@ -88,6 +66,7 @@ async def test_lock(
     assert len(mock_tedee.lock.mock_calls) == 1
     mock_tedee.lock.assert_called_once_with(12345)
     state = hass.states.get("lock.lock_1a2b_lock")
+    assert state
     assert state.state == STATE_LOCKING
 
     await hass.services.async_call(
@@ -102,6 +81,7 @@ async def test_lock(
     assert len(mock_tedee.unlock.mock_calls) == 1
     mock_tedee.unlock.assert_called_once_with(12345)
     state = hass.states.get("lock.lock_1a2b_lock")
+    assert state
     assert state.state == STATE_UNLOCKING
 
     await hass.services.async_call(
@@ -116,6 +96,7 @@ async def test_lock(
     assert len(mock_tedee.open.mock_calls) == 1
     mock_tedee.open.assert_called_once_with(12345)
     state = hass.states.get("lock.lock_1a2b_lock")
+    assert state
     assert state.state == STATE_UNLOCKING
 
 
@@ -177,16 +158,7 @@ async def test_lock_without_pullspring(
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Lock-2C3D Lock"
-    assert state.attributes.get(ATTR_ICON) == "mdi:lock"
     assert state.state == STATE_UNLOCKED
-
-    # test extra attributes
-    assert state.attributes.get(ATTR_CONNECTED) is True
-    assert state.attributes.get(ATTR_DURATION_PULLSPRING) is None
-    assert state.attributes.get(ATTR_NUMERIC_STATE) == 2
-    assert state.attributes.get(ATTR_SEMI_LOCKED) is False
-    assert state.attributes.get(ATTR_SUPPORT_PULLSPING) is False
-    assert state.attributes.get(ATTR_BATTERY_CHARGING) is None
 
     entry = entity_registry.async_get(state.entity_id)
     assert entry

@@ -1,5 +1,4 @@
 """Tedee lock entities."""
-from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -11,33 +10,17 @@ from homeassistant.components.lock import (
     LockEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_BATTERY_CHARGING, ATTR_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ATTR_CONNECTED,
-    ATTR_DURATION_PULLSPRING,
-    ATTR_NUMERIC_STATE,
-    ATTR_SEMI_LOCKED,
-    ATTR_SUPPORT_PULLSPING,
-    CONF_UNLOCK_PULLS_LATCH,
-    DOMAIN,
-)
+from .const import CONF_UNLOCK_PULLS_LATCH, DOMAIN
 from .coordinator import TedeeApiCoordinator
 from .entity import TedeeEntity, TedeeEntityDescription
 
 
-@dataclass
-class TedeeLockEntityDescriptionMixin:
-    """Extends Tedee lock entity description."""
-
-
-@dataclass
-class TedeeLockEntityDescription(
-    LockEntityDescription, TedeeEntityDescription, TedeeLockEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class TedeeLockEntityDescription(LockEntityDescription, TedeeEntityDescription):
     """Describes Tedee lock entity."""
 
 
@@ -46,7 +29,6 @@ ENTITIES: tuple[TedeeLockEntityDescription, ...] = (
         unique_id_fn=lambda lock: f"{lock.lock_id}-lock",
         key="lock",
         translation_key="lock",
-        icon="mdi:lock",
     ),
 )
 
@@ -113,21 +95,6 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
         return self._lock.is_state_jammed
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any]:
-        """Extra attributes for the lock."""
-        attributes = {
-            ATTR_ID: self._lock.lock_id,
-            ATTR_NUMERIC_STATE: self._lock.state,
-            ATTR_CONNECTED: self._lock.is_connected,
-            ATTR_SUPPORT_PULLSPING: self._lock.is_enabled_pullspring,
-            ATTR_SEMI_LOCKED: self._lock.state == TedeeLockState.HALF_OPEN,
-        }
-        if self._lock.lock_type == "Tedee PRO":  # only pro has rechargeable battery
-            attributes |= {ATTR_BATTERY_CHARGING: self._lock.is_charging}
-
-        return attributes
-
-    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._lock.is_connected
@@ -169,13 +136,6 @@ class TedeeLockWithLatchEntity(TedeeLockEntity):
     def supported_features(self) -> LockEntityFeature:
         """Flag supported features."""
         return LockEntityFeature.OPEN
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any]:
-        """Extra attributes for the lock."""
-        return super().extra_state_attributes | {
-            ATTR_DURATION_PULLSPRING: self._lock.duration_pullspring
-        }
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door with pullspring."""

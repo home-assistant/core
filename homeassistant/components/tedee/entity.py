@@ -13,16 +13,11 @@ from .const import DOMAIN
 from .coordinator import TedeeApiCoordinator
 
 
-@dataclass
-class TedeeEntityDescriptionMixin:
+@dataclass(frozen=True, kw_only=True)
+class TedeeEntityDescription(EntityDescription):
     """Describes Tedee entity."""
 
     unique_id_fn: Callable[[TedeeLock], str]
-
-
-@dataclass
-class TedeeEntityDescription(EntityDescription, TedeeEntityDescriptionMixin):
-    """Describes Tedee entity."""
 
 
 class TedeeEntity(CoordinatorEntity[TedeeApiCoordinator]):
