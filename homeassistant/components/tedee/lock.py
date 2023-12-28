@@ -41,11 +41,9 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
         self,
         lock: TedeeLock,
         coordinator: TedeeApiCoordinator,
-        key: str,
-        entry: ConfigEntry,
     ) -> None:
         """Initialize the lock."""
-        super().__init__(lock, coordinator, key)
+        super().__init__(lock, coordinator, "lock")
 
     @property
     def is_locked(self) -> bool:
