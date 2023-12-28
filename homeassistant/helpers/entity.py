@@ -1515,7 +1515,7 @@ class Entity(
         _LOGGER.warning(
             (
                 "Entity %s (%s) is using deprecated supported features"
-                " values. Instead it should use"
+                " values which will be removed in HA Core 2025.1. Instead it should use"
                 " %s, please %s"
             ),
             self.entity_id,
