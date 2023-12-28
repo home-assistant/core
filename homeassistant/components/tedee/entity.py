@@ -14,7 +14,6 @@ from .coordinator import TedeeApiCoordinator
 class TedeeEntity(CoordinatorEntity[TedeeApiCoordinator]):
     """Base class for Tedee entities."""
 
-    entity_description: EntityDescription
     _attr_has_entity_name = True
 
     def __init__(
