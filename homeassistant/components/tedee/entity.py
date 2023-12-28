@@ -24,7 +24,7 @@ class TedeeEntity(CoordinatorEntity[TedeeApiCoordinator]):
     """Base class for Tedee entities."""
 
     entity_description: TedeeEntityDescription
-    _attr_has_entity_name: bool = True
+    _attr_has_entity_name = True
 
     def __init__(
         self,
