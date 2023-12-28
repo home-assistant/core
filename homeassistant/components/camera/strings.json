@@ -95,5 +95,12 @@
       }
     }
   },
-  "selector": {}
+  "selector": {},
+  "device_automation": {
+    "condition_type": {
+      "is_recording": "{entity_name} is recording",
+      "is_streaming": "{entity_name} is streaming",
+      "is_idle": "{entity_name} is idle"
+    }
+  }
 }
