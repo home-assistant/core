@@ -3,8 +3,6 @@ from datetime import timedelta
 from random import randrange
 
 from weatherflow4py.api import WeatherFlowRestAPI
-from weatherflow4py.models.forecast import WeatherData
-from weatherflow4py.models.station import Station
 from weatherflow4py.models.unified import WeatherFlowData
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import _LOGGER, DOMAIN
+
 
 class WeatherFlowCloudDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching REST Based WeatherFlow Forecast data."""
@@ -37,7 +36,7 @@ class WeatherFlowCloudDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=randrange(25, 35)),
         )
 
-    async def _async_update_data(self) -> list[WeatherFlowData]:
+    async def _async_update_data(self) -> dict[int, WeatherFlowData]:
         """Fetch data from WeatherFlow Forecast."""
         try:
             async with self.weather_api:
