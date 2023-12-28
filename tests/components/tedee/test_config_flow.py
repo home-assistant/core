@@ -39,7 +39,7 @@ async def test_flow(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
     }
 
 
-async def test_flow_abort(
+async def test_flow_already_configured(
     hass: HomeAssistant,
     mock_tedee: MagicMock,
     mock_config_entry: MockConfigEntry,
