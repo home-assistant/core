@@ -19,19 +19,12 @@ from .const import DOMAIN
 from .entity import RensonEntity
 
 
-@dataclass
-class RensonTimeEntityDescriptionMixin:
-    """Mixin for required keys."""
-
-    field: FieldEnum
-    action_fn: Callable[[RensonVentilation, str], None]
-
-
-@dataclass
-class RensonTimeEntityDescription(
-    TimeEntityDescription, RensonTimeEntityDescriptionMixin
-):
+@dataclass(kw_only=True)
+class RensonTimeEntityDescription(TimeEntityDescription):
     """Class describing Renson time entity."""
+
+    action_fn: Callable[[RensonVentilation, str], None]
+    field: FieldEnum
 
 
 ENTITY_DESCRIPTIONS: tuple[RensonTimeEntityDescription, ...] = (
