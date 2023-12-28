@@ -5,9 +5,11 @@ from dataclasses import dataclass
 from typing import Any, Final, cast
 
 from aioshelly.block_device import Block
+from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 
 from homeassistant.components.number import (
+    NumberDeviceClass,
     NumberEntityDescription,
     NumberExtraStoredData,
     NumberMode,
@@ -21,12 +23,16 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 
 from .const import CONF_SLEEP_PERIOD, LOGGER
-from .coordinator import ShellyBlockCoordinator
+from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
+    RpcEntityDescription,
+    ShellyRpcEntity,
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
+    async_setup_entry_rpc,
 )
+from .utils import get_device_entry_gen
 
 
 @dataclass(frozen=True)
@@ -37,7 +43,14 @@ class BlockNumberDescription(BlockEntityDescription, NumberEntityDescription):
     rest_arg: str = ""
 
 
-NUMBERS: Final = {
+@dataclass(frozen=True)
+class RpcNumberDescription(RpcEntityDescription, NumberEntityDescription):
+    """Class to describe a RPC number."""
+
+    method: str = ""
+
+
+BLOCK_NUMBERS: Final = {
     ("device", "valvePos"): BlockNumberDescription(
         key="device|valvepos",
         icon="mdi:pipe-valve",
@@ -54,6 +67,23 @@ NUMBERS: Final = {
     ),
 }
 
+RPC_NUMBERS: Final = {
+    "thermostat": RpcNumberDescription(
+        key="thermostat",
+        sub_key="hysteresis",
+        icon="mdi:pipe-valve",
+        name="Hysteresis",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        # native_unit_of_measurement=,
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=0,
+        native_max_value=2,
+        native_step=0.1,
+        mode=NumberMode.SLIDER,
+        method="Thermostat.SetConfig",
+    )
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -61,14 +91,37 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up numbers for device."""
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
+        async_setup_entry_rpc(
+            hass, config_entry, async_add_entities, RPC_NUMBERS, RpcNumber
+        )
+
     if config_entry.data[CONF_SLEEP_PERIOD]:
         async_setup_entry_attribute_entities(
             hass,
             config_entry,
             async_add_entities,
-            NUMBERS,
+            BLOCK_NUMBERS,
             BlockSleepingNumber,
         )
+
+
+# @callback
+# def async_setup_rpc_entry(
+#     hass: HomeAssistant,
+#     config_entry: ConfigEntry,
+#     async_add_entities: AddEntitiesCallback,
+#     description: dict[str, NumberEntityDescription],
+# ) -> None:
+#     """Set up entities for RPC device."""
+#     coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
+#     assert coordinator
+#     key_ids = get_rpc_key_ids(coordinator.device.status, "thermostat")
+
+#     if not key_ids:
+#         return
+
+#     async_add_entities(RpcNumber(coordinator, id_) for id_ in key_ids)
 
 
 class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
@@ -126,3 +179,31 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
             ) from err
         except InvalidAuthError:
             self.coordinator.entry.async_start_reauth(self.hass)
+
+
+class RpcNumber(ShellyRpcEntity):
+    """Represent a rpc number."""
+
+    entity_description: RpcNumberDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        id_: int,
+    ) -> None:
+        """Initialize."""
+        key = f"{self.entity_description.key}:{id_}"
+        super().__init__(coordinator, key)
+        self._id = id_
+
+    @property
+    def native_value(self) -> float | None:
+        """Return value of number."""
+        return cast(int, self.status[self.key][self.entity_description.sub_key])
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set value."""
+        await self.call_rpc(
+            self.entity_description.method,
+            {"config": {"id": self._id, self.entity_description.key: value}},
+        )
