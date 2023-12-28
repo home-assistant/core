@@ -1,7 +1,7 @@
 """Support for Octoprint buttons."""
 from pyoctoprintapi import OctoprintClient, OctoprintPrinterInfo
 
-from homeassistant.components.button import ButtonEntity
+from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -152,6 +152,8 @@ class OctoprintShutdownSystemButton(OctoprintButton):
 class OctoprintRebootSystemButton(OctoprintButton):
     """Reboot the system."""
 
+    _attr_device_class = ButtonDeviceClass.RESTART
+
     def __init__(
         self,
         coordinator: OctoprintDataUpdateCoordinator,
@@ -173,6 +175,8 @@ class OctoprintRebootSystemButton(OctoprintButton):
 
 class OctoprintRestartOctoprintButton(OctoprintButton):
     """Restart Octoprint."""
+
+    _attr_device_class = ButtonDeviceClass.RESTART
 
     def __init__(
         self,
