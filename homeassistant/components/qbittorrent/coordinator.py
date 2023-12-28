@@ -38,7 +38,7 @@ class QBittorrentDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except LoginRequired as exc:
             raise ConfigEntryError("Invalid authentication") from exc
 
-    async def get_torrents(self, torrent_filter: str) -> dict[str, Any]:
+    async def get_torrents(self, torrent_filter: str) -> list[dict[str, Any]]:
         """Async method to get QBittorrent torrents."""
         try:
             total_torrents = await self.hass.async_add_executor_job(
