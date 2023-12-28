@@ -224,9 +224,9 @@ class PermobilSensor(CoordinatorEntity[MyPermobilCoordinator], SensorEntity):
         self._attr_unique_id = (
             f"{coordinator.p_api.email}_{self.entity_description.key}"
         )
-        if self.entity_description.key == "record_distance":
+        if description.key == "record_distance":
             self._attr_native_unit_of_measurement = DISTANCE_UNITS.get(
-                self.coordinator.data.records[RECORDS_DISTANCE_UNIT[0]]
+                coordinator.data.records[RECORDS_DISTANCE_UNIT[0]]
             )
 
     @property
