@@ -1,5 +1,4 @@
 get_torrents:
-  function: handle_get_torrents
   fields:
     torrent_filter:
       required: true
