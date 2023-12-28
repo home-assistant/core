@@ -194,7 +194,6 @@ async def async_setup_entry(
         TessieSensorEntity(vehicle.state_coordinator, description)
         for vehicle in data
         for description in DESCRIPTIONS
-        if description.key in vehicle.state_coordinator.data
     )
 
 
