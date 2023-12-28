@@ -74,7 +74,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="gps_count",
         translation_key="gps_count",
         icon="mdi:satellite-variant",
-        native_unit_of_measurement="Satellites",
+        native_unit_of_measurement="satellites",
     ),
 )
 
