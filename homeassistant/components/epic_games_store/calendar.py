@@ -31,7 +31,7 @@ async def async_setup_entry(
         EGSCalendar(coordinator, entry.entry_id, CalendarType.FREE),
         EGSCalendar(coordinator, entry.entry_id, CalendarType.DISCOUNT),
     ]
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class EGSCalendar(CoordinatorEntity[EGSCalendarUpdateCoordinator], CalendarEntity):
