@@ -34,7 +34,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import BATTERY_ASSUMED_VOLTAGE, DOMAIN, KM, MILES, MILES_TO_KM
+from .const import BATTERY_ASSUMED_VOLTAGE, DOMAIN, KM, MILES
 from .coordinator import MyPermobilCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,18 +53,6 @@ class PermobilSensorEntityDescription(
     SensorEntityDescription, PermobilRequiredKeysMixin
 ):
     """Describes Permobil sensor entity."""
-
-
-def records_dist_fn(data: Any) -> float:
-    """Find and calculate the record distance.
-
-    This function gets the record distance from the data and converts it to kilometers if needed.
-    """
-    distance = data.records[RECORDS_DISTANCE[0]]
-    distance_unit = data.records[RECORDS_DISTANCE_UNIT[0]]
-    if distance_unit != KM:
-        distance = distance * MILES_TO_KM
-    return distance
 
 
 SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
@@ -184,7 +172,7 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
     ),
     PermobilSensorEntityDescription(
         # Record of largest distance travelled in a day, monotonically increasing, never resets
-        value_fn=records_dist_fn,
+        value_fn=lambda data: data.records[RECORDS_DISTANCE[0]],
         available_fn=lambda data: RECORDS_DISTANCE[0] in data.records,
         key="record_distance",
         translation_key="record_distance",
