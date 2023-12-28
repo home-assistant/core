@@ -68,7 +68,7 @@ class TessieEntity(CoordinatorEntity[TessieStateUpdateCoordinator]):
             raise HomeAssistantError(
                 response["reason"],
                 translation_domain=DOMAIN,
-                translation_key=response["reason"],
+                translation_key=response["reason"].replace(" ", "_"),
             )
 
     def set(self, *args: Any) -> None:

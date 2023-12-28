@@ -318,7 +318,10 @@
   },
   "exceptions": {
     "not_supported": {
-      "message": "This action is not supported."
+      "message": "Action is not supported."
+    },
+    "cable_connected": {
+      "message": "Action is not possible as the charge cable is connected"
     }
   }
 }
