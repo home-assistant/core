@@ -7,7 +7,7 @@ from collections import deque
 from collections.abc import Callable, Coroutine, Iterable, Mapping, MutableMapping
 import dataclasses
 from datetime import timedelta
-from enum import Enum, auto
+from enum import Enum, IntFlag, auto
 import functools as ft
 import logging
 import math
@@ -227,6 +227,9 @@ class EntityPlatformState(Enum):
     REMOVED = auto()
 
 
+_SENTINEL = object()
+
+
 class EntityDescription(metaclass=FrozenOrThawed, frozen_or_thawed=True):
     """A class that describes Home Assistant entities."""
 
@@ -346,6 +349,8 @@ class CachedProperties(type):
                 Also invalidates the corresponding cached_property by calling
                 delattr on it.
                 """
+                if getattr(o, private_attr_name, _SENTINEL) == val:
+                    return
                 setattr(o, private_attr_name, val)
                 try:  # noqa: SIM105  suppress is much slower
                     delattr(o, name)
@@ -454,6 +459,9 @@ class Entity(
 
     # If we reported if this entity was slow
     _slow_reported = False
+
+    # If we reported deprecated supported features constants
+    _deprecated_supported_features_reported = False
 
     # If we reported this entity is updated while disabled
     _disabled_reported = False
@@ -1489,6 +1497,31 @@ class Entity(
         platform_name = self.platform.platform_name if self.platform else None
         return async_suggest_report_issue(
             self.hass, integration_domain=platform_name, module=type(self).__module__
+        )
+
+    @callback
+    def _report_deprecated_supported_features_values(
+        self, replacement: IntFlag
+    ) -> None:
+        """Report deprecated supported features values."""
+        if self._deprecated_supported_features_reported is True:
+            return
+        self._deprecated_supported_features_reported = True
+        report_issue = self._suggest_report_issue()
+        report_issue += (
+            " and reference "
+            "https://developers.home-assistant.io/blog/2023/12/28/support-feature-magic-numbers-deprecation"
+        )
+        _LOGGER.warning(
+            (
+                "Entity %s (%s) is using deprecated supported features"
+                " values which will be removed in HA Core 2025.1. Instead it should use"
+                " %s, please %s"
+            ),
+            self.entity_id,
+            type(self),
+            repr(replacement),
+            report_issue,
         )
 
 

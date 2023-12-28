@@ -35,12 +35,12 @@ async def test_media_player_idle(
 
     assert len(hass.states.async_all("media_player")) == 1
 
-    state = hass.states.get("media_player.test")
+    state = hass.states.get("media_player.test_media_player")
     assert state == snapshot
 
     # Trigger coordinator refresh since it has a different fixture.
     freezer.tick(WAIT)
     async_fire_time_changed(hass)
 
-    state = hass.states.get("media_player.test")
+    state = hass.states.get("media_player.test_media_player")
     assert state == snapshot

@@ -153,6 +153,11 @@ def mock_tts_cache_dir_autouse(mock_tts_cache_dir):
 
 
 @pytest.fixture(autouse=True)
+def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock):
+    """Mock writing tags."""
+
+
+@pytest.fixture(autouse=True)
 def mock_user_data():
     """Mock os module."""
     with patch("hass_nabucasa.Cloud._write_user_info") as writer:

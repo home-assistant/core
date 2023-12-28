@@ -115,3 +115,23 @@ def test_deprecated_constants(
     import_and_test_deprecated_constant_enum(
         caplog, water_heater, enum, "SUPPORT_", "2025.1"
     )
+
+
+def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated supported features ints."""
+
+    class MockWaterHeaterEntity(WaterHeaterEntity):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return 1
+
+    entity = MockWaterHeaterEntity()
+    assert entity.supported_features_compat is WaterHeaterEntityFeature(1)
+    assert "MockWaterHeaterEntity" in caplog.text
+    assert "is using deprecated supported features values" in caplog.text
+    assert "Instead it should use" in caplog.text
+    assert "WaterHeaterEntityFeature.TARGET_TEMPERATURE" in caplog.text
+    caplog.clear()
+    assert entity.supported_features_compat is WaterHeaterEntityFeature(1)
+    assert "is using deprecated supported features values" not in caplog.text
