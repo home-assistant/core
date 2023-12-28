@@ -35,13 +35,12 @@ def is_supported(
     try:
         entity_description.value_getter(vicare_device)
         _LOGGER.debug("Found entity %s", name)
+        return True
     except PyViCareNotSupportedFeatureError:
-        _LOGGER.info("Feature not supported %s", name)
-        return False
+        _LOGGER.debug("Feature not supported %s", name)
     except AttributeError as error:
-        _LOGGER.debug("Attribute Error %s: %s", name, error)
-        return False
-    return True
+        _LOGGER.debug("Feature not supported %s: %s", name, error)
+    return False
 
 
 def get_burners(device: PyViCareDevice) -> list[PyViCareHeatingDeviceComponent]:
@@ -50,6 +49,8 @@ def get_burners(device: PyViCareDevice) -> list[PyViCareHeatingDeviceComponent]:
         return device.burners
     except PyViCareNotSupportedFeatureError:
         _LOGGER.debug("No burners found")
+    except AttributeError as error:
+        _LOGGER.debug("No burners found: %s", error)
     return []
 
 
@@ -59,6 +60,8 @@ def get_circuits(device: PyViCareDevice) -> list[PyViCareHeatingDeviceComponent]
         return device.circuits
     except PyViCareNotSupportedFeatureError:
         _LOGGER.debug("No circuits found")
+    except AttributeError as error:
+        _LOGGER.debug("No circuits found: %s", error)
     return []
 
 
@@ -68,4 +71,6 @@ def get_compressors(device: PyViCareDevice) -> list[PyViCareHeatingDeviceCompone
         return device.compressors
     except PyViCareNotSupportedFeatureError:
         _LOGGER.debug("No compressors found")
+    except AttributeError as error:
+        _LOGGER.debug("No compressors found: %s", error)
     return []
