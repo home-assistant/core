@@ -374,7 +374,7 @@ MODBUS_SCHEMA = vol.Schema(
         vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
         vol.Optional(CONF_CLOSE_COMM_ON_ERROR): cv.boolean,
         vol.Optional(CONF_DELAY, default=0): cv.positive_int,
-        vol.Optional(CONF_RETRIES, default=3): cv.positive_int,
+        vol.Optional(CONF_RETRIES): cv.positive_int,
         vol.Optional(CONF_RETRY_ON_EMPTY): cv.boolean,
         vol.Optional(CONF_MSG_WAIT): cv.positive_int,
         vol.Optional(CONF_BINARY_SENSORS): vol.All(
