@@ -65,13 +65,13 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "aep_texas": {
-      "name": "AEP Texas",
+    "aep_ohio": {
+      "name": "AEP Ohio",
       "integration_type": "virtual",
       "supported_by": "opower"
     },
-    "aepohio": {
-      "name": "AEP Ohio",
+    "aep_texas": {
+      "name": "AEP Texas",
       "integration_type": "virtual",
       "supported_by": "opower"
     },
