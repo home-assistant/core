@@ -194,12 +194,9 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
     ),
 )
 
-DISTANCE_UNITS = {KM: UnitOfLength.KILOMETERS, MILES: UnitOfLength.MILES}
-
-DYNAMIC_UOM_SENSORS = {
-    "record_distance": lambda data: DISTANCE_UNITS.get(
-        data.records[RECORDS_DISTANCE_UNIT[0]]
-    )
+DISTANCE_UNITS: dict[Any, UnitOfLength] = {
+    KM: UnitOfLength.KILOMETERS,
+    MILES: UnitOfLength.MILES,
 }
 
 
@@ -244,9 +241,9 @@ class PermobilSensor(CoordinatorEntity[MyPermobilCoordinator], SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | UnitOfLength | None:
         """Return the unit of measurement of the sensor."""
-        if self.entity_description.key in DYNAMIC_UOM_SENSORS:
-            return DYNAMIC_UOM_SENSORS[self.entity_description.key](
-                self.coordinator.data
+        if self.entity_description.key == "record_distance":
+            return DISTANCE_UNITS.get(
+                self.coordinator.data.records[RECORDS_DISTANCE_UNIT[0]]
             )
         return self.entity_description.native_unit_of_measurement
 
