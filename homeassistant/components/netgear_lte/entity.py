@@ -13,6 +13,7 @@ from .const import DISPATCHER_NETGEAR_LTE, DOMAIN, MANUFACTURER
 class LTEEntity(Entity):
     """Base LTE entity."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(
@@ -24,7 +25,6 @@ class LTEEntity(Entity):
         """Initialize a Netgear LTE entity."""
         self.entity_description = description
         self.modem_data = modem_data
-        self._attr_name = f"Netgear LTE {description.key}"
         self._attr_unique_id = f"{description.key}_{modem_data.data.serial_number}"
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{config_entry.data[CONF_HOST]}",
