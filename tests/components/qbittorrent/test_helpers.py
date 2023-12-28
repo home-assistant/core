@@ -36,9 +36,44 @@ async def test_format_torrents(
     hass: HomeAssistant,
 ) -> None:
     """Test the format_torrents function."""
-    assert format_torrents([{"name": "torrent1"}, {"name": "torrent2"}]) == {
-        "torrent1": {},
-        "torrent2": {},
+    assert format_torrents(
+        [
+            {
+                "name": "torrent1",
+                "hash": "hash1",
+                "added_on": 1640995200,
+                "progress": 0.5,
+                "state": "paused",
+                "eta": 86400,
+                "ratio": 1.0,
+            },
+            {
+                "name": "torrent2",
+                "hash": "hash1",
+                "added_on": 1640995200,
+                "progress": 0.5,
+                "state": "paused",
+                "eta": 86400,
+                "ratio": 1.0,
+            },
+        ]
+    ) == {
+        "torrent1": {
+            "id": "hash1",
+            "added_date": "2022-01-01T00:00:00+0000",
+            "percent_done": "50.00",
+            "status": "paused",
+            "eta": "24:00:00",
+            "ratio": "1.00",
+        },
+        "torrent2": {
+            "id": "hash1",
+            "added_date": "2022-01-01T00:00:00+0000",
+            "percent_done": "50.00",
+            "status": "paused",
+            "eta": "24:00:00",
+            "ratio": "1.00",
+        },
     }
 
 
