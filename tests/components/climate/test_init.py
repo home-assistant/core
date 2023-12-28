@@ -333,3 +333,23 @@ async def test_preset_mode_validation(
         )
     assert str(exc.value) == "The fan_mode invalid is not a valid fan_mode: auto, off"
     assert exc.value.translation_key == "not_valid_fan_mode"
+
+
+def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated supported features ints."""
+
+    class MockClimateEntity(ClimateEntity):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return 1
+
+    entity = MockClimateEntity()
+    assert entity.supported_features_compat is ClimateEntityFeature(1)
+    assert "MockClimateEntity" in caplog.text
+    assert "is using deprecated supported features values" in caplog.text
+    assert "Instead it should use" in caplog.text
+    assert "ClimateEntityFeature.TARGET_TEMPERATURE" in caplog.text
+    caplog.clear()
+    assert entity.supported_features_compat is ClimateEntityFeature(1)
+    assert "is using deprecated supported features values" not in caplog.text
