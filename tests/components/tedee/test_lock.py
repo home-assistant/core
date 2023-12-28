@@ -52,14 +52,7 @@ async def test_lock(
     assert entry.unique_id == "12345-lock"
 
     device = device_registry.async_get(entry.device_id)
-    assert device
-    assert device.configuration_url is None
-    assert device.entry_type is None
-    assert device.hw_version is None
-    assert device.identifiers == {(DOMAIN, "12345")}
-    assert device.manufacturer == "Tedee"
-    assert device.name == "Lock-1A2B"
-    assert device.model == "Tedee PRO"
+    assert device == snapshot
 
     await hass.services.async_call(
         LOCK_DOMAIN,
