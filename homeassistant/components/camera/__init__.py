@@ -530,6 +530,15 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Flag supported features."""
         return self._attr_supported_features
 
+    @property
+    def supported_features_compat(self) -> CameraEntityFeature:
+        """Return the supported features as UpdateEntityFeature.
+
+        Remove this compatibility shim in 2025.1 or later.
+        """
+        features = self.supported_features
+        return CameraEntityFeature(features) if type(features) is int else features  # noqa: E721
+
     @cached_property
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
@@ -570,7 +579,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         if hasattr(self, "_attr_frontend_stream_type"):
             return self._attr_frontend_stream_type
-        if CameraEntityFeature.STREAM not in self.supported_features:
+        if CameraEntityFeature.STREAM not in self.supported_features_compat:
             return None
         if self._rtsp_to_webrtc:
             return StreamType.WEB_RTC
@@ -758,7 +767,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     async def _async_use_rtsp_to_webrtc(self) -> bool:
         """Determine if a WebRTC provider can be used for the camera."""
-        if CameraEntityFeature.STREAM not in self.supported_features:
+        if CameraEntityFeature.STREAM not in self.supported_features_compat:
             return False
         if DATA_RTSP_TO_WEB_RTC not in self.hass.data:
             return False
