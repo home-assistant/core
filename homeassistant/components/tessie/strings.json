@@ -317,6 +317,9 @@
     }
   },
   "exceptions": {
+    "unknown": {
+      "message": "An unknown issue occured changing {name}."
+    },
     "not_supported": {
       "message": "{name} is not supported."
     },
@@ -330,7 +333,7 @@
       "message": "{name} is already inactive."
     },
     "incorrect_pin": {
-      "message": "Incorrect pin."
+      "message": "Incorrect pin for {name}."
     }
   }
 }
