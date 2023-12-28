@@ -112,6 +112,7 @@ class SharpAquosTVDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.PLAY
     )
+    _attr_volume_step = 2 / 60
 
     def __init__(
         self, name: str, remote: sharp_aquos_rc.TV, power_on_enabled: bool = False
@@ -155,22 +156,6 @@ class SharpAquosTVDevice(MediaPlayerEntity):
     def turn_off(self) -> None:
         """Turn off tvplayer."""
         self._remote.power(0)
-
-    @_retry
-    def volume_up(self) -> None:
-        """Volume up the media player."""
-        if self.volume_level is None:
-            _LOGGER.debug("Unknown volume in volume_up")
-            return
-        self._remote.volume(int(self.volume_level * 60) + 2)
-
-    @_retry
-    def volume_down(self) -> None:
-        """Volume down media player."""
-        if self.volume_level is None:
-            _LOGGER.debug("Unknown volume in volume_down")
-            return
-        self._remote.volume(int(self.volume_level * 60) - 2)
 
     @_retry
     def set_volume_level(self, volume: float) -> None:

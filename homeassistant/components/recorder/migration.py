@@ -532,7 +532,9 @@ def _update_states_table_with_foreign_key_options(
 
     states_key_constraints = Base.metadata.tables[TABLE_STATES].foreign_key_constraints
     old_states_table = Table(  # noqa: F841
-        TABLE_STATES, MetaData(), *(alter["old_fk"] for alter in alters)  # type: ignore[arg-type]
+        TABLE_STATES,
+        MetaData(),
+        *(alter["old_fk"] for alter in alters),  # type: ignore[arg-type]
     )
 
     for alter in alters:

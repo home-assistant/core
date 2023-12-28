@@ -12,7 +12,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.dhcp import DhcpServiceInfo
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
@@ -31,13 +37,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_device_info: dict[str, Any] = {}
 
     async def _create_entry(
-        self, host: str, user_input: dict[str, Any], errors: dict[str, str]
+        self,
+        host: str,
+        user_input: dict[str, Any],
+        errors: dict[str, str],
+        description_placeholders: dict[str, str] | Any = None,
     ) -> FlowResult | None:
         fully = FullyKiosk(
             async_get_clientsession(self.hass),
             host,
             DEFAULT_PORT,
             user_input[CONF_PASSWORD],
+            use_ssl=user_input[CONF_SSL],
+            verify_ssl=user_input[CONF_VERIFY_SSL],
         )
 
         try:
@@ -50,10 +62,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ) as error:
             LOGGER.debug(error.args, exc_info=True)
             errors["base"] = "cannot_connect"
+            description_placeholders["error_detail"] = str(error.args)
             return None
         except Exception as error:  # pylint: disable=broad-except
             LOGGER.exception("Unexpected exception: %s", error)
             errors["base"] = "unknown"
+            description_placeholders["error_detail"] = str(error.args)
             return None
 
         await self.async_set_unique_id(device_info["deviceID"], raise_on_progress=False)
@@ -64,6 +78,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_HOST: host,
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
                 CONF_MAC: format_mac(device_info["Mac"]),
+                CONF_SSL: user_input[CONF_SSL],
+                CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
             },
         )
 
@@ -72,8 +88,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {}
         if user_input is not None:
-            result = await self._create_entry(user_input[CONF_HOST], user_input, errors)
+            result = await self._create_entry(
+                user_input[CONF_HOST], user_input, errors, placeholders
+            )
             if result:
                 return result
 
@@ -83,8 +102,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_HOST): str,
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Optional(CONF_SSL, default=False): bool,
+                    vol.Optional(CONF_VERIFY_SSL, default=False): bool,
                 }
             ),
+            description_placeholders=placeholders,
             errors=errors,
         )
 
@@ -127,6 +149,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Optional(CONF_SSL, default=False): bool,
+                    vol.Optional(CONF_VERIFY_SSL, default=False): bool,
                 }
             ),
             description_placeholders=placeholders,

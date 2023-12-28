@@ -178,6 +178,38 @@
     'state': '1020.121',
   })
 # ---
+# name: test_all_entities[sensor.henk_elevation_change_last_workout]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'henk Elevation change last workout',
+      'icon': 'mdi:stairs-up',
+      'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_elevation_change_last_workout',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---
+# name: test_all_entities[sensor.henk_elevation_change_today]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'henk Elevation change today',
+      'icon': 'mdi:stairs-up',
+      'last_reset': '2023-10-20T00:00:00-07:00',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.henk_elevation_change_today',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_all_entities[sensor.henk_extracellular_water]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -235,36 +267,6 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '0.07',
-  })
-# ---
-# name: test_all_entities[sensor.henk_floors_climbed_last_workout]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'henk Floors climbed last workout',
-      'icon': 'mdi:stairs-up',
-      'unit_of_measurement': 'floors',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.henk_floors_climbed_last_workout',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '4',
-  })
-# ---
-# name: test_all_entities[sensor.henk_floors_climbed_today]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'henk Floors climbed today',
-      'icon': 'mdi:stairs-up',
-      'last_reset': '2023-10-20T00:00:00-07:00',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'floors',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.henk_floors_climbed_today',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
   })
 # ---
 # name: test_all_entities[sensor.henk_heart_pulse]

@@ -41,7 +41,7 @@ async def test_custom_coap_port(
     assert "Starting CoAP context with UDP port 7632" in caplog.text
 
 
-@pytest.mark.parametrize("gen", [1, 2])
+@pytest.mark.parametrize("gen", [1, 2, 3])
 async def test_shared_device_mac(
     hass: HomeAssistant,
     gen,
@@ -74,7 +74,7 @@ async def test_setup_entry_not_shelly(
     assert "probably comes from a custom integration" in caplog.text
 
 
-@pytest.mark.parametrize("gen", [1, 2])
+@pytest.mark.parametrize("gen", [1, 2, 3])
 async def test_device_connection_error(
     hass: HomeAssistant, gen, mock_block_device, mock_rpc_device, monkeypatch
 ) -> None:
@@ -90,7 +90,7 @@ async def test_device_connection_error(
     assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.parametrize("gen", [1, 2])
+@pytest.mark.parametrize("gen", [1, 2, 3])
 async def test_mac_mismatch_error(
     hass: HomeAssistant, gen, mock_block_device, mock_rpc_device, monkeypatch
 ) -> None:
@@ -106,7 +106,7 @@ async def test_mac_mismatch_error(
     assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.parametrize("gen", [1, 2])
+@pytest.mark.parametrize("gen", [1, 2, 3])
 async def test_device_auth_error(
     hass: HomeAssistant, gen, mock_block_device, mock_rpc_device, monkeypatch
 ) -> None:

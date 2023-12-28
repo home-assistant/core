@@ -25,14 +25,14 @@ from .entity import V2CBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class V2CRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[TrydanData], float]
 
 
-@dataclass
+@dataclass(frozen=True)
 class V2CSensorEntityDescription(SensorEntityDescription, V2CRequiredKeysMixin):
     """Describes an EVSE Power sensor entity."""
 
@@ -41,6 +41,7 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="charge_power",
         translation_key="charge_power",
+        icon="mdi:ev-station",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
@@ -49,6 +50,7 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="charge_energy",
         translation_key="charge_energy",
+        icon="mdi:ev-station",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
@@ -57,6 +59,7 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="charge_time",
         translation_key="charge_time",
+        icon="mdi:timer",
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.DURATION,
@@ -65,6 +68,7 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="house_power",
         translation_key="house_power",
+        icon="mdi:home-lightning-bolt",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
@@ -73,6 +77,7 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="fv_power",
         translation_key="fv_power",
+        icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
@@ -99,7 +104,6 @@ class V2CSensorBaseEntity(V2CBaseEntity, SensorEntity):
     """Defines a base v2c sensor entity."""
 
     entity_description: V2CSensorEntityDescription
-    _attr_icon = "mdi:ev-station"
 
     def __init__(
         self,

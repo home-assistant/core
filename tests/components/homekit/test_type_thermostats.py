@@ -964,16 +964,16 @@ async def test_thermostat_temperature_step_whole(
     assert acc.char_target_temp.properties[PROP_MIN_STEP] == 0.1
 
 
-async def test_thermostat_restore(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_thermostat_restore(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
+) -> None:
     """Test setting up an entity from state in the event registry."""
     hass.state = CoreState.not_running
 
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "climate", "generic", "1234", suggested_object_id="simple"
     )
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "climate",
         "generic",
         "9012",
@@ -1794,16 +1794,16 @@ async def test_water_heater_get_temperature_range(
     assert acc.get_temperature_range(state) == (15.5, 21.0)
 
 
-async def test_water_heater_restore(hass: HomeAssistant, hk_driver, events) -> None:
+async def test_water_heater_restore(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
+) -> None:
     """Test setting up an entity from state in the event registry."""
     hass.state = CoreState.not_running
 
-    registry = er.async_get(hass)
-
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "water_heater", "generic", "1234", suggested_object_id="simple"
     )
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         "water_heater",
         "generic",
         "9012",

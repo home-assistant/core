@@ -3,6 +3,7 @@ from datetime import timedelta
 from unittest.mock import PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.accuweather.const import ATTRIBUTION
@@ -31,7 +32,8 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECAST,
+    LEGACY_SERVICE_GET_FORECAST,
+    SERVICE_GET_FORECASTS,
     WeatherEntityFeature,
 )
 from homeassistant.const import (
@@ -206,16 +208,24 @@ async def test_unsupported_condition_icon_data(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_FORECAST_CONDITION) is None
 
 
+@pytest.mark.parametrize(
+    ("service"),
+    [
+        SERVICE_GET_FORECASTS,
+        LEGACY_SERVICE_GET_FORECAST,
+    ],
+)
 async def test_forecast_service(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
+    service: str,
 ) -> None:
     """Test multiple forecast."""
     await init_integration(hass, forecast=True)
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {
             "entity_id": "weather.home",
             "type": "daily",
@@ -223,7 +233,6 @@ async def test_forecast_service(
         blocking=True,
         return_response=True,
     )
-    assert response["forecast"] != []
     assert response == snapshot
 
 

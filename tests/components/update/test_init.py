@@ -128,6 +128,7 @@ async def test_update(hass: HomeAssistant) -> None:
     update.entity_description = UpdateEntityDescription(key="F5 - Its very refreshing")
     assert update.device_class is None
     assert update.entity_category is EntityCategory.CONFIG
+    del update.device_class
     update.entity_description = UpdateEntityDescription(
         key="F5 - Its very refreshing",
         device_class=UpdateDeviceClass.FIRMWARE,

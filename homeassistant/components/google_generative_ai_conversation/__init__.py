@@ -88,7 +88,7 @@ class GoogleGenerativeAIAgent(conversation.AbstractConversationAgent):
             conversation_id = user_input.conversation_id
             messages = self.history[conversation_id]
         else:
-            conversation_id = ulid.ulid()
+            conversation_id = ulid.ulid_now()
             messages = []
 
         try:
