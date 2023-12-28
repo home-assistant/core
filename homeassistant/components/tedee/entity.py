@@ -49,4 +49,4 @@ class TedeeEntity(CoordinatorEntity[TedeeApiCoordinator]):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._lock = self.coordinator.data[self._lock.lock_id]
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
