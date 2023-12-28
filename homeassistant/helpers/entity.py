@@ -1500,18 +1500,15 @@ class Entity(
         )
 
     @callback
-    def _report_deprecated_supported_features_constants(
+    def _report_deprecated_supported_features_values(
         self, replacement: IntFlag
     ) -> None:
-        """Report deprecated supported features constants."""
+        """Report deprecated supported features values."""
         if self._deprecated_supported_features_reported is True:
             return
         self._deprecated_supported_features_reported = True
         report_issue = self._suggest_report_issue()
-        report_issue += (
-            " and reference "
-            "https://developers.home-assistant.io/blog/2022/04/02/support-constants-deprecation/"
-        )
+        report_issue += " and reference " "TODO: NEW BLOG POST URL"
         _LOGGER.warning(
             (
                 "Entity %s (%s) is using deprecated supported features"

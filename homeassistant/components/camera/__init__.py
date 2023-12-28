@@ -539,7 +539,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         features = self.supported_features
         if type(features) is int:  # noqa: E721
             new_features = CameraEntityFeature(features)
-            self._report_deprecated_supported_features_constants(new_features)
+            self._report_deprecated_supported_features_values(new_features)
             return new_features
         return features
 
