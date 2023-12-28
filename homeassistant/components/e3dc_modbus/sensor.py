@@ -7,8 +7,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -26,9 +26,150 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the sensor platform."""
-    async_add_entities([DemoSensor(hass.data[DOMAIN][entry.entry_id]["hub"])])
+    hub_name = hass.data[DOMAIN][entry.entry_id]["hub"].name
+    _LOGGER.debug("Platformname: %s", hass.data[DOMAIN])
+    # hub = hass.data[DOMAIN][hub_name]["hub"]
+    hub = hass.data[DOMAIN][entry.entry_id]["hub"]  # Object of class E3DCModbusHub
+
+    sensors = []
+    sensor = E3DCSensor(hub_name, hub, "Hersteller", "manufacturer", "W", "mdi:factory")
+
+    sensors.append(sensor)
+
+    # async_add_entities([DemoSensor(hass.data[DOMAIN][entry.entry_id]["hub"])])
     # sensors = [DemoSensor(hub)]
-    # async_add_entities(sensors, update_before_add=True)
+    async_add_entities(sensors, update_before_add=True)
+
+
+class E3DCSensor(SensorEntity):
+    """Representation of an E3DC Modbus sensor.
+
+    Sensor: [Name, Key, Register, Datatype, Count, Unit, Icon]
+    """
+
+    # def __init__(self, platform_name, hub, device_info, name, key, unit, icon, register, datatype, count, Scaninterval):
+    # def __init__(self, platform_name, hub, device_info, name, key, unit, icon, test=""):
+    def __init__(self, platform_name, hub, name, key, unit, icon):
+        """Initialize the sensor."""
+        self._platform_name = platform_name
+        self._hub = hub
+        self._key = key
+        self._name = name
+        self._register = "register"
+        self._datatype = "datatype"
+        self._count = "count"
+        self._scaninterval = 5  # Scaninterval
+        self._unit_of_measurement = unit
+        self._icon = icon
+        self._state = "Status 123"
+        # self._device_info = device_info
+        # self._attr_state_class = STATE_CLASS_MEASUREMENT
+        # if self._unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR:
+        #    self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+        #    self._attr_device_class = SensorDeviceClass.ENERGY
+        #    if (
+        #        STATE_CLASS_TOTAL_INCREASING == STATE_CLASS_MEASUREMENT
+        #    ):  # compatibility to 2021.8
+        #        self._attr_last_reset = dt_util.utc_from_timestamp(0)
+        # if self._unit_of_measurement == UnitOfPower.WATT:
+        #    self._attr_device_class = SensorDeviceClass.POWER
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        self._hub.async_add_e3dc_sensor(self._modbus_data_updated)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove Sensors."""
+        self._hub.async_remove_e3dc_sensor(self._modbus_data_updated)
+
+    @callback
+    def _modbus_data_updated(self):
+        self.async_write_ha_state()
+
+    @callback
+    def _update_state(self):
+        if self._key in self._hub.data:
+            self._state = self._hub.data[self._key]
+
+    @property
+    def name(self) -> str | None:
+        """Return the name."""
+        return f"{self._name}"
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID of the sensor."""
+        return f"{self._platform_name}_{self._key}"
+
+    # @property
+    # def unit_of_measurement(self) -> str | None:
+    #    """Return the unit of measurement."""
+    #    return self._unit_of_measurement
+
+    @property
+    def icon(self) -> str | None:
+        """Return the sensor icon."""
+        return self._icon
+
+    @property
+    def register(self) -> int:
+        """Return the sensor register."""
+        return self._register
+
+    @property
+    def datatype(self):
+        """Return the sensor datatype."""
+        return self._datatype
+
+    @property
+    def count(self) -> int:
+        """Return the sensor count."""
+        return self._count
+
+    @property
+    def scaninterval(self):
+        """Return the sensor count."""
+        return self._scaninterval
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        if self._key in self._hub.data:
+            return self._hub.data[self._key]
+
+    # @property
+    # def extra_state_attributes(self) -> Optional[Mapping[str, Any]]:
+    #    """Return extra state attributes based on the sensor key."""
+    #    if self._key in ["status", "statusvendor"] and self.state in DEVICE_STATUSSES:
+    #        return {ATTR_STATUS_DESCRIPTION: DEVICE_STATUSSES[self.state]}
+    #    elif "battery1" in self._key and "battery1_attrs" in self._hub.data:
+    #        return self._hub.data["battery1_attrs"]
+    #    elif "battery2" in self._key and "battery2_attrs" in self._hub.data:
+    #        return self._hub.data["battery2_attrs"]
+    #    return None
+
+    @property
+    def should_poll(self) -> bool:
+        """Data is delivered by the hub."""
+        return False
+
+    # @property
+    # def device_info(self) -> Optional[Dict[str, Any]]:
+    #    """Return the device information."""
+    #    return self._device_info
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return default device info."""
+        _LOGGER.debug("Geräte UID: %s %s", DOMAIN, self.unique_id)
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="E3/DC Hager AG",
+            model="S10 E AIO Pro 912",
+            name="E3DC Hauskraftwerk",
+            sw_version="0.1.0",
+            configuration_url="https://s10.e3dc.com/",
+        )
 
 
 class DemoSensor(SensorEntity):
@@ -42,12 +183,12 @@ class DemoSensor(SensorEntity):
         self._attr_name = f"{hub.name} Demo Sensor Name"
         self._attr_device_class = SensorDeviceClass.TEMPERATURE
         # self._attr_unit_of_measurement = SensorEntity.unit_of_measurement
-        self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+        # self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
         self._attr_state_class = SensorStateClass.MEASUREMENT
-        self._device_info = "Geräteinformation"
-        self._platform_name = "Platform Name"
-        # self._unit_of_measurement = SensorEntity.unit_of_measurement
-        _LOGGER.debug("Device info: %s", self.device_info)
+        self._device_info = "Geräteinformation Demosensor"
+        self._platform_name = "Platform Name -> demnächste Hauskraftwerk"
+        self._unit_of_measurement = SensorEntity.unit_of_measurement
+        _LOGGER.debug("Sensor: %s", self)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

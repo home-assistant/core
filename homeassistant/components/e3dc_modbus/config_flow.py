@@ -108,6 +108,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialisierung."""
         self.host = None
+        self.name = None
 
     def _host_in_configuration_exists(self, host) -> bool:
         """Return True if host exists in configuration."""
@@ -136,9 +137,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 self.host = user_input[CONF_HOST]
-
-                # Extract the name from the user input here or use the default value
-                # self.name = user_input.get(CONF_NAME, DEFAULT_NAME)
+                self.name = user_input.get(
+                    CONF_NAME, DEFAULT_NAME
+                )  # Move the assignment of 'name' inside __init__
 
                 await self.async_set_unique_id(user_input[CONF_HOST])
                 self._abort_if_unique_id_configured()

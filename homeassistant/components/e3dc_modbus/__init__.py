@@ -9,12 +9,10 @@ from typing import Any, Optional
 from pymodbus.client import ModbusTcpClient
 import voluptuous as vol
 
-# from homeassistant.components.e3dc_modbus import dr
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -25,7 +23,8 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
-from .sensor import DemoSensor
+
+# from .sensor import DemoSensor
 
 # Logging
 _LOGGER = logging.getLogger(__name__)
@@ -71,12 +70,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     modbus_address = entry.data.get(CONF_MODBUS_ADDRESS, 1)
     scan_interval = entry.data[CONF_SCAN_INTERVAL]
 
-    _LOGGER.debug("Setup Hauskraftwerk %s.%s", DOMAIN, name)
+    _LOGGER.info("Setup Hauskraftwerk %s.%s", DOMAIN, name)
 
     # TO_DO 1. Create API instance
     # TO_DO 2. Validate the API connection (and authentication)
     # TO_DO 3. Store an API object for your platforms to access
     # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
+
     # """Register the hub."""
 
     hub = E3DCModbusHub(
@@ -90,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # hass.data[DOMAIN][name] = {"hub": hub}
     # Register the hub under the entry's entry_id
     hass.data[DOMAIN][entry.entry_id] = {"hub": hub}
-
+    # _LOGGER.info("Domain Entry_ID: %s.%s", DOMAIN, entry.entry_id)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -145,7 +145,6 @@ class E3DCModbusHub:
         self.data = {}
         # Modbus register offset
         self._modbus_register_offset = None
-        # self._sensors.append(DemoSensor(self))
         # self._sensors.append()
 
     @callback
@@ -158,13 +157,20 @@ class E3DCModbusHub:
                 self._hass, self.async_refresh_modbus_data, self._scan_interval
             )
 
-        # self._sensors.append(update_callback)
-        self._sensors.append(DemoSensor(self))
+        self._sensors.append(update_callback)
+        # self._sensors.append(DemoSensor(self))
 
     @callback
     def async_remove_e3dc_sensor(self, update_callback):
         """Remove data update."""
-        self._sensors.remove(update_callback)
+        if update_callback in self._sensors:
+            self._sensors.remove(update_callback)
+        else:  # This should not happen.
+            _LOGGER.warning(
+                "Callback %s was not registered for removal on hub %s",
+                update_callback,
+                self._name,
+            )
 
         if not self._sensors:
             # Stop the interval timer upon removal of last sensor.
@@ -174,19 +180,20 @@ class E3DCModbusHub:
 
     async def async_refresh_modbus_data(self, _now: Optional[int] = None) -> None:
         """Time to update Modbus Data."""
+        # _LOGGER.debug("async_refresh_modbus_data: %s", self.data)
         if not self._sensors:
             return
 
         # try:
+        update_result = True
         #    update_result = self.read_modbus_data()
-        # except Exception as e:
-        #    _LOGGER.exception("Error reading modbus data")
-        #    update_result = False
+        # except Exception:
+        _LOGGER.exception("Error reading modbus data")
+        update_result = False
 
-        # if update_result:
-        #    for update_callback in self._sensors:
-        #        update_callback()
-        self.data["e3dc_demo_sensor_name"] = 88.4
+        if update_result:
+            for update_callback in self._sensors:
+                update_callback()
 
     @property
     def name(self):
@@ -218,17 +225,26 @@ class E3DCModbusHub:
             )
         return result
 
-    def device_info(self) -> DeviceInfo:
-        """Return default device info structure."""
-        return DeviceInfo(
-            manufacturer="E3DC",
-            # model=self.e3dc.model,
-            # name=self.e3dc.model,
-            # connections={(dr.CONNECTION_NETWORK_MAC, self.e3dc.macAddress)},
-            # identifiers={(DOMAIN, self.uid)},
-            # sw_version=self._sw_version,
-            configuration_url="https://s10.e3dc.com/",
-        )
+    # @property
+    # def device_info(self) -> DeviceInfo:
+    #    """Return default device info."""
+    #    _LOGGER.debug("Geräte UID: %s", self.unique_id)
+    #    return DeviceInfo(
+    #        manufacturer="E3/DC",
+    #        model="S10 E AIO Pro 912",
+    #        name="P 10",
+    #        sw_version="0.1.0",
+    #        configuration_url="https://s10.e3dc.com/",
+    #    )
+
+    # from homeassistant.helpers import device_registry as dr
+    #        manufacturer="E3/DC",
+    #        model=self.e3dc.model,
+    #        name=self.e3dc.model,
+    #        connections={(dr.CONNECTION_NETWORK_MAC, self.e3dc.macAddress)},
+    #        identifiers={(DOMAIN, self.uid)},
+    #        sw_version=self._sw_version,
+    #        configuration_url="https://s10.e3dc.com/",
 
     def read_register(self, register):
         """Read a register from the E3DC Modbus."""
