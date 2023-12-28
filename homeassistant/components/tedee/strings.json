@@ -9,8 +9,7 @@
           "home_assistant_access_token": "Home Assistant Long Lived Access Token (required)"
         },
         "data_description": {
-          "local_access_token": "You can find it in the tedee app under \"Bridge Settings\" -> \"Local API\".",
-          "home_assistant_access_token": "Used to allow bridge to push data to Home Assistant. You can find it in the Home Assistant UI under \"Profile\" -> \"Long-Lived Access Tokens\"."
+          "local_access_token": "You can find it in the tedee app under \"Bridge Settings\" -> \"Local API\"."
         }
       }
     },

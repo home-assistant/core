@@ -14,12 +14,7 @@ from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import (
-    CONF_HOME_ASSISTANT_ACCESS_TOKEN,
-    CONF_LOCAL_ACCESS_TOKEN,
-    DOMAIN,
-    NAME,
-)
+from .const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN, NAME
 
 
 async def validate_input(user_input: dict[str, Any]) -> bool:
@@ -91,7 +86,6 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_HOST): str,
                     vol.Required(CONF_LOCAL_ACCESS_TOKEN): str,
-                    vol.Optional(CONF_HOME_ASSISTANT_ACCESS_TOKEN): str,
                 }
             ),
             errors=errors,

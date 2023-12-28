@@ -2,7 +2,7 @@
 import time
 from unittest.mock import MagicMock
 
-from pytedee_async.exception import TedeeDataUpdateException, TedeeWebhookException
+from pytedee_async.exception import TedeeDataUpdateException
 import pytest
 
 from homeassistant.components.tedee.const import DOMAIN
@@ -35,28 +35,3 @@ async def test_coordinator(
     mock_tedee.locks_dict = {}
     await coordinator._async_update_data()
     assert "No locks found in your account" in caplog.text
-
-
-async def test_coordinator_callback(
-    hass: HomeAssistant,
-    mock_tedee: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    caplog,
-) -> None:
-    """Testing the callback."""
-    coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
-
-    data = {"type": "device-connection-changed", "data": {"isConnected": 1}}
-
-    coordinator._initialized = True
-    coordinator.webhook_received(data)
-    mock_tedee.parse_webhook_message.assert_called_once_with(data)
-
-    coordinator._initialized = False
-    coordinator.webhook_received(data)
-
-    mock_tedee.parse_webhook_message.side_effect = TedeeWebhookException(
-        "Weird data received"
-    )
-    coordinator.webhook_received(data)
-    assert "Weird data received" in caplog.text

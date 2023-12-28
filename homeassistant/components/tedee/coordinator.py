@@ -11,12 +11,11 @@ from pytedee_async import (
     TedeeDataUpdateException,
     TedeeLocalAuthException,
     TedeeLock,
-    TedeeWebhookException,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -109,22 +108,3 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             self._stale_data = False
 
         return self.tedee_client.locks_dict
-
-    @callback
-    def webhook_received(self, data: dict) -> None:
-        """Handle webhook message."""
-        _LOGGER.debug("Webhook received: %s", str(data))
-        try:
-            self.tedee_client.parse_webhook_message(data)
-        except TedeeWebhookException as ex:
-            _LOGGER.warning(ex)
-            return
-
-        self._last_data_update = time.time()
-
-        if self._initialized:
-            self.async_set_updated_data(
-                self.tedee_client.locks_dict
-            )  # update listeners and reset coordinator timer
-        else:
-            self.async_update_listeners()  # update listeners without resetting coordinator timer
