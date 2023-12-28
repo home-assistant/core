@@ -34,6 +34,7 @@ async def test_lock(
     mock_tedee: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the tedee lock."""
     mock_tedee.lock.return_value = None
