@@ -3,26 +3,21 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_USERNAME, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
-from .const import DEFAULT_OPTIONS, DOMAIN
+from .const import DOMAIN
 from .coordinator import Life360DataUpdateCoordinator, MissingLocReason
 
 PLATFORMS = [Platform.DEVICE_TRACKER, Platform.BUTTON]
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @dataclass
 class IntegData:
     """Integration data."""
 
-    cfg_options: dict[str, Any] | None = None
     # ConfigEntry.entry_id: Life360DataUpdateCoordinator
     coordinators: dict[str, Life360DataUpdateCoordinator] = field(
         init=False, default_factory=dict
@@ -36,34 +31,13 @@ class IntegData:
     logged_circles: list[str] = field(init=False, default_factory=list)
     logged_places: list[str] = field(init=False, default_factory=list)
 
-    def __post_init__(self):
-        """Finish initialization of cfg_options."""
-        self.cfg_options = self.cfg_options or {}
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up integration."""
-    hass.data.setdefault(DOMAIN, IntegData(config.get(DOMAIN)))
-    return True
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up config entry."""
     hass.data.setdefault(DOMAIN, IntegData())
 
-    # Check if this entry was created when this was a "legacy" tracker. If it was,
-    # update with missing data.
-    if not entry.unique_id:
-        hass.config_entries.async_update_entry(
-            entry,
-            unique_id=entry.data[CONF_USERNAME].lower(),
-            options=DEFAULT_OPTIONS | hass.data[DOMAIN].cfg_options,
-        )
-
     coordinator = Life360DataUpdateCoordinator(hass, entry)
-
     await coordinator.async_config_entry_first_refresh()
-
     hass.data[DOMAIN].coordinators[entry.entry_id] = coordinator
 
     # Set up components for our platforms.
