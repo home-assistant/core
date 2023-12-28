@@ -71,14 +71,14 @@ def get_uv_label(uv_index: int) -> str:
     return label.value
 
 
-@dataclass
+@dataclass(frozen=True)
 class OpenUvSensorEntityDescriptionMixin:
     """Define a mixin for OpenUV sensor descriptions."""
 
     value_fn: Callable[[dict[str, Any]], int | str]
 
 
-@dataclass
+@dataclass(frozen=True)
 class OpenUvSensorEntityDescription(
     SensorEntityDescription, OpenUvSensorEntityDescriptionMixin
 ):

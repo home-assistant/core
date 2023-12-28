@@ -95,6 +95,8 @@ ENTITY_IDS_BY_NUMBER = {
     "24": "media_player.kitchen",
     "25": "light.office_rgbw_lights",
     "26": "light.living_room_rgbww_lights",
+    "27": "media_player.group",
+    "28": "media_player.browse",
 }
 
 ENTITY_NUMBERS_BY_ID = {v: k for k, v in ENTITY_IDS_BY_NUMBER.items()}

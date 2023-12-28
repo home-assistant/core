@@ -35,7 +35,6 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entity_entry_helper,
-    write_state_on_attr_change,
 )
 from .models import (
     MqttValueTemplate,
@@ -43,6 +42,7 @@ from .models import (
     ReceiveMessage,
     ReceivePayloadType,
 )
+from .util import get_mqtt_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,9 +120,15 @@ class MqttEvent(MqttEntity, EventEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, {"state"})
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
+            if msg.retain:
+                _LOGGER.debug(
+                    "Ignoring event trigger from replayed retained payload '%s' on topic %s",
+                    msg.payload,
+                    msg.topic,
+                )
+                return
             event_attributes: dict[str, Any] = {}
             event_type: str
             payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
@@ -183,6 +189,8 @@ class MqttEvent(MqttEntity, EventEntity):
                     payload,
                 )
                 return
+            mqtt_data = get_mqtt_data(self.hass)
+            mqtt_data.state_write_requests.write_state_request(self)
 
         topics["state_topic"] = {
             "topic": self._config[CONF_STATE_TOPIC],

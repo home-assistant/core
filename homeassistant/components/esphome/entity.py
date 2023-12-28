@@ -92,7 +92,7 @@ async def platform_async_setup_entry(
 
 
 def esphome_state_property(
-    func: Callable[[_EntityT], _R]
+    func: Callable[[_EntityT], _R],
 ) -> Callable[[_EntityT], _R | None]:
     """Wrap a state property of an esphome entity.
 

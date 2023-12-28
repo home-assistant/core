@@ -48,14 +48,14 @@ def get_modified_description(
     return desc, name
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class LidarrSensorEntityDescriptionMixIn(Generic[T]):
     """Mixin for required keys."""
 
     value_fn: Callable[[T, str], str | int]
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class LidarrSensorEntityDescription(
     SensorEntityDescription, LidarrSensorEntityDescriptionMixIn[T], Generic[T]
 ):

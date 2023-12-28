@@ -41,7 +41,7 @@ from .coordinator import UpnpDataUpdateCoordinator
 from .entity import UpnpEntity, UpnpEntityDescription
 
 
-@dataclass
+@dataclass(frozen=True)
 class UpnpSensorEntityDescription(UpnpEntityDescription, SensorEntityDescription):
     """A class that describes a sensor UPnP entities."""
 

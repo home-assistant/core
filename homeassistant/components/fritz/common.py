@@ -1092,14 +1092,14 @@ class FritzBoxBaseEntity:
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzRequireKeysMixin:
     """Fritz entity description mix in."""
 
     value_fn: Callable[[FritzStatus, Any], Any] | None
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzEntityDescription(EntityDescription, FritzRequireKeysMixin):
     """Fritz entity base description."""
 
