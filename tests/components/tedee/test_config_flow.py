@@ -88,29 +88,6 @@ async def test_flow(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
     }
 
 
-async def test_local_bridge_errors(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
-    """Test the config flow errors."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == FlowResultType.FORM
-
-    mock_tedee.get_local_bridge.side_effect = TedeeClientException("boom.")
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.42",
-            CONF_LOCAL_ACCESS_TOKEN: "token",
-        },
-    )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {CONF_HOST: "invalid_host"}
-    assert len(mock_tedee.get_locks.mock_calls) == 1
-
-
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
@@ -134,7 +111,7 @@ async def test_config_flow_errors(
 
     assert result["type"] == FlowResultType.FORM
 
-    mock_tedee.get_locks.side_effect = side_effect
+    mock_tedee.get_local_bridge.side_effect = side_effect
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -146,4 +123,4 @@ async def test_config_flow_errors(
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == error
-    assert len(mock_tedee.get_locks.mock_calls) == 1
+    assert len(mock_tedee.get_local_bridge.mock_calls) == 1

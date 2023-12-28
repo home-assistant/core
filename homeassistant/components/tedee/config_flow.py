@@ -10,52 +10,15 @@ from pytedee_async import (
 from pytedee_async.bridge import TedeeBridge
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
+from homeassistant import config_entries
+from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN, NAME
 
 
-async def validate_input(user_input: dict[str, Any]) -> bool:
-    """Validate the user input allows us to connect."""
-    pak = user_input.get(CONF_ACCESS_TOKEN, "")
-    host = user_input.get(CONF_HOST, "")
-    local_access_token = user_input.get(CONF_LOCAL_ACCESS_TOKEN, "")
-    tedee_client = TedeeClient(pak, local_access_token, host)
-
-    try:
-        await tedee_client.get_locks()
-    except (TedeeAuthException, TedeeLocalAuthException) as ex:
-        raise InvalidAuth from ex
-    except (TedeeClientException, Exception) as ex:
-        raise CannotConnect from ex
-    return True
-
-
-async def get_local_bridge(host: str, local_access_token: str) -> TedeeBridge:
-    """Get the serial number of the local bridge."""
-    tedee_client = TedeeClient(local_token=local_access_token, local_ip=host)
-    try:
-        return await tedee_client.get_local_bridge()
-    except (TedeeClientException, Exception) as ex:
-        raise CannotConnect from ex
-
-
 class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tedee."""
-
-    VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
-
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self._errors: dict = {}
-        self._reload: bool = False
-        self._previous_step_data: dict = {}
-        self._config: dict = {}
-        self._local_bridge_name: str = ""
-        self._bridges: list[TedeeBridge] = []
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -65,17 +28,19 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         local_bridge: TedeeBridge | None = None
 
         if user_input is not None:
+            host = user_input.get(CONF_HOST, "")
+            local_access_token = user_input.get(CONF_LOCAL_ACCESS_TOKEN, "")
+            tedee_client = TedeeClient(local_token=local_access_token, local_ip=host)
             try:
-                await validate_input(user_input)
-                local_bridge = await get_local_bridge(
-                    user_input[CONF_HOST], user_input[CONF_LOCAL_ACCESS_TOKEN]
-                )
+                local_bridge = await tedee_client.get_local_bridge()
+            except (TedeeAuthException, TedeeLocalAuthException):
+                errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_api_key"
+            except TedeeClientException:
+                errors[CONF_HOST] = "invalid_host"
+
+            if local_bridge:
                 await self.async_set_unique_id(local_bridge.serial)
                 self._abort_if_unique_id_configured()
-            except CannotConnect:
-                errors[CONF_HOST] = "invalid_host"
-            except InvalidAuth:
-                errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_api_key"
 
             if not errors:
                 return self.async_create_entry(title=NAME, data=user_input)
@@ -90,11 +55,3 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""

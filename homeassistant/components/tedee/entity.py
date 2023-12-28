@@ -1,6 +1,4 @@
 """Bases for Tedee entities."""
-from collections.abc import Callable
-from dataclasses import dataclass
 
 from pytedee_async.lock import TedeeLock
 
@@ -13,30 +11,23 @@ from .const import DOMAIN
 from .coordinator import TedeeApiCoordinator
 
 
-@dataclass(frozen=True, kw_only=True)
-class TedeeEntityDescription(EntityDescription):
-    """Describes Tedee entity."""
-
-    unique_id_fn: Callable[[TedeeLock], str]
-
-
 class TedeeEntity(CoordinatorEntity[TedeeApiCoordinator]):
     """Base class for Tedee entities."""
 
-    entity_description: TedeeEntityDescription
+    entity_description: EntityDescription
     _attr_has_entity_name = True
 
     def __init__(
         self,
         lock: TedeeLock,
         coordinator: TedeeApiCoordinator,
-        entity_description: TedeeEntityDescription,
+        entity_description: EntityDescription,
     ) -> None:
         """Initialize Tedee entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._lock = lock
-        self._attr_unique_id = self.entity_description.unique_id_fn(self._lock)
+        self._attr_unique_id = f"{lock.lock_id}-{entity_description.key}"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(lock.lock_id))},

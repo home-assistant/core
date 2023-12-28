@@ -33,10 +33,10 @@ async def test_lock(
     mock_tedee.unlock.return_value = None
     mock_tedee.open.return_value = None
 
-    state = hass.states.get("lock.lock_1a2b_lock")
+    state = hass.states.get("lock.lock_1a2b")
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Lock-1A2B Lock"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Lock-1A2B"
     assert state.state == STATE_UNLOCKED
 
     entry = entity_registry.async_get(state.entity_id)
@@ -58,14 +58,14 @@ async def test_lock(
         LOCK_DOMAIN,
         SERVICE_LOCK,
         {
-            ATTR_ENTITY_ID: "lock.lock_1a2b_lock",
+            ATTR_ENTITY_ID: "lock.lock_1a2b",
         },
         blocking=True,
     )
 
     assert len(mock_tedee.lock.mock_calls) == 1
     mock_tedee.lock.assert_called_once_with(12345)
-    state = hass.states.get("lock.lock_1a2b_lock")
+    state = hass.states.get("lock.lock_1a2b")
     assert state
     assert state.state == STATE_LOCKING
 
@@ -73,14 +73,14 @@ async def test_lock(
         LOCK_DOMAIN,
         SERVICE_UNLOCK,
         {
-            ATTR_ENTITY_ID: "lock.lock_1a2b_lock",
+            ATTR_ENTITY_ID: "lock.lock_1a2b",
         },
         blocking=True,
     )
 
     assert len(mock_tedee.unlock.mock_calls) == 1
     mock_tedee.unlock.assert_called_once_with(12345)
-    state = hass.states.get("lock.lock_1a2b_lock")
+    state = hass.states.get("lock.lock_1a2b")
     assert state
     assert state.state == STATE_UNLOCKING
 
@@ -88,14 +88,14 @@ async def test_lock(
         LOCK_DOMAIN,
         SERVICE_OPEN,
         {
-            ATTR_ENTITY_ID: "lock.lock_1a2b_lock",
+            ATTR_ENTITY_ID: "lock.lock_1a2b",
         },
         blocking=True,
     )
 
     assert len(mock_tedee.open.mock_calls) == 1
     mock_tedee.open.assert_called_once_with(12345)
-    state = hass.states.get("lock.lock_1a2b_lock")
+    state = hass.states.get("lock.lock_1a2b")
     assert state
     assert state.state == STATE_UNLOCKING
 
@@ -111,7 +111,7 @@ async def test_lock_errors(
             LOCK_DOMAIN,
             SERVICE_LOCK,
             {
-                ATTR_ENTITY_ID: "lock.lock_1a2b_lock",
+                ATTR_ENTITY_ID: "lock.lock_1a2b",
             },
             blocking=True,
         )
@@ -124,7 +124,7 @@ async def test_lock_errors(
             LOCK_DOMAIN,
             SERVICE_UNLOCK,
             {
-                ATTR_ENTITY_ID: "lock.lock_1a2b_lock",
+                ATTR_ENTITY_ID: "lock.lock_1a2b",
             },
             blocking=True,
         )
@@ -137,7 +137,7 @@ async def test_lock_errors(
             LOCK_DOMAIN,
             SERVICE_OPEN,
             {
-                ATTR_ENTITY_ID: "lock.lock_1a2b_lock",
+                ATTR_ENTITY_ID: "lock.lock_1a2b",
             },
             blocking=True,
         )
@@ -154,10 +154,10 @@ async def test_lock_without_pullspring(
     mock_tedee.unlock.return_value = None
     mock_tedee.open.return_value = None
 
-    state = hass.states.get("lock.lock_2c3d_lock")
+    state = hass.states.get("lock.lock_2c3d")
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Lock-2C3D Lock"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Lock-2C3D"
     assert state.state == STATE_UNLOCKED
 
     entry = entity_registry.async_get(state.entity_id)
@@ -177,13 +177,13 @@ async def test_lock_without_pullspring(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Entity lock.lock_2c3d_lock does not support this service.",
+        match="Entity lock.lock_2c3d does not support this service.",
     ):
         await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_OPEN,
             {
-                ATTR_ENTITY_ID: "lock.lock_2c3d_lock",
+                ATTR_ENTITY_ID: "lock.lock_2c3d",
             },
             blocking=True,
         )
