@@ -140,17 +140,17 @@ class Enigma2Device(MediaPlayerEntity):
         """Set volume level, range 0..1."""
         await self._device.set_volume(int(volume * 100))
 
-    def volume_up(self) -> None:
+    async def async_volume_up(self) -> None:
         """Volume up the media player."""
         if self._attr_volume_level is None:
             return
-        self._device.set_volume(int(self._attr_volume_level * 100) + 5)
+        await self._device.set_volume(int(self._attr_volume_level * 100) + 5)
 
-    def volume_down(self) -> None:
+    async def async_volume_down(self) -> None:
         """Volume down media player."""
         if self._attr_volume_level is None:
             return
-        self._device.set_volume(int(self._attr_volume_level * 100) - 5)
+        await self._device.set_volume(int(self._attr_volume_level * 100) - 5)
 
     async def async_media_stop(self) -> None:
         """Send stop command."""
