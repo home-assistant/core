@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -130,8 +131,10 @@ class Life360DataUpdateCoordinator(DataUpdateCoordinator[Life360Data]):
 
         for circle in await self._retrieve_data("get_circles"):
             circle_id = circle["id"]
-            circle_members = await self._retrieve_data("get_circle_members", circle_id)
-            circle_places = await self._retrieve_data("get_circle_places", circle_id)
+            circle_members, circle_places = await asyncio.gather(
+                self._retrieve_data("get_circle_members", circle_id),
+                self._retrieve_data("get_circle_places", circle_id),
+            )
 
             data.circles[circle_id] = Life360Circle(
                 circle["name"],

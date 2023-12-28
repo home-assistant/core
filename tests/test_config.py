@@ -1980,6 +1980,30 @@ async def test_core_config_schema_no_country(hass: HomeAssistant) -> None:
     assert issue
 
 
+@pytest.mark.parametrize(
+    ("config", "expected_issue"),
+    [
+        ({}, None),
+        ({"legacy_templates": True}, "legacy_templates_true"),
+        ({"legacy_templates": False}, "legacy_templates_false"),
+    ],
+)
+async def test_core_config_schema_legacy_template(
+    hass: HomeAssistant, config: dict[str, Any], expected_issue: str | None
+) -> None:
+    """Test legacy_template core config schema."""
+    await config_util.async_process_ha_core_config(hass, config)
+
+    issue_registry = ir.async_get(hass)
+    for issue_id in {"legacy_templates_true", "legacy_templates_false"}:
+        issue = issue_registry.async_get_issue("homeassistant", issue_id)
+        assert issue if issue_id == expected_issue else not issue
+
+    await config_util.async_process_ha_core_config(hass, {})
+    for issue_id in {"legacy_templates_true", "legacy_templates_false"}:
+        assert not issue_registry.async_get_issue("homeassistant", issue_id)
+
+
 async def test_core_store_no_country(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:

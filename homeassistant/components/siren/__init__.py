@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from functools import partial
 import logging
-from typing import Any, TypedDict, cast, final
+from typing import TYPE_CHECKING, Any, TypedDict, cast, final
 
 import voluptuous as vol
 
@@ -37,6 +37,11 @@ from .const import (  # noqa: F401
     DOMAIN,
     SirenEntityFeature,
 )
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -165,7 +170,13 @@ class SirenEntityDescription(ToggleEntityDescription, frozen_or_thawed=True):
     available_tones: list[int | str] | dict[int, str] | None = None
 
 
-class SirenEntity(ToggleEntity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "available_tones",
+    "supported_features",
+}
+
+
+class SirenEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a siren device."""
 
     _entity_component_unrecorded_attributes = frozenset({ATTR_AVAILABLE_TONES})
@@ -186,7 +197,7 @@ class SirenEntity(ToggleEntity):
 
         return None
 
-    @property
+    @cached_property
     def available_tones(self) -> list[int | str] | dict[int, str] | None:
         """Return a list of available tones.
 
@@ -198,7 +209,7 @@ class SirenEntity(ToggleEntity):
             return self.entity_description.available_tones
         return None
 
-    @property
+    @cached_property
     def supported_features(self) -> SirenEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features

@@ -1,6 +1,9 @@
 """Test the binary sensor platform of ping."""
+from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
+from icmplib import Host
 import pytest
 
 from homeassistant.components.device_tracker import legacy
@@ -11,7 +14,7 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml import dump
 
-from tests.common import MockConfigEntry, patch_yaml_files
+from tests.common import MockConfigEntry, async_fire_time_changed, patch_yaml_files
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -19,6 +22,7 @@ async def test_setup_and_update(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensor setup and update."""
 
@@ -42,8 +46,30 @@ async def test_setup_and_update(
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # check device tracker is now "home"
     state = hass.states.get("device_tracker.10_10_10_10")
+    assert state.state == "home"
+
+    with patch(
+        "homeassistant.components.ping.helpers.async_ping",
+        return_value=Host(address="10.10.10.10", packets_sent=10, rtts=[]),
+    ):
+        # we need to travel two times into the future to run the update twice
+        freezer.tick(timedelta(minutes=1, seconds=10))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        freezer.tick(timedelta(minutes=4, seconds=10))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert (state := hass.states.get("device_tracker.10_10_10_10"))
+    assert state.state == "not_home"
+
+    freezer.tick(timedelta(minutes=1, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("device_tracker.10_10_10_10"))
     assert state.state == "home"
 
 

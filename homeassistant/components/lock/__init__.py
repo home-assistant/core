@@ -6,7 +6,7 @@ from enum import IntFlag
 import functools as ft
 import logging
 import re
-from typing import Any, final
+from typing import TYPE_CHECKING, Any, final
 
 import voluptuous as vol
 
@@ -24,6 +24,7 @@ from homeassistant.const import (
     STATE_UNLOCKING,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -38,6 +39,11 @@ from homeassistant.helpers.deprecation import (
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,7 +119,18 @@ class LockEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes lock entities."""
 
 
-class LockEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "changed_by",
+    "code_format",
+    "is_locked",
+    "is_locking",
+    "is_unlocking",
+    "is_jammed",
+    "supported_features",
+}
+
+
+class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for lock entities."""
 
     entity_description: LockEntityDescription
@@ -136,19 +153,27 @@ class LockEntity(Entity):
         if not code:
             code = self._lock_option_default_code
         if self.code_format_cmp and not self.code_format_cmp.match(code):
-            raise ValueError(
-                f"Code '{code}' for locking {self.entity_id} doesn't match pattern {self.code_format}"
+            if TYPE_CHECKING:
+                assert self.code_format
+            raise ServiceValidationError(
+                f"The code for {self.entity_id} doesn't match pattern {self.code_format}",
+                translation_domain=DOMAIN,
+                translation_key="add_default_code",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "code_format": self.code_format,
+                },
             )
         if code:
             data[ATTR_CODE] = code
         return data
 
-    @property
+    @cached_property
     def changed_by(self) -> str | None:
         """Last change triggered by."""
         return self._attr_changed_by
 
-    @property
+    @cached_property
     def code_format(self) -> str | None:
         """Regex for code format or None if no code is required."""
         return self._attr_code_format
@@ -167,22 +192,22 @@ class LockEntity(Entity):
             self.__code_format_cmp = re.compile(self.code_format)
         return self.__code_format_cmp
 
-    @property
+    @cached_property
     def is_locked(self) -> bool | None:
         """Return true if the lock is locked."""
         return self._attr_is_locked
 
-    @property
+    @cached_property
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
         return self._attr_is_locking
 
-    @property
+    @cached_property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
         return self._attr_is_unlocking
 
-    @property
+    @cached_property
     def is_jammed(self) -> bool | None:
         """Return true if the lock is jammed (incomplete locking)."""
         return self._attr_is_jammed
@@ -250,7 +275,7 @@ class LockEntity(Entity):
             return None
         return STATE_LOCKED if locked else STATE_UNLOCKED
 
-    @property
+    @cached_property
     def supported_features(self) -> LockEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features

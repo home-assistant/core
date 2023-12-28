@@ -161,6 +161,7 @@ def _print_deprecation_warning(
         description,
         verb,
         breaks_in_ha_version,
+        log_when_no_integration_is_found=True,
     )
 
 
@@ -171,6 +172,8 @@ def _print_deprecation_warning_internal(
     description: str,
     verb: str,
     breaks_in_ha_version: str | None,
+    *,
+    log_when_no_integration_is_found: bool,
 ) -> None:
     logger = logging.getLogger(module_name)
     if breaks_in_ha_version:
@@ -180,13 +183,14 @@ def _print_deprecation_warning_internal(
     try:
         integration_frame = get_integration_frame()
     except MissingIntegrationFrame:
-        logger.warning(
-            "%s is a deprecated %s%s. Use %s instead",
-            obj_name,
-            description,
-            breaks_in,
-            replacement,
-        )
+        if log_when_no_integration_is_found:
+            logger.warning(
+                "%s is a deprecated %s%s. Use %s instead",
+                obj_name,
+                description,
+                breaks_in,
+                replacement,
+            )
     else:
         if integration_frame.custom_integration:
             hass: HomeAssistant | None = None
@@ -248,6 +252,7 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
     """
     module_name = module_globals.get("__name__")
     logger = logging.getLogger(module_name)
+    value = replacement = None
     if (deprecated_const := module_globals.get(_PREFIX_DEPRECATED + name)) is None:
         raise AttributeError(f"Module {module_name!r} has no attribute {name!r}")
     if isinstance(deprecated_const, DeprecatedConstant):
@@ -260,9 +265,22 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
             f"{deprecated_const.enum.__class__.__name__}.{deprecated_const.enum.name}"
         )
         breaks_in_ha_version = deprecated_const.breaks_in_ha_version
-    else:
+    elif isinstance(deprecated_const, tuple):
+        # Use DeprecatedConstant and DeprecatedConstant instead, where possible
+        # Used to avoid import cycles.
+        if len(deprecated_const) == 3:
+            value = deprecated_const[0]
+            replacement = deprecated_const[1]
+            breaks_in_ha_version = deprecated_const[2]
+        elif len(deprecated_const) == 2 and isinstance(deprecated_const[0], Enum):
+            enum = deprecated_const[0]
+            value = enum.value
+            replacement = f"{enum.__class__.__name__}.{enum.name}"
+            breaks_in_ha_version = deprecated_const[1]
+
+    if value is None or replacement is None:
         msg = (
-            f"Value of {_PREFIX_DEPRECATED}{name!r} is an instance of {type(deprecated_const)} "
+            f"Value of {_PREFIX_DEPRECATED}{name} is an instance of {type(deprecated_const)} "
             "but an instance of DeprecatedConstant or DeprecatedConstantEnum is required"
         )
 
@@ -280,6 +298,7 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
         "constant",
         "used",
         breaks_in_ha_version,
+        log_when_no_integration_is_found=False,
     )
     return value
 

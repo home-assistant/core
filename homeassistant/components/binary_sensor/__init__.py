@@ -5,7 +5,7 @@ from datetime import timedelta
 from enum import StrEnum
 from functools import partial
 import logging
-from typing import Literal, final
+from typing import TYPE_CHECKING, Literal, final
 
 import voluptuous as vol
 
@@ -26,7 +26,13 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
+
 _LOGGER = logging.getLogger(__name__)
+
 
 DOMAIN = "binary_sensor"
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -247,7 +253,13 @@ class BinarySensorEntityDescription(EntityDescription, frozen_or_thawed=True):
     device_class: BinarySensorDeviceClass | None = None
 
 
-class BinarySensorEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "device_class",
+    "is_on",
+}
+
+
+class BinarySensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Represent a binary sensor."""
 
     entity_description: BinarySensorEntityDescription
@@ -270,7 +282,7 @@ class BinarySensorEntity(Entity):
         """
         return self.device_class is not None
 
-    @property
+    @cached_property
     def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -279,7 +291,7 @@ class BinarySensorEntity(Entity):
             return self.entity_description.device_class
         return None
 
-    @property
+    @cached_property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self._attr_is_on

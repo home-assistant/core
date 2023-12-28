@@ -78,7 +78,7 @@ __dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 class NumberDeviceClass(StrEnum):
     """Device class for numbers."""
 
-    # NumberDeviceClass should be aligned with NumberDeviceClass
+    # NumberDeviceClass should be aligned with SensorDeviceClass
 
     APPARENT_POWER = "apparent_power"
     """Apparent power.
