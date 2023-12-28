@@ -65,11 +65,12 @@ class TessieEntity(CoordinatorEntity[TessieStateUpdateCoordinator]):
         except ClientResponseError as e:
             raise HomeAssistantError from e
         if response["result"] is False:
+            name: str = getattr(self, "name", self.entity_id)
             raise HomeAssistantError(
                 response["reason"].replace("_", " "),
                 translation_domain=DOMAIN,
                 translation_key=response["reason"].replace(" ", "_"),
-                translation_placeholders={"name": self.entity_id},
+                translation_placeholders={"name": name},
             )
 
     def set(self, *args: Any) -> None:
