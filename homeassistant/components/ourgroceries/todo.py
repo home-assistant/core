@@ -1,6 +1,7 @@
 """A todo platform for OurGroceries."""
 
 import asyncio
+from typing import Any
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -26,6 +27,12 @@ async def async_setup_entry(
         OurGroceriesTodoListEntity(coordinator, sl["id"], sl["name"])
         for sl in coordinator.lists
     )
+
+
+def _completion_status(item: dict[str, Any]) -> TodoItemStatus:
+    if item.get("crossedOffAt", False):
+        return TodoItemStatus.COMPLETED
+    return TodoItemStatus.NEEDS_ACTION
 
 
 class OurGroceriesTodoListEntity(
@@ -58,12 +65,6 @@ class OurGroceriesTodoListEntity(
         if self.coordinator.data is None:
             self._attr_todo_items = None
         else:
-
-            def _completion_status(item):
-                if item.get("crossedOffAt", False):
-                    return TodoItemStatus.COMPLETED
-                return TodoItemStatus.NEEDS_ACTION
-
             self._attr_todo_items = [
                 TodoItem(
                     summary=item["name"],
@@ -88,7 +89,7 @@ class OurGroceriesTodoListEntity(
         if item.summary:
             api_items = self.coordinator.data[self._list_id]["list"]["items"]
             category = next(
-                api_item["categoryId"]
+                api_item.get("categoryId")
                 for api_item in api_items
                 if api_item["id"] == item.uid
             )

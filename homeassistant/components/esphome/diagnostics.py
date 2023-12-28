@@ -32,12 +32,13 @@ async def async_get_config_entry_diagnostics(
 
     if (
         config_entry.unique_id
-        and (scanner := async_scanner_by_source(hass, config_entry.unique_id))
+        and (scanner := async_scanner_by_source(hass, config_entry.unique_id.upper()))
         and (bluetooth_device := entry_data.bluetooth_device)
     ):
         diag["bluetooth"] = {
             "connections_free": bluetooth_device.ble_connections_free,
             "connections_limit": bluetooth_device.ble_connections_limit,
+            "available": bluetooth_device.available,
             "scanner": await scanner.async_diagnostics(),
         }
 

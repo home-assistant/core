@@ -7,12 +7,12 @@ import logging
 from airthings import Airthings, AirthingsError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_ID, CONF_SECRET, DOMAIN
+from .const import CONF_SECRET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

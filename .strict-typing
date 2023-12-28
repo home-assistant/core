@@ -43,11 +43,14 @@ homeassistant.components.abode.*
 homeassistant.components.accuweather.*
 homeassistant.components.acer_projector.*
 homeassistant.components.actiontec.*
+homeassistant.components.adax.*
 homeassistant.components.adguard.*
 homeassistant.components.aftership.*
 homeassistant.components.air_quality.*
 homeassistant.components.airly.*
+homeassistant.components.airnow.*
 homeassistant.components.airvisual.*
+homeassistant.components.airvisual_pro.*
 homeassistant.components.airzone.*
 homeassistant.components.airzone_cloud.*
 homeassistant.components.aladdin_connect.*
@@ -59,10 +62,14 @@ homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
 homeassistant.components.analytics.*
+homeassistant.components.android_ip_webcam.*
+homeassistant.components.androidtv_remote.*
 homeassistant.components.anova.*
 homeassistant.components.anthemav.*
 homeassistant.components.apcupsd.*
+homeassistant.components.apprise.*
 homeassistant.components.aqualogic.*
+homeassistant.components.aranet.*
 homeassistant.components.aseko_pool_live.*
 homeassistant.components.assist_pipeline.*
 homeassistant.components.asuswrt.*
@@ -75,6 +82,7 @@ homeassistant.components.bayesian.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bitcoin.*
 homeassistant.components.blockchain.*
+homeassistant.components.blue_current.*
 homeassistant.components.bluetooth.*
 homeassistant.components.bluetooth_tracker.*
 homeassistant.components.bmw_connected_drive.*
@@ -117,9 +125,12 @@ homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
 homeassistant.components.emulated_hue.*
 homeassistant.components.energy.*
+homeassistant.components.enigma2.*
 homeassistant.components.esphome.*
 homeassistant.components.event.*
 homeassistant.components.evil_genius_labs.*
+homeassistant.components.evohome.*
+homeassistant.components.faa_delays.*
 homeassistant.components.fan.*
 homeassistant.components.fastdotcom.*
 homeassistant.components.feedreader.*
@@ -127,6 +138,7 @@ homeassistant.components.file_upload.*
 homeassistant.components.filesize.*
 homeassistant.components.filter.*
 homeassistant.components.fitbit.*
+homeassistant.components.flexit_bacnet.*
 homeassistant.components.flux_led.*
 homeassistant.components.forecast_solar.*
 homeassistant.components.fritz.*
@@ -150,6 +162,7 @@ homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
 homeassistant.components.here_travel_time.*
 homeassistant.components.history.*
+homeassistant.components.holiday.*
 homeassistant.components.homeassistant.exposed_entities
 homeassistant.components.homeassistant.triggers.event
 homeassistant.components.homeassistant_alerts.*
@@ -228,6 +241,7 @@ homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
 homeassistant.components.moon.*
 homeassistant.components.mopeka.*
+homeassistant.components.motionmount.*
 homeassistant.components.mqtt.*
 homeassistant.components.mysensors.*
 homeassistant.components.nam.*
@@ -264,6 +278,7 @@ homeassistant.components.proximity.*
 homeassistant.components.prusalink.*
 homeassistant.components.pure_energie.*
 homeassistant.components.purpleair.*
+homeassistant.components.pushbullet.*
 homeassistant.components.pvoutput.*
 homeassistant.components.qnap_qsw.*
 homeassistant.components.radarr.*
@@ -313,6 +328,8 @@ homeassistant.components.statistics.*
 homeassistant.components.steamist.*
 homeassistant.components.stookalert.*
 homeassistant.components.stream.*
+homeassistant.components.streamlabswater.*
+homeassistant.components.suez_water.*
 homeassistant.components.sun.*
 homeassistant.components.surepetcare.*
 homeassistant.components.switch.*
@@ -323,6 +340,7 @@ homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*
 homeassistant.components.tag.*
 homeassistant.components.tailscale.*
+homeassistant.components.tailwind.*
 homeassistant.components.tami4.*
 homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
@@ -353,6 +371,7 @@ homeassistant.components.uptimerobot.*
 homeassistant.components.usb.*
 homeassistant.components.vacuum.*
 homeassistant.components.vallox.*
+homeassistant.components.valve.*
 homeassistant.components.velbus.*
 homeassistant.components.vlc_telnet.*
 homeassistant.components.wake_on_lan.*

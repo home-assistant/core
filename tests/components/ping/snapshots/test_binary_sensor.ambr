@@ -72,7 +72,7 @@
     'domain': 'binary_sensor',
     'entity_category': None,
     'entity_id': 'binary_sensor.10_10_10_10',
-    'has_entity_name': True,
+    'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -81,7 +81,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': '10.10.10.10',
     'platform': 'ping',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -90,34 +90,6 @@
   })
 # ---
 # name: test_setup_and_update.1
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'ping',
-        '10.10.10.10',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'Ping',
-    'model': None,
-    'name': '10.10.10.10',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_setup_and_update.2
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
@@ -134,7 +106,7 @@
     'state': 'on',
   })
 # ---
-# name: test_setup_and_update.3
+# name: test_setup_and_update.2
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',

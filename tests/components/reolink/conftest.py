@@ -6,7 +6,13 @@ import pytest
 
 from homeassistant.components.reolink import const
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_PROTOCOL,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
@@ -25,6 +31,8 @@ TEST_PORT = 1234
 TEST_NVR_NAME = "test_reolink_name"
 TEST_NVR_NAME2 = "test2_reolink_name"
 TEST_USE_HTTPS = True
+TEST_HOST_MODEL = "RLN8-410"
+TEST_CAM_MODEL = "RLC-123"
 
 
 @pytest.fixture
@@ -70,8 +78,8 @@ def reolink_connect_class(
         host_mock.hardware_version = "IPC_00000"
         host_mock.sw_version = "v1.0.0.0.0.0000"
         host_mock.manufacturer = "Reolink"
-        host_mock.model = "RLC-123"
-        host_mock.camera_model.return_value = "RLC-123"
+        host_mock.model = TEST_HOST_MODEL
+        host_mock.camera_model.return_value = TEST_CAM_MODEL
         host_mock.camera_name.return_value = TEST_NVR_NAME
         host_mock.camera_sw_version.return_value = "v1.1.0.0.0.0000"
         host_mock.session_active = True
@@ -119,7 +127,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
             const.CONF_USE_HTTPS: TEST_USE_HTTPS,
         },
         options={
-            const.CONF_PROTOCOL: DEFAULT_PROTOCOL,
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
         },
         title=TEST_NVR_NAME,
     )

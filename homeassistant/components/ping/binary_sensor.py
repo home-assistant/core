@@ -18,11 +18,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PingDomainData
 from .const import CONF_IMPORTED_BY, CONF_PING_COUNT, DEFAULT_PING_COUNT, DOMAIN
 from .coordinator import PingUpdateCoordinator
-from .entity import BasePingEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,16 +84,20 @@ async def async_setup_entry(
     async_add_entities([PingBinarySensor(entry, data.coordinators[entry.entry_id])])
 
 
-class PingBinarySensor(BasePingEntity, BinarySensorEntity):
+class PingBinarySensor(CoordinatorEntity[PingUpdateCoordinator], BinarySensorEntity):
     """Representation of a Ping Binary sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    _attr_available = False
 
     def __init__(
         self, config_entry: ConfigEntry, coordinator: PingUpdateCoordinator
     ) -> None:
         """Initialize the Ping Binary sensor."""
-        super().__init__(config_entry, coordinator)
+        super().__init__(coordinator)
+
+        self._attr_name = config_entry.title
+        self._attr_unique_id = config_entry.entry_id
 
         # if this was imported just enable it when it was enabled before
         if CONF_IMPORTED_BY in config_entry.data:
@@ -108,7 +112,7 @@ class PingBinarySensor(BasePingEntity, BinarySensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes of the ICMP echo request."""
+        """Return the state attributes of the ICMP checo request."""
         if self.coordinator.data.data is None:
             return None
         return {

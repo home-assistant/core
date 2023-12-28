@@ -250,11 +250,12 @@ async def test_block_sleeping_device_no_periodic_updates(
 
 
 async def test_block_device_push_updates_failure(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant,
+    mock_block_device,
+    monkeypatch,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test block device with push updates failure."""
-    issue_registry: ir.IssueRegistry = ir.async_get(hass)
-
     await init_integration(hass, 1)
 
     # Updates with COAP_REPLAY type should create an issue

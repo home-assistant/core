@@ -160,6 +160,16 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         # Keep track of the previous action-mode
         self._previous_action_mode(self.coordinator)
 
+        # Adam provides the hvac_action for each thermostat
+        if (control_state := self.device.get("control_state")) == "cooling":
+            return HVACAction.COOLING
+        if control_state == "heating":
+            return HVACAction.HEATING
+        if control_state == "preheating":
+            return HVACAction.PREHEATING
+        if control_state == "off":
+            return HVACAction.IDLE
+
         heater: str = self.coordinator.data.gateway["heater_id"]
         heater_data = self.coordinator.data.devices[heater]
         if heater_data["binary_sensors"]["heating_state"]:

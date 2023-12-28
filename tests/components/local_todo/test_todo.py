@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 import textwrap
+from typing import Any
 
 import pytest
 
@@ -58,11 +59,42 @@ async def ws_move_item(
     return move
 
 
+@pytest.fixture(autouse=True)
+def set_time_zone(hass: HomeAssistant) -> None:
+    """Set the time zone for the tests that keesp UTC-6 all year round."""
+    hass.config.set_time_zone("America/Regina")
+
+
+EXPECTED_ADD_ITEM = {
+    "status": "needs_action",
+    "summary": "replace batteries",
+}
+
+
+@pytest.mark.parametrize(
+    ("item_data", "expected_item_data"),
+    [
+        ({}, EXPECTED_ADD_ITEM),
+        ({"due_date": "2023-11-17"}, {**EXPECTED_ADD_ITEM, "due": "2023-11-17"}),
+        (
+            {"due_datetime": "2023-11-17T11:30:00+00:00"},
+            {**EXPECTED_ADD_ITEM, "due": "2023-11-17T05:30:00-06:00"},
+        ),
+        (
+            {"description": "Additional detail"},
+            {**EXPECTED_ADD_ITEM, "description": "Additional detail"},
+        ),
+        ({"description": ""}, {**EXPECTED_ADD_ITEM, "description": ""}),
+        ({"description": None}, EXPECTED_ADD_ITEM),
+    ],
+)
 async def test_add_item(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     setup_integration: None,
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    item_data: dict[str, Any],
+    expected_item_data: dict[str, Any],
 ) -> None:
     """Test adding a todo item."""
 
@@ -73,32 +105,47 @@ async def test_add_item(
     await hass.services.async_call(
         TODO_DOMAIN,
         "add_item",
-        {"item": "replace batteries"},
+        {"item": "replace batteries", **item_data},
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
 
     items = await ws_get_items()
     assert len(items) == 1
-    assert items[0]["summary"] == "replace batteries"
-    assert items[0]["status"] == "needs_action"
-    assert "uid" in items[0]
+    item_data = items[0]
+    assert "uid" in item_data
+    del item_data["uid"]
+    assert item_data == expected_item_data
 
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert state.state == "1"
 
 
+@pytest.mark.parametrize(
+    ("item_data", "expected_item_data"),
+    [
+        ({}, {}),
+        ({"due_date": "2023-11-17"}, {"due": "2023-11-17"}),
+        (
+            {"due_datetime": "2023-11-17T11:30:00+00:00"},
+            {"due": "2023-11-17T05:30:00-06:00"},
+        ),
+        ({"description": "Additional detail"}, {"description": "Additional detail"}),
+    ],
+)
 async def test_remove_item(
     hass: HomeAssistant,
     setup_integration: None,
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    item_data: dict[str, Any],
+    expected_item_data: dict[str, Any],
 ) -> None:
     """Test removing a todo item."""
     await hass.services.async_call(
         TODO_DOMAIN,
         "add_item",
-        {"item": "replace batteries"},
+        {"item": "replace batteries", **item_data},
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
@@ -107,6 +154,8 @@ async def test_remove_item(
     assert len(items) == 1
     assert items[0]["summary"] == "replace batteries"
     assert items[0]["status"] == "needs_action"
+    for k, v in expected_item_data.items():
+        assert items[0][k] == v
     assert "uid" in items[0]
 
     state = hass.states.get(TEST_ENTITY)
@@ -168,10 +217,40 @@ async def test_bulk_remove(
     assert state.state == "0"
 
 
+EXPECTED_UPDATE_ITEM = {
+    "status": "needs_action",
+    "summary": "soda",
+}
+
+
+@pytest.mark.parametrize(
+    ("item_data", "expected_item_data", "expected_state"),
+    [
+        ({"status": "completed"}, {**EXPECTED_UPDATE_ITEM, "status": "completed"}, "0"),
+        (
+            {"due_date": "2023-11-17"},
+            {**EXPECTED_UPDATE_ITEM, "due": "2023-11-17"},
+            "1",
+        ),
+        (
+            {"due_datetime": "2023-11-17T11:30:00+00:00"},
+            {**EXPECTED_UPDATE_ITEM, "due": "2023-11-17T05:30:00-06:00"},
+            "1",
+        ),
+        (
+            {"description": "Additional detail"},
+            {**EXPECTED_UPDATE_ITEM, "description": "Additional detail"},
+            "1",
+        ),
+    ],
+)
 async def test_update_item(
     hass: HomeAssistant,
     setup_integration: None,
     ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    item_data: dict[str, Any],
+    expected_item_data: dict[str, Any],
+    expected_state: str,
 ) -> None:
     """Test updating a todo item."""
 
@@ -187,6 +266,7 @@ async def test_update_item(
     # Fetch item
     items = await ws_get_items()
     assert len(items) == 1
+
     item = items[0]
     assert item["summary"] == "soda"
     assert item["status"] == "needs_action"
@@ -195,25 +275,142 @@ async def test_update_item(
     assert state
     assert state.state == "1"
 
-    # Mark item completed
+    # Update item
     await hass.services.async_call(
         TODO_DOMAIN,
         "update_item",
-        {"item": item["uid"], "status": "completed"},
+        {"item": item["uid"], **item_data},
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
 
-    # Verify item is marked as completed
+    # Verify item is updated
     items = await ws_get_items()
     assert len(items) == 1
     item = items[0]
     assert item["summary"] == "soda"
-    assert item["status"] == "completed"
+    assert "uid" in item
+    del item["uid"]
+    assert item == expected_item_data
 
     state = hass.states.get(TEST_ENTITY)
     assert state
-    assert state.state == "0"
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("item_data", "expected_item_data"),
+    [
+        (
+            {"status": "completed"},
+            {
+                "summary": "soda",
+                "status": "completed",
+                "description": "Additional detail",
+                "due": "2024-01-01",
+            },
+        ),
+        (
+            {"due_date": "2024-01-02"},
+            {
+                "summary": "soda",
+                "status": "needs_action",
+                "description": "Additional detail",
+                "due": "2024-01-02",
+            },
+        ),
+        (
+            {"due_date": None},
+            {
+                "summary": "soda",
+                "status": "needs_action",
+                "description": "Additional detail",
+            },
+        ),
+        (
+            {"due_datetime": "2024-01-01 10:30:00"},
+            {
+                "summary": "soda",
+                "status": "needs_action",
+                "description": "Additional detail",
+                "due": "2024-01-01T10:30:00-06:00",
+            },
+        ),
+        (
+            {"due_datetime": None},
+            {
+                "summary": "soda",
+                "status": "needs_action",
+                "description": "Additional detail",
+            },
+        ),
+        (
+            {"description": "updated description"},
+            {
+                "summary": "soda",
+                "status": "needs_action",
+                "due": "2024-01-01",
+                "description": "updated description",
+            },
+        ),
+        (
+            {"description": None},
+            {"summary": "soda", "status": "needs_action", "due": "2024-01-01"},
+        ),
+    ],
+    ids=[
+        "status",
+        "due_date",
+        "clear_due_date",
+        "due_datetime",
+        "clear_due_datetime",
+        "description",
+        "clear_description",
+    ],
+)
+async def test_update_existing_field(
+    hass: HomeAssistant,
+    setup_integration: None,
+    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    item_data: dict[str, Any],
+    expected_item_data: dict[str, Any],
+) -> None:
+    """Test updating a todo item."""
+
+    # Create new item
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "add_item",
+        {"item": "soda", "description": "Additional detail", "due_date": "2024-01-01"},
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+    )
+
+    # Fetch item
+    items = await ws_get_items()
+    assert len(items) == 1
+
+    item = items[0]
+    assert item["summary"] == "soda"
+    assert item["status"] == "needs_action"
+
+    # Perform update
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "update_item",
+        {"item": item["uid"], **item_data},
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+    )
+
+    # Verify item is updated
+    items = await ws_get_items()
+    assert len(items) == 1
+    item = items[0]
+    assert item["summary"] == "soda"
+    assert "uid" in item
+    del item["uid"]
+    assert item == expected_item_data
 
 
 async def test_rename(
@@ -445,3 +642,64 @@ async def test_parse_existing_ics(
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert state.state == expected_state
+
+
+async def test_susbcribe(
+    hass: HomeAssistant,
+    setup_integration: None,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test subscribing to item updates."""
+
+    # Create new item
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "add_item",
+        {"item": "soda"},
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+    )
+
+    # Subscribe and get the initial list
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "todo/item/subscribe",
+            "entity_id": TEST_ENTITY,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+    subscription_id = msg["id"]
+
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    items = msg["event"].get("items")
+    assert items
+    assert len(items) == 1
+    assert items[0]["summary"] == "soda"
+    assert items[0]["status"] == "needs_action"
+    uid = items[0]["uid"]
+    assert uid
+
+    # Rename item
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "update_item",
+        {"item": uid, "rename": "milk"},
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+    )
+
+    # Verify update is published
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    items = msg["event"].get("items")
+    assert items
+    assert len(items) == 1
+    assert items[0]["summary"] == "milk"
+    assert items[0]["status"] == "needs_action"
+    assert "uid" in items[0]

@@ -32,7 +32,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform
 
-from . import config_per_platform, config_validation as cv, discovery, entity, service
+from . import config_validation as cv, discovery, entity, service
 from .entity_platform import EntityPlatform
 from .typing import ConfigType, DiscoveryInfoType
 
@@ -148,7 +148,7 @@ class EntityComponent(Generic[_EntityT]):
         self.config = config
 
         # Look in config for Domain, Domain 2, Domain 3 etc and load them
-        for p_type, p_config in config_per_platform(config, self.domain):
+        for p_type, p_config in conf_util.config_per_platform(config, self.domain):
             if p_type is not None:
                 self.hass.async_create_task(
                     self.async_setup_platform(p_type, p_config),

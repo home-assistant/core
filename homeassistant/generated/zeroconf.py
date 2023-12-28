@@ -364,6 +364,11 @@ ZEROCONF = {
             "domain": "forked_daapd",
         },
     ],
+    "_devialet-http._tcp.local.": [
+        {
+            "domain": "devialet",
+        },
+    ],
     "_dkapi._tcp.local.": [
         {
             "domain": "daikin",
@@ -487,6 +492,12 @@ ZEROCONF = {
             "domain": "synology_dsm",
             "properties": {
                 "vendor": "synology*",
+            },
+        },
+        {
+            "domain": "tailwind",
+            "properties": {
+                "vendor": "tailwind",
             },
         },
     ],
@@ -694,6 +705,11 @@ ZEROCONF = {
             "domain": "apple_tv",
         },
     ],
+    "_tvm._tcp.local.": [
+        {
+            "domain": "motionmount",
+        },
+    ],
     "_uzg-01._tcp.local.": [
         {
             "domain": "zha",
@@ -708,6 +724,11 @@ ZEROCONF = {
     "_wled._tcp.local.": [
         {
             "domain": "wled",
+        },
+    ],
+    "_wyoming._tcp.local.": [
+        {
+            "domain": "wyoming",
         },
     ],
     "_xbmc-jsonrpc-h._tcp.local.": [

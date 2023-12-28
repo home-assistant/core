@@ -30,11 +30,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import (
-    config_per_platform,
-    config_validation as cv,
-    entity_platform,
-)
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback, EntityPlatform
 from homeassistant.helpers.service import (
     async_extract_entity_ids,
@@ -208,7 +204,7 @@ async def async_setup_platform(
         await platform.async_reset()
 
         # Extract only the config for the Home Assistant platform, ignore the rest.
-        for p_type, p_config in config_per_platform(conf, SCENE_DOMAIN):
+        for p_type, p_config in conf_util.config_per_platform(conf, SCENE_DOMAIN):
             if p_type != HA_DOMAIN:
                 continue
 

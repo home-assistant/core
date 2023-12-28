@@ -60,7 +60,10 @@ class FitbitOAuth2Implementation(AuthImplementation):
             resp.raise_for_status()
         except aiohttp.ClientResponseError as err:
             if _LOGGER.isEnabledFor(logging.DEBUG):
-                error_body = await resp.text() if not session.closed else ""
+                try:
+                    error_body = await resp.text()
+                except aiohttp.ClientError:
+                    error_body = ""
                 _LOGGER.debug(
                     "Client response error status=%s, body=%s", err.status, error_body
                 )

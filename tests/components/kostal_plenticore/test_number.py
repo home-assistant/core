@@ -23,9 +23,9 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 @pytest.fixture
 def mock_plenticore_client() -> Generator[ApiClient, None, None]:
-    """Return a patched ApiClient."""
+    """Return a patched ExtendedApiClient."""
     with patch(
-        "homeassistant.components.kostal_plenticore.helper.ApiClient",
+        "homeassistant.components.kostal_plenticore.helper.ExtendedApiClient",
         autospec=True,
     ) as plenticore_client_class:
         yield plenticore_client_class.return_value
@@ -41,39 +41,33 @@ def mock_get_setting_values(mock_plenticore_client: ApiClient) -> list:
     mock_plenticore_client.get_settings.return_value = {
         "devices:local": [
             SettingsData(
-                {
-                    "default": None,
-                    "min": 5,
-                    "max": 100,
-                    "access": "readwrite",
-                    "unit": "%",
-                    "type": "byte",
-                    "id": "Battery:MinSoc",
-                }
+                min="5",
+                max="100",
+                default=None,
+                access="readwrite",
+                unit="%",
+                id="Battery:MinSoc",
+                type="byte",
             ),
             SettingsData(
-                {
-                    "default": None,
-                    "min": 50,
-                    "max": 38000,
-                    "access": "readwrite",
-                    "unit": "W",
-                    "type": "byte",
-                    "id": "Battery:MinHomeComsumption",
-                }
+                min="50",
+                max="38000",
+                default=None,
+                access="readwrite",
+                unit="W",
+                id="Battery:MinHomeComsumption",
+                type="byte",
             ),
         ],
         "scb:network": [
             SettingsData(
-                {
-                    "min": "1",
-                    "default": None,
-                    "access": "readwrite",
-                    "unit": None,
-                    "id": "Hostname",
-                    "type": "string",
-                    "max": "63",
-                }
+                min="1",
+                max="63",
+                default=None,
+                access="readwrite",
+                unit=None,
+                id="Hostname",
+                type="string",
             )
         ],
     }
@@ -129,15 +123,13 @@ async def test_setup_no_entries(
     mock_plenticore_client.get_settings.return_value = {
         "scb:network": [
             SettingsData(
-                {
-                    "min": "1",
-                    "default": None,
-                    "access": "readwrite",
-                    "unit": None,
-                    "id": "Hostname",
-                    "type": "string",
-                    "max": "63",
-                }
+                min="1",
+                max="63",
+                default=None,
+                access="readwrite",
+                unit=None,
+                id="Hostname",
+                type="string",
             )
         ],
     }
