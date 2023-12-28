@@ -1,11 +1,7 @@
 """Tests for tedee lock."""
 from unittest.mock import MagicMock
 
-from pytedee_async.exception import (
-    TedeeClientException,
-    TedeeDataUpdateException,
-    TedeeLocalAuthException,
-)
+from pytedee_async.exception import TedeeClientException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -21,11 +17,8 @@ from homeassistant.components.lock import (
 from homeassistant.components.tedee.const import DOMAIN
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.update_coordinator import UpdateFailed
-
-from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -189,59 +182,3 @@ async def test_lock_without_pullspring(
         )
 
     assert len(mock_tedee.open.mock_calls) == 0
-
-
-@pytest.mark.parametrize(
-    ("side_effect", "result_exception", "reason"),
-    [
-        (
-            TedeeClientException("Boom."),
-            UpdateFailed,
-            "Querying API failed. Error: Boom.",
-        ),
-        (
-            TedeeLocalAuthException(""),
-            ConfigEntryError,
-            "Authentication failed. Local access token is invalid",
-        ),
-        (
-            TedeeDataUpdateException("Boom."),
-            UpdateFailed,
-            "Error while updating data: Boom.",
-        ),
-        (TimeoutError("Boom."), UpdateFailed, "Querying API failed. Error: Boom."),
-    ],
-)
-async def test_coordinator_data_update_failures(
-    hass: HomeAssistant,
-    mock_tedee: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    side_effect: Exception,
-    result_exception: type,
-    reason: str,
-) -> None:
-    """Test coordinator data update fails."""
-    mock_tedee.sync.side_effect = side_effect
-    coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
-
-    with pytest.raises(result_exception) as exc:
-        await coordinator._async_update_data()
-    assert str(exc.value) == reason
-
-    mock_tedee.get_locks.side_effect = side_effect
-    with pytest.raises(result_exception) as exc:
-        await coordinator._async_update_data()
-    assert str(exc.value) == reason
-
-
-async def test_coordinator_no_locks(
-    hass: HomeAssistant,
-    mock_tedee: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test coordinator no locks."""
-    mock_tedee.locks_dict = {}
-    coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
-    with pytest.raises(UpdateFailed) as exc:
-        await coordinator._async_update_data()
-    assert str(exc.value) == "No locks found in your account"
