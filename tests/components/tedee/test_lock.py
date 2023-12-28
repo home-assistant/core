@@ -47,9 +47,7 @@ async def test_lock(
     assert state.state == STATE_UNLOCKED
 
     entry = entity_registry.async_get(state.entity_id)
-    assert entry
-    assert entry.device_id
-    assert entry.unique_id == "12345-lock"
+    assert entry == snapshot
 
     device = device_registry.async_get(entry.device_id)
     assert device == snapshot
