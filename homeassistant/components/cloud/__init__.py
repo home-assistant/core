@@ -63,7 +63,7 @@ from .subscription import async_subscription_info
 
 DEFAULT_MODE = MODE_PROD
 
-PLATFORMS = [Platform.STT]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.STT]
 
 SERVICE_REMOTE_CONNECT = "remote_connect"
 SERVICE_REMOTE_DISCONNECT = "remote_disconnect"
@@ -284,7 +284,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         tts_info = {"platform_loaded": tts_platform_loaded}
 
-        await async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
         await async_load_platform(hass, Platform.TTS, DOMAIN, tts_info, config)
         await tts_platform_loaded.wait()
 

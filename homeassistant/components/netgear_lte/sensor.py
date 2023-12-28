@@ -1,92 +1,101 @@
 """Support for Netgear LTE sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.const import CONF_MONITORED_CONDITIONS
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfInformation,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import StateType
 
-from .const import CONF_SENSOR, DOMAIN
+from . import ModemData
+from .const import DOMAIN
 from .entity import LTEEntity
-from .sensor_types import SENSOR_SMS, SENSOR_SMS_TOTAL, SENSOR_UNITS, SENSOR_USAGE
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+@dataclass(frozen=True, kw_only=True)
+class NetgearLTESensorEntityDescription(SensorEntityDescription):
+    """Class describing Netgear LTE entities."""
+
+    value_fn: Callable[[ModemData], StateType] | None = None
+
+
+SENSORS: tuple[NetgearLTESensorEntityDescription, ...] = (
+    NetgearLTESensorEntityDescription(
+        key="sms",
+        native_unit_of_measurement="unread",
+        value_fn=lambda modem_data: sum(1 for x in modem_data.data.sms if x.unread),
+    ),
+    NetgearLTESensorEntityDescription(
+        key="sms_total",
+        native_unit_of_measurement="messages",
+        value_fn=lambda modem_data: len(modem_data.data.sms),
+    ),
+    NetgearLTESensorEntityDescription(
+        key="usage",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        value_fn=lambda modem_data: round(modem_data.data.usage / 1024**2, 1),
+    ),
+    NetgearLTESensorEntityDescription(
+        key="radio_quality",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    NetgearLTESensorEntityDescription(
+        key="rx_level",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    ),
+    NetgearLTESensorEntityDescription(
+        key="tx_level",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    ),
+    NetgearLTESensorEntityDescription(key="upstream"),
+    NetgearLTESensorEntityDescription(key="connection_text"),
+    NetgearLTESensorEntityDescription(key="connection_type"),
+    NetgearLTESensorEntityDescription(key="current_ps_service_type"),
+    NetgearLTESensorEntityDescription(key="register_network_display"),
+    NetgearLTESensorEntityDescription(key="current_band"),
+    NetgearLTESensorEntityDescription(key="cell_id"),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up Netgear LTE sensor devices."""
-    if discovery_info is None:
-        return
+    """Set up the Netgear LTE sensor."""
+    modem_data = hass.data[DOMAIN].get_modem_data(entry.data)
 
-    modem_data = hass.data[DOMAIN].get_modem_data(discovery_info)
-
-    if not modem_data or not modem_data.data:
-        raise PlatformNotReady
-
-    sensor_conf = discovery_info[CONF_SENSOR]
-    monitored_conditions = sensor_conf[CONF_MONITORED_CONDITIONS]
-
-    sensors: list[SensorEntity] = []
-    for sensor_type in monitored_conditions:
-        if sensor_type == SENSOR_SMS:
-            sensors.append(SMSUnreadSensor(modem_data, sensor_type))
-        elif sensor_type == SENSOR_SMS_TOTAL:
-            sensors.append(SMSTotalSensor(modem_data, sensor_type))
-        elif sensor_type == SENSOR_USAGE:
-            sensors.append(UsageSensor(modem_data, sensor_type))
-        else:
-            sensors.append(GenericSensor(modem_data, sensor_type))
-
-    async_add_entities(sensors)
+    async_add_entities(NetgearLTESensor(modem_data, sensor) for sensor in SENSORS)
 
 
-class LTESensor(LTEEntity, SensorEntity):
+class NetgearLTESensor(LTEEntity, SensorEntity):
     """Base LTE sensor entity."""
 
+    entity_description: NetgearLTESensorEntityDescription
+
+    def __init__(
+        self,
+        modem_data: ModemData,
+        entity_description: NetgearLTESensorEntityDescription,
+    ) -> None:
+        """Initialize a Netgear LTE sensor entity."""
+        super().__init__(modem_data, entity_description.key)
+        self.entity_description = entity_description
+
     @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return SENSOR_UNITS[self.sensor_type]
-
-
-class SMSUnreadSensor(LTESensor):
-    """Unread SMS sensor entity."""
-
-    @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return sum(1 for x in self.modem_data.data.sms if x.unread)
-
-
-class SMSTotalSensor(LTESensor):
-    """Total SMS sensor entity."""
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return len(self.modem_data.data.sms)
-
-
-class UsageSensor(LTESensor):
-    """Data usage sensor entity."""
-
-    _attr_device_class = SensorDeviceClass.DATA_SIZE
-
-    @property
-    def native_value(self) -> float:
-        """Return the state of the sensor."""
-        return round(self.modem_data.data.usage / 1024**2, 1)
-
-
-class GenericSensor(LTESensor):
-    """Sensor entity with raw state."""
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
+        if self.entity_description.value_fn is not None:
+            return self.entity_description.value_fn(self.modem_data)
         return getattr(self.modem_data.data, self.sensor_type)

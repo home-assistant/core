@@ -123,5 +123,19 @@
         }
       }
     }
+  },
+  "issues": {
+    "deprecated_yaml_import_device_tracker": {
+      "title": "Tado YAML device tracker configuration imported",
+      "description": "Configuring the Tado Device Tracker using YAML is being removed.\nRemove the YAML device tracker configuration and restart Home Assistant."
+    },
+    "import_aborted": {
+      "title": "Import aborted",
+      "description": "Configuring the Tado Device Tracker using YAML is being removed.\n The import was aborted, due to an existing config entry being the same as the data being imported in the YAML. Remove the YAML device tracker configuration and restart Home Assistant. Please use the UI to configure Tado."
+    },
+    "failed_to_import": {
+      "title": "Failed to import",
+      "description": "Failed to import the configuration for the Tado Device Tracker. Please use the UI to configure Tado. Don't forget to delete the YAML configuration."
+    }
   }
 }

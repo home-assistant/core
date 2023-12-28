@@ -306,6 +306,8 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @cached_property
     def native_step(self) -> float | None:
         """Return the increment/decrement step."""
+        if hasattr(self, "_attr_native_step"):
+            return self._attr_native_step
         if (
             hasattr(self, "entity_description")
             and self.entity_description.native_step is not None
@@ -321,8 +323,6 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     def _calculate_step(self, min_value: float, max_value: float) -> float:
         """Return the increment/decrement step."""
-        if hasattr(self, "_attr_native_step"):
-            return self._attr_native_step
         if (native_step := self.native_step) is not None:
             return native_step
         step = DEFAULT_STEP

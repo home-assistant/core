@@ -8,7 +8,7 @@ from datetime import timedelta
 from enum import IntFlag, StrEnum
 import logging
 import os
-from typing import Any, Self, cast, final
+from typing import TYPE_CHECKING, Any, Self, cast, final
 
 import voluptuous as vol
 
@@ -32,6 +32,11 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 DOMAIN = "light"
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -820,7 +825,25 @@ class LightEntityDescription(ToggleEntityDescription, frozen_or_thawed=True):
     """A class that describes binary sensor entities."""
 
 
-class LightEntity(ToggleEntity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "brightness",
+    "color_mode",
+    "hs_color",
+    "xy_color",
+    "rgb_color",
+    "rgbw_color",
+    "rgbww_color",
+    "color_temp",
+    "min_mireds",
+    "max_mireds",
+    "effect_list",
+    "effect",
+    "supported_color_modes",
+    "supported_features",
+}
+
+
+class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for light entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
@@ -855,12 +878,12 @@ class LightEntity(ToggleEntity):
     _attr_supported_features: LightEntityFeature = LightEntityFeature(0)
     _attr_xy_color: tuple[float, float] | None = None
 
-    @property
+    @cached_property
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         return self._attr_brightness
 
-    @property
+    @cached_property
     def color_mode(self) -> ColorMode | str | None:
         """Return the color mode of the light."""
         return self._attr_color_mode
@@ -885,22 +908,22 @@ class LightEntity(ToggleEntity):
 
         return color_mode
 
-    @property
+    @cached_property
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
         return self._attr_hs_color
 
-    @property
+    @cached_property
     def xy_color(self) -> tuple[float, float] | None:
         """Return the xy color value [float, float]."""
         return self._attr_xy_color
 
-    @property
+    @cached_property
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the rgb color value [int, int, int]."""
         return self._attr_rgb_color
 
-    @property
+    @cached_property
     def rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the rgbw color value [int, int, int, int]."""
         return self._attr_rgbw_color
@@ -911,12 +934,12 @@ class LightEntity(ToggleEntity):
         rgbw_color = self.rgbw_color
         return rgbw_color
 
-    @property
+    @cached_property
     def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
         """Return the rgbww color value [int, int, int, int, int]."""
         return self._attr_rgbww_color
 
-    @property
+    @cached_property
     def color_temp(self) -> int | None:
         """Return the CT color value in mireds."""
         return self._attr_color_temp
@@ -928,12 +951,12 @@ class LightEntity(ToggleEntity):
             return color_util.color_temperature_mired_to_kelvin(self.color_temp)
         return self._attr_color_temp_kelvin
 
-    @property
+    @cached_property
     def min_mireds(self) -> int:
         """Return the coldest color_temp that this light supports."""
         return self._attr_min_mireds
 
-    @property
+    @cached_property
     def max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports."""
         return self._attr_max_mireds
@@ -952,12 +975,12 @@ class LightEntity(ToggleEntity):
             return color_util.color_temperature_mired_to_kelvin(self.min_mireds)
         return self._attr_max_color_temp_kelvin
 
-    @property
+    @cached_property
     def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
         return self._attr_effect_list
 
-    @property
+    @cached_property
     def effect(self) -> str | None:
         """Return the current effect."""
         return self._attr_effect
@@ -1138,12 +1161,12 @@ class LightEntity(ToggleEntity):
 
         return supported_color_modes
 
-    @property
+    @cached_property
     def supported_color_modes(self) -> set[ColorMode] | set[str] | None:
         """Flag supported color modes."""
         return self._attr_supported_color_modes
 
-    @property
+    @cached_property
     def supported_features(self) -> LightEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
