@@ -76,7 +76,9 @@ async def async_setup_entry(
     """Set up the Netgear LTE sensor."""
     modem_data = hass.data[DOMAIN].get_modem_data(entry.data)
 
-    async_add_entities(NetgearLTESensor(modem_data, sensor) for sensor in SENSORS)
+    async_add_entities(
+        NetgearLTESensor(entry, modem_data, sensor) for sensor in SENSORS
+    )
 
 
 class NetgearLTESensor(LTEEntity, SensorEntity):
@@ -84,18 +86,9 @@ class NetgearLTESensor(LTEEntity, SensorEntity):
 
     entity_description: NetgearLTESensorEntityDescription
 
-    def __init__(
-        self,
-        modem_data: ModemData,
-        entity_description: NetgearLTESensorEntityDescription,
-    ) -> None:
-        """Initialize a Netgear LTE sensor entity."""
-        super().__init__(modem_data, entity_description.key)
-        self.entity_description = entity_description
-
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if self.entity_description.value_fn is not None:
             return self.entity_description.value_fn(self.modem_data)
-        return getattr(self.modem_data.data, self.sensor_type)
+        return getattr(self.modem_data.data, self.entity_description.key)
