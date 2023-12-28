@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as SL_DOMAIN
 from .coordinator import ScreenlogicDataUpdateCoordinator
-from .entity import ScreenlogicEntity, ScreenLogicEntityDescription
+from .entity import ScreenLogicEntity, ScreenLogicEntityDescription
 from .util import cleanup_excluded_entity, get_ha_unit
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,14 +29,14 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScreenLogicNumberRequiredMixin:
     """Describes a required mixin for a ScreenLogic number entity."""
 
     set_value_name: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScreenLogicNumberDescription(
     NumberEntityDescription,
     ScreenLogicEntityDescription,
@@ -87,7 +87,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
+class ScreenLogicNumber(ScreenLogicEntity, NumberEntity):
     """Class to represent a ScreenLogic Number entity."""
 
     entity_description: ScreenLogicNumberDescription

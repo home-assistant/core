@@ -48,14 +48,14 @@ from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class YoLinkSensorEntityDescriptionMixin:
     """Mixin for device type."""
 
     exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
 
 
-@dataclass
+@dataclass(frozen=True)
 class YoLinkSensorEntityDescription(
     YoLinkSensorEntityDescriptionMixin, SensorEntityDescription
 ):

@@ -58,7 +58,11 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .common import async_capture_events, async_mock_service
+from .common import (
+    async_capture_events,
+    async_mock_service,
+    import_and_test_deprecated_constant_enum,
+)
 
 PST = dt_util.get_time_zone("America/Los_Angeles")
 
@@ -2621,3 +2625,19 @@ async def test_cancel_shutdown_job(hass: HomeAssistant) -> None:
     cancel()
     await hass.async_stop()
     assert not evt.is_set()
+
+
+@pytest.mark.parametrize(
+    ("enum"),
+    [
+        ha.ConfigSource.DISCOVERED,
+        ha.ConfigSource.YAML,
+        ha.ConfigSource.STORAGE,
+    ],
+)
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: ha.ConfigSource,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(caplog, ha, enum, "SOURCE_", "2025.1")

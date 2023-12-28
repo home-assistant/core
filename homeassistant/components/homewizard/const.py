@@ -17,8 +17,6 @@ LOGGER = logging.getLogger(__package__)
 # Platform config.
 CONF_API_ENABLED = "api_enabled"
 CONF_DATA = "data"
-CONF_DEVICE = "device"
-CONF_PATH = "path"
 CONF_PRODUCT_NAME = "product_name"
 CONF_PRODUCT_TYPE = "product_type"
 CONF_SERIAL = "serial"

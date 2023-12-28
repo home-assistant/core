@@ -22,7 +22,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -37,7 +37,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_USER_EMAIL
     assert result2["data"] == {
         CONF_API_KEY: SUBSCRIPTION_KEY,
@@ -70,7 +70,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
             data=mock_config.data,
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
     with patch(
@@ -86,7 +86,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert mock_config.data.get(CONF_API_KEY) == SUBSCRIPTION_KEY
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
@@ -112,7 +112,7 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -122,7 +122,7 @@ async def test_user_flow_invalid_subscription_key(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -134,7 +134,7 @@ async def test_user_flow_invalid_subscription_key(hass: HomeAssistant) -> None:
             {CONF_API_KEY: SUBSCRIPTION_KEY},
         )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "invalid_auth"}
 
@@ -147,7 +147,7 @@ async def test_user_flow_exception_on_subscription_key_check(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -159,6 +159,6 @@ async def test_user_flow_exception_on_subscription_key_check(
             {CONF_API_KEY: SUBSCRIPTION_KEY},
         )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "invalid_auth"}

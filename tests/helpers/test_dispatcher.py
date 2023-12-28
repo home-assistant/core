@@ -144,13 +144,30 @@ async def test_callback_exception_gets_logged(
     # wrap in partial to test message logging.
     async_dispatcher_connect(hass, "test", partial(bad_handler))
     async_dispatcher_send(hass, "test", "bad")
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     assert (
         f"Exception in functools.partial({bad_handler}) when dispatching 'test': ('bad',)"
         in caplog.text
     )
+
+
+@pytest.mark.no_fail_on_log_exception
+async def test_coro_exception_gets_logged(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test exception raised by signal handler."""
+
+    async def bad_async_handler(*args):
+        """Record calls."""
+        raise Exception("This is a bad message in a coro")
+
+    # wrap in partial to test message logging.
+    async_dispatcher_connect(hass, "test", bad_async_handler)
+    async_dispatcher_send(hass, "test", "bad")
+    await hass.async_block_till_done()
+
+    assert "bad_async_handler" in caplog.text
+    assert "when dispatching 'test': ('bad',)" in caplog.text
 
 
 async def test_dispatcher_add_dispatcher(hass: HomeAssistant) -> None:

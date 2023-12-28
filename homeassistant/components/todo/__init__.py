@@ -4,7 +4,7 @@ from collections.abc import Callable, Iterable
 import dataclasses
 import datetime
 import logging
-from typing import Any, final
+from typing import TYPE_CHECKING, Any, final
 
 import voluptuous as vol
 
@@ -41,6 +41,12 @@ from .const import (
     TodoListEntityFeature,
 )
 
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
+
+
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = datetime.timedelta(seconds=60)
@@ -68,19 +74,19 @@ class TodoItemFieldDescription:
 TODO_ITEM_FIELDS = [
     TodoItemFieldDescription(
         service_field=ATTR_DUE_DATE,
-        validation=cv.date,
+        validation=vol.Any(cv.date, None),
         todo_item_field=ATTR_DUE,
         required_feature=TodoListEntityFeature.SET_DUE_DATE_ON_ITEM,
     ),
     TodoItemFieldDescription(
         service_field=ATTR_DUE_DATETIME,
-        validation=vol.All(cv.datetime, dt_util.as_local),
+        validation=vol.Any(vol.All(cv.datetime, dt_util.as_local), None),
         todo_item_field=ATTR_DUE,
         required_feature=TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM,
     ),
     TodoItemFieldDescription(
         service_field=ATTR_DESCRIPTION,
-        validation=cv.string,
+        validation=vol.Any(cv.string, None),
         todo_item_field=ATTR_DESCRIPTION,
         required_feature=TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM,
     ),
@@ -226,7 +232,12 @@ class TodoItem:
     """
 
 
-class TodoListEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "todo_items",
+}
+
+
+class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """An entity that represents a To-do list."""
 
     _attr_todo_items: list[TodoItem] | None = None
@@ -240,7 +251,7 @@ class TodoListEntity(Entity):
             return None
         return sum([item.status == TodoItemStatus.NEEDS_ACTION for item in items])
 
-    @property
+    @cached_property
     def todo_items(self) -> list[TodoItem] | None:
         """Return the To-do items in the To-do list."""
         return self._attr_todo_items
@@ -474,18 +485,22 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
 
     _validate_supported_features(entity.supported_features, call.data)
 
-    await entity.async_update_todo_item(
-        item=TodoItem(
-            uid=found.uid,
-            summary=call.data.get("rename"),
-            status=call.data.get("status"),
-            **{
-                desc.todo_item_field: call.data[desc.service_field]
-                for desc in TODO_ITEM_FIELDS
-                if desc.service_field in call.data
-            },
-        )
+    # Perform a partial update on the existing entity based on the fields
+    # present in the update. This allows explicitly clearing any of the
+    # extended fields present and set to None.
+    updated_data = dataclasses.asdict(found)
+    if summary := call.data.get("rename"):
+        updated_data["summary"] = summary
+    if status := call.data.get("status"):
+        updated_data["status"] = status
+    updated_data.update(
+        {
+            desc.todo_item_field: call.data[desc.service_field]
+            for desc in TODO_ITEM_FIELDS
+            if desc.service_field in call.data
+        }
     )
+    await entity.async_update_todo_item(item=TodoItem(**updated_data))
 
 
 async def _async_remove_todo_items(entity: TodoListEntity, call: ServiceCall) -> None:

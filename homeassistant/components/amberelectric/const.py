@@ -4,7 +4,6 @@ import logging
 from homeassistant.const import Platform
 
 DOMAIN = "amberelectric"
-CONF_API_TOKEN = "api_token"
 CONF_SITE_NAME = "site_name"
 CONF_SITE_ID = "site_id"
 CONF_SITE_NMI = "site_nmi"

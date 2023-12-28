@@ -17,6 +17,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_CONNECTIONS,
+    CONF_ENABLED,
     CONF_EXCLUDE,
     CONF_HOST,
     CONF_INCLUDE,
@@ -46,7 +47,6 @@ from .const import (
     CONF_AREA,
     CONF_AUTO_CONFIGURE,
     CONF_COUNTER,
-    CONF_ENABLED,
     CONF_KEYPAD,
     CONF_OUTPUT,
     CONF_PLC,
