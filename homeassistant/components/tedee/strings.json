@@ -5,7 +5,7 @@
         "title": "Setup your Tedee locks",
         "data": {
           "host": "Bridge IP Address",
-          "local_access_token": "Local Access Token",
+          "local_access_token": "Local access token"
           "home_assistant_access_token": "Home Assistant Long Lived Access Token (required)"
         },
         "data_description": {
