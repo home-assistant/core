@@ -130,13 +130,13 @@ async def test_single_combination_country_province(hass: HomeAssistant) -> None:
 
 async def test_form_babel_unresolved_language(hass: HomeAssistant) -> None:
     """Test the config flow if using not babel supported language."""
-    hass.config.language = "en-GB"
+    hass.config.language = "en-XX"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_COUNTRY: "SE",
@@ -144,4 +144,77 @@ async def test_form_babel_unresolved_language(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result2["title"] == "Sweden"
+    assert result["title"] == "Sweden"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_COUNTRY: "DE",
+        },
+    )
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PROVINCE: "BW",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Germany, BW"
+    assert result["data"] == {
+        "country": "DE",
+        "province": "BW",
+    }
+
+
+async def test_form_babel_replace_dash_with_underscore(hass: HomeAssistant) -> None:
+    """Test the config flow if using language with dash."""
+    hass.config.language = "en-GB"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_COUNTRY: "SE",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["title"] == "Sweden"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_COUNTRY: "DE",
+        },
+    )
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PROVINCE: "BW",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Germany, BW"
+    assert result["data"] == {
+        "country": "DE",
+        "province": "BW",
+    }
