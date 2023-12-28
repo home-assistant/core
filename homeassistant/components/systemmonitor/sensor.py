@@ -389,7 +389,7 @@ async def async_setup_entry(
     entities = []
     sensor_registry: dict[tuple[str, str], SensorData] = {}
     legacy_resources: list[str] = entry.options.get("resources", [])
-    loaded_entities: list[str] = []
+    loaded_resources: list[str] = []
     disk_arguments = await hass.async_add_executor_job(get_all_disk_mounts)
     network_arguments = await hass.async_add_executor_job(get_all_network_interfaces)
     cpu_temperature = await hass.async_add_executor_job(_read_cpu_temperature)
@@ -405,7 +405,7 @@ async def async_setup_entry(
                 is_enabled = check_legacy_resource(
                     f"{_type}_{argument}", legacy_resources
                 )
-                loaded_entities.append(f"{_type}_{argument}")
+                loaded_resources.append(f"{_type}_{argument}")
                 entities.append(
                     SystemMonitorSensor(
                         sensor_registry,
@@ -425,7 +425,7 @@ async def async_setup_entry(
                 is_enabled = check_legacy_resource(
                     f"{_type}_{argument}", legacy_resources
                 )
-                loaded_entities.append(f"{_type}_{argument}")
+                loaded_resources.append(f"{_type}_{argument}")
                 entities.append(
                     SystemMonitorSensor(
                         sensor_registry,
@@ -449,7 +449,7 @@ async def async_setup_entry(
                 sensor_registry[(_type, argument)] = SensorData(
                     argument, None, None, None, None
                 )
-                loaded_entities.append(f"{_type}_{argument}")
+                loaded_resources.append(f"{_type}_{argument}")
                 entities.append(
                     SystemMonitorSensor(
                         sensor_registry,
@@ -463,7 +463,7 @@ async def async_setup_entry(
 
         sensor_registry[(_type, "")] = SensorData("", None, None, None, None)
         is_enabled = check_legacy_resource(f"{_type}_", legacy_resources)
-        loaded_entities.append(f"{_type}_")
+        loaded_resources.append(f"{_type}_")
         entities.append(
             SystemMonitorSensor(
                 sensor_registry,
@@ -479,9 +479,9 @@ async def async_setup_entry(
     for resource in legacy_resources:
         if resource.startswith("disk_"):
             _LOGGER.debug(
-                "Check resource %s already loaded in %s", resource, loaded_entities
+                "Check resource %s already loaded in %s", resource, loaded_resources
             )
-            if resource not in loaded_entities:
+            if resource not in loaded_resources:
                 split_index = resource.rfind("_")
                 _type = resource[:split_index]
                 argument = resource[split_index + 1 :]
