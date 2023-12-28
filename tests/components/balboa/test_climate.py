@@ -26,6 +26,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import ServiceValidationError
 
 from . import init_integration
 
@@ -146,7 +147,7 @@ async def test_spa_preset_modes(
         assert state
         assert state.attributes[ATTR_PRESET_MODE] == mode
 
-    with pytest.raises(KeyError):
+    with pytest.raises(ServiceValidationError):
         await common.async_set_preset_mode(hass, 2, ENTITY_CLIMATE)
 
     # put it in RNR and test assertion

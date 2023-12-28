@@ -12,6 +12,7 @@ from functools import partial
 import logging
 import os
 from random import SystemRandom
+import time
 from typing import TYPE_CHECKING, Any, Final, cast, final
 
 from aiohttp import hdrs, web
@@ -294,6 +295,7 @@ async def async_get_still_stream(
     last_image = None
 
     while True:
+        last_fetch = time.monotonic()
         img_bytes = await image_cb()
         if not img_bytes:
             break
@@ -307,7 +309,11 @@ async def async_get_still_stream(
                 await write_to_mjpeg_stream(img_bytes)
             last_image = img_bytes
 
-        await asyncio.sleep(interval)
+        next_fetch = last_fetch + interval
+        now = time.monotonic()
+        if next_fetch > now:
+            sleep_time = next_fetch - now
+            await asyncio.sleep(sleep_time)
 
     return response
 
@@ -411,7 +417,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, preload_stream)
 
     @callback
-    def update_tokens(time: datetime) -> None:
+    def update_tokens(t: datetime) -> None:
         """Update tokens of the entities."""
         for entity in component.entities:
             entity.async_update_token()
