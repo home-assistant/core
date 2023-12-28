@@ -36,28 +36,28 @@ async def test_format_torrents(
     hass: HomeAssistant,
 ) -> None:
     """Test the format_torrents function."""
-    assert format_torrents(
-        [
-            {
-                "name": "torrent1",
-                "hash": "hash1",
-                "added_on": 1640995200,
-                "progress": 0.5,
-                "state": "paused",
-                "eta": 86400,
-                "ratio": 1.0,
-            },
-            {
-                "name": "torrent2",
-                "hash": "hash1",
-                "added_on": 1640995200,
-                "progress": 0.5,
-                "state": "paused",
-                "eta": 86400,
-                "ratio": 1.0,
-            },
-        ]
-    ) == {
+    torrents_data = [
+        {
+            "name": "torrent1",
+            "hash": "hash1",
+            "added_on": 1640995200,
+            "progress": 0.5,
+            "state": "paused",
+            "eta": 86400,
+            "ratio": 1.0,
+        },
+        {
+            "name": "torrent2",
+            "hash": "hash1",
+            "added_on": 1640995200,
+            "progress": 0.5,
+            "state": "paused",
+            "eta": 86400,
+            "ratio": 1.0,
+        },
+    ]
+
+    expected_result = {
         "torrent1": {
             "id": "hash1",
             "added_date": "2022-01-01T00:00:00+0000",
@@ -76,21 +76,25 @@ async def test_format_torrents(
         },
     }
 
+    result = format_torrents(torrents_data)
+
+    assert result == expected_result
+
 
 async def test_format_torrent(
     hass: HomeAssistant,
 ) -> None:
     """Test the format_torrent function."""
-    assert format_torrent(
-        {
-            "hash": "hash1",
-            "added_on": 1640995200,
-            "progress": 0.5,
-            "state": "paused",
-            "eta": 86400,
-            "ratio": 1.0,
-        }
-    ) == {
+    torrent_data = {
+        "hash": "hash1",
+        "added_on": 1640995200,
+        "progress": 0.5,
+        "state": "paused",
+        "eta": 86400,
+        "ratio": 1.0,
+    }
+
+    expected_result = {
         "id": "hash1",
         "added_date": "2022-01-01T00:00:00+0000",
         "percent_done": "50.00",
@@ -98,3 +102,7 @@ async def test_format_torrent(
         "eta": "24:00:00",
         "ratio": "1.00",
     }
+
+    result = format_torrent(torrent_data)
+
+    assert result == expected_result
