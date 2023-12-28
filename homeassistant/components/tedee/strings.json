@@ -4,10 +4,11 @@
       "user": {
         "title": "Setup your Tedee locks",
         "data": {
-          "host": "Bridge IP Address",
-          "local_access_token": "Local access token"
+          "local_access_token": "Local access token",
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
+          "host": "Bridge IP Address",
           "local_access_token": "You can find it in the tedee app under \"Bridge Settings\" -> \"Local API\"."
         }
       }

@@ -1,7 +1,6 @@
 """Coordinator for Tedee locks."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
-import time
 
 from pytedee_async import (
     TedeeClient,
@@ -43,7 +42,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             local_ip=self.config_entry.data[CONF_HOST],
         )
 
-        self._next_get_locks = time.time()
+        self._next_get_locks = datetime.now()
 
     async def _async_update_data(self) -> dict[int, TedeeLock]:
         """Fetch data from API endpoint."""
@@ -52,10 +51,10 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
 
         try:
             # once every hours get all lock details, otherwise use the sync endpoint
-            if self._next_get_locks - time.time() <= 0:
+            if self._next_get_locks <= datetime.now():
                 _LOGGER.debug("Updating through /my/lock endpoint")
                 await self.tedee_client.get_locks()
-                self._next_get_locks = time.time() + 60 * 60
+                self._next_get_locks = datetime.now() + timedelta(hours=1)
             else:
                 _LOGGER.debug("Updating through /sync endpoint")
                 await self.tedee_client.sync()

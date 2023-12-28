@@ -7,6 +7,7 @@ from pytedee_async.exception import (
     TedeeLocalAuthException,
 )
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
@@ -42,9 +43,11 @@ async def test_lock(
     mock_tedee.open.return_value = None
 
     state = hass.states.get("lock.lock_1a2b")
+    assert state
     assert state == snapshot
 
     entry = entity_registry.async_get(state.entity_id)
+    assert entry
     assert entry == snapshot
 
     device = device_registry.async_get(entry.device_id)
@@ -99,7 +102,7 @@ async def test_lock(
 async def test_lock_errors(
     hass: HomeAssistant,
     mock_tedee: MagicMock,
-):
+) -> None:
     """Test event errors."""
     mock_tedee.lock.side_effect = TedeeClientException("Boom")
     with pytest.raises(HomeAssistantError, match="Failed to lock the door. Lock 12345"):
