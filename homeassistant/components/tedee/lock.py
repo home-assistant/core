@@ -52,7 +52,6 @@ async def async_setup_entry(
 class TedeeLockEntity(TedeeEntity, LockEntity):
     """A tedee lock that doesn't have pullspring enabled."""
 
-    entity_description: LockEntityDescription
     _attr_name = None
 
     def __init__(
