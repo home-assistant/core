@@ -1508,7 +1508,10 @@ class Entity(
             return
         self._deprecated_supported_features_reported = True
         report_issue = self._suggest_report_issue()
-        report_issue += " and reference " "TODO: NEW BLOG POST URL"
+        report_issue += (
+            " and reference "
+            "https://developers.home-assistant.io/blog/2023/12/28/support-feature-magic-numbers-deprecation"
+        )
         _LOGGER.warning(
             (
                 "Entity %s (%s) is using deprecated supported features"
