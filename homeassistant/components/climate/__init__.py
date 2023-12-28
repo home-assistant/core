@@ -316,7 +316,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return the capability attributes."""
-        supported_features = self.supported_features
+        supported_features = self.supported_features_compat
         temperature_unit = self.temperature_unit
         precision = self.precision
         hass = self.hass
@@ -349,7 +349,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
-        supported_features = self.supported_features
+        supported_features = self.supported_features_compat
         temperature_unit = self.temperature_unit
         precision = self.precision
         hass = self.hass
@@ -664,6 +664,19 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
+
+    @property
+    def supported_features_compat(self) -> ClimateEntityFeature:
+        """Return the supported features as ClimateEntityFeature.
+
+        Remove this compatibility shim in 2025.1 or later.
+        """
+        features = self.supported_features
+        if type(features) is int:  # noqa: E721
+            new_features = ClimateEntityFeature(features)
+            self._report_deprecated_supported_features_values(new_features)
+            return new_features
+        return features
 
     @cached_property
     def min_temp(self) -> float:
