@@ -39,10 +39,10 @@ class TedeeEntity(CoordinatorEntity[TedeeApiCoordinator]):
         self._attr_unique_id = self.entity_description.unique_id_fn(self._lock)
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(self._lock.lock_id))},
-            name=self._lock.lock_name,
-            manufacturer="tedee",
-            model=self._lock.lock_type,
+            identifiers={(DOMAIN, str(lock.lock_id))},
+            name=lock.lock_name,
+            manufacturer="Tedee",
+            model=lock.lock_type,
         )
 
     @callback
