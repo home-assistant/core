@@ -101,7 +101,7 @@
         "name": "Mileage"
       },
       "gps_count": {
-        "name": "GPS Satellites"
+        "name": "GPS satellites"
       }
     },
     "switch": {
