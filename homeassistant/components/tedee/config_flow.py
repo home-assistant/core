@@ -28,7 +28,7 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         local_bridge: TedeeBridge | None = None
 
         if user_input is not None:
-            host = user_input.get(CONF_HOST, "")
+            host = user_input[CONF_HOST]
             local_access_token = user_input.get(CONF_LOCAL_ACCESS_TOKEN, "")
             tedee_client = TedeeClient(local_token=local_access_token, local_ip=host)
             try:
