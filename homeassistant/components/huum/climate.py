@@ -49,7 +49,7 @@ class HuumDevice(ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    _target_temperature = 40
+    _target_temperature: int | None = None
     _status: HuumStatusResponse | None = None
 
     def __init__(self, huum_handler: Huum, unique_id: str) -> None:
@@ -85,21 +85,14 @@ class HuumDevice(ClimateEntity):
         return None
 
     @property
-    def target_temperature(self) -> int | None:
+    def target_temperature(self) -> int:
         """Return the temperature we try to reach."""
-        if (status := self._status) is not None:
-            return status.target_temperature
-        return None
+        return self._target_temperature or int(self.min_temp)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVACMode.HEAT:
-            temperature = (
-                self.target_temperature
-                if self.target_temperature
-                else int(self.min_temp)
-            )
-            await self._turn_on(temperature)
+            await self._turn_on(self.target_temperature)
         elif hvac_mode == HVACMode.OFF:
             await self._huum_handler.turn_off()
 
@@ -124,6 +117,8 @@ class HuumDevice(ClimateEntity):
         a target temperature at that time.
         """
         self._status = await self._huum_handler.status_from_status_or_stop()
+        if self._target_temperature is None or self.hvac_mode == HVACMode.HEAT:
+            self._target_temperature = self._status.target_temperature
 
     async def _turn_on(self, temperature: int) -> None:
         try:
