@@ -170,7 +170,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_HASS_CONFIG] = config
 
     if lte_config := config.get(DOMAIN):
-        await hass.async_create_task(import_yaml(hass, lte_config))
+        hass.async_create_task(import_yaml(hass, lte_config))
 
     return True
 
