@@ -60,7 +60,7 @@ def mock_tedee(request) -> Generator[MagicMock, None, None]:
 
         tedee.parse_webhook_message.return_value = None
 
-        locks_json = json.loads(load_fixture("locks.json", DOMAIN))
+        locks_json = load_json_array_fixture("tedee/locks.json")
 
         lock_list = [TedeeLock(**lock) for lock in locks_json]
         tedee.locks_dict = {lock.lock_id: lock for lock in lock_list}
