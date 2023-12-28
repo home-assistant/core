@@ -52,7 +52,7 @@ class TessieEntity(CoordinatorEntity[TessieStateUpdateCoordinator]):
         return self.coordinator.data.get(key or self.key, default)
 
     async def run(
-        self, func: Callable[..., Awaitable[dict[str, bool | str]]], **kargs: Any
+        self, func: Callable[..., Awaitable[dict[str, Any]]], **kargs: Any
     ) -> None:
         """Run a tessie_api function and handle exceptions."""
         try:
@@ -66,7 +66,9 @@ class TessieEntity(CoordinatorEntity[TessieStateUpdateCoordinator]):
             raise HomeAssistantError from e
         if response["result"] is False:
             raise HomeAssistantError(
-                response.get("reason", "An unknown issue occurred")
+                response["reason"],
+                translation_domain=DOMAIN,
+                translation_key=response["reason"],
             )
 
     def set(self, *args: Any) -> None:

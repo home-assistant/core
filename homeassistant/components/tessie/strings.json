@@ -315,5 +315,10 @@
         "name": "[%key:component::update::title%]"
       }
     }
+  },
+  "exceptions": {
+    "not_supported": {
+      "message": "This action is not supported."
+    }
   }
 }
