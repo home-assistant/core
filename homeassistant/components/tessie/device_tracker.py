@@ -88,5 +88,5 @@ class TessieDeviceTrackerRouteEntity(TessieDeviceTrackerEntity):
     def extra_state_attributes(self) -> dict[str, StateType] | None:
         """Return device state attributes."""
         return {
-            "destination": self.get("active_route_destination"),
+            "destination": self.get("drive_state_active_route_destination"),
         }
