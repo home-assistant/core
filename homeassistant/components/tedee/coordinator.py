@@ -12,7 +12,7 @@ from pytedee_async import (
     TedeeLock,
 )
 
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -39,7 +39,6 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         if not self.config_entry:
             raise ConfigEntryError("Config entry not set")
         self.tedee_client = TedeeClient(
-            personal_token=self.config_entry.data.get(CONF_ACCESS_TOKEN),
             local_token=self.config_entry.data.get(CONF_LOCAL_ACCESS_TOKEN),
             local_ip=self.config_entry.data.get(CONF_HOST),
         )

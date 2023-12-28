@@ -7,7 +7,6 @@ from pytedee_async import (
     TedeeClientException,
     TedeeLocalAuthException,
 )
-from pytedee_async.bridge import TedeeBridge
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -25,7 +24,6 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
-        local_bridge: TedeeBridge | None = None
 
         if user_input is not None:
             host = user_input[CONF_HOST]
