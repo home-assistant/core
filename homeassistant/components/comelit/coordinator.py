@@ -8,6 +8,7 @@ from aiocomelit import (
     ComelitSerialBridgeObject,
     ComelitVedoApi,
     ComelitVedoAreaObject,
+    ComelitVedoZoneObject,
     exceptions,
 )
 from aiocomelit.api import ComelitCommonApi
@@ -53,7 +54,9 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def platform_device_info(
         self,
-        object_class: ComelitVedoAreaObject | ComelitSerialBridgeObject,
+        object_class: ComelitVedoZoneObject
+        | ComelitVedoAreaObject
+        | ComelitSerialBridgeObject,
         object_type: str,
     ) -> dr.DeviceInfo:
         """Set platform device info."""

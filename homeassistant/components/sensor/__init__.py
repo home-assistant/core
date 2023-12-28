@@ -671,11 +671,10 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             converter := UNIT_CONVERTERS.get(device_class)
         ):
             # Unit conversion needed
-            converted_numerical_value = converter.convert(
-                float(numerical_value),
+            converted_numerical_value = converter.converter_factory(
                 native_unit_of_measurement,
                 unit_of_measurement,
-            )
+            )(float(numerical_value))
 
             # If unit conversion is happening, and there's no rounding for display,
             # do a best effort rounding here.
