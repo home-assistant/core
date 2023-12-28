@@ -1,6 +1,7 @@
 """Tests for Shelly button platform."""
 from __future__ import annotations
 
+from aioshelly.const import MODEL_I3
 from pytest_unordered import unordered
 
 from homeassistant.components.event import (
@@ -104,7 +105,7 @@ async def test_block_event(hass: HomeAssistant, monkeypatch, mock_block_device) 
 
 async def test_block_event_shix3_1(hass: HomeAssistant, mock_block_device) -> None:
     """Test block device event for SHIX3-1."""
-    await init_integration(hass, 1, model="SHIX3-1")
+    await init_integration(hass, 1, model=MODEL_I3)
     entity_id = "event.test_name_channel_1"
 
     state = hass.states.get(entity_id)

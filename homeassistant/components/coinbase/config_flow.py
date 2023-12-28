@@ -17,6 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from . import get_accounts
 from .const import (
     API_ACCOUNT_CURRENCY,
+    API_ACCOUNT_CURRENCY_CODE,
     API_RATES,
     API_RESOURCE_TYPE,
     API_TYPE_VAULT,
@@ -81,7 +82,7 @@ async def validate_options(
     accounts = await hass.async_add_executor_job(get_accounts, client)
 
     accounts_currencies = [
-        account[API_ACCOUNT_CURRENCY]
+        account[API_ACCOUNT_CURRENCY][API_ACCOUNT_CURRENCY_CODE]
         for account in accounts
         if account[API_RESOURCE_TYPE] != API_TYPE_VAULT
     ]

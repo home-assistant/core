@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from withings_api import AbstractWithingsApi, WithingsAuth
+from aiowithings import AUTHORIZATION_URL, TOKEN_URL
 
 from homeassistant.components.application_credentials import (
     AuthImplementation,
@@ -24,8 +24,8 @@ async def async_get_auth_implementation(
         DOMAIN,
         credential,
         authorization_server=AuthorizationServer(
-            authorize_url=f"{WithingsAuth.URL}/oauth2_user/authorize2",
-            token_url=f"{AbstractWithingsApi.URL}/v2/oauth2",
+            authorize_url=AUTHORIZATION_URL,
+            token_url=TOKEN_URL,
         ),
     )
 

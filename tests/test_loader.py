@@ -690,9 +690,9 @@ async def test_get_mqtt(hass: HomeAssistant) -> None:
         assert mqtt["test_2"] == ["test_2/discovery"]
 
 
-async def test_get_custom_components_safe_mode(hass: HomeAssistant) -> None:
-    """Test that we get empty custom components in safe mode."""
-    hass.config.safe_mode = True
+async def test_get_custom_components_recovery_mode(hass: HomeAssistant) -> None:
+    """Test that we get empty custom components in recovery mode."""
+    hass.config.recovery_mode = True
     assert await loader.async_get_custom_components(hass) == {}
 
 
@@ -744,3 +744,132 @@ async def test_loggers(hass: HomeAssistant) -> None:
         },
     )
     assert integration.loggers == ["name1", "name2"]
+
+
+CORE_ISSUE_TRACKER = (
+    "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+)
+CORE_ISSUE_TRACKER_BUILT_IN = (
+    CORE_ISSUE_TRACKER + "+label%3A%22integration%3A+bla_built_in%22"
+)
+CORE_ISSUE_TRACKER_CUSTOM = (
+    CORE_ISSUE_TRACKER + "+label%3A%22integration%3A+bla_custom%22"
+)
+CORE_ISSUE_TRACKER_CUSTOM_NO_TRACKER = (
+    CORE_ISSUE_TRACKER + "+label%3A%22integration%3A+bla_custom_no_tracker%22"
+)
+CORE_ISSUE_TRACKER_HUE = CORE_ISSUE_TRACKER + "+label%3A%22integration%3A+hue%22"
+CUSTOM_ISSUE_TRACKER = "https://blablabla.com"
+
+
+@pytest.mark.parametrize(
+    ("domain", "module", "issue_tracker"),
+    [
+        # If no information is available, open issue on core
+        (None, None, CORE_ISSUE_TRACKER),
+        ("hue", "homeassistant.components.hue.sensor", CORE_ISSUE_TRACKER_HUE),
+        ("hue", None, CORE_ISSUE_TRACKER_HUE),
+        ("bla_built_in", None, CORE_ISSUE_TRACKER_BUILT_IN),
+        # Integration domain is not currently deduced from module
+        (None, "homeassistant.components.hue.sensor", CORE_ISSUE_TRACKER),
+        ("hue", "homeassistant.components.mqtt.sensor", CORE_ISSUE_TRACKER_HUE),
+        # Custom integration with known issue tracker
+        ("bla_custom", "custom_components.bla_custom.sensor", CUSTOM_ISSUE_TRACKER),
+        ("bla_custom", None, CUSTOM_ISSUE_TRACKER),
+        # Custom integration without known issue tracker
+        (None, "custom_components.bla.sensor", None),
+        ("bla_custom_no_tracker", "custom_components.bla_custom.sensor", None),
+        ("bla_custom_no_tracker", None, None),
+        ("hue", "custom_components.bla.sensor", None),
+        # Integration domain has priority over module
+        ("bla_custom_no_tracker", "homeassistant.components.bla_custom.sensor", None),
+    ],
+)
+async def test_async_get_issue_tracker(
+    hass, domain: str | None, module: str | None, issue_tracker: str | None
+) -> None:
+    """Test async_get_issue_tracker."""
+    mock_integration(hass, MockModule("bla_built_in"))
+    mock_integration(
+        hass,
+        MockModule(
+            "bla_custom", partial_manifest={"issue_tracker": CUSTOM_ISSUE_TRACKER}
+        ),
+        built_in=False,
+    )
+    mock_integration(hass, MockModule("bla_custom_no_tracker"), built_in=False)
+    assert (
+        loader.async_get_issue_tracker(hass, integration_domain=domain, module=module)
+        == issue_tracker
+    )
+
+
+@pytest.mark.parametrize(
+    ("domain", "module", "issue_tracker"),
+    [
+        # If no information is available, open issue on core
+        (None, None, CORE_ISSUE_TRACKER),
+        ("hue", "homeassistant.components.hue.sensor", CORE_ISSUE_TRACKER_HUE),
+        ("hue", None, CORE_ISSUE_TRACKER_HUE),
+        ("bla_built_in", None, CORE_ISSUE_TRACKER_BUILT_IN),
+        # Integration domain is not currently deduced from module
+        (None, "homeassistant.components.hue.sensor", CORE_ISSUE_TRACKER),
+        ("hue", "homeassistant.components.mqtt.sensor", CORE_ISSUE_TRACKER_HUE),
+        # Custom integration with known issue tracker - can't find it without hass
+        ("bla_custom", "custom_components.bla_custom.sensor", None),
+        # Assumed to be a core integration without hass and without module
+        ("bla_custom", None, CORE_ISSUE_TRACKER_CUSTOM),
+    ],
+)
+async def test_async_get_issue_tracker_no_hass(
+    hass, domain: str | None, module: str | None, issue_tracker: str
+) -> None:
+    """Test async_get_issue_tracker."""
+    mock_integration(hass, MockModule("bla_built_in"))
+    mock_integration(
+        hass,
+        MockModule(
+            "bla_custom", partial_manifest={"issue_tracker": CUSTOM_ISSUE_TRACKER}
+        ),
+        built_in=False,
+    )
+    assert (
+        loader.async_get_issue_tracker(None, integration_domain=domain, module=module)
+        == issue_tracker
+    )
+
+
+REPORT_CUSTOM = (
+    "report it to the author of the 'bla_custom_no_tracker' custom integration"
+)
+REPORT_CUSTOM_UNKNOWN = "report it to the custom integration author"
+
+
+@pytest.mark.parametrize(
+    ("domain", "module", "report_issue"),
+    [
+        (None, None, f"create a bug report at {CORE_ISSUE_TRACKER}"),
+        ("bla_custom", None, f"create a bug report at {CUSTOM_ISSUE_TRACKER}"),
+        ("bla_custom_no_tracker", None, REPORT_CUSTOM),
+        (None, "custom_components.hue.sensor", REPORT_CUSTOM_UNKNOWN),
+    ],
+)
+async def test_async_suggest_report_issue(
+    hass, domain: str | None, module: str | None, report_issue: str
+) -> None:
+    """Test async_suggest_report_issue."""
+    mock_integration(hass, MockModule("bla_built_in"))
+    mock_integration(
+        hass,
+        MockModule(
+            "bla_custom", partial_manifest={"issue_tracker": CUSTOM_ISSUE_TRACKER}
+        ),
+        built_in=False,
+    )
+    mock_integration(hass, MockModule("bla_custom_no_tracker"), built_in=False)
+    assert (
+        loader.async_suggest_report_issue(
+            hass, integration_domain=domain, module=module
+        )
+        == report_issue
+    )

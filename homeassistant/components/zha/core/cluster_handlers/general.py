@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Coroutine
 from typing import TYPE_CHECKING, Any
 
+from zhaquirks.quirk_ids import TUYA_PLUG_ONOFF
 import zigpy.exceptions
 import zigpy.types as t
 import zigpy.zcl
@@ -347,26 +348,10 @@ class OnOffClusterHandler(ClusterHandler):
         super().__init__(cluster, endpoint)
         self._off_listener = None
 
-        if self.cluster.endpoint.model not in (
-            "TS011F",
-            "TS0121",
-            "TS0001",
-            "TS0002",
-            "TS0003",
-            "TS0004",
-        ):
-            return
-
-        try:
-            self.cluster.find_attribute("backlight_mode")
-        except KeyError:
-            return
-
-        self.ZCL_INIT_ATTRS = self.ZCL_INIT_ATTRS.copy()
-        self.ZCL_INIT_ATTRS["backlight_mode"] = True
-        self.ZCL_INIT_ATTRS["power_on_state"] = True
-
-        if self.cluster.endpoint.model == "TS011F":
+        if endpoint.device.quirk_id == TUYA_PLUG_ONOFF:
+            self.ZCL_INIT_ATTRS = self.ZCL_INIT_ATTRS.copy()
+            self.ZCL_INIT_ATTRS["backlight_mode"] = True
+            self.ZCL_INIT_ATTRS["power_on_state"] = True
             self.ZCL_INIT_ATTRS["child_lock"] = True
 
     @classmethod

@@ -1,8 +1,8 @@
 """Offer Home Assistant core automation rules."""
 import voluptuous as vol
 
-from homeassistant.const import CONF_EVENT, CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.const import CONF_EVENT, CONF_PLATFORM
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
@@ -30,24 +30,17 @@ async def async_attach_trigger(
     job = HassJob(action, f"homeassistant trigger {trigger_info}")
 
     if event == EVENT_SHUTDOWN:
-
-        @callback
-        def hass_shutdown(event):
-            """Execute when Home Assistant is shutting down."""
-            hass.async_run_hass_job(
-                job,
-                {
-                    "trigger": {
-                        **trigger_data,
-                        "platform": "homeassistant",
-                        "event": event,
-                        "description": "Home Assistant stopping",
-                    }
-                },
-                event.context,
-            )
-
-        return hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, hass_shutdown)
+        return hass.async_add_shutdown_job(
+            job,
+            {
+                "trigger": {
+                    **trigger_data,
+                    "platform": "homeassistant",
+                    "event": event,
+                    "description": "Home Assistant stopping",
+                }
+            },
+        )
 
     # Automation are enabled while hass is starting up, fire right away
     # Check state because a config reload shouldn't trigger it.

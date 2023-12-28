@@ -117,6 +117,7 @@ class SsdpServiceInfo(BaseServiceInfo):
     ssdp_ext: str | None = None
     ssdp_server: str | None = None
     ssdp_headers: Mapping[str, Any] = field(default_factory=dict)
+    ssdp_all_locations: set[str] = field(default_factory=set)
     x_homeassistant_matching_domains: set[str] = field(default_factory=set)
 
 
@@ -283,6 +284,7 @@ class Scanner:
         self.hass = hass
         self._cancel_scan: Callable[[], None] | None = None
         self._ssdp_listeners: list[SsdpListener] = []
+        self._device_tracker = SsdpDeviceTracker()
         self._callbacks: list[tuple[SsdpCallback, dict[str, str]]] = []
         self._description_cache: DescriptionCache | None = None
         self.integration_matchers = integration_matchers
@@ -290,21 +292,7 @@ class Scanner:
     @property
     def _ssdp_devices(self) -> list[SsdpDevice]:
         """Get all seen devices."""
-        return [
-            ssdp_device
-            for ssdp_listener in self._ssdp_listeners
-            for ssdp_device in ssdp_listener.devices.values()
-        ]
-
-    @property
-    def _all_headers_from_ssdp_devices(
-        self,
-    ) -> dict[tuple[str, str], CaseInsensitiveDict]:
-        return {
-            (ssdp_device.udn, dst): headers
-            for ssdp_device in self._ssdp_devices
-            for dst, headers in ssdp_device.all_combined_headers.items()
-        }
+        return list(self._device_tracker.devices.values())
 
     async def async_register_callback(
         self, callback: SsdpCallback, match_dict: None | dict[str, str] = None
@@ -317,13 +305,16 @@ class Scanner:
 
         # Make sure any entries that happened
         # before the callback was registered are fired
-        for headers in self._all_headers_from_ssdp_devices.values():
-            if _async_headers_match(headers, lower_match_dict):
-                await _async_process_callbacks(
-                    [callback],
-                    await self._async_headers_to_discovery_info(headers),
-                    SsdpChange.ALIVE,
-                )
+        for ssdp_device in self._ssdp_devices:
+            for headers in ssdp_device.all_combined_headers.values():
+                if _async_headers_match(headers, lower_match_dict):
+                    await _async_process_callbacks(
+                        [callback],
+                        await self._async_headers_to_discovery_info(
+                            ssdp_device, headers
+                        ),
+                        SsdpChange.ALIVE,
+                    )
 
         callback_entry = (callback, lower_match_dict)
         self._callbacks.append(callback_entry)
@@ -386,7 +377,6 @@ class Scanner:
     async def _async_start_ssdp_listeners(self) -> None:
         """Start the SSDP Listeners."""
         # Devices are shared between all sources.
-        device_tracker = SsdpDeviceTracker()
         for source_ip in await async_build_source_set(self.hass):
             source_ip_str = str(source_ip)
             if source_ip.version == 6:
@@ -405,7 +395,7 @@ class Scanner:
                     callback=self._ssdp_listener_callback,
                     source=source,
                     target=target,
-                    device_tracker=device_tracker,
+                    device_tracker=self._device_tracker,
                 )
             )
         results = await asyncio.gather(
@@ -454,14 +444,16 @@ class Scanner:
         if info_desc is None:
             # Fetch info desc in separate task and process from there.
             self.hass.async_create_task(
-                self._ssdp_listener_process_with_lookup(ssdp_device, dst, source)
+                self._ssdp_listener_process_callback_with_lookup(
+                    ssdp_device, dst, source
+                )
             )
             return
 
         # Info desc known, process directly.
-        self._ssdp_listener_process(ssdp_device, dst, source, info_desc)
+        self._ssdp_listener_process_callback(ssdp_device, dst, source, info_desc)
 
-    async def _ssdp_listener_process_with_lookup(
+    async def _ssdp_listener_process_callback_with_lookup(
         self,
         ssdp_device: SsdpDevice,
         dst: DeviceOrServiceType,
@@ -469,14 +461,14 @@ class Scanner:
     ) -> None:
         """Handle a device/service change."""
         location = ssdp_device.location
-        self._ssdp_listener_process(
+        self._ssdp_listener_process_callback(
             ssdp_device,
             dst,
             source,
             await self._async_get_description_dict(location),
         )
 
-    def _ssdp_listener_process(
+    def _ssdp_listener_process_callback(
         self,
         ssdp_device: SsdpDevice,
         dst: DeviceOrServiceType,
@@ -502,7 +494,7 @@ class Scanner:
             return
 
         discovery_info = discovery_info_from_headers_and_description(
-            combined_headers, info_desc
+            ssdp_device, combined_headers, info_desc
         )
         discovery_info.x_homeassistant_matching_domains = matching_domains
 
@@ -557,7 +549,7 @@ class Scanner:
         return await self._description_cache.async_get_description_dict(location) or {}
 
     async def _async_headers_to_discovery_info(
-        self, headers: CaseInsensitiveDict
+        self, ssdp_device: SsdpDevice, headers: CaseInsensitiveDict
     ) -> SsdpServiceInfo:
         """Combine the headers and description into discovery_info.
 
@@ -567,34 +559,42 @@ class Scanner:
 
         location = headers["location"]
         info_desc = await self._async_get_description_dict(location)
-        return discovery_info_from_headers_and_description(headers, info_desc)
+        return discovery_info_from_headers_and_description(
+            ssdp_device, headers, info_desc
+        )
 
     async def async_get_discovery_info_by_udn_st(
         self, udn: str, st: str
     ) -> SsdpServiceInfo | None:
         """Return discovery_info for a udn and st."""
-        if headers := self._all_headers_from_ssdp_devices.get((udn, st)):
-            return await self._async_headers_to_discovery_info(headers)
+        for ssdp_device in self._ssdp_devices:
+            if ssdp_device.udn == udn:
+                if headers := ssdp_device.combined_headers(st):
+                    return await self._async_headers_to_discovery_info(
+                        ssdp_device, headers
+                    )
         return None
 
     async def async_get_discovery_info_by_st(self, st: str) -> list[SsdpServiceInfo]:
         """Return matching discovery_infos for a st."""
         return [
-            await self._async_headers_to_discovery_info(headers)
-            for udn_st, headers in self._all_headers_from_ssdp_devices.items()
-            if udn_st[1] == st
+            await self._async_headers_to_discovery_info(ssdp_device, headers)
+            for ssdp_device in self._ssdp_devices
+            if (headers := ssdp_device.combined_headers(st))
         ]
 
     async def async_get_discovery_info_by_udn(self, udn: str) -> list[SsdpServiceInfo]:
         """Return matching discovery_infos for a udn."""
         return [
-            await self._async_headers_to_discovery_info(headers)
-            for udn_st, headers in self._all_headers_from_ssdp_devices.items()
-            if udn_st[0] == udn
+            await self._async_headers_to_discovery_info(ssdp_device, headers)
+            for ssdp_device in self._ssdp_devices
+            for headers in ssdp_device.all_combined_headers.values()
+            if ssdp_device.udn == udn
         ]
 
 
 def discovery_info_from_headers_and_description(
+    ssdp_device: SsdpDevice,
     combined_headers: CaseInsensitiveDict,
     info_desc: Mapping[str, Any],
 ) -> SsdpServiceInfo:
@@ -627,6 +627,7 @@ def discovery_info_from_headers_and_description(
         ssdp_nt=combined_headers.get_lower("nt"),
         ssdp_headers=combined_headers,
         upnp=upnp_info,
+        ssdp_all_locations=set(ssdp_device.locations),
     )
 
 

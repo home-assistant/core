@@ -26,7 +26,6 @@ from homeassistant.components.dlna_dmr.const import (
     CONF_CALLBACK_URL_OVERRIDE,
     CONF_LISTEN_PORT,
     CONF_POLL_AVAILABILITY,
-    DOMAIN as DLNA_DOMAIN,
 )
 from homeassistant.components.dlna_dmr.data import EventListenAddr
 from homeassistant.components.dlna_dmr.media_player import DlnaDmrEntity
@@ -81,7 +80,7 @@ pytestmark = pytest.mark.usefixtures("domain_data_mock")
 async def setup_mock_component(hass: HomeAssistant, mock_entry: MockConfigEntry) -> str:
     """Set up a mock DlnaDmrEntity with the given configuration."""
     mock_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DLNA_DOMAIN, {}) is True
+    assert await hass.config_entries.async_setup(mock_entry.entry_id) is True
     await hass.async_block_till_done()
 
     entries = async_entries_for_config_entry(async_get_er(hass), mock_entry.entry_id)

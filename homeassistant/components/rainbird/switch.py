@@ -65,17 +65,18 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
         """Initialize a Rain Bird Switch Device."""
         super().__init__(coordinator)
         self._zone = zone
-        if coordinator.unique_id:
+        _LOGGER.debug("coordinator.unique_id=%s", coordinator.unique_id)
+        if coordinator.unique_id is not None:
             self._attr_unique_id = f"{coordinator.unique_id}-{zone}"
         device_name = f"{MANUFACTURER} Sprinkler {zone}"
         if imported_name:
             self._attr_name = imported_name
             self._attr_has_entity_name = False
         else:
-            self._attr_name = None if coordinator.unique_id else device_name
+            self._attr_name = None if coordinator.unique_id is not None else device_name
             self._attr_has_entity_name = True
         self._duration_minutes = duration_minutes
-        if coordinator.unique_id and self._attr_unique_id:
+        if coordinator.unique_id is not None and self._attr_unique_id is not None:
             self._attr_device_info = DeviceInfo(
                 name=device_name,
                 identifiers={(DOMAIN, self._attr_unique_id)},

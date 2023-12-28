@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-import re
 
 import voluptuous as vol
 
@@ -160,7 +159,7 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
         """Return one or more digits/characters."""
         if self._code is None:
             return None
-        if isinstance(self._code, str) and re.search("^\\d+$", self._code):
+        if isinstance(self._code, str) and self._code.isdigit():
             return CodeFormat.NUMBER
         return CodeFormat.TEXT
 

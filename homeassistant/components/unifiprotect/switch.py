@@ -31,7 +31,7 @@ ATTR_PREV_MIC = "prev_mic_level"
 ATTR_PREV_RECORD = "prev_record_mode"
 
 
-@dataclass
+@dataclass(frozen=True)
 class ProtectSwitchEntityDescription(
     ProtectSetableKeysMixin[T], SwitchEntityDescription
 ):
@@ -207,6 +207,16 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_value="is_smoke_detection_on",
         ufp_enabled="is_recording_enabled",
         ufp_set_method="set_smoke_detection",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectSwitchEntityDescription(
+        key="color_night_vision",
+        name="Color Night Vision",
+        icon="mdi:light-flood-down",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="has_color_night_vision",
+        ufp_value="isp_settings.is_color_night_vision_enabled",
+        ufp_set_method="set_color_night_vision",
         ufp_perm=PermRequired.WRITE,
     ),
 )

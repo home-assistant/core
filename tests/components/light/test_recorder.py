@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.components import light
 from homeassistant.components.light import (
-    ATTR_EFFECT,
+    ATTR_EFFECT_LIST,
     ATTR_MAX_COLOR_TEMP_KELVIN,
     ATTR_MAX_MIREDS,
     ATTR_MIN_COLOR_TEMP_KELVIN,
@@ -57,7 +57,7 @@ async def test_exclude_attributes(recorder_mock: Recorder, hass: HomeAssistant) 
             assert ATTR_MIN_MIREDS not in state.attributes
             assert ATTR_MAX_MIREDS not in state.attributes
             assert ATTR_SUPPORTED_COLOR_MODES not in state.attributes
-            assert ATTR_EFFECT not in state.attributes
+            assert ATTR_EFFECT_LIST not in state.attributes
             assert ATTR_FRIENDLY_NAME in state.attributes
             assert ATTR_MAX_COLOR_TEMP_KELVIN not in state.attributes
             assert ATTR_MIN_COLOR_TEMP_KELVIN not in state.attributes

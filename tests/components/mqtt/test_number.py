@@ -826,8 +826,7 @@ async def test_invalid_min_max_attributes(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test invalid min/max attributes."""
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    assert await mqtt_mock_entry()
     assert f"'{CONF_MAX}' must be > '{CONF_MIN}'" in caplog.text
 
 
@@ -948,11 +947,9 @@ async def test_invalid_mode(
     valid: bool,
 ) -> None:
     """Test invalid mode."""
-    if valid:
-        await mqtt_mock_entry()
-        return
-    with pytest.raises(AssertionError):
-        await mqtt_mock_entry()
+    await mqtt_mock_entry()
+    state = hass.states.get("number.test_number")
+    assert (state is not None) == valid
 
 
 @pytest.mark.parametrize(

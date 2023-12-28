@@ -125,6 +125,7 @@
               "auto": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::auto%]",
               "high": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::high%]",
               "low": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::low%]",
+              "medium_low": "Medium low",
               "medium": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::medium%]",
               "medium_high": "Medium high",
               "strong": "Strong",
@@ -210,6 +211,7 @@
               "auto": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::auto%]",
               "high": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::high%]",
               "low": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::low%]",
+              "medium_low": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::medium_low%]",
               "medium": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::medium%]",
               "medium_high": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::medium_high%]",
               "strong": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::strong%]",
@@ -338,21 +340,17 @@
         "name": "Pure Boost"
       }
     },
-    "update": {
-      "fw_ver_available": {
-        "name": "Update available"
-      }
-    },
     "climate": {
       "climate_device": {
         "state_attributes": {
           "fan_mode": {
             "state": {
-              "quiet": "Quiet",
-              "strong": "Strong",
+              "quiet": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::quiet%]",
+              "strong": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::strong%]",
               "low": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::low%]",
+              "medium_low": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::medium_low%]",
               "medium": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::medium%]",
-              "medium_high": "Medium high",
+              "medium_high": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::fanlevel::state::medium_high%]",
               "high": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::high%]",
               "auto": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::auto%]"
             }
@@ -360,16 +358,16 @@
           "swing_mode": {
             "state": {
               "stopped": "[%key:common::state::off%]",
-              "fixedtop": "Fixed top",
-              "fixedmiddletop": "Fixed middle top",
-              "fixedmiddle": "Fixed middle",
-              "fixedmiddlebottom": "Fixed middle bottom",
-              "fixedbottom": "Fixed bottom",
-              "rangetop": "Range top",
-              "rangemiddle": "Range middle",
-              "rangebottom": "Range bottom",
+              "fixedtop": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::fixedtop%]",
+              "fixedmiddletop": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::fixedmiddletop%]",
+              "fixedmiddle": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::fixedmiddle%]",
+              "fixedmiddlebottom": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::fixedmiddlebottom%]",
+              "fixedbottom": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::fixedbottom%]",
+              "rangetop": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::rangetop%]",
+              "rangemiddle": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::rangemiddle%]",
+              "rangebottom": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::rangebottom%]",
               "rangefull": "[%key:component::sensibo::entity::select::horizontalswing::state::rangefull%]",
-              "horizontal": "Horizontal",
+              "horizontal": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::horizontal%]",
               "both": "[%key:component::climate::entity_component::_::state_attributes::swing_mode::state::both%]"
             }
           }
@@ -479,6 +477,38 @@
           "description": "Choose between temperature/feels like/humidity."
         }
       }
+    }
+  },
+  "exceptions": {
+    "no_target_temperature_in_features": {
+      "message": "Current mode doesn't support setting target temperature"
+    },
+    "no_target_temperature": {
+      "message": "No target temperature provided"
+    },
+    "no_fan_level_in_features": {
+      "message": "Current mode doesn't support setting fan level"
+    },
+    "fan_mode_not_supported": {
+      "message": "Climate fan mode {fan_mode} is not supported by the integration, please open an issue"
+    },
+    "no_swing_in_features": {
+      "message": "Current mode doesn't support setting swing"
+    },
+    "swing_not_supported": {
+      "message": "Climate swing mode {swing_mode} is not supported by the integration, please open an issue"
+    },
+    "service_result_not_true": {
+      "message": "Could not execute service for {name}"
+    },
+    "service_raised": {
+      "message": "Could not execute service for {name} with error {error}"
+    },
+    "select_option_not_available": {
+      "message": "Current mode {hvac_mode} doesn't support setting {key}"
+    },
+    "climate_react_not_available": {
+      "message": "Use Sensibo Enable Climate React Service once to enable switch or the Sensibo app"
     }
   }
 }

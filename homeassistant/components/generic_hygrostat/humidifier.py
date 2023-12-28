@@ -18,6 +18,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_START,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -86,6 +87,7 @@ async def async_setup_platform(
     initial_state = config.get(CONF_INITIAL_STATE)
     away_humidity = config.get(CONF_AWAY_HUMIDITY)
     away_fixed = config.get(CONF_AWAY_FIXED)
+    unique_id = config.get(CONF_UNIQUE_ID)
 
     async_add_entities(
         [
@@ -105,6 +107,7 @@ async def async_setup_platform(
                 away_humidity,
                 away_fixed,
                 sensor_stale_duration,
+                unique_id,
             )
         ]
     )
@@ -132,6 +135,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         away_humidity,
         away_fixed,
         sensor_stale_duration,
+        unique_id,
     ):
         """Initialize the hygrostat."""
         self._name = name
@@ -160,6 +164,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         if not self._device_class:
             self._device_class = HumidifierDeviceClass.HUMIDIFIER
         self._attr_action = HumidifierAction.IDLE
+        self._attr_unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Run when entity about to be added."""

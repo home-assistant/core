@@ -26,7 +26,7 @@ from . import AirVisualProData, AirVisualProEntity
 from .const import DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class AirVisualProMeasurementKeyMixin:
     """Define an entity description mixin to include a measurement key."""
 
@@ -35,7 +35,7 @@ class AirVisualProMeasurementKeyMixin:
     ]
 
 
-@dataclass
+@dataclass(frozen=True)
 class AirVisualProMeasurementDescription(
     SensorEntityDescription, AirVisualProMeasurementKeyMixin
 ):

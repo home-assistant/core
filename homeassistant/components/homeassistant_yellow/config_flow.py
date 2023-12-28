@@ -63,6 +63,10 @@ class HomeAssistantYellowOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandl
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle logic when on Supervisor host."""
+        return await self.async_step_main_menu()
+
+    async def async_step_main_menu(self, _: None = None) -> FlowResult:
+        """Show the main menu."""
         return self.async_show_menu(
             step_id="main_menu",
             menu_options=[
@@ -85,7 +89,7 @@ class HomeAssistantYellowOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandl
             except (aiohttp.ClientError, TimeoutError, HassioAPIError) as err:
                 _LOGGER.warning("Failed to write hardware settings", exc_info=err)
                 return self.async_abort(reason="write_hw_settings_error")
-            return await self.async_step_confirm_reboot()
+            return await self.async_step_reboot_menu()
 
         try:
             async with asyncio.timeout(10):
@@ -102,7 +106,7 @@ class HomeAssistantYellowOptionsFlow(silabs_multiprotocol_addon.OptionsFlowHandl
 
         return self.async_show_form(step_id="hardware_settings", data_schema=schema)
 
-    async def async_step_confirm_reboot(
+    async def async_step_reboot_menu(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm reboot host."""

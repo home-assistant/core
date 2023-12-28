@@ -456,7 +456,7 @@ async def test_detect_radio_type_failure_wrong_firmware(
     with patch(
         "homeassistant.components.zha.radio_manager.AUTOPROBE_RADIOS", ()
     ), patch(
-        "homeassistant.components.zha.radio_manager.repairs.warn_on_wrong_silabs_firmware",
+        "homeassistant.components.zha.radio_manager.repairs.wrong_silabs_firmware.warn_on_wrong_silabs_firmware",
         return_value=True,
     ):
         assert (
@@ -473,7 +473,7 @@ async def test_detect_radio_type_failure_no_detect(
     with patch(
         "homeassistant.components.zha.radio_manager.AUTOPROBE_RADIOS", ()
     ), patch(
-        "homeassistant.components.zha.radio_manager.repairs.warn_on_wrong_silabs_firmware",
+        "homeassistant.components.zha.radio_manager.repairs.wrong_silabs_firmware.warn_on_wrong_silabs_firmware",
         return_value=False,
     ):
         assert await radio_manager.detect_radio_type() == ProbeResult.PROBING_FAILED

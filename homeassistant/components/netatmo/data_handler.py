@@ -10,8 +10,12 @@ import logging
 from time import time
 from typing import Any
 
+import aiohttp
 import pyatmo
-from pyatmo.modules.device_types import DeviceCategory as NetatmoDeviceCategory
+from pyatmo.modules.device_types import (
+    DeviceCategory as NetatmoDeviceCategory,
+    DeviceType as NetatmoDeviceType,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -52,7 +56,7 @@ ACCOUNT = "account"
 HOME = "home"
 WEATHER = "weather"
 AIR_CARE = "air_care"
-PUBLIC = "public"
+PUBLIC = NetatmoDeviceType.public
 EVENT = "event"
 
 PUBLISHERS = {
@@ -208,6 +212,10 @@ class NetatmoDataHandler:
             _LOGGER.debug(err)
 
         except asyncio.TimeoutError as err:
+            _LOGGER.debug(err)
+            return
+
+        except aiohttp.ClientConnectorError as err:
             _LOGGER.debug(err)
             return
 

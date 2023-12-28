@@ -6,6 +6,7 @@ from collections.abc import Callable, Iterable, Mapping
 import copy
 from dataclasses import dataclass
 from enum import StrEnum
+from functools import partial
 import logging
 from types import MappingProxyType
 from typing import Any, Required, TypedDict
@@ -14,6 +15,11 @@ import voluptuous as vol
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
+from .helpers.deprecation import (
+    DeprecatedConstantEnum,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from .helpers.frame import report
 from .util import uuid as uuid_util
 
@@ -34,17 +40,40 @@ class FlowResultType(StrEnum):
 
 
 # RESULT_TYPE_* is deprecated, to be removed in 2022.9
-RESULT_TYPE_FORM = "form"
-RESULT_TYPE_CREATE_ENTRY = "create_entry"
-RESULT_TYPE_ABORT = "abort"
-RESULT_TYPE_EXTERNAL_STEP = "external"
-RESULT_TYPE_EXTERNAL_STEP_DONE = "external_done"
-RESULT_TYPE_SHOW_PROGRESS = "progress"
-RESULT_TYPE_SHOW_PROGRESS_DONE = "progress_done"
-RESULT_TYPE_MENU = "menu"
+_DEPRECATED_RESULT_TYPE_FORM = DeprecatedConstantEnum(FlowResultType.FORM, "2025.1")
+_DEPRECATED_RESULT_TYPE_CREATE_ENTRY = DeprecatedConstantEnum(
+    FlowResultType.CREATE_ENTRY, "2025.1"
+)
+_DEPRECATED_RESULT_TYPE_ABORT = DeprecatedConstantEnum(FlowResultType.ABORT, "2025.1")
+_DEPRECATED_RESULT_TYPE_EXTERNAL_STEP = DeprecatedConstantEnum(
+    FlowResultType.EXTERNAL_STEP, "2025.1"
+)
+_DEPRECATED_RESULT_TYPE_EXTERNAL_STEP_DONE = DeprecatedConstantEnum(
+    FlowResultType.EXTERNAL_STEP_DONE, "2025.1"
+)
+_DEPRECATED_RESULT_TYPE_SHOW_PROGRESS = DeprecatedConstantEnum(
+    FlowResultType.SHOW_PROGRESS, "2025.1"
+)
+_DEPRECATED_RESULT_TYPE_SHOW_PROGRESS_DONE = DeprecatedConstantEnum(
+    FlowResultType.SHOW_PROGRESS_DONE, "2025.1"
+)
+_DEPRECATED_RESULT_TYPE_MENU = DeprecatedConstantEnum(FlowResultType.MENU, "2025.1")
+
+# Both can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 # Event that is fired when a flow is progressed via external or progress source.
 EVENT_DATA_ENTRY_FLOW_PROGRESSED = "data_entry_flow_progressed"
+
+FLOW_NOT_COMPLETE_STEPS = {
+    FlowResultType.FORM,
+    FlowResultType.EXTERNAL_STEP,
+    FlowResultType.EXTERNAL_STEP_DONE,
+    FlowResultType.SHOW_PROGRESS,
+    FlowResultType.SHOW_PROGRESS_DONE,
+    FlowResultType.MENU,
+}
 
 
 @dataclass(slots=True)
@@ -94,6 +123,7 @@ class FlowResult(TypedDict, total=False):
     handler: Required[str]
     last_step: bool | None
     menu_options: list[str] | dict[str, str]
+    minor_version: int
     options: Mapping[str, Any]
     preview: str | None
     progress_action: str
@@ -382,14 +412,9 @@ class FlowManager(abc.ABC):
         self, flow: FlowHandler, step_id: str, user_input: dict | BaseServiceInfo | None
     ) -> FlowResult:
         """Handle a step of a flow."""
+        self._raise_if_step_does_not_exist(flow, step_id)
+
         method = f"async_step_{step_id}"
-
-        if not hasattr(flow, method):
-            self._async_remove_flow_progress(flow.flow_id)
-            raise UnknownStep(
-                f"Handler {flow.__class__.__name__} doesn't support step {step_id}"
-            )
-
         try:
             result: FlowResult = await getattr(flow, method)(user_input)
         except AbortFlow as err:
@@ -411,14 +436,8 @@ class FlowManager(abc.ABC):
                 error_if_core=False,
             )
 
-        if result["type"] in (
-            FlowResultType.FORM,
-            FlowResultType.EXTERNAL_STEP,
-            FlowResultType.EXTERNAL_STEP_DONE,
-            FlowResultType.SHOW_PROGRESS,
-            FlowResultType.SHOW_PROGRESS_DONE,
-            FlowResultType.MENU,
-        ):
+        if result["type"] in FLOW_NOT_COMPLETE_STEPS:
+            self._raise_if_step_does_not_exist(flow, result["step_id"])
             flow.cur_step = result
             return result
 
@@ -434,6 +453,16 @@ class FlowManager(abc.ABC):
         self._async_remove_flow_progress(flow.flow_id)
 
         return result
+
+    def _raise_if_step_does_not_exist(self, flow: FlowHandler, step_id: str) -> None:
+        """Raise if the step does not exist."""
+        method = f"async_step_{step_id}"
+
+        if not hasattr(flow, method):
+            self._async_remove_flow_progress(flow.flow_id)
+            raise UnknownStep(
+                f"Handler {self.__class__.__name__} doesn't support step {step_id}"
+            )
 
     async def _async_setup_preview(self, flow: FlowHandler) -> None:
         """Set up preview for a flow handler."""
@@ -464,16 +493,17 @@ class FlowHandler:
 
     # Set by developer
     VERSION = 1
+    MINOR_VERSION = 1
 
     @property
     def source(self) -> str | None:
         """Source that initialized the flow."""
-        return self.context.get("source", None)
+        return self.context.get("source", None)  # type: ignore[no-any-return]
 
     @property
     def show_advanced_options(self) -> bool:
         """If we should show advanced options."""
-        return self.context.get("show_advanced_options", False)
+        return self.context.get("show_advanced_options", False)  # type: ignore[no-any-return]
 
     def add_suggested_values_to_schema(
         self, data_schema: vol.Schema, suggested_values: Mapping[str, Any] | None
@@ -543,6 +573,7 @@ class FlowHandler:
         """Finish flow."""
         flow_result = FlowResult(
             version=self.VERSION,
+            minor_version=self.MINOR_VERSION,
             type=FlowResultType.CREATE_ENTRY,
             flow_id=self.flow_id,
             handler=self.handler,

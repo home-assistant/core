@@ -7,7 +7,6 @@ import logging
 import bellows.zigbee.application
 import voluptuous as vol
 import zigpy.application
-from zigpy.config import CONF_DEVICE_PATH  # noqa: F401
 import zigpy.types as t
 import zigpy_deconz.zigbee.application
 import zigpy_xbee.zigbee.application
@@ -49,6 +48,7 @@ ATTR_POWER_SOURCE = "power_source"
 ATTR_PROFILE_ID = "profile_id"
 ATTR_QUIRK_APPLIED = "quirk_applied"
 ATTR_QUIRK_CLASS = "quirk_class"
+ATTR_QUIRK_ID = "quirk_id"
 ATTR_ROUTES = "routes"
 ATTR_RSSI = "rssi"
 ATTR_SIGNATURE = "signature"
@@ -127,8 +127,8 @@ CONF_ALARM_FAILED_TRIES = "alarm_failed_tries"
 CONF_ALARM_ARM_REQUIRES_CODE = "alarm_arm_requires_code"
 
 CONF_BAUDRATE = "baudrate"
+CONF_FLOW_CONTROL = "flow_control"
 CONF_CUSTOM_QUIRKS_PATH = "custom_quirks_path"
-CONF_DATABASE = "database_path"
 CONF_DEFAULT_LIGHT_TRANSITION = "default_light_transition"
 CONF_DEVICE_CONFIG = "device_config"
 CONF_ENABLE_ENHANCED_LIGHT_TRANSITION = "enhanced_light_transition"
@@ -137,12 +137,8 @@ CONF_ALWAYS_PREFER_XY_COLOR_MODE = "always_prefer_xy_color_mode"
 CONF_GROUP_MEMBERS_ASSUME_STATE = "group_members_assume_state"
 CONF_ENABLE_IDENTIFY_ON_JOIN = "enable_identify_on_join"
 CONF_ENABLE_QUIRKS = "enable_quirks"
-CONF_FLOWCONTROL = "flow_control"
-CONF_NWK = "network"
-CONF_NWK_CHANNEL = "channel"
 CONF_RADIO_TYPE = "radio_type"
 CONF_USB_PATH = "usb_path"
-CONF_USE_THREAD = "use_thread"
 CONF_ZIGPY = "zigpy_config"
 
 CONF_CONSIDER_UNAVAILABLE_MAINS = "consider_unavailable_mains"
@@ -411,9 +407,6 @@ class Strobe(t.enum8):
     No_Strobe = 0x00
     Strobe = 0x01
 
-
-STARTUP_FAILURE_DELAY_S = 3
-STARTUP_RETRIES = 3
 
 EZSP_OVERWRITE_EUI64 = (
     "i_understand_i_can_update_eui64_only_once_and_i_still_want_to_do_it"

@@ -17,7 +17,11 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 
-from tests.common import MockConfigEntry, flush_store
+from tests.common import (
+    MockConfigEntry,
+    flush_store,
+    import_and_test_deprecated_constant_enum,
+)
 
 
 @pytest.fixture
@@ -198,11 +202,12 @@ async def test_loading_from_storage(
                     "entry_type": dr.DeviceEntryType.SERVICE,
                     "hw_version": "hw_version",
                     "id": "abcdefghijklm",
-                    "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "identifiers": [["serial", "123456ABCDEF"]],
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "name_by_user": "Test Friendly Name",
                     "name": "name",
+                    "serial_number": "serial_no",
                     "sw_version": "version",
                     "via_device_id": None,
                 }
@@ -212,7 +217,7 @@ async def test_loading_from_storage(
                     "config_entries": [mock_config_entry.entry_id],
                     "connections": [["Zigbee", "23.45.67.89.01"]],
                     "id": "bcdefghijklmn",
-                    "identifiers": [["serial", "34:56:AB:CD:EF:12"]],
+                    "identifiers": [["serial", "3456ABCDEF12"]],
                     "orphaned_timestamp": None,
                 }
             ],
@@ -227,7 +232,7 @@ async def test_loading_from_storage(
     entry = registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={("Zigbee", "01.23.45.67.89")},
-        identifiers={("serial", "12:34:56:AB:CD:EF")},
+        identifiers={("serial", "123456ABCDEF")},
         manufacturer="manufacturer",
         model="model",
     )
@@ -240,11 +245,12 @@ async def test_loading_from_storage(
         entry_type=dr.DeviceEntryType.SERVICE,
         hw_version="hw_version",
         id="abcdefghijklm",
-        identifiers={("serial", "12:34:56:AB:CD:EF")},
+        identifiers={("serial", "123456ABCDEF")},
         manufacturer="manufacturer",
         model="model",
         name_by_user="Test Friendly Name",
         name="name",
+        serial_number="serial_no",
         suggested_area=None,  # Not stored
         sw_version="version",
     )
@@ -256,7 +262,7 @@ async def test_loading_from_storage(
     entry = registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={("Zigbee", "23.45.67.89.01")},
-        identifiers={("serial", "34:56:AB:CD:EF:12")},
+        identifiers={("serial", "3456ABCDEF12")},
         manufacturer="manufacturer",
         model="model",
     )
@@ -264,7 +270,7 @@ async def test_loading_from_storage(
         config_entries={mock_config_entry.entry_id},
         connections={("Zigbee", "23.45.67.89.01")},
         id="bcdefghijklmn",
-        identifiers={("serial", "34:56:AB:CD:EF:12")},
+        identifiers={("serial", "3456ABCDEF12")},
         manufacturer="manufacturer",
         model="model",
     )
@@ -275,12 +281,12 @@ async def test_loading_from_storage(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_1_1_to_1_3(
+async def test_migration_1_1_to_1_4(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test migration from version 1.1 to 1.3."""
+    """Test migration from version 1.1 to 1.4."""
     hass_storage[dr.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 1,
@@ -291,7 +297,7 @@ async def test_migration_1_1_to_1_3(
                     "connections": [["Zigbee", "01.23.45.67.89"]],
                     "entry_type": "service",
                     "id": "abcdefghijklm",
-                    "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "identifiers": [["serial", "123456ABCDEF"]],
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "name": "name",
@@ -316,7 +322,7 @@ async def test_migration_1_1_to_1_3(
                     "connections": [],
                     "entry_type": "service",
                     "id": "deletedid",
-                    "identifiers": [["serial", "12:34:56:AB:CD:FF"]],
+                    "identifiers": [["serial", "123456ABCDFF"]],
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "name": "name",
@@ -333,7 +339,7 @@ async def test_migration_1_1_to_1_3(
     entry = registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={("Zigbee", "01.23.45.67.89")},
-        identifiers={("serial", "12:34:56:AB:CD:EF")},
+        identifiers={("serial", "123456ABCDEF")},
     )
     assert entry.id == "abcdefghijklm"
 
@@ -341,7 +347,7 @@ async def test_migration_1_1_to_1_3(
     entry = registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={("Zigbee", "01.23.45.67.89")},
-        identifiers={("serial", "12:34:56:AB:CD:EF")},
+        identifiers={("serial", "123456ABCDEF")},
         sw_version="new_version",
     )
     assert entry.id == "abcdefghijklm"
@@ -363,11 +369,12 @@ async def test_migration_1_1_to_1_3(
                     "entry_type": "service",
                     "hw_version": None,
                     "id": "abcdefghijklm",
-                    "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "identifiers": [["serial", "123456ABCDEF"]],
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "name": "name",
                     "name_by_user": None,
+                    "serial_number": None,
                     "sw_version": "new_version",
                     "via_device_id": None,
                 },
@@ -385,6 +392,7 @@ async def test_migration_1_1_to_1_3(
                     "model": None,
                     "name_by_user": None,
                     "name": None,
+                    "serial_number": None,
                     "sw_version": None,
                     "via_device_id": None,
                 },
@@ -394,7 +402,7 @@ async def test_migration_1_1_to_1_3(
                     "config_entries": ["123456"],
                     "connections": [],
                     "id": "deletedid",
-                    "identifiers": [["serial", "12:34:56:AB:CD:FF"]],
+                    "identifiers": [["serial", "123456ABCDFF"]],
                     "orphaned_timestamp": None,
                 }
             ],
@@ -403,7 +411,7 @@ async def test_migration_1_1_to_1_3(
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_1_2_to_1_3(
+async def test_migration_1_2_to_1_4(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     mock_config_entry: MockConfigEntry,
@@ -423,7 +431,7 @@ async def test_migration_1_2_to_1_3(
                     "disabled_by": None,
                     "entry_type": "service",
                     "id": "abcdefghijklm",
-                    "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "identifiers": [["serial", "123456ABCDEF"]],
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "name": "name",
@@ -459,7 +467,7 @@ async def test_migration_1_2_to_1_3(
     entry = registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={("Zigbee", "01.23.45.67.89")},
-        identifiers={("serial", "12:34:56:AB:CD:EF")},
+        identifiers={("serial", "123456ABCDEF")},
     )
     assert entry.id == "abcdefghijklm"
 
@@ -467,7 +475,7 @@ async def test_migration_1_2_to_1_3(
     entry = registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={("Zigbee", "01.23.45.67.89")},
-        identifiers={("serial", "12:34:56:AB:CD:EF")},
+        identifiers={("serial", "123456ABCDEF")},
         sw_version="new_version",
     )
     assert entry.id == "abcdefghijklm"
@@ -490,11 +498,12 @@ async def test_migration_1_2_to_1_3(
                     "entry_type": "service",
                     "hw_version": None,
                     "id": "abcdefghijklm",
-                    "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "identifiers": [["serial", "123456ABCDEF"]],
                     "manufacturer": "manufacturer",
                     "model": "model",
                     "name": "name",
                     "name_by_user": None,
+                    "serial_number": None,
                     "sw_version": "new_version",
                     "via_device_id": None,
                 },
@@ -512,6 +521,130 @@ async def test_migration_1_2_to_1_3(
                     "model": None,
                     "name_by_user": None,
                     "name": None,
+                    "serial_number": None,
+                    "sw_version": None,
+                    "via_device_id": None,
+                },
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_1_3_to_1_4(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_config_entry: MockConfigEntry,
+):
+    """Test migration from version 1.3 to 1.4."""
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 3,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": [mock_config_entry.entry_id],
+                    "configuration_url": None,
+                    "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "disabled_by": None,
+                    "entry_type": "service",
+                    "hw_version": "hw_version",
+                    "id": "abcdefghijklm",
+                    "identifiers": [["serial", "123456ABCDEF"]],
+                    "manufacturer": "manufacturer",
+                    "model": "model",
+                    "name": "name",
+                    "name_by_user": None,
+                    "sw_version": "version",
+                    "via_device_id": None,
+                },
+                {
+                    "area_id": None,
+                    "config_entries": [None],
+                    "configuration_url": None,
+                    "connections": [],
+                    "disabled_by": None,
+                    "entry_type": None,
+                    "hw_version": None,
+                    "id": "invalid-entry-type",
+                    "identifiers": [["serial", "mock-id-invalid-entry"]],
+                    "manufacturer": None,
+                    "model": None,
+                    "name_by_user": None,
+                    "name": None,
+                    "sw_version": None,
+                    "via_device_id": None,
+                },
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+
+    # Test data was loaded
+    entry = registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={("Zigbee", "01.23.45.67.89")},
+        identifiers={("serial", "123456ABCDEF")},
+    )
+    assert entry.id == "abcdefghijklm"
+
+    # Update to trigger a store
+    entry = registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={("Zigbee", "01.23.45.67.89")},
+        identifiers={("serial", "123456ABCDEF")},
+        sw_version="new_version",
+    )
+    assert entry.id == "abcdefghijklm"
+
+    # Check we store migrated data
+    await flush_store(registry._store)
+
+    assert hass_storage[dr.STORAGE_KEY] == {
+        "version": dr.STORAGE_VERSION_MAJOR,
+        "minor_version": dr.STORAGE_VERSION_MINOR,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": [mock_config_entry.entry_id],
+                    "configuration_url": None,
+                    "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "disabled_by": None,
+                    "entry_type": "service",
+                    "hw_version": "hw_version",
+                    "id": "abcdefghijklm",
+                    "identifiers": [["serial", "123456ABCDEF"]],
+                    "manufacturer": "manufacturer",
+                    "model": "model",
+                    "name": "name",
+                    "name_by_user": None,
+                    "serial_number": None,
+                    "sw_version": "new_version",
+                    "via_device_id": None,
+                },
+                {
+                    "area_id": None,
+                    "config_entries": [None],
+                    "configuration_url": None,
+                    "connections": [],
+                    "disabled_by": None,
+                    "entry_type": None,
+                    "hw_version": None,
+                    "id": "invalid-entry-type",
+                    "identifiers": [["serial", "mock-id-invalid-entry"]],
+                    "manufacturer": None,
+                    "model": None,
+                    "name_by_user": None,
+                    "name": None,
+                    "serial_number": None,
                     "sw_version": None,
                     "via_device_id": None,
                 },
@@ -996,6 +1129,7 @@ async def test_update(
             name_by_user="Test Friendly Name",
             name="name",
             new_identifiers=new_identifiers,
+            serial_number="serial_no",
             suggested_area="suggested_area",
             sw_version="version",
             via_device_id="98765B",
@@ -1017,6 +1151,7 @@ async def test_update(
         model="Test Model",
         name_by_user="Test Friendly Name",
         name="name",
+        serial_number="serial_no",
         suggested_area="suggested_area",
         sw_version="version",
         via_device_id="98765B",
@@ -1060,6 +1195,7 @@ async def test_update(
         "model": None,
         "name": None,
         "name_by_user": None,
+        "serial_number": None,
         "suggested_area": None,
         "sw_version": None,
         "via_device_id": None,
@@ -1194,7 +1330,9 @@ async def test_update_suggested_area(
 
 
 async def test_cleanup_device_registry(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test cleanup works."""
     config_entry = MockConfigEntry(domain="hue")
@@ -1217,13 +1355,12 @@ async def test_cleanup_device_registry(
     # Remove the config entry without triggering the normal cleanup
     hass.config_entries._entries.pop(ghost_config_entry.entry_id)
 
-    ent_reg = er.async_get(hass)
-    ent_reg.async_get_or_create("light", "hue", "e1", device_id=d1.id)
-    ent_reg.async_get_or_create("light", "hue", "e2", device_id=d1.id)
-    ent_reg.async_get_or_create("light", "hue", "e3", device_id=d3.id)
+    entity_registry.async_get_or_create("light", "hue", "e1", device_id=d1.id)
+    entity_registry.async_get_or_create("light", "hue", "e2", device_id=d1.id)
+    entity_registry.async_get_or_create("light", "hue", "e3", device_id=d3.id)
 
     # Manual cleanup should detect the orphaned config entry
-    dr.async_cleanup(hass, device_registry, ent_reg)
+    dr.async_cleanup(hass, device_registry, entity_registry)
 
     assert device_registry.async_get_device(identifiers={("hue", "d1")}) is not None
     assert device_registry.async_get_device(identifiers={("hue", "d2")}) is not None
@@ -1232,7 +1369,9 @@ async def test_cleanup_device_registry(
 
 
 async def test_cleanup_device_registry_removes_expired_orphaned_devices(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test cleanup removes expired orphaned devices."""
     config_entry = MockConfigEntry(domain="hue")
@@ -1252,8 +1391,7 @@ async def test_cleanup_device_registry_removes_expired_orphaned_devices(
     assert len(device_registry.devices) == 0
     assert len(device_registry.deleted_devices) == 3
 
-    ent_reg = er.async_get(hass)
-    dr.async_cleanup(hass, device_registry, ent_reg)
+    dr.async_cleanup(hass, device_registry, entity_registry)
 
     assert len(device_registry.devices) == 0
     assert len(device_registry.deleted_devices) == 3
@@ -1261,7 +1399,7 @@ async def test_cleanup_device_registry_removes_expired_orphaned_devices(
     future_time = time.time() + dr.ORPHANED_DEVICE_KEEP_SECONDS + 1
 
     with patch("time.time", return_value=future_time):
-        dr.async_cleanup(hass, device_registry, ent_reg)
+        dr.async_cleanup(hass, device_registry, entity_registry)
 
     assert len(device_registry.devices) == 0
     assert len(device_registry.deleted_devices) == 0
@@ -1856,11 +1994,12 @@ async def test_loading_invalid_configuration_url_from_storage(
                     "entry_type": dr.DeviceEntryType.SERVICE,
                     "hw_version": None,
                     "id": "abcdefghijklm",
-                    "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "identifiers": [["serial", "123456ABCDEF"]],
                     "manufacturer": None,
                     "model": None,
                     "name_by_user": None,
                     "name": None,
+                    "serial_number": None,
                     "sw_version": None,
                     "via_device_id": None,
                 }
@@ -1874,6 +2013,15 @@ async def test_loading_invalid_configuration_url_from_storage(
     assert len(registry.devices) == 1
     entry = registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={("serial", "12:34:56:AB:CD:EF")},
+        identifiers={("serial", "123456ABCDEF")},
     )
     assert entry.configuration_url == "invalid"
+
+
+@pytest.mark.parametrize(("enum"), list(dr.DeviceEntryDisabler))
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: dr.DeviceEntryDisabler,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(caplog, dr, enum, "DISABLED_", "2025.1")

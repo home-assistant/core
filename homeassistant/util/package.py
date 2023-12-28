@@ -67,9 +67,7 @@ def install_package(
     upgrade: bool = True,
     target: str | None = None,
     constraints: str | None = None,
-    find_links: str | None = None,
     timeout: int | None = None,
-    no_cache_dir: bool | None = False,
 ) -> bool:
     """Install a package on PyPi. Accepts pip compatible package strings.
 
@@ -81,14 +79,10 @@ def install_package(
     args = [sys.executable, "-m", "pip", "install", "--quiet", package]
     if timeout:
         args += ["--timeout", str(timeout)]
-    if no_cache_dir:
-        args.append("--no-cache-dir")
     if upgrade:
         args.append("--upgrade")
     if constraints is not None:
         args += ["--constraint", constraints]
-    if find_links is not None:
-        args += ["--find-links", find_links, "--prefer-binary"]
     if target:
         assert not is_virtual_env()
         # This only works if not running in venv

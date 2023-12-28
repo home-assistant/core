@@ -5,8 +5,11 @@ details on Fitbit authorization.
 """
 
 import base64
+from http import HTTPStatus
 import logging
 from typing import Any, cast
+
+import aiohttp
 
 from homeassistant.components.application_credentials import (
     AuthImplementation,
@@ -18,6 +21,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .exceptions import FitbitApiException, FitbitAuthException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,26 +35,43 @@ class FitbitOAuth2Implementation(AuthImplementation):
 
     async def async_resolve_external_data(self, external_data: dict[str, Any]) -> dict:
         """Resolve the authorization code to tokens."""
-        session = async_get_clientsession(self.hass)
-        data = {
-            "grant_type": "authorization_code",
-            "code": external_data["code"],
-            "redirect_uri": external_data["state"]["redirect_uri"],
-        }
-        resp = await session.post(self.token_url, data=data, headers=self._headers)
-        resp.raise_for_status()
-        return cast(dict, await resp.json())
+        return await self._post(
+            {
+                "grant_type": "authorization_code",
+                "code": external_data["code"],
+                "redirect_uri": external_data["state"]["redirect_uri"],
+            }
+        )
 
     async def _token_request(self, data: dict) -> dict:
         """Make a token request."""
+        return await self._post(
+            {
+                **data,
+                CONF_CLIENT_ID: self.client_id,
+                CONF_CLIENT_SECRET: self.client_secret,
+            }
+        )
+
+    async def _post(self, data: dict[str, Any]) -> dict[str, Any]:
         session = async_get_clientsession(self.hass)
-        body = {
-            **data,
-            CONF_CLIENT_ID: self.client_id,
-            CONF_CLIENT_SECRET: self.client_secret,
-        }
-        resp = await session.post(self.token_url, data=body, headers=self._headers)
-        resp.raise_for_status()
+        try:
+            resp = await session.post(self.token_url, data=data, headers=self._headers)
+            resp.raise_for_status()
+        except aiohttp.ClientResponseError as err:
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                try:
+                    error_body = await resp.text()
+                except aiohttp.ClientError:
+                    error_body = ""
+                _LOGGER.debug(
+                    "Client response error status=%s, body=%s", err.status, error_body
+                )
+            if err.status == HTTPStatus.UNAUTHORIZED:
+                raise FitbitAuthException(f"Unauthorized error: {err}") from err
+            raise FitbitApiException(f"Server error response: {err}") from err
+        except aiohttp.ClientError as err:
+            raise FitbitApiException(f"Client connection error: {err}") from err
         return cast(dict, await resp.json())
 
     @property

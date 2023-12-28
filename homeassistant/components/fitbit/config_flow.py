@@ -4,8 +4,6 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from fitbit.exceptions import HTTPException
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
@@ -13,6 +11,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import api
 from .const import DOMAIN, OAUTH_SCOPES
+from .exceptions import FitbitApiException, FitbitAuthException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,13 +53,31 @@ class OAuth2FlowHandler(
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
+    async def async_step_creation(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Create config entry from external data with Fitbit specific error handling."""
+        try:
+            return await super().async_step_creation()
+        except FitbitAuthException as err:
+            _LOGGER.error(
+                "Failed to authenticate when creating Fitbit credentials: %s", err
+            )
+            return self.async_abort(reason="invalid_auth")
+        except FitbitApiException as err:
+            _LOGGER.error("Failed to create Fitbit credentials: %s", err)
+            return self.async_abort(reason="cannot_connect")
+
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Create an entry for the flow, or update existing entry."""
 
         client = api.ConfigFlowFitbitApi(self.hass, data[CONF_TOKEN])
         try:
             profile = await client.async_get_user_profile()
-        except HTTPException as err:
+        except FitbitAuthException as err:
+            _LOGGER.error("Failed to authenticate with Fitbit API: %s", err)
+            return self.async_abort(reason="invalid_access_token")
+        except FitbitApiException as err:
             _LOGGER.error("Failed to fetch user profile for Fitbit API: %s", err)
             return self.async_abort(reason="cannot_connect")
 
@@ -73,7 +90,7 @@ class OAuth2FlowHandler(
 
         await self.async_set_unique_id(profile.encoded_id)
         self._abort_if_unique_id_configured()
-        return self.async_create_entry(title=profile.full_name, data=data)
+        return self.async_create_entry(title=profile.display_name, data=data)
 
     async def async_step_import(self, data: dict[str, Any]) -> FlowResult:
         """Handle import from YAML."""

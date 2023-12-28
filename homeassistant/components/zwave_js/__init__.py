@@ -113,6 +113,7 @@ from .helpers import (
     async_enable_statistics,
     get_device_id,
     get_device_id_ext,
+    get_network_identifier_for_notification,
     get_unique_id,
     get_valueless_base_unique_id,
 )
@@ -448,8 +449,33 @@ class ControllerEvents:
                     "remove_entity"
                 ),
             )
-        else:
-            self.remove_device(device)
+            # We don't want to remove the device so we can keep the user customizations
+            return
+
+        if reason == RemoveNodeReason.RESET:
+            device_name = device.name_by_user or device.name or f"Node {node.node_id}"
+            identifier = get_network_identifier_for_notification(
+                self.hass, self.config_entry, self.driver_events.driver.controller
+            )
+            notification_msg = (
+                f"`{device_name}` has been factory reset "
+                "and removed from the Z-Wave network"
+            )
+            if identifier:
+                # Remove trailing comma if it's there
+                if identifier[-1] == ",":
+                    identifier = identifier[:-1]
+                notification_msg = f"{notification_msg} {identifier}."
+            else:
+                notification_msg = f"{notification_msg}."
+            async_create(
+                self.hass,
+                notification_msg,
+                "Device Was Factory Reset!",
+                f"{DOMAIN}.node_reset_and_removed.{dev_id[1]}",
+            )
+
+        self.remove_device(device)
 
     @callback
     def async_on_identify(self, event: dict) -> None:
@@ -459,26 +485,17 @@ class ControllerEvents:
         dev_id = get_device_id(self.driver_events.driver, node)
         device = self.dev_reg.async_get_device(identifiers={dev_id})
         assert device
-        device_name = device.name_by_user or device.name
-        home_id = self.driver_events.driver.controller.home_id
-        # We do this because we know at this point the controller has its home ID as
-        # as it is part of the device ID
-        assert home_id
+        device_name = device.name_by_user or device.name or f"Node {node.node_id}"
         # In case the user has multiple networks, we should give them more information
         # about the network for the controller being identified.
-        identifier = ""
-        if len(self.hass.config_entries.async_entries(DOMAIN)) > 1:
-            if str(home_id) != self.config_entry.title:
-                identifier = (
-                    f"`{self.config_entry.title}`, with the home ID `{home_id}`, "
-                )
-            else:
-                identifier = f"with the home ID `{home_id}` "
+        identifier = get_network_identifier_for_notification(
+            self.hass, self.config_entry, self.driver_events.driver.controller
+        )
         async_create(
             self.hass,
             (
                 f"`{device_name}` has just requested the controller for your Z-Wave "
-                f"network {identifier}to identify itself. No action is needed from "
+                f"network {identifier} to identify itself. No action is needed from "
                 "you other than to note the source of the request, and you can safely "
                 "dismiss this notification when ready."
             ),

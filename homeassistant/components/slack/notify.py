@@ -166,7 +166,7 @@ class SlackNotificationService(BaseNotificationService):
                 filename=filename,
                 initial_comment=message,
                 title=title or filename,
-                thread_ts=thread_ts,
+                thread_ts=thread_ts or "",
             )
         except (SlackApiError, ClientError) as err:
             _LOGGER.error("Error while uploading file-based message: %r", err)

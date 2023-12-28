@@ -76,6 +76,11 @@ def mock_connection(
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
+    aioclient_mock.get(
+        f"{url}/api/v3/queue",
+        text=load_fixture("radarr/queue.json"),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
     root_folder_fixture = "rootfolder-linux"
 
     if windows:
@@ -90,13 +95,21 @@ def mock_connection(
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
-    movie_fixture = "movie"
-    if single_return:
-        movie_fixture = f"single-{movie_fixture}"
-
     aioclient_mock.get(
         f"{url}/api/v3/movie",
-        text=load_fixture(f"radarr/{movie_fixture}.json"),
+        text=load_fixture("radarr/movie.json"),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+
+
+def mock_calendar(
+    aioclient_mock: AiohttpClientMocker,
+    url: str = URL,
+) -> None:
+    """Mock radarr connection."""
+    aioclient_mock.get(
+        f"{url}/api/v3/calendar",
+        text=load_fixture("radarr/calendar.json"),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
@@ -114,10 +127,12 @@ def mock_connection_invalid_auth(
     url: str = URL,
 ) -> None:
     """Mock radarr invalid auth errors."""
-    aioclient_mock.get(f"{url}/api/v3/system/status", status=HTTPStatus.UNAUTHORIZED)
     aioclient_mock.get(f"{url}/api/v3/command", status=HTTPStatus.UNAUTHORIZED)
     aioclient_mock.get(f"{url}/api/v3/movie", status=HTTPStatus.UNAUTHORIZED)
+    aioclient_mock.get(f"{url}/api/v3/queue", status=HTTPStatus.UNAUTHORIZED)
     aioclient_mock.get(f"{url}/api/v3/rootfolder", status=HTTPStatus.UNAUTHORIZED)
+    aioclient_mock.get(f"{url}/api/v3/system/status", status=HTTPStatus.UNAUTHORIZED)
+    aioclient_mock.get(f"{url}/api/v3/calendar", status=HTTPStatus.UNAUTHORIZED)
 
 
 def mock_connection_server_error(
@@ -125,13 +140,17 @@ def mock_connection_server_error(
     url: str = URL,
 ) -> None:
     """Mock radarr server errors."""
+    aioclient_mock.get(f"{url}/api/v3/command", status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    aioclient_mock.get(f"{url}/api/v3/movie", status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    aioclient_mock.get(f"{url}/api/v3/queue", status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    aioclient_mock.get(
+        f"{url}/api/v3/rootfolder", status=HTTPStatus.INTERNAL_SERVER_ERROR
+    )
     aioclient_mock.get(
         f"{url}/api/v3/system/status", status=HTTPStatus.INTERNAL_SERVER_ERROR
     )
-    aioclient_mock.get(f"{url}/api/v3/command", status=HTTPStatus.INTERNAL_SERVER_ERROR)
-    aioclient_mock.get(f"{url}/api/v3/movie", status=HTTPStatus.INTERNAL_SERVER_ERROR)
     aioclient_mock.get(
-        f"{url}/api/v3/rootfolder", status=HTTPStatus.INTERNAL_SERVER_ERROR
+        f"{url}/api/v3/calendar", status=HTTPStatus.INTERNAL_SERVER_ERROR
     )
 
 
@@ -169,6 +188,8 @@ async def setup_integration(
         single_return=single_return,
     )
 
+    mock_calendar(aioclient_mock, url)
+
     if not skip_entry_setup:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -183,11 +204,6 @@ def patch_async_setup_entry(return_value=True):
         "homeassistant.components.radarr.async_setup_entry",
         return_value=return_value,
     )
-
-
-def patch_radarr():
-    """Patch radarr api."""
-    return patch("homeassistant.components.radarr.RadarrClient.async_get_system_status")
 
 
 def create_entry(hass: HomeAssistant) -> MockConfigEntry:

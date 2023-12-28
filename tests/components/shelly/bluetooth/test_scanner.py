@@ -108,19 +108,6 @@ async def test_scanner_ignores_wrong_version_and_logs(
     assert "Unsupported BLE scan result version: 0" in caplog.text
 
 
-async def test_scanner_minimum_firmware_log_error(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test scanner log error if device firmware incompatible."""
-    monkeypatch.setattr(mock_rpc_device, "version", "0.11.0")
-    await init_integration(
-        hass, 2, options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE}
-    )
-    assert mock_rpc_device.initialized is True
-
-    assert "BLE not supported on device" in caplog.text
-
-
 async def test_scanner_warns_on_corrupt_event(
     hass: HomeAssistant, mock_rpc_device, monkeypatch, caplog: pytest.LogCaptureFixture
 ) -> None:

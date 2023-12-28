@@ -18,13 +18,13 @@ from homeassistant.components.todoist.const import (
     PROJECT_NAME,
     SERVICE_NEW_TASK,
 )
-from homeassistant.const import CONF_TOKEN
+from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
-from .conftest import SUMMARY
+from .conftest import PROJECT_ID, SUMMARY
 
 from tests.typing import ClientSessionGenerator
 
@@ -32,6 +32,12 @@ from tests.typing import ClientSessionGenerator
 # This keeps UTC-6 all year round
 TZ_NAME = "America/Regina"
 TIMEZONE = zoneinfo.ZoneInfo(TZ_NAME)
+
+
+@pytest.fixture(autouse=True)
+def platforms() -> list[Platform]:
+    """Override platforms."""
+    return [Platform.CALENDAR]
 
 
 @pytest.fixture(autouse=True)
@@ -97,7 +103,7 @@ async def test_calendar_entity_unique_id(
 ) -> None:
     """Test unique id is set to project id."""
     entity = entity_registry.async_get("calendar.name")
-    assert entity.unique_id == "12345"
+    assert entity.unique_id == PROJECT_ID
 
 
 @pytest.mark.parametrize(
@@ -256,7 +262,7 @@ async def test_create_task_service_call(hass: HomeAssistant, api: AsyncMock) -> 
     await hass.async_block_till_done()
 
     api.add_task.assert_called_with(
-        "task", project_id="12345", labels=["Label1"], assignee_id="1"
+        "task", project_id=PROJECT_ID, labels=["Label1"], assignee_id="1"
     )
 
 

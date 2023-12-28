@@ -6,13 +6,10 @@ from homeassistant.const import CONF_DEVICES
 DEBOUNCE_TIMEOUT = 0.5
 DEVICE_PRECISION_LEEWAY = 6
 DOMAIN = "homekit"
+PERSIST_LOCK_DATA = f"{DOMAIN}_persist_lock"
 HOMEKIT_FILE = ".homekit.state"
-HOMEKIT_PAIRING_QR = "homekit-pairing-qr"
-HOMEKIT_PAIRING_QR_SECRET = "homekit-pairing-qr-secret"
-HOMEKIT = "homekit"
 SHUTDOWN_TIMEOUT = 30
 CONF_ENTRY_INDEX = "index"
-PERSIST_LOCK = "persist_lock"
 
 # ### Codecs ####
 VIDEO_CODEC_COPY = "copy"

@@ -1337,7 +1337,7 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
             "energy",
             0,
             "from integration test ",
-            "report it to the custom integration author",
+            "report it to the author of the 'test' custom integration",
         ),
     ],
 )

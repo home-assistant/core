@@ -1,11 +1,15 @@
 """DataUpdateCoordinator for the AirNow integration."""
+from datetime import timedelta
 import logging
+from typing import Any
 
+from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
 from pyairnow import WebServiceAPI
 from pyairnow.conv import aqi_to_concentration
 from pyairnow.errors import AirNowError
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -20,6 +24,7 @@ from .const import (
     ATTR_API_POLLUTANT,
     ATTR_API_REPORT_DATE,
     ATTR_API_REPORT_HOUR,
+    ATTR_API_REPORT_TZ,
     ATTR_API_STATE,
     ATTR_API_STATION,
     ATTR_API_STATION_LATITUDE,
@@ -30,12 +35,19 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class AirNowDataUpdateCoordinator(DataUpdateCoordinator):
+class AirNowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """The AirNow update coordinator."""
 
     def __init__(
-        self, hass, session, api_key, latitude, longitude, distance, update_interval
-    ):
+        self,
+        hass: HomeAssistant,
+        session: ClientSession,
+        api_key: str,
+        latitude: float,
+        longitude: float,
+        distance: int,
+        update_interval: timedelta,
+    ) -> None:
         """Initialize."""
         self.latitude = latitude
         self.longitude = longitude
@@ -45,7 +57,7 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator):
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         data = {}
         try:
@@ -83,6 +95,7 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator):
                 # Copy Report Details
                 data[ATTR_API_REPORT_DATE] = obv[ATTR_API_REPORT_DATE]
                 data[ATTR_API_REPORT_HOUR] = obv[ATTR_API_REPORT_HOUR]
+                data[ATTR_API_REPORT_TZ] = obv[ATTR_API_REPORT_TZ]
 
                 # Copy Station Details
                 data[ATTR_API_STATE] = obv[ATTR_API_STATE]
