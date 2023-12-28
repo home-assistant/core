@@ -31,6 +31,7 @@ from homeassistant.components.matrix import (
     CONF_WORD,
     EVENT_MATRIX_COMMAND,
     MatrixBot,
+    RoomAlias,
     RoomAnyID,
     RoomID,
 )
@@ -52,11 +53,11 @@ from tests.common import async_capture_events
 TEST_NOTIFIER_NAME = "matrix_notify"
 
 TEST_HOMESERVER = "example.com"
-TEST_DEFAULT_ROOM = "!DefaultNotificationRoom:example.com"
-TEST_ROOM_A_ID = "!RoomA-ID:example.com"
-TEST_ROOM_B_ID = "!RoomB-ID:example.com"
-TEST_ROOM_B_ALIAS = "#RoomB-Alias:example.com"
-TEST_ROOM_C_ID = "!RoomC-ID:example.com"
+TEST_DEFAULT_ROOM = RoomID("!DefaultNotificationRoom:example.com")
+TEST_ROOM_A_ID = RoomID("!RoomA-ID:example.com")
+TEST_ROOM_B_ID = RoomID("!RoomB-ID:example.com")
+TEST_ROOM_B_ALIAS = RoomAlias("#RoomB-Alias:example.com")
+TEST_ROOM_C_ID = RoomID("!RoomC-ID:example.com")
 TEST_JOINABLE_ROOMS: dict[RoomAnyID, RoomID] = {
     TEST_ROOM_A_ID: TEST_ROOM_A_ID,
     TEST_ROOM_B_ALIAS: TEST_ROOM_B_ID,

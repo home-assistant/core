@@ -123,20 +123,21 @@ self_command_global = partial(
     ],
 )
 async def test_commands(
-    hass: HomeAssistant, matrix_bot: MatrixBot, command_events, partial_param, room_id
+    hass: HomeAssistant,
+    matrix_bot: MatrixBot,
+    command_events,
+    partial_param,
+    room_id: RoomID,
 ):
-    """Test that the configured commands were parsed and used correctly."""
+    """Test that the configured commands are used correctly."""
+    command_param: CommandTestParameters = partial_param(room_id=room_id)
+    room = MatrixRoom(room_id=command_param.room_id, own_user_id=matrix_bot._mx_id)
+
     await hass.async_start()
     assert len(command_events) == 0
-
-    assert matrix_bot._word_commands == MOCK_WORD_COMMANDS
-    assert matrix_bot._expression_commands == MOCK_EXPRESSION_COMMANDS
-
-    command_param: CommandTestParameters = partial_param(room_id=room_id)
-
-    room = MatrixRoom(room_id=command_param.room_id, own_user_id=matrix_bot._mx_id)
     await matrix_bot._handle_room_message(room, command_param.room_message)
     await hass.async_block_till_done()
+
     match command_events:
         case [Event() as event] if command_param.expected_event_data is not None:
             assert event.data == command_param.expected_event_data
@@ -144,3 +145,11 @@ async def test_commands(
             pass
         case _:
             pytest.fail(f"Unexpected data in {command_events=}")
+
+
+async def test_commands_parsing(hass: HomeAssistant, matrix_bot: MatrixBot):
+    """Test that the configured commands were parsed correctly."""
+
+    await hass.async_start()
+    assert matrix_bot._word_commands == MOCK_WORD_COMMANDS
+    assert matrix_bot._expression_commands == MOCK_EXPRESSION_COMMANDS
