@@ -22,7 +22,6 @@ class LTEEntity(Entity):
         description: EntityDescription,
     ) -> None:
         """Initialize a Netgear LTE entity."""
-        self.config_entry = config_entry
         self.entity_description = description
         self.modem_data = modem_data
         self._attr_name = f"Netgear LTE {description.key}"
@@ -32,8 +31,7 @@ class LTEEntity(Entity):
             identifiers={(DOMAIN, modem_data.data.serial_number)},
             manufacturer=MANUFACTURER,
             model=modem_data.data.items["general.model"],
-            name=config_entry.title,
-            serial_number=config_entry.unique_id,
+            serial_number=modem_data.data.serial_number,
             sw_version=modem_data.data.items["general.fwversion"],
             hw_version=modem_data.data.items["general.hwversion"],
         )
