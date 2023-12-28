@@ -3,8 +3,10 @@
 from unittest.mock import patch
 
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.lock import (
+    ATTR_CODE,
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
@@ -13,23 +15,19 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
-from .common import TEST_VEHICLE_STATE_ONLINE, setup_platform
+from .common import setup_platform
 
 
-async def test_locks(hass: HomeAssistant) -> None:
+async def test_locks(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Tests that the lock entity is correct."""
 
     assert len(hass.states.async_all("lock")) == 0
 
     await setup_platform(hass)
 
-    assert len(hass.states.async_all("lock")) == 2
+    assert hass.states.async_all("lock") == snapshot
 
     entity_id = "lock.test_lock"
-
-    assert (
-        hass.states.get(entity_id).state == STATE_LOCKED
-    ) == TEST_VEHICLE_STATE_ONLINE["vehicle_state"]["locked"]
 
     # Test lock set value functions
     with patch("homeassistant.components.tessie.lock.lock") as mock_run:
@@ -39,8 +37,8 @@ async def test_locks(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        assert hass.states.get(entity_id).state == STATE_LOCKED
         mock_run.assert_called_once()
+    assert hass.states.get(entity_id).state == STATE_LOCKED
 
     with patch("homeassistant.components.tessie.lock.unlock") as mock_run:
         await hass.services.async_call(
@@ -49,8 +47,8 @@ async def test_locks(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
-        assert hass.states.get(entity_id).state == STATE_UNLOCKED
         mock_run.assert_called_once()
+    assert hass.states.get(entity_id).state == STATE_UNLOCKED
 
     # Test charge cable lock set value functions
     entity_id = "lock.test_charge_cable_lock"
@@ -73,3 +71,37 @@ async def test_locks(hass: HomeAssistant) -> None:
         )
         assert hass.states.get(entity_id).state == STATE_UNLOCKED
         mock_run.assert_called_once()
+
+    # Test lock set value functions
+    entity_id = "lock.test_speed_limit"
+    with patch(
+        "homeassistant.components.tessie.lock.enable_speed_limit"
+    ) as mock_enable_speed_limit:
+        await hass.services.async_call(
+            LOCK_DOMAIN,
+            SERVICE_LOCK,
+            {ATTR_ENTITY_ID: [entity_id], ATTR_CODE: "1234"},
+            blocking=True,
+        )
+        assert hass.states.get(entity_id).state == STATE_LOCKED
+        mock_enable_speed_limit.assert_called_once()
+
+    with patch(
+        "homeassistant.components.tessie.lock.disable_speed_limit"
+    ) as mock_disable_speed_limit:
+        await hass.services.async_call(
+            LOCK_DOMAIN,
+            SERVICE_UNLOCK,
+            {ATTR_ENTITY_ID: [entity_id], ATTR_CODE: "1234"},
+            blocking=True,
+        )
+        assert hass.states.get(entity_id).state == STATE_UNLOCKED
+        mock_disable_speed_limit.assert_called_once()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            LOCK_DOMAIN,
+            SERVICE_UNLOCK,
+            {ATTR_ENTITY_ID: [entity_id], ATTR_CODE: "abc"},
+            blocking=True,
+        )
