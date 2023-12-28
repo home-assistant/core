@@ -71,10 +71,9 @@ RPC_NUMBERS: Final = {
     "thermostat": RpcNumberDescription(
         key="thermostat",
         sub_key="hysteresis",
-        icon="mdi:pipe-valve",
+        icon="mdi:chart-bell-curve-cumulative",
         name="Hysteresis",
         device_class=NumberDeviceClass.TEMPERATURE,
-        # native_unit_of_measurement=,
         entity_category=EntityCategory.CONFIG,
         native_min_value=0,
         native_max_value=2,
@@ -104,24 +103,6 @@ async def async_setup_entry(
             BLOCK_NUMBERS,
             BlockSleepingNumber,
         )
-
-
-# @callback
-# def async_setup_rpc_entry(
-#     hass: HomeAssistant,
-#     config_entry: ConfigEntry,
-#     async_add_entities: AddEntitiesCallback,
-#     description: dict[str, NumberEntityDescription],
-# ) -> None:
-#     """Set up entities for RPC device."""
-#     coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
-#     assert coordinator
-#     key_ids = get_rpc_key_ids(coordinator.device.status, "thermostat")
-
-#     if not key_ids:
-#         return
-
-#     async_add_entities(RpcNumber(coordinator, id_) for id_ in key_ids)
 
 
 class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
