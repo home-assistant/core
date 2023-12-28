@@ -6,13 +6,14 @@ from collections.abc import Callable, Coroutine, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import wraps
-from typing import Any, TypeVarTuple
+from typing import Any, TypeVar, TypeVarTuple
 
 from homeassistant.core import ServiceResponse
 import homeassistant.util.dt as dt_util
 
 from .typing import TemplateVarsType
 
+_T = TypeVar("_T")
 _Ts = TypeVarTuple("_Ts")
 
 
@@ -150,8 +151,8 @@ def trace_stack_pop(
 
 
 def trace_stack_top(
-    trace_stack_var: ContextVar[list[TraceElement] | None],
-) -> TraceElement | None:
+    trace_stack_var: ContextVar[list[_T] | None],
+) -> _T | None:
     """Return the element at the top of a trace stack."""
     trace_stack = trace_stack_var.get()
     return trace_stack[-1] if trace_stack else None
