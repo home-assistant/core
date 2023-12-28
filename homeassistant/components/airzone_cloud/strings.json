@@ -15,5 +15,17 @@
         }
       }
     }
+  },
+  "entity": {
+    "select": {
+      "air_quality": {
+        "name": "Air Quality mode",
+        "state": {
+          "off": "Off",
+          "on": "On",
+          "auto": "Auto"
+        }
+      }
+    }
   }
 }
