@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Setup your tedee locks",
+        "title": "Setup your Tedee locks",
         "data": {
           "host": "Bridge IP Address",
           "local_access_token": "Local Access Token",
