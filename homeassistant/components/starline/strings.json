@@ -54,6 +54,15 @@
       },
       "doors": {
         "name": "Doors"
+      },
+      "handsfree": {
+        "name": "Handsfree"
+      },
+      "neutral": {
+        "name": "Programmable neutral"
+      },
+      "moving_ban": {
+        "name": "Moving ban"
       }
     },
     "device_tracker": {

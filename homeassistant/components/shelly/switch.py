@@ -7,12 +7,20 @@ from typing import Any, cast
 from aioshelly.block_device import Block
 from aioshelly.const import MODEL_2, MODEL_25, MODEL_GAS, RPC_GENERATIONS
 
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.script import scripts_with_entity
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
+from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import GAS_VALVE_OPEN_STATES, MODEL_WALL_DISPLAY
+from .const import DOMAIN, GAS_VALVE_OPEN_STATES, MODEL_WALL_DISPLAY
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .entity import (
     BlockEntityDescription,
@@ -35,11 +43,13 @@ class BlockSwitchDescription(BlockEntityDescription, SwitchEntityDescription):
     """Class to describe a BLOCK switch."""
 
 
+# This entity description is deprecated and will be removed in Home Assistant 2024.7.0.
 GAS_VALVE_SWITCH = BlockSwitchDescription(
     key="valve|valve",
     name="Valve",
     available=lambda block: block.valve not in ("failure", "checking"),
     removal_condition=lambda _, block: block.valve in ("not_connected", "unknown"),
+    entity_registry_enabled_default=False,
 )
 
 
@@ -137,7 +147,10 @@ def async_setup_rpc_entry(
 
 
 class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
-    """Entity that controls a Gas Valve on Block based Shelly devices."""
+    """Entity that controls a Gas Valve on Block based Shelly devices.
+
+    This class is deprecated and will be removed in Home Assistant 2024.7.0.
+    """
 
     entity_description: BlockSwitchDescription
 
@@ -167,13 +180,60 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Open valve."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "deprecated_valve_switch",
+            breaks_in_ha_version="2024.7.0",
+            is_fixable=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_valve_switch",
+            translation_placeholders={
+                "entity": f"{VALVE_DOMAIN}.{cast(str, self.name).lower().replace(' ', '_')}",
+                "service": f"{VALVE_DOMAIN}.open_valve",
+            },
+        )
         self.control_result = await self.set_state(go="open")
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Close valve."""
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            "deprecated_valve_switch",
+            breaks_in_ha_version="2024.7.0",
+            is_fixable=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_valve_switche",
+            translation_placeholders={
+                "entity": f"{VALVE_DOMAIN}.{cast(str, self.name).lower().replace(' ', '_')}",
+                "service": f"{VALVE_DOMAIN}.close_valve",
+            },
+        )
         self.control_result = await self.set_state(go="close")
         self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Set up a listener when this entity is added to HA."""
+        await super().async_added_to_hass()
+
+        entity_automations = automations_with_entity(self.hass, self.entity_id)
+        entity_scripts = scripts_with_entity(self.hass, self.entity_id)
+        for item in entity_automations + entity_scripts:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"deprecated_valve_{self.entity_id}_{item}",
+                breaks_in_ha_version="2024.7.0",
+                is_fixable=True,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_valve_switch_entity",
+                translation_placeholders={
+                    "entity": f"{SWITCH_DOMAIN}.{cast(str, self.name).lower().replace(' ', '_')}",
+                    "info": item,
+                },
+            )
 
     @callback
     def _update_callback(self) -> None:

@@ -616,16 +616,17 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     return True
 
 
-@dataclass
 class HuaweiLteBaseEntity(Entity):
     """Huawei LTE entity base class."""
 
-    router: Router
-
-    _available: bool = field(default=True, init=False)
-    _unsub_handlers: list[Callable] = field(default_factory=list, init=False)
-    _attr_has_entity_name: bool = field(default=True, init=False)
+    _available = True
+    _attr_has_entity_name = True
     _attr_should_poll = False
+
+    def __init__(self, router: Router) -> None:
+        """Initialize."""
+        self.router = router
+        self._unsub_handlers: list[Callable] = []
 
     @property
     def _device_unique_id(self) -> str:

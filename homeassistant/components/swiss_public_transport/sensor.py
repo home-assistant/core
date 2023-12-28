@@ -3,38 +3,29 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
-from opendata_transport.exceptions import OpendataTransportError
 import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_NAME
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_DESTINATION, CONF_START, DEFAULT_NAME, DOMAIN
+from .const import CONF_DESTINATION, CONF_START, DEFAULT_NAME, DOMAIN, PLACEHOLDERS
+from .coordinator import SwissPublicTransportDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=90)
-
-ATTR_DEPARTURE_TIME1 = "next_departure"
-ATTR_DEPARTURE_TIME2 = "next_on_departure"
-ATTR_DURATION = "duration"
-ATTR_PLATFORM = "platform"
-ATTR_REMAINING_TIME = "remaining_time"
-ATTR_START = "start"
-ATTR_TARGET = "destination"
-ATTR_TRAIN_NUMBER = "train_number"
-ATTR_TRANSFERS = "transfers"
-ATTR_DELAY = "delay"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -51,15 +42,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
-    opendata = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    start = config_entry.data[CONF_START]
-    destination = config_entry.data[CONF_DESTINATION]
-    name = config_entry.title
+    unique_id = config_entry.unique_id
+
+    if TYPE_CHECKING:
+        assert unique_id
 
     async_add_entities(
-        [SwissPublicTransportSensor(opendata, start, destination, name)],
-        update_before_add=True,
+        [SwissPublicTransportSensor(coordinator, unique_id)],
     )
 
 
@@ -103,65 +94,45 @@ async def async_setup_platform(
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
             translation_key=f"deprecated_yaml_import_issue_${result['reason']}",
+            translation_placeholders=PLACEHOLDERS,
         )
 
 
-class SwissPublicTransportSensor(SensorEntity):
-    """Implementation of an Swiss public transport sensor."""
+class SwissPublicTransportSensor(
+    CoordinatorEntity[SwissPublicTransportDataUpdateCoordinator], SensorEntity
+):
+    """Implementation of a Swiss public transport sensor."""
 
     _attr_attribution = "Data provided by transport.opendata.ch"
     _attr_icon = "mdi:bus"
+    _attr_has_entity_name = True
+    _attr_translation_key = "departure"
 
-    def __init__(self, opendata, start, destination, name):
+    def __init__(
+        self,
+        coordinator: SwissPublicTransportDataUpdateCoordinator,
+        unique_id: str,
+    ) -> None:
         """Initialize the sensor."""
-        self._opendata = opendata
-        self._name = name
-        self._from = start
-        self._to = destination
-        self._remaining_time = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return (
-            self._opendata.connections[0]["departure"]
-            if self._opendata is not None
-            else None
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{unique_id}_departure"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer="Opendata.ch",
+            entry_type=DeviceEntryType.SERVICE,
         )
 
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        if self._opendata is None:
-            return
-
-        self._remaining_time = dt_util.parse_datetime(
-            self._opendata.connections[0]["departure"]
-        ) - dt_util.as_local(dt_util.utcnow())
-
-        return {
-            ATTR_TRAIN_NUMBER: self._opendata.connections[0]["number"],
-            ATTR_PLATFORM: self._opendata.connections[0]["platform"],
-            ATTR_TRANSFERS: self._opendata.connections[0]["transfers"],
-            ATTR_DURATION: self._opendata.connections[0]["duration"],
-            ATTR_DEPARTURE_TIME1: self._opendata.connections[1]["departure"],
-            ATTR_DEPARTURE_TIME2: self._opendata.connections[2]["departure"],
-            ATTR_START: self._opendata.from_name,
-            ATTR_TARGET: self._opendata.to_name,
-            ATTR_REMAINING_TIME: f"{self._remaining_time}",
-            ATTR_DELAY: self._opendata.connections[0]["delay"],
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle the state update and prepare the extra state attributes."""
+        self._attr_extra_state_attributes = {
+            key: value
+            for key, value in self.coordinator.data.items()
+            if key not in {"departure"}
         }
+        return super()._handle_coordinator_update()
 
-    async def async_update(self) -> None:
-        """Get the latest data from opendata.ch and update the states."""
-
-        try:
-            if not self._remaining_time or self._remaining_time.total_seconds() < 0:
-                await self._opendata.async_get_data()
-        except OpendataTransportError:
-            _LOGGER.error("Unable to retrieve data from transport.opendata.ch")
+    @property
+    def native_value(self) -> str:
+        """Return the state of the sensor."""
+        return self.coordinator.data["departure"]
