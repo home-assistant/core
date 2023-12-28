@@ -7,7 +7,7 @@ from collections import deque
 from collections.abc import Callable, Coroutine, Iterable, Mapping, MutableMapping
 import dataclasses
 from datetime import timedelta
-from enum import Enum, auto
+from enum import Enum, IntFlag, auto
 import functools as ft
 import logging
 import math
@@ -459,6 +459,9 @@ class Entity(
 
     # If we reported if this entity was slow
     _slow_reported = False
+
+    # If we reported deprecated supported features constants
+    _deprecated_supported_features_reported = False
 
     # If we reported this entity is updated while disabled
     _disabled_reported = False
@@ -1494,6 +1497,31 @@ class Entity(
         platform_name = self.platform.platform_name if self.platform else None
         return async_suggest_report_issue(
             self.hass, integration_domain=platform_name, module=type(self).__module__
+        )
+
+    @callback
+    def _report_deprecated_supported_features_constants(
+        self, replacement: IntFlag
+    ) -> None:
+        """Report deprecated supported features constants."""
+        if self._deprecated_supported_features_reported is False:
+            return
+        self._deprecated_supported_features_reported = True
+        report_issue = self._suggest_report_issue()
+        report_issue += (
+            " and reference "
+            "https://developers.home-assistant.io/blog/2022/04/02/support-constants-deprecation/"
+        )
+        _LOGGER.warning(
+            (
+                "Entity %s (%s) is using deprecated supported features "
+                " values. Instead it should use"
+                " %s, please %s"
+            ),
+            self.entity_id,
+            type(self),
+            replacement,
+            report_issue,
         )
 
 

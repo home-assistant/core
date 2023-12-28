@@ -537,7 +537,11 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         Remove this compatibility shim in 2025.1 or later.
         """
         features = self.supported_features
-        return CameraEntityFeature(features) if type(features) is int else features  # noqa: E721
+        if type(features) is int:  # noqa: E721
+            new_features = CameraEntityFeature(features)
+            self._report_deprecated_supported_features_constants(new_features)
+            return new_features
+        return features
 
     @cached_property
     def is_recording(self) -> bool:
