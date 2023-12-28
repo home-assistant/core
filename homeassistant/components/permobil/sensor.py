@@ -224,15 +224,10 @@ class PermobilSensor(CoordinatorEntity[MyPermobilCoordinator], SensorEntity):
         self._attr_unique_id = (
             f"{coordinator.p_api.email}_{self.entity_description.key}"
         )
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of the sensor."""
         if self.entity_description.key == "record_distance":
-            return DISTANCE_UNITS.get(
+            self._attr_native_unit_of_measurement = DISTANCE_UNITS.get(
                 self.coordinator.data.records[RECORDS_DISTANCE_UNIT[0]]
             )
-        return self.entity_description.native_unit_of_measurement
 
     @property
     def available(self) -> bool:
