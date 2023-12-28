@@ -61,7 +61,7 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        errors: dict = {}
+        errors: dict[str, str] = {}
         local_bridge: TedeeBridge | None = None
 
         if user_input is not None:
