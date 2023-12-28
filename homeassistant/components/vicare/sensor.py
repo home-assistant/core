@@ -491,6 +491,24 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    ViCareSensorEntityDescription(
+        key="ess_state_of_charge",
+        translation_key="ess_state_of_charge",
+        # icon="mdi:battery",
+        native_unit_of_measurement=PERCENTAGE,
+        value_getter=lambda api: api.getElectricalEnergySystemSOC(),
+        # unit_getter=lambda api: api.getElectricalEnergySystemSOCUnit(),
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
+        key="ess_power",
+        translation_key="ess_power",
+        # icon="mdi:battery",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_getter=lambda api: api.getElectricalEnergySystemPower(),
+        # unit_getter=lambda api: api.getElectricalEnergySystemSOCUnit(),
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 )
 
 CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
