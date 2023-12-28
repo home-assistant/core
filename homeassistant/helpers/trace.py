@@ -128,31 +128,23 @@ def trace_id_get() -> tuple[str, str] | None:
     return trace_id_cv.get()
 
 
-def trace_stack_push(
-    trace_stack_var: ContextVar[list[str] | None]
-    | ContextVar[list[TraceElement] | None],
-    node: Any,
-) -> None:
+def trace_stack_push(trace_stack_var: ContextVar[list[_T] | None], node: _T) -> None:
     """Push an element to the top of a trace stack."""
+    trace_stack: list[_T] | None
     if (trace_stack := trace_stack_var.get()) is None:
         trace_stack = []
         trace_stack_var.set(trace_stack)
     trace_stack.append(node)
 
 
-def trace_stack_pop(
-    trace_stack_var: ContextVar[list[str] | None]
-    | ContextVar[list[TraceElement] | None],
-) -> None:
+def trace_stack_pop(trace_stack_var: ContextVar[list[Any] | None]) -> None:
     """Remove the top element from a trace stack."""
     trace_stack = trace_stack_var.get()
     if trace_stack is not None:
         trace_stack.pop()
 
 
-def trace_stack_top(
-    trace_stack_var: ContextVar[list[_T] | None],
-) -> _T | None:
+def trace_stack_top(trace_stack_var: ContextVar[list[_T] | None]) -> _T | None:
     """Return the element at the top of a trace stack."""
     trace_stack = trace_stack_var.get()
     return trace_stack[-1] if trace_stack else None
