@@ -38,7 +38,7 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except TedeeClientException:
                 errors[CONF_HOST] = "invalid_host"
 
-            if local_bridge:
+            else:
                 await self.async_set_unique_id(local_bridge.serial)
                 self._abort_if_unique_id_configured()
 
