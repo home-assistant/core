@@ -226,7 +226,7 @@ class PermobilSensor(CoordinatorEntity[MyPermobilCoordinator], SensorEntity):
         )
 
     @property
-    def native_unit_of_measurement(self) -> str | UnitOfLength | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor."""
         if self.entity_description.key == "record_distance":
             return DISTANCE_UNITS.get(
