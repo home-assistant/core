@@ -9,7 +9,7 @@ from time import monotonic
 from typing import TypeVar
 
 from pyprusalink import JobInfo, LegacyPrinterStatus, PrinterStatus, PrusaLink
-from pyprusalink.types import InvalidAuth, PrusaLinkError
+from pyprusalink.types import InvalidAuth, NotFound, PrusaLinkError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -195,9 +195,32 @@ class LegacyStatusCoordinator(PrusaLinkUpdateCoordinator[LegacyPrinterStatus]):
 class JobUpdateCoordinator(PrusaLinkUpdateCoordinator[JobInfo]):
     """Job update coordinator."""
 
+    job_id_without_thumbnail = -1
+
     async def _fetch_data(self) -> JobInfo:
         """Fetch the printer data."""
-        return await self.api.get_job()
+        job = await self.api.get_job()
+
+        if (job_id := job.get("id")) and (job_id == self.job_id_without_thumbnail):
+            return job
+
+        # Check if Job even include a ["file"]["thumbnail"]
+        if not (
+            (file := job.get("file"))
+            and (thumbnail := file.get("refs", {}).get("thumbnail"))
+        ):
+            self.job_id_without_thumbnail = job_id
+            return job
+
+        try:
+            # Check if thumbnail is available, if not we get a NotFound exception
+            await self.api.get_file(thumbnail)
+        except NotFound:
+            self.job_id_without_thumbnail = job_id
+        except Exception as ex:
+            raise ex
+
+        return job
 
 
 class PrusaLinkEntity(CoordinatorEntity[PrusaLinkUpdateCoordinator]):

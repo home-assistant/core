@@ -1,8 +1,6 @@
 """Camera entity for PrusaLink."""
 from __future__ import annotations
 
-from pyprusalink.types import NotFound
-
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -25,7 +23,6 @@ class PrusaLinkJobPreviewEntity(PrusaLinkEntity, Camera):
     """Defines a PrusaLink camera."""
 
     last_path = ""
-    last_path_no_thumbnail_available = ""
     last_image: bytes
     _attr_translation_key = "job_preview"
 
@@ -40,9 +37,8 @@ class PrusaLinkJobPreviewEntity(PrusaLinkEntity, Camera):
         """Get if camera is available."""
         return (
             super().available
-            and (file := self.coordinator.data.get("file"))
-            and (thumbnail := file.get("refs", {}).get("thumbnail"))
-            and thumbnail != self.last_path_no_thumbnail_available
+            and (job_id := self.coordinator.data.get("id"))
+            and (job_id != self.coordinator.job_id_without_thumbnail)
         )
 
     async def async_camera_image(
@@ -54,19 +50,10 @@ class PrusaLinkJobPreviewEntity(PrusaLinkEntity, Camera):
 
         path = self.coordinator.data["file"]["refs"]["thumbnail"]
 
-        if self.last_path_no_thumbnail_available == path:
-            return None
-
         if self.last_path == path:
             return self.last_image
 
-        try:
-            self.last_image = await self.coordinator.api.get_file(path)
-            self.last_path = path
-        except NotFound:
-            self.last_path_no_thumbnail_available = path
-            return None
-        except Exception as ex:
-            raise ex
+        self.last_image = await self.coordinator.api.get_file(path)
+        self.last_path = path
 
         return self.last_image
