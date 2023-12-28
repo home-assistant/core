@@ -3,7 +3,6 @@
   "name": "fever_smart",
   "bluetooth": [
     {
-      "service_data_uuid": "00001809-0000-1000-8000-00805f9b34fb",
       "manufacturer_id": 8199,
       "connectable": false
     }

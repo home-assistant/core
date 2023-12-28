@@ -88,6 +88,11 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
     },
     {
         "connectable": False,
+        "domain": "fever_smart",
+        "manufacturer_id": 8199,
+    },
+    {
+        "connectable": False,
         "domain": "fjaraskupan",
         "manufacturer_data_start": [
             79,

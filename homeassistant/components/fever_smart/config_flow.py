@@ -20,8 +20,8 @@ from .fever_smart import FeverSmartAdvParser
 _LOGGER = logging.getLogger(__name__)
 
 
-class RuuvitagConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for ruuvitag_ble."""
+class ConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Fever Smart"""
 
     VERSION = 1
 
@@ -35,7 +35,7 @@ class RuuvitagConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
-        _LOGGER.warning("In discovery flow...")
+        _LOGGER.info("In discovery flow...")
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
         device = FeverSmartAdvParser()
@@ -49,7 +49,7 @@ class RuuvitagConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm discovery."""
-        _LOGGER.warning("In confrim flow...")
+        _LOGGER.info("In confrim flow...")
         assert self._discovered_device is not None
         device = self._discovered_device
         assert self._discovery_info is not None

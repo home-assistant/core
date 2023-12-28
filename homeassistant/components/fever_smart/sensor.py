@@ -1,6 +1,8 @@
 """Platform for sensor integration."""
 from __future__ import annotations
 
+import logging
+
 from sensor_state_data import (
     DeviceKey,
     SensorDescription,
@@ -29,6 +31,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
+
 
 SENSOR_DESCRIPTIONS = {
     (SSDSensorDeviceClass.TEMPERATURE, Units.TEMP_CELSIUS): SensorEntityDescription(
@@ -121,8 +126,8 @@ async def async_setup_entry(
     entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Ruuvitag BLE sensors."""
-    _LOGGER.warning("Setting up fever smart sensor")
+    """Set up the Fever Smart BLE sensors."""
+    _LOGGER.info("Setting up fever smart sensor")
     coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]

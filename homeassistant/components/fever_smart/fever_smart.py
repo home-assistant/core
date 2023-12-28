@@ -28,6 +28,7 @@ class FeverSmartAdvParser(BluetoothData):
 
     def _start_update(self, service_info: BluetoothServiceInfo) -> None:
         """Update from BLE advertisement data."""
+        _LOGGER.info("Starting update")
         manufacturer_data = service_info.manufacturer_data
 
         if not manufacturer_data:
@@ -61,6 +62,9 @@ class FeverSmartAdvParser(BluetoothData):
         message = self.process(hex_adv, MAC_TO_KEY[service_info.address])
 
         _LOGGER.warning("Fever Smart Mac: %s Adv: %s", service_info.address, message)
+
+        if message is None:
+            return
 
         self.set_device_type("Fever Smart")
         self.set_device_manufacturer("Nurofen")
