@@ -66,7 +66,7 @@ class TessieEntity(CoordinatorEntity[TessieStateUpdateCoordinator]):
             raise HomeAssistantError from e
         if response["result"] is False:
             raise HomeAssistantError(
-                response["reason"],
+                response["reason"].replace("_", " "),
                 translation_domain=DOMAIN,
                 translation_key=response["reason"].replace(" ", "_"),
             )
