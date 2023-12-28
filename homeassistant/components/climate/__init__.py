@@ -1,7 +1,6 @@
 """Provides functionality to interact with climate devices."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 import functools as ft
 import logging
@@ -27,6 +26,10 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA_BASE,
     make_entity_service_schema,
 )
+from homeassistant.helpers.deprecation import (
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
@@ -34,6 +37,20 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (  # noqa: F401
+    _DEPRECATED_HVAC_MODE_AUTO,
+    _DEPRECATED_HVAC_MODE_COOL,
+    _DEPRECATED_HVAC_MODE_DRY,
+    _DEPRECATED_HVAC_MODE_FAN_ONLY,
+    _DEPRECATED_HVAC_MODE_HEAT,
+    _DEPRECATED_HVAC_MODE_HEAT_COOL,
+    _DEPRECATED_HVAC_MODE_OFF,
+    _DEPRECATED_SUPPORT_AUX_HEAT,
+    _DEPRECATED_SUPPORT_FAN_MODE,
+    _DEPRECATED_SUPPORT_PRESET_MODE,
+    _DEPRECATED_SUPPORT_SWING_MODE,
+    _DEPRECATED_SUPPORT_TARGET_HUMIDITY,
+    _DEPRECATED_SUPPORT_TARGET_TEMPERATURE,
+    _DEPRECATED_SUPPORT_TARGET_TEMPERATURE_RANGE,
     ATTR_AUX_HEAT,
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
@@ -65,10 +82,6 @@ from .const import (  # noqa: F401
     FAN_OFF,
     FAN_ON,
     FAN_TOP,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
     HVAC_MODES,
     PRESET_ACTIVITY,
     PRESET_AWAY,
@@ -85,13 +98,6 @@ from .const import (  # noqa: F401
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -128,6 +134,12 @@ SET_TEMPERATURE_SCHEMA = vol.All(
         }
     ),
 )
+
+# As we import deprecated constants from the const module, we need to add these two functions
+# otherwise this module will be logged for using deprecated constants and not the custom component
+# Both can be removed if no deprecated constant are in this module anymore
+__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = ft.partial(dir_with_deprecated_constants, module_globals=globals())
 
 # mypy: disallow-any-generics
 
@@ -201,13 +213,26 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class ClimateEntityDescription(EntityDescription):
+class ClimateEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes climate entities."""
 
 
 class ClimateEntity(Entity):
     """Base class for climate entities."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {
+            ATTR_HVAC_MODES,
+            ATTR_FAN_MODES,
+            ATTR_SWING_MODES,
+            ATTR_MIN_TEMP,
+            ATTR_MAX_TEMP,
+            ATTR_MIN_HUMIDITY,
+            ATTR_MAX_HUMIDITY,
+            ATTR_TARGET_TEMP_STEP,
+            ATTR_PRESET_MODES,
+        }
+    )
 
     entity_description: ClimateEntityDescription
     _attr_current_humidity: int | None = None
@@ -239,11 +264,13 @@ class ClimateEntity(Entity):
     @property
     def state(self) -> str | None:
         """Return the current state."""
-        if self.hvac_mode is None:
+        hvac_mode = self.hvac_mode
+        if hvac_mode is None:
             return None
-        if not isinstance(self.hvac_mode, HVACMode):
-            return HVACMode(self.hvac_mode).value
-        return self.hvac_mode.value
+        # Support hvac_mode as string for custom integration backwards compatibility
+        if not isinstance(hvac_mode, HVACMode):
+            return HVACMode(hvac_mode).value  # type: ignore[unreachable]
+        return hvac_mode.value
 
     @property
     def precision(self) -> float:
@@ -258,18 +285,18 @@ class ClimateEntity(Entity):
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return the capability attributes."""
         supported_features = self.supported_features
+        temperature_unit = self.temperature_unit
+        precision = self.precision
+        hass = self.hass
+
         data: dict[str, Any] = {
             ATTR_HVAC_MODES: self.hvac_modes,
-            ATTR_MIN_TEMP: show_temp(
-                self.hass, self.min_temp, self.temperature_unit, self.precision
-            ),
-            ATTR_MAX_TEMP: show_temp(
-                self.hass, self.max_temp, self.temperature_unit, self.precision
-            ),
+            ATTR_MIN_TEMP: show_temp(hass, self.min_temp, temperature_unit, precision),
+            ATTR_MAX_TEMP: show_temp(hass, self.max_temp, temperature_unit, precision),
         }
 
-        if self.target_temperature_step:
-            data[ATTR_TARGET_TEMP_STEP] = self.target_temperature_step
+        if target_temperature_step := self.target_temperature_step:
+            data[ATTR_TARGET_TEMP_STEP] = target_temperature_step
 
         if supported_features & ClimateEntityFeature.TARGET_HUMIDITY:
             data[ATTR_MIN_HUMIDITY] = self.min_humidity
@@ -291,39 +318,34 @@ class ClimateEntity(Entity):
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         supported_features = self.supported_features
+        temperature_unit = self.temperature_unit
+        precision = self.precision
+        hass = self.hass
+
         data: dict[str, str | float | None] = {
             ATTR_CURRENT_TEMPERATURE: show_temp(
-                self.hass,
-                self.current_temperature,
-                self.temperature_unit,
-                self.precision,
+                hass, self.current_temperature, temperature_unit, precision
             ),
         }
 
         if supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             data[ATTR_TEMPERATURE] = show_temp(
-                self.hass,
+                hass,
                 self.target_temperature,
-                self.temperature_unit,
-                self.precision,
+                temperature_unit,
+                precision,
             )
 
         if supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
             data[ATTR_TARGET_TEMP_HIGH] = show_temp(
-                self.hass,
-                self.target_temperature_high,
-                self.temperature_unit,
-                self.precision,
+                hass, self.target_temperature_high, temperature_unit, precision
             )
             data[ATTR_TARGET_TEMP_LOW] = show_temp(
-                self.hass,
-                self.target_temperature_low,
-                self.temperature_unit,
-                self.precision,
+                hass, self.target_temperature_low, temperature_unit, precision
             )
 
-        if self.current_humidity is not None:
-            data[ATTR_CURRENT_HUMIDITY] = self.current_humidity
+        if (current_humidity := self.current_humidity) is not None:
+            data[ATTR_CURRENT_HUMIDITY] = current_humidity
 
         if supported_features & ClimateEntityFeature.TARGET_HUMIDITY:
             data[ATTR_HUMIDITY] = self.target_humidity
@@ -331,8 +353,8 @@ class ClimateEntity(Entity):
         if supported_features & ClimateEntityFeature.FAN_MODE:
             data[ATTR_FAN_MODE] = self.fan_mode
 
-        if self.hvac_action:
-            data[ATTR_HVAC_ACTION] = self.hvac_action
+        if hvac_action := self.hvac_action:
+            data[ATTR_HVAC_ACTION] = hvac_action
 
         if supported_features & ClimateEntityFeature.PRESET_MODE:
             data[ATTR_PRESET_MODE] = self.preset_mode
@@ -462,11 +484,11 @@ class ClimateEntity(Entity):
         """
         return self._attr_swing_modes
 
-    def set_temperature(self, **kwargs) -> None:
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         raise NotImplementedError()
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self.hass.async_add_executor_job(
             ft.partial(self.set_temperature, **kwargs)

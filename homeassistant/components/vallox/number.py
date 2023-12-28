@@ -23,7 +23,6 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
     """Representation of a Vallox number entity."""
 
     entity_description: ValloxNumberEntityDescription
-    _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
@@ -61,14 +60,14 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
         await self.coordinator.async_request_refresh()
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValloxMetricMixin:
     """Holds Vallox metric key."""
 
     metric_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValloxNumberEntityDescription(NumberEntityDescription, ValloxMetricMixin):
     """Describes Vallox number entity."""
 
@@ -76,7 +75,7 @@ class ValloxNumberEntityDescription(NumberEntityDescription, ValloxMetricMixin):
 NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
     ValloxNumberEntityDescription(
         key="supply_air_target_home",
-        name="Supply air temperature (Home)",
+        translation_key="supply_air_target_home",
         metric_key="A_CYC_HOME_AIR_TEMP_TARGET",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -87,7 +86,7 @@ NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
     ),
     ValloxNumberEntityDescription(
         key="supply_air_target_away",
-        name="Supply air temperature (Away)",
+        translation_key="supply_air_target_away",
         metric_key="A_CYC_AWAY_AIR_TEMP_TARGET",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -98,7 +97,7 @@ NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
     ),
     ValloxNumberEntityDescription(
         key="supply_air_target_boost",
-        name="Supply air temperature (Boost)",
+        translation_key="supply_air_target_boost",
         metric_key="A_CYC_BOOST_AIR_TEMP_TARGET",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,

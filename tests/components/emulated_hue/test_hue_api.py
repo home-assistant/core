@@ -36,9 +36,11 @@ from homeassistant.components.emulated_hue.hue_api import (
     HueAllLightsStateView,
     HueConfigView,
     HueFullStateView,
+    HueGroupView,
     HueOneLightChangeView,
     HueOneLightStateView,
     HueUsernameView,
+    _remote_is_allowed,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -232,6 +234,7 @@ def _mock_hue_endpoints(
     HueOneLightStateView(config).register(hass, web_app, web_app.router)
     HueOneLightChangeView(config).register(hass, web_app, web_app.router)
     HueAllGroupsStateView(config).register(hass, web_app, web_app.router)
+    HueGroupView(config).register(hass, web_app, web_app.router)
     HueFullStateView(config).register(hass, web_app, web_app.router)
     HueConfigView(config).register(hass, web_app, web_app.router)
 
@@ -314,7 +317,7 @@ async def test_discover_lights(hass: HomeAssistant, hue_client) -> None:
     await hass.async_block_till_done()
 
     result_json = await async_get_lights(hue_client)
-    assert "1" not in result_json.keys()
+    assert "1" not in result_json
     devices = {val["uniqueid"] for val in result_json.values()}
     assert "00:2f:d2:31:ce:c5:55:cc-ee" not in devices  # light.ceiling_lights
 
@@ -1130,7 +1133,6 @@ async def test_put_light_state_fan(hass_hue, hue_client) -> None:
         assert round(fan_json["state"][HUE_API_STATE_BRI] * 100 / 254) == 100
 
 
-# pylint: disable=invalid-name
 async def test_put_with_form_urlencoded_content_type(hass_hue, hue_client) -> None:
     """Test the form with urlencoded content."""
     entity_number = ENTITY_NUMBERS_BY_ID["light.ceiling_lights"]
@@ -1215,7 +1217,6 @@ async def test_get_empty_groups_state(hue_client) -> None:
     assert result_json == {}
 
 
-# pylint: disable=invalid-name
 async def perform_put_test_on_ceiling_lights(
     hass_hue, hue_client, content_type=CONTENT_TYPE_JSON
 ):
@@ -1329,22 +1330,32 @@ async def test_external_ip_blocked(hue_client) -> None:
         "/api/username/lights/light.ceiling_lights",
     ]
     postUrls = ["/api"]
-    putUrls = ["/api/username/lights/light.ceiling_lights/state"]
+    putUrls = [
+        "/api/username/lights/light.ceiling_lights/state",
+        "/api/username/groups/0/action",
+    ]
     with patch(
         "homeassistant.components.emulated_hue.hue_api.ip_address",
         return_value=ip_address("45.45.45.45"),
     ):
         for getUrl in getUrls:
+            _remote_is_allowed.cache_clear()
             result = await hue_client.get(getUrl)
             assert result.status == HTTPStatus.UNAUTHORIZED
 
         for postUrl in postUrls:
+            _remote_is_allowed.cache_clear()
             result = await hue_client.post(postUrl)
             assert result.status == HTTPStatus.UNAUTHORIZED
 
         for putUrl in putUrls:
+            _remote_is_allowed.cache_clear()
             result = await hue_client.put(putUrl)
             assert result.status == HTTPStatus.UNAUTHORIZED
+
+    # We are patching inside of a cache so be sure to clear it
+    # so that the next test is not affected
+    _remote_is_allowed.cache_clear()
 
 
 async def test_unauthorized_user_blocked(hue_client) -> None:
@@ -1683,3 +1694,62 @@ async def test_specificly_exposed_entities(
     result_json = await async_get_lights(client)
 
     assert "1" in result_json
+
+
+async def test_get_light_state_when_none(hass_hue: HomeAssistant, hue_client) -> None:
+    """Test the getting of light state when brightness is None."""
+    hass_hue.states.async_set(
+        "light.ceiling_lights",
+        STATE_ON,
+        {
+            light.ATTR_BRIGHTNESS: None,
+            light.ATTR_RGB_COLOR: None,
+            light.ATTR_HS_COLOR: None,
+            light.ATTR_COLOR_TEMP: None,
+            light.ATTR_XY_COLOR: None,
+            light.ATTR_SUPPORTED_COLOR_MODES: [
+                light.COLOR_MODE_COLOR_TEMP,
+                light.COLOR_MODE_HS,
+                light.COLOR_MODE_XY,
+            ],
+            light.ATTR_COLOR_MODE: light.COLOR_MODE_XY,
+        },
+    )
+
+    light_json = await perform_get_light_state(
+        hue_client, "light.ceiling_lights", HTTPStatus.OK
+    )
+    state = light_json["state"]
+    assert state[HUE_API_STATE_ON] is True
+    assert state[HUE_API_STATE_BRI] == 1
+    assert state[HUE_API_STATE_HUE] == 0
+    assert state[HUE_API_STATE_SAT] == 0
+    assert state[HUE_API_STATE_CT] == 153
+
+    hass_hue.states.async_set(
+        "light.ceiling_lights",
+        STATE_OFF,
+        {
+            light.ATTR_BRIGHTNESS: None,
+            light.ATTR_RGB_COLOR: None,
+            light.ATTR_HS_COLOR: None,
+            light.ATTR_COLOR_TEMP: None,
+            light.ATTR_XY_COLOR: None,
+            light.ATTR_SUPPORTED_COLOR_MODES: [
+                light.COLOR_MODE_COLOR_TEMP,
+                light.COLOR_MODE_HS,
+                light.COLOR_MODE_XY,
+            ],
+            light.ATTR_COLOR_MODE: light.COLOR_MODE_XY,
+        },
+    )
+
+    light_json = await perform_get_light_state(
+        hue_client, "light.ceiling_lights", HTTPStatus.OK
+    )
+    state = light_json["state"]
+    assert state[HUE_API_STATE_ON] is False
+    assert state[HUE_API_STATE_BRI] == 1
+    assert state[HUE_API_STATE_HUE] == 0
+    assert state[HUE_API_STATE_SAT] == 0
+    assert state[HUE_API_STATE_CT] == 153

@@ -42,7 +42,7 @@ async def test_get_conditions(
 ) -> None:
     """Test we get the expected onditions from a zwave_js."""
     device = device_registry.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
     config_value = list(lock_schlage_be469.get_configuration_values().values())[0]
@@ -82,7 +82,7 @@ async def test_get_conditions(
 
     # Test that we don't return actions for a controller node
     device = device_registry.async_get_device(
-        {get_device_id(client.driver, client.driver.controller.nodes[1])}
+        identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
     )
     assert device
     assert (
@@ -103,7 +103,7 @@ async def test_node_status_state(
 ) -> None:
     """Test for node_status conditions."""
     device = device_registry.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
 
@@ -268,7 +268,7 @@ async def test_config_parameter_state(
 ) -> None:
     """Test for config_parameter conditions."""
     device = device_registry.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
 
@@ -388,7 +388,7 @@ async def test_value_state(
 ) -> None:
     """Test for value conditions."""
     device = device_registry.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
 
@@ -439,7 +439,7 @@ async def test_get_condition_capabilities_node_status(
 ) -> None:
     """Test we don't get capabilities from a node_status condition."""
     device = device_registry.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
 
@@ -479,7 +479,7 @@ async def test_get_condition_capabilities_value(
 ) -> None:
     """Test we get the expected capabilities from a value condition."""
     device = device_registry.async_get_device(
-        {get_device_id(client.driver, lock_schlage_be469)}
+        identifiers={get_device_id(client.driver, lock_schlage_be469)}
     )
     assert device
 
@@ -532,7 +532,7 @@ async def test_get_condition_capabilities_config_parameter(
     """Test we get the expected capabilities from a config_parameter condition."""
     node = climate_radio_thermostat_ct100_plus
     device = device_registry.async_get_device(
-        {get_device_id(client.driver, climate_radio_thermostat_ct100_plus)}
+        identifiers={get_device_id(client.driver, climate_radio_thermostat_ct100_plus)}
     )
     assert device
 
@@ -617,7 +617,7 @@ async def test_failure_scenarios(
 ) -> None:
     """Test failure scenarios."""
     device = device_registry.async_get_device(
-        {get_device_id(client.driver, hank_binary_switch)}
+        identifiers={get_device_id(client.driver, hank_binary_switch)}
     )
     assert device
 

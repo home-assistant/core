@@ -4,12 +4,13 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
+from requests.exceptions import ReadTimeout
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 from homeassistant.setup import async_setup_component
@@ -60,11 +61,31 @@ GUEST_WIFI_CHANGED: dict[str, dict] = {
 
 GUEST_WIFI_DISABLED: dict[str, dict] = {
     "WLANConfiguration0": {},
-    "WLANConfiguration1": {"GetInfo": {"NewEnable": False}},
+    "WLANConfiguration1": {
+        "GetInfo": {
+            "NewEnable": False,
+            "NewStatus": "Up",
+            "NewSSID": "GuestWifi",
+            "NewBeaconType": "11iandWPA3",
+            "NewX_AVM-DE_PossibleBeaconTypes": "None,11i,11iandWPA3",
+            "NewStandard": "ax",
+            "NewBSSID": "1C:ED:6F:12:34:13",
+        },
+        "GetSSID": {
+            "NewSSID": "GuestWifi",
+        },
+        "GetSecurityKeys": {"NewKeyPassphrase": "1234567890"},
+    },
 }
 
 
-@pytest.mark.parametrize(("fc_data"), [({**MOCK_FB_SERVICES, **GUEST_WIFI_ENABLED})])
+@pytest.mark.parametrize(
+    ("fc_data"),
+    [
+        ({**MOCK_FB_SERVICES, **GUEST_WIFI_ENABLED}),
+        ({**MOCK_FB_SERVICES, **GUEST_WIFI_DISABLED}),
+    ],
+)
 async def test_image_entity(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -152,21 +173,41 @@ async def test_image_update(
     assert resp_body_new == snapshot
 
 
-@pytest.mark.parametrize(("fc_data"), [({**MOCK_FB_SERVICES, **GUEST_WIFI_DISABLED})])
-async def test_image_guest_wifi_disabled(
+@pytest.mark.parametrize(("fc_data"), [({**MOCK_FB_SERVICES, **GUEST_WIFI_ENABLED})])
+async def test_image_update_unavailable(
     hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
     fc_class_mock,
     fh_class_mock,
 ) -> None:
-    """Test image entities."""
+    """Test image update when fritzbox is unavailable."""
 
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
-    entry.add_to_hass(hass)
+    # setup component with image platform only
+    with patch(
+        "homeassistant.components.fritz.PLATFORMS",
+        [Platform.IMAGE],
+    ):
+        entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+        entry.add_to_hass(hass)
+        assert await async_setup_component(hass, DOMAIN, {})
 
-    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.LOADED
 
-    images = hass.states.async_all(IMAGE_DOMAIN)
-    assert len(images) == 0
+    state = hass.states.get("image.mock_title_guestwifi")
+    assert state
+
+    # fritzbox becomes unavailable
+    fc_class_mock().call_action_side_effect(ReadTimeout)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("image.mock_title_guestwifi")
+    assert state.state == STATE_UNKNOWN
+
+    # fritzbox is available again
+    fc_class_mock().call_action_side_effect(None)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("image.mock_title_guestwifi")
+    assert state.state != STATE_UNKNOWN

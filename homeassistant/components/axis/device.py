@@ -1,10 +1,10 @@
 """Axis network device abstraction."""
 
 import asyncio
+from asyncio import timeout
 from types import MappingProxyType
 from typing import Any
 
-import async_timeout
 import axis
 from axis.configuration import Configuration
 from axis.errors import Unauthorized
@@ -61,6 +61,8 @@ class AxisNetworkDevice:
         self.available = True
         self.fw_version = api.vapix.firmware_version
         self.product_type = api.vapix.product_type
+
+        self.additional_diagnostics: dict[str, Any] = {}
 
     @property
     def host(self):
@@ -251,7 +253,7 @@ async def get_axis_device(
     )
 
     try:
-        async with async_timeout.timeout(30):
+        async with timeout(30):
             await device.vapix.initialize()
 
         return device

@@ -14,8 +14,7 @@ from homeassistant.components.button import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import AvmWrapper
@@ -24,14 +23,14 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzButtonDescriptionMixin:
     """Mixin to describe a Button entity."""
 
     press_action: Callable
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzButtonDescription(ButtonEntityDescription, FritzButtonDescriptionMixin):
     """Class to describe a Button entity."""
 

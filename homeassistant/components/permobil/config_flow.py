@@ -1,25 +1,25 @@
 """Config flow for MyPermobil integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
 from mypermobil import MyPermobil, MyPermobilAPIException, MyPermobilClientException
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
-from homeassistant.const import (
-    CONF_CODE,
-    CONF_EMAIL,
-    CONF_REGION,
-    CONF_TOKEN,
-    CONF_TTL,
-    CONF_URL,
-)
+from homeassistant import config_entries
+from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_REGION, CONF_TOKEN, CONF_TTL
+from homeassistant.core import HomeAssistant, async_get_hass
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import APPLICATION, DOMAIN
 
@@ -27,117 +27,86 @@ _LOGGER = logging.getLogger(__name__)
 
 GET_EMAIL_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_EMAIL): cv.string,
+        vol.Required(CONF_EMAIL): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.EMAIL)
+        ),
     }
 )
 
 GET_TOKEN_SCHEMA = vol.Schema({vol.Required(CONF_CODE): cv.string})
 
 
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-async def validate_input(p_api: MyPermobil, data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect."""
-    email = data.get(CONF_EMAIL)
-    code = data.get(CONF_CODE)
-    token = data.get(CONF_TOKEN)
-    if email:
-        p_api.set_email(email)
-    if code:
-        code = code.replace(" ", "")
-        p_api.set_code(code)
-    if token:
-        p_api.set_token(token)
-
-
 class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Permobil config flow."""
 
-    # The schema version of the entries that it creates
-    # Home Assistant will call your migrate method if the version changes
     VERSION = 1
-    p_api: MyPermobil = None
-    region_names = {"Failed to load regions": ""}
-    data = {
-        CONF_EMAIL: "",
-        CONF_REGION: "",
-        CONF_CODE: "",
-        CONF_TOKEN: "",
-        CONF_TTL: "",
-    }
+    region_names: dict[str, str] = {}
+    data: dict[str, str] = {}
+
+    def __init__(self) -> None:
+        """Initialize flow."""
+        hass: HomeAssistant = async_get_hass()
+        session = async_get_clientsession(hass)
+        self.p_api = MyPermobil(APPLICATION, session=session)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Invoke when a user initiates a flow via the user interface."""
-        await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured()
         errors: dict[str, str] = {}
-        if not self.p_api:
-            session = async_get_clientsession(self.hass)
-            self.p_api = MyPermobil(APPLICATION, session=session)
-        try:
-            if user_input is not None:
-                # the user has entered data in the first prompt
-                await validate_input(self.p_api, user_input)
-                self.data[CONF_EMAIL] = user_input[CONF_EMAIL]
-                _LOGGER.debug("Permobil: email %s", self.p_api.email)
-        except MyPermobilClientException as err:
-            _LOGGER.error("Permobil: %s", err)
-            errors["base"] = f"Pemobil: {err}"
-            errors["reason"] = "invalid_email"
-        if errors or user_input is None:
-            # there were errors in the first prompt
+
+        if user_input:
+            try:
+                self.p_api.set_email(user_input[CONF_EMAIL])
+            except MyPermobilClientException:
+                _LOGGER.exception("Error validating email")
+                errors["base"] = "invalid_email"
+
+            self.data.update(user_input)
+
+            await self.async_set_unique_id(self.data[CONF_EMAIL])
+            self._abort_if_unique_id_configured()
+
+        if errors or not user_input:
             return self.async_show_form(
                 step_id="user", data_schema=GET_EMAIL_SCHEMA, errors=errors
             )
-        # open the email code prompt
         return await self.async_step_region()
 
-    async def async_step_region(self, user_input=None) -> FlowResult:
+    async def async_step_region(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Invoke when a user initiates a flow via the user interface."""
         errors: dict[str, str] = {}
-        if not self.p_api:
-            session = async_get_clientsession(self.hass)
-            self.p_api = MyPermobil(APPLICATION, session=session)
-        try:
-            if user_input is None:
-                include_internal = self.p_api.email.endswith("@permobil.com")
-                _LOGGER.debug("Permobil: include internals %s", include_internal)
-                self.region_names = await self.p_api.request_region_names(
-                    include_internal
-                )
+        if not user_input:
+            # fetch the list of regions names and urls from the api
+            # for the user to select from.
+            try:
+                self.region_names = await self.p_api.request_region_names()
                 _LOGGER.debug(
-                    "Permobil: region names %s", str(self.region_names.keys())
+                    "region names %s",
+                    ",".join(list(self.region_names.keys())),
                 )
+            except MyPermobilAPIException:
+                _LOGGER.exception("Error requesting regions")
+                errors["base"] = "region_fetch_error"
 
-            else:
-                # the user has entered data in the first prompt
-                # set the data
-                await validate_input(self.p_api, user_input)
-                region_name = user_input[CONF_REGION]
-                self.data[CONF_REGION] = self.region_names[region_name]
-                self.p_api.set_region(self.data[CONF_REGION])
-                _LOGGER.debug("Permobil: region %s", self.p_api.region)
+        else:
+            region_url = self.region_names[user_input[CONF_REGION]]
+
+            self.data[CONF_REGION] = region_url
+            self.p_api.set_region(region_url)
+            _LOGGER.debug("region %s", self.p_api.region)
+            try:
+                # tell backend to send code to the users email
                 await self.p_api.request_application_code()
-        except KeyError as err:
-            errors["base"] = f"Pemobil: {err}"
-            errors["reason"] = "invalid_region"
-        except MyPermobilClientException as err:
-            errors["base"] = f"Pemobil: {err}"
-            errors["reason"] = "invalid_region"
-        except MyPermobilAPIException as err:
-            errors["base"] = f"Pemobil: {err}"
-            errors["reason"] = "connection_error"
+            except MyPermobilAPIException:
+                _LOGGER.exception("Error requesting code")
+                errors["base"] = "code_request_error"
 
-        if errors or user_input is None:
-            # there were errors in the first prompt
+        if errors or not user_input:
+            # the error could either be that the fetch region did not pass
+            # or that the request application code failed
             schema = vol.Schema(
                 {
                     vol.Required(CONF_REGION): selector.SelectSelector(
@@ -152,38 +121,53 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="region", data_schema=schema, errors=errors
             )
 
-        user_input[CONF_URL] = self.region_names[user_input[CONF_REGION]]
-        _LOGGER.debug("Permobil: url %s", user_input[CONF_URL])
-        # open the email code prompt
         return await self.async_step_email_code()
 
-    async def async_step_email_code(self, user_input=None) -> FlowResult:
+    async def async_step_email_code(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Second step in config flow to enter the email code."""
         errors: dict[str, str] = {}
-        if not self.p_api:
-            session = async_get_clientsession(self.hass)
-            self.p_api = MyPermobil(APPLICATION, session=session)
 
-        try:
-            if user_input is not None:
-                # the user has entered data in the second prompt
-                # set the data
-                await validate_input(self.p_api, user_input)
-                self.data[CONF_CODE] = user_input[CONF_CODE]
-                _LOGGER.debug("Permobil: code %s…", self.data[CONF_CODE][:3])
+        if user_input:
+            try:
+                self.p_api.set_code(user_input[CONF_CODE])
+                self.data.update(user_input)
                 token, ttl = await self.p_api.request_application_token()
                 self.data[CONF_TOKEN] = token
-                _LOGGER.debug("Permobil: token %s…", self.data[CONF_TOKEN][:5])
                 self.data[CONF_TTL] = ttl
-                _LOGGER.debug("Permobil: ttl %s", self.data[CONF_TTL])
-        except (MyPermobilAPIException, MyPermobilClientException) as err:
-            _LOGGER.error("Permobil: %s", err)
-            errors["base"] = f"Pemobil: {err}"
-            errors["reason"] = "invalid_code"
+            except (MyPermobilAPIException, MyPermobilClientException):
+                # the code did not pass validation by the api client
+                # or the backend returned an error when trying to validate the code
+                _LOGGER.exception("Error verifying code")
+                errors["base"] = "invalid_code"
 
-        if errors or user_input is None:
+        if errors or not user_input:
             return self.async_show_form(
                 step_id="email_code", data_schema=GET_TOKEN_SCHEMA, errors=errors
             )
 
-        return self.async_create_entry(title="Token", data=self.data)
+        return self.async_create_entry(title=self.data[CONF_EMAIL], data=self.data)
+
+    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        assert reauth_entry
+
+        try:
+            email: str = reauth_entry.data[CONF_EMAIL]
+            region: str = reauth_entry.data[CONF_REGION]
+            self.p_api.set_email(email)
+            self.p_api.set_region(region)
+            self.data = {
+                CONF_EMAIL: email,
+                CONF_REGION: region,
+            }
+            await self.p_api.request_application_code()
+        except MyPermobilAPIException:
+            _LOGGER.exception("Error requesting code for reauth")
+            return self.async_abort(reason="unknown")
+
+        return await self.async_step_email_code()

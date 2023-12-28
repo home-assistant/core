@@ -1,0 +1,30 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'data': dict({
+      'varies_by': 'firmware_version',
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': '1.1.1.1',
+        'name': '**REDACTED**',
+        'password': '**REDACTED**',
+        'token': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'domain': 'enphase_envoy',
+      'entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+    'envoy_firmware': '7.1.2',
+  })
+# ---

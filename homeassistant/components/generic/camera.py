@@ -33,6 +33,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -80,12 +81,6 @@ async def async_setup_platform(
 ) -> None:
     """Set up a generic IP Camera."""
 
-    _LOGGER.warning(
-        "Loading generic IP camera via configuration.yaml is deprecated, "
-        "it will be automatically imported.  Once you have confirmed correct "
-        "operation, please remove 'generic' (IP camera) section(s) from "
-        "configuration.yaml"
-    )
     image = config.get(CONF_STILL_IMAGE_URL)
     stream = config.get(CONF_STREAM_SOURCE)
     config_new = {
@@ -178,15 +173,21 @@ class GenericCamera(Camera):
         self._last_url = None
         self._last_image = None
 
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, identifier)},
+            manufacturer="Generic",
+        )
+
+    @property
+    def use_stream_for_stills(self) -> bool:
+        """Whether or not to use stream to generate stills."""
+        return not self._still_image_url
+
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
         if not self._still_image_url:
-            if not self.stream:
-                await self.async_create_stream()
-            if self.stream:
-                return await self.stream.async_get_image(width, height)
             return None
         try:
             url = self._still_image_url.async_render(parse_result=False)

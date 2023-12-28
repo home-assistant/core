@@ -14,10 +14,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
@@ -470,12 +467,21 @@ async def test_get_action_capabilities_features_legacy(
 
 async def test_action(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
     enable_custom_integrations: None,
 ) -> None:
     """Test for turn_on and turn_off actions."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     assert await async_setup_component(
         hass,
@@ -486,7 +492,7 @@ async def test_action(
                     "trigger": {"platform": "event", "event_type": "test_off"},
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "turn_off",
                     },
@@ -495,7 +501,7 @@ async def test_action(
                     "trigger": {"platform": "event", "event_type": "test_on"},
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "turn_on",
                     },
@@ -504,7 +510,7 @@ async def test_action(
                     "trigger": {"platform": "event", "event_type": "test_toggle"},
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "toggle",
                     },
@@ -513,7 +519,7 @@ async def test_action(
                     "trigger": {"platform": "event", "event_type": "test_flash_short"},
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "flash",
                     },
@@ -522,7 +528,7 @@ async def test_action(
                     "trigger": {"platform": "event", "event_type": "test_flash_long"},
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "flash",
                         "flash": "long",
@@ -535,7 +541,7 @@ async def test_action(
                     },
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "brightness_increase",
                     },
@@ -547,7 +553,7 @@ async def test_action(
                     },
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "brightness_decrease",
                     },
@@ -556,7 +562,7 @@ async def test_action(
                     "trigger": {"platform": "event", "event_type": "test_brightness"},
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.id,
                         "type": "turn_on",
                         "brightness_pct": 75,
@@ -626,12 +632,21 @@ async def test_action(
 
 async def test_action_legacy(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     calls,
     enable_custom_integrations: None,
 ) -> None:
     """Test for turn_on and turn_off actions."""
-    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
 
     assert await async_setup_component(
         hass,
@@ -642,7 +657,7 @@ async def test_action_legacy(
                     "trigger": {"platform": "event", "event_type": "test_off"},
                     "action": {
                         "domain": DOMAIN,
-                        "device_id": "",
+                        "device_id": device_entry.id,
                         "entity_id": entry.entity_id,
                         "type": "turn_off",
                     },

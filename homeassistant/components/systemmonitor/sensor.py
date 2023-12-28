@@ -9,7 +9,7 @@ import logging
 import os
 import socket
 import sys
-from typing import Any, cast
+from typing import Any
 
 import psutil
 import voluptuous as vol
@@ -64,7 +64,7 @@ SENSOR_TYPE_MANDATORY_ARG = 4
 SIGNAL_SYSTEMMONITOR_UPDATE = "systemmonitor_update"
 
 
-@dataclass
+@dataclass(frozen=True)
 class SysMonitorSensorEntityDescription(SensorEntityDescription):
     """Description for System Monitor sensor entities."""
 
@@ -205,7 +205,6 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         key="process",
         name="Process",
         icon=CPU_ICON,
-        state_class=SensorStateClass.MEASUREMENT,
         mandatory_arg=True,
     ),
     "processor_use": SysMonitorSensorEntityDescription(
@@ -614,6 +613,6 @@ def _read_cpu_temperature() -> float | None:
             # check both name and label because some systems embed cpu# in the
             # name, which makes label not match because label adds cpu# at end.
             if _label in CPU_SENSOR_PREFIXES or name in CPU_SENSOR_PREFIXES:
-                return cast(float, round(entry.current, 1))
+                return round(entry.current, 1)
 
     return None

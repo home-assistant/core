@@ -22,14 +22,14 @@ from .coordinator import ZeversolarCoordinator
 from .entity import ZeversolarEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class ZeversolarEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[zeversolar.ZeverSolarData], zeversolar.kWh | zeversolar.Watt]
 
 
-@dataclass
+@dataclass(frozen=True)
 class ZeversolarEntityDescription(
     SensorEntityDescription, ZeversolarEntityDescriptionMixin
 ):
@@ -39,7 +39,6 @@ class ZeversolarEntityDescription(
 SENSOR_TYPES = (
     ZeversolarEntityDescription(
         key="pac",
-        name="Current power",
         icon="mdi:solar-power-variant",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -49,7 +48,7 @@ SENSOR_TYPES = (
     ),
     ZeversolarEntityDescription(
         key="energy_today",
-        name="Energy today",
+        translation_key="energy_today",
         icon="mdi:home-battery",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,

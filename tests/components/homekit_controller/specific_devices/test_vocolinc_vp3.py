@@ -14,10 +14,12 @@ from ..common import (
 )
 
 
-async def test_vocolinc_vp3_setup(hass: HomeAssistant) -> None:
+async def test_vocolinc_vp3_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test that a VOCOlinc VP3 can be correctly setup in HA."""
 
-    entity_registry = er.async_get(hass)
     outlet = entity_registry.async_get_or_create(
         "switch",
         "homekit_controller",

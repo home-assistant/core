@@ -21,7 +21,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .browse_media import browse_node, browse_top_level
@@ -39,13 +39,24 @@ async def async_setup_entry(
 
     afsapi: AFSAPI = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_entities([AFSAPIDevice(config_entry.title, afsapi)], True)
+    async_add_entities(
+        [
+            AFSAPIDevice(
+                config_entry.entry_id,
+                config_entry.title,
+                afsapi,
+            )
+        ],
+        True,
+    )
 
 
 class AFSAPIDevice(MediaPlayerEntity):
     """Representation of a Frontier Silicon device on the network."""
 
     _attr_media_content_type: str = MediaType.CHANNEL
+    _attr_has_entity_name = True
+    _attr_name = None
 
     _attr_supported_features = (
         MediaPlayerEntityFeature.PAUSE
@@ -65,16 +76,15 @@ class AFSAPIDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
 
-    def __init__(self, name: str | None, afsapi: AFSAPI) -> None:
+    def __init__(self, unique_id: str, name: str | None, afsapi: AFSAPI) -> None:
         """Initialize the Frontier Silicon API device."""
         self.fs_device = afsapi
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, afsapi.webfsapi_endpoint)},
+            identifiers={(DOMAIN, unique_id)},
             name=name,
         )
-        self._attr_name = name
-
+        self._attr_unique_id = unique_id
         self._max_volume: int | None = None
 
         self.__modes_by_label: dict[str, str] | None = None
@@ -113,12 +123,11 @@ class AFSAPIDevice(MediaPlayerEntity):
             )
 
             self._attr_available = True
-        if not self._attr_name:
-            self._attr_name = await afsapi.get_friendly_name()
 
         if not self._attr_source_list:
             self.__modes_by_label = {
-                mode.label: mode.key for mode in await afsapi.get_modes()
+                (mode.label if mode.label else mode.id): mode.key
+                for mode in await afsapi.get_modes()
             }
             self._attr_source_list = list(self.__modes_by_label)
 
@@ -142,6 +151,9 @@ class AFSAPIDevice(MediaPlayerEntity):
         # If call to get_volume fails set to 0 and try again next time.
         if not self._max_volume:
             self._max_volume = int(await afsapi.get_volume_steps() or 1) - 1
+
+        if self._max_volume:
+            self._attr_volume_step = 1 / self._max_volume
 
         if self._attr_state != MediaPlayerState.OFF:
             info_name = await afsapi.get_play_name()
@@ -230,18 +242,6 @@ class AFSAPIDevice(MediaPlayerEntity):
         await self.fs_device.set_mute(mute)
 
     # volume
-    async def async_volume_up(self) -> None:
-        """Send volume up command."""
-        volume = await self.fs_device.get_volume()
-        volume = int(volume or 0) + 1
-        await self.fs_device.set_volume(min(volume, self._max_volume))
-
-    async def async_volume_down(self) -> None:
-        """Send volume down command."""
-        volume = await self.fs_device.get_volume()
-        volume = int(volume or 0) - 1
-        await self.fs_device.set_volume(max(volume, 0))
-
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume command."""
         if self._max_volume:  # Can't do anything sensible if not set

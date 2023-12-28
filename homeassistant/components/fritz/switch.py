@@ -9,9 +9,9 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
@@ -518,7 +518,6 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
             default_manufacturer="AVM",
             default_model="FRITZ!Box Tracked device",
             default_name=device.hostname,
-            identifiers={(DOMAIN, self._mac)},
             via_device=(
                 DOMAIN,
                 avm_wrapper.unique_id,

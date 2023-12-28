@@ -33,10 +33,9 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import GroupEntity
@@ -137,8 +136,25 @@ async def async_setup_entry(
     )
 
 
+@callback
+def async_create_preview_sensor(
+    name: str, validated_config: dict[str, Any]
+) -> SensorGroup:
+    """Create a preview sensor."""
+    return SensorGroup(
+        None,
+        name,
+        validated_config[CONF_ENTITIES],
+        validated_config.get(CONF_IGNORE_NON_NUMERIC, False),
+        validated_config[CONF_TYPE],
+        None,
+        None,
+        None,
+    )
+
+
 def calc_min(
-    sensor_values: list[tuple[str, float, State]]
+    sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float | None]:
     """Calculate min value."""
     val: float | None = None
@@ -154,7 +170,7 @@ def calc_min(
 
 
 def calc_max(
-    sensor_values: list[tuple[str, float, State]]
+    sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float | None]:
     """Calculate max value."""
     val: float | None = None
@@ -170,7 +186,7 @@ def calc_max(
 
 
 def calc_mean(
-    sensor_values: list[tuple[str, float, State]]
+    sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float | None]:
     """Calculate mean value."""
     result = (sensor_value for _, sensor_value, _ in sensor_values)
@@ -180,7 +196,7 @@ def calc_mean(
 
 
 def calc_median(
-    sensor_values: list[tuple[str, float, State]]
+    sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float | None]:
     """Calculate median value."""
     result = (sensor_value for _, sensor_value, _ in sensor_values)
@@ -190,7 +206,7 @@ def calc_median(
 
 
 def calc_last(
-    sensor_values: list[tuple[str, float, State]]
+    sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float | None]:
     """Calculate last value."""
     last_updated: datetime | None = None
@@ -207,7 +223,7 @@ def calc_last(
 
 
 def calc_range(
-    sensor_values: list[tuple[str, float, State]]
+    sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float]:
     """Calculate range value."""
     max_result = max((sensor_value for _, sensor_value, _ in sensor_values))
@@ -218,7 +234,7 @@ def calc_range(
 
 
 def calc_sum(
-    sensor_values: list[tuple[str, float, State]]
+    sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float]:
     """Calculate a sum of values."""
     result = 0.0
@@ -229,7 +245,7 @@ def calc_sum(
 
 
 def calc_product(
-    sensor_values: list[tuple[str, float, State]]
+    sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float]:
     """Calculate a product of values."""
     result = 1.0
@@ -294,23 +310,6 @@ class SensorGroup(GroupEntity, SensorEntity):
         ] = CALC_TYPES[self._sensor_type]
         self._state_incorrect: set[str] = set()
         self._extra_state_attribute: dict[str, Any] = {}
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-
-        @callback
-        def async_state_changed_listener(event: Event) -> None:
-            """Handle child updates."""
-            self.async_set_context(event.context)
-            self.async_defer_or_update_ha_state()
-
-        self.async_on_remove(
-            async_track_state_change_event(
-                self.hass, self._entity_ids, async_state_changed_listener
-            )
-        )
-
-        await super().async_added_to_hass()
 
     @callback
     def async_update_group_state(self) -> None:

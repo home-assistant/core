@@ -4,7 +4,7 @@
       "user": {
         "title": "Connect to the modem",
         "data": {
-          "device": "Device",
+          "device": "[%key:common::config_flow::data::device%]",
           "baud_speed": "Baud Speed"
         }
       }
@@ -20,16 +20,27 @@
   },
   "entity": {
     "sensor": {
-      "bit_error_rate": { "name": "Bit error rate" },
-      "cid": { "name": "Cell ID" },
-      "lac": { "name": "Local area code" },
-      "network_code": { "name": "GSM network code" },
-      "network_name": { "name": "Network name" },
-      "signal_percent": { "name": "Signal percent" },
-      "signal_strength": {
-        "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
+      "bit_error_rate": {
+        "name": "Bit error rate"
       },
-      "state": { "name": "Network status" }
+      "cid": {
+        "name": "Cell ID"
+      },
+      "lac": {
+        "name": "Local area code"
+      },
+      "network_code": {
+        "name": "GSM network code"
+      },
+      "network_name": {
+        "name": "Network name"
+      },
+      "signal_percent": {
+        "name": "Signal percent"
+      },
+      "state": {
+        "name": "Network status"
+      }
     }
   }
 }

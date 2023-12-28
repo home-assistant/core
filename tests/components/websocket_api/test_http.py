@@ -18,10 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed
-from tests.typing import (
-    MockHAClientWebSocket,
-    WebSocketGenerator,
-)
+from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture

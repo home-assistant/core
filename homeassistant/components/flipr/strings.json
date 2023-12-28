@@ -40,9 +40,6 @@
       "chlorine": {
         "name": "Chlorine"
       },
-      "ph": {
-        "name": "pH"
-      },
       "water_temperature": {
         "name": "Water temperature"
       },

@@ -1,0 +1,151 @@
+{
+  "adapter": {
+    "firmware": {
+      "name": "Protocol Adapter Firmware",
+      "value": "POOL: 5.2 Build 736.0 Rel"
+    }
+  },
+  "controller": {
+    "controller_id": 100,
+    "configuration": {
+      "body_type": {
+        "0": {
+          "min_setpoint": 40,
+          "max_setpoint": 104
+        },
+        "1": {
+          "min_setpoint": 40,
+          "max_setpoint": 104
+        }
+      },
+      "is_celsius": {
+        "name": "Is Celsius",
+        "value": 0
+      },
+      "controller_type": 13,
+      "hardware_type": 0
+    },
+    "model": {
+      "name": "Model",
+      "value": "EasyTouch2 8"
+    },
+    "equipment": {
+      "flags": 32796
+    },
+    "sensor": {
+      "active_alert": {
+        "name": "Active Alert",
+        "value": 0,
+        "device_type": "alarm"
+      }
+    }
+  },
+  "circuit": {},
+  "pump": {
+    "0": {
+      "data": 70,
+      "type": 3,
+      "state": {
+        "name": "Pool Low Pump",
+        "value": 0
+      },
+      "watts_now": {
+        "name": "Pool Low Pump Watts Now",
+        "value": 0,
+        "unit": "W",
+        "device_type": "power",
+        "state_type": "measurement"
+      },
+      "rpm_now": {
+        "name": "Pool Low Pump RPM Now",
+        "value": 0,
+        "unit": "rpm",
+        "state_type": "measurement"
+      }
+    },
+    "1": {
+      "data": 0
+    },
+    "2": {
+      "data": 0
+    },
+    "3": {
+      "data": 0
+    },
+    "4": {
+      "data": 0
+    },
+    "5": {
+      "data": 0
+    },
+    "6": {
+      "data": 0
+    },
+    "7": {
+      "data": 0
+    }
+  },
+  "body": {},
+  "intellichem": {
+    "unknown_at_offset_00": 42,
+    "unknown_at_offset_04": 0,
+    "sensor": {
+      "ph_now": {
+        "name": "pH Now",
+        "value": 0.0,
+        "unit": "pH",
+        "state_type": "measurement"
+      },
+      "orp_now": {
+        "name": "ORP Now",
+        "value": 0,
+        "unit": "mV",
+        "state_type": "measurement"
+      }
+    }
+  },
+  "scg": {
+    "scg_present": 1,
+    "sensor": {
+      "state": {
+        "name": "Chlorinator",
+        "value": 0
+      },
+      "salt_ppm": {
+        "name": "Chlorinator Salt",
+        "value": 0,
+        "unit": "ppm",
+        "state_type": "measurement"
+      }
+    },
+    "configuration": {
+      "pool_setpoint": {
+        "name": "Pool Chlorinator Setpoint",
+        "value": 51,
+        "unit": "%",
+        "min_setpoint": 0,
+        "max_setpoint": 100,
+        "step": 5,
+        "body_type": 0
+      },
+      "spa_setpoint": {
+        "name": "Spa Chlorinator Setpoint",
+        "value": 0,
+        "unit": "%",
+        "min_setpoint": 0,
+        "max_setpoint": 100,
+        "step": 5,
+        "body_type": 1
+      },
+      "super_chlor_timer": {
+        "name": "Super Chlorination Timer",
+        "value": 0,
+        "unit": "hr",
+        "min_setpoint": 1,
+        "max_setpoint": 72,
+        "step": 1
+      }
+    },
+    "flags": 0
+  }
+}

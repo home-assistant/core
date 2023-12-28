@@ -20,7 +20,9 @@ DEBOUNCE_TIMEOUT = 1
 DISPATCHERS: Final = "dispatchers"
 GDM_DEBOUNCER: Final = "gdm_debouncer"
 GDM_SCANNER: Final = "gdm_scanner"
-PLATFORMS = frozenset([Platform.BUTTON, Platform.MEDIA_PLAYER, Platform.SENSOR])
+PLATFORMS = frozenset(
+    [Platform.BUTTON, Platform.MEDIA_PLAYER, Platform.SENSOR, Platform.UPDATE]
+)
 PLATFORMS_COMPLETED: Final = "platforms_completed"
 PLAYER_SOURCE = "player_source"
 SERVERS: Final = "servers"

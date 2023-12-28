@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
-from typing import cast
+from typing import Any, cast
 
 from aioguardian import Client
 from aioguardian.errors import GuardianError
@@ -23,9 +23,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -107,45 +107,6 @@ def async_get_entry_id_for_service_call(hass: HomeAssistant, call: ServiceCall) 
     raise ValueError(f"No config entry for device ID: {device_id}")
 
 
-@callback
-def async_log_deprecated_service_call(
-    hass: HomeAssistant,
-    call: ServiceCall,
-    alternate_service: str,
-    alternate_target: str,
-    breaks_in_ha_version: str,
-) -> None:
-    """Log a warning about a deprecated service call."""
-    deprecated_service = f"{call.domain}.{call.service}"
-
-    async_create_issue(
-        hass,
-        DOMAIN,
-        f"deprecated_service_{deprecated_service}",
-        breaks_in_ha_version=breaks_in_ha_version,
-        is_fixable=True,
-        is_persistent=True,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_service",
-        translation_placeholders={
-            "alternate_service": alternate_service,
-            "alternate_target": alternate_target,
-            "deprecated_service": deprecated_service,
-        },
-    )
-
-    LOGGER.warning(
-        (
-            'The "%s" service is deprecated and will be removed in %s; use the "%s" '
-            'service and pass it a target entity ID of "%s"'
-        ),
-        deprecated_service,
-        breaks_in_ha_version,
-        alternate_service,
-        alternate_target,
-    )
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elexa Guardian from a config entry."""
     client = Client(entry.data[CONF_IP_ADDRESS], port=entry.data[CONF_PORT])
@@ -209,7 +170,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
-    def call_with_data(func: Callable) -> Callable:
+    def call_with_data(
+        func: Callable[[ServiceCall, GuardianData], Coroutine[Any, Any, None]],
+    ) -> Callable[[ServiceCall], Coroutine[Any, Any, None]]:
         """Hydrate a service call with the appropriate GuardianData object."""
 
         async def wrapper(call: ServiceCall) -> None:
@@ -447,14 +410,14 @@ class PairedSensorEntity(GuardianEntity):
         self._attr_unique_id = f"{paired_sensor_uid}_{description.key}"
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValveControllerEntityDescriptionMixin:
     """Define an entity description mixin for valve controller entities."""
 
     api_category: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValveControllerEntityDescription(
     EntityDescription, ValveControllerEntityDescriptionMixin
 ):

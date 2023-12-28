@@ -154,14 +154,9 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
         if self.service.has(CharacteristicsTypes.POSITION_HOLD):
             features |= CoverEntityFeature.STOP
 
-        supports_tilt = any(
-            (
-                self.service.has(CharacteristicsTypes.VERTICAL_TILT_CURRENT),
-                self.service.has(CharacteristicsTypes.HORIZONTAL_TILT_CURRENT),
-            )
-        )
-
-        if supports_tilt:
+        if self.service.has(
+            CharacteristicsTypes.VERTICAL_TILT_CURRENT
+        ) or self.service.has(CharacteristicsTypes.HORIZONTAL_TILT_CURRENT):
             features |= (
                 CoverEntityFeature.OPEN_TILT
                 | CoverEntityFeature.CLOSE_TILT
@@ -299,8 +294,14 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
         return {"obstruction-detected": obstruction_detected}
 
 
+class HomeKitWindow(HomeKitWindowCover):
+    """Representation of a HomeKit Window."""
+
+    _attr_device_class = CoverDeviceClass.WINDOW
+
+
 ENTITY_TYPES = {
     ServicesTypes.GARAGE_DOOR_OPENER: HomeKitGarageDoorCover,
     ServicesTypes.WINDOW_COVERING: HomeKitWindowCover,
-    ServicesTypes.WINDOW: HomeKitWindowCover,
+    ServicesTypes.WINDOW: HomeKitWindow,
 }

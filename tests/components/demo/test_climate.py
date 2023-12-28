@@ -198,6 +198,28 @@ async def test_set_target_temp_range_bad_attr(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 24.0
 
 
+async def test_set_temp_with_hvac_mode(hass: HomeAssistant) -> None:
+    """Test the setting of the hvac_mode in set_temperature."""
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get(ATTR_TEMPERATURE) == 21
+    assert state.state == HVACMode.COOL
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: ENTITY_CLIMATE,
+            ATTR_TEMPERATURE: 23,
+            ATTR_HVAC_MODE: HVACMode.OFF,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.state == HVACMode.OFF
+    assert state.attributes.get(ATTR_TEMPERATURE) == 23
+
+
 async def test_set_target_humidity_bad_attr(hass: HomeAssistant) -> None:
     """Test setting the target humidity without required attribute."""
     state = hass.states.get(ENTITY_CLIMATE)

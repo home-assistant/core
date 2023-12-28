@@ -6,11 +6,11 @@ from aiogithubapi import GitHubException
 from homeassistant import config_entries
 from homeassistant.components.github.config_flow import get_repositories
 from homeassistant.components.github.const import (
-    CONF_ACCESS_TOKEN,
     CONF_REPOSITORIES,
     DEFAULT_REPOSITORIES,
     DOMAIN,
 )
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

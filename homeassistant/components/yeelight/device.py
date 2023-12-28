@@ -3,12 +3,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import Any
 
 from yeelight import BulbException
-from yeelight.aio import KEY_CONNECTED
+from yeelight.aio import KEY_CONNECTED, AsyncBulb
 
 from homeassistant.const import CONF_ID, CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
@@ -63,17 +64,19 @@ def update_needs_bg_power_workaround(data):
 class YeelightDevice:
     """Represents single Yeelight device."""
 
-    def __init__(self, hass, host, config, bulb):
+    def __init__(
+        self, hass: HomeAssistant, host: str, config: dict[str, Any], bulb: AsyncBulb
+    ) -> None:
         """Initialize device."""
         self._hass = hass
         self._config = config
         self._host = host
         self._bulb_device = bulb
-        self.capabilities = {}
-        self._device_type = None
+        self.capabilities: dict[str, Any] = {}
+        self._device_type: str | None = None
         self._available = True
         self._initialized = False
-        self._name = None
+        self._name: str | None = None
 
     @property
     def bulb(self):
@@ -114,6 +117,11 @@ class YeelightDevice:
     def fw_version(self):
         """Return the firmware version."""
         return self.capabilities.get("fw_ver")
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return the unique ID of the device."""
+        return self.capabilities.get("id")
 
     @property
     def is_nightlight_supported(self) -> bool:

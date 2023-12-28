@@ -7,7 +7,6 @@ import logging
 
 import aiohttp
 from aiohttp.hdrs import ACCEPT, AUTHORIZATION
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -134,7 +133,7 @@ class TtnDataStorage:
         """Get the current state from The Things Network Data Storage."""
         try:
             session = async_get_clientsession(self._hass)
-            async with async_timeout.timeout(DEFAULT_TIMEOUT):
+            async with asyncio.timeout(DEFAULT_TIMEOUT):
                 response = await session.get(self._url, headers=self._headers)
 
         except (asyncio.TimeoutError, aiohttp.ClientError):

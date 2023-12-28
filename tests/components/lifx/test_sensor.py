@@ -20,7 +20,7 @@ from homeassistant.util import dt as dt_util
 from . import (
     DEFAULT_ENTRY_TITLE,
     IP_ADDRESS,
-    MAC_ADDRESS,
+    SERIAL,
     _mocked_bulb,
     _mocked_bulb_old_firmware,
     _patch_config_flow_try_connect,
@@ -31,14 +31,16 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_rssi_sensor(hass: HomeAssistant) -> None:
+async def test_rssi_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test LIFX RSSI sensor entity."""
 
     config_entry = MockConfigEntry(
         domain=lifx.DOMAIN,
         title=DEFAULT_ENTRY_TITLE,
         data={CONF_HOST: IP_ADDRESS},
-        unique_id=MAC_ADDRESS,
+        unique_id=SERIAL,
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
@@ -49,7 +51,6 @@ async def test_rssi_sensor(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     entity_id = "sensor.my_bulb_rssi"
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.entities.get(entity_id)
     assert entry
@@ -82,14 +83,16 @@ async def test_rssi_sensor(hass: HomeAssistant) -> None:
     assert rssi.attributes["state_class"] == SensorStateClass.MEASUREMENT
 
 
-async def test_rssi_sensor_old_firmware(hass: HomeAssistant) -> None:
+async def test_rssi_sensor_old_firmware(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test LIFX RSSI sensor entity."""
 
     config_entry = MockConfigEntry(
         domain=lifx.DOMAIN,
         title=DEFAULT_ENTRY_TITLE,
         data={CONF_HOST: IP_ADDRESS},
-        unique_id=MAC_ADDRESS,
+        unique_id=SERIAL,
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb_old_firmware()
@@ -100,7 +103,6 @@ async def test_rssi_sensor_old_firmware(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     entity_id = "sensor.my_bulb_rssi"
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.entities.get(entity_id)
     assert entry

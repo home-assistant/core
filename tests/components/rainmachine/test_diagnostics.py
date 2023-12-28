@@ -19,6 +19,7 @@ async def test_entry_diagnostics(
         "entry": {
             "entry_id": config_entry.entry_id,
             "version": 2,
+            "minor_version": 1,
             "domain": "rainmachine",
             "title": "Mock Title",
             "data": {
@@ -645,6 +646,7 @@ async def test_entry_diagnostics_failed_controller_diagnostics(
         "entry": {
             "entry_id": config_entry.entry_id,
             "version": 2,
+            "minor_version": 1,
             "domain": "rainmachine",
             "title": "Mock Title",
             "data": {

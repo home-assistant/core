@@ -7,11 +7,8 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-)
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -56,6 +53,7 @@ async def async_setup_entry(
     ):
         device_info = DeviceInfo(
             identifiers=device.identifiers,
+            connections=device.connections,
         )
     else:
         device_info = None

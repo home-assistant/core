@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from copy import deepcopy
-from dataclasses import dataclass
-from datetime import datetime, timezone
+import dataclasses
+from datetime import UTC, datetime
 from typing import Any, Generic
 
 from aiopyarr import Diskspace, RootFolder, SystemStatus
@@ -13,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfInformation
@@ -38,21 +38,23 @@ def get_modified_description(
     description: RadarrSensorEntityDescription[T], mount: RootFolder
 ) -> tuple[RadarrSensorEntityDescription[T], str]:
     """Return modified description and folder name."""
-    desc = deepcopy(description)
     name = mount.path.rsplit("/")[-1].rsplit("\\")[-1]
-    desc.key = f"{description.key}_{name}"
-    desc.name = f"{description.name} {name}".capitalize()
+    desc = dataclasses.replace(
+        description,
+        key=f"{description.key}_{name}",
+        name=f"{description.name} {name}".capitalize(),
+    )
     return desc, name
 
 
-@dataclass
+@dataclasses.dataclass(frozen=True)
 class RadarrSensorEntityDescriptionMixIn(Generic[T]):
     """Mixin for required keys."""
 
     value_fn: Callable[[T, str], str | int | datetime]
 
 
-@dataclass
+@dataclasses.dataclass(frozen=True)
 class RadarrSensorEntityDescription(
     SensorEntityDescription, RadarrSensorEntityDescriptionMixIn[T], Generic[T]
 ):
@@ -82,13 +84,22 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {
         entity_registry_enabled_default=False,
         value_fn=lambda data, _: data,
     ),
+    "queue": RadarrSensorEntityDescription[int](
+        key="queue",
+        translation_key="queue",
+        native_unit_of_measurement="Movies",
+        icon="mdi:download",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data, _: data,
+    ),
     "status": RadarrSensorEntityDescription[SystemStatus](
         key="start_time",
         translation_key="start_time",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data, _: data.startTime.replace(tzinfo=timezone.utc),
+        value_fn=lambda data, _: data.startTime.replace(tzinfo=UTC),
     ),
 }
 

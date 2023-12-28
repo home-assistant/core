@@ -16,7 +16,7 @@ from homeassistant.components.update import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -48,22 +48,19 @@ class OpenhomeUpdateEntity(UpdateEntity):
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_supported_features = UpdateEntityFeature.INSTALL
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, device):
         """Initialize a Linn DS update entity."""
         self._device = device
         self._attr_unique_id = f"{device.uuid()}-update"
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, self._device.uuid()),
+                (DOMAIN, device.uuid()),
             },
-            manufacturer=self._device.manufacturer(),
-            model=self._device.model_name(),
-            name=self._device.friendly_name(),
+            manufacturer=device.manufacturer(),
+            model=device.model_name(),
+            name=device.friendly_name(),
         )
 
     async def async_update(self) -> None:

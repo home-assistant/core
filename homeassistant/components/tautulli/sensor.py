@@ -43,14 +43,14 @@ def get_top_stats(
     return value
 
 
-@dataclass
+@dataclass(frozen=True)
 class TautulliSensorEntityMixin:
     """Mixin for Tautulli sensor."""
 
     value_fn: Callable[[PyTautulliApiHomeStats, PyTautulliApiActivity, str], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class TautulliSensorEntityDescription(
     SensorEntityDescription, TautulliSensorEntityMixin
 ):
@@ -61,14 +61,14 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
     TautulliSensorEntityDescription(
         icon="mdi:plex",
         key="watching_count",
-        name="Watching",
+        translation_key="watching_count",
         native_unit_of_measurement="Watching",
         value_fn=lambda home_stats, activity, _: cast(int, activity.stream_count),
     ),
     TautulliSensorEntityDescription(
         icon="mdi:plex",
         key="stream_count_direct_play",
-        name="Direct plays",
+        translation_key="stream_count_direct_play",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="Streams",
         entity_registry_enabled_default=False,
@@ -79,7 +79,7 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
     TautulliSensorEntityDescription(
         icon="mdi:plex",
         key="stream_count_direct_stream",
-        name="Direct streams",
+        translation_key="stream_count_direct_stream",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="Streams",
         entity_registry_enabled_default=False,
@@ -90,7 +90,7 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
     TautulliSensorEntityDescription(
         icon="mdi:plex",
         key="stream_count_transcode",
-        name="Transcodes",
+        translation_key="stream_count_transcode",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="Streams",
         entity_registry_enabled_default=False,
@@ -100,7 +100,7 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
     ),
     TautulliSensorEntityDescription(
         key="total_bandwidth",
-        name="Total bandwidth",
+        translation_key="total_bandwidth",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.KILOBITS,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -109,7 +109,7 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
     ),
     TautulliSensorEntityDescription(
         key="lan_bandwidth",
-        name="LAN bandwidth",
+        translation_key="lan_bandwidth",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.KILOBITS,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -119,7 +119,7 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
     ),
     TautulliSensorEntityDescription(
         key="wan_bandwidth",
-        name="WAN bandwidth",
+        translation_key="wan_bandwidth",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.KILOBITS,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -130,35 +130,35 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
     TautulliSensorEntityDescription(
         icon="mdi:movie-open",
         key="top_movies",
-        name="Top movie",
+        translation_key="top_movies",
         entity_registry_enabled_default=False,
         value_fn=get_top_stats,
     ),
     TautulliSensorEntityDescription(
         icon="mdi:television",
         key="top_tv",
-        name="Top TV show",
+        translation_key="top_tv",
         entity_registry_enabled_default=False,
         value_fn=get_top_stats,
     ),
     TautulliSensorEntityDescription(
         icon="mdi:walk",
         key=ATTR_TOP_USER,
-        name="Top user",
+        translation_key="top_user",
         entity_registry_enabled_default=False,
         value_fn=get_top_stats,
     ),
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class TautulliSessionSensorEntityMixin:
     """Mixin for Tautulli session sensor."""
 
     value_fn: Callable[[PyTautulliApiSession], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class TautulliSessionSensorEntityDescription(
     SensorEntityDescription, TautulliSessionSensorEntityMixin
 ):
@@ -169,26 +169,26 @@ SESSION_SENSOR_TYPES: tuple[TautulliSessionSensorEntityDescription, ...] = (
     TautulliSessionSensorEntityDescription(
         icon="mdi:plex",
         key="state",
-        name="State",
+        translation_key="state",
         value_fn=lambda session: cast(str, session.state),
     ),
     TautulliSessionSensorEntityDescription(
         key="full_title",
-        name="Full title",
+        translation_key="full_title",
         entity_registry_enabled_default=False,
         value_fn=lambda session: cast(str, session.full_title),
     ),
     TautulliSessionSensorEntityDescription(
         icon="mdi:progress-clock",
         key="progress",
-        name="Progress",
+        translation_key="progress",
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
         value_fn=lambda session: cast(str, session.progress_percent),
     ),
     TautulliSessionSensorEntityDescription(
         key="stream_resolution",
-        name="Stream resolution",
+        translation_key="stream_resolution",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda session: cast(str, session.stream_video_resolution),
@@ -196,21 +196,21 @@ SESSION_SENSOR_TYPES: tuple[TautulliSessionSensorEntityDescription, ...] = (
     TautulliSessionSensorEntityDescription(
         icon="mdi:plex",
         key="transcode_decision",
-        name="Transcode decision",
+        translation_key="transcode_decision",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda session: cast(str, session.transcode_decision),
     ),
     TautulliSessionSensorEntityDescription(
         key="session_thumb",
-        name="session thumbnail",
+        translation_key="session_thumb",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda session: cast(str, session.user_thumb),
     ),
     TautulliSessionSensorEntityDescription(
         key="video_resolution",
-        name="Video resolution",
+        translation_key="video_resolution",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda session: cast(str, session.video_resolution),

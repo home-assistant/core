@@ -13,8 +13,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -23,14 +22,14 @@ from .const import DOMAIN
 from .coordinator import GitHubDataUpdateCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class BaseEntityDescriptionMixin:
     """Mixin for required GitHub base description keys."""
 
     value_fn: Callable[[dict[str, Any]], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class BaseEntityDescription(SensorEntityDescription):
     """Describes GitHub sensor entity default overrides."""
 
@@ -39,7 +38,7 @@ class BaseEntityDescription(SensorEntityDescription):
     avabl_fn: Callable[[dict[str, Any]], bool] = lambda data: True
 
 
-@dataclass
+@dataclass(frozen=True)
 class GitHubSensorEntityDescription(BaseEntityDescription, BaseEntityDescriptionMixin):
     """Describes GitHub issue sensor entity."""
 

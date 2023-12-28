@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Coroutine, Iterable
 from datetime import timedelta
 from typing import Any, cast
 
@@ -66,11 +66,11 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.service import (
     async_register_admin_service,
     verify_domain_control,
@@ -268,7 +268,7 @@ def _async_register_base_station(
 
     # Check for an old system ID format and remove it:
     if old_base_station := device_registry.async_get_device(
-        {(DOMAIN, system.system_id)}  # type: ignore[arg-type]
+        identifiers={(DOMAIN, system.system_id)}  # type: ignore[arg-type]
     ):
         # Update the new base station with any properties the user might have configured
         # on the old base station:
@@ -336,7 +336,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
-    def extract_system(func: Callable) -> Callable:
+    def extract_system(
+        func: Callable[[ServiceCall, SystemType], Coroutine[Any, Any, None]],
+    ) -> Callable[[ServiceCall], Coroutine[Any, Any, None]]:
         """Define a decorator to get the correct system for a service call."""
 
         async def wrapper(call: ServiceCall) -> None:

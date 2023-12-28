@@ -14,7 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform, service
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -125,6 +125,9 @@ class MonopriceZone(MediaPlayerEntity):
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_volume_step = 1 / MAX_VOLUME
 
     def __init__(self, monoprice, sources, namespace, zone_id):
         """Initialize new zone."""
@@ -137,12 +140,11 @@ class MonopriceZone(MediaPlayerEntity):
         self._attr_source_list = sources[2]
         self._zone_id = zone_id
         self._attr_unique_id = f"{namespace}_{self._zone_id}"
-        self._attr_name = f"Zone {self._zone_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="Monoprice",
             model="6-Zone Amplifier",
-            name=self.name,
+            name=f"Zone {self._zone_id}",
         )
 
         self._snapshot = None
@@ -209,17 +211,3 @@ class MonopriceZone(MediaPlayerEntity):
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._monoprice.set_volume(self._zone_id, round(volume * MAX_VOLUME))
-
-    def volume_up(self) -> None:
-        """Volume up the media player."""
-        if self.volume_level is None:
-            return
-        volume = round(self.volume_level * MAX_VOLUME)
-        self._monoprice.set_volume(self._zone_id, min(volume + 1, MAX_VOLUME))
-
-    def volume_down(self) -> None:
-        """Volume down media player."""
-        if self.volume_level is None:
-            return
-        volume = round(self.volume_level * MAX_VOLUME)
-        self._monoprice.set_volume(self._zone_id, max(volume - 1, 0))

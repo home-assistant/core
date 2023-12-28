@@ -15,6 +15,7 @@ ELMAX_PLATFORMS = [
     Platform.SWITCH,
     Platform.BINARY_SENSOR,
     Platform.ALARM_CONTROL_PANEL,
+    Platform.COVER,
 ]
 
 POLLING_SECONDS = 30

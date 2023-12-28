@@ -107,7 +107,6 @@ class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]
             _LOGGER,
             name=DOMAIN,
             update_interval=timedelta(days=1),
-            update_method=self._async_update_data,
         )
         self.fail_count = 0
         self.fail_threshold = 10

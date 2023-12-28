@@ -401,9 +401,9 @@ async def test_key_options_in_options_form(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("advanced_options", "assert_result"),
     [
-        ({"max_message_size": "8192"}, data_entry_flow.FlowResultType.CREATE_ENTRY),
-        ({"max_message_size": "1024"}, data_entry_flow.FlowResultType.FORM),
-        ({"max_message_size": "65536"}, data_entry_flow.FlowResultType.FORM),
+        ({"max_message_size": 8192}, data_entry_flow.FlowResultType.CREATE_ENTRY),
+        ({"max_message_size": 1024}, data_entry_flow.FlowResultType.FORM),
+        ({"max_message_size": 65536}, data_entry_flow.FlowResultType.FORM),
         (
             {"custom_event_data_template": "{{ subject }}"},
             data_entry_flow.FlowResultType.CREATE_ENTRY,
@@ -412,6 +412,8 @@ async def test_key_options_in_options_form(hass: HomeAssistant) -> None:
             {"custom_event_data_template": "{{ invalid_syntax"},
             data_entry_flow.FlowResultType.FORM,
         ),
+        ({"enable_push": True}, data_entry_flow.FlowResultType.CREATE_ENTRY),
+        ({"enable_push": False}, data_entry_flow.FlowResultType.CREATE_ENTRY),
     ],
     ids=[
         "valid_message_size",
@@ -419,6 +421,8 @@ async def test_key_options_in_options_form(hass: HomeAssistant) -> None:
         "invalid_message_size_high",
         "valid_template",
         "invalid_template",
+        "enable_push_true",
+        "enable_push_false",
     ],
 )
 async def test_advanced_options_form(
@@ -459,77 +463,10 @@ async def test_advanced_options_form(
             else:
                 # Check if entry was updated
                 for key, value in new_config.items():
-                    assert str(entry.data[key]) == value
+                    assert entry.data[key] == value
     except vol.MultipleInvalid:
         # Check if form was expected with these options
         assert assert_result == data_entry_flow.FlowResultType.FORM
-
-
-async def test_import_flow_success(hass: HomeAssistant) -> None:
-    """Test a successful import of yaml."""
-    with patch(
-        "homeassistant.components.imap.config_flow.connect_to_server"
-    ) as mock_client, patch(
-        "homeassistant.components.imap.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        mock_client.return_value.search.return_value = (
-            "OK",
-            [b""],
-        )
-        result2 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                "name": "IMAP",
-                "username": "email@email.com",
-                "password": "password",
-                "server": "imap.server.com",
-                "port": 993,
-                "folder": "INBOX",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "IMAP"
-    assert result2["data"] == {
-        "username": "email@email.com",
-        "password": "password",
-        "server": "imap.server.com",
-        "port": 993,
-        "charset": "utf-8",
-        "folder": "INBOX",
-        "search": "UnSeen UnDeleted",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_import_flow_connection_error(hass: HomeAssistant) -> None:
-    """Test a successful import of yaml."""
-    with patch(
-        "homeassistant.components.imap.config_flow.connect_to_server",
-        side_effect=AioImapException("Unexpected error"),
-    ), patch(
-        "homeassistant.components.imap.async_setup_entry",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                "name": "IMAP",
-                "username": "email@email.com",
-                "password": "password",
-                "server": "imap.server.com",
-                "port": 993,
-                "folder": "INBOX",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
 
 
 @pytest.mark.parametrize("cipher_list", ["python_default", "modern", "intermediate"])

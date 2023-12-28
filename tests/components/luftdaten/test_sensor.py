@@ -23,11 +23,11 @@ from tests.common import MockConfigEntry
 
 async def test_luftdaten_sensors(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the Luftdaten sensors."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     entry = entity_registry.async_get("sensor.sensor_12345_temperature")
     assert entry

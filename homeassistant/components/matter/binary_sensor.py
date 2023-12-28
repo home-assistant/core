@@ -13,7 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -32,7 +32,7 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.BINARY_SENSOR, async_add_entities)
 
 
-@dataclass
+@dataclass(frozen=True)
 class MatterBinarySensorEntityDescription(
     BinarySensorEntityDescription, MatterEntityDescription
 ):
@@ -99,6 +99,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterBinarySensorEntityDescription(
             key="BatteryChargeLevel",
             device_class=BinarySensorDeviceClass.BATTERY,
+            entity_category=EntityCategory.DIAGNOSTIC,
             measurement_to_ha=lambda x: x
             != clusters.PowerSource.Enums.BatChargeLevelEnum.kOk,
         ),

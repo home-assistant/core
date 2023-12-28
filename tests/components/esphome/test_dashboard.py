@@ -58,7 +58,9 @@ async def test_setup_dashboard_fails(
         assert mock_config_entry.state == ConfigEntryState.LOADED
         assert mock_get_devices.call_count == 1
 
-    assert dashboard.STORAGE_KEY not in hass_storage
+    # The dashboard addon might recover later so we still
+    # allow it to be set up.
+    assert dashboard.STORAGE_KEY in hass_storage
 
 
 async def test_setup_dashboard_fails_when_already_setup(

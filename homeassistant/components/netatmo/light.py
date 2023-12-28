@@ -186,11 +186,6 @@ class NetatmoLight(NetatmoBase, LightEntity):
             ]
         )
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if light is on."""
-        return self._dimmer.on is True
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -211,6 +206,8 @@ class NetatmoLight(NetatmoBase, LightEntity):
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
+        self._attr_is_on = self._dimmer.on is True
+
         if self._dimmer.brightness is not None:
             # Netatmo uses a range of [0, 100] to control brightness
             self._attr_brightness = round((self._dimmer.brightness / 100) * 255)

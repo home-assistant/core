@@ -49,7 +49,7 @@ async def test_power_monitoring(hass: HomeAssistant) -> None:
     _, entry = await async_setup_integration(
         hass, wizlight=socket, bulb_type=FAKE_SOCKET_WITH_POWER_MONITORING
     )
-    entity_id = "sensor.mock_title_current_power"
+    entity_id = "sensor.mock_title_power"
     entity_registry = er.async_get(hass)
     reg_entry = entity_registry.async_get(entity_id)
     assert reg_entry.unique_id == f"{FAKE_MAC}_power"

@@ -33,7 +33,15 @@ async def test_entity_and_device_attributes(
     """Test the attributes of the entity are correct."""
     # Arrange
     device = device_factory(
-        "Garage", [Capability.garage_door_control], {Attribute.door: "open"}
+        "Garage",
+        [Capability.garage_door_control],
+        {
+            Attribute.door: "open",
+            Attribute.mnmo: "123",
+            Attribute.mnmn: "Generic manufacturer",
+            Attribute.mnhw: "v4.56",
+            Attribute.mnfv: "v7.89",
+        },
     )
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
@@ -44,13 +52,15 @@ async def test_entity_and_device_attributes(
     assert entry
     assert entry.unique_id == device.device_id
 
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
+    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
     assert entry
     assert entry.configuration_url == "https://account.smartthings.com"
     assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
-    assert entry.model == device.device_type_name
-    assert entry.manufacturer == "Unavailable"
+    assert entry.model == "123"
+    assert entry.manufacturer == "Generic manufacturer"
+    assert entry.hw_version == "v4.56"
+    assert entry.sw_version == "v7.89"
 
 
 async def test_open(hass: HomeAssistant, device_factory) -> None:
@@ -103,13 +113,46 @@ async def test_close(hass: HomeAssistant, device_factory) -> None:
         assert state.state == STATE_CLOSING
 
 
-async def test_set_cover_position(hass: HomeAssistant, device_factory) -> None:
-    """Test the cover sets to the specific position."""
+async def test_set_cover_position_switch_level(
+    hass: HomeAssistant, device_factory
+) -> None:
+    """Test the cover sets to the specific position for legacy devices that use Capability.switch_level."""
     # Arrange
     device = device_factory(
         "Shade",
         [Capability.window_shade, Capability.battery, Capability.switch_level],
         {Attribute.window_shade: "opening", Attribute.battery: 95, Attribute.level: 10},
+    )
+    await setup_platform(hass, COVER_DOMAIN, devices=[device])
+    # Act
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_POSITION: 50, "entity_id": "all"},
+        blocking=True,
+    )
+
+    state = hass.states.get("cover.shade")
+    # Result of call does not update state
+    assert state.state == STATE_OPENING
+    assert state.attributes[ATTR_BATTERY_LEVEL] == 95
+    assert state.attributes[ATTR_CURRENT_POSITION] == 10
+    # Ensure API called
+
+    assert device._api.post_device_command.call_count == 1  # type: ignore
+
+
+async def test_set_cover_position(hass: HomeAssistant, device_factory) -> None:
+    """Test the cover sets to the specific position."""
+    # Arrange
+    device = device_factory(
+        "Shade",
+        [Capability.window_shade, Capability.battery, Capability.window_shade_level],
+        {
+            Attribute.window_shade: "opening",
+            Attribute.battery: 95,
+            Attribute.shade_level: 10,
+        },
     )
     await setup_platform(hass, COVER_DOMAIN, devices=[device])
     # Act

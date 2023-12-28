@@ -184,13 +184,13 @@ async def test_bad_formatted_scene(
 async def test_delete_scene(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
     hass_config_store,
     setup_scene,
 ) -> None:
     """Test deleting a scene."""
-    ent_reg = er.async_get(hass)
 
-    assert len(ent_reg.entities) == 2
+    assert len(entity_registry.entities) == 2
 
     with patch.object(config, "SECTIONS", ["scene"]):
         assert await async_setup_component(hass, "config", {})
@@ -220,4 +220,48 @@ async def test_delete_scene(
         {"id": "light_off"},
     ]
 
-    assert len(ent_reg.entities) == 1
+    assert len(entity_registry.entities) == 1
+
+
+@pytest.mark.parametrize("scene_config", ({},))
+async def test_api_calls_require_admin(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_read_only_access_token: str,
+    hass_config_store,
+    setup_scene,
+) -> None:
+    """Test scene APIs endpoints do not work as a normal user."""
+    with patch.object(config, "SECTIONS", ["scene"]):
+        await async_setup_component(hass, "config", {})
+
+    hass_config_store["scenes.yaml"] = [
+        {
+            "id": "light_off",
+            "name": "Lights off",
+            "entities": {"light.bedroom": {"state": "off"}},
+        }
+    ]
+
+    client = await hass_client(hass_read_only_access_token)
+
+    # Get
+    resp = await client.get("/api/config/scene/config/light_off")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+    # Update
+    resp = await client.post(
+        "/api/config/scene/config/light_off",
+        data=json.dumps(
+            {
+                "id": "light_off",
+                "name": "Lights off",
+                "entities": {"light.bedroom": {"state": "off"}},
+            }
+        ),
+    )
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+    # Delete
+    resp = await client.delete("/api/config/scene/config/light_on")
+    assert resp.status == HTTPStatus.UNAUTHORIZED

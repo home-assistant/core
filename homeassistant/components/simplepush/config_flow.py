@@ -20,7 +20,7 @@ def validate_input(entry: dict[str, str]) -> dict[str, str] | None:
             send(
                 key=entry[CONF_DEVICE_KEY],
                 password=entry[CONF_PASSWORD],
-                salt=entry[CONF_PASSWORD],
+                salt=entry[CONF_SALT],
                 title="HA test",
                 message="Message delivered successfully",
             )

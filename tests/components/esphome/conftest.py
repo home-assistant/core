@@ -1,6 +1,7 @@
 """esphome session fixtures."""
 from __future__ import annotations
 
+import asyncio
 from asyncio import Event
 from collections.abc import Awaitable, Callable
 from typing import Any
@@ -9,6 +10,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from aioesphomeapi import (
     APIClient,
     APIVersion,
+    BluetoothProxyFeature,
     DeviceInfo,
     EntityInfo,
     EntityState,
@@ -18,15 +20,13 @@ from aioesphomeapi import (
 import pytest
 from zeroconf import Zeroconf
 
-from homeassistant.components.esphome import (
-    CONF_DEVICE_NAME,
-    CONF_NOISE_PSK,
-    DOMAIN,
-    dashboard,
-)
+from homeassistant.components.esphome import dashboard
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
+    CONF_DEVICE_NAME,
+    CONF_NOISE_PSK,
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+    DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -53,11 +53,17 @@ async def load_homeassistant(hass) -> None:
     assert await async_setup_component(hass, "homeassistant", {})
 
 
+@pytest.fixture(autouse=True)
+def mock_tts(mock_tts_cache_dir):
+    """Auto mock the tts cache."""
+
+
 @pytest.fixture
 def mock_config_entry(hass) -> MockConfigEntry:
     """Return the default mocked config entry."""
     config_entry = MockConfigEntry(
         title="ESPHome Device",
+        entry_id="08d821dc059cf4f645cb024d32c8e708",
         domain=DOMAIN,
         data={
             CONF_HOST: "192.168.1.2",
@@ -66,10 +72,22 @@ def mock_config_entry(hass) -> MockConfigEntry:
             CONF_NOISE_PSK: "12345678123456781234567812345678",
             CONF_DEVICE_NAME: "test",
         },
+        # ESPHome unique ids are lower case
         unique_id="11:22:33:44:55:aa",
     )
     config_entry.add_to_hass(hass)
     return config_entry
+
+
+class BaseMockReconnectLogic(ReconnectLogic):
+    """Mock ReconnectLogic."""
+
+    def stop_callback(self) -> None:
+        """Stop the reconnect logic."""
+        # For the purposes of testing, we don't want to wait
+        # for the reconnect logic to finish trying to connect
+        self._cancel_connect("forced disconnect from test")
+        self._is_stopped = True
 
 
 @pytest.fixture
@@ -79,7 +97,8 @@ def mock_device_info() -> DeviceInfo:
         uses_password=False,
         name="test",
         legacy_bluetooth_proxy_version=0,
-        mac_address="11:22:33:44:55:aa",
+        # ESPHome mac addresses are UPPER case
+        mac_address="11:22:33:44:55:AA",
         esphome_version="1.0.0",
     )
 
@@ -124,9 +143,13 @@ def mock_client(mock_device_info) -> APIClient:
     mock_client.connect = AsyncMock()
     mock_client.disconnect = AsyncMock()
     mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.address = "127.0.0.1"
     mock_client.api_version = APIVersion(99, 99)
 
-    with patch("homeassistant.components.esphome.APIClient", mock_client), patch(
+    with patch(
+        "homeassistant.components.esphome.manager.ReconnectLogic",
+        BaseMockReconnectLogic,
+    ), patch("homeassistant.components.esphome.APIClient", mock_client), patch(
         "homeassistant.components.esphome.config_flow.APIClient", mock_client
     ):
         yield mock_client
@@ -154,6 +177,7 @@ class MockESPHomeDevice:
         self.entry = entry
         self.state_callback: Callable[[EntityState], None]
         self.on_disconnect: Callable[[bool], None]
+        self.on_connect: Callable[[bool], None]
 
     def set_state_callback(self, state_callback: Callable[[EntityState], None]) -> None:
         """Set the state callback."""
@@ -170,6 +194,14 @@ class MockESPHomeDevice:
     async def mock_disconnect(self, expected_disconnect: bool) -> None:
         """Mock disconnecting."""
         await self.on_disconnect(expected_disconnect)
+
+    def set_on_connect(self, on_connect: Callable[[], None]) -> None:
+        """Set the connect callback."""
+        self.on_connect = on_connect
+
+    async def mock_connect(self) -> None:
+        """Mock connecting."""
+        await self.on_connect()
 
 
 async def _mock_generic_device_entry(
@@ -196,13 +228,13 @@ async def _mock_generic_device_entry(
 
     mock_device = MockESPHomeDevice(entry)
 
-    device_info = DeviceInfo(
-        name="test",
-        friendly_name="Test",
-        mac_address="11:22:33:44:55:aa",
-        esphome_version="1.0.0",
-        **mock_device_info,
-    )
+    default_device_info = {
+        "name": "test",
+        "friendly_name": "Test",
+        "esphome_version": "1.0.0",
+        "mac_address": "11:22:33:44:55:AA",
+    }
+    device_info = DeviceInfo(**(default_device_info | mock_device_info))
 
     async def _subscribe_states(callback: Callable[[EntityState], None]) -> None:
         """Subscribe to state."""
@@ -219,13 +251,14 @@ async def _mock_generic_device_entry(
 
     try_connect_done = Event()
 
-    class MockReconnectLogic(ReconnectLogic):
+    class MockReconnectLogic(BaseMockReconnectLogic):
         """Mock ReconnectLogic."""
 
         def __init__(self, *args, **kwargs):
             """Init the mock."""
             super().__init__(*args, **kwargs)
             mock_device.set_on_disconnect(kwargs["on_disconnect"])
+            mock_device.set_on_connect(kwargs["on_connect"])
             self._try_connect = self.mock_try_connect
 
         async def mock_try_connect(self):
@@ -234,12 +267,21 @@ async def _mock_generic_device_entry(
             try_connect_done.set()
             return result
 
-    with patch("homeassistant.components.esphome.ReconnectLogic", MockReconnectLogic):
+        def stop_callback(self) -> None:
+            """Stop the reconnect logic."""
+            # For the purposes of testing, we don't want to wait
+            # for the reconnect logic to finish trying to connect
+            self._cancel_connect("forced disconnect from test")
+            self._is_stopped = True
+
+    with patch(
+        "homeassistant.components.esphome.manager.ReconnectLogic", MockReconnectLogic
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
-        await try_connect_done.wait()
+        async with asyncio.timeout(2):
+            await try_connect_done.wait()
 
     await hass.async_block_till_done()
-
     return mock_device
 
 
@@ -270,6 +312,54 @@ async def mock_voice_assistant_v1_entry(mock_voice_assistant_entry) -> MockConfi
 async def mock_voice_assistant_v2_entry(mock_voice_assistant_entry) -> MockConfigEntry:
     """Set up an ESPHome entry with voice assistant."""
     return await mock_voice_assistant_entry(version=2)
+
+
+@pytest.fixture
+async def mock_bluetooth_entry(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+):
+    """Set up an ESPHome entry with bluetooth."""
+
+    async def _mock_bluetooth_entry(
+        bluetooth_proxy_feature_flags: BluetoothProxyFeature,
+    ) -> MockESPHomeDevice:
+        return await _mock_generic_device_entry(
+            hass,
+            mock_client,
+            {"bluetooth_proxy_feature_flags": bluetooth_proxy_feature_flags},
+            ([], []),
+            [],
+        )
+
+    return _mock_bluetooth_entry
+
+
+@pytest.fixture
+async def mock_bluetooth_entry_with_raw_adv(mock_bluetooth_entry) -> MockESPHomeDevice:
+    """Set up an ESPHome entry with bluetooth and raw advertisements."""
+    return await mock_bluetooth_entry(
+        bluetooth_proxy_feature_flags=BluetoothProxyFeature.PASSIVE_SCAN
+        | BluetoothProxyFeature.ACTIVE_CONNECTIONS
+        | BluetoothProxyFeature.REMOTE_CACHING
+        | BluetoothProxyFeature.PAIRING
+        | BluetoothProxyFeature.CACHE_CLEARING
+        | BluetoothProxyFeature.RAW_ADVERTISEMENTS
+    )
+
+
+@pytest.fixture
+async def mock_bluetooth_entry_with_legacy_adv(
+    mock_bluetooth_entry,
+) -> MockESPHomeDevice:
+    """Set up an ESPHome entry with bluetooth with legacy advertisements."""
+    return await mock_bluetooth_entry(
+        bluetooth_proxy_feature_flags=BluetoothProxyFeature.PASSIVE_SCAN
+        | BluetoothProxyFeature.ACTIVE_CONNECTIONS
+        | BluetoothProxyFeature.REMOTE_CACHING
+        | BluetoothProxyFeature.PAIRING
+        | BluetoothProxyFeature.CACHE_CLEARING
+    )
 
 
 @pytest.fixture
@@ -311,9 +401,15 @@ async def mock_esphome_device(
         user_service: list[UserService],
         states: list[EntityState],
         entry: MockConfigEntry | None = None,
+        device_info: dict[str, Any] | None = None,
     ) -> MockESPHomeDevice:
         return await _mock_generic_device_entry(
-            hass, mock_client, {}, (entity_info, user_service), states, entry
+            hass,
+            mock_client,
+            device_info or {},
+            (entity_info, user_service),
+            states,
+            entry,
         )
 
     return _mock_device

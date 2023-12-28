@@ -21,10 +21,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
-    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
+from homeassistant.util.scaling import int_states_in_range
 
 from .const import DOMAIN, SERVICE_SET_FAN_SPEED_TRACKED_STATE
 from .entity import BondEntity
@@ -153,7 +153,7 @@ class BondFan(BondEntity, FanEntity):
         except ClientResponseError as ex:
             raise HomeAssistantError(
                 "The bond API returned an error calling set_power_state_belief for"
-                f" {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
+                f" {self.entity_id}.  Code: {ex.status}  Message: {ex.message}"
             ) from ex
 
     async def async_set_speed_belief(self, speed: int) -> None:
@@ -199,10 +199,6 @@ class BondFan(BondEntity, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        if preset_mode != PRESET_MODE_BREEZE or not self._device.has_action(
-            Action.BREEZE_ON
-        ):
-            raise ValueError(f"Invalid preset mode: {preset_mode}")
         await self._hub.bond.action(self._device.device_id, Action(Action.BREEZE_ON))
 
     async def async_turn_off(self, **kwargs: Any) -> None:

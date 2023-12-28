@@ -19,7 +19,7 @@ from homeassistant.components.cover import (
     STATE_OPEN,
     STATE_OPENING,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 
@@ -37,6 +37,7 @@ async def test_cover_node_percentage(
     assert state
     assert state.state == STATE_CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
+    assert state.attributes[ATTR_BATTERY_LEVEL] == 0
 
     await hass.services.async_call(
         COVER_DOMAIN,

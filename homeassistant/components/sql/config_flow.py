@@ -12,7 +12,17 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.recorder import CONF_DB_URL, get_instance
-from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_VALUE_TEMPLATE,
+)
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
@@ -21,6 +31,7 @@ from .const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
 from .util import resolve_db_url
 
 _LOGGER = logging.getLogger(__name__)
+
 
 OPTIONS_SCHEMA: vol.Schema = vol.Schema(
     {
@@ -39,6 +50,26 @@ OPTIONS_SCHEMA: vol.Schema = vol.Schema(
         vol.Optional(
             CONF_VALUE_TEMPLATE,
         ): selector.TemplateSelector(),
+        vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[
+                    cls.value
+                    for cls in SensorDeviceClass
+                    if cls != SensorDeviceClass.ENUM
+                ],
+                mode=selector.SelectSelectorMode.DROPDOWN,
+                translation_key="device_class",
+                sort=True,
+            )
+        ),
+        vol.Optional(CONF_STATE_CLASS): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[cls.value for cls in SensorStateClass],
+                mode=selector.SelectSelectorMode.DROPDOWN,
+                translation_key="state_class",
+                sort=True,
+            )
+        ),
     }
 )
 
@@ -139,6 +170,10 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 options[CONF_UNIT_OF_MEASUREMENT] = uom
             if value_template := user_input.get(CONF_VALUE_TEMPLATE):
                 options[CONF_VALUE_TEMPLATE] = value_template
+            if device_class := user_input.get(CONF_DEVICE_CLASS):
+                options[CONF_DEVICE_CLASS] = device_class
+            if state_class := user_input.get(CONF_STATE_CLASS):
+                options[CONF_STATE_CLASS] = state_class
             if db_url_for_validation != get_instance(self.hass).db_url:
                 options[CONF_DB_URL] = db_url_for_validation
 
@@ -204,6 +239,10 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                     options[CONF_UNIT_OF_MEASUREMENT] = uom
                 if value_template := user_input.get(CONF_VALUE_TEMPLATE):
                     options[CONF_VALUE_TEMPLATE] = value_template
+                if device_class := user_input.get(CONF_DEVICE_CLASS):
+                    options[CONF_DEVICE_CLASS] = device_class
+                if state_class := user_input.get(CONF_STATE_CLASS):
+                    options[CONF_STATE_CLASS] = state_class
                 if db_url_for_validation != get_instance(self.hass).db_url:
                     options[CONF_DB_URL] = db_url_for_validation
 

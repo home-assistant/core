@@ -6,5 +6,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/slimproto",
   "iot_class": "local_push",
-  "requirements": ["aioslimproto==2.1.1"]
+  "requirements": ["aioslimproto==2.3.3"]
 }

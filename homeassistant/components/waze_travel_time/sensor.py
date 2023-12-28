@@ -1,11 +1,13 @@
 """Support for Waze travel time sensor."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
 
-from WazeRouteCalculator import WazeRouteCalculator, WRCError
+import httpx
+from pywaze.route_calculator import WazeRouteCalculator, WRCError
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -21,9 +23,9 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import CoreState, HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.util.unit_conversion import DistanceConverter
 
@@ -41,11 +43,16 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     IMPERIAL_UNITS,
+    SEMAPHORE,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=5)
+
+PARALLEL_UPDATES = 1
+
+SECONDS_BETWEEN_API_CALLS = 0.5
 
 
 async def async_setup_entry(
@@ -61,6 +68,7 @@ async def async_setup_entry(
 
     data = WazeTravelTimeData(
         region,
+        get_async_client(hass),
         config_entry,
     )
 
@@ -133,31 +141,38 @@ class WazeTravelTime(SensorEntity):
 
     async def first_update(self, _=None) -> None:
         """Run first update and write state."""
-        await self.hass.async_add_executor_job(self.update)
+        await self.async_update()
         self.async_write_ha_state()
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Fetch new state data for the sensor."""
         _LOGGER.debug("Fetching Route for %s", self._attr_name)
         self._waze_data.origin = find_coordinates(self.hass, self._origin)
         self._waze_data.destination = find_coordinates(self.hass, self._destination)
-        self._waze_data.update()
+        await self.hass.data[DOMAIN][SEMAPHORE].acquire()
+        try:
+            await self._waze_data.async_update()
+            await asyncio.sleep(SECONDS_BETWEEN_API_CALLS)
+        finally:
+            self.hass.data[DOMAIN][SEMAPHORE].release()
 
 
 class WazeTravelTimeData:
     """WazeTravelTime Data object."""
 
-    def __init__(self, region: str, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, region: str, client: httpx.AsyncClient, config_entry: ConfigEntry
+    ) -> None:
         """Set up WazeRouteCalculator."""
-        self.region = region
         self.config_entry = config_entry
+        self.client = WazeRouteCalculator(region=region, client=client)
         self.origin: str | None = None
         self.destination: str | None = None
         self.duration = None
         self.distance = None
         self.route = None
 
-    def update(self):
+    async def async_update(self):
         """Update WazeRouteCalculator Sensor."""
         _LOGGER.debug(
             "Getting update for origin: %s destination: %s",
@@ -178,17 +193,17 @@ class WazeTravelTimeData:
             avoid_ferries = self.config_entry.options[CONF_AVOID_FERRIES]
             units = self.config_entry.options[CONF_UNITS]
 
+            routes = {}
             try:
-                params = WazeRouteCalculator(
+                routes = await self.client.calc_all_routes_info(
                     self.origin,
                     self.destination,
-                    self.region,
-                    vehicle_type,
-                    avoid_toll_roads,
-                    avoid_subscription_roads,
-                    avoid_ferries,
+                    vehicle_type=vehicle_type,
+                    avoid_toll_roads=avoid_toll_roads,
+                    avoid_subscription_roads=avoid_subscription_roads,
+                    avoid_ferries=avoid_ferries,
+                    real_time=realtime,
                 )
-                routes = params.calc_all_routes_info(real_time=realtime)
 
                 if incl_filter not in {None, ""}:
                     routes = {

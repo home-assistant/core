@@ -3,25 +3,33 @@ from pyfritzhome.devicetypes import FritzhomeTemplate
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FritzboxDataUpdateCoordinator, FritzBoxEntity
-from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
+from . import FritzBoxEntity
+from .common import get_coordinator
+from .const import DOMAIN
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FRITZ!SmartHome template from ConfigEntry."""
-    coordinator: FritzboxDataUpdateCoordinator = hass.data[FRITZBOX_DOMAIN][
-        entry.entry_id
-    ][CONF_COORDINATOR]
+    coordinator = get_coordinator(hass, entry.entry_id)
 
-    async_add_entities(
-        [FritzBoxTemplate(coordinator, ain) for ain in coordinator.data.templates]
-    )
+    @callback
+    def _add_entities(templates: set[str] | None = None) -> None:
+        """Add templates."""
+        if templates is None:
+            templates = coordinator.new_templates
+        if not templates:
+            return
+        async_add_entities(FritzBoxTemplate(coordinator, ain) for ain in templates)
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
+
+    _add_entities(set(coordinator.data.templates))
 
 
 class FritzBoxTemplate(FritzBoxEntity, ButtonEntity):
@@ -37,7 +45,7 @@ class FritzBoxTemplate(FritzBoxEntity, ButtonEntity):
         """Return device specific attributes."""
         return DeviceInfo(
             name=self.data.name,
-            identifiers={(FRITZBOX_DOMAIN, self.ain)},
+            identifiers={(DOMAIN, self.ain)},
             configuration_url=self.coordinator.configuration_url,
             manufacturer="AVM",
             model="SmartHome Template",

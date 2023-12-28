@@ -23,7 +23,7 @@ from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class YoLinkSirenEntityDescription(SirenEntityDescription):
     """YoLink SirenEntityDescription."""
 
@@ -34,7 +34,6 @@ class YoLinkSirenEntityDescription(SirenEntityDescription):
 DEVICE_TYPES: tuple[YoLinkSirenEntityDescription, ...] = (
     YoLinkSirenEntityDescription(
         key="state",
-        name="State",
         value=lambda value: value == "alert" if value is not None else None,
         exists_fn=lambda device: device.device_type in [ATTR_DEVICE_SIREN],
     ),
@@ -70,6 +69,8 @@ async def async_setup_entry(
 class YoLinkSirenEntity(YoLinkEntity, SirenEntity):
     """YoLink Siren Entity."""
 
+    _attr_name = None
+
     entity_description: YoLinkSirenEntityDescription
 
     def __init__(
@@ -83,9 +84,6 @@ class YoLinkSirenEntity(YoLinkEntity, SirenEntity):
         self.entity_description = description
         self._attr_unique_id = (
             f"{coordinator.device.device_id} {self.entity_description.key}"
-        )
-        self._attr_name = (
-            f"{coordinator.device.device_name} ({self.entity_description.name})"
         )
         self._attr_supported_features = (
             SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF

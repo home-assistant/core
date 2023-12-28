@@ -5,6 +5,8 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, Generic, TypeVar
 
+from aioshelly.const import RPC_GENERATIONS
+
 from homeassistant.components.button import (
     ButtonDeviceClass,
     ButtonEntity,
@@ -14,8 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
@@ -29,14 +30,14 @@ _ShellyCoordinatorT = TypeVar(
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class ShellyButtonDescriptionMixin(Generic[_ShellyCoordinatorT]):
     """Mixin to describe a Button entity."""
 
     press_action: Callable[[_ShellyCoordinatorT], Coroutine[Any, Any, None]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class ShellyButtonDescription(
     ButtonEntityDescription, ShellyButtonDescriptionMixin[_ShellyCoordinatorT]
 ):
@@ -92,8 +93,8 @@ def async_migrate_unique_ids(
     device_name = slugify(coordinator.device.name)
 
     for key in ("reboot", "self_test", "mute", "unmute"):
-        if entity_entry.unique_id.startswith(device_name):
-            old_unique_id = entity_entry.unique_id
+        old_unique_id = f"{device_name}_{key}"
+        if entity_entry.unique_id == old_unique_id:
             new_unique_id = f"{coordinator.mac}_{key}"
             LOGGER.debug(
                 "Migrating unique_id for %s entity from [%s] to [%s]",
@@ -127,7 +128,7 @@ async def async_setup_entry(
         return async_migrate_unique_ids(entity_entry, coordinator)
 
     coordinator: ShellyRpcCoordinator | ShellyBlockCoordinator | None = None
-    if get_device_entry_gen(config_entry) == 2:
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
         coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
     else:
         coordinator = get_entry_data(hass)[config_entry.entry_id].block

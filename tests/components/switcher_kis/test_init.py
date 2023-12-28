@@ -77,7 +77,7 @@ async def test_update_fail(
         state = hass.states.get(entity_id)
         assert state.state == STATE_UNAVAILABLE
 
-        entity_id = f"sensor.{slugify(device.name)}_power_consumption"
+        entity_id = f"sensor.{slugify(device.name)}_power"
         state = hass.states.get(entity_id)
         assert state.state == STATE_UNAVAILABLE
 
@@ -92,7 +92,7 @@ async def test_update_fail(
         state = hass.states.get(entity_id)
         assert state.state != STATE_UNAVAILABLE
 
-        entity_id = f"sensor.{slugify(device.name)}_power_consumption"
+        entity_id = f"sensor.{slugify(device.name)}_power"
         state = hass.states.get(entity_id)
         assert state.state != STATE_UNAVAILABLE
 

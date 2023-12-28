@@ -23,6 +23,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONTENT_TYPE_JSON,
     SERVICE_RELOAD,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfInformation,
     UnitOfTemperature,
@@ -1018,3 +1019,27 @@ async def test_entity_config(hass: HomeAssistant) -> None:
         "state_class": "measurement",
         "unit_of_measurement": "°C",
     }
+
+
+@respx.mock
+async def test_availability_in_config(hass: HomeAssistant) -> None:
+    """Test entity configuration."""
+
+    config = {
+        SENSOR_DOMAIN: {
+            # REST configuration
+            "platform": DOMAIN,
+            "method": "GET",
+            "resource": "http://localhost",
+            # Entity configuration
+            "availability": "{{value==1}}",
+            "name": "{{'REST' + ' ' + 'Sensor'}}",
+        },
+    }
+
+    respx.get("http://localhost").respond(status_code=HTTPStatus.OK, text="123")
+    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.rest_sensor")
+    assert state.state == STATE_UNAVAILABLE

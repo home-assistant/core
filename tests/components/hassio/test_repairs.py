@@ -84,6 +84,7 @@ async def test_supervisor_issue_repair_flow(
         "errors": None,
         "description_placeholders": {"reference": "/dev/sda1"},
         "last_step": True,
+        "preview": None,
     }
 
     resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
@@ -99,6 +100,7 @@ async def test_supervisor_issue_repair_flow(
         "handler": "hassio",
         "description": None,
         "description_placeholders": None,
+        "minor_version": 1,
     }
 
     assert not issue_registry.async_get_issue(domain="hassio", issue_id="1234")
@@ -194,6 +196,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions(
         "handler": "hassio",
         "description": None,
         "description_placeholders": None,
+        "minor_version": 1,
     }
 
     assert not issue_registry.async_get_issue(domain="hassio", issue_id="1234")
@@ -292,6 +295,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions_and_confir
         "errors": None,
         "description_placeholders": None,
         "last_step": True,
+        "preview": None,
     }
 
     resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
@@ -307,6 +311,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions_and_confir
         "handler": "hassio",
         "description": None,
         "description_placeholders": None,
+        "minor_version": 1,
     }
 
     assert not issue_registry.async_get_issue(domain="hassio", issue_id="1234")
@@ -371,6 +376,7 @@ async def test_supervisor_issue_repair_flow_skip_confirmation(
         "errors": None,
         "description_placeholders": None,
         "last_step": True,
+        "preview": None,
     }
 
     resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
@@ -386,6 +392,7 @@ async def test_supervisor_issue_repair_flow_skip_confirmation(
         "handler": "hassio",
         "description": None,
         "description_placeholders": None,
+        "minor_version": 1,
     }
 
     assert not issue_registry.async_get_issue(domain="hassio", issue_id="1234")
@@ -485,6 +492,7 @@ async def test_mount_failed_repair_flow(
         "handler": "hassio",
         "description": None,
         "description_placeholders": None,
+        "minor_version": 1,
     }
 
     assert not issue_registry.async_get_issue(domain="hassio", issue_id="1234")
@@ -580,6 +588,7 @@ async def test_supervisor_issue_docker_config_repair_flow(
         "errors": None,
         "description_placeholders": {"components": "Home Assistant\n- test"},
         "last_step": True,
+        "preview": None,
     }
 
     resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
@@ -595,6 +604,7 @@ async def test_supervisor_issue_docker_config_repair_flow(
         "handler": "hassio",
         "description": None,
         "description_placeholders": None,
+        "minor_version": 1,
     }
 
     assert not issue_registry.async_get_issue(domain="hassio", issue_id="1234")

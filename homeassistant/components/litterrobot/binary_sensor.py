@@ -22,14 +22,14 @@ from .entity import LitterRobotEntity, _RobotT
 from .hub import LitterRobotHub
 
 
-@dataclass
+@dataclass(frozen=True)
 class RequiredKeysMixin(Generic[_RobotT]):
     """A class that describes robot binary sensor entity required keys."""
 
     is_on_fn: Callable[[_RobotT], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RobotBinarySensorEntityDescription(
     BinarySensorEntityDescription, RequiredKeysMixin[_RobotT]
 ):
@@ -48,7 +48,7 @@ class LitterRobotBinarySensorEntity(LitterRobotEntity[_RobotT], BinarySensorEnti
 
 
 BINARY_SENSOR_MAP: dict[type[Robot], tuple[RobotBinarySensorEntityDescription, ...]] = {
-    LitterRobot: (
+    LitterRobot: (  # type: ignore[type-abstract]  # only used for isinstance check
         RobotBinarySensorEntityDescription[LitterRobot](
             key="sleeping",
             translation_key="sleeping",
@@ -66,7 +66,7 @@ BINARY_SENSOR_MAP: dict[type[Robot], tuple[RobotBinarySensorEntityDescription, .
             is_on_fn=lambda robot: robot.sleep_mode_enabled,
         ),
     ),
-    Robot: (
+    Robot: (  # type: ignore[type-abstract]  # only used for isinstance check
         RobotBinarySensorEntityDescription[Robot](
             key="power_status",
             translation_key="power_status",

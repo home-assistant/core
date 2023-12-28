@@ -60,7 +60,7 @@
 - [ ] There is no commented out code in this PR.
 - [ ] I have followed the [development checklist][dev-checklist]
 - [ ] I have followed the [perfect PR recommendations][perfect-pr]
-- [ ] The code has been formatted using Black (`black --fast homeassistant tests`)
+- [ ] The code has been formatted using Ruff (`ruff format homeassistant tests`)
 - [ ] Tests have been added to verify that the new code works.
 
 If user exposed functionality or configuration variables are added/changed:

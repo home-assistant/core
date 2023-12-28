@@ -201,6 +201,7 @@ async def test_get_trigger_capabilities_node_status(
                     "mode": "dropdown",
                     "multiple": True,
                     "options": [],
+                    "sort": False,
                 },
             },
         }

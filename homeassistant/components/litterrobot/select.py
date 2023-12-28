@@ -28,7 +28,7 @@ BRIGHTNESS_LEVEL_ICON_MAP: dict[BrightnessLevel | None, str] = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class RequiredKeysMixin(Generic[_RobotT, _CastTypeT]):
     """A class that describes robot select entity required keys."""
 
@@ -37,7 +37,7 @@ class RequiredKeysMixin(Generic[_RobotT, _CastTypeT]):
     select_fn: Callable[[_RobotT, str], Coroutine[Any, Any, bool]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RobotSelectEntityDescription(
     SelectEntityDescription, RequiredKeysMixin[_RobotT, _CastTypeT]
 ):
@@ -48,7 +48,7 @@ class RobotSelectEntityDescription(
 
 
 ROBOT_SELECT_MAP: dict[type[Robot], RobotSelectEntityDescription] = {
-    LitterRobot: RobotSelectEntityDescription[LitterRobot, int](
+    LitterRobot: RobotSelectEntityDescription[LitterRobot, int](  # type: ignore[type-abstract]  # only used for isinstance check
         key="cycle_delay",
         translation_key="cycle_delay",
         icon="mdi:timer-outline",

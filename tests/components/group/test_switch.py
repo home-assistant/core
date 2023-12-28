@@ -1,7 +1,6 @@
 """The tests for the Group Switch platform."""
+import asyncio
 from unittest.mock import patch
-
-import async_timeout
 
 from homeassistant import config as hass_config
 from homeassistant.components.group import DOMAIN, SERVICE_RELOAD
@@ -25,7 +24,9 @@ from homeassistant.setup import async_setup_component
 from tests.common import get_fixture_path
 
 
-async def test_default_state(hass: HomeAssistant) -> None:
+async def test_default_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test switch group default state."""
     hass.states.async_set("switch.tv", "on")
     await async_setup_component(
@@ -50,7 +51,6 @@ async def test_default_state(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ENTITY_ID) == ["switch.tv", "switch.soundbar"]
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("switch.multimedia_group")
     assert entry
     assert entry.unique_id == "unique_identifier"
@@ -445,7 +445,7 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_ENTITY_ID) == ["switch.some_group"]
 
     # Test controlling the nested group
-    async with async_timeout.timeout(0.5):
+    async with asyncio.timeout(0.5):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TOGGLE,

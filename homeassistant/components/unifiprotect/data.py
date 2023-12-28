@@ -178,7 +178,7 @@ class ProtectData:
     def _async_remove_device(self, device: ProtectAdoptableDeviceModel) -> None:
         registry = dr.async_get(self._hass)
         device_entry = registry.async_get_device(
-            identifiers=set(), connections={(dr.CONNECTION_NETWORK_MAC, device.mac)}
+            connections={(dr.CONNECTION_NETWORK_MAC, device.mac)}
         )
         if device_entry:
             _LOGGER.debug("Device removed: %s", device.id)
@@ -227,7 +227,7 @@ class ProtectData:
                 self._async_update_device(obj, message.changed_data)
 
         # trigger updates for camera that the event references
-        elif isinstance(obj, Event):
+        elif isinstance(obj, Event):  # type: ignore[unreachable]
             if obj.type in SMART_EVENTS:
                 if obj.camera is not None:
                     if obj.end is None:

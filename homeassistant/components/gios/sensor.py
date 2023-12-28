@@ -18,8 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -43,17 +42,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class GiosSensorRequiredKeysMixin:
-    """Class for GIOS entity required keys."""
-
-    value: Callable[[GiosSensors], StateType]
-
-
-@dataclass
-class GiosSensorEntityDescription(SensorEntityDescription, GiosSensorRequiredKeysMixin):
+@dataclass(frozen=True, kw_only=True)
+class GiosSensorEntityDescription(SensorEntityDescription):
     """Class describing GIOS sensor entities."""
 
+    value: Callable[[GiosSensors], StateType]
     subkey: str | None = None
 
 

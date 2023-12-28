@@ -1,0 +1,45 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'attributes': dict({
+      'brightness': 26,
+      'color_mode': 'brightness',
+      'effect': None,
+      'effect_list': list([
+      ]),
+      'friendly_name': 'twinkly_test_device_name',
+      'icon': 'mdi:string-lights',
+      'supported_color_modes': list([
+        'brightness',
+      ]),
+      'supported_features': 4,
+    }),
+    'device_info': dict({
+      'device_name': 'twinkly_test_device_name',
+      'product_code': 'twinkly_test_device_model',
+      'uuid': '4c8fccf5-e08a-4173-92d5-49bf479252a2',
+    }),
+    'entry': dict({
+      'data': dict({
+        'device_name': 'twinkly_test_device_name',
+        'host': '**REDACTED**',
+        'id': '4c8fccf5-e08a-4173-92d5-49bf479252a2',
+        'model': 'twinkly_test_device_model',
+        'name': 'twinkly_test_device_name',
+      }),
+      'disabled_by': None,
+      'domain': 'twinkly',
+      'entry_id': '4c8fccf5-e08a-4173-92d5-49bf479252a2',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Twinkly',
+      'unique_id': '4c8fccf5-e08a-4173-92d5-49bf479252a2',
+      'version': 1,
+    }),
+    'sw_version': '2.8.10',
+  })
+# ---

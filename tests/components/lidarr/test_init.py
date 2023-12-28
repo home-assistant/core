@@ -45,14 +45,16 @@ async def test_async_setup_entry_auth_failed(
 
 
 async def test_device_info(
-    hass: HomeAssistant, setup_integration: ComponentSetup, connection
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    setup_integration: ComponentSetup,
+    connection,
 ) -> None:
     """Test device info."""
     await setup_integration()
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    device_registry = dr.async_get(hass)
     await hass.async_block_till_done()
-    device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
 
     assert device.configuration_url == "http://127.0.0.1:8668"
     assert device.identifiers == {(DOMAIN, entry.entry_id)}

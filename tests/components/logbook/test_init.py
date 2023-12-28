@@ -1,13 +1,13 @@
 """The tests for the logbook component."""
-# pylint: disable=invalid-name
 import asyncio
 import collections
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import json
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
+from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
@@ -494,17 +494,18 @@ async def test_logbook_describe_event(
         hass,
         "fake_integration.logbook",
         Mock(
-            async_describe_events=lambda hass, async_describe_event: async_describe_event(
-                "test_domain", "some_event", _describe
-            )
+            async_describe_events=(
+                lambda hass, async_describe_event: async_describe_event(
+                    "test_domain",
+                    "some_event",
+                    _describe,
+                )
+            ),
         ),
     )
 
     assert await async_setup_component(hass, "logbook", {})
-    with patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=dt_util.utcnow() - timedelta(seconds=5),
-    ):
+    with freeze_time(dt_util.utcnow() - timedelta(seconds=5)):
         hass.bus.async_fire("some_event")
         await async_wait_recording_done(hass)
 
@@ -566,10 +567,7 @@ async def test_exclude_described_event(
         },
     )
 
-    with patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=dt_util.utcnow() - timedelta(seconds=5),
-    ):
+    with freeze_time(dt_util.utcnow() - timedelta(seconds=5)):
         hass.bus.async_fire(
             "some_automation_event",
             {logbook.ATTR_NAME: name, logbook.ATTR_ENTITY_ID: entity_id},

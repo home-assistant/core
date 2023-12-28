@@ -24,7 +24,6 @@ DEFAULT_NAME = "OpenWeatherMap"
 DEFAULT_LANGUAGE = "en"
 ATTRIBUTION = "Data provided by OpenWeatherMap"
 MANUFACTURER = "OpenWeather"
-CONF_LANGUAGE = "language"
 CONFIG_FLOW_VERSION = 2
 ENTRY_NAME = "name"
 ENTRY_WEATHER_COORDINATOR = "weather_coordinator"
@@ -156,4 +155,9 @@ CONDITION_CLASSES = {
         903,
         904,
     ],
+}
+CONDITION_MAP = {
+    cond_code: cond_ha
+    for cond_ha, cond_codes in CONDITION_CLASSES.items()
+    for cond_code in cond_codes
 }

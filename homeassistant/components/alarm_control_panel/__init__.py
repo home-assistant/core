@@ -1,8 +1,8 @@
 """Component to interface with an alarm control panel."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
+from functools import partial
 import logging
 from typing import Any, Final, final
 
@@ -23,25 +23,35 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
+from homeassistant.helpers.deprecation import (
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (  # noqa: F401
+    _DEPRECATED_FORMAT_NUMBER,
+    _DEPRECATED_FORMAT_TEXT,
+    _DEPRECATED_SUPPORT_ALARM_ARM_AWAY,
+    _DEPRECATED_SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
+    _DEPRECATED_SUPPORT_ALARM_ARM_HOME,
+    _DEPRECATED_SUPPORT_ALARM_ARM_NIGHT,
+    _DEPRECATED_SUPPORT_ALARM_ARM_VACATION,
+    _DEPRECATED_SUPPORT_ALARM_TRIGGER,
     ATTR_CHANGED_BY,
     ATTR_CODE_ARM_REQUIRED,
     DOMAIN,
-    FORMAT_NUMBER,
-    FORMAT_TEXT,
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_ARM_VACATION,
-    SUPPORT_ALARM_TRIGGER,
     AlarmControlPanelEntityFeature,
     CodeFormat,
 )
+
+# As we import constants of the cost module here, we need to add the following
+# functions to check for deprecated constants again
+# Both can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -121,8 +131,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class AlarmControlPanelEntityDescription(EntityDescription):
+class AlarmControlPanelEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes alarm control panel entities."""
 
 

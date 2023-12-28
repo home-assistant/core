@@ -59,11 +59,8 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
     def __init__(self, device, desc, ambient):
         """Initialize the entity."""
         super().__init__(device, desc)
-        self._state = None
-        self._brightness = None
-        self._hs_color = None
         self._ambient = ambient
-        if self._ambient:
+        if ambient:
             self._brightness_key = BSH_AMBIENT_LIGHT_BRIGHTNESS
             self._key = BSH_AMBIENT_LIGHT_ENABLED
             self._custom_color_key = BSH_AMBIENT_LIGHT_CUSTOM_COLOR
@@ -77,21 +74,6 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
             self._color_key = None
             self._attr_color_mode = ColorMode.BRIGHTNESS
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-
-    @property
-    def is_on(self):
-        """Return true if the light is on."""
-        return bool(self._state)
-
-    @property
-    def brightness(self):
-        """Return the brightness of the light."""
-        return self._brightness
-
-    @property
-    def hs_color(self):
-        """Return the color property."""
-        return self._hs_color
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch the light on, change brightness, change color."""
@@ -113,12 +95,12 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                     )
                 except HomeConnectError as err:
                     _LOGGER.error("Error while trying selecting customcolor: %s", err)
-                if self._brightness is not None:
-                    brightness = 10 + ceil(self._brightness / 255 * 90)
+                if self._attr_brightness is not None:
+                    brightness = 10 + ceil(self._attr_brightness / 255 * 90)
                     if ATTR_BRIGHTNESS in kwargs:
                         brightness = 10 + ceil(kwargs[ATTR_BRIGHTNESS] / 255 * 90)
 
-                    hs_color = kwargs.get(ATTR_HS_COLOR, self._hs_color)
+                    hs_color = kwargs.get(ATTR_HS_COLOR, self._attr_hs_color)
 
                     if hs_color is not None:
                         rgb = color_util.color_hsv_to_RGB(
@@ -170,32 +152,34 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
     async def async_update(self) -> None:
         """Update the light's status."""
         if self.device.appliance.status.get(self._key, {}).get(ATTR_VALUE) is True:
-            self._state = True
+            self._attr_is_on = True
         elif self.device.appliance.status.get(self._key, {}).get(ATTR_VALUE) is False:
-            self._state = False
+            self._attr_is_on = False
         else:
-            self._state = None
+            self._attr_is_on = None
 
-        _LOGGER.debug("Updated, new light state: %s", self._state)
+        _LOGGER.debug("Updated, new light state: %s", self._attr_is_on)
 
         if self._ambient:
             color = self.device.appliance.status.get(self._custom_color_key, {})
 
             if not color:
-                self._hs_color = None
-                self._brightness = None
+                self._attr_hs_color = None
+                self._attr_brightness = None
             else:
                 colorvalue = color.get(ATTR_VALUE)[1:]
                 rgb = color_util.rgb_hex_to_rgb_list(colorvalue)
                 hsv = color_util.color_RGB_to_hsv(rgb[0], rgb[1], rgb[2])
-                self._hs_color = [hsv[0], hsv[1]]
-                self._brightness = ceil((hsv[2] - 10) * 255 / 90)
-                _LOGGER.debug("Updated, new brightness: %s", self._brightness)
+                self._attr_hs_color = (hsv[0], hsv[1])
+                self._attr_brightness = ceil((hsv[2] - 10) * 255 / 90)
+                _LOGGER.debug("Updated, new brightness: %s", self._attr_brightness)
 
         else:
             brightness = self.device.appliance.status.get(self._brightness_key, {})
             if brightness is None:
-                self._brightness = None
+                self._attr_brightness = None
             else:
-                self._brightness = ceil((brightness.get(ATTR_VALUE) - 10) * 255 / 90)
-            _LOGGER.debug("Updated, new brightness: %s", self._brightness)
+                self._attr_brightness = ceil(
+                    (brightness.get(ATTR_VALUE) - 10) * 255 / 90
+                )
+            _LOGGER.debug("Updated, new brightness: %s", self._attr_brightness)

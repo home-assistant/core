@@ -24,28 +24,28 @@ from .entity import SensiboDeviceBaseEntity, SensiboMotionBaseEntity
 PARALLEL_UPDATES = 0
 
 
-@dataclass
+@dataclass(frozen=True)
 class MotionBaseEntityDescriptionMixin:
     """Mixin for required Sensibo base description keys."""
 
     value_fn: Callable[[MotionSensor], bool | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class DeviceBaseEntityDescriptionMixin:
     """Mixin for required Sensibo base description keys."""
 
     value_fn: Callable[[SensiboDevice], bool | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SensiboMotionBinarySensorEntityDescription(
     BinarySensorEntityDescription, MotionBaseEntityDescriptionMixin
 ):
     """Describes Sensibo Motion sensor entity."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class SensiboDeviceBinarySensorEntityDescription(
     BinarySensorEntityDescription, DeviceBaseEntityDescriptionMixin
 ):
@@ -54,8 +54,8 @@ class SensiboDeviceBinarySensorEntityDescription(
 
 FILTER_CLEAN_REQUIRED_DESCRIPTION = SensiboDeviceBinarySensorEntityDescription(
     key="filter_clean",
+    translation_key="filter_clean",
     device_class=BinarySensorDeviceClass.PROBLEM,
-    name="Filter clean required",
     value_fn=lambda data: data.filter_clean,
 )
 
@@ -64,20 +64,18 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionBinarySensorEntityDescription, ...] = (
         key="alive",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Alive",
         value_fn=lambda data: data.alive,
     ),
     SensiboMotionBinarySensorEntityDescription(
         key="is_main_sensor",
+        translation_key="is_main_sensor",
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Main sensor",
         icon="mdi:connection",
         value_fn=lambda data: data.is_main_sensor,
     ),
     SensiboMotionBinarySensorEntityDescription(
         key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
-        name="Motion",
         icon="mdi:motion-sensor",
         value_fn=lambda data: data.motion,
     ),
@@ -86,8 +84,8 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionBinarySensorEntityDescription, ...] = (
 MOTION_DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
     SensiboDeviceBinarySensorEntityDescription(
         key="room_occupied",
+        translation_key="room_occupied",
         device_class=BinarySensorDeviceClass.MOTION,
-        name="Room occupied",
         icon="mdi:motion-sensor",
         value_fn=lambda data: data.room_occupied,
     ),
@@ -100,30 +98,30 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
 PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
     SensiboDeviceBinarySensorEntityDescription(
         key="pure_ac_integration",
+        translation_key="pure_ac_integration",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        name="Pure Boost linked with AC",
         value_fn=lambda data: data.pure_ac_integration,
     ),
     SensiboDeviceBinarySensorEntityDescription(
         key="pure_geo_integration",
+        translation_key="pure_geo_integration",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        name="Pure Boost linked with presence",
         value_fn=lambda data: data.pure_geo_integration,
     ),
     SensiboDeviceBinarySensorEntityDescription(
         key="pure_measure_integration",
+        translation_key="pure_measure_integration",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        name="Pure Boost linked with indoor air quality",
         value_fn=lambda data: data.pure_measure_integration,
     ),
     SensiboDeviceBinarySensorEntityDescription(
         key="pure_prime_integration",
+        translation_key="pure_prime_integration",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        name="Pure Boost linked with outdoor air quality",
         value_fn=lambda data: data.pure_prime_integration,
     ),
     FILTER_CLEAN_REQUIRED_DESCRIPTION,

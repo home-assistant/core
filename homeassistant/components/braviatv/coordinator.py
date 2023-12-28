@@ -19,14 +19,13 @@ from pybravia import (
 )
 
 from homeassistant.components.media_player import MediaType
-from homeassistant.const import CONF_PIN
+from homeassistant.const import CONF_CLIENT_ID, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    CONF_CLIENT_ID,
     CONF_NICKNAME,
     CONF_USE_PSK,
     DOMAIN,
@@ -43,7 +42,7 @@ SCAN_INTERVAL: Final = timedelta(seconds=10)
 
 
 def catch_braviatv_errors(
-    func: Callable[Concatenate[_BraviaTVCoordinatorT, _P], Awaitable[None]]
+    func: Callable[Concatenate[_BraviaTVCoordinatorT, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_BraviaTVCoordinatorT, _P], Coroutine[Any, Any, None]]:
     """Catch Bravia errors."""
 
@@ -191,9 +190,11 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             if self.media_uri[:8] == "extInput":
                 self.source = playing_info.get("title")
             if self.media_uri[:2] == "tv":
-                self.media_title = playing_info.get("programTitle")
-                self.media_channel = playing_info.get("title")
                 self.media_content_id = playing_info.get("dispNum")
+                self.media_title = (
+                    playing_info.get("programTitle") or self.media_content_id
+                )
+                self.media_channel = playing_info.get("title") or self.media_content_id
                 self.media_content_type = MediaType.CHANNEL
         if not playing_info:
             self.media_title = "Smart TV"

@@ -118,6 +118,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
+            description_placeholders={"username": self._username},
             data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
             errors=errors,
         )
