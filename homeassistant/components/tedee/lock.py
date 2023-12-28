@@ -25,9 +25,9 @@ async def async_setup_entry(
     entities: list[TedeeLockEntity] = []
     for lock in coordinator.data.values():
         if lock.is_enabled_pullspring:
-            entities.append(TedeeLockWithLatchEntity(lock, coordinator, key, entry))
+            entities.append(TedeeLockWithLatchEntity(lock, coordinator))
         else:
-            entities.append(TedeeLockEntity(lock, coordinator, key, entry))
+            entities.append(TedeeLockEntity(lock, coordinator))
 
     async_add_entities(entities)
 
