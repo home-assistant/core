@@ -532,7 +532,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @property
     def supported_features_compat(self) -> CameraEntityFeature:
-        """Return the supported features as UpdateEntityFeature.
+        """Return the supported features as CameraEntityFeature.
 
         Remove this compatibility shim in 2025.1 or later.
         """
