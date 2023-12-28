@@ -329,7 +329,11 @@ class UpdateEntity(
         Remove this compatibility shim in 2025.1 or later.
         """
         features = self.supported_features
-        return UpdateEntityFeature(features) if type(features) is int else features  # noqa: E721
+        if type(features) is int:  # noqa: E721
+            new_features = UpdateEntityFeature(features)
+            self._report_deprecated_supported_features_values(new_features)
+            return new_features
+        return features
 
     @final
     async def async_skip(self) -> None:
