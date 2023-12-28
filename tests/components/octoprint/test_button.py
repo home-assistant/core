@@ -198,15 +198,10 @@ async def test_shutdown_system(hass: HomeAssistant) -> None:
     """Test the shutdown system button."""
     await init_integration(hass, BUTTON_DOMAIN)
 
-    coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN]["uuid"][
-        "coordinator"
-    ]
-
     # Test shutting down the system
-    with patch("pyoctoprintapi.OctoprintClient.shutdown") as shutdown_command:
-        coordinator.data["printer"] = OctoprintPrinterInfo(
-            {"state": {"flags": {}}, "temperature": []}
-        )
+    with patch(
+        "homeassistant.components.octoprint.coordinator.OctoprintClient.shutdown"
+    ) as shutdown_command:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
@@ -223,15 +218,10 @@ async def test_reboot_system(hass: HomeAssistant) -> None:
     """Test the reboot system button."""
     await init_integration(hass, BUTTON_DOMAIN)
 
-    coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN]["uuid"][
-        "coordinator"
-    ]
-
     # Test rebooting the system
-    with patch("pyoctoprintapi.OctoprintClient.reboot_system") as reboot_command:
-        coordinator.data["printer"] = OctoprintPrinterInfo(
-            {"state": {"flags": {}}, "temperature": []}
-        )
+    with patch(
+        "homeassistant.components.octoprint.coordinator.OctoprintClient.reboot_system"
+    ) as reboot_command:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
@@ -248,15 +238,10 @@ async def test_restart_octoprint(hass: HomeAssistant) -> None:
     """Test the restart octoprint button."""
     await init_integration(hass, BUTTON_DOMAIN)
 
-    coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN]["uuid"][
-        "coordinator"
-    ]
-
     # Test restarting octoprint
-    with patch("pyoctoprintapi.OctoprintClient.restart") as restart_command:
-        coordinator.data["printer"] = OctoprintPrinterInfo(
-            {"state": {"flags": {}}, "temperature": []}
-        )
+    with patch(
+        "homeassistant.components.octoprint.coordinator.OctoprintClient.restart"
+    ) as restart_command:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
