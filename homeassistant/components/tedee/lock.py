@@ -3,11 +3,7 @@ from typing import Any
 
 from pytedee_async import TedeeClientException, TedeeLock, TedeeLockState
 
-from homeassistant.components.lock import (
-    LockEntity,
-    LockEntityDescription,
-    LockEntityFeature,
-)
+from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -16,12 +12,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .coordinator import TedeeApiCoordinator
 from .entity import TedeeEntity
-
-ENTITIES: tuple[LockEntityDescription, ...] = (
-    LockEntityDescription(
-        key="lock",
-    ),
-)
 
 
 async def async_setup_entry(
@@ -34,17 +24,11 @@ async def async_setup_entry(
 
     entities: list[TedeeLockEntity] = []
     for lock in coordinator.data.values():
-        for entity_description in ENTITIES:
-            if lock.is_enabled_pullspring:
-                entities.append(
-                    TedeeLockWithLatchEntity(
-                        lock, coordinator, entity_description, entry
-                    )
-                )
-            else:
-                entities.append(
-                    TedeeLockEntity(lock, coordinator, entity_description, entry)
-                )
+        key = "lock"
+        if lock.is_enabled_pullspring:
+            entities.append(TedeeLockWithLatchEntity(lock, coordinator, key, entry))
+        else:
+            entities.append(TedeeLockEntity(lock, coordinator, key, entry))
 
     async_add_entities(entities)
 
@@ -58,11 +42,11 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
         self,
         lock: TedeeLock,
         coordinator: TedeeApiCoordinator,
-        entity_description: LockEntityDescription,
+        key: str,
         entry: ConfigEntry,
     ) -> None:
         """Initialize the lock."""
-        super().__init__(lock, coordinator, entity_description)
+        super().__init__(lock, coordinator, key)
 
     @property
     def is_locked(self) -> bool:

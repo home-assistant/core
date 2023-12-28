@@ -10,59 +10,10 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 FLOW_UNIQUE_ID = "112233445566778899"
 LOCAL_ACCESS_TOKEN = "api_token"
-
-
-async def test_show_config_form(hass: HomeAssistant) -> None:
-    """Test if initial configuration form is shown."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-
-async def test_flow_abort(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
-    """Test config flow."""
-    # initial config
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.62",
-            CONF_LOCAL_ACCESS_TOKEN: "token",
-        },
-    )
-
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {
-        CONF_HOST: "192.168.1.62",
-        CONF_LOCAL_ACCESS_TOKEN: "token",
-    }
-
-    # config with local only
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "192.168.1.62",
-            CONF_LOCAL_ACCESS_TOKEN: "token",
-        },
-    )
-    assert result2["type"] == FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
 
 
 async def test_flow(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
@@ -86,6 +37,32 @@ async def test_flow(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
         CONF_HOST: "192.168.1.62",
         CONF_LOCAL_ACCESS_TOKEN: "token",
     }
+
+
+async def test_flow_abort(
+    hass: HomeAssistant,
+    mock_tedee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test config flow aborts when already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    # config with local only
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.62",
+            CONF_LOCAL_ACCESS_TOKEN: "token",
+        },
+    )
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(

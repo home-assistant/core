@@ -26,7 +26,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_ACCESS_TOKEN: "api_token",
             CONF_HOST: "192.168.1.42",
         },
-        unique_id="unique_id",
+        unique_id="0000-0000",
     )
 
 

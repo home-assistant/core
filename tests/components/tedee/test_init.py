@@ -1,7 +1,7 @@
 """Test initialization of tedee."""
 from unittest.mock import MagicMock
 
-from pytedee_async.exception import TedeeClientException
+from pytedee_async.exception import TedeeAuthException, TedeeClientException
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
@@ -28,7 +28,9 @@ async def test_load_unload_config_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.parametrize("side_effect", [TedeeClientException(""), Exception("")])
+@pytest.mark.parametrize(
+    "side_effect", [TedeeClientException(""), TedeeAuthException("")]
+)
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

@@ -20,13 +20,12 @@ class TedeeEntity(CoordinatorEntity[TedeeApiCoordinator]):
         self,
         lock: TedeeLock,
         coordinator: TedeeApiCoordinator,
-        entity_description: EntityDescription,
+        key: str,
     ) -> None:
         """Initialize Tedee entity."""
         super().__init__(coordinator)
-        self.entity_description = entity_description
         self._lock = lock
-        self._attr_unique_id = f"{lock.lock_id}-{entity_description.key}"
+        self._attr_unique_id = f"{lock.lock_id}-{key}"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(lock.lock_id))},
@@ -40,3 +39,17 @@ class TedeeEntity(CoordinatorEntity[TedeeApiCoordinator]):
         """Handle updated data from the coordinator."""
         self._lock = self.coordinator.data[self._lock.lock_id]
         super()._handle_coordinator_update()
+
+
+class TedeeDescriptionEntity(TedeeEntity):
+    """Base class for Tedee entities with description."""
+
+    def __init__(
+        self,
+        lock: TedeeLock,
+        coordinator: TedeeApiCoordinator,
+        entity_description: EntityDescription,
+    ) -> None:
+        """Initialize Tedee entity."""
+        super().__init__(lock, coordinator, entity_description.key)
+        self.entity_description = entity_description

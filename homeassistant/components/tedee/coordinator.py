@@ -1,5 +1,4 @@
 """Coordinator for Tedee locks."""
-import asyncio
 from datetime import timedelta
 import logging
 import time
@@ -12,6 +11,7 @@ from pytedee_async import (
     TedeeLock,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
@@ -20,13 +20,14 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=20)
-STALE_DATA_INTERVAL = 300
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
     """Class to handle fetching data from the tedee API centrally."""
+
+    config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize coordinator."""
@@ -36,16 +37,13 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
-        if not self.config_entry:
-            raise ConfigEntryError("Config entry not set")
+
         self.tedee_client = TedeeClient(
             local_token=self.config_entry.data.get(CONF_LOCAL_ACCESS_TOKEN),
             local_ip=self.config_entry.data.get(CONF_HOST),
         )
-        self._initialized = False
+
         self._next_get_locks = time.time()
-        self._last_data_update = time.time()
-        self._stale_data = False
 
     async def _async_update_data(self) -> dict[int, TedeeLock]:
         """Fetch data from API endpoint."""
@@ -69,35 +67,18 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
 
         except TedeeDataUpdateException as ex:
             _LOGGER.debug("Error while updating data: %s", str(ex))
-        except (TedeeClientException, asyncio.TimeoutError) as ex:
+            raise UpdateFailed("Error while updating data: %s" % str(ex)) from ex
+        except (TedeeClientException, TimeoutError) as ex:
             raise UpdateFailed("Querying API failed. Error: %s" % str(ex)) from ex
 
         if not self.tedee_client.locks_dict:
             # No locks found; abort setup routine.
             _LOGGER.warning("No locks found in your account")
+            raise UpdateFailed("No locks found in your account")
 
         _LOGGER.debug(
             "available_locks: %s",
             ", ".join(map(str, self.tedee_client.locks_dict.keys())),
         )
 
-        if not self._initialized:
-            self._initialized = True
-
-        if (
-            time.time() - self._last_data_update
-        ) >= STALE_DATA_INTERVAL and not self._stale_data:
-            _LOGGER.warning(
-                "Data hasn't been updated for more than %s minutes. \
-                            Check your connection to the Tedee Bridge/the internet or reload the integration",
-                str(int(STALE_DATA_INTERVAL / 60)),
-            )
-            self._stale_data = True
-        elif (
-            time.time() - self._last_data_update
-        ) < STALE_DATA_INTERVAL and self._stale_data:
-            _LOGGER.warning("Tedee receiving updated data again")
-            self._stale_data = False
-
-        self._last_data_update = time.time()
         return self.tedee_client.locks_dict
