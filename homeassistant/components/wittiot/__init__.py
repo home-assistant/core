@@ -21,7 +21,6 @@ from .const import CONF_IP, CONNECTION_TYPE, DOMAIN, LOCAL
 _LOGGER = logging.getLogger(__name__)
 
 
-# PLATFORMS: list[str] = ["sensor"]
 PLATFORMS = [Platform.SENSOR]
 
 
