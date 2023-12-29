@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN
+from . import DOMAIN
 
 RESULT_AUTH_FAILED = "connection_failed"
 RESULT_SUCCESS = "success"

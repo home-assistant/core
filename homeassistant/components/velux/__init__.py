@@ -5,7 +5,7 @@ from pyvlx import Node, PyVLX
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
@@ -14,10 +14,14 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, PLATFORMS
-
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = "velux"
+PLATFORMS = [
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.SCENE,
+]
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
         cv.deprecated(DOMAIN),

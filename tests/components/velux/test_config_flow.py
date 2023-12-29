@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from pyvlx import PyVLX, PyVLXException
 
 from homeassistant.components import zeroconf
-from homeassistant.components.velux.const import DOMAIN
+from homeassistant.components.velux import DOMAIN
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
     SOURCE_UNIGNORE,

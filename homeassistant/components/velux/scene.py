@@ -8,8 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import _LOGGER
-from .const import DOMAIN
+from . import _LOGGER, DOMAIN
 
 PARALLEL_UPDATES = 1
 

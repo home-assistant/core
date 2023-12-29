@@ -1,7 +1,7 @@
 """Tests for the Velux component initialisation."""
 from unittest.mock import patch
 
-from homeassistant.components.velux.const import DOMAIN
+from homeassistant.components.velux import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType

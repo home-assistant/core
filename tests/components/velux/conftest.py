@@ -9,7 +9,7 @@ from pyvlx.node import Node
 from pyvlx.opening_device import Blind, OpeningDevice, Window
 from pyvlx.scene import Scene
 
-from homeassistant.components.velux.const import DOMAIN
+from homeassistant.components.velux import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType

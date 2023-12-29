@@ -12,8 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VeluxEntity
-from .const import DOMAIN
+from . import DOMAIN, VeluxEntity
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
