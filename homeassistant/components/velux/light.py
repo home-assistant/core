@@ -34,12 +34,10 @@ async def async_setup_entry(
 class VeluxLight(VeluxEntity, LightEntity):
     """Representation of a Velux light."""
 
-    def __init__(self, node: LighteningDevice) -> None:
-        """Initialize the Velux light."""
-        self.node: LighteningDevice = node
-        super().__init__(node)
-        self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-        self._attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
+
+    node: LighteningDevice
 
     @property
     def brightness(self) -> int:
