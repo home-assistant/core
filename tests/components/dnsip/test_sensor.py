@@ -15,6 +15,7 @@ from homeassistant.components.dnsip.const import (
     CONF_RESOLVER_IPV6,
     DOMAIN,
 )
+from homeassistant.components.dnsip.sensor import SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -97,21 +98,17 @@ async def test_sensor_no_response(
         "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
         return_value=dns_mock,
     ):
-        freezer.tick(timedelta(seconds=120))
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
         async_fire_time_changed(hass)
-        freezer.tick(timedelta(seconds=120))
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    # Allows 2 retries before going unavailable
-    state = hass.states.get("sensor.home_assistant_io")
-    assert state.state == "1.2.3.4"
+        # Allows 2 retries before going unavailable
+        state = hass.states.get("sensor.home_assistant_io")
+        assert state.state == "1.2.3.4"
 
-    with patch(
-        "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
-        return_value=dns_mock,
-    ):
-        freezer.tick(timedelta(seconds=120))
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
