@@ -12,8 +12,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import VeluxEntity
 from .const import DOMAIN
-from .node_entity import VeluxNodeEntity
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
@@ -32,7 +32,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class VeluxLight(VeluxNodeEntity, LightEntity):
+class VeluxLight(VeluxEntity, LightEntity):
     """Representation of a Velux light."""
 
     def __init__(self, node: Light) -> None:

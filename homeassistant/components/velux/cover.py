@@ -26,8 +26,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import VeluxEntity
 from .const import DOMAIN
-from .node_entity import VeluxNodeEntity
 
 PARALLEL_UPDATES = 1
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=2)
@@ -45,7 +45,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class VeluxCover(VeluxNodeEntity, CoverEntity):
+class VeluxCover(VeluxEntity, CoverEntity):
     """Representation of a Velux cover."""
 
     _is_blind = False
