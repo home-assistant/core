@@ -20,6 +20,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
     """Velux config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 1
 
     def __init__(self) -> None:
         """Initialize the Velux flow."""
