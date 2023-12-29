@@ -155,7 +155,7 @@ async def test_zeroconf_discovery_abort(hass: HomeAssistant) -> None:
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert hass.config_entries.async_entries(DOMAIN)[0].unique_id is None
-    hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     # Set unique_id for already configured entry.
     result = await hass.config_entries.flow.async_init(
