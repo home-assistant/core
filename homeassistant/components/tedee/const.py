@@ -2,7 +2,7 @@
 from datetime import timedelta
 
 DOMAIN = "tedee"
-NAME = "tedee"
+NAME = "Tedee"
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
