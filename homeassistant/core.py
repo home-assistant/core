@@ -889,7 +889,7 @@ class HomeAssistant:
                         continue
                     tasks.append(task_or_none)
                 if tasks:
-                    asyncio.gather(*tasks, return_exceptions=True)
+                    await asyncio.gather(*tasks, return_exceptions=True)
         except asyncio.TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for shutdown jobs to complete, the shutdown will"
