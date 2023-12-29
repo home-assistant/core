@@ -47,7 +47,6 @@ async def test_flow_already_configured(
     """Test config flow aborts when already configured."""
     mock_config_entry.add_to_hass(hass)
 
-    # config with local only
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
