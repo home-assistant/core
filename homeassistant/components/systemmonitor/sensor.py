@@ -19,8 +19,8 @@ import voluptuous as vol
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
@@ -32,6 +32,7 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     EntityCategory,
     UnitOfDataRate,
     UnitOfInformation,
@@ -553,7 +554,7 @@ async def async_setup_sensor_registry_updates(
     await _async_update_data()
 
 
-class SystemMonitorSensor(SensorEntity):
+class SystemMonitorSensor(RestoreSensor):
     """Implementation of a system monitor sensor."""
 
     should_poll = False
@@ -600,6 +601,11 @@ class SystemMonitorSensor(SensorEntity):
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        last_sensor_state = await self.async_get_last_sensor_data()
+        if last_state and last_sensor_state and last_state.state != STATE_UNAVAILABLE:
+            self._attr_native_value = last_sensor_state.native_value
+
         _LOGGER.debug("Adding %s_%s", self.entity_description.key, self._argument)
         self._sensor_registry[
             (self.entity_description.key, self._argument)
