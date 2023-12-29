@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_binary_sensors
+# name: test_binary_sensors[binary_sensor.netgear_lm1200_mobile_connected]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
@@ -12,7 +12,19 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors.1
+# name: test_binary_sensors[binary_sensor.netgear_lm1200_roaming]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Netgear LM1200 Roaming',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.netgear_lm1200_roaming',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.netgear_lm1200_wire_connected]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
@@ -20,18 +32,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.netgear_lm1200_wire_connected',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_binary_sensors.2
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Netgear LM1200 Roaming',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.netgear_lm1200_roaming',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',

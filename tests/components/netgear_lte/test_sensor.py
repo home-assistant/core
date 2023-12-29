@@ -1,38 +1,27 @@
 """The tests for Netgear LTE sensor platform."""
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.netgear_lte.const import DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 
 async def test_sensors(
     hass: HomeAssistant,
     entity_registry_enabled_by_default: None,
     setup_integration: None,
+    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test for successfully setting up the Netgear LTE sensor platform."""
-    assert hass.states.get("sensor.netgear_lm1200_cell_id") == snapshot
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
 
-    assert hass.states.get("sensor.netgear_lm1200_connection_text") == snapshot
-
-    assert hass.states.get("sensor.netgear_lm1200_connection_type") == snapshot
-
-    assert hass.states.get("sensor.netgear_lm1200_current_band") == snapshot
-
-    assert hass.states.get("sensor.netgear_lm1200_service_type") == snapshot
-
-    assert hass.states.get("sensor.netgear_lm1200_radio_quality") == snapshot
-
-    assert hass.states.get("sensor.netgear_lm1200_register_network_display") == snapshot
-
-    assert hass.states.get("sensor.netgear_lm1200_rx_level") == snapshot
-
-    assert hass.states.get("sensor.netgear_lm1200_sms") == snapshot
-
-    assert hass.states.get("sensor.netgear_lm1200_sms_total") == snapshot
-
-    assert hass.states.get("sensor.netgear_lm1200_tx_level") == snapshot
-
-    assert hass.states.get("sensor.netgear_lm1200_upstream") == snapshot
-
-    assert hass.states.get("sensor.netgear_lm1200_usage") == snapshot
+    assert entity_entries
+    for entity_entry in entity_entries:
+        if entity_entry.domain != SENSOR_DOMAIN:
+            continue
+        assert hass.states.get(entity_entry.entity_id) == snapshot(
+            name=entity_entry.entity_id
+        )

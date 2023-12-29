@@ -52,8 +52,10 @@ SENSORS: tuple[NetgearLTESensorEntityDescription, ...] = (
         translation_key="usage",
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_registry_enabled_default=False,
-        native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
-        value_fn=lambda modem_data: round(modem_data.data.usage / 1024**2, 1),
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        suggested_display_precision=1,
+        value_fn=lambda modem_data: modem_data.data.usage,
     ),
     NetgearLTESensorEntityDescription(
         key="radio_quality",

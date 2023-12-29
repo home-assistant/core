@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors
+# name: test_sensors[sensor.netgear_lm1200_cell_id]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 Cell ID',
@@ -12,7 +12,7 @@
     'state': '12345678',
   })
 # ---
-# name: test_sensors.1
+# name: test_sensors[sensor.netgear_lm1200_connection_text]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 Connection text',
@@ -25,48 +25,7 @@
     'state': '4G',
   })
 # ---
-# name: test_sensors.10
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'Netgear LM1200 Tx level',
-      'unit_of_measurement': 'dBm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.netgear_lm1200_tx_level',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '4',
-  })
-# ---
-# name: test_sensors.11
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Netgear LM1200 Upstream',
-      'icon': 'mdi:ip-network',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.netgear_lm1200_upstream',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'LTE',
-  })
-# ---
-# name: test_sensors.12
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Netgear LM1200 Usage',
-      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.netgear_lm1200_usage',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '40.5',
-  })
-# ---
-# name: test_sensors.2
+# name: test_sensors[sensor.netgear_lm1200_connection_type]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 Connection type',
@@ -79,7 +38,7 @@
     'state': 'IPv4AndIPv6',
   })
 # ---
-# name: test_sensors.3
+# name: test_sensors[sensor.netgear_lm1200_current_band]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 Current band',
@@ -92,20 +51,7 @@
     'state': 'LTE B4',
   })
 # ---
-# name: test_sensors.4
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Netgear LM1200 Service type',
-      'icon': 'mdi:radio-tower',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.netgear_lm1200_service_type',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'LTE',
-  })
-# ---
-# name: test_sensors.5
+# name: test_sensors[sensor.netgear_lm1200_radio_quality]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 Radio quality',
@@ -118,7 +64,7 @@
     'state': '52',
   })
 # ---
-# name: test_sensors.6
+# name: test_sensors[sensor.netgear_lm1200_register_network_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 Register network display',
@@ -131,7 +77,7 @@
     'state': 'T-Mobile',
   })
 # ---
-# name: test_sensors.7
+# name: test_sensors[sensor.netgear_lm1200_rx_level]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
@@ -145,7 +91,20 @@
     'state': '-113',
   })
 # ---
-# name: test_sensors.8
+# name: test_sensors[sensor.netgear_lm1200_service_type]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Netgear LM1200 Service type',
+      'icon': 'mdi:radio-tower',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.netgear_lm1200_service_type',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'LTE',
+  })
+# ---
+# name: test_sensors[sensor.netgear_lm1200_sms]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 SMS',
@@ -159,7 +118,7 @@
     'state': '1',
   })
 # ---
-# name: test_sensors.9
+# name: test_sensors[sensor.netgear_lm1200_sms_total]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 SMS total',
@@ -171,5 +130,46 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
+  })
+# ---
+# name: test_sensors[sensor.netgear_lm1200_tx_level]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Netgear LM1200 Tx level',
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.netgear_lm1200_tx_level',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4',
+  })
+# ---
+# name: test_sensors[sensor.netgear_lm1200_upstream]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Netgear LM1200 Upstream',
+      'icon': 'mdi:ip-network',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.netgear_lm1200_upstream',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'LTE',
+  })
+# ---
+# name: test_sensors[sensor.netgear_lm1200_usage]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'Netgear LM1200 Usage',
+      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.netgear_lm1200_usage',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40.5162000656128',
   })
 # ---
