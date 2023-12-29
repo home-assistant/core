@@ -50,12 +50,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == SOURCE_USER
 
 
-@patch.object(
-    PyVLX,
-    "connect",
-    new=AsyncMock(side_effect=OSError),
-    spec=PyVLX,
-)
+@patch.object(PyVLX, "connect", new=AsyncMock(side_effect=OSError), spec=PyVLX)
 async def test_async_step_wrong_host(hass: HomeAssistant) -> None:
     """Test import user."""
     with patch("homeassistant.components.velux.PyVLX", autospec=True) as pyvlx:

@@ -1,7 +1,6 @@
 """Fixtures for the Velbus tests."""
-from collections.abc import Generator
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from pyvlx.config import Config
@@ -72,13 +71,6 @@ class TestPyVLX:
         """Simulate a gateway reboot."""
         self.disconnected = True
         return
-
-
-@pytest.fixture(name="pyvlx")
-def mock_pyvlx() -> Generator[TestPyVLX, None, None]:
-    """Mock a successful velux gateway."""
-    with patch("homeassistant.components.velux.PyVLX", spec=TestPyVLX) as pyvlx:
-        yield pyvlx
 
 
 @pytest.fixture(name="config_entry")
