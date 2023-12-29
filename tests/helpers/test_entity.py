@@ -1716,30 +1716,200 @@ def test_extending_entity_description(snapshot: SnapshotAssertion):
 
     # Try multiple direct parents
     @dataclasses.dataclass(frozen=True)
-    class MyMixin:
+    class MyMixin1:
+        mixin: str
+
+    @dataclasses.dataclass
+    class MyMixin2:
+        mixin: str
+
+    @dataclasses.dataclass(frozen=True)
+    class MyMixin3:
+        mixin: str = None
+
+    @dataclasses.dataclass
+    class MyMixin4:
         mixin: str = None
 
     @dataclasses.dataclass(frozen=True, kw_only=True)
-    class ComplexEntityDescription1(MyMixin, entity.EntityDescription):
+    class ComplexEntityDescription1A(MyMixin1, entity.EntityDescription):
         extra: str = None
 
-    obj = ComplexEntityDescription1(key="blah", extra="foo", mixin="mixin", name="name")
+    obj = ComplexEntityDescription1A(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
     assert obj == snapshot
-    assert obj == ComplexEntityDescription1(
+    assert obj == ComplexEntityDescription1A(
         key="blah", extra="foo", mixin="mixin", name="name"
     )
     assert repr(obj) == snapshot
 
     @dataclasses.dataclass(frozen=True, kw_only=True)
-    class ComplexEntityDescription2(entity.EntityDescription, MyMixin):
+    class ComplexEntityDescription1B(entity.EntityDescription, MyMixin1):
         extra: str = None
 
-    obj = ComplexEntityDescription2(key="blah", extra="foo", mixin="mixin", name="name")
+    obj = ComplexEntityDescription1B(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
     assert obj == snapshot
-    assert obj == ComplexEntityDescription2(
+    assert obj == ComplexEntityDescription1B(
         key="blah", extra="foo", mixin="mixin", name="name"
     )
     assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(frozen=True)
+    class ComplexEntityDescription1C(MyMixin1, entity.EntityDescription):
+        extra: str = None
+
+    obj = ComplexEntityDescription1C(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription1C(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(frozen=True)
+    class ComplexEntityDescription1D(entity.EntityDescription, MyMixin1):
+        extra: str = None
+
+    obj = ComplexEntityDescription1D(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription1D(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(kw_only=True)
+    class ComplexEntityDescription2A(MyMixin2, entity.EntityDescription):
+        extra: str = None
+
+    obj = ComplexEntityDescription2A(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription2A(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(kw_only=True)
+    class ComplexEntityDescription2B(entity.EntityDescription, MyMixin2):
+        extra: str = None
+
+    obj = ComplexEntityDescription2B(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription2B(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass
+    class ComplexEntityDescription2C(MyMixin2, entity.EntityDescription):
+        extra: str = None
+
+    obj = ComplexEntityDescription2C(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription2C(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass
+    class ComplexEntityDescription2D(entity.EntityDescription, MyMixin2):
+        extra: str = None
+
+    obj = ComplexEntityDescription2D(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription2D(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(frozen=True, kw_only=True)
+    class ComplexEntityDescription3A(MyMixin3, entity.EntityDescription):
+        extra: str = None
+
+    obj = ComplexEntityDescription3A(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription3A(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(frozen=True, kw_only=True)
+    class ComplexEntityDescription3B(entity.EntityDescription, MyMixin3):
+        extra: str = None
+
+    obj = ComplexEntityDescription3B(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription3B(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    with pytest.raises(TypeError):
+
+        @dataclasses.dataclass(frozen=True)
+        class ComplexEntityDescription3C(MyMixin3, entity.EntityDescription):
+            extra: str = None
+
+    with pytest.raises(TypeError):
+
+        @dataclasses.dataclass(frozen=True)
+        class ComplexEntityDescription3D(entity.EntityDescription, MyMixin3):
+            extra: str = None
+
+    @dataclasses.dataclass(kw_only=True)
+    class ComplexEntityDescription4A(MyMixin4, entity.EntityDescription):
+        extra: str = None
+
+    obj = ComplexEntityDescription4A(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription4A(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(kw_only=True)
+    class ComplexEntityDescription4B(entity.EntityDescription, MyMixin4):
+        extra: str = None
+
+    obj = ComplexEntityDescription4B(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription4B(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    with pytest.raises(TypeError):
+
+        @dataclasses.dataclass
+        class ComplexEntityDescription4C(MyMixin4, entity.EntityDescription):
+            extra: str = None
+
+    with pytest.raises(TypeError):
+
+        @dataclasses.dataclass
+        class ComplexEntityDescription4D(entity.EntityDescription, MyMixin4):
+            extra: str = None
 
     # Try inheriting with custom init
     @dataclasses.dataclass
