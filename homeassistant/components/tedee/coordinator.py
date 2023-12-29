@@ -1,5 +1,5 @@
 """Coordinator for Tedee locks."""
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 import time
@@ -68,7 +68,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         return self.tedee_client.locks_dict
 
     async def _async_update_locks(
-        self, update_fn: Callable[[], Coroutine[None, None, None]]
+        self, update_fn: Callable[[], Awaitable[None]]
     ) -> None:
         """Update locks based on update function."""
         try:
