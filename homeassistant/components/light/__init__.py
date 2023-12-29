@@ -1180,25 +1180,26 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         Remove this compatibility shim in 2025.1 or later.
         """
         features = self.supported_features
-        if type(features) is int:  # noqa: E721
-            new_features = LightEntityFeature(features)
-            if self._deprecated_supported_features_reported is False:
-                self._deprecated_supported_features_reported = True
-                report_issue = self._suggest_report_issue()
-                report_issue += (
-                    " and reference "
-                    "https://developers.home-assistant.io/blog/2023/12/28/support-feature-magic-numbers-deprecation"
-                )
-                _LOGGER.warning(
-                    (
-                        "Entity %s (%s) is using deprecated supported features"
-                        " values which will be removed in HA Core 2025.1. Instead it should use"
-                        " %s and color modes, please %s"
-                    ),
-                    self.entity_id,
-                    type(self),
-                    repr(new_features),
-                    report_issue,
-                )
+        if type(features) is not int:  # noqa: E721
+            return features
+        new_features = LightEntityFeature(features)
+        if self._deprecated_supported_features_reported is True:
             return new_features
-        return features
+        self._deprecated_supported_features_reported = True
+        report_issue = self._suggest_report_issue()
+        report_issue += (
+            " and reference "
+            "https://developers.home-assistant.io/blog/2023/12/28/support-feature-magic-numbers-deprecation"
+        )
+        _LOGGER.warning(
+            (
+                "Entity %s (%s) is using deprecated supported features"
+                " values which will be removed in HA Core 2025.1. Instead it should use"
+                " %s and color modes, please %s"
+            ),
+            self.entity_id,
+            type(self),
+            repr(new_features),
+            report_issue,
+        )
+        return new_features
