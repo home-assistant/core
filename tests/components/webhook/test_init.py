@@ -21,6 +21,39 @@ def mock_client(hass, hass_client):
     return hass.loop.run_until_complete(hass_client())
 
 
+def test_is_registered_no_data(hass: HomeAssistant) -> None:
+    """Test check if webhook is registered before data is setup."""
+    webhook_id = webhook.async_generate_id()
+    result = webhook.is_registered(hass, webhook_id)
+    assert result is False
+
+
+async def test_is_registered_not_registered(hass: HomeAssistant) -> None:
+    """Test check if webhook is registered when not registered."""
+    assert await async_setup_component(hass, "webhook", {})
+
+    webhook_id = webhook.async_generate_id()
+    result = webhook.is_registered(hass, webhook_id)
+    assert result is False
+
+
+async def test_is_registered_when_registered(hass: HomeAssistant) -> None:
+    """Test check if webhook is registered when not registered."""
+    assert await async_setup_component(hass, "webhook", {})
+
+    hooks = []
+    webhook_id = webhook.async_generate_id()
+
+    async def handle(*args):
+        """Handle webhook."""
+        hooks.append(args)
+
+    webhook.async_register(hass, "test", "Test hook", webhook_id, handle)
+
+    result = webhook.is_registered(hass, webhook_id)
+    assert result is True
+
+
 async def test_unregistering_webhook(hass: HomeAssistant, mock_client) -> None:
     """Test unregistering a webhook."""
     hooks = []
