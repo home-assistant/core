@@ -503,7 +503,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         # icon="mdi:battery",
         native_unit_of_measurement=PERCENTAGE,
         value_getter=lambda api: api.getElectricalEnergySystemSOC(),
-        # unit_getter=lambda api: api.getElectricalEnergySystemSOCUnit(),
+        unit_getter=lambda api: api.getElectricalEnergySystemSOCUnit(),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
@@ -512,7 +512,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         # icon="mdi:battery",
         native_unit_of_measurement=UnitOfPower.WATT,
         value_getter=lambda api: api.getElectricalEnergySystemPower(),
-        # unit_getter=lambda api: api.getElectricalEnergySystemSOCUnit(),
+        unit_getter=lambda api: api.getElectricalEnergySystemPowerUnit(),
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
