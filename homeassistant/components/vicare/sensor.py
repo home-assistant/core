@@ -44,8 +44,11 @@ from .const import (
     VICARE_API,
     VICARE_CUBIC_METER,
     VICARE_DEVICE_CONFIG,
+    VICARE_KW,
     VICARE_KWH,
     VICARE_UNIT_TO_UNIT_OF_MEASUREMENT,
+    VICARE_W,
+    VICARE_WH,
 )
 from .entity import ViCareEntity
 from .utils import get_burners, get_circuits, get_compressors, is_supported
@@ -53,7 +56,10 @@ from .utils import get_burners, get_circuits, get_compressors, is_supported
 _LOGGER = logging.getLogger(__name__)
 
 VICARE_UNIT_TO_DEVICE_CLASS = {
+    VICARE_WH: SensorDeviceClass.ENERGY,
     VICARE_KWH: SensorDeviceClass.ENERGY,
+    VICARE_W: SensorDeviceClass.POWER,
+    VICARE_KW: SensorDeviceClass.POWER,
     VICARE_CUBIC_METER: SensorDeviceClass.GAS,
 }
 
@@ -509,7 +515,46 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         # unit_getter=lambda api: api.getElectricalEnergySystemSOCUnit(),
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    ViCareSensorEntityDescription(
+        key="pcc_transfer_power_exchange",
+        translation_key="pcc_transfer_power_exchange",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_getter=lambda api: api.getPointOfCommonCouplingTransferPowerExchange(),
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
+        key="photovoltaic_production_current",
+        translation_key="photovoltaic_production_current",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        value_getter=lambda api: api.getPhotovoltaicProductionCurrent(),
+        unit_getter=lambda api: api.getPhotovoltaicProductionCurrentUnit(),
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
+        key="photovoltaic_production_today",
+        translation_key="photovoltaic_production_today",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        value_getter=lambda api: api.getPhotovoltaicProductionCumulatedCurrentDay(),
+        unit_getter=lambda api: api.getPhotovoltaicProductionCumulatedUnit(),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="photovoltaic_status",
+        translation_key="photovoltaic_status",
+        value_getter=lambda api: api.getPhotovoltaicStatus(),
+        # options=["nothing", "ready", "production", "unknown"],
+    ),
+    ViCareSensorEntityDescription(
+        key="ess_state",
+        translation_key="ess_state",
+        value_getter=lambda api: api.getElectricalEnergySystemOperationState(),
+        # options=["charge", "discharge", "standby"],
+    ),
 )
+
 
 CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
