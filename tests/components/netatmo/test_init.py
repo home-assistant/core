@@ -179,7 +179,7 @@ async def test_setup_without_https(
         mock_auth.assert_called_once()
         mock_async_generate_url.assert_called_once()
 
-    assert "https and port 443 is required to register the webhook" in caplog.text
+    assert "Webhook not registered - HTTPS and port 443 are required to register the webhook" in caplog.text
 
 
 async def test_setup_with_cloud(hass: HomeAssistant, config_entry) -> None:
