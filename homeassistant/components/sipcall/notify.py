@@ -41,6 +41,23 @@ class SIPCallNotificationService(BaseNotificationService):
             password=config[CONF_PASSWORD],
         )
 
+    @staticmethod
+    async def make_call(config: dict, callee: str, duration: int):
+        """Make a SIP call to the given callee hanging up after duration seconds."""
+
+        auth_creds = SIPAuthCreds(
+            username=config[CONF_USERNAME], password=config[CONF_PASSWORD]
+        )
+
+        inv = Invite(
+            uri_from=f"sip:{config[CONF_USERNAME]}@{config[CONF_SIP_DOMAIN]}",
+            uri_to=f"sip:{callee}@{config[CONF_SIP_SERVER]}",
+            uri_via=config[CONF_SIP_SERVER],
+            auth_creds=auth_creds,
+        )
+
+        return await async_call_and_cancel(inv, duration)
+
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Make a short call and hang up."""
 
@@ -62,15 +79,4 @@ class SIPCallNotificationService(BaseNotificationService):
         except (TypeError, KeyError):
             duration = DEFAULT_DURATION
 
-        auth_creds = SIPAuthCreds(
-            username=self.config[CONF_USERNAME], password=self.config[CONF_PASSWORD]
-        )
-
-        inv = Invite(
-            uri_from=f"sip:{self.config[CONF_USERNAME]}@{self.config[CONF_SIP_DOMAIN]}",
-            uri_to=f"sip:{callee}@{self.config[CONF_SIP_SERVER]}",
-            uri_via=self.config[CONF_SIP_SERVER],
-            auth_creds=auth_creds,
-        )
-
-        await async_call_and_cancel(inv, duration)
+        await self.make_call(self.config, callee, duration)
