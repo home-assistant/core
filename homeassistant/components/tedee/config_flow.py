@@ -1,4 +1,5 @@
 """Config flow for Tedee integration."""
+from collections.abc import Mapping
 from typing import Any
 
 from pytedee_async import (
@@ -9,15 +10,17 @@ from pytedee_async import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN, NAME
 
 
-class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tedee."""
+
+    reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -51,3 +54,18 @@ class TedeeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        self.reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm reauth dialog."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+        return await self.async_step_user()
