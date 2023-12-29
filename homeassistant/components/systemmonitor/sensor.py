@@ -505,7 +505,8 @@ async def async_setup_sensor_registry_updates(
 
     def _update_sensors() -> None:
         """Update sensors and store the result in the registry."""
-        _LOGGER.debug("Updating %s", sensor_registry.keys())
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("Updating %s", sensor_registry.keys())
         for (type_, argument), data in sensor_registry.items():
             try:
                 state, value, update_time = _update(type_, data)
