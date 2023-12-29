@@ -1,7 +1,6 @@
 """Support for Velux covers."""
 from __future__ import annotations
 
-from datetime import timedelta
 from typing import Any, cast
 
 from pyvlx import Position, PyVLX
@@ -29,7 +28,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import DOMAIN, VeluxEntity
 
 PARALLEL_UPDATES = 1
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=2)
 
 
 async def async_setup_entry(
