@@ -575,6 +575,10 @@ async def test_register_webhook_https_error(
 
         assert err.value.translation_domain == DOMAIN
         assert err.value.translation_key == EXCEPTION_ID_WEBHOOK_HTTPS_REQUIRED
+        assert (
+            "Webhook not registered - HTTPS and port 443 are required to register the webhook"
+            in caplog.text
+        )
 
 
 async def test_register_webhook_already_registered(
