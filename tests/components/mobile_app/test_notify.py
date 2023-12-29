@@ -163,10 +163,10 @@ async def test_notify_target_device_id(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
 ) -> None:
     """Test notify target device_id."""
-    assert hass.services.has_service("notify", "mobile_app_test") is True
+    assert hass.services.has_service("notify", "notify") is True
     await hass.services.async_call(
         "notify",
-        "mobile_app_test",
+        "notify",
         {"message": "Hello world", "target": "4d5e6f"},
         blocking=True,
     )
@@ -187,10 +187,10 @@ async def test_notify_target_webhook_id(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
 ) -> None:
     """Test notify target webhook_id."""
-    assert hass.services.has_service("notify", "mobile_app_test") is True
+    assert hass.services.has_service("notify", "notify") is True
     await hass.services.async_call(
         "notify",
-        "mobile_app_test",
+        "notify",
         {"message": "Hello world", "target": "mock-webhook_id"},
         blocking=True,
     )
@@ -211,10 +211,10 @@ async def test_notify_target_not_existing(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
 ) -> None:
     """Test notify target not existing."""
-    assert hass.services.has_service("notify", "mobile_app_test") is True
+    assert hass.services.has_service("notify", "notify") is True
     await hass.services.async_call(
         "notify",
-        "mobile_app_test",
+        "notify",
         {"message": "Hello world", "target": "not_existing"},
         blocking=True,
     )
