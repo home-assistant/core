@@ -1389,7 +1389,7 @@ class State:
         self,
         entity_id: str,
         state: str,
-        attributes: Mapping[str, Any] | ReadOnlyDict[str, Any] | None = None,
+        attributes: Mapping[str, Any] | None = None,
         last_changed: datetime.datetime | None = None,
         last_updated: datetime.datetime | None = None,
         context: Context | None = None,
