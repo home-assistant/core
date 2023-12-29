@@ -2,7 +2,7 @@
 from contextlib import asynccontextmanager
 from datetime import timedelta
 from time import time
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 import pyatmo
@@ -11,10 +11,14 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.netatmo import DOMAIN
-from homeassistant.components.netatmo.const import SERVICE_UNREGISTER_WEBHOOK
+from homeassistant.components.netatmo.const import (
+    EXCEPTION_ID_WEBHOOK_REGISTRATION_FAILED,
+    SERVICE_REGISTER_WEBHOOK,
+    SERVICE_UNREGISTER_WEBHOOK,
+)
 from homeassistant.components.webhook import is_registered as is_webhook_registered
 from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant, HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -65,8 +69,8 @@ async def setup_for_webhook_tests(hass: HomeAssistant, config_entry):
         "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
     ) as mock_auth, selected_platforms(["camera", "climate", "light", "sensor"]):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post_request
-        mock_async_addwebhook = mock_auth.return_value.async_addwebhook
-        mock_async_dropwebhook = mock_auth.return_value.async_dropwebhook
+        mock_async_addwebhook: MagicMock = mock_auth.return_value.async_addwebhook
+        mock_async_dropwebhook: MagicMock = mock_auth.return_value.async_dropwebhook
 
         mock_async_addwebhook.side_effect = AsyncMock()
         mock_async_dropwebhook.side_effect = AsyncMock()
@@ -564,3 +568,81 @@ async def test_unregister_webhook_success(hass: HomeAssistant, config_entry) -> 
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     assert not is_webhook_registered(hass, webhook_id)
+
+
+async def test_register_webhook_already_registered(
+    hass: HomeAssistant, config_entry
+) -> None:
+    """Test calling register webhook service when webhook is already registered in Home Assistant."""
+    async with setup_for_webhook_tests(hass, config_entry) as (
+        mock_async_addwebhook,
+        _,
+    ):
+        webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+        assert is_webhook_registered(hass, webhook_id)
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_REGISTER_WEBHOOK,
+            blocking=True,
+        )
+        webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+        assert is_webhook_registered(hass, webhook_id)
+        mock_async_addwebhook.assert_called_once()
+
+
+async def test_register_webhook_api_error(
+    hass: HomeAssistant, config_entry, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test calling register webhook service when API errors."""
+    async with setup_for_webhook_tests(hass, config_entry) as (
+        mock_async_addwebhook,
+        _,
+    ):
+        webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+        assert is_webhook_registered(hass, webhook_id)
+
+        error_message = "Test API Error"
+        mock_async_addwebhook.side_effect = AsyncMock(
+            side_effect=pyatmo.ApiError(error_message)
+        )
+
+        with pytest.raises(HomeAssistantError) as err:
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_REGISTER_WEBHOOK,
+                blocking=True,
+            )
+        webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+        assert is_webhook_registered(hass, webhook_id)
+        assert f"Error during webhook registration - {error_message}" in caplog.text
+
+        assert err.value.translation_domain == DOMAIN
+        assert err.value.translation_key == EXCEPTION_ID_WEBHOOK_REGISTRATION_FAILED
+        assert err.value.translation_placeholders["error"] == error_message
+
+
+async def test_register_webhook_success(hass: HomeAssistant, config_entry) -> None:
+    """Test calling register webhook service when success expected."""
+    async with setup_for_webhook_tests(hass, config_entry) as (
+        mock_async_addwebhook,
+        mock_async_dropwebhook,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UNREGISTER_WEBHOOK,
+            blocking=True,
+        )
+        webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+        assert not is_webhook_registered(hass, webhook_id)
+        mock_async_addwebhook.reset_mock()
+        mock_async_dropwebhook.reset_mock()
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_REGISTER_WEBHOOK,
+            blocking=True,
+        )
+        webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+        assert is_webhook_registered(hass, webhook_id)
+        mock_async_addwebhook.assert_called_once()
