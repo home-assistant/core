@@ -5804,6 +5804,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "tedee": {
+      "name": "Tedee",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "telegram": {
       "name": "Telegram",
       "integrations": {
