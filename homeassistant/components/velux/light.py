@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from pyvlx import Intensity, PyVLX
-from pyvlx.lightening_device import Light
+from pyvlx.lightening_device import LighteningDevice
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -25,7 +25,7 @@ async def async_setup_entry(
     entities = []
     pyvlx: PyVLX = hass.data[DOMAIN][entry.entry_id]
     for node in pyvlx.nodes:
-        if isinstance(node, Light):
+        if isinstance(node, LighteningDevice):
             _LOGGER.debug("Light will be added: %s", node.name)
             entities.append(VeluxLight(node))
     async_add_entities(entities)
@@ -34,9 +34,9 @@ async def async_setup_entry(
 class VeluxLight(VeluxEntity, LightEntity):
     """Representation of a Velux light."""
 
-    def __init__(self, node: Light) -> None:
+    def __init__(self, node: LighteningDevice) -> None:
         """Initialize the Velux light."""
-        self.node: Light = node
+        self.node: LighteningDevice = node
         super().__init__(node)
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         self._attr_color_mode = ColorMode.BRIGHTNESS
