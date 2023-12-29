@@ -18,7 +18,13 @@ def get_all_disk_mounts() -> set[str]:
                 # ENOENT, pop-up a Windows GUI error for a non-ready
                 # partition or just hang.
                 continue
-        usage = psutil.disk_usage(part.mountpoint)
+        try:
+            usage = psutil.disk_usage(part.mountpoint)
+        except PermissionError:
+            _LOGGER.debug(
+                "No permission for running user to access %s", part.mountpoint
+            )
+            continue
         if usage.total > 0 and part.device != "":
             disks.add(part.mountpoint)
     _LOGGER.debug("Adding disks: %s", ", ".join(disks))
