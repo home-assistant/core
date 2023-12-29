@@ -30,4 +30,9 @@ GOVEE_DEVICE_CAPABILITIES: dict[str, set[GoveeLightCapabilities]] = {
         GoveeLightCapabilities.COLOR_KELVIN_TEMPERATURE,
         GoveeLightCapabilities.BRIGHTNESS,
     },
+    "H618A": {
+        GoveeLightCapabilities.COLOR_RGB,
+        GoveeLightCapabilities.COLOR_KELVIN_TEMPERATURE,
+        GoveeLightCapabilities.BRIGHTNESS,
+    },
 }
