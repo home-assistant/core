@@ -9,6 +9,8 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.netatmo import DOMAIN
+from homeassistant.components.netatmo.const import SERVICE_UNREGISTER_WEBHOOK
+from homeassistant.components.webhook import is_registered as is_webhook_registered
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -179,7 +181,10 @@ async def test_setup_without_https(
         mock_auth.assert_called_once()
         mock_async_generate_url.assert_called_once()
 
-    assert "Webhook not registered - HTTPS and port 443 are required to register the webhook" in caplog.text
+    assert (
+        "Webhook not registered - HTTPS and port 443 are required to register the webhook"
+        in caplog.text
+    )
 
 
 async def test_setup_with_cloud(hass: HomeAssistant, config_entry) -> None:
@@ -449,3 +454,36 @@ async def test_setup_component_invalid_token(hass: HomeAssistant, config_entry) 
 
     for config_entry in hass.config_entries.async_entries("netatmo"):
         await hass.config_entries.async_remove(config_entry.entry_id)
+
+
+async def test_unregister_webhook_success(hass: HomeAssistant, config_entry) -> None:
+    """Test unregister webhook service API call when expected to succeed."""
+    with patch(
+        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
+    ) as mock_auth, selected_platforms(["camera", "climate", "light", "sensor"]):
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post_request
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+        assert is_webhook_registered(hass, webhook_id)
+        mock_auth.return_value.async_addwebhook.assert_called_once()
+        mock_auth.return_value.async_dropwebhook.assert_not_called()
+
+        mock_auth.return_value.async_addwebhook.reset_mock()
+        mock_auth.return_value.async_dropwebhook.reset_mock()
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UNREGISTER_WEBHOOK,
+            blocking=True,
+        )
+
+        mock_auth.return_value.async_addwebhook.assert_not_called()
+        mock_auth.return_value.async_dropwebhook.assert_called_once()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    assert not is_webhook_registered(hass, webhook_id)
