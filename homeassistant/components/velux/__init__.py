@@ -117,9 +117,7 @@ class VeluxEntity(Entity):
     def __init__(self, node: Node) -> None:
         """Initialize the Velux device."""
         self.node: Node = node
-        self._attr_unique_id = (
-            node.serial_number if node.serial_number else str(node.node_id)
-        )
+        self._attr_unique_id = node.serial_number
         self._attr_name = node.name if node.name else f"#{node.node_id}"
 
     @callback
