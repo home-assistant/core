@@ -13,14 +13,10 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
+DOMAIN = "velux"
+PLATFORMS = [Platform.COVER, Platform.LIGHT, Platform.SCENE]
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "velux"
-PLATFORMS = [
-    Platform.COVER,
-    Platform.LIGHT,
-    Platform.SCENE,
-]
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
         cv.deprecated(DOMAIN),
