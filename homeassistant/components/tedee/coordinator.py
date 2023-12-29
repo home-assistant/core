@@ -68,6 +68,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
     async def _async_update_locks(
         self, update_fn: Callable[[], Coroutine[None, None, None]]
     ) -> None:
+        """Update locks based on update function."""
         try:
             await update_fn()
         except TedeeLocalAuthException as ex:
