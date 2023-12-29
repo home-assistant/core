@@ -110,8 +110,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await pyvlx.disconnect()
 
     # Unload velux platform components
-    for component in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(entry, component)
+    for platform in PLATFORMS:
+        await hass.config_entries.async_forward_entry_unload(entry, platform)
 
     return True
 
