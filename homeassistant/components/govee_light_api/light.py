@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 import logging
 from typing import Any
@@ -52,7 +53,6 @@ async def async_setup_entry(
         coordinator = GoveeLocalApiCoordinator(
             hass=hass,
             config_entry=config_entry,
-            async_add_entities=add_device,
             scan_interval=SCAN_INTERVAL,
             logger=_LOGGER,
         )
@@ -61,6 +61,24 @@ async def async_setup_entry(
         await coordinator.start()
 
     await coordinator.async_config_entry_first_refresh()
+
+    try:
+        async with asyncio.timeout(delay=5):
+            while not coordinator.devices:
+                await asyncio.sleep(delay=1)
+    except asyncio.TimeoutError:
+        pass
+
+    async_add_entities(
+        GoveeLight(coordinator, device) for device in coordinator.devices
+    )
+
+    def discovery_callback(device: GoveeDevice, is_new: bool) -> bool:
+        if is_new:
+            async_add_entities([GoveeLight(coordinator, device)])
+        return True
+
+    await coordinator.set_discovery_callback(discovery_callback)
 
 
 class GoveeLight(CoordinatorEntity, LightEntity):

@@ -3,7 +3,6 @@
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Any
 
 from govee_local_api import GoveeController, GoveeDevice
 
@@ -28,7 +27,6 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: Callable[[Any, GoveeDevice], None],
         scan_interval: timedelta,
         logger: logging.Logger,
     ) -> None:
@@ -50,11 +48,6 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator):
             else config.get(CONF_DISCOVERY_INTERVAL, CONF_DISCOVERY_INTERVAL_DEFAULT)
         )
 
-        def discovery_callback(device: GoveeDevice, is_new: bool) -> bool:
-            if is_new:
-                async_add_entities(self, device)
-            return True
-
         self._controller = GoveeController(
             loop=hass.loop,
             logger=logger,
@@ -64,7 +57,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator):
             listening_port=config[CONF_LISENING_PORT],
             discovery_enabled=True,
             discovery_interval=config[CONF_DISCOVERY_INTERVAL],
-            discovered_callback=discovery_callback,
+            discovered_callback=None,
             update_enabled=False,
         )
 
@@ -72,6 +65,12 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator):
         """Start the Govee coordinator."""
         await self._controller.start()
         self._controller.send_update_message()
+
+    async def set_discovery_callback(
+        self, callback: Callable[[GoveeDevice, bool], bool]
+    ) -> None:
+        """Set discovery callback for automatic Govee light discovery."""
+        self._controller.set_device_discovered_callback(callback)
 
     def clenaup(self) -> None:
         """Stop and clenaup the cooridinator."""
