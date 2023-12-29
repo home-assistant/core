@@ -11,7 +11,6 @@ from .const import DOMAIN
 from .coordinator import TedeeApiCoordinator
 
 TO_REDACT = {
-    "lock_name",
     "lock_id",
 }
 
