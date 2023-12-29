@@ -119,7 +119,6 @@ class Enigma2Device(MediaPlayerEntity):
         | MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
-    _attr_volume_step = 5 / 100
 
     def __init__(self, name: str, device: OpenWebIfDevice, about: dict) -> None:
         """Initialize the Enigma2 device."""
@@ -140,6 +139,18 @@ class Enigma2Device(MediaPlayerEntity):
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._device.set_volume(int(volume * 100))
+
+    async def async_volume_up(self) -> None:
+        """Volume up the media player."""
+        if self._attr_volume_level is None:
+            return
+        await self._device.set_volume(int(self._attr_volume_level * 100) + 5)
+
+    async def async_volume_down(self) -> None:
+        """Volume down media player."""
+        if self._attr_volume_level is None:
+            return
+        await self._device.set_volume(int(self._attr_volume_level * 100) - 5)
 
     async def async_media_stop(self) -> None:
         """Send stop command."""

@@ -724,6 +724,9 @@
       },
       "quick_start_time": {
         "name": "Quick start time"
+      },
+      "local_temperature_calibration": {
+        "name": "Local temperature offset"
       }
     },
     "select": {
@@ -780,6 +783,15 @@
       },
       "preset": {
         "name": "Preset"
+      },
+      "detection_distance": {
+        "name": "Detection distance"
+      },
+      "switch_mode": {
+        "name": "Switch mode"
+      },
+      "decoupled_mode": {
+        "name": "Decoupled mode"
       }
     },
     "sensor": {

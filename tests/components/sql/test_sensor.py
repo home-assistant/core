@@ -57,6 +57,22 @@ async def test_query_basic(recorder_mock: Recorder, hass: HomeAssistant) -> None
     assert state.attributes["value"] == 5
 
 
+async def test_query_cte(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+    """Test the SQL sensor with CTE."""
+    config = {
+        "db_url": "sqlite://",
+        "query": "WITH test AS (SELECT 1 AS row_num, 10 AS state) SELECT state FROM test WHERE row_num = 1 LIMIT 1;",
+        "column": "state",
+        "name": "Select value SQL query CTE",
+        "unique_id": "very_unique_id",
+    }
+    await init_integration(hass, config)
+
+    state = hass.states.get("sensor.select_value_sql_query_cte")
+    assert state.state == "10"
+    assert state.attributes["state"] == 10
+
+
 async def test_query_value_template(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:

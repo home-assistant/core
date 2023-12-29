@@ -64,6 +64,9 @@
       },
       "record_adjustments": {
         "name": "Record number of adjustments"
+      },
+      "record_distance": {
+        "name": "Record distance"
       }
     }
   }
