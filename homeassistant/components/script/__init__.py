@@ -250,6 +250,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.services.async_register(
         DOMAIN, SERVICE_TOGGLE, toggle_service, schema=SCRIPT_TURN_ONOFF_SCHEMA
     )
+
+    hass.bus.async_fire(
+        "SCRIPT_SETUP_COMPLETE",
+    )
+
     websocket_api.async_register_command(hass, websocket_config)
 
     return True

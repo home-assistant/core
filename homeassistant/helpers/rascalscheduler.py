@@ -3,11 +3,17 @@ from __future__ import annotations
 
 from collections.abc import Iterator, MutableMapping, MutableSequence
 import json
+import logging
 import time
 from typing import Any, TypeVar
 
+import voluptuous as vol
+
+from homeassistant import exceptions
 from homeassistant.components.device_automation import action as device_action
+from homeassistant.const import CONF_CONTINUE_ON_ERROR
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.util import slugify
 
 from . import config_validation as cv
 
@@ -25,63 +31,44 @@ RASC_START = "start"
 RASC_COMPLETE = "complete"
 RASC_RESPONSE = "rasc_response"
 
-
-class BaseRoutineEntity:
-    """A class of base routine entity."""
-
-    counters: dict[str, int] = {}
-    routine_start_times: dict[str, float] = {}
-
-    @classmethod
-    def add_counter(cls, routine_id: str) -> None:
-        """Increment counter by 1."""
-        cls.counters[routine_id] = cls.counters[routine_id] + 1
-
-    @classmethod
-    def get_counter(cls, routine_id: str) -> int:
-        """Return counter based on the routine_id."""
-        return cls.counters[routine_id]
-
-    @classmethod
-    def set_counter(cls, routine_id: str, counter: int) -> None:
-        """Set the counter."""
-        cls.counters[routine_id] = counter
-
-    @classmethod
-    def get_start_time(cls, routine_id: str) -> float:
-        """Return the start time based on the routine_id."""
-        return cls.routine_start_times[routine_id]
-
-    @classmethod
-    def set_start_time(cls, routine_id: str, st: float) -> None:
-        """Set the start time."""
-        cls.routine_start_times[routine_id] = st
+_LOGGER = logging.getLogger(__name__)
 
 
-class RoutineEntity(BaseRoutineEntity):
+class RoutineEntity:
     """A class that describes routine entities for Rascal Scheduler."""
 
     def __init__(
         self,
-        routine_id: str,
+        name: str | None,
+        routine_id: str | None,
         actions: dict[str, ActionEntity],
+        timeout: float,
+        logger: logging.Logger | None = None,
+        log_exceptions: bool = True,
     ) -> None:
         """Initialize a routine entity."""
-
+        self.name = name
         self.routine_id = routine_id
-        self._instance_id: str
         self.actions = actions
-        self._start_time: float
-        self._timeout: int = 3
+        self._start_time: float | None = None
+        self._last_trigger_time: float | None = None
+        self._timeout = timeout
+        self._set_logger(logger)
+        self._log_exceptions = log_exceptions
 
     @property
-    def instance_id(self) -> str:
-        """Get instante_id."""
-        return self._instance_id
+    def start_time(self) -> float | None:
+        """Return the start time of the routine entity."""
+        return self._start_time
+
+    @property
+    def last_trigger_time(self) -> float | None:
+        """Return the last trigger time or the routine entity."""
+        return self._last_trigger_time
 
     @property
     def timeout(self) -> float:
-        """Get timeout."""
+        """Return the timeout of the routine entity."""
         return self._timeout
 
     def set_variables(self, var: dict[str, Any]) -> None:
@@ -93,6 +80,13 @@ class RoutineEntity(BaseRoutineEntity):
         """Set context to all the action entities."""
         for entity in self.actions.values():
             entity.context = ctx
+
+    def _set_logger(self, logger: logging.Logger | None = None) -> None:
+        """Set logger."""
+        if logger:
+            self._logger = logger
+        else:
+            self._logger = logging.getLogger(f"{__name__}.{slugify(self.name)}")
 
     def duplicate(self) -> RoutineEntity:
         """Duplicate the routine entity."""
@@ -118,12 +112,16 @@ class RoutineEntity(BaseRoutineEntity):
                     routine_entity[child.action_id]
                 )
 
-        RoutineEntity.add_counter(self.routine_id)
-        RoutineEntity.set_start_time(self.routine_id, time.time())
-        self._instance_id = str(RoutineEntity.get_counter(self.routine_id))
-        self._start_time = time.time()
+        if self._last_trigger_time is None:
+            self._start_time = time.time()
+            self._last_trigger_time = self._start_time
+        else:
+            self._last_trigger_time = self._start_time
+            self._start_time = time.time()
 
-        return RoutineEntity(self.routine_id, routine_entity)
+        return RoutineEntity(
+            self.name, self.routine_id, routine_entity, self._timeout, self._logger
+        )
 
     def output(self) -> None:
         """Print the routine information."""
@@ -179,24 +177,90 @@ class ActionEntity:
         self.routine_id = routine_id
         self.variables: dict[str, Any]
         self.context: Context | None
+        self._log_exceptions = False
 
-    async def attach_triggered(self) -> None:
+    async def attach_triggered(self, log_exceptions: bool) -> None:
         """Trigger the function."""
-        # print("[rascal] attach_triggered")
         action = cv.determine_script_action(self.action)
+        continue_on_error = self.action.get(CONF_CONTINUE_ON_ERROR, False)
 
         try:
             handler = f"_async_{action}_step"
             await getattr(self, handler)()
 
-        except Exception:  # pylint: disable=broad-except
-            return
-            # print(ex)
+        except Exception as ex:  # pylint: disable=broad-except
+            self._handle_exception(
+                ex, continue_on_error, self._log_exceptions or log_exceptions
+            )
 
     async def _async_device_step(self) -> None:
         """Execute device automation."""
         await device_action.async_call_action_from_config(
             self.hass, self.action, self.variables, self.context
+        )
+
+    def _handle_exception(
+        self, exception: Exception, continue_on_error: bool, log_exceptions: bool
+    ) -> None:
+        if not isinstance(exception, _HaltScript) and log_exceptions:
+            self._log_exception(exception)
+
+        if not continue_on_error:
+            raise exception
+
+        # An explicit request to stop the script has been raised.
+        if isinstance(exception, _StopScript):
+            raise exception
+
+        # These are incorrect scripts, and not runtime errors that need to
+        # be handled and thus cannot be stopped by `continue_on_error`.
+        if isinstance(
+            exception,
+            (
+                vol.Invalid,
+                exceptions.TemplateError,
+                exceptions.ServiceNotFound,
+                exceptions.InvalidEntityFormatError,
+                exceptions.NoEntitySpecifiedError,
+                exceptions.ConditionError,
+            ),
+        ):
+            raise exception
+
+        # Only Home Assistant errors can be ignored.
+        if not isinstance(exception, exceptions.HomeAssistantError):
+            raise exception
+
+    def _log_exception(self, exception: Exception) -> None:
+        """Log exception."""
+        action_type = cv.determine_script_action(self.action)
+
+        error = str(exception)
+
+        if isinstance(exception, vol.Invalid):
+            error_desc = "Invalid data"
+
+        elif isinstance(exception, exceptions.TemplateError):
+            error_desc = "Error rendering template"
+
+        elif isinstance(exception, exceptions.Unauthorized):
+            error_desc = "Unauthorized"
+
+        elif isinstance(exception, exceptions.ServiceNotFound):
+            error_desc = "Service not found"
+
+        elif isinstance(exception, exceptions.HomeAssistantError):
+            error_desc = "Error"
+
+        else:
+            error_desc = "Unexpected error"
+
+        _LOGGER.warning(
+            "Error executing script. %s for %s at action_id %s: %s",
+            error_desc,
+            action_type,
+            self.action_id,
+            error,
         )
 
 
@@ -276,3 +340,16 @@ class QueueEntity(MutableSequence[_VT]):
     def append(self, __value: Any) -> None:
         """Append new value."""
         self._queue_entities.append(__value)
+
+
+class _HaltScript(Exception):
+    """Throw if script needs to stop executing."""
+
+
+class _StopScript(_HaltScript):
+    """Throw if script needs to stop."""
+
+    def __init__(self, message: str, response: Any) -> None:
+        """Initialize a halt exception."""
+        super().__init__(message)
+        self.response = response
