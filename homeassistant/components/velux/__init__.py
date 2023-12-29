@@ -61,6 +61,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "password": entry.data[CONF_PASSWORD],
     }
     pyvlx: PyVLX = PyVLX(**pyvlx_args)
+
+    # Try to connect to KLF200. Sometimes KLF200 becomes unresponsives and block new connections.
+    # Keep trying to connect if this happen.
     try:
         await pyvlx.connect()
     except OSError as ex:
