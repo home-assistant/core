@@ -30,6 +30,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
     """Class to handle fetching data from the tedee API centrally."""
 
     config_entry: ConfigEntry
+    tedee_client: TedeeClient
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize coordinator."""
