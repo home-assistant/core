@@ -67,13 +67,13 @@ class WeatherFlowWeather(
 
         self.station_id = station_id
         self._attr_unique_id = f"weatherflow_forecast_{station_id}"
-        self._attr_name = self.local_data.station.name
+        self._attr_name = None
 
-        outdoor_device = [
-            d for d in self.local_data.station.devices if d.device_type == "ST"
-        ][0]
+        # Obtain info from 1st outdoor device on station
+        outdoor_device = self.local_data.station.outdoor_devices[0]
+
         self._attr_device_info = DeviceInfo(
-            name="Forecast",
+            name=self.local_data.station.name,
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, outdoor_device.serial_number)},
             manufacturer=MANUFACTURER,
