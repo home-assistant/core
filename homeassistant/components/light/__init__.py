@@ -160,14 +160,14 @@ def brightness_supported(color_modes: Iterable[ColorMode | str] | None) -> bool:
     """Test if brightness is supported."""
     if not color_modes:
         return False
-    return any(mode in COLOR_MODES_BRIGHTNESS for mode in color_modes)
+    return not COLOR_MODES_BRIGHTNESS.isdisjoint(color_modes)
 
 
 def color_supported(color_modes: Iterable[ColorMode | str] | None) -> bool:
     """Test if color is supported."""
     if not color_modes:
         return False
-    return any(mode in COLOR_MODES_COLOR for mode in color_modes)
+    return not COLOR_MODES_COLOR.isdisjoint(color_modes)
 
 
 def color_temp_supported(color_modes: Iterable[ColorMode | str] | None) -> bool:
