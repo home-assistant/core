@@ -33,7 +33,7 @@ async def test_user(hass: HomeAssistant) -> None:
     )
     assert result["errors"] == {}
 
-    with patch("bluecurrent_api.Client.validate_api_token", return_value=True), patch(
+    with patch("bluecurrent_api.Client.validate_api_token", return_value="1234"), patch(
         "bluecurrent_api.Client.get_email", return_value="test@email.com"
     ), patch(
         "homeassistant.components.blue_current.async_setup_entry",
@@ -74,7 +74,7 @@ async def test_flow_fails(hass: HomeAssistant, error: Exception, message: str) -
         )
         assert result["errors"]["base"] == message
 
-    with patch("bluecurrent_api.Client.validate_api_token", return_value=True), patch(
+    with patch("bluecurrent_api.Client.validate_api_token", return_value="1234"), patch(
         "bluecurrent_api.Client.get_email", return_value="test@email.com"
     ), patch(
         "homeassistant.components.blue_current.async_setup_entry",
@@ -92,11 +92,20 @@ async def test_flow_fails(hass: HomeAssistant, error: Exception, message: str) -
         assert result2["data"] == {"api_token": "123"}
 
 
-async def test_flow_reauth(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("customer_id", "reason", "expected_api_token"),
+    [
+        ("1234", "reauth_successful", "1234567890"),
+        ("6666", "wrong_account", "123"),
+    ],
+)
+async def test_reauth(
+    hass: HomeAssistant, customer_id: str, reason: str, expected_api_token: str
+) -> None:
     """Test reauth flow."""
     with patch(
         "bluecurrent_api.Client.validate_api_token",
-        return_value=True,
+        return_value=customer_id,
     ), patch("bluecurrent_api.Client.get_email", return_value="test@email.com"):
         entry = MockConfigEntry(
             domain=DOMAIN,
@@ -112,7 +121,7 @@ async def test_flow_reauth(hass: HomeAssistant) -> None:
                 "entry_id": entry.entry_id,
                 "unique_id": entry.unique_id,
             },
-            data={"api_token": "abc"},
+            data={"api_token": "123"},
         )
 
         assert result["type"] == FlowResultType.FORM
@@ -123,8 +132,7 @@ async def test_flow_reauth(hass: HomeAssistant) -> None:
             user_input={"api_token": "1234567890"},
         )
         assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "reauth_successful"
-        assert entry.data.copy() == {"api_token": "1234567890"}
+        assert result["reason"] == reason
+        assert entry.data == {"api_token": expected_api_token}
 
-        assert await entry.async_unload(hass)
         await hass.async_block_till_done()

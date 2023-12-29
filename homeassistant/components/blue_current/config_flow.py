@@ -26,10 +26,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle the config flow for Blue Current."""
 
     VERSION = 1
-
-    def __init__(self) -> None:
-        """Start the Blue Current config flow."""
-        self._reauth_entry: config_entries.ConfigEntry | None = None
+    _reauth_entry: config_entries.ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -56,9 +53,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             else:
-                await self.async_set_unique_id(customer_id)
+                if not self._reauth_entry:
+                    await self.async_set_unique_id(customer_id)
+                    self._abort_if_unique_id_configured()
+                    return self.async_create_entry(title=email, data=user_input)
 
-                if self._reauth_entry:
+                if self._reauth_entry.unique_id == customer_id:
                     self.hass.config_entries.async_update_entry(
                         self._reauth_entry, data=user_input
                     )
@@ -67,9 +67,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                     return self.async_abort(reason="reauth_successful")
 
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=email, data=user_input)
-
+                return self.async_abort(
+                    reason="wrong_account",
+                    description_placeholders={"email": email},
+                )
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
