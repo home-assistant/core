@@ -71,7 +71,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             raise UpdateFailed("Querying API failed. Error: %s" % str(ex)) from ex
 
         if not self.tedee_client.locks_dict:
-            _LOGGER.warning("No locks found in your account")
+            _LOGGER.debug("No locks found in your account")
 
         _LOGGER.debug(
             "available_locks: %s",
