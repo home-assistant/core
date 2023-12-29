@@ -9,7 +9,7 @@ import logging
 import os
 import socket
 import sys
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import psutil
 from psutil._common import sdiskusage, shwtemp, snetio, snicaddr, sswap
@@ -604,13 +604,23 @@ class SystemMonitorSensor(RestoreSensor):
         await super().async_added_to_hass()
         last_state = await self.async_get_last_state()
         last_sensor_state = await self.async_get_last_sensor_data()
+        old_state: str | float | datetime | None = None
         if last_state and last_sensor_state and last_state.state != STATE_UNAVAILABLE:
-            self._attr_native_value = last_sensor_state.native_value
+            if TYPE_CHECKING:
+                assert isinstance(
+                    last_sensor_state.native_value, (str, float, datetime, type(None))
+                )
+            old_state = last_sensor_state.native_value
 
-        _LOGGER.debug("Adding %s_%s", self.entity_description.key, self._argument)
+        _LOGGER.debug(
+            "Adding %s_%s with old state %s",
+            self.entity_description.key,
+            self._argument,
+            old_state,
+        )
         self._sensor_registry[
             (self.entity_description.key, self._argument)
-        ] = SensorData(self._argument, None, None, None, None)
+        ] = SensorData(self._argument, old_state, None, None, None)
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, SIGNAL_SYSTEMMONITOR_UPDATE, self.async_write_ha_state
