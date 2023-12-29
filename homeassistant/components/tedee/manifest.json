@@ -1,6 +1,6 @@
 {
   "domain": "tedee",
-  "name": "Tedee",
+  "name": "tedee",
   "codeowners": ["@patrickhilker", "@zweckj"],
   "config_flow": true,
   "dependencies": ["http"],

@@ -1,7 +1,8 @@
 """Coordinator for Tedee locks."""
 from collections.abc import Callable, Coroutine
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
+import time
 
 from pytedee_async import (
     TedeeClient,
@@ -20,6 +21,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=20)
+GET_LOCKS_INTERVAL_SECONDS = 3600
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,17 +45,17 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             local_ip=self.config_entry.data[CONF_HOST],
         )
 
-        self._next_get_locks = datetime.now()
+        self._next_get_locks = time.time()
 
     async def _async_update_data(self) -> dict[int, TedeeLock]:
         """Fetch data from API endpoint."""
 
         _LOGGER.debug("Update coordinator: Getting locks from API")
         # once every hours get all lock details, otherwise use the sync endpoint
-        if self._next_get_locks <= datetime.now():
+        if self._next_get_locks <= time.time():
             _LOGGER.debug("Updating through /my/lock endpoint")
             await self._async_update_locks(self.tedee_client.get_locks)
-            self._next_get_locks = datetime.now() + timedelta(hours=1)
+            self._next_get_locks = time.time() + GET_LOCKS_INTERVAL_SECONDS
         else:
             _LOGGER.debug("Updating through /sync endpoint")
             await self._async_update_locks(self.tedee_client.sync)

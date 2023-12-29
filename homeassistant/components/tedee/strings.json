@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Setup your Tedee locks",
+        "title": "Setup your tedee locks",
         "data": {
           "local_access_token": "Local access token",
           "host": "[%key:common::config_flow::data::host%]"
