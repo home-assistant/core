@@ -75,15 +75,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = pyvlx
 
-    # Load nodes (devices) and scenes from API
-    await pyvlx.load_nodes()
-    await pyvlx.load_scenes()
-
     # Register velux services
     async def async_reboot_gateway(service_call: ServiceCall) -> None:
         await pyvlx.reboot_gateway()
 
     hass.services.async_register(DOMAIN, "reboot_gateway", async_reboot_gateway)
+
+    # Load nodes (devices) and scenes from API
+    await pyvlx.load_nodes()
+    await pyvlx.load_scenes()
 
     # Setup velux platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
