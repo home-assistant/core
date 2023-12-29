@@ -127,7 +127,7 @@ SENSORS: list[RoombaSensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda self: (
             self.run_stats.get("sqft") * 9.29
-            if self.run_stats.get("sqft") is not None
+            if self.run_stats.get("sqft")
             else None
         ),
         suggested_display_precision=0,
