@@ -16,6 +16,7 @@ from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_DEVICE_ID, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -116,7 +117,15 @@ class MobileAppNotificationService(BaseNotificationService):
         ):
             data[ATTR_TITLE] = kwargs.get(ATTR_TITLE)
 
-        if not (targets := kwargs.get(ATTR_TARGET)):
+        if ATTR_TARGET in kwargs:
+            given = kwargs.get(ATTR_TARGET)
+            targets = [
+                entry.data[CONF_WEBHOOK_ID]
+                for entry in self.hass.data[DOMAIN][DATA_CONFIG_ENTRIES].values()
+                if entry.data[CONF_DEVICE_ID] in given
+                or entry.data[CONF_WEBHOOK_ID] in given
+            ]
+        else:
             targets = push_registrations(self.hass).values()
 
         if kwargs.get(ATTR_DATA) is not None:
