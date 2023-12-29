@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.govee_local_api.coordinator import GoveeController
+from homeassistant.components.govee_light_api.coordinator import GoveeController
 
 
 @pytest.fixture(name="mock_govee_api")

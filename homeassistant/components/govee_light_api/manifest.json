@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/govee_light_api",
   "homekit": {},
   "iot_class": "local_push",
-  "requirements": ["govee-local-api==1.3.1"],
+  "requirements": ["govee-local-api==1.3.2"],
   "ssdp": [],
   "zeroconf": []
 }

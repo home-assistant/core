@@ -1,7 +1,9 @@
 """Coordinator for Govee Local API."""
 
+from collections.abc import Callable
 from datetime import timedelta
 import logging
+from typing import Any
 
 from govee_local_api import GoveeController, GoveeDevice
 
@@ -23,14 +25,19 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator):
     """My custom coordinator."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, logger: logging.Logger
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: Callable[[Any, GoveeDevice], None],
+        scan_interval: timedelta,
+        logger: logging.Logger,
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass=hass,
             logger=logger,
-            name="GoveeLocalAPI",
-            update_interval=timedelta(seconds=1),
+            name="GoveeLightLocalApi",
+            update_interval=scan_interval,
         )
 
         self._config_entry = config_entry
@@ -43,6 +50,11 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator):
             else config.get(CONF_DISCOVERY_INTERVAL, CONF_DISCOVERY_INTERVAL_DEFAULT)
         )
 
+        def discovery_callback(device: GoveeDevice, is_new: bool) -> bool:
+            if is_new:
+                async_add_entities(self, device)
+            return True
+
         self._controller = GoveeController(
             loop=hass.loop,
             logger=logger,
@@ -52,6 +64,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator):
             listening_port=config[CONF_LISENING_PORT],
             discovery_enabled=True,
             discovery_interval=config[CONF_DISCOVERY_INTERVAL],
+            discovered_callback=discovery_callback,
             update_enabled=False,
         )
 

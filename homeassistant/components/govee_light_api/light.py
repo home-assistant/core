@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 import logging
 from typing import Any
@@ -17,12 +16,12 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import SCAN_INTERVAL
 from .capability import (
     GOVEE_COORDINATORS_MAPPER,
     GOVEE_DEVICE_CAPABILITIES,
@@ -41,19 +40,27 @@ async def async_setup_entry(
 ) -> None:
     """Govee light setup."""
 
-    coordinator: GoveeLocalApiCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    await coordinator.async_config_entry_first_refresh()
-
-    try:
-        async with asyncio.timeout(delay=5):
-            while not coordinator.devices:
-                await asyncio.sleep(delay=1)
-    except asyncio.TimeoutError as exc:
-        raise ConfigEntryNotReady("No devices found") from exc
-
-    async_add_entities(
-        GoveeLight(coordinator, device) for device in coordinator.devices
+    entry_id = config_entry.entry_id
+    coordinator: GoveeLocalApiCoordinator = hass.data.setdefault(DOMAIN, {}).get(
+        entry_id, None
     )
+
+    def add_device(coordinator: GoveeLocalApiCoordinator, device: GoveeDevice):
+        async_add_entities([GoveeLight(coordinator, device)])
+
+    if not coordinator:
+        coordinator = GoveeLocalApiCoordinator(
+            hass=hass,
+            config_entry=config_entry,
+            async_add_entities=add_device,
+            scan_interval=SCAN_INTERVAL,
+            logger=_LOGGER,
+        )
+
+        hass.data.setdefault(DOMAIN, {})[entry_id] = coordinator
+        await coordinator.start()
+
+    await coordinator.async_config_entry_first_refresh()
 
 
 class GoveeLight(CoordinatorEntity, LightEntity):
@@ -72,6 +79,7 @@ class GoveeLight(CoordinatorEntity, LightEntity):
 
         self._coordinator = coordinator
         self._device = device
+        self._device.set_update_callback(self._update_callback)
 
         capabilities: set[GoveeLightCapabilities] = GOVEE_DEVICE_CAPABILITIES.get(
             device.sku, set()
@@ -178,4 +186,10 @@ class GoveeLight(CoordinatorEntity, LightEntity):
             },
             name=self.name,
             manufacturer=MANUFACTURER,
+            model=self._device.sku,
+            connections={("mac", self._device.fingerprint)},
         )
+
+    @callback
+    def _update_callback(self, device: GoveeDevice) -> None:
+        self.async_write_ha_state()

@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries
-from homeassistant.components.govee_local_api.const import (
+from homeassistant.components.govee_light_api.const import (
     CONF_BIND_ADDRESS,
     CONF_DISCOVERY_INTERVAL,
     CONF_LISENING_PORT,
@@ -40,7 +40,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
     assert CONF_LISENING_PORT not in result["data_schema"].schema
 
     with patch(
-        "homeassistant.components.govee_local_api.async_setup_entry", return_value=True
+        "homeassistant.components.govee_light_api.async_setup_entry", return_value=True
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -73,7 +73,7 @@ async def test_step_user_advanced(hass: HomeAssistant) -> None:
     assert CONF_DISCOVERY_INTERVAL in result["data_schema"].schema
 
     with patch(
-        "homeassistant.components.govee_local_api.async_setup_entry", return_value=True
+        "homeassistant.components.govee_light_api.async_setup_entry", return_value=True
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -118,7 +118,7 @@ async def test_async_step_already_configured(hass: HomeAssistant) -> None:
         )
 
     with patch(
-        "homeassistant.components.govee_local_api.async_setup_entry", return_value=True
+        "homeassistant.components.govee_light_api.async_setup_entry", return_value=True
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -142,7 +142,7 @@ async def test_option_flow(hass: HomeAssistant) -> None:
     assert not entry.options
 
     with patch(
-        "homeassistant.components.govee_local_api.async_setup_entry", return_value=True
+        "homeassistant.components.govee_light_api.async_setup_entry", return_value=True
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

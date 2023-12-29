@@ -1,6 +1,5 @@
 """Tests for the Govee Lights - Local API integration."""
 
-
 from homeassistant.components.govee_light_api.const import (
     CONF_BIND_ADDRESS,
     CONF_DISCOVERY_INTERVAL,

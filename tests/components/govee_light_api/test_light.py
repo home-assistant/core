@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from govee_local_api import GoveeDevice
 
-from homeassistant.components.govee_local_api.const import DOMAIN
+from homeassistant.components.govee_light_api.const import DOMAIN
 from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode
 from homeassistant.core import HomeAssistant
 
@@ -28,7 +28,7 @@ async def test_light_known_device(
     ]
 
     with patch(
-        "homeassistant.components.govee_local_api.coordinator.GoveeController",
+        "homeassistant.components.govee_light_api.coordinator.GoveeController",
         return_value=mock_govee_api,
     ):
         entry = MockConfigEntry(
@@ -71,7 +71,7 @@ async def test_light_unknown_device(
     ]
 
     with patch(
-        "homeassistant.components.govee_local_api.coordinator.GoveeController",
+        "homeassistant.components.govee_light_api.coordinator.GoveeController",
         return_value=mock_govee_api,
     ):
         entry = MockConfigEntry(
@@ -103,7 +103,7 @@ async def test_light_remove(hass: HomeAssistant, mock_govee_api: AsyncMock) -> N
     ]
 
     with patch(
-        "homeassistant.components.govee_local_api.coordinator.GoveeController",
+        "homeassistant.components.govee_light_api.coordinator.GoveeController",
         return_value=mock_govee_api,
     ):
         entry = MockConfigEntry(
@@ -136,7 +136,7 @@ async def test_light_on_off(hass: HomeAssistant, mock_govee_api: MagicMock) -> N
     ]
 
     with patch(
-        "homeassistant.components.govee_local_api.coordinator.GoveeController",
+        "homeassistant.components.govee_light_api.coordinator.GoveeController",
         return_value=mock_govee_api,
     ):
         entry = MockConfigEntry(
@@ -193,7 +193,7 @@ async def test_light_brightness(hass: HomeAssistant, mock_govee_api: MagicMock) 
     ]
 
     with patch(
-        "homeassistant.components.govee_local_api.coordinator.GoveeController",
+        "homeassistant.components.govee_light_api.coordinator.GoveeController",
         return_value=mock_govee_api,
     ):
         entry = MockConfigEntry(
@@ -269,7 +269,7 @@ async def test_light_color(hass: HomeAssistant, mock_govee_api: MagicMock) -> No
     ]
 
     with patch(
-        "homeassistant.components.govee_local_api.coordinator.GoveeController",
+        "homeassistant.components.govee_light_api.coordinator.GoveeController",
         return_value=mock_govee_api,
     ):
         entry = MockConfigEntry(
