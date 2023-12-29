@@ -8,7 +8,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "Bridge IP Address",
+          "host": "The IP address of the bridge you want to connect to.",
           "local_access_token": "You can find it in the tedee app under \"Bridge Settings\" -> \"Local API\"."
         }
       }
