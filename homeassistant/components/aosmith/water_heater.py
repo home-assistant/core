@@ -23,8 +23,8 @@ from .const import (
     AOSMITH_MODE_VACATION,
     DOMAIN,
 )
-from .coordinator import AOSmithCoordinator
-from .entity import AOSmithEntity
+from .coordinator import AOSmithStatusCoordinator
+from .entity import AOSmithStatusEntity
 
 MODE_HA_TO_AOSMITH = {
     STATE_OFF: AOSMITH_MODE_VACATION,
@@ -54,22 +54,24 @@ async def async_setup_entry(
     """Set up A. O. Smith water heater platform."""
     data: AOSmithData = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
-
-    for junction_id in data.coordinator.data:
-        entities.append(AOSmithWaterHeaterEntity(data.coordinator, junction_id))
-
-    async_add_entities(entities)
+    async_add_entities(
+        AOSmithWaterHeaterEntity(data.status_coordinator, junction_id)
+        for junction_id in data.status_coordinator.data
+    )
 
 
-class AOSmithWaterHeaterEntity(AOSmithEntity, WaterHeaterEntity):
+class AOSmithWaterHeaterEntity(AOSmithStatusEntity, WaterHeaterEntity):
     """The water heater entity for the A. O. Smith integration."""
 
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_min_temp = 95
 
-    def __init__(self, coordinator: AOSmithCoordinator, junction_id: str) -> None:
+    def __init__(
+        self,
+        coordinator: AOSmithStatusCoordinator,
+        junction_id: str,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, junction_id)
         self._attr_unique_id = junction_id

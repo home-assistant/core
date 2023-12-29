@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from datetime import timedelta
 from fnmatch import translate
 from functools import lru_cache
-from ipaddress import ip_address as make_ip_address
 import logging
 import os
 import re
@@ -22,6 +21,7 @@ from aiodiscover.discovery import (
     IP_ADDRESS as DISCOVERY_IP_ADDRESS,
     MAC_ADDRESS as DISCOVERY_MAC_ADDRESS,
 )
+from cached_ipaddress import cached_ip_addresses
 from scapy.config import conf
 from scapy.error import Scapy_Exception
 
@@ -153,7 +153,10 @@ class WatcherBase(ABC):
         self, ip_address: str, hostname: str, mac_address: str
     ) -> None:
         """Process a client."""
-        made_ip_address = make_ip_address(ip_address)
+        if (made_ip_address := cached_ip_addresses(ip_address)) is None:
+            # Ignore invalid addresses
+            _LOGGER.debug("Ignoring invalid IP Address: %s", ip_address)
+            return
 
         if (
             made_ip_address.is_link_local
