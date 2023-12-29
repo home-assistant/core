@@ -2605,6 +2605,9 @@ async def test_shutdown_job(hass: HomeAssistant) -> None:
     evt = asyncio.Event()
 
     async def shutdown_func() -> None:
+        # Sleep to ensure core is waiting for the task to finish
+        await asyncio.sleep(0.01)
+        # Set the event
         evt.set()
 
     job = HassJob(shutdown_func, "shutdown_job")
