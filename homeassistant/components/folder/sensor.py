@@ -23,7 +23,9 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_FOLDER_PATHS = "folder"
 CONF_FILTER = "filter"
+CONF_RECURSIVE = "recursive"
 DEFAULT_FILTER = "*"
+DEFAULT_RECURSIVE = False
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -31,6 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_FOLDER_PATHS): cv.isdir,
         vol.Optional(CONF_FILTER, default=DEFAULT_FILTER): cv.string,
+        vol.Optional(CONF_RECURSIVE, default=DEFAULT_RECURSIVE): cv.boolean,
     }
 )
 
@@ -38,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def get_files_list(folder_path: str, filter_term: str) -> list[str]:
     """Return the list of files, applying filter."""
     query = folder_path + filter_term
-    files_list = glob.glob(query)
+    files_list = glob.glob(query, recursive=config[CONF_RECURSIVE])
     return files_list
 
 
