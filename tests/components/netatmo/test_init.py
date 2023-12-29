@@ -1,4 +1,5 @@
 """The tests for Netatmo component."""
+from contextlib import asynccontextmanager
 from datetime import timedelta
 from time import time
 from unittest.mock import AsyncMock, patch
@@ -55,6 +56,33 @@ FAKE_WEBHOOK = {
     "event_type": "set_point",
     "push_type": "display_change",
 }
+
+
+@asynccontextmanager
+async def setup_for_webhook_tests(hass: HomeAssistant, config_entry):
+    """Configure patches and integration for testing webhook management services."""
+    with patch(
+        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
+    ) as mock_auth, selected_platforms(["camera", "climate", "light", "sensor"]):
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post_request
+        mock_async_addwebhook = mock_auth.return_value.async_addwebhook
+        mock_async_dropwebhook = mock_auth.return_value.async_dropwebhook
+
+        mock_async_addwebhook.side_effect = AsyncMock()
+        mock_async_dropwebhook.side_effect = AsyncMock()
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+        assert is_webhook_registered(hass, webhook_id)
+        mock_async_addwebhook.assert_called_once()
+        mock_auth.return_value.async_dropwebhook.assert_not_called()
+
+        mock_async_addwebhook.reset_mock()
+        mock_async_dropwebhook.reset_mock()
+
+        yield (mock_async_addwebhook, mock_async_dropwebhook)
 
 
 async def test_setup_component(hass: HomeAssistant, config_entry) -> None:
@@ -461,19 +489,10 @@ async def test_unregister_webhook_not_registered(
     hass: HomeAssistant, config_entry, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test unregister webhook service when no webhook is registered."""
-    with patch(
-        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
-    ) as mock_auth, selected_platforms(["camera", "climate", "light", "sensor"]):
-        mock_auth.return_value.async_post_api_request.side_effect = fake_post_request
-        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
-        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
-
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-        assert is_webhook_registered(hass, webhook_id)
-
+    async with setup_for_webhook_tests(hass, config_entry) as (
+        mock_async_addwebhook,
+        mock_async_dropwebhook,
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_UNREGISTER_WEBHOOK,
@@ -482,11 +501,9 @@ async def test_unregister_webhook_not_registered(
         webhook_id = config_entry.data[CONF_WEBHOOK_ID]
         assert not is_webhook_registered(hass, webhook_id)
 
-        mock_auth.return_value.async_addwebhook.reset_mock()
-        mock_auth.return_value.async_dropwebhook.reset_mock()
-        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock(
-            side_effect=pyatmo.ApiError
-        )
+        mock_async_addwebhook.reset_mock()
+        mock_async_dropwebhook.reset_mock()
+        mock_async_dropwebhook.side_effect = AsyncMock(side_effect=pyatmo.ApiError)
         caplog.clear()
         assert f"No webhook to be dropped for {webhook_id}" not in caplog.text
 
@@ -496,8 +513,8 @@ async def test_unregister_webhook_not_registered(
             blocking=True,
         )
 
-        mock_auth.return_value.async_addwebhook.assert_not_called()
-        mock_auth.return_value.async_dropwebhook.assert_called_once()
+        mock_async_addwebhook.assert_not_called()
+        mock_async_dropwebhook.assert_called_once()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     assert not is_webhook_registered(hass, webhook_id)
@@ -509,26 +526,11 @@ async def test_unregister_webhook_drop_error(
     hass: HomeAssistant, config_entry, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test unregister webhook service API call to drop webhook fails."""
-    with patch(
-        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
-    ) as mock_auth, selected_platforms(["camera", "climate", "light", "sensor"]):
-        mock_auth.return_value.async_post_api_request.side_effect = fake_post_request
-        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
-        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
-
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-        assert is_webhook_registered(hass, webhook_id)
-        mock_auth.return_value.async_addwebhook.assert_called_once()
-        mock_auth.return_value.async_dropwebhook.assert_not_called()
-
-        mock_auth.return_value.async_addwebhook.reset_mock()
-        mock_auth.return_value.async_dropwebhook.reset_mock()
-        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock(
-            side_effect=pyatmo.ApiError
-        )
+    async with setup_for_webhook_tests(hass, config_entry) as (
+        mock_async_addwebhook,
+        mock_async_dropwebhook,
+    ):
+        mock_async_dropwebhook.side_effect = AsyncMock(side_effect=pyatmo.ApiError)
 
         await hass.services.async_call(
             DOMAIN,
@@ -536,8 +538,8 @@ async def test_unregister_webhook_drop_error(
             blocking=True,
         )
 
-        mock_auth.return_value.async_addwebhook.assert_not_called()
-        mock_auth.return_value.async_dropwebhook.assert_called_once()
+        mock_async_addwebhook.assert_not_called()
+        mock_async_dropwebhook.assert_called_once()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     assert not is_webhook_registered(hass, webhook_id)
@@ -547,32 +549,18 @@ async def test_unregister_webhook_drop_error(
 
 async def test_unregister_webhook_success(hass: HomeAssistant, config_entry) -> None:
     """Test unregister webhook service API call when expected to succeed."""
-    with patch(
-        "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
-    ) as mock_auth, selected_platforms(["camera", "climate", "light", "sensor"]):
-        mock_auth.return_value.async_post_api_request.side_effect = fake_post_request
-        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
-        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
-
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-        assert is_webhook_registered(hass, webhook_id)
-        mock_auth.return_value.async_addwebhook.assert_called_once()
-        mock_auth.return_value.async_dropwebhook.assert_not_called()
-
-        mock_auth.return_value.async_addwebhook.reset_mock()
-        mock_auth.return_value.async_dropwebhook.reset_mock()
-
+    async with setup_for_webhook_tests(hass, config_entry) as (
+        mock_async_addwebhook,
+        mock_async_dropwebhook,
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_UNREGISTER_WEBHOOK,
             blocking=True,
         )
 
-        mock_auth.return_value.async_addwebhook.assert_not_called()
-        mock_auth.return_value.async_dropwebhook.assert_called_once()
+        mock_async_addwebhook.assert_not_called()
+        mock_async_dropwebhook.assert_called_once()
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     assert not is_webhook_registered(hass, webhook_id)
