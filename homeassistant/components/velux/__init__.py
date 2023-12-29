@@ -83,17 +83,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await pyvlx.load_nodes()
     await pyvlx.load_scenes()
 
-    # Setup velux components
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
-
     # Register velux services
     async def async_reboot_gateway(service_call: ServiceCall) -> None:
         await pyvlx.reboot_gateway()
 
     hass.services.async_register(DOMAIN, "reboot_gateway", async_reboot_gateway)
+
+    # Setup velux platforms
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -108,11 +105,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Disconnect from KLF200
     await pyvlx.disconnect()
 
-    # Unload velux platform components
-    for platform in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(entry, platform)
-
-    return True
+    # Unload velux platforms
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class VeluxEntity(Entity):
