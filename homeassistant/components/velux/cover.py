@@ -1,6 +1,7 @@
 """Support for Velux covers."""
 from __future__ import annotations
 
+import asyncio
 from typing import Any, cast
 
 from pyvlx import OpeningDevice, Position
@@ -13,7 +14,7 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -59,6 +60,7 @@ class VeluxCover(VeluxEntity, CoverEntity):
             self._attr_device_class = CoverDeviceClass.SHUTTER
         if isinstance(node, Window):
             self._attr_device_class = CoverDeviceClass.WINDOW
+        self.is_looping_while_moving: bool = False
 
     @property
     def supported_features(self) -> CoverEntityFeature:
@@ -94,6 +96,33 @@ class VeluxCover(VeluxEntity, CoverEntity):
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self.node.position.closed
+
+    @property
+    def is_opening(self) -> bool:
+        """Return if the cover is closing or not."""
+        return self.node.is_opening
+
+    @property
+    def is_closing(self) -> bool:
+        """Return if the cover is opening or not."""
+        return self.node.is_closing
+
+    @callback
+    def async_register_callbacks(self) -> None:
+        """Register callbacks to update hass after device was changed."""
+
+        async def after_update_callback(device) -> None:
+            """Call after device was updated."""
+            self.async_write_ha_state()
+            if self.node.is_moving():
+                if not self.is_looping_while_moving:
+                    self.is_looping_while_moving = True
+                    while self.node.is_moving():
+                        await asyncio.sleep(1)
+                        self.async_write_ha_state()
+                    self.is_looping_while_moving = False
+
+        self.node.register_device_updated_cb(after_update_callback)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
