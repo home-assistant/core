@@ -4,5 +4,11 @@
       "name": "[%key:common::action::reload%]",
       "description": "Reloads all available Python scripts."
     }
+  },
+  "issues": {
+    "script_continue_on_error": {
+      "title": "'python_script.{script_name}' logs errors and continues",
+      "description": "The `python_script` integration will change to raise script errors instead of logging them.\n\nThis will **stop** automations/scripts if `continue_on_error` is not set ([docs](https://www.home-assistant.io/docs/scripts/#continuing-on-error)).\n\nTo enable the new behavior, add a `response_variable` ([docs](https://www.home-assistant.io/docs/scripts/service-calls/#use-templates-to-handle-response-data)) to your service call."
+    }
   }
 }
