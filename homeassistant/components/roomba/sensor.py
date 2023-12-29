@@ -125,8 +125,8 @@ SENSORS: list[RoombaSensorEntityDescription] = [
         icon="mdi:texture-box",
         native_unit_of_measurement=AREA_SQUARE_METERS,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=(
-            lambda self: self.run_stats.get("sqft") * 9.29
+        value_fn=lambda self: (
+            self.run_stats.get("sqft") * 9.29
             if self.run_stats.get("sqft") is not None
             else None
         ),
