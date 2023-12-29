@@ -60,6 +60,8 @@ from .const import (
     EXCEPTION_ID_WEBHOOK_HTTPS_REQUIRED,
     EXCEPTION_ID_WEBHOOK_REGISTRATION_FAILED,
     PLATFORMS,
+    SERVICE_REGISTER_WEBHOOK,
+    SERVICE_UNREGISTER_WEBHOOK,
     WEBHOOK_DEACTIVATION,
     WEBHOOK_PUSH_TYPE,
 )
@@ -275,8 +277,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         entry.async_on_unload(async_at_started(hass, register_webhook))
 
-    hass.services.async_register(DOMAIN, "register_webhook", register_webhook)
-    hass.services.async_register(DOMAIN, "unregister_webhook", unregister_webhook)
+    hass.services.async_register(DOMAIN, SERVICE_REGISTER_WEBHOOK, register_webhook)
+    hass.services.async_register(DOMAIN, SERVICE_UNREGISTER_WEBHOOK, unregister_webhook)
 
     entry.async_on_unload(entry.add_update_listener(async_config_entry_updated))
 
