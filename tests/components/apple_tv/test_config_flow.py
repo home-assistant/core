@@ -1169,3 +1169,22 @@ async def test_zeroconf_rejects_ipv6(hass: HomeAssistant) -> None:
     )
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "ipv6_not_supported"
+
+
+async def test_zeroconf_rejects_macos(hass: HomeAssistant) -> None:
+    """Test zeroconf discovery rejects macos."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname="mock_hostname",
+            port=None,
+            type="_raop._tcp.local.",
+            name="AABBCCDDEEFF@Master Bed._raop._tcp.local.",
+            properties={"am": "MacOS"},
+        ),
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "device_not_supported"
