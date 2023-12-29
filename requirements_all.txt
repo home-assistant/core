@@ -1225,7 +1225,7 @@ lupupy==0.3.1
 lw12==0.9.2
 
 # homeassistant.components.scrape
-lxml==4.9.3
+lxml==5.0.0
 
 # homeassistant.components.nmap_tracker
 mac-vendor-lookup==0.1.12
