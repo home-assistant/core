@@ -17,6 +17,7 @@ from homeassistant.components.webhook import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN, NAME
 from .coordinator import TedeeApiCoordinator
@@ -84,8 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         webhook_registered = True
 
-    await register_webhook(None)
-
+    entry.async_on_unload(async_call_later(hass, 1, register_webhook))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
