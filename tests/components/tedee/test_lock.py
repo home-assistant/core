@@ -1,7 +1,13 @@
 """Tests for tedee lock."""
+from datetime import timedelta
 from unittest.mock import MagicMock
 
-from pytedee_async.exception import TedeeClientException
+from freezegun.api import FrozenDateTimeFactory
+from pytedee_async.exception import (
+    TedeeClientException,
+    TedeeDataUpdateException,
+    TedeeLocalAuthException,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -11,14 +17,14 @@ from homeassistant.components.lock import (
     SERVICE_OPEN,
     SERVICE_UNLOCK,
     STATE_LOCKING,
-    STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
-from homeassistant.components.tedee.const import DOMAIN
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from tests.common import async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -93,6 +99,47 @@ async def test_lock(
     assert state.state == STATE_UNLOCKING
 
 
+async def test_lock_without_pullspring(
+    hass: HomeAssistant,
+    mock_tedee: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the tedee lock without pullspring."""
+    mock_tedee.lock.return_value = None
+    mock_tedee.unlock.return_value = None
+    mock_tedee.open.return_value = None
+
+    state = hass.states.get("lock.lock_2c3d")
+    assert state
+    assert state == snapshot
+
+    entry = entity_registry.async_get(state.entity_id)
+    assert entry
+    assert entry == snapshot
+
+    assert entry.device_id
+    device = device_registry.async_get(entry.device_id)
+    assert device
+    assert device == snapshot
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Entity lock.lock_2c3d does not support this service.",
+    ):
+        await hass.services.async_call(
+            LOCK_DOMAIN,
+            SERVICE_OPEN,
+            {
+                ATTR_ENTITY_ID: "lock.lock_2c3d",
+            },
+            blocking=True,
+        )
+
+    assert len(mock_tedee.open.mock_calls) == 0
+
+
 async def test_lock_errors(
     hass: HomeAssistant,
     mock_tedee: MagicMock,
@@ -136,49 +183,27 @@ async def test_lock_errors(
         )
 
 
-async def test_lock_without_pullspring(
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        TedeeClientException("Boom"),
+        TedeeLocalAuthException("Boom"),
+        TimeoutError,
+        TedeeDataUpdateException("Boom"),
+    ],
+)
+async def test_update_failed(
     hass: HomeAssistant,
     mock_tedee: MagicMock,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    side_effect: Exception,
 ) -> None:
-    """Test the tedee lock without pullspring."""
-    mock_tedee.lock.return_value = None
-    mock_tedee.unlock.return_value = None
-    mock_tedee.open.return_value = None
+    """Test update failed."""
+    mock_tedee.sync.side_effect = side_effect
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    state = hass.states.get("lock.lock_2c3d")
-    assert state
-    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Lock-2C3D"
-    assert state.state == STATE_UNLOCKED
-
-    entry = entity_registry.async_get(state.entity_id)
-    assert entry
-    assert entry.device_id
-    assert entry.unique_id == "98765-lock"
-
-    device = device_registry.async_get(entry.device_id)
-    assert device
-    assert device.configuration_url is None
-    assert device.entry_type is None
-    assert device.hw_version is None
-    assert device.identifiers == {(DOMAIN, "98765")}
-    assert device.manufacturer == "Tedee"
-    assert device.name == "Lock-2C3D"
-    assert device.model == "Tedee GO"
-
-    with pytest.raises(
-        HomeAssistantError,
-        match="Entity lock.lock_2c3d does not support this service.",
-    ):
-        await hass.services.async_call(
-            LOCK_DOMAIN,
-            SERVICE_OPEN,
-            {
-                ATTR_ENTITY_ID: "lock.lock_2c3d",
-            },
-            blocking=True,
-        )
-
-    assert len(mock_tedee.open.mock_calls) == 0
+    state = hass.states.get("lock.lock_1a2b")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

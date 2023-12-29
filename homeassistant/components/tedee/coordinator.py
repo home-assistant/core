@@ -73,7 +73,6 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         if not self.tedee_client.locks_dict:
             # No locks found; abort setup routine.
             _LOGGER.warning("No locks found in your account")
-            raise UpdateFailed("No locks found in your account")
 
         _LOGGER.debug(
             "available_locks: %s",

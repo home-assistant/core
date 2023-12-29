@@ -9,8 +9,8 @@ from pytedee_async.bridge import TedeeBridge
 from pytedee_async.lock import TedeeLock
 import pytest
 
-from homeassistant.components.tedee.const import DOMAIN
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
+from homeassistant.components.tedee.const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -23,7 +23,7 @@ def mock_config_entry() -> MockConfigEntry:
         title="My Tedee",
         domain=DOMAIN,
         data={
-            CONF_ACCESS_TOKEN: "api_token",
+            CONF_LOCAL_ACCESS_TOKEN: "api_token",
             CONF_HOST: "192.168.1.42",
         },
         unique_id="0000-0000",
