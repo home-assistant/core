@@ -1,0 +1,25 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup your tedee locks",
+        "data": {
+          "local_access_token": "Local access token",
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The IP address of the bridge you want to connect to.",
+          "local_access_token": "You can find it in the tedee app under \"Bridge Settings\" -> \"Local API\"."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  }
+}
