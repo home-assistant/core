@@ -62,7 +62,7 @@ async def test_user(hass: HomeAssistant) -> None:
     ],
 )
 async def test_flow_fails(hass: HomeAssistant, error: Exception, message: str) -> None:
-    """Test user initialized flow with invalid username."""
+    """Test bluecurrent api errors during configuration flow."""
     with patch(
         "bluecurrent_api.Client.validate_api_token",
         side_effect=error,
