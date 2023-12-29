@@ -8,9 +8,9 @@ import psutil
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_all_disk_mounts() -> list[str]:
+def get_all_disk_mounts() -> set[str]:
     """Return all disk mount points on system."""
-    disks: list[str] = []
+    disks: set[str] = set()
     for part in psutil.disk_partitions(all=True):
         if os.name == "nt":
             if "cdrom" in part.opts or part.fstype == "":
@@ -20,25 +20,25 @@ def get_all_disk_mounts() -> list[str]:
                 continue
         usage = psutil.disk_usage(part.mountpoint)
         if usage.total > 0 and part.device != "":
-            disks.append(part.mountpoint)
+            disks.add(part.mountpoint)
     _LOGGER.debug("Adding disks: %s", ", ".join(disks))
     return disks
 
 
-def get_all_network_interfaces() -> list[str]:
+def get_all_network_interfaces() -> set[str]:
     """Return all network interfaces on system."""
-    interfaces: list[str] = []
+    interfaces: set[str] = set()
     for interface, _ in psutil.net_if_addrs().items():
-        interfaces.append(interface)
+        interfaces.add(interface)
     _LOGGER.debug("Adding interfaces: %s", ", ".join(interfaces))
     return interfaces
 
 
-def get_all_running_processes() -> list[str]:
+def get_all_running_processes() -> set[str]:
     """Return all running processes on system."""
-    processes: list[str] = []
+    processes: set[str] = set()
     for proc in psutil.process_iter(["name"]):
         if proc.name() not in processes:
-            processes.append(proc.name())
+            processes.add(proc.name())
     _LOGGER.debug("Running processes: %s", ", ".join(processes))
     return processes
