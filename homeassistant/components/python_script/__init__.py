@@ -114,7 +114,7 @@ def discover_scripts(hass):
 
     def python_script_service_handler(call: ServiceCall) -> ServiceResponse:
         """Handle python script service calls."""
-        return execute_script(hass, call.service, call.data)
+        return execute_script(hass, call.service, call.data, call.return_response)
 
     existing = hass.services.services.get(DOMAIN, {}).keys()
     for existing_service in existing:
@@ -147,17 +147,17 @@ def discover_scripts(hass):
 
 
 @bind_hass
-def execute_script(hass, name, data=None):
+def execute_script(hass, name, data=None, return_response=False):
     """Execute a script."""
     filename = f"{name}.py"
     raise_if_invalid_filename(filename)
     with open(hass.config.path(FOLDER, filename), encoding="utf8") as fil:
         source = fil.read()
-    return execute(hass, filename, source, data)
+    return execute(hass, filename, source, data, return_response=return_response)
 
 
 @bind_hass
-def execute(hass, filename, source, data=None):
+def execute(hass, filename, source, data=None, return_response=False):
     """Execute Python source."""
 
     compiled = compile_restricted_exec(source, filename=filename)
@@ -246,11 +246,17 @@ def execute(hass, filename, source, data=None):
                 f"Expected `output` to be a dictionary, was {output_type}"
             )
     except ScriptError as err:
-        raise ServiceValidationError(f"Error executing script: {err}") from err
+        if return_response:
+            raise ServiceValidationError(f"Error executing script: {err}") from err
+        logger.error("Error executing script: %s", err)
+        return None
     except Exception as err:  # pylint: disable=broad-except
-        raise HomeAssistantError(
-            f"Error executing script ({type(err).__name__}): {err}"
-        ) from err
+        if return_response:
+            raise HomeAssistantError(
+                f"Error executing script ({type(err).__name__}): {err}"
+            ) from err
+        logger.error("Error executing script: %s", err)
+        return None
 
     return restricted_globals["output"]
 
