@@ -21,7 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.data_entry_flow import FlowResult
 
-from . import UnknownError, get_api
+from . import ServerVersionMismatch, get_api
 from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
@@ -61,7 +61,7 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await get_api(self.hass, user_input)
             except GlancesApiAuthorizationError:
                 errors["base"] = "invalid_auth"
-            except (GlancesApiConnectionError, UnknownError):
+            except (GlancesApiConnectionError, ServerVersionMismatch):
                 errors["base"] = "cannot_connect"
             else:
                 self.hass.config_entries.async_update_entry(
