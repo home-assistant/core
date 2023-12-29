@@ -1389,7 +1389,7 @@ class State:
         self,
         entity_id: str,
         state: str,
-        attributes: Mapping[str, Any] | None = None,
+        attributes: Mapping[str, Any] | ReadOnlyDict[str, Any] | None = None,
         last_changed: datetime.datetime | None = None,
         last_updated: datetime.datetime | None = None,
         context: Context | None = None,
@@ -1409,7 +1409,10 @@ class State:
 
         self.entity_id = entity_id
         self.state = state
-        self.attributes = ReadOnlyDict(attributes or {})
+        if type(attributes) is not ReadOnlyDict:  # noqa: E721
+            self.attributes = ReadOnlyDict(attributes or {})
+        else:
+            self.attributes = attributes
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
@@ -1827,6 +1830,11 @@ class StateMachine:
             context = Context(id=ulid_at_time(timestamp))
         else:
             now = dt_util.utcnow()
+
+        if same_attr:
+            if TYPE_CHECKING:
+                assert old_state is not None
+            attributes = old_state.attributes
 
         state = State(
             entity_id,
