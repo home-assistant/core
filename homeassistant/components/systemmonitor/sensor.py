@@ -267,7 +267,7 @@ def check_required_arg(value: Any) -> Any:
     return value
 
 
-def check_legacy_resource(resource: str, resources: list[str]) -> bool:
+def check_legacy_resource(resource: str, resources: set[str]) -> bool:
     """Return True if legacy resource was configured."""
     # This function to check legacy resources can be removed
     # once we are removing the import from YAML
@@ -388,8 +388,8 @@ async def async_setup_entry(
     """Set up System Montor sensors based on a config entry."""
     entities = []
     sensor_registry: dict[tuple[str, str], SensorData] = {}
-    legacy_resources: list[str] = entry.options.get("resources", [])
-    loaded_resources: list[str] = []
+    legacy_resources: set[str] = set(entry.options.get("resources", []))
+    loaded_resources: set[str] = set()
     disk_arguments = await hass.async_add_executor_job(get_all_disk_mounts)
     network_arguments = await hass.async_add_executor_job(get_all_network_interfaces)
     cpu_temperature = await hass.async_add_executor_job(_read_cpu_temperature)
@@ -405,7 +405,7 @@ async def async_setup_entry(
                 is_enabled = check_legacy_resource(
                     f"{_type}_{argument}", legacy_resources
                 )
-                loaded_resources.append(f"{_type}_{argument}")
+                loaded_resources.add(f"{_type}_{argument}")
                 entities.append(
                     SystemMonitorSensor(
                         sensor_registry,
@@ -425,7 +425,7 @@ async def async_setup_entry(
                 is_enabled = check_legacy_resource(
                     f"{_type}_{argument}", legacy_resources
                 )
-                loaded_resources.append(f"{_type}_{argument}")
+                loaded_resources.add(f"{_type}_{argument}")
                 entities.append(
                     SystemMonitorSensor(
                         sensor_registry,
@@ -449,7 +449,7 @@ async def async_setup_entry(
                 sensor_registry[(_type, argument)] = SensorData(
                     argument, None, None, None, None
                 )
-                loaded_resources.append(f"{_type}_{argument}")
+                loaded_resources.add(f"{_type}_{argument}")
                 entities.append(
                     SystemMonitorSensor(
                         sensor_registry,
@@ -463,7 +463,7 @@ async def async_setup_entry(
 
         sensor_registry[(_type, "")] = SensorData("", None, None, None, None)
         is_enabled = check_legacy_resource(f"{_type}_", legacy_resources)
-        loaded_resources.append(f"{_type}_")
+        loaded_resources.add(f"{_type}_")
         entities.append(
             SystemMonitorSensor(
                 sensor_registry,
