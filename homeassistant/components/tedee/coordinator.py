@@ -1,4 +1,5 @@
 """Coordinator for Tedee locks."""
+from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
 import logging
 
@@ -48,17 +49,27 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         """Fetch data from API endpoint."""
 
         _LOGGER.debug("Update coordinator: Getting locks from API")
+        # once every hours get all lock details, otherwise use the sync endpoint
+        if self._next_get_locks <= datetime.now():
+            _LOGGER.debug("Updating through /my/lock endpoint")
+            await self._async_update_locks(self.tedee_client.get_locks)
+            self._next_get_locks = datetime.now() + timedelta(hours=1)
+        else:
+            _LOGGER.debug("Updating through /sync endpoint")
+            await self._async_update_locks(self.tedee_client.sync)
 
+        _LOGGER.debug(
+            "available_locks: %s",
+            ", ".join(map(str, self.tedee_client.locks_dict.keys())),
+        )
+
+        return self.tedee_client.locks_dict
+
+    async def _async_update_locks(
+        self, update_fn: Callable[[], Coroutine[None, None, None]]
+    ) -> None:
         try:
-            # once every hours get all lock details, otherwise use the sync endpoint
-            if self._next_get_locks <= datetime.now():
-                _LOGGER.debug("Updating through /my/lock endpoint")
-                await self.tedee_client.get_locks()
-                self._next_get_locks = datetime.now() + timedelta(hours=1)
-            else:
-                _LOGGER.debug("Updating through /sync endpoint")
-                await self.tedee_client.sync()
-
+            await update_fn()
         except TedeeLocalAuthException as ex:
             raise ConfigEntryError(
                 "Authentication failed. Local access token is invalid"
@@ -69,13 +80,3 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             raise UpdateFailed("Error while updating data: %s" % str(ex)) from ex
         except (TedeeClientException, TimeoutError) as ex:
             raise UpdateFailed("Querying API failed. Error: %s" % str(ex)) from ex
-
-        if not self.tedee_client.locks_dict:
-            _LOGGER.debug("No locks found in your account")
-
-        _LOGGER.debug(
-            "available_locks: %s",
-            ", ".join(map(str, self.tedee_client.locks_dict.keys())),
-        )
-
-        return self.tedee_client.locks_dict
