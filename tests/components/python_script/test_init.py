@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.python_script import DOMAIN, FOLDER, execute
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
 
@@ -144,7 +144,7 @@ hass.async_stop()
     task = hass.async_add_executor_job(execute, hass, "test.py", source, {})
     await hass.async_block_till_done()
 
-    assert type(task.exception()) == ValueError
+    assert type(task.exception()) == ServiceValidationError
     assert "Not allowed to access async methods" in str(task.exception())
 
 
@@ -176,7 +176,7 @@ async def test_accessing_forbidden_methods(hass: HomeAssistant) -> None:
         task = hass.async_add_executor_job(execute, hass, "test.py", source, {})
         await hass.async_block_till_done()
 
-        assert type(task.exception()) == ValueError
+        assert type(task.exception()) == ServiceValidationError
         assert f"Not allowed to access {name}" in str(task.exception())
 
 
@@ -540,7 +540,7 @@ output = f"hello {data.get('name', 'World')}"
         "homeassistant.components.python_script.open",
         mock_open(read_data=source),
         create=True,
-    ), pytest.raises(ValueError):
+    ), pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             "python_script",
             "hello",

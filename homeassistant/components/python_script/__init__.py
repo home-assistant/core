@@ -26,7 +26,7 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -246,7 +246,7 @@ def execute(hass, filename, source, data=None):
                 f"Expected `output` to be a dictionary, was {output_type}"
             )
     except ScriptError as err:
-        raise ValueError(f"Error executing script: {err}") from err
+        raise ServiceValidationError(f"Error executing script: {err}") from err
     except Exception as err:  # pylint: disable=broad-except
         raise HomeAssistantError(
             f"Error executing script ({type(err).__name__}): {err}"
