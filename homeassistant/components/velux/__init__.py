@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -122,10 +122,16 @@ class VeluxEntity(Entity):
         )
         self._attr_name = node.name if node.name else f"#{node.node_id}"
 
-    async def after_update_callback(self, node: Node) -> None:
-        """Call after device was updated."""
-        self.async_write_ha_state()
+    @callback
+    def async_register_callbacks(self) -> None:
+        """Register callbacks to update hass after device was changed."""
+
+        async def after_update_callback(node: Node) -> None:
+            """Call after device was updated."""
+            self.async_write_ha_state()
+
+        self.node.register_device_updated_cb(after_update_callback)
 
     async def async_added_to_hass(self) -> None:
         """Store register state change callback."""
-        self.node.register_device_updated_cb(self.after_update_callback)
+        self.async_register_callbacks()
