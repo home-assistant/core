@@ -64,8 +64,6 @@ async def get_machines(
 class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for La Marzocco."""
 
-    VERSION = 1
-
     def __init__(self) -> None:
         """Init config flow."""
         self._discovered: dict[str, str] = {}

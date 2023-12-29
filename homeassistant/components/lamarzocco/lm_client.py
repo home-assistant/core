@@ -66,6 +66,13 @@ class LaMarzoccoClient(LMCloud):
 
         if self._lm_bluetooth:
             _LOGGER.debug("Connecting to machine with Bluetooth")
+            # update the config entry with the MAC address
+            new_data = self.entry.data.copy()
+            new_data[CONF_MAC] = self._lm_bluetooth.address
+            self.hass.config_entries.async_update_entry(
+                self.entry,
+                data=new_data,
+            )
             await self.get_hass_bt_client()
 
         host: str = self.entry.data.get(CONF_HOST, "")

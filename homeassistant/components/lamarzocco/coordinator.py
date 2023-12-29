@@ -20,12 +20,14 @@ _LOGGER = logging.getLogger(__name__)
 class LmApiCoordinator(DataUpdateCoordinator[LaMarzoccoClient]):
     """Class to handle fetching data from the La Marzocco API centrally."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize coordinator."""
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
         self._lm = LaMarzoccoClient(
             hass=hass,
-            entry=entry,
+            entry=self.config_entry,
             callback_websocket_notify=self.async_update_listeners,
         )
         self.data = self._lm
