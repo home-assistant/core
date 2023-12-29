@@ -185,7 +185,7 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
             ATTR_MAX_HUMIDITY: self.max_humidity,
         }
 
-        if HumidifierEntityFeature.MODES in self.supported_features:
+        if HumidifierEntityFeature.MODES in self.supported_features_compat:
             data[ATTR_AVAILABLE_MODES] = self.available_modes
 
         return data
@@ -280,3 +280,16 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
     def supported_features(self) -> HumidifierEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
+
+    @property
+    def supported_features_compat(self) -> HumidifierEntityFeature:
+        """Return the supported features as HumidifierEntityFeature.
+
+        Remove this compatibility shim in 2025.1 or later.
+        """
+        features = self.supported_features
+        if type(features) is int:  # noqa: E721
+            new_features = HumidifierEntityFeature(features)
+            self._report_deprecated_supported_features_values(new_features)
+            return new_features
+        return features
