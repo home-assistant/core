@@ -12,6 +12,8 @@ import sys
 from typing import Any
 
 import psutil
+from psutil._common import sdiskusage, shwtemp, snetio, snicaddr, sswap
+from psutil._pslinux import svmem
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -338,8 +340,8 @@ class SensorData:
     """Data for a sensor."""
 
     argument: Any
-    state: str | datetime | None
-    value: Any | None
+    state: str | float | datetime | None
+    value: int | None
     update_time: datetime | None
     last_exception: BaseException | None
 
@@ -399,9 +401,6 @@ async def async_setup_entry(
     for _type, sensor_description in SENSOR_TYPES.items():
         if _type.startswith("disk_"):
             for argument in disk_arguments:
-                sensor_registry[(_type, argument)] = SensorData(
-                    argument, None, None, None, None
-                )
                 is_enabled = check_legacy_resource(
                     f"{_type}_{argument}", legacy_resources
                 )
@@ -419,9 +418,6 @@ async def async_setup_entry(
 
         if _type in NETWORK_TYPES:
             for argument in network_arguments:
-                sensor_registry[(_type, argument)] = SensorData(
-                    argument, None, None, None, None
-                )
                 is_enabled = check_legacy_resource(
                     f"{_type}_{argument}", legacy_resources
                 )
@@ -446,9 +442,6 @@ async def async_setup_entry(
         if _type == "process":
             _entry: dict[str, list] = entry.options.get(SENSOR_DOMAIN, {})
             for argument in _entry.get(CONF_PROCESS, []):
-                sensor_registry[(_type, argument)] = SensorData(
-                    argument, None, None, None, None
-                )
                 loaded_resources.add(f"{_type}_{argument}")
                 entities.append(
                     SystemMonitorSensor(
@@ -461,7 +454,6 @@ async def async_setup_entry(
                 )
             continue
 
-        sensor_registry[(_type, "")] = SensorData("", None, None, None, None)
         is_enabled = check_legacy_resource(f"{_type}_", legacy_resources)
         loaded_resources.add(f"{_type}_")
         entities.append(
@@ -486,9 +478,6 @@ async def async_setup_entry(
                 _type = resource[:split_index]
                 argument = resource[split_index + 1 :]
                 _LOGGER.debug("Loading legacy %s with argument %s", _type, argument)
-                sensor_registry[(_type, argument)] = SensorData(
-                    argument, None, None, None, None
-                )
                 entities.append(
                     SystemMonitorSensor(
                         sensor_registry,
@@ -500,8 +489,8 @@ async def async_setup_entry(
                 )
 
     scan_interval = DEFAULT_SCAN_INTERVAL
-    await async_setup_sensor_registry_updates(hass, sensor_registry, scan_interval)
     async_add_entities(entities)
+    await async_setup_sensor_registry_updates(hass, sensor_registry, scan_interval)
 
 
 async def async_setup_sensor_registry_updates(
@@ -515,6 +504,7 @@ async def async_setup_sensor_registry_updates(
 
     def _update_sensors() -> None:
         """Update sensors and store the result in the registry."""
+        _LOGGER.debug("Updating %s", sensor_registry.keys())
         for (type_, argument), data in sensor_registry.items():
             try:
                 state, value, update_time = _update(type_, data)
@@ -593,7 +583,7 @@ class SystemMonitorSensor(SensorEntity):
         )
 
     @property
-    def native_value(self) -> str | datetime | None:
+    def native_value(self) -> str | float | datetime | None:
         """Return the state of the device."""
         return self.data.state
 
@@ -610,20 +600,30 @@ class SystemMonitorSensor(SensorEntity):
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
+        _LOGGER.debug("Adding %s_%s", self.entity_description.key, self._argument)
+        self._sensor_registry[
+            (self.entity_description.key, self._argument)
+        ] = SensorData(self._argument, None, None, None, None)
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, SIGNAL_SYSTEMMONITOR_UPDATE, self.async_write_ha_state
             )
         )
 
+    async def async_will_remove_from_hass(self) -> None:
+        """When entity is removed from hass."""
+        await super().async_will_remove_from_hass()
+        _LOGGER.debug("Removing %s_%s", self.entity_description.key, self._argument)
+        self._sensor_registry.pop((self.entity_description.key, self._argument))
+
 
 def _update(  # noqa: C901
     type_: str, data: SensorData
-) -> tuple[str | datetime | None, str | None, datetime | None]:
+) -> tuple[str | float | datetime | None, int | None, datetime | None]:
     """Get the latest system information."""
-    state = None
-    value = None
-    update_time = None
+    state: str | float | datetime | None = None
+    value: int | None = None
+    update_time: datetime | None = None
 
     if type_ == "disk_use_percent":
         state = _disk_usage(data.argument).percent
@@ -713,31 +713,39 @@ def _update(  # noqa: C901
     elif type_ == "load_15m":
         state = round(_getloadavg()[2], 2)
 
+    _LOGGER.debug(
+        "Updated %s_%s with state %s, value %s, time %s",
+        type_,
+        data.argument,
+        state,
+        value,
+        update_time,
+    )
     return state, value, update_time
 
 
 @cache
-def _disk_usage(path: str) -> Any:
+def _disk_usage(path: str) -> sdiskusage:
     return psutil.disk_usage(path)
 
 
 @cache
-def _swap_memory() -> Any:
+def _swap_memory() -> sswap:
     return psutil.swap_memory()
 
 
 @cache
-def _virtual_memory() -> Any:
+def _virtual_memory() -> svmem:
     return psutil.virtual_memory()
 
 
 @cache
-def _net_io_counters() -> Any:
+def _net_io_counters() -> dict[str, snetio]:
     return psutil.net_io_counters(pernic=True)
 
 
 @cache
-def _net_if_addrs() -> Any:
+def _net_if_addrs() -> dict[str, list[snicaddr]]:
     return psutil.net_if_addrs()
 
 
@@ -748,6 +756,7 @@ def _getloadavg() -> tuple[float, float, float]:
 
 def _read_cpu_temperature() -> float | None:
     """Attempt to read CPU / processor temperature."""
+    entry: shwtemp
     temps = psutil.sensors_temperatures()
 
     for name, entries in temps.items():
