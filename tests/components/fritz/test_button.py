@@ -26,7 +26,7 @@ async def test_button_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock) -
     assert entry.state == ConfigEntryState.LOADED
 
     buttons = hass.states.async_all(BUTTON_DOMAIN)
-    assert len(buttons) == 4
+    assert len(buttons) == 5
 
     for button in buttons:
         assert button.state == STATE_UNKNOWN
@@ -72,4 +72,36 @@ async def test_buttons(
         mock_press_action.assert_called_once()
 
         button = hass.states.get(entity_id)
+        assert button.state != STATE_UNKNOWN
+
+
+async def test_wol_button(
+    hass: HomeAssistant,
+    fc_class_mock,
+    fh_class_mock,
+) -> None:
+    """Test Fritz!Tools wake on LAN button."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert entry.state == ConfigEntryState.LOADED
+
+    button = hass.states.get("button.printer_wake_on_lan")
+    assert button
+    assert button.state == STATE_UNKNOWN
+    with patch(
+        "homeassistant.components.fritz.common.AvmWrapper.async_wake_on_lan"
+    ) as mock_press_action:
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.printer_wake_on_lan"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_press_action.assert_called_once_with("AA:BB:CC:00:11:22")
+
+        button = hass.states.get("button.printer_wake_on_lan")
         assert button.state != STATE_UNKNOWN
