@@ -1,4 +1,4 @@
-"""The Govee Local API integration."""
+"""The Govee Lights - Local API integration."""
 from __future__ import annotations
 
 import logging

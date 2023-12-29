@@ -1,7 +1,6 @@
-"""Constants for the Govee Local API integration."""
+"""Constants for the Govee Lights - Local API integration."""
 
-
-DOMAIN = "govee_local_api"
+DOMAIN = "govee_light_api"
 MANUFACTURER = "Govee"
 
 CONF_BIND_ADDRESS = "bind_address"

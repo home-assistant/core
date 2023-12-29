@@ -7,7 +7,6 @@ from collections.abc import Callable
 import logging
 from typing import Any
 
-import async_timeout
 from govee_local_api import GoveeDevice
 
 from homeassistant.components.light import (
@@ -20,7 +19,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -46,7 +45,7 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
 
     try:
-        with async_timeout.timeout(delay=5):
+        async with asyncio.timeout(delay=5):
             while not coordinator.devices:
                 await asyncio.sleep(delay=1)
     except asyncio.TimeoutError as exc:
@@ -170,9 +169,9 @@ class GoveeLight(CoordinatorEntity, LightEntity):
         self.async_write_ha_state()
 
     @property
-    def device_info(self) -> entity.DeviceInfo:
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return entity.DeviceInfo(
+        return DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, self.unique_id)
