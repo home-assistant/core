@@ -17,7 +17,7 @@ class RointeBaseEntity(CoordinatorEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"rointe-{unique_id}"
+        self._attr_unique_id = unique_id
 
     @property
     def device_manager(self) -> RointeDeviceManager:
