@@ -438,11 +438,6 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
             self.async_write_ha_state()
 
     @callback
-    def async_initiate_state(self) -> None:
-        """Initiate entity state."""
-        self.async_update_state(ItemEvent.ADDED, self._obj_id)
-
-    @callback
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:
         """Update entity state.
 
