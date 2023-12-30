@@ -1409,6 +1409,9 @@ class State:
 
         self.entity_id = entity_id
         self.state = state
+        # State only creates and expects a ReadOnlyDict so
+        # there is no need to check for subclassing with
+        # isinstance here so we can use the faster type check.
         if type(attributes) is not ReadOnlyDict:  # noqa: E721
             self.attributes = ReadOnlyDict(attributes or {})
         else:
