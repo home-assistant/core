@@ -9,6 +9,7 @@ import logging
 import pypck
 
 from homeassistant import config_entries
+from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE_ID,
@@ -24,9 +25,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ADD_ENTITIES_CALLBACKS,
     CONF_DIM_MODE,
     CONF_DOMAIN_DATA,
     CONF_SK_NUM_TRIES,
@@ -47,6 +50,7 @@ from .helpers import (
 )
 from .schemas import CONFIG_SCHEMA  # noqa: F401
 from .services import SERVICES
+from .websocket import register_panel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,6 +59,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LCN component."""
     if DOMAIN not in config:
         return True
+
+    _LOGGER.warning(
+        "Configuration of LCN integration in YAML is deprecated and "
+        "will be removed in a future release; Your existing configuration "
+        "has been imported into the UI automatically "
+        "and can be safely removed from your configuration.yaml file"
+    )
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2024.7.0",
+        is_fixable=False,
+        is_persistent=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "LCN",
+        },
+    )
 
     # initialize a config_flow for all LCN configurations read from
     # configuration.yaml
@@ -115,6 +141,7 @@ async def async_setup_entry(
     _LOGGER.debug('LCN connected to "%s"', config_entry.title)
     hass.data[DOMAIN][config_entry.entry_id] = {
         CONNECTION: lcn_connection,
+        ADD_ENTITIES_CALLBACKS: {},
     }
     # Update config_entry with LCN device serials
     await async_update_config_entry(hass, config_entry)
@@ -139,6 +166,8 @@ async def async_setup_entry(
             hass.services.async_register(
                 DOMAIN, service_name, service(hass).async_call_service, service.schema
             )
+
+    await register_panel(hass)
 
     return True
 

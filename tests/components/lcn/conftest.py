@@ -3,7 +3,7 @@
 from collections.abc import AsyncGenerator
 import json
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pypck
 from pypck.connection import PchkConnectionManager
@@ -97,6 +97,7 @@ async def init_integration(
     hass: HomeAssistant, entry: MockConfigEntry
 ) -> AsyncGenerator[MockPchkConnectionManager]:
     """Set up the LCN integration in Home Assistant."""
+    hass.http = Mock()
     lcn_connection = None
 
     def lcn_connection_factory(*args, **kwargs):
