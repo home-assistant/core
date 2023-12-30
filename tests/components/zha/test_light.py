@@ -506,6 +506,10 @@ async def test_transitions(
 
     group_entity_id = async_find_group_entity_id(hass, Platform.LIGHT, zha_group)
     assert hass.states.get(group_entity_id) is not None
+    assert (
+        hass.states.get(group_entity_id).attributes["zigbee_group_id"]
+        == zha_group.group_id
+    )
 
     assert device_1_entity_id in zha_group.member_entity_ids
     assert device_2_entity_id in zha_group.member_entity_ids

@@ -205,6 +205,14 @@ class FanGroup(BaseFan, ZhaGroupEntity):
         self._preset_mode = None
 
     @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return state attributes from both parents."""
+        attributes = {}
+        attributes.update(super(BaseFan, self).extra_state_attributes)
+        attributes.update(super(ZhaGroupEntity, self).extra_state_attributes)
+        return attributes
+
+    @property
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         return self._percentage

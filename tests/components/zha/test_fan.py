@@ -317,6 +317,9 @@ async def test_zha_group_fan_entity(
 
     entity_id = async_find_group_entity_id(hass, Platform.FAN, zha_group)
     assert hass.states.get(entity_id) is not None
+    assert (
+        hass.states.get(entity_id).attributes["zigbee_group_id"] == zha_group.group_id
+    )
 
     group_fan_cluster = zha_group.endpoint[hvac.Fan.cluster_id]
 

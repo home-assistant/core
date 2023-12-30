@@ -255,6 +255,7 @@ class ZhaGroupEntity(BaseZhaEntity):
         self._update_group_from_child_delay = DEFAULT_UPDATE_GROUP_FROM_CHILD_DELAY
 
         self._attr_name = self._group.name
+        self._extra_state_attributes.update({"zigbee_group_id": group_id})
 
     @property
     def available(self) -> bool:

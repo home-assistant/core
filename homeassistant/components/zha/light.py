@@ -1185,6 +1185,14 @@ class LightGroup(BaseLight, ZhaGroupEntity):
         self._zha_config_enhanced_light_transition = False
         self._attr_color_mode = None
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return state attributes from both parents."""
+        attributes = {}
+        attributes.update(super(BaseLight, self).extra_state_attributes)
+        attributes.update(super(ZhaGroupEntity, self).extra_state_attributes)
+        return attributes
+
     # remove this when all ZHA platforms and base entities are updated
     @property
     def available(self) -> bool:
