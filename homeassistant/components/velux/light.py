@@ -22,7 +22,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up light(s) for Velux platform."""
-    entities = []
+    entities: list = []
     pyvlx: PyVLX = hass.data[DOMAIN][entry.entry_id]
     for node in pyvlx.nodes:
         if isinstance(node, LighteningDevice):

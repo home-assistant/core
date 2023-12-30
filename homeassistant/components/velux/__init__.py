@@ -5,8 +5,13 @@ from pyvlx import Node, PyVLX
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -63,7 +68,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
     pyvlx: PyVLX = PyVLX(**pyvlx_args)
 
-    # Try to connect to KLF200. Sometimes KLF200 becomes unresponsives and block new connections.
+    # Try to connect to KLF200.
+    # Sometimes KLF200 becomes unresponsives and block new connections.
     # Keep trying to connect if this happen.
     try:
         await pyvlx.connect()
@@ -77,9 +83,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Register velux services
     async def async_reboot_gateway(service_call: ServiceCall) -> None:
-        await pyvlx.reboot_gateway()
+        """Reboot Velux KLF200 Gateway."""
+        await pyvlx.klf200.reboot()
 
     hass.services.async_register(DOMAIN, "reboot_gateway", async_reboot_gateway)
+
+    # Add event listener
+    async def on_hass_stop(event: Event) -> None:
+        """Close connection when hass stops."""
+        _LOGGER.debug("Velux interface terminated")
+        # Avoid reconnection problems due to unresponsive KLF200
+        await pyvlx.klf200.reboot()
+        # Close the socket
+        await pyvlx.disconnect()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
 
     # Load nodes (devices) and scenes from API
     await pyvlx.load_nodes()
@@ -100,6 +118,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Disconnect from KLF200
     await pyvlx.disconnect()
+
+    # Remove services
+    hass.services.async_remove(DOMAIN, "reboot_gateway")
 
     # Unload velux platforms
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

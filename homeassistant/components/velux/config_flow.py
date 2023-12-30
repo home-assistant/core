@@ -1,5 +1,4 @@
 """Velux component config flow."""
-# https://developers.home-assistant.io/docs/config_entries_config_flow_handler#defining-your-config-flow
 from typing import Any
 
 from pyvlx import PyVLX, PyVLXException

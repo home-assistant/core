@@ -1,4 +1,10 @@
 {
+  "services": {
+    "reboot_gateway": {
+      "name": "Reboot gateway",
+      "description": "Reboots the KLF200 Gateway."
+    }
+  },
   "title": "Velux KLF200 Gateway",
   "config": {
     "step": {
@@ -21,10 +27,10 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
-  "services": {
-    "reboot_gateway": {
-      "name": "Reboot gateway",
-      "description": "Reboots the KLF200 Gateway."
+  "issues": {
+    "deprecated_yaml": {
+      "title": "The Velux YAML configuration is being removed",
+      "description": "Configuring Velux using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the Velux YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
     }
   }
 }

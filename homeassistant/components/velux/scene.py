@@ -18,7 +18,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the scenes for Velux platform."""
     pyvlx: PyVLX = hass.data[DOMAIN][entry.entry_id]
-    entities = [VeluxScene(scene) for scene in pyvlx.scenes]
+    entities: list = [VeluxScene(scene) for scene in pyvlx.scenes]
     async_add_entities(entities)
 
 
