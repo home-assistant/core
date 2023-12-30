@@ -16,6 +16,7 @@ RUN \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         # Additional library needed by some tests and accordingly by VScode Tests Discovery
         bluez \
+        ffmpeg \
         libudev-dev \
         libavformat-dev \
         libavcodec-dev \
