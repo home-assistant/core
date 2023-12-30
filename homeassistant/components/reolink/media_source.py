@@ -19,6 +19,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from reolink_aio.enums import VodRequestType
+
 from . import ReolinkData
 from .const import DOMAIN
 
@@ -56,7 +58,12 @@ class ReolinkVODMediaSource(MediaSource):
         channel = int(channel_str)
 
         host = self.data[config_entry_id].host
-        mime_type, url = await host.api.get_vod_source(channel, filename, stream_res)
+
+        vod_type = VodRequestType.RTMP
+        if host.api.is_nvr:
+            vod_type = VodRequestType.FLV
+
+        mime_type, url = await host.api.get_vod_source(channel, filename, stream_res, vod_type)
         if _LOGGER.isEnabledFor(logging.DEBUG):
             url_log = f"{url.split('&user=')[0]}&user=xxxxx&password=xxxxx"
             _LOGGER.debug(
