@@ -1,9 +1,11 @@
 """Utils for System Monitor."""
-
 import logging
 import os
 
 import psutil
+from psutil._common import shwtemp
+
+from .coordinator import CPU_SENSOR_PREFIXES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,3 +63,21 @@ def get_all_running_processes() -> set[str]:
             processes.add(proc.name())
     _LOGGER.debug("Running processes: %s", ", ".join(processes))
     return processes
+
+
+def read_cpu_temperature() -> float | None:
+    """Attempt to read CPU / processor temperature."""
+    entry: shwtemp
+    temps = psutil.sensors_temperatures()
+
+    for name, entries in temps.items():
+        for i, entry in enumerate(entries, start=1):
+            # In case the label is empty (e.g. on Raspberry PI 4),
+            # construct it ourself here based on the sensor key name.
+            _label = f"{name} {i}" if not entry.label else entry.label
+            # check both name and label because some systems embed cpu# in the
+            # name, which makes label not match because label adds cpu# at end.
+            if _label in CPU_SENSOR_PREFIXES or name in CPU_SENSOR_PREFIXES:
+                return round(entry.current, 1)
+
+    return None
