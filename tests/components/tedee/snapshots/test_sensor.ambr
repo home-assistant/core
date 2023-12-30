@@ -1,20 +1,5 @@
 # serializer version: 1
-# name: test_sensors
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Lock-1A2B Battery',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.lock_1a2b_battery',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '70',
-  })
-# ---
-# name: test_sensors.1
+# name: test_sensors[battery]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -47,23 +32,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors.2
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Lock-1A2B Pullspring duration',
-      'icon': 'mdi:timer-lock-open',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.lock_1a2b_pullspring_duration',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2',
-  })
-# ---
-# name: test_sensors.3
+# name: test_sensors[pullspring_duration]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
