@@ -236,8 +236,11 @@ def mock_util() -> Mock:
         "homeassistant.components.systemmonitor.util.psutil",
         autospec=True,
     ) as mock_util:
+<<<<<<< HEAD
         mock_util
 >>>>>>> 4d1de7ae9a (Add fixtures and first test)
+=======
+>>>>>>> 75938d9570 (Remove unneeded)
         mock_util.net_if_addrs.return_value = {
             "eth0": [
                 snicaddr(
