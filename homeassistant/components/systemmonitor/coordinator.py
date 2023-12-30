@@ -67,7 +67,7 @@ class MonitorCoordinator(DataUpdateCoordinator[_dataT]):
         super().__init__(
             hass,
             _LOGGER,
-            name=DOMAIN,
+            name=f"{DOMAIN} {type_}_{argument}",
             update_interval=DEFAULT_SCAN_INTERVAL,
             always_update=False,
         )
