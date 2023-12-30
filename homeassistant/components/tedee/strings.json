@@ -24,9 +24,6 @@
   },
   "entity": {
     "sensor": {
-      "battery_sensor": {
-        "name": "Battery"
-      },
       "pullspring_duration": {
         "name": "Pullspring duration"
       }

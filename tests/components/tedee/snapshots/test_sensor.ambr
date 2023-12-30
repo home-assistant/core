@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_battery
+# name: test_sensors[battery]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -14,7 +14,7 @@
     'state': '70',
   })
 # ---
-# name: test_battery.1
+# name: test_sensors[battery].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -47,42 +47,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_battery.2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'tedee',
-        '12345',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'Tedee',
-    'model': 'Tedee PRO',
-    'name': 'Lock-1A2B',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_pullspring_duration
+# name: test_sensors[pullspring_duration]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Lock-1A2B Pullspring duration',
       'icon': 'mdi:timer-lock-open',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 's',
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.lock_1a2b_pullspring_duration',
@@ -91,7 +63,7 @@
     'state': '2',
   })
 # ---
-# name: test_pullspring_duration.1
+# name: test_sensors[pullspring_duration].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -121,34 +93,6 @@
     'supported_features': 0,
     'translation_key': 'pullspring_duration',
     'unique_id': '12345-pullspring_duration',
-    'unit_of_measurement': 's',
-  })
-# ---
-# name: test_pullspring_duration.2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'tedee',
-        '12345',
-      ),
-    }),
-    'is_new': False,
-    'manufacturer': 'Tedee',
-    'model': 'Tedee PRO',
-    'name': 'Lock-1A2B',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': None,
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---

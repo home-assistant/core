@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -22,7 +23,7 @@ from .entity import TedeeDescriptionEntity
 class TedeeSensorEntityDescription(SensorEntityDescription):
     """Describes Tedee sensor entity."""
 
-    value_fn: Callable[[TedeeLock], int | None]
+    value_fn: Callable[[TedeeLock], float | None]
 
 
 ENTITIES: tuple[TedeeSensorEntityDescription, ...] = (
@@ -30,7 +31,7 @@ ENTITIES: tuple[TedeeSensorEntityDescription, ...] = (
         key="battery_sensor",
         translation_key="battery_sensor",
         device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda lock: lock.battery_level,
     ),
@@ -38,7 +39,7 @@ ENTITIES: tuple[TedeeSensorEntityDescription, ...] = (
         key="pullspring_duration",
         translation_key="pullspring_duration",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement="s",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.TOTAL,
         icon="mdi:timer-lock-open",
         value_fn=lambda lock: lock.duration_pullspring,
