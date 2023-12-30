@@ -61,7 +61,7 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await get_api(self.hass, user_input)
             except GlancesApiAuthorizationError:
                 errors["base"] = "invalid_auth"
-            except (GlancesApiConnectionError, ServerVersionMismatch):
+            except GlancesApiConnectionError:
                 errors["base"] = "cannot_connect"
             else:
                 self.hass.config_entries.async_update_entry(
@@ -96,7 +96,7 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await get_api(self.hass, user_input)
             except GlancesApiAuthorizationError:
                 errors["base"] = "invalid_auth"
-            except GlancesApiConnectionError:
+            except (GlancesApiConnectionError, ServerVersionMismatch):
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(
