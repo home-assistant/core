@@ -4,12 +4,12 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterable, Coroutine
 import logging
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.config import config_per_platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_prepare_setup_platform
 
 from .const import (
@@ -38,7 +38,7 @@ def async_get_provider(
 ) -> Provider | None:
     """Return provider."""
     if domain:
-        return hass.data[DATA_PROVIDERS].get(domain)
+        return cast(Provider | None, hass.data[DATA_PROVIDERS].get(domain))
 
     provider = async_default_provider(hass)
     return hass.data[DATA_PROVIDERS][provider] if provider is not None else None
@@ -51,7 +51,11 @@ def async_setup_legacy(
     """Set up legacy speech-to-text providers."""
     providers = hass.data[DATA_PROVIDERS] = {}
 
-    async def async_setup_platform(p_type, p_config=None, discovery_info=None):
+    async def async_setup_platform(
+        p_type: str,
+        p_config: ConfigType | None = None,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
         """Set up an STT platform."""
         if p_config is None:
             p_config = {}
@@ -73,7 +77,9 @@ def async_setup_legacy(
             return
 
     # Add discovery support
-    async def async_platform_discovered(platform, info):
+    async def async_platform_discovered(
+        platform: str, info: DiscoveryInfoType | None
+    ) -> None:
         """Handle for discovered platform."""
         await async_setup_platform(platform, discovery_info=info)
 
@@ -82,6 +88,7 @@ def async_setup_legacy(
     return [
         async_setup_platform(p_type, p_config)
         for p_type, p_config in config_per_platform(config, DOMAIN)
+        if p_type
     ]
 
 
