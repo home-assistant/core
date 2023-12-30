@@ -379,6 +379,7 @@ homeassistant.components.valve.*
 homeassistant.components.velbus.*
 homeassistant.components.vlc_telnet.*
 homeassistant.components.wake_on_lan.*
+homeassistant.components.wake_word.*
 homeassistant.components.wallbox.*
 homeassistant.components.water_heater.*
 homeassistant.components.watttime.*
