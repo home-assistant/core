@@ -198,6 +198,8 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "suggested_unit_of_measurement",
 }
 
+TEMPERATURE_UNITS = {UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT}
+
 
 class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for sensor entities."""
@@ -509,8 +511,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         native_unit_of_measurement = self.native_unit_of_measurement
 
         if (
-            native_unit_of_measurement
-            in {UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT}
+            native_unit_of_measurement in TEMPERATURE_UNITS
             and self.device_class is SensorDeviceClass.TEMPERATURE
         ):
             return self.hass.config.units.temperature_unit
@@ -670,11 +671,10 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             converter := UNIT_CONVERTERS.get(device_class)
         ):
             # Unit conversion needed
-            converted_numerical_value = converter.convert(
-                float(numerical_value),
+            converted_numerical_value = converter.converter_factory(
                 native_unit_of_measurement,
                 unit_of_measurement,
-            )
+            )(float(numerical_value))
 
             # If unit conversion is happening, and there's no rounding for display,
             # do a best effort rounding here.

@@ -1,14 +1,34 @@
 """Support for Netgear LTE binary sensors."""
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .entity import LTEEntity
-from .sensor_types import ALL_BINARY_SENSORS, BINARY_SENSOR_CLASSES
+
+BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
+        key="roaming",
+        translation_key="roaming",
+    ),
+    BinarySensorEntityDescription(
+        key="wire_connected",
+        translation_key="wire_connected",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    ),
+    BinarySensorEntityDescription(
+        key="mobile_connected",
+        translation_key="mobile_connected",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -18,19 +38,14 @@ async def async_setup_entry(
     modem_data = hass.data[DOMAIN].get_modem_data(entry.data)
 
     async_add_entities(
-        LTEBinarySensor(modem_data, sensor) for sensor in ALL_BINARY_SENSORS
+        NetgearLTEBinarySensor(entry, modem_data, sensor) for sensor in BINARY_SENSORS
     )
 
 
-class LTEBinarySensor(LTEEntity, BinarySensorEntity):
+class NetgearLTEBinarySensor(LTEEntity, BinarySensorEntity):
     """Netgear LTE binary sensor entity."""
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return getattr(self.modem_data.data, self.sensor_type)
-
-    @property
-    def device_class(self):
-        """Return the class of binary sensor."""
-        return BINARY_SENSOR_CLASSES[self.sensor_type]
+        return getattr(self.modem_data.data, self.entity_description.key)

@@ -67,10 +67,10 @@ from .const import (
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
-    LENGTH_METERS,
     MATCH_ALL,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_STATE_STATE,
+    UnitOfLength,
     __version__,
 )
 from .exceptions import (
@@ -147,9 +147,42 @@ class ConfigSource(enum.StrEnum):
 
 
 # SOURCE_* are deprecated as of Home Assistant 2022.2, use ConfigSource instead
-SOURCE_DISCOVERED = ConfigSource.DISCOVERED.value
-SOURCE_STORAGE = ConfigSource.STORAGE.value
-SOURCE_YAML = ConfigSource.YAML.value
+_DEPRECATED_SOURCE_DISCOVERED = (ConfigSource.DISCOVERED, "2025.1")
+_DEPRECATED_SOURCE_STORAGE = (ConfigSource.STORAGE, "2025.1")
+_DEPRECATED_SOURCE_YAML = (ConfigSource.YAML, "2025.1")
+
+
+# Can be removed if no deprecated constant are in this module anymore
+def __getattr__(name: str) -> Any:
+    """Check if the not found name is a deprecated constant.
+
+    If it is, print a deprecation warning and return the value of the constant.
+    Otherwise raise AttributeError.
+    """
+    module_globals = globals()
+    if f"_DEPRECATED_{name}" not in module_globals:
+        raise AttributeError(f"Module {__name__} has no attribute {name!r}")
+
+    # Avoid circular import
+    from .helpers.deprecation import (  # pylint: disable=import-outside-toplevel
+        check_if_deprecated_constant,
+    )
+
+    return check_if_deprecated_constant(name, module_globals)
+
+
+# Can be removed if no deprecated constant are in this module anymore
+def __dir__() -> list[str]:
+    """Return dir() with deprecated constants."""
+    # Copied method from homeassistant.helpers.deprecattion#dir_with_deprecated_constants to avoid import cycle
+    module_globals = globals()
+
+    return list(module_globals) + [
+        name.removeprefix("_DEPRECATED_")
+        for name in module_globals
+        if name.startswith("_DEPRECATED_")
+    ]
+
 
 # How long to wait until things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
@@ -856,7 +889,7 @@ class HomeAssistant:
                         continue
                     tasks.append(task_or_none)
                 if tasks:
-                    asyncio.gather(*tasks, return_exceptions=True)
+                    await asyncio.gather(*tasks, return_exceptions=True)
         except asyncio.TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for shutdown jobs to complete, the shutdown will"
@@ -1376,7 +1409,13 @@ class State:
 
         self.entity_id = entity_id
         self.state = state
-        self.attributes = ReadOnlyDict(attributes or {})
+        # State only creates and expects a ReadOnlyDict so
+        # there is no need to check for subclassing with
+        # isinstance here so we can use the faster type check.
+        if type(attributes) is not ReadOnlyDict:  # noqa: E721
+            self.attributes = ReadOnlyDict(attributes or {})
+        else:
+            self.attributes = attributes
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
@@ -1795,6 +1834,11 @@ class StateMachine:
         else:
             now = dt_util.utcnow()
 
+        if same_attr:
+            if TYPE_CHECKING:
+                assert old_state is not None
+            attributes = old_state.attributes
+
         state = State(
             entity_id,
             new_state,
@@ -1937,13 +1981,20 @@ class ServiceRegistry:
             Coroutine[Any, Any, ServiceResponse] | ServiceResponse | None,
         ],
         schema: vol.Schema | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Register a service.
 
         Schema is called to coerce and validate the service data.
         """
         run_callback_threadsafe(
-            self._hass.loop, self.async_register, domain, service, service_func, schema
+            self._hass.loop,
+            self.async_register,
+            domain,
+            service,
+            service_func,
+            schema,
+            supports_response,
         ).result()
 
     @callback
@@ -2242,7 +2293,8 @@ class Config:
         Async friendly.
         """
         return self.units.length(
-            location.distance(self.latitude, self.longitude, lat, lon), LENGTH_METERS
+            location.distance(self.latitude, self.longitude, lat, lon),
+            UnitOfLength.METERS,
         )
 
     def path(self, *path: str) -> str:

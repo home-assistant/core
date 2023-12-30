@@ -38,6 +38,7 @@ CAMERA_SWITCHES_BASIC = [
     and d.name != "Detections: License Plate"
     and d.name != "Detections: Smoke/CO"
     and d.name != "SSH Enabled"
+    and d.name != "Color Night Vision"
 ]
 CAMERA_SWITCHES_NO_EXTRA = [
     d for d in CAMERA_SWITCHES_BASIC if d.name not in ("High FPS", "Privacy Mode")

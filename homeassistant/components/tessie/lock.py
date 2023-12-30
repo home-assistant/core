@@ -27,8 +27,6 @@ async def async_setup_entry(
 class TessieLockEntity(TessieEntity, LockEntity):
     """Lock entity for current charge."""
 
-    _attr_name = None
-
     def __init__(
         self,
         coordinator: TessieStateUpdateCoordinator,
