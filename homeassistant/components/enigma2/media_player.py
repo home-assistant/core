@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from openwebif.api import OpenWebIfDevice
-from openwebif.enums import RemoteControlCodes
+from openwebif.enums import RemoteControlCodes, SetVolumeOption
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -142,15 +142,11 @@ class Enigma2Device(MediaPlayerEntity):
 
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
-        if self._attr_volume_level is None:
-            return
-        await self._device.set_volume(int(self._attr_volume_level * 100) + 5)
+        await self._device.set_volume(SetVolumeOption.UP)
 
     async def async_volume_down(self) -> None:
         """Volume down media player."""
-        if self._attr_volume_level is None:
-            return
-        await self._device.set_volume(int(self._attr_volume_level * 100) - 5)
+        await self._device.set_volume(SetVolumeOption.DOWN)
 
     async def async_media_stop(self) -> None:
         """Send stop command."""

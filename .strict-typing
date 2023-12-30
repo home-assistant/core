@@ -102,6 +102,8 @@ homeassistant.components.configurator.*
 homeassistant.components.cover.*
 homeassistant.components.cpuspeed.*
 homeassistant.components.crownstone.*
+homeassistant.components.date.*
+homeassistant.components.datetime.*
 homeassistant.components.deconz.*
 homeassistant.components.demo.*
 homeassistant.components.derivative.*
@@ -350,6 +352,7 @@ homeassistant.components.threshold.*
 homeassistant.components.tibber.*
 homeassistant.components.tile.*
 homeassistant.components.tilt_ble.*
+homeassistant.components.todo.*
 homeassistant.components.tolo.*
 homeassistant.components.tplink.*
 homeassistant.components.tplink_omada.*

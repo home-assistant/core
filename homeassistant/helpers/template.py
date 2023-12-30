@@ -651,7 +651,7 @@ class Template:
             except Exception:  # pylint: disable=broad-except
                 self._exc_info = sys.exc_info()
             finally:
-                run_callback_threadsafe(self.hass.loop, finish_event.set)
+                self.hass.loop.call_soon_threadsafe(finish_event.set)
 
         try:
             template_render_thread = ThreadWithException(target=_render_template)

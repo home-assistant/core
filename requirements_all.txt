@@ -478,7 +478,7 @@ asyncinotify==4.0.2
 asyncpysupla==0.0.5
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.4.0
+asyncsleepiq==1.4.1
 
 # homeassistant.components.aten_pe
 # atenpdu==0.3.2
@@ -2403,7 +2403,7 @@ rocketchat-API==0.6.1
 rokuecp==0.18.1
 
 # homeassistant.components.roomba
-roombapy==1.6.8
+roombapy==1.6.10
 
 # homeassistant.components.roon
 roonapi==0.1.6
@@ -2638,7 +2638,7 @@ tessie-api==0.0.9
 # tf-models-official==2.5.0
 
 # homeassistant.components.thermobeacon
-thermobeacon-ble==0.6.0
+thermobeacon-ble==0.6.2
 
 # homeassistant.components.thermopro
 thermopro-ble==0.5.0
