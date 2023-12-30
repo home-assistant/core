@@ -3,7 +3,9 @@ from __future__ import annotations
 
 from openwebif.api import OpenWebIfDevice
 from openwebif.enums import RemoteControlCodes, SetVolumeOption
+import voluptuous as vol
 
+from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -20,16 +22,40 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_DEEP_STANDBY, CONF_SOURCE_BOUQUET, CONF_USE_CHANNEL_ICON, DOMAIN
+from .const import (
+    CONF_DEEP_STANDBY,
+    CONF_MAC_ADDRESS,
+    CONF_SOURCE_BOUQUET,
+    CONF_USE_CHANNEL_ICON,
+    DOMAIN,
+)
 
 ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
 ATTR_MEDIA_DESCRIPTION = "media_description"
 ATTR_MEDIA_END_TIME = "media_end_time"
 ATTR_MEDIA_START_TIME = "media_start_time"
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_PORT): cv.port,
+        vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_SSL): cv.boolean,
+        vol.Optional(CONF_USE_CHANNEL_ICON): cv.boolean,
+        vol.Optional(CONF_DEEP_STANDBY): cv.boolean,
+        vol.Optional(CONF_MAC_ADDRESS): cv.string,
+        vol.Optional(CONF_SOURCE_BOUQUET): cv.string,
+    }
+)
 
 
 async def async_setup_platform(
@@ -41,6 +67,23 @@ async def async_setup_platform(
     """Set up of an enigma2 media player."""
 
     host = config[CONF_HOST]
+
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2024.7.0",
+        is_fixable=False,
+        is_persistent=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Enigma2",
+        },
+    )
+
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.options[CONF_HOST] == host:
             return
