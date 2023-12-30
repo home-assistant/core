@@ -479,11 +479,25 @@ class EnvoyInverterEntity(EnvoySensorBaseEntity):
         )
 
     @property
-    def native_value(self) -> datetime.datetime | float:
+    def native_value(self) -> datetime.datetime | float | None:
         """Return the state of the sensor."""
         inverters = self.data.inverters
         assert inverters is not None
-        return self.entity_description.value_fn(inverters[self._serial_number])
+        # Some envoy fw versions return an empty inverter array every 4 hours when
+        # no production is taking place. Prevent collection failur due to this
+        # as other data seems fine. Inveretrs will show unknown during this cycle.
+        try:
+            result: datetime.datetime | float = self.entity_description.value_fn(
+                inverters[self._serial_number]
+            )
+        except KeyError:
+            _LOGGER.warning(
+                "Inverter %s not in returned inverters array (size: %s)",
+                self._serial_number,
+                len(inverters),
+            )
+            return None
+        return result
 
 
 class EnvoyEnchargeEntity(EnvoySensorBaseEntity):
