@@ -21,7 +21,7 @@ ATTRIBUTION = "Data provided by WorldTides"
 
 DEFAULT_NAME = "WorldTidesInfo"
 
-SCAN_INTERVAL = timedelta(seconds=3600)
+SCAN_INTERVAL = timedelta(seconds=86400)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
