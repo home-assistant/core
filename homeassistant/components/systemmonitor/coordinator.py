@@ -89,7 +89,7 @@ class SystemMonitorNetIOCoordinator(MonitorCoordinator[int]):
         raise UpdateFailed(f"NIC {self._argument} could not be found")
 
 
-class SystemMonitorNetThrougputCoordinator(MonitorCoordinator[float | None]):
+class SystemMonitorNetThroughputCoordinator(MonitorCoordinator[float | None]):
     """A System monitor Network Throughput Data Update Coordinator."""
 
     def __init__(self, hass: HomeAssistant, type_: str, argument: str) -> None:
