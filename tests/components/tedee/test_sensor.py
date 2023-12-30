@@ -16,7 +16,7 @@ pytestmark = pytest.mark.usefixtures("init_integration")
     "key",
     [
         "battery",
-        "duration",
+        "pullspring_duration",
     ],
 )
 async def test_sensors(
