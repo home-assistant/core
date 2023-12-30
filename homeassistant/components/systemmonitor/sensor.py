@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import cache, lru_cache
@@ -12,6 +13,8 @@ import sys
 from typing import Any, Literal
 
 import psutil
+from psutil._common import sdiskusage, sswap
+from psutil._pslinux import svmem
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -80,6 +83,17 @@ class SysMonitorSensorEntityDescription(SensorEntityDescription):
 
     mandatory_arg: bool = False
     placeholder: str | None = None
+    value_disk: Callable[[sdiskusage], float] | None = None
+    value_swap: Callable[[sswap], float] | None = None
+    value_memory: Callable[[svmem], float] | None = None
+    value_net_io: Callable[[int], float] | None = None
+    value_net_throughput: Callable[[float], float] | None = None
+    value_net_addr: Callable[[str], str] | None = None
+    value_load: Callable[[tuple[float, float, float]], float] | None = None
+    value_processor: Callable[[float], float] | None = None
+    value_boot_time: Callable[[datetime], datetime] | None = None
+    value_process: Callable[[bool], str] | None = None
+    value_cpu_temp: Callable[[float], float] | None = None
 
 
 SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
