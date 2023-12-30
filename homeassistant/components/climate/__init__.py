@@ -227,6 +227,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "temperature_unit",
     "current_humidity",
     "target_humidity",
+    "hvac_mode",
     "hvac_modes",
     "hvac_action",
     "current_temperature",
@@ -414,7 +415,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the humidity we try to reach."""
         return self._attr_target_humidity
 
-    @property
+    @cached_property
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
         return self._attr_hvac_mode
