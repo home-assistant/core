@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[battery]
+# name: test_sensors
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -14,7 +14,7 @@
     'state': '70',
   })
 # ---
-# name: test_sensors[battery].1
+# name: test_sensors.1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -47,7 +47,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[pullspring_duration]
+# name: test_sensors.2
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -63,7 +63,7 @@
     'state': '2',
   })
 # ---
-# name: test_sensors[pullspring_duration].1
+# name: test_sensors.3
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
