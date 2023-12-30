@@ -152,8 +152,6 @@ class UnifiSensorEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
     """Validate and load entities from different UniFi handlers."""
 
     value_fn: Callable[[UniFiController, ApiItemT], datetime | float | str | None]
-    should_check_heartbeat: bool
-    is_connected_fn: Callable[[UniFiController, str], bool]
 
 
 @callback
@@ -169,6 +167,8 @@ class UnifiSensorEntityDescription(
     UnifiSensorEntityDescriptionMixin[HandlerT, ApiItemT],
 ):
     """Class describing UniFi sensor entity."""
+
+    is_connected_fn: Callable[[UniFiController, str], bool] | None = None
 
 
 ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
@@ -186,7 +186,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_client_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        should_check_heartbeat=True,
         is_connected_fn=async_client_is_connected_fn,
         name_fn=lambda _: "RX",
         object_fn=lambda api, obj_id: api.clients[obj_id],
@@ -209,7 +208,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_client_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        should_check_heartbeat=True,
         is_connected_fn=async_client_is_connected_fn,
         name_fn=lambda _: "TX",
         object_fn=lambda api, obj_id: api.clients[obj_id],
@@ -231,8 +229,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        should_check_heartbeat=False,
-        is_connected_fn=lambda controller, _: False,
         name_fn=lambda port: f"{port.name} PoE Power",
         object_fn=lambda api, obj_id: api.ports[obj_id],
         should_poll=False,
@@ -252,8 +248,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_client_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        should_check_heartbeat=False,
-        is_connected_fn=lambda controller, _: False,
         name_fn=lambda client: "Uptime",
         object_fn=lambda api, obj_id: api.clients[obj_id],
         should_poll=False,
@@ -272,8 +266,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_wlan_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        should_check_heartbeat=False,
-        is_connected_fn=lambda controller, _: False,
         name_fn=lambda wlan: None,
         object_fn=lambda api, obj_id: api.wlans[obj_id],
         should_poll=True,
@@ -293,8 +285,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        should_check_heartbeat=False,
-        is_connected_fn=lambda controller, _: False,
         name_fn=lambda outlet: f"{outlet.name} Outlet Power",
         object_fn=lambda api, obj_id: api.outlets[obj_id],
         should_poll=True,
@@ -315,8 +305,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        should_check_heartbeat=False,
-        is_connected_fn=lambda controller, _: False,
         name_fn=lambda device: "AC Power Budget",
         object_fn=lambda api, obj_id: api.devices[obj_id],
         should_poll=False,
@@ -337,8 +325,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        should_check_heartbeat=False,
-        is_connected_fn=lambda controller, _: False,
         name_fn=lambda device: "AC Power Consumption",
         object_fn=lambda api, obj_id: api.devices[obj_id],
         should_poll=False,
@@ -357,8 +343,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        should_check_heartbeat=False,
-        is_connected_fn=lambda controller, _: False,
         name_fn=lambda device: "Uptime",
         object_fn=lambda api, obj_id: api.devices[obj_id],
         should_poll=False,
@@ -378,8 +362,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        should_check_heartbeat=False,
-        is_connected_fn=lambda controller, _: False,
         name_fn=lambda device: "Temperature",
         object_fn=lambda api, obj_id: api.devices[obj_id],
         should_poll=False,
@@ -398,8 +380,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
-        should_check_heartbeat=False,
-        is_connected_fn=lambda controller, _: False,
         name_fn=lambda device: "State",
         object_fn=lambda api, obj_id: api.devices[obj_id],
         should_poll=False,
@@ -448,7 +428,7 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
         if (value := description.value_fn(self.controller, obj)) != self.native_value:
             self._attr_native_value = value
 
-        if description.should_check_heartbeat:
+        if description.is_connected_fn is not None:
             # Send heartbeat if client is connected
             if description.is_connected_fn(self.controller, self._obj_id):
                 self.controller.async_heartbeat(
