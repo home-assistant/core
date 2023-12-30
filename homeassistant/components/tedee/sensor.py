@@ -29,7 +29,6 @@ class TedeeSensorEntityDescription(SensorEntityDescription):
 ENTITIES: tuple[TedeeSensorEntityDescription, ...] = (
     TedeeSensorEntityDescription(
         key="battery_sensor",
-        translation_key="battery_sensor",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,

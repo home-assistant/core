@@ -42,28 +42,28 @@
     'platform': 'tedee',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'battery_sensor',
+    'translation_key': None,
     'unique_id': '12345-battery_sensor',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[pullspring_duration]
+# name: test_sensors[duration]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Lock-1A2B Pullspring duration',
+      'friendly_name': 'Lock-1A2B Duration',
       'icon': 'mdi:timer-lock-open',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.lock_1a2b_pullspring_duration',
+    'entity_id': 'sensor.lock_1a2b_duration',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
 # ---
-# name: test_sensors[pullspring_duration].1
+# name: test_sensors[duration].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -77,7 +77,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.lock_1a2b_pullspring_duration',
+    'entity_id': 'sensor.lock_1a2b_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -87,7 +87,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': 'mdi:timer-lock-open',
-    'original_name': 'Pullspring duration',
+    'original_name': 'Duration',
     'platform': 'tedee',
     'previous_unique_id': None,
     'supported_features': 0,
