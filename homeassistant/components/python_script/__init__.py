@@ -27,7 +27,6 @@ from homeassistant.core import (
     SupportsResponse,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -250,16 +249,6 @@ def execute(hass, filename, source, data=None, return_response=False):
         if return_response:
             raise ServiceValidationError(f"Error executing script: {err}") from err
         logger.error("Error executing script: %s", err)
-        ir.create_issue(
-            hass,
-            DOMAIN,
-            filename,
-            breaks_in_ha_version="2024.4.0",
-            is_fixable=False,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key="script_continue_on_error",
-            translation_placeholders={"script_name": filename.replace(".py", "")},
-        )
         return None
     except Exception as err:  # pylint: disable=broad-except
         if return_response:
@@ -267,16 +256,6 @@ def execute(hass, filename, source, data=None, return_response=False):
                 f"Error executing script ({type(err).__name__}): {err}"
             ) from err
         logger.exception("Error executing script: %s", err)
-        ir.create_issue(
-            hass,
-            DOMAIN,
-            filename,
-            breaks_in_ha_version="2024.4.0",
-            is_fixable=False,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key="script_continue_on_error",
-            translation_placeholders={"script_name": filename.replace(".py", "")},
-        )
         return None
 
     return restricted_globals["output"]
