@@ -50,7 +50,7 @@ async def test_config_exceptions(
 ) -> None:
     """Tests if the correct config error is raised when connecting to the api fails."""
     with patch(
-        "bluecurrent_api.Client.connect",
+        "homeassistant.components.blue_current.Client.connect",
         side_effect=api_error,
     ), pytest.raises(config_error):
         config_entry = MockConfigEntry(
@@ -161,14 +161,15 @@ async def test_start_loop(hass: HomeAssistant) -> None:
         connector = Connector(hass, config_entry, Client)
 
         with patch(
-            "bluecurrent_api.Client.start_loop",
+            "homeassistant.components.blue_current.Client.start_loop",
             side_effect=WebsocketError("unknown command"),
         ):
             await connector.start_loop()
             test_async_call_later.assert_called_with(hass, 1, connector.reconnect)
 
         with patch(
-            "bluecurrent_api.Client.start_loop", side_effect=RequestLimitReached
+            "homeassistant.components.blue_current.Client.start_loop",
+            side_effect=RequestLimitReached,
         ):
             await connector.start_loop()
             test_async_call_later.assert_called_with(hass, 1, connector.reconnect)
@@ -189,15 +190,19 @@ async def test_reconnect(hass: HomeAssistant) -> None:
 
         connector = Connector(hass, config_entry, Client)
 
-        with patch("bluecurrent_api.Client.connect", side_effect=WebsocketError):
+        with patch(
+            "homeassistant.components.blue_current.Client.connect",
+            side_effect=WebsocketError,
+        ):
             await connector.reconnect()
 
         test_async_call_later.assert_called_with(hass, 20, connector.reconnect)
 
         with patch(
-            "bluecurrent_api.Client.connect", side_effect=RequestLimitReached
+            "homeassistant.components.blue_current.Client.connect",
+            side_effect=RequestLimitReached,
         ), patch(
-            "bluecurrent_api.Client.get_next_reset_delta",
+            "homeassistant.components.blue_current.Client.get_next_reset_delta",
             return_value=timedelta(hours=1),
         ):
             await connector.reconnect()
@@ -206,10 +211,10 @@ async def test_reconnect(hass: HomeAssistant) -> None:
             hass, timedelta(hours=1), connector.reconnect
         )
 
-        with patch("bluecurrent_api.Client.connect"), patch(
+        with patch("homeassistant.components.blue_current.Client.connect"), patch(
             "homeassistant.components.blue_current.Connector.start_loop"
         ) as test_start_loop, patch(
-            "bluecurrent_api.Client.get_charge_points"
+            "homeassistant.components.blue_current.Client.get_charge_points"
         ) as test_get_charge_points:
             await connector.reconnect()
             test_start_loop.assert_called_once()

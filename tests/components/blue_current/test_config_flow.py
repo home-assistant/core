@@ -33,8 +33,12 @@ async def test_user(hass: HomeAssistant) -> None:
     )
     assert result["errors"] == {}
 
-    with patch("bluecurrent_api.Client.validate_api_token", return_value="1234"), patch(
-        "bluecurrent_api.Client.get_email", return_value="test@email.com"
+    with patch(
+        "homeassistant.components.blue_current.config_flow.Client.validate_api_token",
+        return_value="1234",
+    ), patch(
+        "homeassistant.components.blue_current.config_flow.Client.get_email",
+        return_value="test@email.com",
     ), patch(
         "homeassistant.components.blue_current.async_setup_entry",
         return_value=True,
@@ -64,7 +68,7 @@ async def test_user(hass: HomeAssistant) -> None:
 async def test_flow_fails(hass: HomeAssistant, error: Exception, message: str) -> None:
     """Test bluecurrent api errors during configuration flow."""
     with patch(
-        "bluecurrent_api.Client.validate_api_token",
+        "homeassistant.components.blue_current.config_flow.Client.validate_api_token",
         side_effect=error,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -74,8 +78,12 @@ async def test_flow_fails(hass: HomeAssistant, error: Exception, message: str) -
         )
         assert result["errors"]["base"] == message
 
-    with patch("bluecurrent_api.Client.validate_api_token", return_value="1234"), patch(
-        "bluecurrent_api.Client.get_email", return_value="test@email.com"
+    with patch(
+        "homeassistant.components.blue_current.config_flow.Client.validate_api_token",
+        return_value="1234",
+    ), patch(
+        "homeassistant.components.blue_current.config_flow.Client.get_email",
+        return_value="test@email.com",
     ), patch(
         "homeassistant.components.blue_current.async_setup_entry",
         return_value=True,
@@ -104,9 +112,12 @@ async def test_reauth(
 ) -> None:
     """Test reauth flow."""
     with patch(
-        "bluecurrent_api.Client.validate_api_token",
+        "homeassistant.components.blue_current.config_flow.Client.validate_api_token",
         return_value=customer_id,
-    ), patch("bluecurrent_api.Client.get_email", return_value="test@email.com"):
+    ), patch(
+        "homeassistant.components.blue_current.config_flow.Client.get_email",
+        return_value="test@email.com",
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             entry_id="uuid",
