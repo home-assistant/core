@@ -486,18 +486,14 @@ class EnvoyInverterEntity(EnvoySensorBaseEntity):
         # Some envoy fw versions return an empty inverter array every 4 hours when
         # no production is taking place. Prevent collection failur due to this
         # as other data seems fine. Inveretrs will show unknown during this cycle.
-        try:
-            result: datetime.datetime | float = self.entity_description.value_fn(
-                inverters[self._serial_number]
-            )
-        except KeyError:
-            _LOGGER.warning(
+        if self._serial_number not in inverters:
+            _LOGGER.debug(
                 "Inverter %s not in returned inverters array (size: %s)",
                 self._serial_number,
                 len(inverters),
             )
             return None
-        return result
+        return self.entity_description.value_fn(inverters[self._serial_number])
 
 
 class EnvoyEnchargeEntity(EnvoySensorBaseEntity):
