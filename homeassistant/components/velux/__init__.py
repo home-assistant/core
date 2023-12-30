@@ -45,7 +45,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass,
             DOMAIN,
             "deprecated_yaml",
-            breaks_in_ha_version="2023.7.0",
+            breaks_in_ha_version="2024.5.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_yaml",
@@ -84,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Register velux services
     async def async_reboot_gateway(service_call: ServiceCall) -> None:
         """Reboot Velux KLF200 Gateway."""
-        await pyvlx.klf200.reboot()
+        await pyvlx.reboot_gateway()
 
     hass.services.async_register(DOMAIN, "reboot_gateway", async_reboot_gateway)
 
@@ -93,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Close connection when hass stops."""
         _LOGGER.debug("Velux interface terminated")
         # Avoid reconnection problems due to unresponsive KLF200
-        await pyvlx.klf200.reboot()
+        await pyvlx.reboot_gateway()
         # Close the socket
         await pyvlx.disconnect()
 

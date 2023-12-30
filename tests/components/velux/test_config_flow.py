@@ -1,5 +1,6 @@
 """Tests for the Velux config flow."""
 from ipaddress import ip_address
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from pyvlx import PyVLX, PyVLXException
@@ -20,11 +21,11 @@ from .conftest import TestPyVLX
 from .const import HOST, HOSTNAME, PASSWORD
 
 
-@patch("homeassistant.components.velux.config_flow.PyVLX", new=AsyncMock, spec=PyVLX)
+@patch("homeassistant.components.velux.config_flow.PyVLX", new=TestPyVLX)
 async def test_async_step_import(hass: HomeAssistant) -> None:
     """Test import step."""
     with patch("homeassistant.components.velux.PyVLX", autospec=True) as pyvlx:
-        result = await hass.config_entries.flow.async_init(
+        result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
             data={
@@ -43,7 +44,7 @@ async def test_async_step_import(hass: HomeAssistant) -> None:
 
 async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
-    result = await hass.config_entries.flow.async_init(
+    result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
@@ -54,7 +55,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
 async def test_async_step_wrong_host(hass: HomeAssistant) -> None:
     """Test import user."""
     with patch("homeassistant.components.velux.PyVLX", autospec=True) as pyvlx:
-        result = await hass.config_entries.flow.async_init(
+        result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
             data={
@@ -77,7 +78,7 @@ async def test_async_step_wrong_host(hass: HomeAssistant) -> None:
 async def test_async_step_wrong_password(hass: HomeAssistant) -> None:
     """Test import user."""
     with patch("homeassistant.components.velux.PyVLX", autospec=True) as pyvlx:
-        result = await hass.config_entries.flow.async_init(
+        result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
             data={

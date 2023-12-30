@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 from pyvlx.config import Config
+from pyvlx.klf200gateway import Klf200Gateway
 from pyvlx.node import Node
 from pyvlx.opening_device import Blind, OpeningDevice, Window
 from pyvlx.scene import Scene
@@ -25,9 +26,11 @@ class TestPyVLX:
         """Initialize pyvlx mock."""
         self.nodes: list[Node] = []
         self.scenes: list[Scene] = []
+        self.host: str = host
+        self.password: str = password
         self.config: Config = Config(pyvlx=self, host=host, password=password)
         self.version = "software test version"
-        self.klf200 = AsyncMock()
+        self.klf200 = TestKLF200(pyvlx=self)
         self.heartbeat = AsyncMock()
         self.connection = AsyncMock()
         self.reboot_initiated: bool = False
@@ -37,7 +40,6 @@ class TestPyVLX:
 
     async def connect(self) -> None:
         """Simulate pyvlx connect function."""
-        return
 
     async def load_nodes(self) -> None:
         """Load test nodes."""
@@ -54,23 +56,34 @@ class TestPyVLX:
                 pyvlx=self, node_id=3, name="Window 3", serial_number="Cover3_serial"
             )
         )
-        return
 
     async def load_scenes(self) -> None:
         """Load test scenes."""
         self.scenes.append(Scene(pyvlx=self, scene_id=1, name="Test scene 1"))
         self.scenes.append(Scene(pyvlx=self, scene_id=2, name="Test scene 2"))
-        return
 
     async def reboot_gateway(self) -> None:
         """Simulate a gateway reboot."""
-        self.reboot_initiated = True
-        return
+        await self.klf200.reboot()
 
     async def disconnect(self) -> None:
         """Simulate a gateway reboot."""
         self.disconnected = True
-        return
+
+
+class TestKLF200(AsyncMock):
+    """KLF200 mock class."""
+
+    def __init__(self, pyvlx: TestPyVLX) -> None:
+        """Initialize a mocked KLF200 Gateway."""
+        super().__init__()
+        self.pyvlx = pyvlx
+        self.mock_add_spec(spec=Klf200Gateway)
+
+    async def reboot(self) -> bool:
+        """Simulate a gateway reboot."""
+        self.pyvlx.reboot_initiated = True
+        return self.pyvlx.reboot_initiated
 
 
 @pytest.fixture(name="config_entry")
