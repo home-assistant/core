@@ -21,7 +21,9 @@ from .const import (
 
 
 class GoveeLocalApiCoordinator(DataUpdateCoordinator):
-    """My custom coordinator."""
+    """Govee Local API coordinator."""
+
+    config_entry: ConfigEntry
 
     def __init__(
         self,
@@ -38,9 +40,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator):
             update_interval=scan_interval,
         )
 
-        self._config_entry = config_entry
         config = config_entry.data["config"]
-
         option_discovery_interval = config_entry.options.get(CONF_DISCOVERY_INTERVAL)
         self._discovery_interval = (
             option_discovery_interval
@@ -78,29 +78,24 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator):
 
     async def turn_on(self, device: GoveeDevice) -> None:
         """Turn on the light."""
-        assert self._controller == device.controller
         await device.turn_on()
 
     async def turn_off(self, device: GoveeDevice) -> None:
         """Turn off the light."""
-        assert self._controller == device.controller
         await device.turn_off()
 
     async def set_brightness(self, device: GoveeDevice, brightness: int) -> None:
         """Set light brightness."""
-        assert self._controller == device.controller
         await device.set_brightness(brightness)
 
     async def set_rgb_color(
         self, device: GoveeDevice, red: int, green: int, blue: int
     ) -> None:
         """Set light RGB color."""
-        assert self._controller == device.controller
         await device.set_rgb_color(red, green, blue)
 
     async def set_temperature(self, device: GoveeDevice, temperature: int) -> None:
         """Set light color in kelvin."""
-        assert self._controller == device.controller
         await device.set_temperature(temperature)
 
     @property
@@ -109,7 +104,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator):
         return self._controller.devices
 
     async def _async_update_data(self):
-        discovery_interval = self._config_entry.options.get(CONF_DISCOVERY_INTERVAL)
+        discovery_interval = self.config_entry.options.get(CONF_DISCOVERY_INTERVAL)
         if discovery_interval and discovery_interval != self._discovery_interval:
             self._controller.set_discovery_interval(discovery_interval)
             self.logger.debug(

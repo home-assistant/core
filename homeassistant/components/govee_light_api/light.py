@@ -93,9 +93,7 @@ class GoveeLight(CoordinatorEntity, LightEntity):
     ) -> None:
         """Govee Light constructor."""
 
-        super(CoordinatorEntity, self).__init__(coordinator)
-
-        self._coordinator = coordinator
+        super().__init__(coordinator)
         self._device = device
         self._device.set_update_callback(self._update_callback)
 
@@ -104,7 +102,6 @@ class GoveeLight(CoordinatorEntity, LightEntity):
         )
 
         self._attr_unique_id: str = device.fingerprint
-        self.entry_id = f"{device.sku}_{device.fingerprint}"
 
         color_modes = set()
         if GoveeLightCapabilities.COLOR_RGB in capabilities:
@@ -125,11 +122,6 @@ class GoveeLight(CoordinatorEntity, LightEntity):
     def name(self) -> str:
         """Name of the entity."""
         return self._device.sku
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._attr_unique_id
 
     @property
     def is_on(self) -> bool:
@@ -166,16 +158,16 @@ class GoveeLight(CoordinatorEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if not self.is_on or not kwargs:
-            await self._coordinator.turn_on(self._device)
+            await self.coordinator.turn_on(self._device)
 
         if ATTR_BRIGHTNESS in kwargs:
             brightness: int = int((float(kwargs[ATTR_BRIGHTNESS]) / 255.0) * 100.0)
-            await self._coordinator.set_brightness(self._device, brightness)
+            await self.coordinator.set_brightness(self._device, brightness)
 
         if ATTR_RGB_COLOR in kwargs:
             self._attr_color_mode = ColorMode.RGB
             red, green, blue = kwargs[ATTR_RGB_COLOR]
-            await self._coordinator.set_rgb_color(self._device, red, green, blue)
+            await self.coordinator.set_rgb_color(self._device, red, green, blue)
         elif ATTR_COLOR_TEMP_KELVIN in kwargs:
             self._attr_color_mode = ColorMode.COLOR_TEMP
             temperature: float = kwargs[ATTR_COLOR_TEMP_KELVIN]
@@ -184,14 +176,12 @@ class GoveeLight(CoordinatorEntity, LightEntity):
                 GoveeLightCapabilities.COLOR_KELVIN_TEMPERATURE, lambda x: x
             )
 
-            await self._coordinator.set_temperature(
-                self._device, converter(temperature)
-            )
+            await self.coordinator.set_temperature(self._device, converter(temperature))
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self._coordinator.turn_off(self._device)
+        await self.coordinator.turn_off(self._device)
         self.async_write_ha_state()
 
     @property
@@ -200,7 +190,7 @@ class GoveeLight(CoordinatorEntity, LightEntity):
         return DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.unique_id)
+                (DOMAIN, self._attr_unique_id)
             },
             name=self.name,
             manufacturer=MANUFACTURER,
