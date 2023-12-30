@@ -5,8 +5,8 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
-from collections.abc import Callable, Collection, Generator, Iterable, MutableMapping
-from contextlib import contextmanager, suppress
+from collections.abc import Callable, Collection, Generator, Iterable
+from contextlib import AbstractContextManager, suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
 from functools import cache, lru_cache, partial, wraps
@@ -20,7 +20,7 @@ import re
 import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
-from types import CodeType
+from types import CodeType, TracebackType
 from typing import (
     Any,
     Concatenate,
@@ -40,7 +40,7 @@ from jinja2 import pass_context, pass_environment, pass_eval_context
 from jinja2.runtime import AsyncLoopContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
-from lru import LRU  # pylint: disable=no-name-in-module
+from lru import LRU
 import orjson
 import voluptuous as vol
 
@@ -147,10 +147,8 @@ EVAL_CACHE_SIZE = 512
 
 MAX_CUSTOM_TEMPLATE_SIZE = 5 * 1024 * 1024
 
-CACHED_TEMPLATE_LRU: MutableMapping[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
-CACHED_TEMPLATE_NO_COLLECT_LRU: MutableMapping[State, TemplateState] = LRU(
-    CACHED_TEMPLATE_STATES
-)
+CACHED_TEMPLATE_LRU: LRU[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
+CACHED_TEMPLATE_NO_COLLECT_LRU: LRU[State, TemplateState] = LRU(CACHED_TEMPLATE_STATES)
 ENTITY_COUNT_GROWTH_FACTOR = 1.2
 
 ORJSON_PASSTHROUGH_OPTIONS = (
@@ -187,9 +185,9 @@ def async_setup(hass: HomeAssistant) -> bool:
         )
         for lru in (CACHED_TEMPLATE_LRU, CACHED_TEMPLATE_NO_COLLECT_LRU):
             # There is no typing for LRU
-            current_size = lru.get_size()  # type: ignore[attr-defined]
+            current_size = lru.get_size()
             if new_size > current_size:
-                lru.set_size(new_size)  # type: ignore[attr-defined]
+                lru.set_size(new_size)
 
     from .event import (  # pylint: disable=import-outside-toplevel
         async_track_time_interval,
@@ -504,7 +502,8 @@ class Template:
 
     def ensure_valid(self) -> None:
         """Return if template is valid."""
-        with set_template(self.template, "compiling"):
+        with _template_context_manager as cm:
+            cm.set_template(self.template, "compiling")
             if self.is_static or self._compiled_code is not None:
                 return
 
@@ -652,7 +651,7 @@ class Template:
             except Exception:  # pylint: disable=broad-except
                 self._exc_info = sys.exc_info()
             finally:
-                run_callback_threadsafe(self.hass.loop, finish_event.set)
+                self.hass.loop.call_soon_threadsafe(finish_event.set)
 
         try:
             template_render_thread = ThreadWithException(target=_render_template)
@@ -1909,6 +1908,66 @@ def average(*args: Any, default: Any = _SENTINEL) -> Any:
         return default
 
 
+def median(*args: Any, default: Any = _SENTINEL) -> Any:
+    """Filter and function to calculate the median.
+
+    Calculates median of an iterable of two or more arguments.
+
+    The parameters may be passed as an iterable or as separate arguments.
+    """
+    if len(args) == 0:
+        raise TypeError("median expected at least 1 argument, got 0")
+
+    # If first argument is a list or tuple and more than 1 argument provided but not a named
+    # default, then use 2nd argument as default.
+    if isinstance(args[0], Iterable):
+        median_list = args[0]
+        if len(args) > 1 and default is _SENTINEL:
+            default = args[1]
+    elif len(args) == 1:
+        raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
+    else:
+        median_list = args
+
+    try:
+        return statistics.median(median_list)
+    except (TypeError, statistics.StatisticsError):
+        if default is _SENTINEL:
+            raise_no_default("median", args)
+        return default
+
+
+def statistical_mode(*args: Any, default: Any = _SENTINEL) -> Any:
+    """Filter and function to calculate the statistical mode.
+
+    Calculates mode of an iterable of two or more arguments.
+
+    The parameters may be passed as an iterable or as separate arguments.
+    """
+    if not args:
+        raise TypeError("statistical_mode expected at least 1 argument, got 0")
+
+    # If first argument is a list or tuple and more than 1 argument provided but not a named
+    # default, then use 2nd argument as default.
+    if len(args) == 1 and isinstance(args[0], Iterable):
+        mode_list = args[0]
+    elif isinstance(args[0], list | tuple):
+        mode_list = args[0]
+        if len(args) > 1 and default is _SENTINEL:
+            default = args[1]
+    elif len(args) == 1:
+        raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
+    else:
+        mode_list = args
+
+    try:
+        return statistics.mode(mode_list)
+    except (TypeError, statistics.StatisticsError):
+        if default is _SENTINEL:
+            raise_no_default("statistical_mode", args)
+        return default
+
+
 def forgiving_float(value, default=_SENTINEL):
     """Try to convert value to a float."""
     try:
@@ -2124,6 +2183,10 @@ def to_json(
 
     option = (
         ORJSON_PASSTHROUGH_OPTIONS
+        # OPT_NON_STR_KEYS is added as a workaround to
+        # ensure subclasses of str are allowed as dict keys
+        # See: https://github.com/ijl/orjson/issues/445
+        | orjson.OPT_NON_STR_KEYS
         | (orjson.OPT_INDENT_2 if pretty_print else 0)
         | (orjson.OPT_SORT_KEYS if sort_keys else 0)
     )
@@ -2213,21 +2276,32 @@ def iif(
     return if_false
 
 
-@contextmanager
-def set_template(template_str: str, action: str) -> Generator:
-    """Store template being parsed or rendered in a Contextvar to aid error handling."""
-    template_cv.set((template_str, action))
-    try:
-        yield
-    finally:
+class TemplateContextManager(AbstractContextManager):
+    """Context manager to store template being parsed or rendered in a ContextVar."""
+
+    def set_template(self, template_str: str, action: str) -> None:
+        """Store template being parsed or rendered in a Contextvar to aid error handling."""
+        template_cv.set((template_str, action))
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        """Raise any exception triggered within the runtime context."""
         template_cv.set(None)
+
+
+_template_context_manager = TemplateContextManager()
 
 
 def _render_with_context(
     template_str: str, template: jinja2.Template, **kwargs: Any
 ) -> str:
     """Store template being rendered in a ContextVar to aid error handling."""
-    with set_template(template_str, "rendering"):
+    with _template_context_manager as cm:
+        cm.set_template(template_str, "rendering")
         return template.render(**kwargs)
 
 
@@ -2376,6 +2450,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["from_json"] = from_json
         self.filters["is_defined"] = fail_when_undefined
         self.filters["average"] = average
+        self.filters["median"] = median
+        self.filters["statistical_mode"] = statistical_mode
         self.filters["random"] = random_every_time
         self.filters["base64_encode"] = base64_encode
         self.filters["base64_decode"] = base64_decode
@@ -2398,6 +2474,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["bool"] = forgiving_boolean
         self.filters["version"] = version
         self.filters["contains"] = contains
+        self.filters["median"] = median
+        self.filters["statistical_mode"] = statistical_mode
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -2419,6 +2497,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["strptime"] = strptime
         self.globals["urlencode"] = urlencode
         self.globals["average"] = average
+        self.globals["median"] = median
+        self.globals["statistical_mode"] = statistical_mode
         self.globals["max"] = min_max_from_filter(self.filters["max"], "max")
         self.globals["min"] = min_max_from_filter(self.filters["min"], "min")
         self.globals["is_number"] = is_number
@@ -2431,6 +2511,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["iif"] = iif
         self.globals["bool"] = forgiving_boolean
         self.globals["version"] = version
+        self.globals["median"] = median
+        self.globals["statistical_mode"] = statistical_mode
         self.tests["is_number"] = is_number
         self.tests["list"] = _is_list
         self.tests["set"] = _is_set
@@ -2555,7 +2637,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["expand"] = hassfunction(expand)
         self.filters["expand"] = self.globals["expand"]
         self.globals["closest"] = hassfunction(closest)
-        self.filters["closest"] = hassfunction(closest_filter)  # type: ignore[arg-type]
+        self.filters["closest"] = hassfunction(closest_filter)
         self.globals["distance"] = hassfunction(distance)
         self.globals["is_hidden_entity"] = hassfunction(is_hidden_entity)
         self.tests["is_hidden_entity"] = hassfunction(
@@ -2596,7 +2678,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         return super().is_safe_attribute(obj, attr, value)
 
     @overload
-    def compile(  # type: ignore[misc]
+    def compile(  # type: ignore[overload-overlap]
         self,
         source: str | jinja2.nodes.Template,
         name: str | None = None,

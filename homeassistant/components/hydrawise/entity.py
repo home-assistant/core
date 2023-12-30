@@ -1,7 +1,7 @@
 """Base classes for Hydrawise entities."""
 from __future__ import annotations
 
-from typing import Any
+from pydrawise.schema import Controller, Zone
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -20,23 +20,25 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
 
     def __init__(
         self,
-        *,
-        data: dict[str, Any],
         coordinator: HydrawiseDataUpdateCoordinator,
         description: EntityDescription,
-        device_id_key: str = "relay_id",
+        controller: Controller,
+        zone: Zone | None = None,
     ) -> None:
         """Initialize the Hydrawise entity."""
         super().__init__(coordinator=coordinator)
-        self.data = data
         self.entity_description = description
-        self._device_id = str(data.get(device_id_key))
+        self.controller = controller
+        self.zone = zone
+        self._device_id = str(controller.id if zone is None else zone.id)
         self._attr_unique_id = f"{self._device_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
-            name=data["name"],
+            name=controller.name if zone is None else zone.name,
             manufacturer=MANUFACTURER,
         )
+        if zone is not None:
+            self._attr_device_info["via_device"] = (DOMAIN, str(controller.id))
         self._update_attrs()
 
     def _update_attrs(self) -> None:

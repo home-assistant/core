@@ -829,7 +829,7 @@ async def test_iblinds_v3_cover(
     hass: HomeAssistant, client, iblinds_v3, integration
 ) -> None:
     """Test iBlinds v3 cover which uses Window Covering CC."""
-    entity_id = "cover.window_blind_controller_horizontal_slats_angle"
+    entity_id = "cover.blind_west_bed_1_horizontal_slats_angle"
     state = hass.states.get(entity_id)
     assert state
     # This device has no state because there is no position value
@@ -854,7 +854,7 @@ async def test_iblinds_v3_cover(
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
-    assert args["nodeId"] == 12
+    assert args["nodeId"] == 131
     assert args["valueId"] == {
         "endpoint": 0,
         "commandClass": 106,
@@ -875,7 +875,7 @@ async def test_iblinds_v3_cover(
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
-    assert args["nodeId"] == 12
+    assert args["nodeId"] == 131
     assert args["valueId"] == {
         "endpoint": 0,
         "commandClass": 106,
@@ -896,7 +896,7 @@ async def test_iblinds_v3_cover(
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
-    assert args["nodeId"] == 12
+    assert args["nodeId"] == 131
     assert args["valueId"] == {
         "endpoint": 0,
         "commandClass": 106,
@@ -917,11 +917,11 @@ async def test_iblinds_v3_cover(
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
-    assert args["nodeId"] == 12
+    assert args["nodeId"] == 131
     assert args["valueId"] == {
         "endpoint": 0,
         "commandClass": 106,
-        "property": "open",
+        "property": "levelChangeUp",
         "propertyKey": 23,
     }
     assert args["value"] is False

@@ -70,7 +70,7 @@ class LTEData:
     """Shared state."""
 
     websession = attr.ib()
-    modem_data = attr.ib(init=False, factory=dict)
+    modem_data: dict[str, ModemData] = attr.ib(init=False, factory=dict)
 
     def get_modem_data(self, config):
         """Get the requested or the only modem_data value."""

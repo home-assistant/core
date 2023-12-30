@@ -31,6 +31,7 @@ from aioairzone.const import (
 )
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
@@ -222,6 +223,9 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
             params[API_HEAT_SET_POINT] = kwargs[ATTR_TARGET_TEMP_LOW]
         await self._async_update_hvac_params(params)
 
+        if ATTR_HVAC_MODE in kwargs:
+            await self.async_set_hvac_mode(kwargs[ATTR_HVAC_MODE])
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""
@@ -244,7 +248,6 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
             self._attr_hvac_mode = HVACMode.OFF
         self._attr_max_temp = self.get_airzone_value(AZD_TEMP_MAX)
         self._attr_min_temp = self.get_airzone_value(AZD_TEMP_MIN)
-        self._attr_target_temperature = self.get_airzone_value(AZD_TEMP_SET)
         if self.supported_features & ClimateEntityFeature.FAN_MODE:
             self._attr_fan_mode = self._speeds.get(self.get_airzone_value(AZD_SPEED))
         if self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
@@ -254,3 +257,5 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
             self._attr_target_temperature_low = self.get_airzone_value(
                 AZD_HEAT_TEMP_SET
             )
+        else:
+            self._attr_target_temperature = self.get_airzone_value(AZD_TEMP_SET)

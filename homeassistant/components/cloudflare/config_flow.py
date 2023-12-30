@@ -5,12 +5,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from pycfdns import CloudflareUpdater
-from pycfdns.exceptions import (
-    CloudflareAuthenticationException,
-    CloudflareConnectionException,
-    CloudflareZoneException,
-)
+import pycfdns
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -23,6 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_RECORDS, DOMAIN
+from .helpers import get_zone_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,54 +29,45 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-def _zone_schema(zones: list[str] | None = None) -> vol.Schema:
+def _zone_schema(zones: list[pycfdns.ZoneModel] | None = None) -> vol.Schema:
     """Zone selection schema."""
     zones_list = []
 
     if zones is not None:
-        zones_list = zones
+        zones_list = [zones["name"] for zones in zones]
 
     return vol.Schema({vol.Required(CONF_ZONE): vol.In(zones_list)})
 
 
-def _records_schema(records: list[str] | None = None) -> vol.Schema:
+def _records_schema(records: list[pycfdns.RecordModel] | None = None) -> vol.Schema:
     """Zone records selection schema."""
     records_dict = {}
 
     if records:
-        records_dict = {name: name for name in records}
+        records_dict = {name["name"]: name["name"] for name in records}
 
     return vol.Schema({vol.Required(CONF_RECORDS): cv.multi_select(records_dict)})
 
 
 async def _validate_input(
-    hass: HomeAssistant, data: dict[str, Any]
-) -> dict[str, list[str] | None]:
+    hass: HomeAssistant,
+    data: dict[str, Any],
+) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     zone = data.get(CONF_ZONE)
-    records: list[str] | None = None
+    records: list[pycfdns.RecordModel] = []
 
-    cfupdate = CloudflareUpdater(
-        async_get_clientsession(hass),
-        data[CONF_API_TOKEN],
-        zone,
-        [],
+    client = pycfdns.Client(
+        api_token=data[CONF_API_TOKEN],
+        client_session=async_get_clientsession(hass),
     )
 
-    try:
-        zones: list[str] | None = await cfupdate.get_zones()
-        if zone:
-            zone_id = await cfupdate.get_zone_id()
-            records = await cfupdate.get_zone_records(zone_id, "A")
-    except CloudflareConnectionException as error:
-        raise CannotConnect from error
-    except CloudflareAuthenticationException as error:
-        raise InvalidAuth from error
-    except CloudflareZoneException as error:
-        raise InvalidZone from error
+    zones = await client.list_zones()
+    if zone and (zone_id := get_zone_id(zone, zones)) is not None:
+        records = await client.list_dns_records(zone_id=zone_id, type="A")
 
     return {"zones": zones, "records": records}
 
@@ -95,8 +82,8 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the Cloudflare config flow."""
         self.cloudflare_config: dict[str, Any] = {}
-        self.zones: list[str] | None = None
-        self.records: list[str] | None = None
+        self.zones: list[pycfdns.ZoneModel] | None = None
+        self.records: list[pycfdns.RecordModel] | None = None
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle initiation of re-authentication with Cloudflare."""
@@ -195,18 +182,16 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_validate_or_error(
         self, config: dict[str, Any]
-    ) -> tuple[dict[str, list[str] | None], dict[str, str]]:
+    ) -> tuple[dict[str, list[Any]], dict[str, str]]:
         errors: dict[str, str] = {}
         info = {}
 
         try:
             info = await _validate_input(self.hass, config)
-        except CannotConnect:
+        except pycfdns.ComunicationException:
             errors["base"] = "cannot_connect"
-        except InvalidAuth:
+        except pycfdns.AuthenticationException:
             errors["base"] = "invalid_auth"
-        except InvalidZone:
-            errors["base"] = "invalid_zone"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -220,7 +205,3 @@ class CannotConnect(HomeAssistantError):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
-
-
-class InvalidZone(HomeAssistantError):
-    """Error to indicate we cannot validate zone exists in account."""

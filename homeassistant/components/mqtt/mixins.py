@@ -9,7 +9,6 @@ import logging
 from typing import TYPE_CHECKING, Any, Protocol, cast, final
 
 import voluptuous as vol
-import yaml
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -28,8 +27,9 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
+    EntityCategory,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, async_get_hass, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -63,6 +63,7 @@ from homeassistant.helpers.typing import (
     UndefinedType,
 )
 from homeassistant.util.json import json_loads
+from homeassistant.util.yaml import dump as yaml_dump
 
 from . import debug_info, subscription
 from .client import async_publish
@@ -138,7 +139,6 @@ CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
 MQTT_ATTRIBUTES_BLOCKED = {
     "assumed_state",
     "available",
-    "context_recent_time",
     "device_class",
     "device_info",
     "entity_category",
@@ -205,6 +205,62 @@ def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType
         "Device must have at least one identifying value in "
         "'identifiers' and/or 'connections'"
     )
+
+
+def validate_sensor_entity_category(
+    domain: str, discovery: bool
+) -> Callable[[ConfigType], ConfigType]:
+    """Check the sensor's entity category is not set to `config` which is invalid for sensors."""
+
+    # A guard was added to the core sensor platform with HA core 2023.11.0
+    # See: https://github.com/home-assistant/core/pull/101471
+    # A developers blog from october 2021 explains the correct uses of the entity category
+    # See:
+    # https://developers.home-assistant.io/blog/2021/10/26/config-entity/?_highlight=entity_category#entity-categories
+    #
+    # To limitate the impact of the change we use a grace period
+    # of 3 months for user to update there configs.
+
+    def _validate(config: ConfigType) -> ConfigType:
+        if (
+            CONF_ENTITY_CATEGORY in config
+            and config[CONF_ENTITY_CATEGORY] == EntityCategory.CONFIG
+        ):
+            config_str: str
+            if not discovery:
+                config_str = yaml_dump(config)
+            config.pop(CONF_ENTITY_CATEGORY)
+            _LOGGER.warning(
+                "Entity category `config` is invalid for sensors, ignoring. "
+                "This stops working from HA Core 2024.2.0"
+            )
+            # We only open an issue if the user can fix it
+            if discovery:
+                return config
+            config_file = getattr(config, "__config_file__", "?")
+            line = getattr(config, "__line__", "?")
+            hass = async_get_hass()
+            async_create_issue(
+                hass,
+                domain=DOMAIN,
+                issue_id="invalid_entity_category",
+                breaks_in_ha_version="2024.2.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="invalid_entity_category",
+                learn_more_url=(
+                    f"https://www.home-assistant.io/integrations/{domain}.mqtt/"
+                ),
+                translation_placeholders={
+                    "domain": domain,
+                    "config": config_str,
+                    "config_file": config_file,
+                    "line": line,
+                },
+            )
+        return config
+
+    return _validate
 
 
 MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
@@ -400,12 +456,12 @@ async def async_setup_entity_entry_helper(
                 if TYPE_CHECKING:
                     assert entity_class is not None
                 entities.append(entity_class(hass, config, entry, None))
-            except vol.Invalid as ex:
-                error = str(ex)
+            except vol.Invalid as exc:
+                error = str(exc)
                 config_file = getattr(yaml_config, "__config_file__", "?")
                 line = getattr(yaml_config, "__line__", "?")
-                issue_id = hex(hash(frozenset(yaml_config.items())))
-                yaml_config_str = yaml.dump(dict(yaml_config))
+                issue_id = hex(hash(frozenset(yaml_config)))
+                yaml_config_str = yaml_dump(yaml_config)
                 learn_more_url = (
                     f"https://www.home-assistant.io/integrations/{domain}.mqtt/"
                 )
@@ -427,7 +483,7 @@ async def async_setup_entity_entry_helper(
                     translation_key="invalid_platform_config",
                 )
                 _LOGGER.error(
-                    "%s for manual configured MQTT %s item, in %s, line %s Got %s",
+                    "%s for manually configured MQTT %s item, in %s, line %s Got %s",
                     error,
                     domain,
                     config_file,
@@ -1079,7 +1135,7 @@ class MqttDiscoveryUpdate(Entity):
 
 
 def device_info_from_specifications(
-    specifications: dict[str, Any] | None
+    specifications: dict[str, Any] | None,
 ) -> DeviceInfo | None:
     """Return a device description for device registry."""
     if not specifications:

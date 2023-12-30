@@ -2,8 +2,7 @@
 from __future__ import annotations
 
 from contextlib import suppress
-from copy import copy
-from dataclasses import dataclass
+import dataclasses
 from datetime import timedelta
 import logging
 import statistics
@@ -51,7 +50,7 @@ INVERTER_MODES = (
 )
 
 
-@dataclass
+@dataclasses.dataclass(frozen=True)
 class SolarEdgeLocalSensorEntityDescription(SensorEntityDescription):
     """Describes SolarEdge-local sensor entity."""
 
@@ -231,10 +230,11 @@ def setup_platform(
     data = SolarEdgeData(hass, api)
 
     # Changing inverter temperature unit.
-    inverter_temp_description = copy(SENSOR_TYPE_INVERTER_TEMPERATURE)
+    inverter_temp_description = SENSOR_TYPE_INVERTER_TEMPERATURE
     if status.inverters.primary.temperature.units.farenheit:
-        inverter_temp_description.native_unit_of_measurement = (
-            UnitOfTemperature.FAHRENHEIT
+        inverter_temp_description = dataclasses.replace(
+            inverter_temp_description,
+            native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         )
 
     # Create entities

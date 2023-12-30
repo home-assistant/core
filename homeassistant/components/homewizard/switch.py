@@ -23,23 +23,15 @@ from .entity import HomeWizardEntity
 from .helpers import homewizard_exception_handler
 
 
-@dataclass
-class HomeWizardEntityDescriptionMixin:
-    """Mixin values for HomeWizard entities."""
-
-    create_fn: Callable[[HWEnergyDeviceUpdateCoordinator], bool]
-    available_fn: Callable[[DeviceResponseEntry], bool]
-    is_on_fn: Callable[[DeviceResponseEntry], bool | None]
-    set_fn: Callable[[HomeWizardEnergy, bool], Awaitable[Any]]
-
-
-@dataclass
-class HomeWizardSwitchEntityDescription(
-    SwitchEntityDescription, HomeWizardEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class HomeWizardSwitchEntityDescription(SwitchEntityDescription):
     """Class describing HomeWizard switch entities."""
 
+    available_fn: Callable[[DeviceResponseEntry], bool]
+    create_fn: Callable[[HWEnergyDeviceUpdateCoordinator], bool]
     icon_off: str | None = None
+    is_on_fn: Callable[[DeviceResponseEntry], bool | None]
+    set_fn: Callable[[HomeWizardEnergy, bool], Awaitable[Any]]
 
 
 SWITCHES = [

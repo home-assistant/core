@@ -21,11 +21,10 @@ pytestmark = [
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("device_fixture", "data_fixture", "entity_ids"),
+    ("device_fixture", "entity_ids"),
     [
         (
-            "device-HWE-P1.json",
-            "data-HWE-P1.json",
+            "HWE-P1",
             [
                 "sensor.device_dsmr_version",
                 "sensor.device_smart_meter_model",
@@ -69,10 +68,93 @@ pytestmark = [
                 "sensor.device_active_water_usage",
                 "sensor.device_total_water_usage",
             ],
-        )
+        ),
+        (
+            "HWE-P1-zero-values",
+            [
+                "sensor.device_total_energy_import",
+                "sensor.device_total_energy_import_tariff_1",
+                "sensor.device_total_energy_import_tariff_2",
+                "sensor.device_total_energy_import_tariff_3",
+                "sensor.device_total_energy_import_tariff_4",
+                "sensor.device_total_energy_export",
+                "sensor.device_total_energy_export_tariff_1",
+                "sensor.device_total_energy_export_tariff_2",
+                "sensor.device_total_energy_export_tariff_3",
+                "sensor.device_total_energy_export_tariff_4",
+                "sensor.device_active_power",
+                "sensor.device_active_power_phase_1",
+                "sensor.device_active_power_phase_2",
+                "sensor.device_active_power_phase_3",
+                "sensor.device_active_voltage_phase_1",
+                "sensor.device_active_voltage_phase_2",
+                "sensor.device_active_voltage_phase_3",
+                "sensor.device_active_current_phase_1",
+                "sensor.device_active_current_phase_2",
+                "sensor.device_active_current_phase_3",
+                "sensor.device_active_frequency",
+                "sensor.device_voltage_sags_detected_phase_1",
+                "sensor.device_voltage_sags_detected_phase_2",
+                "sensor.device_voltage_sags_detected_phase_3",
+                "sensor.device_voltage_swells_detected_phase_1",
+                "sensor.device_voltage_swells_detected_phase_2",
+                "sensor.device_voltage_swells_detected_phase_3",
+                "sensor.device_power_failures_detected",
+                "sensor.device_long_power_failures_detected",
+                "sensor.device_active_average_demand",
+                "sensor.device_peak_demand_current_month",
+                "sensor.device_total_gas",
+                "sensor.device_active_water_usage",
+                "sensor.device_total_water_usage",
+            ],
+        ),
+        (
+            "HWE-SKT",
+            [
+                "sensor.device_wi_fi_ssid",
+                "sensor.device_wi_fi_strength",
+                "sensor.device_total_energy_import",
+                "sensor.device_total_energy_export",
+                "sensor.device_active_power",
+                "sensor.device_active_power_phase_1",
+            ],
+        ),
+        (
+            "HWE-WTR",
+            [
+                "sensor.device_wi_fi_ssid",
+                "sensor.device_wi_fi_strength",
+                "sensor.device_active_water_usage",
+                "sensor.device_total_water_usage",
+            ],
+        ),
+        (
+            "SDM230",
+            [
+                "sensor.device_wi_fi_ssid",
+                "sensor.device_wi_fi_strength",
+                "sensor.device_total_energy_import",
+                "sensor.device_total_energy_export",
+                "sensor.device_active_power",
+                "sensor.device_active_power_phase_1",
+            ],
+        ),
+        (
+            "SDM630",
+            [
+                "sensor.device_wi_fi_ssid",
+                "sensor.device_wi_fi_strength",
+                "sensor.device_total_energy_import",
+                "sensor.device_total_energy_export",
+                "sensor.device_active_power",
+                "sensor.device_active_power_phase_1",
+                "sensor.device_active_power_phase_2",
+                "sensor.device_active_power_phase_3",
+            ],
+        ),
     ],
 )
-async def test_sensors_p1_meter(
+async def test_sensors(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -93,51 +175,67 @@ async def test_sensors_p1_meter(
 
 
 @pytest.mark.parametrize(
-    "entity_id",
+    ("device_fixture", "entity_ids"),
     [
-        "sensor.device_wi_fi_strength",
-        "sensor.device_active_voltage_phase_1",
-        "sensor.device_active_voltage_phase_2",
-        "sensor.device_active_voltage_phase_3",
-        "sensor.device_active_current_phase_1",
-        "sensor.device_active_current_phase_2",
-        "sensor.device_active_current_phase_3",
-        "sensor.device_active_frequency",
+        (
+            "HWE-P1",
+            [
+                "sensor.device_wi_fi_strength",
+                "sensor.device_active_voltage_phase_1",
+                "sensor.device_active_voltage_phase_2",
+                "sensor.device_active_voltage_phase_3",
+                "sensor.device_active_current_phase_1",
+                "sensor.device_active_current_phase_2",
+                "sensor.device_active_current_phase_3",
+                "sensor.device_active_frequency",
+            ],
+        ),
+        (
+            "HWE-P1-unused-exports",
+            [
+                "sensor.device_total_energy_export",
+                "sensor.device_total_energy_export_tariff_1",
+                "sensor.device_total_energy_export_tariff_2",
+                "sensor.device_total_energy_export_tariff_3",
+                "sensor.device_total_energy_export_tariff_4",
+            ],
+        ),
+        (
+            "HWE-SKT",
+            [
+                "sensor.device_wi_fi_strength",
+            ],
+        ),
+        (
+            "HWE-WTR",
+            [
+                "sensor.device_wi_fi_strength",
+            ],
+        ),
+        (
+            "SDM230",
+            [
+                "sensor.device_wi_fi_strength",
+            ],
+        ),
+        (
+            "SDM630",
+            [
+                "sensor.device_wi_fi_strength",
+            ],
+        ),
     ],
 )
 async def test_disabled_by_default_sensors(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, entity_id: str
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, entity_ids: list[str]
 ) -> None:
     """Test the disabled by default sensors."""
-    assert not hass.states.get(entity_id)
+    for entity_id in entity_ids:
+        assert not hass.states.get(entity_id)
 
-    assert (entry := entity_registry.async_get(entity_id))
-    assert entry.disabled
-    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-
-
-@pytest.mark.parametrize("data_fixture", ["data-HWE-P1-unused-exports.json"])
-@pytest.mark.parametrize(
-    "entity_id",
-    [
-        "sensor.device_total_energy_export",
-        "sensor.device_total_energy_export_tariff_1",
-        "sensor.device_total_energy_export_tariff_2",
-        "sensor.device_total_energy_export_tariff_3",
-        "sensor.device_total_energy_export_tariff_4",
-    ],
-)
-async def test_disabled_by_default_sensors_when_unused(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    entity_id: str,
-) -> None:
-    """Test the disabled by default unused sensors."""
-    assert not hass.states.get(entity_id)
-
-    assert (entry := entity_registry.async_get(entity_id))
-    assert entry.disabled
-    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        assert (entry := entity_registry.async_get(entity_id))
+        assert entry.disabled
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 @pytest.mark.parametrize("exception", [RequestError, DisabledError])
@@ -156,3 +254,177 @@ async def test_sensors_unreachable(
 
     assert (state := hass.states.get(state.entity_id))
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("device_fixture", "entity_ids"),
+    [
+        (
+            "HWE-SKT",
+            [
+                "sensor.device_active_average_demand",
+                "sensor.device_active_current_phase_1",
+                "sensor.device_active_current_phase_2",
+                "sensor.device_active_current_phase_3",
+                "sensor.device_active_frequency",
+                "sensor.device_active_power_phase_2",
+                "sensor.device_active_power_phase_3",
+                "sensor.device_active_tariff",
+                "sensor.device_active_voltage_phase_1",
+                "sensor.device_active_voltage_phase_2",
+                "sensor.device_active_voltage_phase_3",
+                "sensor.device_active_water_usage",
+                "sensor.device_dsmr_version",
+                "sensor.device_gas_meter_identifier",
+                "sensor.device_long_power_failures_detected",
+                "sensor.device_peak_demand_current_month",
+                "sensor.device_power_failures_detected",
+                "sensor.device_smart_meter_identifier",
+                "sensor.device_smart_meter_model",
+                "sensor.device_total_energy_export_tariff_1",
+                "sensor.device_total_energy_export_tariff_2",
+                "sensor.device_total_energy_export_tariff_3",
+                "sensor.device_total_energy_export_tariff_4",
+                "sensor.device_total_energy_import_tariff_1",
+                "sensor.device_total_energy_import_tariff_2",
+                "sensor.device_total_energy_import_tariff_3",
+                "sensor.device_total_energy_import_tariff_4",
+                "sensor.device_total_gas",
+                "sensor.device_total_water_usage",
+                "sensor.device_voltage_sags_detected_phase_1",
+                "sensor.device_voltage_sags_detected_phase_2",
+                "sensor.device_voltage_sags_detected_phase_3",
+                "sensor.device_voltage_swells_detected_phase_1",
+                "sensor.device_voltage_swells_detected_phase_2",
+                "sensor.device_voltage_swells_detected_phase_3",
+            ],
+        ),
+        (
+            "HWE-WTR",
+            [
+                "sensor.device_dsmr_version",
+                "sensor.device_smart_meter_model",
+                "sensor.device_smart_meter_identifier",
+                "sensor.device_active_tariff",
+                "sensor.device_total_energy_import",
+                "sensor.device_total_energy_import_tariff_1",
+                "sensor.device_total_energy_import_tariff_2",
+                "sensor.device_total_energy_import_tariff_3",
+                "sensor.device_total_energy_import_tariff_4",
+                "sensor.device_total_energy_export",
+                "sensor.device_total_energy_export_tariff_1",
+                "sensor.device_total_energy_export_tariff_2",
+                "sensor.device_total_energy_export_tariff_3",
+                "sensor.device_total_energy_export_tariff_4",
+                "sensor.device_active_power",
+                "sensor.device_active_power_phase_1",
+                "sensor.device_active_power_phase_2",
+                "sensor.device_active_power_phase_3",
+                "sensor.device_active_voltage_phase_1",
+                "sensor.device_active_voltage_phase_2",
+                "sensor.device_active_voltage_phase_3",
+                "sensor.device_active_current_phase_1",
+                "sensor.device_active_current_phase_2",
+                "sensor.device_active_current_phase_3",
+                "sensor.device_active_frequency",
+                "sensor.device_voltage_sags_detected_phase_1",
+                "sensor.device_voltage_sags_detected_phase_2",
+                "sensor.device_voltage_sags_detected_phase_3",
+                "sensor.device_voltage_swells_detected_phase_1",
+                "sensor.device_voltage_swells_detected_phase_2",
+                "sensor.device_voltage_swells_detected_phase_3",
+                "sensor.device_power_failures_detected",
+                "sensor.device_long_power_failures_detected",
+                "sensor.device_active_average_demand",
+                "sensor.device_peak_demand_current_month",
+                "sensor.device_total_gas",
+                "sensor.device_gas_meter_identifier",
+            ],
+        ),
+        (
+            "SDM230",
+            [
+                "sensor.device_active_average_demand",
+                "sensor.device_active_current_phase_1",
+                "sensor.device_active_current_phase_2",
+                "sensor.device_active_current_phase_3",
+                "sensor.device_active_frequency",
+                "sensor.device_active_power_phase_2",
+                "sensor.device_active_power_phase_3",
+                "sensor.device_active_tariff",
+                "sensor.device_active_voltage_phase_1",
+                "sensor.device_active_voltage_phase_2",
+                "sensor.device_active_voltage_phase_3",
+                "sensor.device_active_water_usage",
+                "sensor.device_dsmr_version",
+                "sensor.device_gas_meter_identifier",
+                "sensor.device_long_power_failures_detected",
+                "sensor.device_peak_demand_current_month",
+                "sensor.device_power_failures_detected",
+                "sensor.device_smart_meter_identifier",
+                "sensor.device_smart_meter_model",
+                "sensor.device_total_energy_export_tariff_1",
+                "sensor.device_total_energy_export_tariff_2",
+                "sensor.device_total_energy_export_tariff_3",
+                "sensor.device_total_energy_export_tariff_4",
+                "sensor.device_total_energy_import_tariff_1",
+                "sensor.device_total_energy_import_tariff_2",
+                "sensor.device_total_energy_import_tariff_3",
+                "sensor.device_total_energy_import_tariff_4",
+                "sensor.device_total_gas",
+                "sensor.device_total_water_usage",
+                "sensor.device_voltage_sags_detected_phase_1",
+                "sensor.device_voltage_sags_detected_phase_2",
+                "sensor.device_voltage_sags_detected_phase_3",
+                "sensor.device_voltage_swells_detected_phase_1",
+                "sensor.device_voltage_swells_detected_phase_2",
+                "sensor.device_voltage_swells_detected_phase_3",
+            ],
+        ),
+        (
+            "SDM630",
+            [
+                "sensor.device_active_average_demand",
+                "sensor.device_active_current_phase_1",
+                "sensor.device_active_current_phase_2",
+                "sensor.device_active_current_phase_3",
+                "sensor.device_active_frequency",
+                "sensor.device_active_tariff",
+                "sensor.device_active_voltage_phase_1",
+                "sensor.device_active_voltage_phase_2",
+                "sensor.device_active_voltage_phase_3",
+                "sensor.device_active_water_usage",
+                "sensor.device_dsmr_version",
+                "sensor.device_gas_meter_identifier",
+                "sensor.device_long_power_failures_detected",
+                "sensor.device_peak_demand_current_month",
+                "sensor.device_power_failures_detected",
+                "sensor.device_smart_meter_identifier",
+                "sensor.device_smart_meter_model",
+                "sensor.device_total_energy_export_tariff_1",
+                "sensor.device_total_energy_export_tariff_2",
+                "sensor.device_total_energy_export_tariff_3",
+                "sensor.device_total_energy_export_tariff_4",
+                "sensor.device_total_energy_import_tariff_1",
+                "sensor.device_total_energy_import_tariff_2",
+                "sensor.device_total_energy_import_tariff_3",
+                "sensor.device_total_energy_import_tariff_4",
+                "sensor.device_total_gas",
+                "sensor.device_total_water_usage",
+                "sensor.device_voltage_sags_detected_phase_1",
+                "sensor.device_voltage_sags_detected_phase_2",
+                "sensor.device_voltage_sags_detected_phase_3",
+                "sensor.device_voltage_swells_detected_phase_1",
+                "sensor.device_voltage_swells_detected_phase_2",
+                "sensor.device_voltage_swells_detected_phase_3",
+            ],
+        ),
+    ],
+)
+async def test_entities_not_created_for_device(
+    hass: HomeAssistant,
+    entity_ids: list[str],
+) -> None:
+    """Ensures entities for a specific device are not created."""
+    for entity_id in entity_ids:
+        assert not hass.states.get(entity_id)

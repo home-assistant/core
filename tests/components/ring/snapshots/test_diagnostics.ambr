@@ -1,0 +1,579 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'device_data': list([
+      dict({
+        'address': '**REDACTED**',
+        'alerts': dict({
+          'connection': 'online',
+        }),
+        'description': '**REDACTED**',
+        'device_id': '**REDACTED**',
+        'do_not_disturb': dict({
+          'seconds_left': 0,
+        }),
+        'features': dict({
+          'ringtones_enabled': True,
+        }),
+        'firmware_version': '1.2.3',
+        'id': '**REDACTED**',
+        'kind': 'chime',
+        'latitude': '**REDACTED**',
+        'longitude': '**REDACTED**',
+        'owned': True,
+        'owner': dict({
+          'email': '**REDACTED**',
+          'first_name': '**REDACTED**',
+          'id': '**REDACTED**',
+          'last_name': '**REDACTED**',
+        }),
+        'settings': dict({
+          'ding_audio_id': None,
+          'ding_audio_user_id': None,
+          'motion_audio_id': None,
+          'motion_audio_user_id': None,
+          'volume': 2,
+        }),
+        'time_zone': 'America/New_York',
+      }),
+      dict({
+        'address': '**REDACTED**',
+        'alerts': dict({
+          'connection': 'online',
+        }),
+        'battery_life': 4081,
+        'description': '**REDACTED**',
+        'device_id': '**REDACTED**',
+        'external_connection': False,
+        'features': dict({
+          'advanced_motion_enabled': False,
+          'motion_message_enabled': False,
+          'motions_enabled': True,
+          'people_only_enabled': False,
+          'shadow_correction_enabled': False,
+          'show_recordings': True,
+        }),
+        'firmware_version': '1.4.26',
+        'id': '**REDACTED**',
+        'kind': 'lpd_v1',
+        'latitude': '**REDACTED**',
+        'longitude': '**REDACTED**',
+        'motion_snooze': None,
+        'owned': True,
+        'owner': dict({
+          'email': '**REDACTED**',
+          'first_name': '**REDACTED**',
+          'id': '**REDACTED**',
+          'last_name': '**REDACTED**',
+        }),
+        'settings': dict({
+          'chime_settings': dict({
+            'duration': 3,
+            'enable': True,
+            'type': 0,
+          }),
+          'doorbell_volume': 1,
+          'enable_vod': True,
+          'live_view_preset_profile': 'highest',
+          'live_view_presets': list([
+            'low',
+            'middle',
+            'high',
+            'highest',
+          ]),
+          'motion_announcement': False,
+          'motion_snooze_preset_profile': 'low',
+          'motion_snooze_presets': list([
+            'null',
+            'low',
+            'medium',
+            'high',
+          ]),
+        }),
+        'subscribed': True,
+        'subscribed_motions': True,
+        'time_zone': 'America/New_York',
+      }),
+      dict({
+        'address': '**REDACTED**',
+        'alerts': dict({
+          'connection': 'online',
+        }),
+        'battery_life': 80,
+        'description': '**REDACTED**',
+        'device_id': '**REDACTED**',
+        'external_connection': False,
+        'features': dict({
+          'advanced_motion_enabled': False,
+          'motion_message_enabled': False,
+          'motions_enabled': True,
+          'night_vision_enabled': False,
+          'people_only_enabled': False,
+          'shadow_correction_enabled': False,
+          'show_recordings': True,
+        }),
+        'firmware_version': '1.9.3',
+        'id': '**REDACTED**',
+        'kind': 'hp_cam_v1',
+        'latitude': '**REDACTED**',
+        'led_status': 'off',
+        'location_id': None,
+        'longitude': '**REDACTED**',
+        'motion_snooze': dict({
+          'scheduled': True,
+        }),
+        'night_mode_status': 'false',
+        'owned': True,
+        'owner': dict({
+          'email': '**REDACTED**',
+          'first_name': '**REDACTED**',
+          'id': '**REDACTED**',
+          'last_name': '**REDACTED**',
+        }),
+        'ring_cam_light_installed': 'false',
+        'ring_id': None,
+        'settings': dict({
+          'chime_settings': dict({
+            'duration': 10,
+            'enable': True,
+            'type': 0,
+          }),
+          'doorbell_volume': 11,
+          'enable_vod': True,
+          'floodlight_settings': dict({
+            'duration': 30,
+            'priority': 0,
+          }),
+          'light_schedule_settings': dict({
+            'end_hour': 0,
+            'end_minute': 0,
+            'start_hour': 0,
+            'start_minute': 0,
+          }),
+          'live_view_preset_profile': 'highest',
+          'live_view_presets': list([
+            'low',
+            'middle',
+            'high',
+            'highest',
+          ]),
+          'motion_announcement': False,
+          'motion_snooze_preset_profile': 'low',
+          'motion_snooze_presets': list([
+            'none',
+            'low',
+            'medium',
+            'high',
+          ]),
+          'motion_zones': dict({
+            'active_motion_filter': 1,
+            'advanced_object_settings': dict({
+              'human_detection_confidence': dict({
+                'day': 0.7,
+                'night': 0.7,
+              }),
+              'motion_zone_overlap': dict({
+                'day': 0.1,
+                'night': 0.2,
+              }),
+              'object_size_maximum': dict({
+                'day': 0.8,
+                'night': 0.8,
+              }),
+              'object_size_minimum': dict({
+                'day': 0.03,
+                'night': 0.05,
+              }),
+              'object_time_overlap': dict({
+                'day': 0.1,
+                'night': 0.6,
+              }),
+            }),
+            'enable_audio': False,
+            'pir_settings': dict({
+              'sensitivity1': 1,
+              'sensitivity2': 1,
+              'sensitivity3': 1,
+              'zone_mask': 6,
+            }),
+            'sensitivity': 5,
+            'zone1': dict({
+              'name': 'Zone 1',
+              'state': 2,
+              'vertex1': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex2': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex3': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex4': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex5': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex6': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex7': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex8': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+            }),
+            'zone2': dict({
+              'name': 'Zone 2',
+              'state': 2,
+              'vertex1': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex2': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex3': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex4': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex5': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex6': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex7': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex8': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+            }),
+            'zone3': dict({
+              'name': 'Zone 3',
+              'state': 2,
+              'vertex1': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex2': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex3': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex4': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex5': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex6': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex7': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex8': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+            }),
+          }),
+          'pir_motion_zones': list([
+            0,
+            1,
+            1,
+          ]),
+          'pir_settings': dict({
+            'sensitivity1': 1,
+            'sensitivity2': 1,
+            'sensitivity3': 1,
+            'zone_mask': 6,
+          }),
+          'stream_setting': 0,
+          'video_settings': dict({
+            'ae_level': 0,
+            'birton': None,
+            'brightness': 0,
+            'contrast': 64,
+            'saturation': 80,
+          }),
+        }),
+        'siren_status': dict({
+          'seconds_remaining': 0,
+        }),
+        'stolen': False,
+        'subscribed': True,
+        'subscribed_motions': True,
+        'time_zone': 'America/New_York',
+      }),
+      dict({
+        'address': '**REDACTED**',
+        'alerts': dict({
+          'connection': 'online',
+        }),
+        'battery_life': 80,
+        'description': '**REDACTED**',
+        'device_id': '**REDACTED**',
+        'external_connection': False,
+        'features': dict({
+          'advanced_motion_enabled': False,
+          'motion_message_enabled': False,
+          'motions_enabled': True,
+          'night_vision_enabled': False,
+          'people_only_enabled': False,
+          'shadow_correction_enabled': False,
+          'show_recordings': True,
+        }),
+        'firmware_version': '1.9.3',
+        'id': '**REDACTED**',
+        'kind': 'hp_cam_v1',
+        'latitude': '**REDACTED**',
+        'led_status': 'on',
+        'location_id': None,
+        'longitude': '**REDACTED**',
+        'motion_snooze': dict({
+          'scheduled': True,
+        }),
+        'night_mode_status': 'false',
+        'owned': True,
+        'owner': dict({
+          'email': '**REDACTED**',
+          'first_name': '**REDACTED**',
+          'id': '**REDACTED**',
+          'last_name': '**REDACTED**',
+        }),
+        'ring_cam_light_installed': 'false',
+        'ring_id': None,
+        'settings': dict({
+          'chime_settings': dict({
+            'duration': 10,
+            'enable': True,
+            'type': 0,
+          }),
+          'doorbell_volume': 11,
+          'enable_vod': True,
+          'floodlight_settings': dict({
+            'duration': 30,
+            'priority': 0,
+          }),
+          'light_schedule_settings': dict({
+            'end_hour': 0,
+            'end_minute': 0,
+            'start_hour': 0,
+            'start_minute': 0,
+          }),
+          'live_view_preset_profile': 'highest',
+          'live_view_presets': list([
+            'low',
+            'middle',
+            'high',
+            'highest',
+          ]),
+          'motion_announcement': False,
+          'motion_snooze_preset_profile': 'low',
+          'motion_snooze_presets': list([
+            'none',
+            'low',
+            'medium',
+            'high',
+          ]),
+          'motion_zones': dict({
+            'active_motion_filter': 1,
+            'advanced_object_settings': dict({
+              'human_detection_confidence': dict({
+                'day': 0.7,
+                'night': 0.7,
+              }),
+              'motion_zone_overlap': dict({
+                'day': 0.1,
+                'night': 0.2,
+              }),
+              'object_size_maximum': dict({
+                'day': 0.8,
+                'night': 0.8,
+              }),
+              'object_size_minimum': dict({
+                'day': 0.03,
+                'night': 0.05,
+              }),
+              'object_time_overlap': dict({
+                'day': 0.1,
+                'night': 0.6,
+              }),
+            }),
+            'enable_audio': False,
+            'pir_settings': dict({
+              'sensitivity1': 1,
+              'sensitivity2': 1,
+              'sensitivity3': 1,
+              'zone_mask': 6,
+            }),
+            'sensitivity': 5,
+            'zone1': dict({
+              'name': 'Zone 1',
+              'state': 2,
+              'vertex1': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex2': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex3': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex4': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex5': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex6': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex7': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex8': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+            }),
+            'zone2': dict({
+              'name': 'Zone 2',
+              'state': 2,
+              'vertex1': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex2': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex3': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex4': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex5': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex6': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex7': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex8': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+            }),
+            'zone3': dict({
+              'name': 'Zone 3',
+              'state': 2,
+              'vertex1': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex2': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex3': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex4': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex5': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex6': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex7': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+              'vertex8': dict({
+                'x': 0.0,
+                'y': 0.0,
+              }),
+            }),
+          }),
+          'pir_motion_zones': list([
+            0,
+            1,
+            1,
+          ]),
+          'pir_settings': dict({
+            'sensitivity1': 1,
+            'sensitivity2': 1,
+            'sensitivity3': 1,
+            'zone_mask': 6,
+          }),
+          'stream_setting': 0,
+          'video_settings': dict({
+            'ae_level': 0,
+            'birton': None,
+            'brightness': 0,
+            'contrast': 64,
+            'saturation': 80,
+          }),
+        }),
+        'siren_status': dict({
+          'seconds_remaining': 30,
+        }),
+        'stolen': False,
+        'subscribed': True,
+        'subscribed_motions': True,
+        'time_zone': 'America/New_York',
+      }),
+    ]),
+  })
+# ---

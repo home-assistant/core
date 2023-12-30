@@ -57,6 +57,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_SET,
+    STATE_CLOSED,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -73,6 +74,7 @@ from homeassistant.util.network import is_local
 from .config import Config
 
 _LOGGER = logging.getLogger(__name__)
+_OFF_STATES: dict[str, str] = {cover.DOMAIN: STATE_CLOSED}
 
 # How long to wait for a state change to happen
 STATE_CHANGE_WAIT_TIMEOUT = 5.0
@@ -394,7 +396,7 @@ class HueOneLightChangeView(HomeAssistantView):
                 return self.json_message("Bad request", HTTPStatus.BAD_REQUEST)
             parsed[STATE_ON] = request_json[HUE_API_STATE_ON]
         else:
-            parsed[STATE_ON] = entity.state != STATE_OFF
+            parsed[STATE_ON] = _hass_to_hue_state(entity)
 
         for key, attr in (
             (HUE_API_STATE_BRI, STATE_BRIGHTNESS),
@@ -585,7 +587,7 @@ class HueOneLightChangeView(HomeAssistantView):
             )
 
         if service is not None:
-            state_will_change = parsed[STATE_ON] != (entity.state != STATE_OFF)
+            state_will_change = parsed[STATE_ON] != _hass_to_hue_state(entity)
 
             hass.async_create_task(
                 hass.services.async_call(domain, service, data, blocking=True)
@@ -643,7 +645,7 @@ def get_entity_state_dict(config: Config, entity: State) -> dict[str, Any]:
             cached_state = entry_state
         elif time.time() - entry_time < STATE_CACHED_TIMEOUT and entry_state[
             STATE_ON
-        ] == (entity.state != STATE_OFF):
+        ] == _hass_to_hue_state(entity):
             # We only want to use the cache if the actual state of the entity
             # is in sync so that it can be detected as an error by Alexa.
             cached_state = entry_state
@@ -676,19 +678,20 @@ def get_entity_state_dict(config: Config, entity: State) -> dict[str, Any]:
 @lru_cache(maxsize=512)
 def _build_entity_state_dict(entity: State) -> dict[str, Any]:
     """Build a state dict for an entity."""
+    is_on = _hass_to_hue_state(entity)
     data: dict[str, Any] = {
-        STATE_ON: entity.state != STATE_OFF,
+        STATE_ON: is_on,
         STATE_BRIGHTNESS: None,
         STATE_HUE: None,
         STATE_SATURATION: None,
         STATE_COLOR_TEMP: None,
     }
-    if data[STATE_ON]:
+    attributes = entity.attributes
+    if is_on:
         data[STATE_BRIGHTNESS] = hass_to_hue_brightness(
-            entity.attributes.get(ATTR_BRIGHTNESS, 0)
+            attributes.get(ATTR_BRIGHTNESS) or 0
         )
-        hue_sat = entity.attributes.get(ATTR_HS_COLOR)
-        if hue_sat is not None:
+        if (hue_sat := attributes.get(ATTR_HS_COLOR)) is not None:
             hue = hue_sat[0]
             sat = hue_sat[1]
             # Convert hass hs values back to hue hs values
@@ -697,7 +700,7 @@ def _build_entity_state_dict(entity: State) -> dict[str, Any]:
         else:
             data[STATE_HUE] = HUE_API_STATE_HUE_MIN
             data[STATE_SATURATION] = HUE_API_STATE_SAT_MIN
-        data[STATE_COLOR_TEMP] = entity.attributes.get(ATTR_COLOR_TEMP, 0)
+        data[STATE_COLOR_TEMP] = attributes.get(ATTR_COLOR_TEMP) or 0
 
     else:
         data[STATE_BRIGHTNESS] = 0
@@ -706,25 +709,23 @@ def _build_entity_state_dict(entity: State) -> dict[str, Any]:
         data[STATE_COLOR_TEMP] = 0
 
     if entity.domain == climate.DOMAIN:
-        temperature = entity.attributes.get(ATTR_TEMPERATURE, 0)
+        temperature = attributes.get(ATTR_TEMPERATURE, 0)
         # Convert 0-100 to 0-254
         data[STATE_BRIGHTNESS] = round(temperature * HUE_API_STATE_BRI_MAX / 100)
     elif entity.domain == humidifier.DOMAIN:
-        humidity = entity.attributes.get(ATTR_HUMIDITY, 0)
+        humidity = attributes.get(ATTR_HUMIDITY, 0)
         # Convert 0-100 to 0-254
         data[STATE_BRIGHTNESS] = round(humidity * HUE_API_STATE_BRI_MAX / 100)
     elif entity.domain == media_player.DOMAIN:
-        level = entity.attributes.get(
-            ATTR_MEDIA_VOLUME_LEVEL, 1.0 if data[STATE_ON] else 0.0
-        )
+        level = attributes.get(ATTR_MEDIA_VOLUME_LEVEL, 1.0 if is_on else 0.0)
         # Convert 0.0-1.0 to 0-254
         data[STATE_BRIGHTNESS] = round(min(1.0, level) * HUE_API_STATE_BRI_MAX)
     elif entity.domain == fan.DOMAIN:
-        percentage = entity.attributes.get(ATTR_PERCENTAGE) or 0
+        percentage = attributes.get(ATTR_PERCENTAGE) or 0
         # Convert 0-100 to 0-254
         data[STATE_BRIGHTNESS] = round(percentage * HUE_API_STATE_BRI_MAX / 100)
     elif entity.domain == cover.DOMAIN:
-        level = entity.attributes.get(ATTR_CURRENT_POSITION, 0)
+        level = attributes.get(ATTR_CURRENT_POSITION, 0)
         data[STATE_BRIGHTNESS] = round(level / 100 * HUE_API_STATE_BRI_MAX)
     _clamp_values(data)
     return data
@@ -773,7 +774,9 @@ def state_to_json(config: Config, state: State) -> dict[str, Any]:
         "swversion": "123",
     }
 
-    if light.color_supported(color_modes) and light.color_temp_supported(color_modes):
+    color_supported = light.color_supported(color_modes)
+    color_temp_supported = light.color_temp_supported(color_modes)
+    if color_supported and color_temp_supported:
         # Extended Color light (Zigbee Device ID: 0x0210)
         # Same as Color light, but which supports additional setting of color temperature
         retval["type"] = "Extended color light"
@@ -791,7 +794,7 @@ def state_to_json(config: Config, state: State) -> dict[str, Any]:
             json_state[HUE_API_STATE_COLORMODE] = "hs"
         else:
             json_state[HUE_API_STATE_COLORMODE] = "ct"
-    elif light.color_supported(color_modes):
+    elif color_supported:
         # Color light (Zigbee Device ID: 0x0200)
         # Supports on/off, dimming and color control (hue/saturation, enhanced hue, color loop and XY)
         retval["type"] = "Color light"
@@ -805,7 +808,7 @@ def state_to_json(config: Config, state: State) -> dict[str, Any]:
                 HUE_API_STATE_EFFECT: "none",
             }
         )
-    elif light.color_temp_supported(color_modes):
+    elif color_temp_supported:
         # Color temperature light (Zigbee Device ID: 0x0220)
         # Supports groups, scenes, on/off, dimming, and setting of a color temperature
         retval["type"] = "Color temperature light"
@@ -888,6 +891,11 @@ def hue_brightness_to_hass(value: int) -> int:
 def hass_to_hue_brightness(value: int) -> int:
     """Convert hass brightness 0..255 to hue 1..254 scale."""
     return max(1, round((value / 255) * HUE_API_STATE_BRI_MAX))
+
+
+def _hass_to_hue_state(entity: State) -> bool:
+    """Convert hass entity states to simple True/False on/off state for Hue."""
+    return entity.state != _OFF_STATES.get(entity.domain, STATE_OFF)
 
 
 async def wait_for_state_change_or_timeout(

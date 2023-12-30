@@ -4,10 +4,7 @@ from __future__ import annotations
 import datetime as dt
 from typing import Final
 
-from systembridgeconnector.models.media_control import (
-    Action as MediaAction,
-    MediaControl,
-)
+from systembridgemodels.media_control import Action as MediaAction, MediaControl
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,

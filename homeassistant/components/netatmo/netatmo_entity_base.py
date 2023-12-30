@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from pyatmo import DeviceType
 from pyatmo.modules.device_types import (
     DEVICE_DESCRIPTION_MAP,
     DeviceType as NetatmoDeviceType,
@@ -29,7 +30,7 @@ class NetatmoBase(Entity):
 
         self._device_name: str = ""
         self._id: str = ""
-        self._model: str = ""
+        self._model: DeviceType
         self._config_url: str | None = None
         self._attr_name = None
         self._attr_unique_id = None

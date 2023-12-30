@@ -29,7 +29,7 @@ SWITCH_KIND_ONBOARD_AP = "onboard_ap"
 SWITCH_KIND_VALVE = "valve"
 
 
-@dataclass
+@dataclass(frozen=True)
 class SwitchDescriptionMixin:
     """Define an entity description mixin for Guardian switches."""
 
@@ -37,7 +37,7 @@ class SwitchDescriptionMixin:
     on_action: Callable[[Client], Awaitable]
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValveControllerSwitchDescription(
     SwitchEntityDescription, ValveControllerEntityDescription, SwitchDescriptionMixin
 ):

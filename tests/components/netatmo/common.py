@@ -97,6 +97,6 @@ def selected_platforms(platforms):
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
-        "homeassistant.components.netatmo.webhook_generate_url"
+        "homeassistant.components.netatmo.webhook_generate_url",
     ):
         yield

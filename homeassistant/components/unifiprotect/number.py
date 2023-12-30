@@ -26,7 +26,7 @@ from .models import PermRequired, ProtectSetableKeysMixin, T
 from .utils import async_dispatch_id as _ufpd
 
 
-@dataclass
+@dataclass(frozen=True)
 class NumberKeysMixin:
     """Mixin for required keys."""
 
@@ -35,7 +35,7 @@ class NumberKeysMixin:
     ufp_step: int | float
 
 
-@dataclass
+@dataclass(frozen=True)
 class ProtectNumberEntityDescription(
     ProtectSetableKeysMixin[T], NumberEntityDescription, NumberKeysMixin
 ):

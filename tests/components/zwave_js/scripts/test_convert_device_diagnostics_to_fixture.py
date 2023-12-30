@@ -36,6 +36,10 @@ def test_fixture_functions() -> None:
     old_diagnostics_format_data["data"]["state"]["values"] = list(
         old_diagnostics_format_data["data"]["state"]["values"].values()
     )
+    old_diagnostics_format_data["data"]["state"]["endpoints"] = list(
+        old_diagnostics_format_data["data"]["state"]["endpoints"].values()
+    )
+
     assert (
         extract_fixture_data(old_diagnostics_format_data)
         == old_diagnostics_format_data["data"]["state"]
@@ -54,7 +58,6 @@ def test_load_file() -> None:
 
 def test_main(capfd: pytest.CaptureFixture[str]) -> None:
     """Test main function."""
-    Path(__file__).parents[1] / "fixtures" / "zooz_zse44_state.json"
     fixture_str = load_fixture("zwave_js/zooz_zse44_state.json")
     fixture_dict = json.loads(fixture_str)
 
