@@ -687,6 +687,7 @@ omit =
     homeassistant/components/lcn/climate.py
     homeassistant/components/lcn/helpers.py
     homeassistant/components/lcn/services.py
+    homeassistant/components/lcn/websocket.py
     homeassistant/components/ld2410_ble/__init__.py
     homeassistant/components/ld2410_ble/binary_sensor.py
     homeassistant/components/ld2410_ble/coordinator.py
