@@ -83,7 +83,7 @@ class VeluxCover(VeluxEntity, CoverEntity):
     @property
     def current_cover_position(self) -> int:
         """Return the current position of the cover."""
-        return 100 - self.node.position.position_percent
+        return 100 - self.node.get_position().position_percent
 
     @property
     def current_cover_tilt_position(self) -> int | None:
