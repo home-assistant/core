@@ -92,7 +92,7 @@ async def get_api(hass: HomeAssistant, entry_data: dict[str, Any]) -> Glances:
                 hass,
                 DOMAIN,
                 "deprecated_version",
-                breaks_in_ha_version="2024.6.1",
+                breaks_in_ha_version="2024.8.1",
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
                 translation_key="deprecated_version",
