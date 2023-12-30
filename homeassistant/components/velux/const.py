@@ -5,4 +5,4 @@ from homeassistant.const import Platform
 
 DOMAIN = "velux"
 PLATFORMS = [Platform.COVER, Platform.LIGHT, Platform.SCENE]
-_LOGGER = getLogger(__name__)
+LOGGER = getLogger(__name__)

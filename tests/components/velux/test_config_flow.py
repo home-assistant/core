@@ -99,8 +99,9 @@ async def test_user_unknown_error(hass: HomeAssistant) -> None:
 
         connect_mock.assert_called_once()
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
-        assert result["reason"] == "unknown"
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": "unknown"}
 
 
 async def test_user_success(hass: HomeAssistant) -> None:

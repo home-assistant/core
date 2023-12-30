@@ -27,7 +27,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up cover(s) for Velux platform."""
     entities = []
-    for node in hass.data[DOMAIN][config.entry_id].pyvlx.nodes:
+    module = hass.data[DOMAIN][config.entry_id]
+    for node in module.pyvlx.nodes:
         if isinstance(node, OpeningDevice):
             entities.append(VeluxCover(node))
     async_add_entities(entities)

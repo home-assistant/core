@@ -9,7 +9,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -19,17 +19,8 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for velux."""
-
-    VERSION: int = 1
-
-    @staticmethod
-    async def test_connection(host: str, password: str):
-        """Test the connection to Velux."""
-        pyvlx = PyVLX(host=host, password=password)
-        await pyvlx.connect()
-        await pyvlx.disconnect()
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a config entry."""
@@ -40,22 +31,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
         errors: dict[str, Any] = {}
 
         if user_input is not None:
             try:
-                await self.test_connection(
-                    user_input[CONF_HOST], user_input[CONF_PASSWORD]
+                pyvlx = PyVLX(
+                    host=user_input[CONF_HOST], password=user_input[CONF_PASSWORD]
                 )
+                await pyvlx.connect()
+                await pyvlx.disconnect()
             except (PyVLXException, ConnectionError) as err:
                 errors["base"] = "cannot_connect"
-                _LOGGER.debug("Cannot connect: %s", err)
+                LOGGER.debug("Cannot connect: %s", err)
             except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception: %s", err)
-                return self.async_abort(reason="unknown")
+                LOGGER.exception("Unexpected exception: %s", err)
+                errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
                     title=user_input[CONF_HOST],

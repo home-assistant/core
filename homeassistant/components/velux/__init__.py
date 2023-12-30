@@ -10,7 +10,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .const import _LOGGER, DOMAIN, PLATFORMS
+from .const import DOMAIN, LOGGER, PLATFORMS
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
@@ -53,13 +53,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the velux component."""
     try:
-        hass.data[DOMAIN][entry.entry_id] = VeluxModule(hass, entry.data)
-        hass.data[DOMAIN][entry.entry_id].setup()
-        await hass.data[DOMAIN][entry.entry_id].async_start()
+        module = VeluxModule(hass, entry.data)
+        module.setup()
+        await module.async_start()
 
     except PyVLXException as ex:
-        _LOGGER.exception("Can't connect to velux interface: %s", ex)
+        LOGGER.exception("Can't connect to velux interface: %s", ex)
         return False
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = module
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -85,7 +87,7 @@ class VeluxModule:
 
         async def on_hass_stop(event):
             """Close connection when hass stops."""
-            _LOGGER.debug("Velux interface terminated")
+            LOGGER.debug("Velux interface terminated")
             await self.pyvlx.disconnect()
 
         async def async_reboot_gateway(service_call: ServiceCall) -> None:
@@ -102,7 +104,7 @@ class VeluxModule:
 
     async def async_start(self):
         """Start velux component."""
-        _LOGGER.debug("Velux interface started")
+        LOGGER.debug("Velux interface started")
         await self.pyvlx.load_scenes()
         await self.pyvlx.load_nodes()
 
