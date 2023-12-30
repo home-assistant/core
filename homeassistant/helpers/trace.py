@@ -21,6 +21,7 @@ class TraceElement:
         "_child_key",
         "_child_run_id",
         "_error",
+        "_last_variables",
         "path",
         "_result",
         "reuse_by_child",
@@ -38,16 +39,8 @@ class TraceElement:
         self.reuse_by_child = False
         self._timestamp = dt_util.utcnow()
 
-        if variables is None:
-            variables = {}
-        last_variables = variables_cv.get() or {}
-        variables_cv.set(dict(variables))
-        changed_variables = {
-            key: value
-            for key, value in variables.items()
-            if key not in last_variables or last_variables[key] != value
-        }
-        self._variables = changed_variables
+        self._last_variables = variables_cv.get() or {}
+        self.update_variables(variables)
 
     def __repr__(self) -> str:
         """Container for trace data."""
@@ -70,6 +63,19 @@ class TraceElement:
         """Set result."""
         old_result = self._result or {}
         self._result = {**old_result, **kwargs}
+
+    def update_variables(self, variables: TemplateVarsType) -> None:
+        """Update variables."""
+        if variables is None:
+            variables = {}
+        last_variables = self._last_variables
+        variables_cv.set(dict(variables))
+        changed_variables = {
+            key: value
+            for key, value in variables.items()
+            if key not in last_variables or last_variables[key] != value
+        }
+        self._variables = changed_variables
 
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this TraceElement."""
