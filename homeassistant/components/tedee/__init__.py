@@ -10,6 +10,7 @@ from .coordinator import TedeeApiCoordinator
 
 PLATFORMS = [
     Platform.LOCK,
+    Platform.SENSOR,
 ]
 
 _LOGGER = logging.getLogger(__name__)
