@@ -137,7 +137,7 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
     @callback
     def _async_reconfigure(self) -> None:
         """Reconfigure entity."""
-        del self.supported_features
+        self._async_clear_property_cache(("supported_features",))
         super()._async_reconfigure()
 
     def get_characteristic_types(self) -> list[str]:
