@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-import logging
 from typing import Any
 
 from govee_local_api import GoveeDevice
@@ -22,7 +21,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SCAN_INTERVAL
 from .capability import (
     GOVEE_COORDINATORS_MAPPER,
     GOVEE_DEVICE_CAPABILITIES,
@@ -30,8 +28,6 @@ from .capability import (
 )
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import GoveeLocalApiCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -41,24 +37,7 @@ async def async_setup_entry(
 ) -> None:
     """Govee light setup."""
 
-    entry_id = config_entry.entry_id
-    coordinator: GoveeLocalApiCoordinator = hass.data.setdefault(DOMAIN, {}).get(
-        entry_id, None
-    )
-
-    def add_device(coordinator: GoveeLocalApiCoordinator, device: GoveeDevice):
-        async_add_entities([GoveeLight(coordinator, device)])
-
-    if not coordinator:
-        coordinator = GoveeLocalApiCoordinator(
-            hass=hass,
-            config_entry=config_entry,
-            scan_interval=SCAN_INTERVAL,
-            logger=_LOGGER,
-        )
-
-        hass.data.setdefault(DOMAIN, {})[entry_id] = coordinator
-        await coordinator.start()
+    coordinator: GoveeLocalApiCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     await coordinator.async_config_entry_first_refresh()
 
