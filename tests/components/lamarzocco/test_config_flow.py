@@ -11,13 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import (
-    HOST_SELECTION,
-    LOGIN_INFO,
-    USER_INPUT,
-    WRONG_LOGIN_INFO,
-    get_bluetooth_service_info,
-)
+from . import HOST_SELECTION, PASSWORD_SELECTION, USER_INPUT, get_bluetooth_service_info
 
 from tests.common import MockConfigEntry
 
@@ -291,43 +285,12 @@ async def test_reauth_flow(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        LOGIN_INFO,
+        PASSWORD_SELECTION,
     )
 
     assert result2["type"] == FlowResultType.ABORT
     await hass.async_block_till_done()
     assert result2["reason"] == "reauth_successful"
-    assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1
-
-
-async def test_no_machines(
-    hass: HomeAssistant,
-    mock_lamarzocco: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test no machines."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": mock_config_entry.unique_id,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
-
-    mock_lamarzocco.get_all_machines.return_value = []
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        WRONG_LOGIN_INFO,
-    )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "no_machines"}
-
     assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1
 
 
@@ -361,7 +324,7 @@ async def test_reauth_errors(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        WRONG_LOGIN_INFO,
+        PASSWORD_SELECTION,
     )
 
     assert result2["type"] == FlowResultType.FORM

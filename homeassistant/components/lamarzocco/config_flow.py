@@ -50,7 +50,11 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            data: dict[str, Any] = {}
+            if self.reauth_entry:
+                data = dict(self.reauth_entry.data)
             data = {
+                **data,
                 **user_input,
                 **self._discovered,
             }
@@ -105,22 +109,6 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_validate_host(
-        self, serial_number: str, user_input: dict[str, Any]
-    ) -> dict[str, str]:
-        """Validate the host input."""
-        errors: dict[str, str] = {}
-        # if host is set, check if we can connect to it
-        if user_input.get(CONF_HOST):
-            lm = LaMarzoccoClient(hass=self.hass)
-            if not await lm.check_local_connection(
-                credentials=self._config,
-                host=user_input[CONF_HOST],
-                serial=serial_number,
-            ):
-                errors[CONF_HOST] = "cannot_connect"
-        return errors
-
     async def async_step_machine_selection(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -134,7 +122,15 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 serial_number = self._discovered[CONF_MACHINE]
 
-            errors = await self.async_validate_host(serial_number, user_input)
+            # validate local connection if host is provided
+            if user_input.get(CONF_HOST):
+                lm = LaMarzoccoClient(hass=self.hass)
+                if not await lm.check_local_connection(
+                    credentials=self._config,
+                    host=user_input[CONF_HOST],
+                    serial=serial_number,
+                ):
+                    errors[CONF_HOST] = "cannot_connect"
 
             if not errors:
                 return self.async_create_entry(
@@ -149,11 +145,11 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
             for serial_number, model_name in self._machines
         ]
+
         machine_selection_schema = vol.Schema(
             {
                 vol.Required(
-                    CONF_MACHINE,
-                    default=machine_options[0],
+                    CONF_MACHINE, default=machine_options[0]["label"]
                 ): SelectSelector(
                     SelectSelectorConfig(
                         options=machine_options,
@@ -203,7 +199,6 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_USERNAME, default=entry_data[CONF_USERNAME]): str,
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),

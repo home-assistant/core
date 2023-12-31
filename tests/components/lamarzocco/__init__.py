@@ -9,18 +9,12 @@ USER_INPUT = {
     CONF_PASSWORD: "password",
 }
 
-LOGIN_INFO = {
-    CONF_USERNAME: "username",
-    CONF_PASSWORD: "password",
-}
-
-WRONG_LOGIN_INFO = {
-    CONF_USERNAME: "username",
-    CONF_PASSWORD: "wrong_password",
-}
-
 HOST_SELECTION = {
     CONF_HOST: "192.168.1.1",
+}
+
+PASSWORD_SELECTION = {
+    CONF_PASSWORD: "password",
 }
 
 
