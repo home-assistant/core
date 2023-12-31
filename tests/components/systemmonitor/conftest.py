@@ -57,6 +57,14 @@ class MockProcess(Process):
         return self._name
 
 
+class Process:
+    """Mock a Process class."""
+
+    def name():
+        """Return a name."""
+        return "Python3"
+
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
     """Mock setup entry."""
@@ -75,20 +83,10 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={},
         options={
-<<<<<<< HEAD
             "sensor": {"process": ["python3", "pip"]},
             "resources": [
                 "disk_use_percent_/",
                 "disk_use_percent_/home/notexist/",
-=======
-            "sensor": {
-                "process": [
-                    "python3",
-                ]
-            },
-            "resources": [
-                "disk_use_percent_/",
->>>>>>> 4d1de7ae9a (Add fixtures and first test)
                 "memory_free_",
                 "network_out_eth0",
                 "process_python3",
@@ -114,7 +112,6 @@ async def mock_added_config_entry(
 
 
 @pytest.fixture
-<<<<<<< HEAD
 def mock_process() -> list[MockProcess]:
     """Mock process."""
     _process_python = MockProcess("python3")
@@ -127,15 +124,6 @@ def mock_psutil(mock_process: list[MockProcess]) -> Mock:
     """Mock psutil."""
     with patch(
         "homeassistant.components.systemmonitor.sensor.psutil",
-=======
-def mock_psutil() -> Mock:
-    """Mock psutil."""
-    mock_process: Mock = create_autospec(Process)
-    mock_process.configure_mock(pid=1, name="Python3")
-
-    with patch(
-        "homeassistant.components.systemmonitor.coordinator.psutil",
->>>>>>> 4d1de7ae9a (Add fixtures and first test)
         autospec=True,
     ) as mock_psutil:
         mock_psutil.disk_usage.return_value = sdiskusage(
@@ -158,13 +146,9 @@ def mock_psutil() -> Mock:
             1,
         )
         mock_psutil.net_io_counters.return_value = {
-<<<<<<< HEAD
             "eth0": snetio(100 * 1024**2, 100 * 1024**2, 50, 50, 0, 0, 0, 0),
             "eth1": snetio(200 * 1024**2, 200 * 1024**2, 150, 150, 0, 0, 0, 0),
             "vethxyzxyz": snetio(300 * 1024**2, 300 * 1024**2, 150, 150, 0, 0, 0, 0),
-=======
-            "eth0": snetio(100, 100, 50, 50, 0, 0, 0, 0)
->>>>>>> 4d1de7ae9a (Add fixtures and first test)
         }
         mock_psutil.net_if_addrs.return_value = {
             "eth0": [
@@ -175,7 +159,6 @@ def mock_psutil() -> Mock:
                     "255.255.255.255",
                     None,
                 )
-<<<<<<< HEAD
             ],
             "eth1": [
                 snicaddr(
@@ -206,16 +189,6 @@ def mock_psutil() -> Mock:
             "cpu0-thermal": [shwtemp("cpu0-thermal", 50.0, 60.0, 70.0)]
         }
         mock_psutil.NoSuchProcess = NoSuchProcess
-=======
-            ]
-        }
-        mock_psutil.cpu_percent.return_value = 10.0
-        mock_psutil.boot_time.return_value = 1703973338.0
-        mock_psutil.process_iter.return_value = [mock_process.return_value]
-        mock_psutil.sensors_temperatures.return_value = {
-            "cpu0-thermal": [shwtemp("cpu0-thermal", 50.0, 60.0, 70.0)]
-        }
->>>>>>> 4d1de7ae9a (Add fixtures and first test)
         yield mock_psutil
 
 
@@ -229,12 +202,8 @@ def mock_util(mock_process) -> Mock:
 =======
 def mock_util() -> Mock:
     """Mock psutil."""
-    mock_process: Mock = create_autospec(Process)
-    mock_process.configure_mock(pid=1, name="Python3")
-
     with patch(
-        "homeassistant.components.systemmonitor.util.psutil",
-        autospec=True,
+        "homeassistant.components.systemmonitor.util.psutil", autospec=True
     ) as mock_util:
 <<<<<<< HEAD
         mock_util
@@ -279,8 +248,13 @@ def mock_util() -> Mock:
 =======
             ]
         }
+<<<<<<< HEAD
         mock_util.process_iter.return_value = [mock_process.return_value]
 >>>>>>> 4d1de7ae9a (Add fixtures and first test)
+=======
+        _process = Process()
+        mock_util.process_iter.return_value = [_process]
+>>>>>>> a4f32af124 (Fix process)
         mock_util.sensors_temperatures.return_value = {
             "cpu0-thermal": [shwtemp("cpu0-thermal", 50.0, 60.0, 70.0)]
         }
@@ -313,7 +287,12 @@ def mock_os() -> Mock:
         "homeassistant.components.systemmonitor.coordinator.os",
         autospec=True,
     ) as mock_os:
+<<<<<<< HEAD
         _os = mock_os
         _os.getloadavg.return_value = (1, 2, 3)
         yield _os
 >>>>>>> 4d1de7ae9a (Add fixtures and first test)
+=======
+        mock_os.getloadavg.return_value = (1, 2, 3)
+        yield mock_os
+>>>>>>> a4f32af124 (Fix process)
