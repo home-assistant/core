@@ -2,7 +2,7 @@
   "domain": "calendar",
   "name": "Calendar",
   "codeowners": ["@home-assistant/core"],
-  "dependencies": ["http"],
+  "dependencies": ["http","python-dateutil"],
   "documentation": "https://www.home-assistant.io/integrations/calendar",
   "integration_type": "entity",
   "quality_scale": "internal"
