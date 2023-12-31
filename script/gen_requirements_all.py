@@ -182,7 +182,7 @@ charset-normalizer==3.2.0
 
 # lxml 5.0.0 currently does not build on alpine 3.18
 # https://bugs.launchpad.net/lxml/+bug/2047718
-lxml==4.9.4
+lxml==5.0.0
 """
 
 GENERATED_MESSAGE = (
