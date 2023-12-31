@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Generator
 import datetime
 import http
+import time
 from typing import Any, TypeVar
 from unittest.mock import Mock, mock_open, patch
 
@@ -189,9 +190,9 @@ def creds(
 
 
 @pytest.fixture
-def config_entry_token_expiry(token_expiry: datetime.datetime) -> float:
+def config_entry_token_expiry() -> float:
     """Fixture for token expiration value stored in the config entry."""
-    return token_expiry.timestamp()
+    return time.time() + 86400
 
 
 @pytest.fixture
@@ -218,7 +219,7 @@ def config_entry(
         domain=DOMAIN,
         unique_id=config_entry_unique_id,
         data={
-            "auth_implementation": "device_auth",
+            "auth_implementation": DOMAIN,
             "token": {
                 "access_token": "ACCESS_TOKEN",
                 "refresh_token": "REFRESH_TOKEN",
@@ -260,7 +261,7 @@ def mock_events_list(
 
 @pytest.fixture
 def mock_events_list_items(
-    mock_events_list: Callable[[dict[str, Any]], None]
+    mock_events_list: Callable[[dict[str, Any]], None],
 ) -> Callable[[list[dict[str, Any]]], None]:
     """Fixture to construct an API response containing event items."""
 
@@ -350,7 +351,9 @@ def component_setup(
     async def _setup_func() -> bool:
         assert await async_setup_component(hass, "application_credentials", {})
         await async_import_client_credential(
-            hass, DOMAIN, ClientCredential("client-id", "client-secret"), "device_auth"
+            hass,
+            DOMAIN,
+            ClientCredential("client-id", "client-secret"),
         )
         config_entry.add_to_hass(hass)
         return await hass.config_entries.async_setup(config_entry.entry_id)

@@ -38,7 +38,7 @@ async def test_yaml_resources_backwards(
 ) -> None:
     """Test defining resources in YAML ll config (legacy)."""
     with patch(
-        "homeassistant.components.lovelace.dashboard.load_yaml",
+        "homeassistant.components.lovelace.dashboard.load_yaml_dict",
         return_value={"resources": RESOURCE_EXAMPLES},
     ):
         assert await async_setup_component(

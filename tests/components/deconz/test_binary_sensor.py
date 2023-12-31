@@ -480,17 +480,17 @@ TEST_DATA = [
 @pytest.mark.parametrize(("sensor_data", "expected"), TEST_DATA)
 async def test_binary_sensors(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
     mock_deconz_websocket,
     sensor_data,
     expected,
 ) -> None:
     """Test successful creation of binary sensor entities."""
-    ent_reg = er.async_get(hass)
-    dev_reg = dr.async_get(hass)
 
     # Create entity entry to migrate to new unique ID
-    ent_reg.async_get_or_create(
+    entity_registry.async_get_or_create(
         DOMAIN,
         DECONZ_DOMAIN,
         expected["old_unique_id"],
@@ -513,14 +513,14 @@ async def test_binary_sensors(
 
     # Verify entity registry data
 
-    ent_reg_entry = ent_reg.async_get(expected["entity_id"])
+    ent_reg_entry = entity_registry.async_get(expected["entity_id"])
     assert ent_reg_entry.entity_category is expected["entity_category"]
     assert ent_reg_entry.unique_id == expected["unique_id"]
 
     # Verify device registry data
 
     assert (
-        len(dr.async_entries_for_config_entry(dev_reg, config_entry.entry_id))
+        len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))
         == expected["device_count"]
     )
 
@@ -670,7 +670,10 @@ async def test_add_new_binary_sensor(
 
 
 async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    mock_deconz_websocket,
 ) -> None:
     """Test that adding a new binary sensor is not allowed."""
     sensor = {
@@ -702,7 +705,6 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
     assert len(hass.states.async_all()) == 0
     assert not hass.states.get("binary_sensor.presence_sensor")
 
-    entity_registry = er.async_get(hass)
     assert (
         len(async_entries_for_config_entry(entity_registry, config_entry.entry_id)) == 0
     )
@@ -719,7 +721,10 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_service_call(
 
 
 async def test_add_new_binary_sensor_ignored_load_entities_on_options_change(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    mock_deconz_websocket,
 ) -> None:
     """Test that adding a new binary sensor is not allowed."""
     sensor = {
@@ -751,7 +756,6 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_options_change(
     assert len(hass.states.async_all()) == 0
     assert not hass.states.get("binary_sensor.presence_sensor")
 
-    entity_registry = er.async_get(hass)
     assert (
         len(async_entries_for_config_entry(entity_registry, config_entry.entry_id)) == 0
     )

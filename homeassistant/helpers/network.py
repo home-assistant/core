@@ -299,3 +299,14 @@ def _get_cloud_url(hass: HomeAssistant, require_current_request: bool = False) -
             return normalize_url(str(cloud_url))
 
     raise NoURLAvailableError
+
+
+def is_cloud_connection(hass: HomeAssistant) -> bool:
+    """Return True if the current connection is a nabucasa cloud connection."""
+
+    if "cloud" not in hass.config.components:
+        return False
+
+    from hass_nabucasa import remote  # pylint: disable=import-outside-toplevel
+
+    return remote.is_cloud_request.get()

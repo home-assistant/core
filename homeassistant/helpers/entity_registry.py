@@ -131,7 +131,7 @@ EventEntityRegistryUpdatedData = (
 
 
 EntityOptionsType = Mapping[str, Mapping[str, Any]]
-ReadOnlyEntityOptionsType = ReadOnlyDict[str, Mapping[str, Any]]
+ReadOnlyEntityOptionsType = ReadOnlyDict[str, ReadOnlyDict[str, Any]]
 
 DISLAY_DICT_OPTIONAL = (
     ("ai", "area_id"),

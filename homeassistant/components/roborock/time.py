@@ -25,7 +25,7 @@ from .device import RoborockEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoborockTimeDescriptionMixin:
     """Define an entity description mixin for time entities."""
 
@@ -37,7 +37,7 @@ class RoborockTimeDescriptionMixin:
     get_value: Callable[[AttributeCache], datetime.time]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoborockTimeDescription(TimeEntityDescription, RoborockTimeDescriptionMixin):
     """Class to describe an Roborock time entity."""
 
@@ -139,7 +139,7 @@ async def async_setup_entry(
     # We need to check if this function is supported by the device.
     results = await asyncio.gather(
         *(
-            coordinator.api.cache.get(description.cache_key).async_value()
+            coordinator.api.get_from_cache(description.cache_key)
             for coordinator, description in possible_entities
         ),
         return_exceptions=True,

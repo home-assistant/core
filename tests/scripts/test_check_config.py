@@ -78,7 +78,10 @@ def test_config_platform_valid(
         (
             BASE_CONFIG + "light:\n  platform: beer",
             {"homeassistant", "light"},
-            "Platform error light.beer - Integration 'beer' not found.",
+            (
+                "Platform error 'light' from integration 'beer' - "
+                "Integration 'beer' not found."
+            ),
         ),
     ],
 )

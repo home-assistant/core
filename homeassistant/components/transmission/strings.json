@@ -69,6 +69,14 @@
       "started_torrents": {
         "name": "Started torrents"
       }
+    },
+    "switch": {
+      "on_off": {
+        "name": "Switch"
+      },
+      "turtle_mode": {
+        "name": "Turtle mode"
+      }
     }
   },
   "services": {

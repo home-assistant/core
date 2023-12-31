@@ -312,6 +312,7 @@ async def test_availability_with_shared_state_topic(
 @patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
 async def test_default_entity_and_device_name(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data,
     caplog: pytest.LogCaptureFixture,
@@ -336,9 +337,7 @@ async def test_default_entity_and_device_name(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
-    registry = dr.async_get(hass)
-
-    device = registry.async_get_device({("mqtt", "helloworld")})
+    device = device_registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
     assert device.name == device_name
 

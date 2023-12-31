@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import ANY, MagicMock, patch
 
+from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 import yaml
@@ -31,6 +32,7 @@ from homeassistant.generated.mqtt import MQTT
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
@@ -1320,9 +1322,8 @@ async def help_test_entity_debug_info_max_messages(
         "subscriptions"
     ]
 
-    start_dt = datetime(2019, 1, 1, 0, 0, 0)
-    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
-        dt_utcnow.return_value = start_dt
+    start_dt = datetime(2019, 1, 1, 0, 0, 0, tzinfo=dt_util.UTC)
+    with freeze_time(start_dt):
         for i in range(0, debug_info.STORED_MESSAGES + 1):
             async_fire_mqtt_message(hass, "test-topic", f"{i}")
 
@@ -1396,7 +1397,7 @@ async def help_test_entity_debug_info_message(
 
     debug_info_data = debug_info.info_for_device(hass, device.id)
 
-    start_dt = datetime(2019, 1, 1, 0, 0, 0)
+    start_dt = datetime(2019, 1, 1, 0, 0, 0, tzinfo=dt_util.UTC)
 
     if state_topic is not None:
         assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
@@ -1404,8 +1405,7 @@ async def help_test_entity_debug_info_message(
             "subscriptions"
         ]
 
-        with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
-            dt_utcnow.return_value = start_dt
+        with freeze_time(start_dt):
             async_fire_mqtt_message(hass, str(state_topic), state_payload)
 
         debug_info_data = debug_info.info_for_device(hass, device.id)
@@ -1426,8 +1426,7 @@ async def help_test_entity_debug_info_message(
     expected_transmissions = []
     if service:
         # Trigger an outgoing MQTT message
-        with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
-            dt_utcnow.return_value = start_dt
+        with freeze_time(start_dt):
             if service:
                 service_data = {ATTR_ENTITY_ID: f"{domain}.beer_test"}
                 if service_parameters:
