@@ -41,6 +41,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
+    ColorMode,
     LightEntityFeature,
 )
 from homeassistant.components.media_player import (
@@ -115,12 +116,19 @@ UNAUTHORIZED_USER = [
     {"error": {"address": "/", "description": "unauthorized user", "type": "1"}}
 ]
 
-DIMMABLE_SUPPORT_FEATURES = (
-    CoverEntityFeature.SET_POSITION
-    | FanEntityFeature.SET_SPEED
-    | MediaPlayerEntityFeature.VOLUME_SET
-    | ClimateEntityFeature.TARGET_TEMPERATURE
-)
+DIMMABLE_SUPPORTED_FEATURES_BY_DOMAIN = {
+    cover.DOMAIN: CoverEntityFeature.SET_POSITION,
+    fan.DOMAIN: FanEntityFeature.SET_SPEED,
+    media_player.DOMAIN: MediaPlayerEntityFeature.VOLUME_SET,
+    climate.DOMAIN: ClimateEntityFeature.TARGET_TEMPERATURE,
+}
+
+ENTITY_FEATURES_BY_DOMAIN = {
+    cover.DOMAIN: CoverEntityFeature,
+    fan.DOMAIN: FanEntityFeature,
+    media_player.DOMAIN: MediaPlayerEntityFeature,
+    climate.DOMAIN: ClimateEntityFeature,
+}
 
 
 @lru_cache(maxsize=32)
@@ -756,8 +764,8 @@ def _entity_unique_id(entity_id: str) -> str:
 
 def state_to_json(config: Config, state: State) -> dict[str, Any]:
     """Convert an entity to its Hue bridge JSON representation."""
-    entity_features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-    color_modes = state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, [])
+
+    color_modes = state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, set())
     unique_id = _entity_unique_id(state.entity_id)
     state_dict = get_entity_state_dict(config, state)
 
@@ -820,9 +828,7 @@ def state_to_json(config: Config, state: State) -> dict[str, Any]:
                 HUE_API_STATE_BRI: state_dict[STATE_BRIGHTNESS],
             }
         )
-    elif entity_features & DIMMABLE_SUPPORT_FEATURES or light.brightness_supported(
-        color_modes
-    ):
+    elif state_supports_hue_brightness(state, color_modes):
         # Dimmable light (Zigbee Device ID: 0x0100)
         # Supports groups, scenes, on/off and dimming
         retval["type"] = "Dimmable light"
@@ -843,6 +849,19 @@ def state_to_json(config: Config, state: State) -> dict[str, Any]:
         json_state.update({HUE_API_STATE_BRI: HUE_API_STATE_BRI_MAX})
 
     return retval
+
+
+def state_supports_hue_brightness(state: State, color_modes: set[ColorMode]) -> bool:
+    """Return True if the state supports brightness."""
+    domain = state.domain
+    if domain == light.DOMAIN:
+        return light.brightness_supported(color_modes)
+    if not (required_feature := DIMMABLE_SUPPORTED_FEATURES_BY_DOMAIN.get(domain)):
+        return False
+    entity_features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    if type(entity_features) is int:  # noqa: E721 - we mean is an int here
+        entity_features = ENTITY_FEATURES_BY_DOMAIN[domain](entity_features)
+    return required_feature in entity_features
 
 
 def create_hue_success_response(
