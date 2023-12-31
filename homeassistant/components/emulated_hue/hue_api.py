@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 from functools import lru_cache
 import hashlib
 from http import HTTPStatus
@@ -765,9 +766,9 @@ def _entity_unique_id(entity_id: str) -> str:
 def state_to_json(config: Config, state: State) -> dict[str, Any]:
     """Convert an entity to its Hue bridge JSON representation."""
 
+    color_modes = state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, [])
     unique_id = _entity_unique_id(state.entity_id)
     state_dict = get_entity_state_dict(config, state)
-    color_modes = state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, set())
 
     json_state: dict[str, str | bool | int] = {
         HUE_API_STATE_ON: state_dict[STATE_ON],
@@ -851,7 +852,9 @@ def state_to_json(config: Config, state: State) -> dict[str, Any]:
     return retval
 
 
-def state_supports_hue_brightness(state: State, color_modes: set[ColorMode]) -> bool:
+def state_supports_hue_brightness(
+    state: State, color_modes: Iterable[ColorMode]
+) -> bool:
     """Return True if the state supports brightness."""
     domain = state.domain
     if domain == light.DOMAIN:
