@@ -195,9 +195,9 @@ class Metering(ClusterHandler):
         )  # 1 digit to the right, 15 digits to the left
         self._summa_format = self.get_formatting(fmting)
 
-    async def async_force_update(self) -> None:
+    async def async_update(self) -> None:
         """Retrieve latest state."""
-        self.debug("async_force_update")
+        self.debug("async_update")
 
         attrs = [
             a["attr"]
