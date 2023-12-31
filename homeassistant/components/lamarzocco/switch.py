@@ -21,7 +21,7 @@ class LaMarzoccoSwitchEntityDescription(
     SwitchEntityDescription,
     LaMarzoccoEntityDescription,
 ):
-    """Description of an La Marzocco Switch."""
+    """Description of a La Marzocco Switch."""
 
     control_fn: Callable[[LaMarzoccoClient, bool], Coroutine[Any, Any, bool]]
     is_on_fn: Callable[[LaMarzoccoClient], bool]
