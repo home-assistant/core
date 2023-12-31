@@ -285,8 +285,8 @@ class AirzoneDeviceGroupClimate(AirzoneClimate):
 class AirzoneAidooClimate(AirzoneAidooEntity, AirzoneDeviceClimate):
     """Define an Airzone Cloud Aidoo climate."""
 
-    _speeds: dict[int, str] = {}
-    _speeds_reverse: dict[str, int] = {}
+    _speeds: dict[int, str]
+    _speeds_reverse: dict[str, int]
 
     def __init__(
         self,
@@ -317,27 +317,27 @@ class AirzoneAidooClimate(AirzoneAidooEntity, AirzoneDeviceClimate):
         azd_speeds: dict[int, int] = self.get_airzone_value(AZD_SPEEDS)
         max_speed = max(azd_speeds)
 
-        speeds: dict[int, str]
-        if _speeds := FAN_SPEED_MAPS.get(max_speed):
-            speeds = _speeds
+        fan_speeds: dict[int, str]
+        if speeds_map := FAN_SPEED_MAPS.get(max_speed):
+            fan_speeds = speeds_map
         else:
-            speeds = {}
+            fan_speeds = {}
 
             for speed in azd_speeds:
                 if speed == 0:
-                    speeds[speed] = FAN_AUTO
+                    fan_speeds[speed] = FAN_AUTO
                 else:
-                    speeds[speed] = f"{int(round((speed * 100) / max_speed, 0))}%"
+                    fan_speeds[speed] = f"{int(round((speed * 100) / max_speed, 0))}%"
 
-            speeds[1] = FAN_LOW
-            speeds[int(round((max_speed + 1) / 2, 0))] = FAN_MEDIUM
-            speeds[max_speed] = FAN_HIGH
+            fan_speeds[1] = FAN_LOW
+            fan_speeds[int(round((max_speed + 1) / 2, 0))] = FAN_MEDIUM
+            fan_speeds[max_speed] = FAN_HIGH
 
-        if 0 in speeds and 0 not in azd_speeds:
-            speeds.pop(0)
+        if 0 in fan_speeds and 0 not in azd_speeds:
+            fan_speeds.pop(0)
 
         self._speeds = {}
-        for key, value in speeds.items():
+        for key, value in fan_speeds.items():
             _key = azd_speeds.get(key)
             if _key is not None:
                 self._speeds[_key] = value
