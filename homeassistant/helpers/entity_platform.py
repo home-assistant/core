@@ -144,10 +144,9 @@ class EntityPlatform:
         # which powers entity_component.add_entities
         self.parallel_updates_created = platform is None
 
-        platforms: list[EntityPlatform] = hass.data.setdefault(
-            DATA_ENTITY_PLATFORM, {}
-        ).setdefault(platform_name, [])
-        platforms.append(self)
+        hass.data.setdefault(DATA_ENTITY_PLATFORM, {}).setdefault(
+            self.platform_name, []
+        ).append(self)
 
         self.domain_entities: dict[str, Entity] = hass.data.setdefault(
             DATA_DOMAIN_ENTITIES, {}
