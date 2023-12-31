@@ -23,6 +23,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "pullspring_enabled": {
+        "name": "Pullspring enabled"
+      },
+      "semi_locked": {
+        "name": "Semi locked"
+      }
+    },
     "sensor": {
       "pullspring_duration": {
         "name": "Pullspring duration"
