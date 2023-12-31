@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ble_device = bluetooth.async_ble_device_from_address(hass, address)
         airthings = AirthingsBluetoothDeviceData(_LOGGER, elevation, is_metric)
 
-        close_stale_connections(ble_device)
+        await close_stale_connections(ble_device)
 
         try:
             data = await airthings.update_device(ble_device)
