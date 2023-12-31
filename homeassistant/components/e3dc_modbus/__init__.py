@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -184,12 +185,12 @@ class E3DCModbusHub:
         if not self._sensors:
             return
 
-        # try:
-        update_result = True
+        try:
+            update_result = True
         #    update_result = self.read_modbus_data()
-        # except Exception:
-        _LOGGER.exception("Error reading modbus data")
-        update_result = False
+        except ErrrorReadingModbusData:
+            _LOGGER.exception("Error reading modbus data")
+            update_result = False
 
         if update_result:
             for update_callback in self._sensors:
@@ -257,3 +258,7 @@ class E3DCModbusHub:
         with self._lock:
             result = self._client.write_register(register, value)
         return result
+
+
+class ErrrorReadingModbusData(HomeAssistantError):
+    """Error reading Modbus data."""
