@@ -30,14 +30,6 @@ from .lm_client import LaMarzoccoClient
 
 _LOGGER = logging.getLogger(__name__)
 
-LOGIN_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-    },
-    extra=vol.PREVENT_EXTRA,
-)
-
 
 async def get_machines(
     hass: core.HomeAssistant, data: dict[str, Any]
@@ -64,12 +56,10 @@ async def get_machines(
 class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for La Marzocco."""
 
-    def __init__(self) -> None:
-        """Init config flow."""
-        self._discovered: dict[str, str] = {}
-        self.reauth_entry: ConfigEntry | None
-        self._config: dict[str, Any] = {}
-        self._machines: list[tuple[str, str]] = []
+    _discovered: dict[str, str] = {}
+    reauth_entry: ConfigEntry | None = None
+    _config: dict[str, Any] = {}
+    _machines: list[tuple[str, str]] = []
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -94,6 +84,14 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_machines"
 
             if not errors:
+                if self.reauth_entry:
+                    self.hass.config_entries.async_update_entry(
+                        self.reauth_entry, data=user_input
+                    )
+                    await self.hass.config_entries.async_reload(
+                        self.reauth_entry.entry_id
+                    )
+                    return self.async_abort(reason="reauth_successful")
                 if self._discovered:
                     serials = [machine[0] for machine in self._machines]
                     if self._discovered[CONF_MACHINE] not in serials:
@@ -107,7 +105,14 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_machine_selection()
 
         return self.async_show_form(
-            step_id="user", data_schema=LOGIN_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
         )
 
     async def async_validate_host(
@@ -220,34 +225,14 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Dialog that informs the user that reauth is required."""
-        errors = {}
-        assert self.reauth_entry
-        if user_input is not None:
-            try:
-                await get_machines(self.hass, self.reauth_entry.data | user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except NoMachines:
-                errors["base"] = "no_machines"
-            if not errors:
-                self.hass.config_entries.async_update_entry(
-                    self.reauth_entry, data=user_input
-                )
-                await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
-
         return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=LOGIN_DATA_SCHEMA,
-            errors=errors,
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME, default=entry_data[CONF_USERNAME]): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
         )
 
 

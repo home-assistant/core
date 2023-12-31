@@ -272,26 +272,6 @@ async def test_bluetooth_discovery_errors(
     assert len(mock_lamarzocco.check_local_connection.mock_calls) == 1
 
 
-async def test_show_reauth(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test that the reauth form shows."""
-
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": mock_config_entry.unique_id,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-
 async def test_reauth_flow(
     hass: HomeAssistant, mock_lamarzocco: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
