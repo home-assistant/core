@@ -11,7 +11,13 @@ import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.components.device_automation import action as device_action
-from homeassistant.const import CONF_CONTINUE_ON_ERROR
+from homeassistant.const import (
+    CONF_CONTINUE_ON_ERROR,
+    DOMAIN_AUTOMATION,
+    DOMAIN_PERSON,
+    DOMAIN_SCRIPT,
+    DOMAIN_ZONE,
+)
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.util import slugify
 
@@ -32,6 +38,39 @@ RASC_COMPLETE = "complete"
 RASC_RESPONSE = "rasc_response"
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def create_x_ready_queue(hass: HomeAssistant, entity_id: str) -> None:
+    """Create queue for x entity."""
+    domains = [DOMAIN_SCRIPT, DOMAIN_AUTOMATION, DOMAIN_PERSON, DOMAIN_ZONE]
+    # full_names = []
+
+    entity = entity_id.split(".")
+    domain = entity[0]
+    full_name = entity[1]
+
+    if full_name is not None:
+        if domain not in domains:
+            scheduler = hass.data[DOMAIN]
+            scheduler.ready_queues[entity_id] = QueueEntity(None)
+            scheduler.active_routines[entity_id] = None
+            scheduler.loops[entity_id] = scheduler.create_bg_loop()
+
+            _LOGGER.info("Create queue: %s", entity_id)
+
+
+def delete_x_active_queue(hass: HomeAssistant, entity_id: str) -> None:
+    """Delete x entity queue."""
+    try:
+        scheduler = hass.data[DOMAIN]
+
+        del scheduler.active_routines[entity_id]
+        del scheduler.loops[entity_id]
+        del scheduler.ready_queues[entity_id]
+
+        _LOGGER.info("Delete queue: %s", entity_id)
+    except (KeyError, ValueError):
+        _LOGGER.warning("Unable to delete unknown queue %s", entity_id)
 
 
 class RoutineEntity:

@@ -13,12 +13,6 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
-from homeassistant.components.rascalscheduler import (
-    RoutineEntity,
-    dag_operator,
-    get_rascal_scheduler,
-    setup_rascal_scheduler_entity,
-)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -68,6 +62,7 @@ from homeassistant.helpers.integration_platform import (
     async_process_integration_platform_for_component,
 )
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.rascalscheduler import RoutineEntity
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
     ATTR_CUR,
@@ -97,6 +92,11 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.rascalscheduler import (
+    dag_operator,
+    get_rascal_scheduler,
+    setup_rascal_scheduler_entity,
+)
 from homeassistant.util.dt import parse_datetime
 
 from .config import AutomationConfig

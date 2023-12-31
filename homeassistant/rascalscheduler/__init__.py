@@ -9,11 +9,10 @@ import threading
 from typing import Any
 
 from homeassistant.components.script import BaseScriptEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.rascalscheduler import (
     ActionEntity,
-    Queue,
     QueueEntity,
     RoutineEntity,
 )
@@ -50,26 +49,7 @@ def setup_rascal_scheduler_entity(hass: HomeAssistant) -> None:
     hass.bus.async_listen(RASC_RESPONSE, hass.data[DOMAIN].event_listener)
 
 
-def create_x_ready_queue(hass: HomeAssistant, entity_id: str) -> None:
-    """Create queue for x entity."""
-    LOGGER.info("Create ready queue: %s", entity_id)
-    scheduler = hass.data[DOMAIN]
-    scheduler.ready_queues[entity_id] = QueueEntity(None)
-    scheduler.active_routines[entity_id] = None
-    scheduler.loops[entity_id] = scheduler.create_bg_loop()
-
-
-# def delete_x_active_queue(hass: HomeAssistant, entity_id: str) -> None:
-#     """Delete x entity queue."""
-#     try:
-#         rascal_scheduler = hass.data[DOMAIN]
-#         active_routines = rascal_scheduler.get_active_routines()
-#         del active_routines[entity_id]
-#     except (KeyError, ValueError):
-#         LOGGER.warning("Unable to delete unknown queue %s", entity_id)
-
-
-def get_rascal_scheduler(hass: HomeAssistant) -> RascalSchedulerEntity:
+def get_rascal_scheduler(hass: HomeAssistant) -> Any:
     """Get rascal scheduler."""
     return hass.data[DOMAIN]
 
@@ -185,15 +165,15 @@ def dfs(
 class BaseActiveRoutines:
     """Base class for active routines."""
 
-    _active_routines: dict[str, ActionEntity]
+    _active_routines: dict[str, ActionEntity | None]
     _loops: dict[str, asyncio.AbstractEventLoop]
 
     @property
-    def active_routines(self) -> dict[str, ActionEntity]:
+    def active_routines(self) -> dict[str, ActionEntity | None]:
         """Get active routines."""
         return self._active_routines
 
-    def get_active_routine(self, entity_id: str) -> ActionEntity:
+    def get_active_routine(self, entity_id: str) -> ActionEntity | None:
         """Get active routine of entity_id."""
         return self._active_routines[entity_id]
 
@@ -209,13 +189,13 @@ class BaseActiveRoutines:
     def create_bg_loop(self) -> asyncio.AbstractEventLoop:
         """Create event loop in background."""
 
-        def to_bg(loop):
+        def to_bg(loop: asyncio.AbstractEventLoop) -> None:
             """Create event loop in background."""
             asyncio.set_event_loop(loop)
             try:
                 loop.run_forever()
             except asyncio.CancelledError as e:
-                self.logger.error("Error cancelling loop %s", e)
+                LOGGER.error("Error cancelling loop %s", e)
             finally:
                 loop.run_until_complete(loop.shutdown_asyncgens())
                 loop.stop()
@@ -229,18 +209,19 @@ class BaseActiveRoutines:
     def output_active_routines(self) -> None:
         """Output the content of active routines."""
         active_routines = []
-        for entity_id in self._active_routines:
-            if self._active_routines[entity_id] is None:
+        for entity_id, action_entity in self._active_routines.items():
+            if action_entity is not None:
                 entity_json = {
                     "entity_id": entity_id,
-                    "action_id": None,
-                    "action_state": None,
+                    "action_id": action_entity.action_id,
+                    "action_state": action_entity.action_state,
                 }
+
             else:
                 entity_json = {
                     "entity_id": entity_id,
-                    "action_id": self._active_routines[entity_id].action_id,
-                    "action_state": self._active_routines[entity_id].action_state,
+                    "action_id": "None",
+                    "action_state": "None",
                 }
 
             active_routines.append(entity_json)
@@ -283,10 +264,10 @@ class BaseReadyQueues:
 class RascalSchedulerEntity(BaseActiveRoutines, BaseReadyQueues):
     """Representation of a rascal scehduler entity."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize rascal scheduler entity."""
         self.hass = hass
-        self._ready_queues: Queue() = {}
+        self._ready_queues: dict[str, QueueEntity] = {}
         self._active_routines: dict[str, ActionEntity | None] = {}
         self._loops: dict[
             str, asyncio.AbstractEventLoop
@@ -361,7 +342,7 @@ class RascalSchedulerEntity(BaseActiveRoutines, BaseReadyQueues):
         await action_entity.attach_triggered(log_exceptions=False)
 
     # Listener to handle fired events
-    def handle_event(self, event):
+    def handle_event(self, event: Event) -> None:
         """Handle event.
 
         a. When the event type is complete
@@ -374,7 +355,8 @@ class RascalSchedulerEntity(BaseActiveRoutines, BaseReadyQueues):
 
         eventType = event.data.get(EVENT_TYPE)
         entityID = event.data.get(EVENT_ENTITY_ID)
-        action_entity = self.get_active_routine(entityID)
+        if entityID is not None:
+            action_entity = self.get_active_routine(str(entityID))
 
         if eventType == RASC_COMPLETE:
             self.update_action_state(action_entity, RASC_COMPLETE)
@@ -385,8 +367,11 @@ class RascalSchedulerEntity(BaseActiveRoutines, BaseReadyQueues):
             self.update_action_state(action_entity, RASC_START)
             # self.output_active_routines()
 
-    def schedule_next(self, action_entity: ActionEntity) -> None:
+    def schedule_next(self, action_entity: ActionEntity | None) -> None:
         """After action_entity completed, schedule the next subroutines."""
+        if action_entity is None:
+            return
+
         entity_id = action_entity.action[CONFIG_ENTITY_ID]
 
         self._add_subroutines_to_ready_queues(action_entity)
@@ -424,6 +409,11 @@ class RascalSchedulerEntity(BaseActiveRoutines, BaseReadyQueues):
             next_action_entity = self._ready_queues[entity_id].pop(0)
             self._set_active_routine(entity_id, next_action_entity)
 
-    def update_action_state(self, action_entity: ActionEntity, new_state: str) -> None:
+    def update_action_state(
+        self, action_entity: ActionEntity | None, new_state: str
+    ) -> None:
         """Update action state to new state."""
+        if action_entity is None:
+            return
+
         action_entity.action_state = new_state

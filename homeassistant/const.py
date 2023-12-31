@@ -1199,3 +1199,9 @@ class EntityCategory(StrEnum):
 RASC_START = "start"
 RASC_COMPLETE = "complete"
 RASC_RESPONSE = "rasc_response"
+
+DOMAIN_AUTOMATION = "automation"
+DOMAIN_SCRIPT = "script"
+DOMAIN_PERSON = "person"
+DOMAIN_ZONE = "zone"
+DOMAIN_SENSOR = "sensor"

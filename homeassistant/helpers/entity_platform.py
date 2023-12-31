@@ -46,6 +46,7 @@ from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntr
 from .event import async_call_later, async_track_time_interval
 from .issue_registry import IssueSeverity, async_create_issue
 from .rasc import rasc_on_command, rasc_on_update, update_rasc_state
+from .rascalscheduler import create_x_ready_queue, delete_x_active_queue
 from .typing import UNDEFINED, ConfigType, DiscoveryInfoType
 
 if TYPE_CHECKING:
@@ -761,6 +762,8 @@ class EntityPlatform:
         entity_id = entity.entity_id
         self.entities[entity_id] = entity
 
+        create_x_ready_queue(self.hass, entity_id)
+
         if not restored:
             # Reserve the state in the state machine
             # because as soon as we return control to the event
@@ -790,6 +793,9 @@ class EntityPlatform:
             return
 
         tasks = [entity.async_remove() for entity in self.entities.values()]
+
+        for entity in self.entities.values():
+            delete_x_active_queue(self.hass, entity.entity_id)
 
         await asyncio.gather(*tasks)
 
