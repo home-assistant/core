@@ -136,6 +136,10 @@
     "failed_to_import": {
       "title": "Failed to import",
       "description": "Failed to import the configuration for the Tado Device Tracker. Please use the UI to configure Tado. Don't forget to delete the YAML configuration."
+    },
+    "failed_import_invalid_auth": {
+      "title": "Failed to import, invalid credentials",
+      "description": "Failed to import the configuration for the Tado Device Tracker, due to invalid credentials. Please fix the YAML configuration. Don't forget to delete the YAML configuration, once the import is successful."
     }
   }
 }
