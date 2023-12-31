@@ -353,6 +353,7 @@ homeassistant.components.threshold.*
 homeassistant.components.tibber.*
 homeassistant.components.tile.*
 homeassistant.components.tilt_ble.*
+homeassistant.components.time.*
 homeassistant.components.todo.*
 homeassistant.components.tolo.*
 homeassistant.components.tplink.*
