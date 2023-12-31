@@ -143,7 +143,7 @@ class HomeKitBaseClimateEntity(HomeKitEntity, ClimateEntity):
     @callback
     def _async_reconfigure(self) -> None:
         """Reconfigure entity."""
-        self._async_clear_property_cache(("supported_features",))
+        self._async_clear_property_cache(("supported_features", "fan_modes"))
         super()._async_reconfigure()
 
     def get_characteristic_types(self) -> list[str]:
@@ -158,7 +158,7 @@ class HomeKitBaseClimateEntity(HomeKitEntity, ClimateEntity):
         """Return the current temperature."""
         return self.service.value(CharacteristicsTypes.TEMPERATURE_CURRENT)
 
-    @property
+    @cached_property
     def fan_modes(self) -> list[str] | None:
         """Return the available fan modes."""
         if self.service.has(CharacteristicsTypes.FAN_STATE_TARGET):
