@@ -1,7 +1,6 @@
 """Coordinator for Govee Local API."""
 
 from collections.abc import Callable
-from datetime import timedelta
 import logging
 
 from govee_local_api import GoveeController, GoveeDevice
@@ -14,29 +13,27 @@ from .const import (
     CONF_LISENING_PORT_DEFAULT,
     CONF_MULTICAST_ADDRESS_DEFAULT,
     CONF_TARGET_PORT_DEFAULT,
+    SCAN_INTERVAL,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class GoveeLocalApiCoordinator(DataUpdateCoordinator):
     """Govee Local API coordinator."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        scan_interval: timedelta,
-        logger: logging.Logger,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass=hass,
-            logger=logger,
+            logger=_LOGGER,
             name="GoveeLightLocalApi",
-            update_interval=scan_interval,
+            update_interval=SCAN_INTERVAL,
         )
 
         self._controller = GoveeController(
             loop=hass.loop,
-            logger=logger,
+            logger=_LOGGER,
             broadcast_address=CONF_MULTICAST_ADDRESS_DEFAULT,
             broadcast_port=CONF_TARGET_PORT_DEFAULT,
             listening_port=CONF_LISENING_PORT_DEFAULT,

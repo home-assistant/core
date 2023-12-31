@@ -57,6 +57,7 @@ class GoveeLight(CoordinatorEntity, LightEntity):
     """Govee Light."""
 
     _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
@@ -89,7 +90,6 @@ class GoveeLight(CoordinatorEntity, LightEntity):
             color_modes.add(ColorMode.ONOFF)
 
         self._attr_supported_color_modes = color_modes
-        self._attr_name = None
         self._attr_device_info = DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain

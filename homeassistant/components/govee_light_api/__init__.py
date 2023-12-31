@@ -2,18 +2,17 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
 import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 from .coordinator import GoveeLocalApiCoordinator
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
-SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,9 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Govee Local API from a config entry."""
 
-    coordinator: GoveeLocalApiCoordinator = GoveeLocalApiCoordinator(
-        hass=hass, scan_interval=SCAN_INTERVAL, logger=_LOGGER
-    )
+    coordinator: GoveeLocalApiCoordinator = GoveeLocalApiCoordinator(hass=hass)
     entry.async_on_unload(coordinator.cleanup)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
@@ -35,8 +32,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async with asyncio.timeout(delay=5):
             while not coordinator.devices:
                 await asyncio.sleep(delay=1)
-    except asyncio.TimeoutError:
-        _LOGGER.debug("No devices found")
+    except asyncio.TimeoutError as ex:
+        raise ConfigEntryNotReady from ex
 
     hass.async_add_job(hass.config_entries.async_forward_entry_setups(entry, PLATFORMS))
     return True
@@ -45,7 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
-    if await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id, None)
-        return True
-    return False
+    return unload_ok
