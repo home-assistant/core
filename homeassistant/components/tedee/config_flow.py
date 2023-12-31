@@ -29,7 +29,11 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            host = user_input[CONF_HOST]
+            host = (
+                self.reauth_entry.data[CONF_HOST]
+                if self.reauth_entry
+                else user_input[CONF_HOST]
+            )
             local_access_token = user_input[CONF_LOCAL_ACCESS_TOKEN]
             tedee_client = TedeeClient(local_token=local_access_token, local_ip=host)
             try:
@@ -40,8 +44,6 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors[CONF_HOST] = "invalid_host"
             else:
                 if self.reauth_entry:
-                    if self.reauth_entry.unique_id != local_bridge.serial:
-                        return self.async_abort(reason="incorrect_bridge")
                     self.hass.config_entries.async_update_entry(
                         self.reauth_entry,
                         data={**self.reauth_entry.data, **user_input},
@@ -60,15 +62,9 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         CONF_HOST,
-                        default=self.reauth_entry.data[CONF_HOST]
-                        if self.reauth_entry
-                        else "",
                     ): str,
                     vol.Required(
                         CONF_LOCAL_ACCESS_TOKEN,
-                        default=self.reauth_entry.data[CONF_LOCAL_ACCESS_TOKEN]
-                        if self.reauth_entry
-                        else "",
                     ): str,
                 }
             ),
@@ -80,4 +76,14 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
-        return await self.async_step_user()
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_LOCAL_ACCESS_TOKEN,
+                        default=entry_data[CONF_LOCAL_ACCESS_TOKEN],
+                    ): str,
+                }
+            ),
+        )

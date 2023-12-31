@@ -2,7 +2,6 @@
 from unittest.mock import MagicMock
 
 from pytedee_async import TedeeClientException, TedeeLocalAuthException
-from pytedee_async.bridge import TedeeBridge
 import pytest
 
 from homeassistant.components.tedee.const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
@@ -180,41 +179,3 @@ async def test_reauth_flow_errors(
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == error
     assert len(mock_tedee.get_local_bridge.mock_calls) == 1
-
-
-async def test_reauth_flow_incorrect_bridge(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_tedee: MagicMock,
-) -> None:
-    """Test that the reauth flow errors when the bridge is incorrect."""
-
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": mock_config_entry.unique_id,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data={
-            CONF_LOCAL_ACCESS_TOKEN: LOCAL_ACCESS_TOKEN,
-            CONF_HOST: "192.168.1.42",
-        },
-    )
-
-    mock_tedee.get_local_bridge.return_value = TedeeBridge(
-        1, "1111-1111", "Bridge-CD2E"
-    )
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_LOCAL_ACCESS_TOKEN: LOCAL_ACCESS_TOKEN,
-            CONF_HOST: "192.168.1.43",
-        },
-    )
-
-    assert result2["type"] == FlowResultType.ABORT
-    assert result2["reason"] == "incorrect_bridge"
