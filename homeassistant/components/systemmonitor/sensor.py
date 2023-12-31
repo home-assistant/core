@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from functools import cache, lru_cache
+from datetime import datetime
+from functools import lru_cache
 import logging
 import sys
-from typing import Any, Literal
+from typing import Any, Generic, Literal
 
 from psutil._common import sdiskusage, sswap
 from psutil._pslinux import svmem
@@ -55,6 +55,7 @@ from .coordinator import (
     SystemMonitorProcessCoordinator,
     SystemMonitorProcessorCoordinator,
     SystemMonitorSwapCoordinator,
+    _dataT,
 )
 from .util import get_all_disk_mounts, get_all_network_interfaces, read_cpu_temperature
 
@@ -81,36 +82,26 @@ def get_cpu_icon() -> Literal["mdi:cpu-64-bit", "mdi:cpu-32-bit"]:
 
 
 @dataclass(frozen=True)
-class SysMonitorSensorEntityDescriptionMixin:
+class SysMonitorSensorEntityDescriptionMixin(Generic[_dataT]):
     """Mixin for System Monitor sensor entities."""
 
     coordinator: type[MonitorCoordinator]
+    value_fn: Callable[[_dataT], float | str | datetime | None]
 
 
 @dataclass(frozen=True)
 class SysMonitorSensorEntityDescription(
-    SysMonitorSensorEntityDescriptionMixin,
+    SysMonitorSensorEntityDescriptionMixin[_dataT],
     SensorEntityDescription,
 ):
     """Describes System Monitor sensor entities."""
 
     mandatory_arg: bool = False
     placeholder: str | None = None
-    value_disk: Callable[[sdiskusage], float] | None = None
-    value_swap: Callable[[sswap], float] | None = None
-    value_memory: Callable[[svmem], float] | None = None
-    value_net_io: Callable[[int], float] | None = None
-    value_net_throughput: Callable[[float], float] | None = None
-    value_net_addr: Callable[[str], str] | None = None
-    value_load: Callable[[tuple[float, float, float]], float] | None = None
-    value_processor: Callable[[float], float] | None = None
-    value_boot_time: Callable[[datetime], datetime] | None = None
-    value_process: Callable[[bool], str] | None = None
-    value_cpu_temp: Callable[[float], float] | None = None
 
 
-SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
-    "disk_free": SysMonitorSensorEntityDescription(
+SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription[Any]] = {
+    "disk_free": SysMonitorSensorEntityDescription[sdiskusage](
         key="disk_free",
         translation_key="disk_free",
         placeholder="mount_point",
@@ -119,9 +110,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
         coordinator=SystemMonitorDiskCoordinator,
-        value_disk=lambda data: round(data.free / 1024**3, 1),
+        value_fn=lambda data: round(data.free / 1024**3, 1),
     ),
-    "disk_use": SysMonitorSensorEntityDescription(
+    "disk_use": SysMonitorSensorEntityDescription[sdiskusage](
         key="disk_use",
         translation_key="disk_use",
         placeholder="mount_point",
@@ -130,9 +121,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
         coordinator=SystemMonitorDiskCoordinator,
-        value_disk=lambda data: round(data.used / 1024**3, 1),
+        value_fn=lambda data: round(data.used / 1024**3, 1),
     ),
-    "disk_use_percent": SysMonitorSensorEntityDescription(
+    "disk_use_percent": SysMonitorSensorEntityDescription[sdiskusage](
         key="disk_use_percent",
         translation_key="disk_use_percent",
         placeholder="mount_point",
@@ -140,58 +131,58 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
         coordinator=SystemMonitorDiskCoordinator,
-        value_disk=lambda data: data.percent,
+        value_fn=lambda data: data.percent,
     ),
-    "ipv4_address": SysMonitorSensorEntityDescription(
+    "ipv4_address": SysMonitorSensorEntityDescription[str](
         key="ipv4_address",
         translation_key="ipv4_address",
         placeholder="ip_address",
         icon="mdi:ip-network",
         mandatory_arg=True,
         coordinator=SystemMonitorNetAddrCoordinator,
-        value_net_addr=lambda data: data,
+        value_fn=lambda data: data,
     ),
-    "ipv6_address": SysMonitorSensorEntityDescription(
+    "ipv6_address": SysMonitorSensorEntityDescription[str](
         key="ipv6_address",
         translation_key="ipv6_address",
         placeholder="ip_address",
         icon="mdi:ip-network",
         mandatory_arg=True,
         coordinator=SystemMonitorNetAddrCoordinator,
-        value_net_addr=lambda data: data,
+        value_fn=lambda data: data,
     ),
-    "last_boot": SysMonitorSensorEntityDescription(
+    "last_boot": SysMonitorSensorEntityDescription[datetime](
         key="last_boot",
         translation_key="last_boot",
         device_class=SensorDeviceClass.TIMESTAMP,
         coordinator=SystemMonitorBootTimeCoordinator,
-        value_boot_time=lambda data: data,
+        value_fn=lambda data: data,
     ),
-    "load_15m": SysMonitorSensorEntityDescription(
+    "load_15m": SysMonitorSensorEntityDescription[tuple[float, float, float]](
         key="load_15m",
         translation_key="load_15m",
         icon=get_cpu_icon(),
         state_class=SensorStateClass.MEASUREMENT,
         coordinator=SystemMonitorLoadCoordinator,
-        value_load=lambda data: round(data[2], 2),
+        value_fn=lambda data: round(data[2], 2),
     ),
-    "load_1m": SysMonitorSensorEntityDescription(
+    "load_1m": SysMonitorSensorEntityDescription[tuple[float, float, float]](
         key="load_1m",
         translation_key="load_1m",
         icon=get_cpu_icon(),
         state_class=SensorStateClass.MEASUREMENT,
         coordinator=SystemMonitorLoadCoordinator,
-        value_load=lambda data: round(data[0], 2),
+        value_fn=lambda data: round(data[0], 2),
     ),
-    "load_5m": SysMonitorSensorEntityDescription(
+    "load_5m": SysMonitorSensorEntityDescription[tuple[float, float, float]](
         key="load_5m",
         translation_key="load_5m",
         icon=get_cpu_icon(),
         state_class=SensorStateClass.MEASUREMENT,
         coordinator=SystemMonitorLoadCoordinator,
-        value_load=lambda data: round(data[1], 2),
+        value_fn=lambda data: round(data[1], 2),
     ),
-    "memory_free": SysMonitorSensorEntityDescription(
+    "memory_free": SysMonitorSensorEntityDescription[svmem](
         key="memory_free",
         translation_key="memory_free",
         native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
@@ -199,9 +190,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
         coordinator=SystemMonitorMemoryCoordinator,
-        value_memory=lambda data: round(data.available / 1024**2, 1),
+        value_fn=lambda data: round(data.available / 1024**2, 1),
     ),
-    "memory_use": SysMonitorSensorEntityDescription(
+    "memory_use": SysMonitorSensorEntityDescription[svmem](
         key="memory_use",
         translation_key="memory_use",
         native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
@@ -209,18 +200,18 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
         coordinator=SystemMonitorMemoryCoordinator,
-        value_memory=lambda data: round((data.total - data.available) / 1024**2, 1),
+        value_fn=lambda data: round((data.total - data.available) / 1024**2, 1),
     ),
-    "memory_use_percent": SysMonitorSensorEntityDescription(
+    "memory_use_percent": SysMonitorSensorEntityDescription[svmem](
         key="memory_use_percent",
         translation_key="memory_use_percent",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
         coordinator=SystemMonitorMemoryCoordinator,
-        value_memory=lambda data: data.percent,
+        value_fn=lambda data: data.percent,
     ),
-    "network_in": SysMonitorSensorEntityDescription(
+    "network_in": SysMonitorSensorEntityDescription[int](
         key="network_in",
         translation_key="network_in",
         placeholder="interface",
@@ -230,9 +221,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         mandatory_arg=True,
         coordinator=SystemMonitorNetIOCoordinator,
-        value_net_io=lambda data: round(data / 1024**2, 1),
+        value_fn=lambda data: round(data / 1024**2, 1),
     ),
-    "network_out": SysMonitorSensorEntityDescription(
+    "network_out": SysMonitorSensorEntityDescription[int](
         key="network_out",
         translation_key="network_out",
         placeholder="interface",
@@ -242,9 +233,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         mandatory_arg=True,
         coordinator=SystemMonitorNetIOCoordinator,
-        value_net_io=lambda data: round(data / 1024**2, 1),
+        value_fn=lambda data: round(data / 1024**2, 1),
     ),
-    "packets_in": SysMonitorSensorEntityDescription(
+    "packets_in": SysMonitorSensorEntityDescription[int](
         key="packets_in",
         translation_key="packets_in",
         placeholder="interface",
@@ -252,9 +243,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         mandatory_arg=True,
         coordinator=SystemMonitorNetIOCoordinator,
-        value_net_io=lambda data: data,
+        value_fn=lambda data: data,
     ),
-    "packets_out": SysMonitorSensorEntityDescription(
+    "packets_out": SysMonitorSensorEntityDescription[int](
         key="packets_out",
         translation_key="packets_out",
         placeholder="interface",
@@ -262,9 +253,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         mandatory_arg=True,
         coordinator=SystemMonitorNetIOCoordinator,
-        value_net_io=lambda data: data,
+        value_fn=lambda data: data,
     ),
-    "throughput_network_in": SysMonitorSensorEntityDescription(
+    "throughput_network_in": SysMonitorSensorEntityDescription[float | None](
         key="throughput_network_in",
         translation_key="throughput_network_in",
         placeholder="interface",
@@ -273,9 +264,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         mandatory_arg=True,
         coordinator=SystemMonitorNetThroughputCoordinator,
-        value_net_throughput=lambda data: data,
+        value_fn=lambda data: data,
     ),
-    "throughput_network_out": SysMonitorSensorEntityDescription(
+    "throughput_network_out": SysMonitorSensorEntityDescription[float | None](
         key="throughput_network_out",
         translation_key="throughput_network_out",
         placeholder="interface",
@@ -284,36 +275,36 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         mandatory_arg=True,
         coordinator=SystemMonitorNetThroughputCoordinator,
-        value_net_throughput=lambda data: data,
+        value_fn=lambda data: data,
     ),
-    "process": SysMonitorSensorEntityDescription(
+    "process": SysMonitorSensorEntityDescription[bool](
         key="process",
         translation_key="process",
         placeholder="process",
         icon=get_cpu_icon(),
         mandatory_arg=True,
         coordinator=SystemMonitorProcessCoordinator,
-        value_process=lambda data: STATE_ON if data is True else STATE_OFF,
+        value_fn=lambda data: STATE_ON if data is True else STATE_OFF,
     ),
-    "processor_use": SysMonitorSensorEntityDescription(
+    "processor_use": SysMonitorSensorEntityDescription[float](
         key="processor_use",
         translation_key="processor_use",
         native_unit_of_measurement=PERCENTAGE,
         icon=get_cpu_icon(),
         state_class=SensorStateClass.MEASUREMENT,
         coordinator=SystemMonitorProcessorCoordinator,
-        value_processor=lambda data: data,
+        value_fn=lambda data: data,
     ),
-    "processor_temperature": SysMonitorSensorEntityDescription(
+    "processor_temperature": SysMonitorSensorEntityDescription[float](
         key="processor_temperature",
         translation_key="processor_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         coordinator=SystemMonitorCPUtempCoordinator,
-        value_cpu_temp=lambda data: data,
+        value_fn=lambda data: data,
     ),
-    "swap_free": SysMonitorSensorEntityDescription(
+    "swap_free": SysMonitorSensorEntityDescription[sswap](
         key="swap_free",
         translation_key="swap_free",
         native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
@@ -321,9 +312,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
         coordinator=SystemMonitorSwapCoordinator,
-        value_swap=lambda data: round(data.free / 1024**2, 1),
+        value_fn=lambda data: round(data.free / 1024**2, 1),
     ),
-    "swap_use": SysMonitorSensorEntityDescription(
+    "swap_use": SysMonitorSensorEntityDescription[sswap](
         key="swap_use",
         translation_key="swap_use",
         native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
@@ -331,16 +322,16 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
         coordinator=SystemMonitorSwapCoordinator,
-        value_swap=lambda data: round(data.used / 1024**2, 1),
+        value_fn=lambda data: round(data.used / 1024**2, 1),
     ),
-    "swap_use_percent": SysMonitorSensorEntityDescription(
+    "swap_use_percent": SysMonitorSensorEntityDescription[sswap](
         key="swap_use_percent",
         translation_key="swap_use_percent",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
         coordinator=SystemMonitorSwapCoordinator,
-        value_swap=lambda data: data.percent,
+        value_fn=lambda data: data.percent,
     ),
 }
 
@@ -430,7 +421,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up System Montor sensors based on a config entry."""
-    entities = []
+    entities: list[SystemMonitorSensor] = []
     legacy_resources: set[str] = set(entry.options.get("resources", []))
     loaded_resources: set[str] = set()
     disk_arguments = await hass.async_add_executor_job(get_all_disk_mounts)
@@ -535,7 +526,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SystemMonitorSensor(CoordinatorEntity[MonitorCoordinator], SensorEntity):
+class SystemMonitorSensor(CoordinatorEntity[MonitorCoordinator[_dataT]], SensorEntity):
     """Implementation of a system monitor sensor."""
 
     _attr_has_entity_name = True
@@ -577,27 +568,4 @@ class SystemMonitorSensor(CoordinatorEntity[MonitorCoordinator], SensorEntity):
     @property
     def native_value(self) -> str | float | int | datetime | None:
         """Return the state."""
-        data = self.coordinator.data
-        if value_disk := self.entity_description.value_disk:
-            return value_disk(data)
-        if value_swap := self.entity_description.value_swap:
-            return value_swap(data)
-        if value_memory := self.entity_description.value_memory:
-            return value_memory(data)
-        if value_net_io := self.entity_description.value_net_io:
-            return value_net_io(data)
-        if value_net_throughput := self.entity_description.value_net_throughput:
-            return value_net_throughput(data)
-        if value_net_addr := self.entity_description.value_net_addr:
-            return value_net_addr(data)
-        if value_load := self.entity_description.value_load:
-            return value_load(data)
-        if value_processor := self.entity_description.value_processor:
-            return value_processor(data)
-        if value_boot_time := self.entity_description.value_boot_time:
-            return value_boot_time(data)
-        if value_process := self.entity_description.value_process:
-            return value_process(data)
-        if value_cpu_temp := self.entity_description.value_cpu_temp:
-            return value_cpu_temp(data)
-        return None
+        return self.entity_description.value_fn(self.coordinator.data)

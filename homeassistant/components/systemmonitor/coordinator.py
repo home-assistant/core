@@ -56,7 +56,19 @@ CPU_SENSOR_PREFIXES = [
     "k10temp 1",
 ]
 
-_dataT = TypeVar("_dataT")
+_dataT = TypeVar(
+    "_dataT",
+    bound=sdiskusage
+    | sswap
+    | svmem
+    | int
+    | float
+    | str
+    | tuple[float, float, float]
+    | datetime
+    | bool
+    | None,
+)
 
 
 class MonitorCoordinator(DataUpdateCoordinator[_dataT]):
