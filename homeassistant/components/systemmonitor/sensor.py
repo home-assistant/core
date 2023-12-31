@@ -647,6 +647,10 @@ async def async_setup_entry(  # noqa: C901
                 _type = resource[:split_index]
                 argument = resource[split_index + 1 :]
                 _LOGGER.debug("Loading legacy %s with argument %s", _type, argument)
+                if not disk_coordinators.get(argument):
+                    disk_coordinators[argument] = SystemMonitorDiskCoordinator(
+                        hass, "", argument
+                    )
                 entities.append(
                     SystemMonitorSensor(
                         disk_coordinators[argument],
