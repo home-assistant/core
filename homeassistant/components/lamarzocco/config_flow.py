@@ -34,10 +34,13 @@ _LOGGER = logging.getLogger(__name__)
 class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for La Marzocco."""
 
-    _discovered: dict[str, str] = {}
-    reauth_entry: ConfigEntry | None = None
-    _config: dict[str, Any] = {}
-    _machines: list[tuple[str, str]] = []
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+
+        self._discovered: dict[str, str] = {}
+        self.reauth_entry: ConfigEntry | None = None
+        self._config: dict[str, Any] = {}
+        self._machines: list[tuple[str, str]] = []
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

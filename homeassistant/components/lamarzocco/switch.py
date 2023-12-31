@@ -18,8 +18,8 @@ from .lm_client import LaMarzoccoClient
 
 @dataclass(frozen=True, kw_only=True)
 class LaMarzoccoSwitchEntityDescription(
-    SwitchEntityDescription,
     LaMarzoccoEntityDescription,
+    SwitchEntityDescription,
 ):
     """Description of a La Marzocco Switch."""
 
