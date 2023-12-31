@@ -8,6 +8,7 @@ from typing import Any, Optional
 from kasa import (
     AuthenticationException,
     Credentials,
+    DeviceConfig,
     Discover,
     SmartDevice,
     SmartDeviceException,
@@ -30,14 +31,17 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.httpx_client import (
-    HassHttpXAsyncClient,
-    create_async_httpx_client,
-)
+from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from . import async_discover_devices, get_stored_credentials, set_stored_credentials
-from .const import CONF_CONNECTION_TYPE, CONNECT_TIMEOUT, DOMAIN
+from . import async_discover_devices, get_credentials, set_credentials
+from .const import (
+    CONF_CONNECTION_TYPE,
+    CONF_DEVICE_CONFIG,
+    CONF_USES_HTTP,
+    CONNECT_TIMEOUT,
+    DOMAIN,
+)
 
 STEP_AUTH_DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
@@ -70,26 +74,29 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self._async_handle_discovery(
             discovery_info[CONF_HOST],
             discovery_info[CONF_MAC],
-            discovery_info[CONF_CONNECTION_TYPE],
+            discovery_info[CONF_DEVICE_CONFIG],
         )
 
     async def _async_handle_discovery(
-        self, host: str, mac: str, ctype: Optional[dict] = None
+        self, host: str, mac: str, config: Optional[DeviceConfig] = None
     ) -> FlowResult:
         """Handle any discovery."""
         await self.async_set_unique_id(dr.format_mac(mac))
-        updates = (
-            {CONF_HOST: host, CONF_CONNECTION_TYPE: ctype}
-            if ctype
-            else {CONF_HOST: host}
-        )
+        if config:
+            updates = {
+                CONF_HOST: host,
+                CONF_CONNECTION_TYPE: config.connection_type.to_dict(),
+                CONF_USES_HTTP: config.uses_http,
+            }
+        else:
+            updates = {CONF_HOST: host}
         self._abort_if_unique_id_configured(updates=updates)
         self._async_abort_entries_match({CONF_HOST: host})
         self.context[CONF_HOST] = host
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == host:
                 return self.async_abort(reason="already_in_progress")
-        credentials = await get_stored_credentials(self.hass)
+        credentials = await get_credentials(self.hass)
         try:
             await self._async_try_discover_and_update(
                 host, credentials, raise_on_progress=True
@@ -108,8 +115,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._discovered_device is not None
         errors = {}
 
-        credentials = await get_stored_credentials(self.hass)
-        if credentials != self._discovered_device.connection_parameters.credentials:
+        credentials = await get_credentials(self.hass)
+        if credentials != self._discovered_device.config.credentials:
             try:
                 device = await self._async_try_connect(
                     self._discovered_device, credentials
@@ -134,7 +141,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
             else:
                 self._discovered_device = device
-                await set_stored_credentials(
+                await set_credentials(
                     self.hass, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
                 async_call_later(
@@ -185,7 +192,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not (host := user_input[CONF_HOST]):
                 return await self.async_step_pick_device()
             self.context[CONF_HOST] = host
-            credentials = await get_stored_credentials(self.hass)
+            credentials = await get_credentials(self.hass)
             try:
                 device = await self._async_try_discover_and_update(
                     host, credentials, raise_on_progress=False
@@ -222,7 +229,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except SmartDeviceException:
                 errors["base"] = "cannot_connect"
             else:
-                await set_stored_credentials(
+                await set_credentials(
                     self.hass, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
                 async_call_later(
@@ -250,7 +257,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             host = self._discovered_device.host
 
             self.context[CONF_HOST] = host
-            credentials = await get_stored_credentials(self.hass)
+            credentials = await get_credentials(self.hass)
 
             try:
                 device = await self._async_try_connect(
@@ -301,7 +308,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except SmartDeviceException:
                 errors["base"] = "cannot_connect"
             else:
-                await set_stored_credentials(
+                await set_credentials(
                     self.hass, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
                 async_call_later(
@@ -340,9 +347,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_HOST: device.host,
                 CONF_ALIAS: device.alias,
                 CONF_MODEL: device.model,
-                CONF_CONNECTION_TYPE: device.connection_parameters.connection_type.to_dict()
-                if device.connection_parameters
-                else None,
+                CONF_CONNECTION_TYPE: device.config.connection_type.to_dict(),
+                CONF_USES_HTTP: device.config.uses_http,
             },
         )
 
@@ -354,10 +360,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> SmartDevice:
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: host})
-        httpx_asyncclient = create_async_httpx_client(self.hass, verify_ssl=False)
         self._discovered_device = await Discover.discover_single(
-            host, credentials=credentials, httpx_asyncclient=httpx_asyncclient
+            host, credentials=credentials
         )
+        if self._discovered_device.config.uses_http:
+            self._discovered_device.config.http_client = create_async_httpx_client(
+                self.hass, verify_ssl=False
+            )
         await self._discovered_device.update()
         await self.async_set_unique_id(
             dr.format_mac(self._discovered_device.mac),
@@ -373,13 +382,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: discovered_device.host})
 
-        cparams = discovered_device.connection_parameters
+        config = discovered_device.config
         if credentials:
-            cparams.credentials = credentials
-        cparams.timeout = CONNECT_TIMEOUT
-        assert isinstance(cparams.http_client, HassHttpXAsyncClient)
+            config.credentials = credentials
+        config.timeout = CONNECT_TIMEOUT
+        if config.uses_http:
+            config.http_client = create_async_httpx_client(self.hass, verify_ssl=False)
 
-        self._discovered_device = await SmartDevice.connect(cparams=cparams)
+        self._discovered_device = await SmartDevice.connect(config=config)
         await self.async_set_unique_id(
             dr.format_mac(self._discovered_device.mac),
             raise_on_progress=False,
@@ -414,7 +424,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except SmartDeviceException:
                 errors["base"] = "unknown"
             else:
-                await set_stored_credentials(
+                await set_credentials(
                     self.hass, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
                 await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)

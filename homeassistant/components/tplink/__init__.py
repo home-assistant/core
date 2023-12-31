@@ -6,12 +6,11 @@ from datetime import timedelta
 import logging
 from typing import Any, Final, Optional, cast
 
-import httpx
 from kasa import (
     AuthenticationException,
-    ConnectionParameters,
     ConnectionType,
     Credentials,
+    DeviceConfig,
     Discover,
     SmartDevice,
     SmartDeviceException,
@@ -43,6 +42,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CONNECTION_TYPE,
+    CONF_DEVICE_CONFIG,
+    CONF_USES_HTTP,
     CONNECT_TIMEOUT,
     DISCOVERY_TIMEOUT,
     DOMAIN,
@@ -77,7 +78,7 @@ def async_trigger_discovery(
                 CONF_NAME: device.alias,
                 CONF_HOST: device.host,
                 CONF_MAC: formatted_mac,
-                CONF_CONNECTION_TYPE: device.connection_parameters.connection_type.to_dict(),
+                CONF_DEVICE_CONFIG: device.config,
             },
         )
 
@@ -85,10 +86,7 @@ def async_trigger_discovery(
 async def async_discover_devices(hass: HomeAssistant) -> dict[str, SmartDevice]:
     """Discover TPLink devices on configured network interfaces."""
 
-    def _http_client_generator() -> httpx.AsyncClient:
-        return create_async_httpx_client(hass, verify_ssl=False)
-
-    credentials = await get_stored_credentials(hass)
+    credentials = await get_credentials(hass)
     broadcast_addresses = await network.async_get_ipv4_broadcast_addresses(hass)
     tasks = [
         Discover.discover(
@@ -96,7 +94,6 @@ async def async_discover_devices(hass: HomeAssistant) -> dict[str, SmartDevice]:
             discovery_timeout=DISCOVERY_TIMEOUT,
             timeout=CONNECT_TIMEOUT,
             credentials=credentials,
-            http_client_generator=_http_client_generator,
         )
         for address in broadcast_addresses
     ]
@@ -131,7 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up TPLink from a config entry."""
     host = entry.data[CONF_HOST]
 
-    credentials = await get_stored_credentials(hass)
+    credentials = await get_credentials(hass)
     connection_type = None
 
     if connection_type_dict := entry.data.get(CONF_CONNECTION_TYPE):
@@ -139,30 +136,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             connection_type = ConnectionType.from_dict(connection_type_dict)
         except SmartDeviceException:
             _LOGGER.warning(
-                "Invalid connection parameters for %s: %s", host, connection_type_dict
+                "Invalid connection type dict for %s: %s", host, connection_type_dict
             )
 
-    httpx_asyncclient = create_async_httpx_client(hass, verify_ssl=False)
-    cparams = ConnectionParameters(
-        host, timeout=CONNECT_TIMEOUT, http_client=httpx_asyncclient
-    )
+    config = DeviceConfig(host, timeout=CONNECT_TIMEOUT)
+    if entry.data.get(CONF_USES_HTTP) is True:
+        config.http_client = create_async_httpx_client(hass, verify_ssl=False)
     if connection_type:
-        cparams.connection_type = connection_type
+        config.connection_type = connection_type
     if credentials:
-        cparams.credentials = credentials
+        config.credentials = credentials
     try:
-        device: SmartDevice = await SmartDevice.connect(cparams=cparams)
+        device: SmartDevice = await SmartDevice.connect(config=config)
     except AuthenticationException as ex:
         raise ConfigEntryAuthFailed from ex
     except SmartDeviceException as ex:
         raise ConfigEntryNotReady from ex
 
     # Save the connection_type if not already saved
-    ctype = device.connection_parameters.connection_type
-    if connection_type_dict and connection_type != ctype:
+    ctype = device.config.connection_type
+    if not connection_type_dict or connection_type != ctype:
         hass.config_entries.async_update_entry(
             entry,
-            data={**entry.data, CONF_CONNECTION_TYPE: ctype.to_dict()},
+            data={
+                **entry.data,
+                CONF_CONNECTION_TYPE: ctype.to_dict(),
+                CONF_USES_HTTP: device.config.uses_http,
+            },
         )
     found_mac = dr.format_mac(device.mac)
     if found_mac != entry.unique_id:
@@ -203,9 +203,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass_data.pop(entry.entry_id)
     await device.protocol.close()
 
+    return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Cleanup caches before removing config entry."""
     if len(hass.config_entries.async_entries(DOMAIN)) == 1:
         await _get_store(hass).async_remove()
-    return unload_ok
 
 
 def legacy_device_id(device: SmartDevice) -> str:
@@ -224,23 +228,28 @@ def _get_store(hass: HomeAssistant) -> Store[dict[str, dict[str, str]]]:
     return Store[dict[str, dict[str, str]]](hass, STORAGE_VERSION, STORAGE_KEY)
 
 
-async def get_stored_credentials(hass: HomeAssistant) -> Optional[Credentials]:
-    """Retrieve the credentials from the Store."""
+async def get_credentials(hass: HomeAssistant) -> Optional[Credentials]:
+    """Retrieve the credentials from hass data or the Store."""
+    if DOMAIN in hass.data and CONF_AUTHENTICATION in hass.data[DOMAIN]:
+        auth = hass.data[DOMAIN][CONF_AUTHENTICATION]
+        return Credentials(auth[CONF_USERNAME], auth[CONF_PASSWORD])
+
     storage_data = await _get_store(hass).async_load()
     if storage_data and (auth := storage_data[CONF_AUTHENTICATION]):
+        # If hass data is initialised cache the credentials
+        if DOMAIN in hass.data:
+            hass.data[DOMAIN][CONF_AUTHENTICATION] = auth
         return Credentials(auth[CONF_USERNAME], auth[CONF_PASSWORD])
 
     return None
 
 
-async def set_stored_credentials(
-    hass: HomeAssistant, username: str, password: str
-) -> None:
+async def set_credentials(hass: HomeAssistant, username: str, password: str) -> None:
     """Save the credentials to the Store."""
-    storage_data = {
-        CONF_AUTHENTICATION: {
-            CONF_USERNAME: username,
-            CONF_PASSWORD: password,
-        }
+    auth = {
+        CONF_USERNAME: username,
+        CONF_PASSWORD: password,
     }
+    storage_data = {CONF_AUTHENTICATION: auth}
     await _get_store(hass).async_save(storage_data)
+    hass.data[DOMAIN][CONF_AUTHENTICATION] = auth
