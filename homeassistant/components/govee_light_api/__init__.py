@@ -1,6 +1,7 @@
 """The Govee Lights - Local API integration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -20,21 +21,22 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Govee Local API from a config entry."""
 
-    entry_id = entry.entry_id
-    coordinator: GoveeLocalApiCoordinator = hass.data.setdefault(DOMAIN, {}).get(
-        entry_id, None
+    coordinator: GoveeLocalApiCoordinator = GoveeLocalApiCoordinator(
+        hass=hass, scan_interval=SCAN_INTERVAL, logger=_LOGGER
     )
+    entry.async_on_unload(coordinator.clenaup)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    if not coordinator:
-        coordinator = GoveeLocalApiCoordinator(
-            hass=hass,
-            config_entry=entry,
-            scan_interval=SCAN_INTERVAL,
-            logger=_LOGGER,
-        )
+    await coordinator.start()
 
-        hass.data.setdefault(DOMAIN, {})[entry_id] = coordinator
-        await coordinator.start()
+    await coordinator.async_config_entry_first_refresh()
+
+    try:
+        async with asyncio.timeout(delay=5):
+            while not coordinator.devices:
+                await asyncio.sleep(delay=1)
+    except asyncio.TimeoutError:
+        _LOGGER.debug("No devices found")
 
     hass.async_add_job(hass.config_entries.async_forward_entry_setups(entry, PLATFORMS))
     return True
@@ -43,14 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
-    entry_id = entry.entry_id
-
-    coordinator: GoveeLocalApiCoordinator = hass.data.setdefault(DOMAIN, {}).get(
-        entry_id
-    )
-    if coordinator:
-        coordinator.clenaup()
-        del hass.data[DOMAIN][entry_id]
-        del hass.data[DOMAIN]
-
-    return True
+    if await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id, None)
+        return True
+    return False

@@ -1,163 +1,71 @@
 """Test Govee Local API config flow."""
+from unittest.mock import AsyncMock, patch
 
-from unittest.mock import patch
+from govee_local_api import GoveeDevice
 
-from homeassistant import config_entries
-from homeassistant.components.govee_light_api.const import (
-    CONF_BIND_ADDRESS,
-    CONF_DISCOVERY_INTERVAL,
-    CONF_LISENING_PORT,
-    CONF_MULTICAST_ADDRESS,
-    CONF_TARGET_PORT,
-    DOMAIN,
-)
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.govee_light_api.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-
-from . import DEFAULT_CONFIG, DEFAULT_UNIQUE_ID
-
-from tests.common import MockConfigEntry
 
 
-async def test_step_user(hass: HomeAssistant) -> None:
-    """Test user step."""
+async def test_creating_entry_has_no_devices(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_govee_api: AsyncMock
+) -> None:
+    """Test setting up Gree creates the climate components."""
 
-    with patch(
-        "homeassistant.components.network.async_get_source_ip",
-        return_value="192.168.1.1",
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
-
-    assert result["step_id"] == "user"
-    assert result["type"] == FlowResultType.FORM
-    assert CONF_BIND_ADDRESS in result["data_schema"].schema
-    assert CONF_DISCOVERY_INTERVAL in result["data_schema"].schema
-    assert CONF_MULTICAST_ADDRESS not in result["data_schema"].schema
-    assert CONF_TARGET_PORT not in result["data_schema"].schema
-    assert CONF_LISENING_PORT not in result["data_schema"].schema
+    mock_govee_api.devices = []
 
     with patch(
-        "homeassistant.components.govee_light_api.async_setup_entry", return_value=True
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"bind_address": "192.168.1.1"},
-        )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "govee@192.168.1.1"
-    assert result2["data"] == {"config": DEFAULT_CONFIG}
-    assert result2["result"].unique_id == DEFAULT_UNIQUE_ID
-
-
-async def test_step_user_advanced(hass: HomeAssistant) -> None:
-    """Test user step with advanced config."""
-
-    with patch(
-        "homeassistant.components.network.async_get_source_ip",
-        return_value="192.168.1.1",
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_USER,
-                "show_advanced_options": True,
-            },
-        )
-
-    assert result["step_id"] == "user"
-    assert result["type"] == FlowResultType.FORM
-    assert CONF_BIND_ADDRESS in result["data_schema"].schema
-    assert CONF_DISCOVERY_INTERVAL in result["data_schema"].schema
-
-    with patch(
-        "homeassistant.components.govee_light_api.async_setup_entry", return_value=True
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_BIND_ADDRESS: "192.168.1.2",
-                CONF_TARGET_PORT: 1234,
-                CONF_LISENING_PORT: 4321,
-            },
-        )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "govee@192.168.1.2"
-    assert result2["data"] == {
-        "config": {
-            CONF_BIND_ADDRESS: "192.168.1.2",
-            CONF_MULTICAST_ADDRESS: "239.255.255.250",
-            CONF_TARGET_PORT: 1234,
-            CONF_LISENING_PORT: 4321,
-            CONF_DISCOVERY_INTERVAL: 60,
-        }
-    }
-    assert (
-        result2["result"].unique_id
-        == "GoveeLocalApi:192.168.1.2:4321:239.255.255.250:1234"
-    )
-
-
-async def test_async_step_already_configured(hass: HomeAssistant) -> None:
-    """Test flow if there is already a config entry."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=DEFAULT_UNIQUE_ID,
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.network.async_get_source_ip",
-        return_value="192.168.1.1",
+        "homeassistant.components.govee_light_api.config_flow.GoveeController",
+        return_value=mock_govee_api,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-    with patch(
-        "homeassistant.components.govee_light_api.async_setup_entry", return_value=True
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"bind_address": "192.168.1.1"},
-        )
+        # Confirmation form
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
 
-    assert result2["type"] == FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
 
-
-async def test_option_flow(hass: HomeAssistant) -> None:
-    """Test option flow."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=DEFAULT_UNIQUE_ID,
-        data={"config": DEFAULT_CONFIG},
-    )
-    entry.add_to_hass(hass)
-
-    assert not entry.options
-
-    with patch(
-        "homeassistant.components.govee_light_api.async_setup_entry", return_value=True
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        result = await hass.config_entries.options.async_init(
-            entry.entry_id,
-            data=None,
+
+        mock_govee_api.start.assert_awaited_once()
+        mock_setup_entry.assert_not_called()
+
+
+async def test_creating_entry_has_with_devices(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_govee_api: AsyncMock,
+) -> None:
+    """Test setting up Gree creates the climate components."""
+
+    mock_govee_api.devices = [
+        GoveeDevice(
+            controller=mock_govee_api,
+            ip="192.168.1.100",
+            fingerprint="asdawdqwdqwd1",
+            sku="H615A",
+        )
+    ]
+
+    with patch(
+        "homeassistant.components.govee_light_api.config_flow.GoveeController",
+        return_value=mock_govee_api,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "init"
+        # Confirmation form
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_DISCOVERY_INTERVAL: 42},
-    )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_DISCOVERY_INTERVAL: 42}
+        await hass.async_block_till_done()
+
+        mock_govee_api.start.assert_awaited_once()
+        mock_setup_entry.assert_awaited_once()

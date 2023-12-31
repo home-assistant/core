@@ -6,29 +6,23 @@ import logging
 
 from govee_local_api import GoveeController, GoveeDevice
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
-    CONF_BIND_ADDRESS,
-    CONF_DISCOVERY_INTERVAL,
     CONF_DISCOVERY_INTERVAL_DEFAULT,
-    CONF_LISENING_PORT,
-    CONF_MULTICAST_ADDRESS,
-    CONF_TARGET_PORT,
+    CONF_LISENING_PORT_DEFAULT,
+    CONF_MULTICAST_ADDRESS_DEFAULT,
+    CONF_TARGET_PORT_DEFAULT,
 )
 
 
 class GoveeLocalApiCoordinator(DataUpdateCoordinator):
     """Govee Local API coordinator."""
 
-    config_entry: ConfigEntry
-
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
         scan_interval: timedelta,
         logger: logging.Logger,
     ) -> None:
@@ -40,23 +34,14 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator):
             update_interval=scan_interval,
         )
 
-        config = config_entry.data["config"]
-        option_discovery_interval = config_entry.options.get(CONF_DISCOVERY_INTERVAL)
-        self._discovery_interval = (
-            option_discovery_interval
-            if option_discovery_interval
-            else config.get(CONF_DISCOVERY_INTERVAL, CONF_DISCOVERY_INTERVAL_DEFAULT)
-        )
-
         self._controller = GoveeController(
             loop=hass.loop,
             logger=logger,
-            listening_address=config[CONF_BIND_ADDRESS],
-            broadcast_address=config[CONF_MULTICAST_ADDRESS],
-            broadcast_port=config[CONF_TARGET_PORT],
-            listening_port=config[CONF_LISENING_PORT],
+            broadcast_address=CONF_MULTICAST_ADDRESS_DEFAULT,
+            broadcast_port=CONF_TARGET_PORT_DEFAULT,
+            listening_port=CONF_LISENING_PORT_DEFAULT,
             discovery_enabled=True,
-            discovery_interval=config[CONF_DISCOVERY_INTERVAL],
+            discovery_interval=CONF_DISCOVERY_INTERVAL_DEFAULT,
             discovered_callback=None,
             update_enabled=False,
         )
@@ -104,14 +89,5 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator):
         return self._controller.devices
 
     async def _async_update_data(self):
-        discovery_interval = self.config_entry.options.get(CONF_DISCOVERY_INTERVAL)
-        if discovery_interval and discovery_interval != self._discovery_interval:
-            self._controller.set_discovery_interval(discovery_interval)
-            self.logger.debug(
-                "Changed update interval from %d to %d",
-                self._discovery_interval,
-                discovery_interval,
-            )
-            self._discovery_interval = discovery_interval
         self._controller.send_update_message()
         return self._controller.devices

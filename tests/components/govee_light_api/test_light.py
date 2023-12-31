@@ -8,8 +8,6 @@ from homeassistant.components.govee_light_api.const import DOMAIN
 from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode
 from homeassistant.core import HomeAssistant
 
-from . import DEFAULT_CONFIG, DEFAULT_UNIQUE_ID
-
 from tests.common import MockConfigEntry
 
 
@@ -31,9 +29,7 @@ async def test_light_known_device(
         "homeassistant.components.govee_light_api.coordinator.GoveeController",
         return_value=mock_govee_api,
     ):
-        entry = MockConfigEntry(
-            domain=DOMAIN, unique_id=DEFAULT_UNIQUE_ID, data={"config": DEFAULT_CONFIG}
-        )
+        entry = MockConfigEntry(domain=DOMAIN)
         entry.add_to_hass(hass)
 
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -74,9 +70,7 @@ async def test_light_unknown_device(
         "homeassistant.components.govee_light_api.coordinator.GoveeController",
         return_value=mock_govee_api,
     ):
-        entry = MockConfigEntry(
-            domain=DOMAIN, unique_id=DEFAULT_UNIQUE_ID, data={"config": DEFAULT_CONFIG}
-        )
+        entry = MockConfigEntry(domain=DOMAIN)
         entry.add_to_hass(hass)
 
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -106,9 +100,7 @@ async def test_light_remove(hass: HomeAssistant, mock_govee_api: AsyncMock) -> N
         "homeassistant.components.govee_light_api.coordinator.GoveeController",
         return_value=mock_govee_api,
     ):
-        entry = MockConfigEntry(
-            domain=DOMAIN, unique_id=DEFAULT_UNIQUE_ID, data={"config": DEFAULT_CONFIG}
-        )
+        entry = MockConfigEntry(domain=DOMAIN)
         entry.add_to_hass(hass)
 
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -139,9 +131,7 @@ async def test_light_on_off(hass: HomeAssistant, mock_govee_api: MagicMock) -> N
         "homeassistant.components.govee_light_api.coordinator.GoveeController",
         return_value=mock_govee_api,
     ):
-        entry = MockConfigEntry(
-            domain=DOMAIN, unique_id=DEFAULT_UNIQUE_ID, data={"config": DEFAULT_CONFIG}
-        )
+        entry = MockConfigEntry(domain=DOMAIN)
         entry.add_to_hass(hass)
 
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -196,9 +186,7 @@ async def test_light_brightness(hass: HomeAssistant, mock_govee_api: MagicMock) 
         "homeassistant.components.govee_light_api.coordinator.GoveeController",
         return_value=mock_govee_api,
     ):
-        entry = MockConfigEntry(
-            domain=DOMAIN, unique_id=DEFAULT_UNIQUE_ID, data={"config": DEFAULT_CONFIG}
-        )
+        entry = MockConfigEntry(domain=DOMAIN)
         entry.add_to_hass(hass)
 
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -272,9 +260,7 @@ async def test_light_color(hass: HomeAssistant, mock_govee_api: MagicMock) -> No
         "homeassistant.components.govee_light_api.coordinator.GoveeController",
         return_value=mock_govee_api,
     ):
-        entry = MockConfigEntry(
-            domain=DOMAIN, unique_id=DEFAULT_UNIQUE_ID, data={"config": DEFAULT_CONFIG}
-        )
+        entry = MockConfigEntry(domain=DOMAIN)
         entry.add_to_hass(hass)
 
         assert await hass.config_entries.async_setup(entry.entry_id)

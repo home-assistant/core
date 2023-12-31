@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from typing import Any
 
@@ -17,7 +16,8 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -26,7 +26,7 @@ from .capability import (
     GOVEE_DEVICE_CAPABILITIES,
     GoveeLightCapabilities,
 )
-from .const import DOMAIN, MANUFACTURER
+from .const import DISPATCH_GOVEE_LIGHT_DISCOVERED, DOMAIN, MANUFACTURER
 from .coordinator import GoveeLocalApiCoordinator
 
 
@@ -39,22 +39,15 @@ async def async_setup_entry(
 
     coordinator: GoveeLocalApiCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    await coordinator.async_config_entry_first_refresh()
-
-    try:
-        async with asyncio.timeout(delay=5):
-            while not coordinator.devices:
-                await asyncio.sleep(delay=1)
-    except asyncio.TimeoutError:
-        pass
-
     async_add_entities(
         GoveeLight(coordinator, device) for device in coordinator.devices
     )
 
     def discovery_callback(device: GoveeDevice, is_new: bool) -> bool:
         if is_new:
-            async_add_entities([GoveeLight(coordinator, device)])
+            entity = GoveeLight(coordinator, device)
+            async_add_entities([entity])
+            async_dispatcher_send(hass, DISPATCH_GOVEE_LIGHT_DISCOVERED, entity)
         return True
 
     await coordinator.set_discovery_callback(discovery_callback)
@@ -80,7 +73,7 @@ class GoveeLight(CoordinatorEntity, LightEntity):
             device.sku, set()
         )
 
-        self._attr_unique_id: str = device.fingerprint
+        self._attr_unique_id = device.fingerprint
 
         color_modes = set()
         if GoveeLightCapabilities.COLOR_RGB in capabilities:
@@ -95,12 +88,18 @@ class GoveeLight(CoordinatorEntity, LightEntity):
         if len(color_modes) == 0:
             color_modes.add(ColorMode.ONOFF)
 
-        self._attr_supported_color_modes: set[ColorMode] | set[str] = color_modes
-
-    @property
-    def name(self) -> str:
-        """Name of the entity."""
-        return self._device.sku
+        self._attr_supported_color_modes = color_modes
+        self._attr_name = None
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, device.fingerprint)
+            },
+            name=device.sku,
+            manufacturer=MANUFACTURER,
+            model=device.sku,
+            connections={(CONNECTION_NETWORK_MAC, device.fingerprint)},
+        )
 
     @property
     def is_on(self) -> bool:
@@ -132,7 +131,13 @@ class GoveeLight(CoordinatorEntity, LightEntity):
             return ColorMode.COLOR_TEMP
         if self._device.rgb_color is not None and any(self._device.rgb_color):
             return ColorMode.RGB
-        return next((x for x in self._attr_supported_color_modes), ColorMode.ONOFF)
+
+        if (
+            self._attr_supported_color_modes
+            and ColorMode.BRIGHTNESS in self._attr_supported_color_modes
+        ):
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -162,20 +167,6 @@ class GoveeLight(CoordinatorEntity, LightEntity):
         """Turn the device off."""
         await self.coordinator.turn_off(self._device)
         self.async_write_ha_state()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self._attr_unique_id)
-            },
-            name=self.name,
-            manufacturer=MANUFACTURER,
-            model=self._device.sku,
-            connections={("mac", self._device.fingerprint)},
-        )
 
     @callback
     def _update_callback(self, device: GoveeDevice) -> None:
