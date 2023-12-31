@@ -858,10 +858,10 @@ def state_supports_hue_brightness(state: State, color_modes: set[ColorMode]) -> 
         return light.brightness_supported(color_modes)
     if not (required_feature := DIMMABLE_SUPPORTED_FEATURES_BY_DOMAIN.get(domain)):
         return False
-    entity_features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-    if type(entity_features) is int:  # noqa: E721 - we mean is an int here
-        entity_features = ENTITY_FEATURES_BY_DOMAIN[domain](entity_features)
-    return required_feature in entity_features
+    features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    enum = ENTITY_FEATURES_BY_DOMAIN[domain]
+    features = enum(features) if type(features) is int else features  # noqa: E721
+    return required_feature in features
 
 
 def create_hue_success_response(
