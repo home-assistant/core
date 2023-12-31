@@ -661,6 +661,24 @@ async def async_setup_entry(  # noqa: C901
                     )
                 )
 
+    _coordinator: MonitorCoordinator
+    for _, _coordinator in disk_coordinators.items():
+        await _coordinator.async_request_refresh()
+    await swap_coordinator.async_request_refresh()
+    await memory_coordinator.async_request_refresh()
+    for _, _coordinator in net_io_coordinators.items():
+        await _coordinator.async_request_refresh()
+    for _, _coordinator in net_throughput_coordinators.items():
+        await _coordinator.async_request_refresh()
+    for _, _coordinator in net_addr_coordinators.items():
+        await _coordinator.async_request_refresh()
+    await system_load_coordinator.async_request_refresh()
+    await processor_coordinator.async_request_refresh()
+    await boot_time_coordinator.async_request_refresh()
+    for _, _coordinator in process_coordinators.items():
+        await _coordinator.async_request_refresh()
+    await cpu_temp_coordinator.async_request_refresh()
+
     async_add_entities(entities)
 
 
@@ -694,11 +712,6 @@ class SystemMonitorSensor(CoordinatorEntity[MonitorCoordinator[_dataT]], SensorE
             manufacturer="System Monitor",
             name="System Monitor",
         )
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added."""
-        await super().async_added_to_hass()
-        await self.coordinator.async_request_refresh()
 
     @property
     def native_value(self) -> str | float | int | datetime | None:
