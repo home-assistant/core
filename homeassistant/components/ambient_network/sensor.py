@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .climate_utils import ClimateUtils
-from .const import DOMAIN, ENTITY_MNEMONIC
+from .const import DOMAIN, ENTITY_STATION_NAME
 from .coordinator import AmbientNetworkDataUpdateCoordinator
 from .entity import AmbientNetworkEntity
 from .reducers import Reducers
@@ -143,6 +143,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     AmbientNetworkSensorEntityDescription(
         key=TYPE_HOURLYRAININ,
+        translation_key="hourly_rain",
         native_unit_of_measurement=UnitOfVolumetricFlux.INCHES_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
@@ -193,7 +194,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     AmbientNetworkSensorEntityDescription(
         key=TYPE_MAXDAILYGUST,
-        translation_key="max_gust",
+        translation_key="max_daily_gust",
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
@@ -227,6 +228,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     AmbientNetworkSensorEntityDescription(
         key=TYPE_SOLARRADIATION,
+        translation_key="solar_radiation",
         native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
         device_class=SensorDeviceClass.IRRADIANCE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -329,7 +331,7 @@ async def async_setup_entry(
                         AmbientNetworkSensor(
                             coordinator,
                             description,
-                            coordinator.config_entry.data[ENTITY_MNEMONIC],
+                            coordinator.config_entry.data[ENTITY_STATION_NAME],
                         )
                     )
                     break
@@ -343,14 +345,11 @@ class AmbientNetworkSensor(AmbientNetworkEntity, SensorEntity):
         self,
         coordinator: AmbientNetworkDataUpdateCoordinator,
         description: AmbientNetworkSensorEntityDescription,
-        mnemonic: str,
+        station_name: str,
     ) -> None:
         """Initialize a sensor object."""
 
-        super().__init__(coordinator, description, mnemonic)
-        # Override the entity_id to make them cleaner (otherwise Homeassistant
-        # will name them _precipitation_1, _precipitation_2, etc.)
-        self.entity_id = f"sensor.{self._device_id.lower()}_{description.key}"
+        super().__init__(coordinator, description, station_name)
         self._attr_suggested_display_precision = description.suggested_display_precision
 
     def _calc_attrs(self, key: str) -> Any:

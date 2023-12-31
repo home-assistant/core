@@ -13,14 +13,15 @@
         "title": "Station Selection",
         "description": "Select a single station for precise information about a specific location. Alternatively, select multiple stations to create a virtual station that provides an average picture of the weather in a broader area. This virtual station will automatically exclude data from offline stations and any outliers to ensure accurate results.",
         "data": {
-          "station": "Station"
+          "stations": "Stations"
         }
       },
-      "mnemonic": {
-        "title": "Mnemonic Selection",
-        "description": "Create a distinctive mnemonic for your physical or virtual station, which will be incorporated into all sensor names.",
+      "station_name": {
+        "title": "Station Name",
+        "description": "Create a distinctive name for your physical or virtual station, which will be incorporated into all sensor names.",
         "data": {
-          "mnemonic": "Mnemonic"
+          "station_name": "Station Name",
+          "station_name_suffix": "Weather Station"
         }
       }
     },
@@ -31,7 +32,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_mnemonic_defined": "You need to define a non-empty mnemonic.",
+      "no_station_name_defined": "You need to define a non-empty station name.",
       "no_stations_found": "Did not find any stations in the selected region.",
       "no_stations_selected": "You did not select any stations."
     }
@@ -65,6 +66,9 @@
       "feels_like": {
         "name": "Feels like"
       },
+      "hourly_rain": {
+        "name": "Hourly rain"
+      },
       "last_rain": {
         "name": "Last rain"
       },
@@ -77,11 +81,14 @@
       "lightning_distance": {
         "name": "Lightning distance"
       },
-      "max_gust": {
-        "name": "Max gust"
+      "max_daily_gust": {
+        "name": "Max daily gust"
       },
       "monthly_rain": {
         "name": "Monthly rain"
+      },
+      "solar_radiation": {
+        "name": "Solar radiation"
       },
       "uv_index": {
         "name": "UV index"

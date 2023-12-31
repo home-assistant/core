@@ -1,16 +1,16 @@
 """Config flow for the Ambient Weather Network integration."""
 from __future__ import annotations
 
-import hashlib
-import re
 from typing import Any
 
 from aioambient import OpenAPI
+from geopy import Location, Nominatim
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import UnitOfLength
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import translation
 from homeassistant.helpers.selector import (
     LocationSelector,
     LocationSelectorConfig,
@@ -27,14 +27,14 @@ from .const import (
     API_STATION_NAME,
     DOMAIN,
     ENTITY_MAC_ADDRESS,
-    ENTITY_MNEMONIC,
-    ENTITY_NAME,
+    ENTITY_STATION_NAME,
     ENTITY_STATIONS,
+    LOGGER,
 )
 
 CONFIG_STEP_USER = "user"
 CONFIG_STEP_STATIONS = "stations"
-CONFIG_STEP_MNEMONIC = "mnemonic"
+CONFIG_STEP_STATION_NAME = "station_name"
 
 CONFIG_LOCATION = "location"
 CONFIG_LOCATION_LATITUDE = "latitude"
@@ -47,7 +47,10 @@ CONFIG_LOCATION_RADIUS_DEFAULT = DistanceConverter.convert(
 )
 
 CONFIG_STATIONS = "stations"
-CONFIG_MNEMONIC = "mnemonic"
+CONFIG_STATION_NAME = "station_name"
+CONFIG_STATION_NAME_SUFFIX = (
+    f"component.{DOMAIN}.config.step.station_name.data.station_name_suffix"
+)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -62,34 +65,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._latitude = 0.0
         self._radius = 0.0
         self._stations: list[dict[str, str]] = []
-
-    def create_mnemonic(self, text: str) -> str:
-        """Create a four-letter mnemonic from a text string."""
-
-        # Split the text by spaces.
-        words: list[str] = text.split()
-
-        # Process each word.
-        mnemonic: str = ""
-        for word in words:
-            # Use regular expression to split the word between uppercase and lowercase letters.
-            parts: list[str] = re.findall(
-                r"[a-z][a-z0-9\-]+|[A-Z][a-z0-9\-]+|[A-Z][A-Z0-9\-]+", word
-            )
-
-            for part in parts:
-                match: re.Match | None = re.match(r"([a-zA-Z]+)[\-0-9]", part)
-                if match is not None:
-                    # Take all the letters preceding the dash or numbers.
-                    mnemonic += match.group(1).upper()
-                else:
-                    # Take the first letter from each part.
-                    mnemonic += part[0].upper()
-
-        # Ensure the mnemonic is exactly four letters long.
-        mnemonic = mnemonic[:4]
-
-        return mnemonic
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -139,18 +114,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
 
             def parse_station(station: str) -> dict[str, str]:
-                mac_address, mnemonic, name = station.split(",")
+                mac_address, station_name = station.split(",")
                 return {
-                    ENTITY_NAME: name,
+                    ENTITY_STATION_NAME: station_name,
                     ENTITY_MAC_ADDRESS: mac_address,
-                    ENTITY_MNEMONIC: mnemonic,
                 }
 
             self._stations = list(map(parse_station, user_input[CONFIG_STATIONS]))
             if len(self._stations) == 0:
                 return self.async_abort(reason="no_stations_selected")
 
-            return await self.async_step_mnemonic()
+            return await self.async_step_station_name()
 
         client: OpenAPI = OpenAPI()
         stations: list[dict[str, Any]] = await client.get_devices_by_location(
@@ -162,11 +136,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         options: list[SelectOptionDict] = list[SelectOptionDict]()
         for station in stations:
-            name: str = station[API_STATION_INFO][API_STATION_NAME]
-            mnemonic: str = self.create_mnemonic(name)
+            station_name: str = station[API_STATION_INFO][API_STATION_NAME]
             option: SelectOptionDict = SelectOptionDict(
-                label=f"{name} ({mnemonic})",
-                value=f"{station[API_STATION_MAC_ADDRESS]},{mnemonic},{name}",
+                label=f"{station_name}",
+                value=f"{station[API_STATION_MAC_ADDRESS]},{station_name}",
             )
             options.append(option)
 
@@ -188,26 +161,40 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_mnemonic(
+    async def suggest_virtual_station_name(self) -> str:
+        """Suggest a name for a virtual station. The suggested name is composed of the city name and the word 'Weather Station'."""
+        geolocator = Nominatim(user_agent="homeassistant", timeout=3)
+        translations: dict[str, str] = await translation.async_get_translations(
+            self.hass, self.hass.config.language, "config", {DOMAIN}
+        )
+        suffix = translations[CONFIG_STATION_NAME_SUFFIX]
+        try:
+            location: Location = await self.hass.async_add_executor_job(
+                lambda: geolocator.reverse(
+                    str(self._latitude) + "," + str(self._longitude)
+                )
+            )
+            return str(location.raw["address"]["city"]) + " " + suffix
+        except Exception:  # pylint: disable=broad-exception-caught
+            LOGGER.warning("Failed to look up geo city name")
+            return suffix
+
+    async def async_step_station_name(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle the third step to assign a mnemonic."""
+        """Handle the third step to assign a station name."""
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            if user_input[CONFIG_MNEMONIC] == "":
-                return self.async_abort(reason="no_mnemonic_defined")
+            if user_input[CONFIG_STATION_NAME] == "":
+                return self.async_abort(reason="no_station_name_defined")
 
-            md5 = hashlib.md5(
-                ",".join([s[ENTITY_MAC_ADDRESS] for s in self._stations]).encode()
-            )
-
-            await self.async_set_unique_id(md5.hexdigest())
+            await self.async_set_unique_id(user_input[CONFIG_STATION_NAME])
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=f"{user_input[CONFIG_MNEMONIC]}",
+                title=f"{user_input[CONFIG_STATION_NAME]}",
                 data={
-                    ENTITY_MNEMONIC: user_input[CONFIG_MNEMONIC],
+                    ENTITY_STATION_NAME: user_input[CONFIG_STATION_NAME],
                     ENTITY_STATIONS: self._stations,
                 },
             )
@@ -215,13 +202,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema: vol.Schema = vol.Schema(
             {
                 vol.Required(
-                    CONFIG_MNEMONIC, default=self._stations[0][ENTITY_MNEMONIC]
+                    CONFIG_STATION_NAME,
+                    default=self._stations[0][ENTITY_STATION_NAME]
+                    if len(self._stations) == 1
+                    else await self.suggest_virtual_station_name(),
                 ): str
             }
         )
 
         return self.async_show_form(
-            step_id=CONFIG_STEP_MNEMONIC,
+            step_id=CONFIG_STEP_STATION_NAME,
             data_schema=schema,
             errors=errors,
         )

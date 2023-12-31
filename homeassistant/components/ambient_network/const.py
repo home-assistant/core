@@ -6,9 +6,8 @@ import logging
 DOMAIN = "ambient_network"
 
 ENTITY_STATIONS = "stations"
-ENTITY_NAME = "name"
 ENTITY_MAC_ADDRESS = "mac_address"
-ENTITY_MNEMONIC = "mnemonic"
+ENTITY_STATION_NAME = "station_name"
 
 API_STATION_INFO = "info"
 API_STATION_NAME = "name"
