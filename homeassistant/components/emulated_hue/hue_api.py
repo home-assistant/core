@@ -765,9 +765,9 @@ def _entity_unique_id(entity_id: str) -> str:
 def state_to_json(config: Config, state: State) -> dict[str, Any]:
     """Convert an entity to its Hue bridge JSON representation."""
 
-    color_modes = state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, set())
     unique_id = _entity_unique_id(state.entity_id)
     state_dict = get_entity_state_dict(config, state)
+    color_modes = state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, set())
 
     json_state: dict[str, str | bool | int] = {
         HUE_API_STATE_ON: state_dict[STATE_ON],
@@ -781,9 +781,9 @@ def state_to_json(config: Config, state: State) -> dict[str, Any]:
         "manufacturername": "Home Assistant",
         "swversion": "123",
     }
-
-    color_supported = light.color_supported(color_modes)
-    color_temp_supported = light.color_temp_supported(color_modes)
+    is_light = state.domain == light.DOMAIN
+    color_supported = is_light and light.color_supported(color_modes)
+    color_temp_supported = is_light and light.color_temp_supported(color_modes)
     if color_supported and color_temp_supported:
         # Extended Color light (Zigbee Device ID: 0x0210)
         # Same as Color light, but which supports additional setting of color temperature
