@@ -52,7 +52,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_URL],
             entry.data[CONF_USERNAME],
             entry.data[CONF_PASSWORD],
-            entry.data[CONF_VERIFY_SSL],
+            verify_ssl=entry.data[CONF_VERIFY_SSL],
+            skip_update=False,
         )
 
     try:
