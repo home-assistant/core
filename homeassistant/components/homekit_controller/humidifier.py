@@ -26,9 +26,10 @@ from .connection import HKDevice
 from .entity import HomeKitEntity
 
 if TYPE_CHECKING:
-    pass
+    from functools import cached_property
 else:
-    pass
+    from homeassistant.backports.functools import cached_property
+
 
 HK_MODE_TO_HA = {
     0: "off",
@@ -49,6 +50,8 @@ class HomeKitBaseHumidifier(HomeKitEntity, HumidifierEntity):
 
     _attr_supported_features = HumidifierEntityFeature.MODES
     _attr_available_modes = [MODE_NORMAL, MODE_AUTO]
+    _humidity_char = CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
+    _on_mode_value = 1
 
     @callback
     def _async_reconfigure(self) -> None:
@@ -77,6 +80,25 @@ class HomeKitBaseHumidifier(HomeKitEntity, HumidifierEntity):
         """Return the current humidity."""
         return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
 
+    @property
+    def target_humidity(self) -> int | None:
+        """Return the humidity we try to reach."""
+        return self.service.value(self._humidity_char)
+
+    @cached_property
+    def min_humidity(self) -> int:
+        """Return the minimum humidity."""
+        return int(self.service[self._humidity_char].minValue or DEFAULT_MIN_HUMIDITY)
+
+    @cached_property
+    def max_humidity(self) -> int:
+        """Return the maximum humidity."""
+        return int(self.service[self._humidity_char].maxValue or DEFAULT_MAX_HUMIDITY)
+
+    async def async_set_humidity(self, humidity: int) -> None:
+        """Set new target humidity."""
+        await self.async_put_characteristics({self._humidity_char: humidity})
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified valve on."""
         await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: True})
@@ -85,34 +107,6 @@ class HomeKitBaseHumidifier(HomeKitEntity, HumidifierEntity):
         """Turn the specified valve off."""
         await self.async_put_characteristics({CharacteristicsTypes.ACTIVE: False})
 
-
-class HomeKitHumidifier(HomeKitBaseHumidifier):
-    """Representation of a HomeKit Controller Humidifier."""
-
-    _attr_device_class = HumidifierDeviceClass.HUMIDIFIER
-
-    def get_characteristic_types(self) -> list[str]:
-        """Define the homekit characteristics the entity cares about."""
-        return [
-            CharacteristicsTypes.ACTIVE,
-            CharacteristicsTypes.CURRENT_HUMIDIFIER_DEHUMIDIFIER_STATE,
-            CharacteristicsTypes.TARGET_HUMIDIFIER_DEHUMIDIFIER_STATE,
-            CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD,
-        ]
-
-    @property
-    def target_humidity(self) -> int | None:
-        """Return the humidity we try to reach."""
-        return self.service.value(
-            CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
-        )
-
-    async def async_set_humidity(self, humidity: int) -> None:
-        """Set new target humidity."""
-        await self.async_put_characteristics(
-            {CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD: humidity}
-        )
-
     async def async_set_mode(self, mode: str) -> None:
         """Set new mode."""
         if mode == MODE_AUTO:
@@ -125,36 +119,33 @@ class HomeKitHumidifier(HomeKitBaseHumidifier):
         else:
             await self.async_put_characteristics(
                 {
-                    CharacteristicsTypes.TARGET_HUMIDIFIER_DEHUMIDIFIER_STATE: 1,
+                    CharacteristicsTypes.TARGET_HUMIDIFIER_DEHUMIDIFIER_STATE: self._on_mode_value,
                     CharacteristicsTypes.ACTIVE: True,
                 }
             )
 
-    @property
-    def min_humidity(self) -> int:
-        """Return the minimum humidity."""
-        return int(
-            self.service[
-                CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
-            ].minValue
-            or DEFAULT_MIN_HUMIDITY
-        )
+    def get_characteristic_types(self) -> list[str]:
+        """Define the homekit characteristics the entity cares about."""
+        return [
+            CharacteristicsTypes.ACTIVE,
+            CharacteristicsTypes.CURRENT_HUMIDIFIER_DEHUMIDIFIER_STATE,
+            CharacteristicsTypes.TARGET_HUMIDIFIER_DEHUMIDIFIER_STATE,
+            CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD,
+        ]
 
-    @property
-    def max_humidity(self) -> int:
-        """Return the maximum humidity."""
-        return int(
-            self.service[
-                CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD
-            ].maxValue
-            or DEFAULT_MAX_HUMIDITY
-        )
+
+class HomeKitHumidifier(HomeKitBaseHumidifier):
+    """Representation of a HomeKit Controller Humidifier."""
+
+    _attr_device_class = HumidifierDeviceClass.HUMIDIFIER
 
 
 class HomeKitDehumidifier(HomeKitBaseHumidifier):
     """Representation of a HomeKit Controller Humidifier."""
 
     _attr_device_class = HumidifierDeviceClass.DEHUMIDIFIER
+    _humidity_char = CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
+    _on_mode_value = 2
 
     def __init__(self, accessory: HKDevice, devinfo: ConfigType) -> None:
         """Initialise the dehumidifier."""
@@ -163,63 +154,9 @@ class HomeKitDehumidifier(HomeKitBaseHumidifier):
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
-        return [
-            CharacteristicsTypes.ACTIVE,
-            CharacteristicsTypes.CURRENT_HUMIDIFIER_DEHUMIDIFIER_STATE,
-            CharacteristicsTypes.TARGET_HUMIDIFIER_DEHUMIDIFIER_STATE,
-            CharacteristicsTypes.RELATIVE_HUMIDITY_HUMIDIFIER_THRESHOLD,
-            CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD,
-        ]
-
-    @property
-    def target_humidity(self) -> int | None:
-        """Return the humidity we try to reach."""
-        return self.service.value(
+        return super().get_characteristic_types() + [
             CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
-        )
-
-    @property
-    def min_humidity(self) -> int:
-        """Return the minimum humidity."""
-        return int(
-            self.service[
-                CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
-            ].minValue
-            or DEFAULT_MIN_HUMIDITY
-        )
-
-    @property
-    def max_humidity(self) -> int:
-        """Return the maximum humidity."""
-        return int(
-            self.service[
-                CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD
-            ].maxValue
-            or DEFAULT_MAX_HUMIDITY
-        )
-
-    async def async_set_humidity(self, humidity: int) -> None:
-        """Set new target humidity."""
-        await self.async_put_characteristics(
-            {CharacteristicsTypes.RELATIVE_HUMIDITY_DEHUMIDIFIER_THRESHOLD: humidity}
-        )
-
-    async def async_set_mode(self, mode: str) -> None:
-        """Set new mode."""
-        if mode == MODE_AUTO:
-            await self.async_put_characteristics(
-                {
-                    CharacteristicsTypes.TARGET_HUMIDIFIER_DEHUMIDIFIER_STATE: 0,
-                    CharacteristicsTypes.ACTIVE: True,
-                }
-            )
-        else:
-            await self.async_put_characteristics(
-                {
-                    CharacteristicsTypes.TARGET_HUMIDIFIER_DEHUMIDIFIER_STATE: 2,
-                    CharacteristicsTypes.ACTIVE: True,
-                }
-            )
+        ]
 
     @property
     def old_unique_id(self) -> str:
