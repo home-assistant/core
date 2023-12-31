@@ -49,19 +49,19 @@ class E3DCSensor(SensorEntity):
 
     # def __init__(self, platform_name, hub, device_info, name, key, unit, icon, register, datatype, count, Scaninterval):
     # def __init__(self, platform_name, hub, device_info, name, key, unit, icon, test=""):
-    def __init__(self, platform_name, hub, name, key, unit, icon):
+    def __init__(self, platform_name, hub, name, key, unit, icon) -> None:
         """Initialize the sensor."""
         self._platform_name = platform_name
         self._hub = hub
         self._key = key
         self._name = name
-        self._register = "register"
+        self._register = None
         self._datatype = "datatype"
-        self._count = "count"
+        self._count = None
         self._scaninterval = 5  # Scaninterval
         self._unit_of_measurement = unit
         self._icon = icon
-        self._state = "Status 123"
+        self._state = None
         # self._device_info = device_info
         # self._attr_state_class = STATE_CLASS_MEASUREMENT
         # if self._unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR:
@@ -112,30 +112,33 @@ class E3DCSensor(SensorEntity):
         return self._icon
 
     @property
-    def register(self) -> int:
+    def register(self) -> int | None:
         """Return the sensor register."""
         return self._register
 
     @property
-    def datatype(self):
+    def datatype(self) -> str | None:
         """Return the sensor datatype."""
         return self._datatype
 
     @property
-    def count(self) -> int:
+    def count(self) -> int | None:
         """Return the sensor count."""
         return self._count
 
     @property
-    def scaninterval(self):
+    def scaninterval(self) -> int | None:
         """Return the sensor count."""
         return self._scaninterval
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._key in self._hub.data:
-            return self._hub.data[self._key]
+        return self._state
+        # if self._key in self._hub.data:
+        #    return self._hub.data[self._key]
+        # else:
+        #    return None
 
     # @property
     # def extra_state_attributes(self) -> Optional[Mapping[str, Any]]:
@@ -153,23 +156,15 @@ class E3DCSensor(SensorEntity):
         """Data is delivered by the hub."""
         return False
 
-    # @property
-    # def device_info(self) -> Optional[Dict[str, Any]]:
-    #    """Return the device information."""
-    #    return self._device_info
+    async def async_update(self) -> None:
+        """Aktualisiere den Zustand des Sensors."""
+        # Führe hier die Logik durch, um den Zustand des Sensors zu aktualisieren
+        self._state = self._hub.get_sensor_data()
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return default device info."""
-        _LOGGER.debug("Geräte UID: %s %s", DOMAIN, self.unique_id)
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            manufacturer="E3/DC Hager AG",
-            model="S10 E AIO Pro 912",
-            name="E3DC Hauskraftwerk",
-            sw_version="0.1.0",
-            configuration_url="https://s10.e3dc.com/",
-        )
+        return self._hub.device_info
 
 
 class DemoSensor(SensorEntity):

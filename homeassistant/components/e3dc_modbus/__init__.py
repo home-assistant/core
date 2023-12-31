@@ -14,6 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTER
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -146,6 +147,11 @@ class E3DCModbusHub:
         self.data = {}
         # Modbus register offset
         self._modbus_register_offset = None
+
+        self._manufacturer = "E3/DC Hager AG"
+        self._model = "S10 E AIO Pro 912"
+        self._sw_version = "0.1.0"
+
         # self._sensors.append()
 
     @callback
@@ -226,17 +232,18 @@ class E3DCModbusHub:
             )
         return result
 
-    # @property
-    # def device_info(self) -> DeviceInfo:
-    #    """Return default device info."""
-    #    _LOGGER.debug("Geräte UID: %s", self.unique_id)
-    #    return DeviceInfo(
-    #        manufacturer="E3/DC",
-    #        model="S10 E AIO Pro 912",
-    #        name="P 10",
-    #        sw_version="0.1.0",
-    #        configuration_url="https://s10.e3dc.com/",
-    #    )
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return default device info."""
+        # _LOGGER.debug("Geräte UID: %s %s", DOMAIN, self.unique_id)
+        return {
+            "identifiers": {(DOMAIN, self._name)},
+            "manufacturer": self._manufacturer,
+            "model": self._model,
+            "name": self._name,
+            "sw_version": self._sw_version,
+            "configuration_url": "https://s10.e3dc.com/",
+        }
 
     # from homeassistant.helpers import device_registry as dr
     #        manufacturer="E3/DC",
