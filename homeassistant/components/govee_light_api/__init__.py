@@ -24,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator: GoveeLocalApiCoordinator = GoveeLocalApiCoordinator(
         hass=hass, scan_interval=SCAN_INTERVAL, logger=_LOGGER
     )
-    entry.async_on_unload(coordinator.clenaup)
+    entry.async_on_unload(coordinator.cleanup)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await coordinator.start()

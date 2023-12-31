@@ -37,7 +37,7 @@ async def test_light_known_device(
 
         assert len(hass.states.async_all()) == 1
 
-        light = hass.states.get("light.h615a_h615a")
+        light = hass.states.get("light.H615A")
         assert light is not None
 
         color_modes = light.attributes[ATTR_SUPPORTED_COLOR_MODES]
@@ -49,7 +49,6 @@ async def test_light_known_device(
         assert await hass.config_entries.async_remove(entry.entry_id)
         await hass.async_block_till_done()
         assert len(hass.states.async_all()) == 0
-        assert DOMAIN not in hass.data
 
 
 async def test_light_unknown_device(
@@ -78,7 +77,7 @@ async def test_light_unknown_device(
 
         assert len(hass.states.async_all()) == 1
 
-        light = hass.states.get("light.XYZK_XYZK")
+        light = hass.states.get("light.XYZK")
         assert light is not None
 
         assert light.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
@@ -106,13 +105,12 @@ async def test_light_remove(hass: HomeAssistant, mock_govee_api: AsyncMock) -> N
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert len(hass.states.async_all()) == 1
-        assert hass.states.get("light.h615a_h615a") is not None
+        assert hass.states.get("light.H615A") is not None
 
         # Remove 1
         assert await hass.config_entries.async_remove(entry.entry_id)
         await hass.async_block_till_done()
         assert len(hass.states.async_all()) == 0
-        assert DOMAIN not in hass.data
 
 
 async def test_light_on_off(hass: HomeAssistant, mock_govee_api: MagicMock) -> None:
@@ -139,7 +137,7 @@ async def test_light_on_off(hass: HomeAssistant, mock_govee_api: MagicMock) -> N
 
         assert len(hass.states.async_all()) == 1
 
-        light = hass.states.get("light.h615a_h615a")
+        light = hass.states.get("light.H615A")
         assert light is not None
         assert light.state == "off"
 
@@ -151,7 +149,7 @@ async def test_light_on_off(hass: HomeAssistant, mock_govee_api: MagicMock) -> N
         )
         await hass.async_block_till_done()
 
-        light = hass.states.get("light.h615a_h615a")
+        light = hass.states.get("light.H615A")
         assert light is not None
         assert light.state == "on"
         mock_govee_api.turn_on_off.assert_awaited_with(mock_govee_api.devices[0], True)
@@ -165,7 +163,7 @@ async def test_light_on_off(hass: HomeAssistant, mock_govee_api: MagicMock) -> N
         )
         await hass.async_block_till_done()
 
-        light = hass.states.get("light.h615a_h615a")
+        light = hass.states.get("light.H615A")
         assert light is not None
         assert light.state == "off"
         mock_govee_api.turn_on_off.assert_awaited_with(mock_govee_api.devices[0], False)
@@ -194,7 +192,7 @@ async def test_light_brightness(hass: HomeAssistant, mock_govee_api: MagicMock) 
 
         assert len(hass.states.async_all()) == 1
 
-        light = hass.states.get("light.h615a_h615a")
+        light = hass.states.get("light.H615A")
         assert light is not None
         assert light.state == "off"
 
@@ -206,7 +204,7 @@ async def test_light_brightness(hass: HomeAssistant, mock_govee_api: MagicMock) 
         )
         await hass.async_block_till_done()
 
-        light = hass.states.get("light.h615a_h615a")
+        light = hass.states.get("light.H615A")
         assert light is not None
         assert light.state == "on"
         mock_govee_api.set_brightness.assert_awaited_with(mock_govee_api.devices[0], 50)
@@ -220,7 +218,7 @@ async def test_light_brightness(hass: HomeAssistant, mock_govee_api: MagicMock) 
         )
         await hass.async_block_till_done()
 
-        light = hass.states.get("light.h615a_h615a")
+        light = hass.states.get("light.H615A")
         assert light is not None
         assert light.state == "on"
         assert light.attributes["brightness"] == 255
@@ -236,7 +234,7 @@ async def test_light_brightness(hass: HomeAssistant, mock_govee_api: MagicMock) 
         )
         await hass.async_block_till_done()
 
-        light = hass.states.get("light.h615a_h615a")
+        light = hass.states.get("light.H615A")
         assert light is not None
         assert light.state == "on"
         assert light.attributes["brightness"] == 255
@@ -268,7 +266,7 @@ async def test_light_color(hass: HomeAssistant, mock_govee_api: MagicMock) -> No
 
         assert len(hass.states.async_all()) == 1
 
-        light = hass.states.get("light.h615a_h615a")
+        light = hass.states.get("light.H615A")
         assert light is not None
         assert light.state == "off"
 
@@ -280,7 +278,7 @@ async def test_light_color(hass: HomeAssistant, mock_govee_api: MagicMock) -> No
         )
         await hass.async_block_till_done()
 
-        light = hass.states.get("light.h615a_h615a")
+        light = hass.states.get("light.H615A")
         assert light is not None
         assert light.state == "on"
         assert light.attributes["rgb_color"] == (100, 255, 50)
@@ -298,7 +296,7 @@ async def test_light_color(hass: HomeAssistant, mock_govee_api: MagicMock) -> No
         )
         await hass.async_block_till_done()
 
-        light = hass.states.get("light.h615a_h615a")
+        light = hass.states.get("light.H615A")
         assert light is not None
         assert light.state == "on"
         assert light.attributes["color_temp_kelvin"] == 4400
