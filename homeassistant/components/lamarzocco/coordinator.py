@@ -17,10 +17,15 @@ SCAN_INTERVAL = timedelta(seconds=30)
 _LOGGER = logging.getLogger(__name__)
 
 
-class LmApiCoordinator(DataUpdateCoordinator[LaMarzoccoClient]):
+class LmApiCoordinator(DataUpdateCoordinator[None]):
     """Class to handle fetching data from the La Marzocco API centrally."""
 
     config_entry: ConfigEntry
+
+    @property
+    def lm(self) -> LaMarzoccoClient:
+        """Return the LaMarzoccoClient instance."""
+        return self._lm
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize coordinator."""
@@ -30,9 +35,8 @@ class LmApiCoordinator(DataUpdateCoordinator[LaMarzoccoClient]):
             entry=self.config_entry,
             callback_websocket_notify=self.async_update_listeners,
         )
-        self.data = self._lm
 
-    async def _async_update_data(self) -> LaMarzoccoClient:
+    async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         try:
             _LOGGER.debug("Update coordinator: Updating data")
@@ -48,4 +52,3 @@ class LmApiCoordinator(DataUpdateCoordinator[LaMarzoccoClient]):
             raise UpdateFailed("Querying API failed. Error: %s" % ex) from ex
 
         _LOGGER.debug("Current status: %s", str(self._lm.current_status))
-        return self._lm

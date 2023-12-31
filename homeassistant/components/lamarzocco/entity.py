@@ -38,7 +38,7 @@ class LaMarzoccoEntity(CoordinatorEntity[LmApiCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._lm_client = self.coordinator.data
+        self._lm_client = self.coordinator.lm
         self._attr_unique_id = (
             f"{self._lm_client.serial_number}_{entity_description.key}"
         )

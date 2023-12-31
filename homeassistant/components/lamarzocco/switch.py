@@ -90,7 +90,7 @@ async def async_setup_entry(
     async_add_entities(
         LaMarzoccoSwitchEntity(coordinator, description)
         for description in ENTITIES
-        if coordinator.data.model_name in description.supported_models
+        if coordinator.lm.model_name in description.supported_models
     )
 
 
