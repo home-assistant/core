@@ -1,0 +1,43 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "serial_no": "Serial number",
+          "token": "Token"
+        }
+      }
+    },
+    "error": {
+      "unauthorized": "Could not authorized. The provided data are invalid.",
+      "bad_request": "Something went wrong. Check the provided data."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "service_date": {
+        "name": "Service date"
+      },
+      "time": {
+        "name": "Last status update"
+      },
+      "fill_percentage": {
+        "name": "Fill percentage"
+      },
+      "device_no": {
+        "name": "Device no"
+      },
+      "ssid": {
+        "name": "SSID"
+      }
+    },
+    "binary_sensor": {
+      "status": {
+        "name": "Status"
+      }
+    }
+  }
+}
