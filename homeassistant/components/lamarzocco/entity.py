@@ -40,7 +40,7 @@ class LaMarzoccoEntity(CoordinatorEntity[LmApiCoordinator]):
         self.entity_description = entity_description
         self._lm_client = self.coordinator.data
         self._attr_unique_id = (
-            f"{self._lm_client.serial_number}_{self.entity_description.key}"
+            f"{self._lm_client.serial_number}_{entity_description.key}"
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._lm_client.serial_number)},
