@@ -97,20 +97,13 @@ async def setup_platform(
 ):
     """Load the Ambient Network integration with the provided OpenAPI."""
 
-    hass.config.components.add(ambient_network.DOMAIN)
     config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-
-    coordinator = ambient_network.AmbientNetworkDataUpdateCoordinator(
-        hass, open_api, ambient_network.SCAN_INTERVAL
-    )
-    hass.data[ambient_network.DOMAIN] = {config_entry.entry_id: coordinator}
-
-    await coordinator.async_config_entry_first_refresh()
+    assert await async_setup_component(hass, ambient_network.DOMAIN, {})
     await hass.async_block_till_done()
 
-    # simulate a full setup by manually adding the config entry
-    assert await async_setup_component(hass, ambient_network.DOMAIN, {}) is True
+    # Perform a coordinator refresh
+    coordinator = hass.data[ambient_network.DOMAIN][config_entry.entry_id]
+    assert await coordinator.async_refresh()
     await hass.async_block_till_done()
 
     return
