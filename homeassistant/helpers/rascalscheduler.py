@@ -17,7 +17,14 @@ from homeassistant.const import (
     DOMAIN_PERSON,
     DOMAIN_RASCALSCHEDULER,
     DOMAIN_SCRIPT,
+    DOMAIN_TTS,
     DOMAIN_ZONE,
+    NAME_SUN_NEXT_DAWN,
+    NAME_SUN_NEXT_DUSK,
+    NAME_SUN_NEXT_MIDNIGHT,
+    NAME_SUN_NEXT_NOON,
+    NAME_SUN_NEXT_RISING,
+    NAME_SUN_NEXT_SETTING,
     RASC_SCHEDULED,
 )
 from homeassistant.core import Context, HomeAssistant
@@ -34,15 +41,22 @@ _LOGGER = logging.getLogger(__name__)
 
 def create_x_ready_queue(hass: HomeAssistant, entity_id: str) -> None:
     """Create queue for x entity."""
-    domains = [DOMAIN_SCRIPT, DOMAIN_AUTOMATION, DOMAIN_PERSON, DOMAIN_ZONE]
-    # full_names = []
+    domains = [DOMAIN_SCRIPT, DOMAIN_AUTOMATION, DOMAIN_PERSON, DOMAIN_ZONE, DOMAIN_TTS]
+    full_names = [
+        NAME_SUN_NEXT_SETTING,
+        NAME_SUN_NEXT_RISING,
+        NAME_SUN_NEXT_DAWN,
+        NAME_SUN_NEXT_DUSK,
+        NAME_SUN_NEXT_MIDNIGHT,
+        NAME_SUN_NEXT_NOON,
+    ]
 
     entity = entity_id.split(".")
     domain = entity[0]
     full_name = entity[1]
 
     if full_name is not None:
-        if domain not in domains:
+        if domain not in domains and full_name not in full_names:
             scheduler = hass.data[DOMAIN_RASCALSCHEDULER]
             scheduler.ready_queues[entity_id] = QueueEntity(None)
             scheduler.active_routines[entity_id] = None

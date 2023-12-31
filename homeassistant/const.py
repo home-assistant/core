@@ -1206,6 +1206,7 @@ DOMAIN_SCRIPT = "script"
 DOMAIN_PERSON = "person"
 DOMAIN_ZONE = "zone"
 DOMAIN_SENSOR = "sensor"
+DOMAIN_TTS = "tts"
 DOMAIN_RASCALSCHEDULER = "rascalscheduler"
 
 NAME_SUN_NEXT_DAWN = "sun_next_dawn"
