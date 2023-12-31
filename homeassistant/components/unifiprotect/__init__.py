@@ -3,14 +3,15 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+from functools import partial
 import logging
 
 from aiohttp.client_exceptions import ServerDisconnectedError
 from pyunifiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_LOGGING_CHANGED
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
@@ -54,6 +55,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def _async_handle_logging_changed(data: ProtectData, _event: Event) -> None:
+    """Handle when the logging level changes."""
+
+    if _LOGGER.isEnabledFor(logging.DEBUG):
+        data.async_enable_ws_debug()
+    else:
+        data.async_disable_ws_debug()
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the UniFi Protect config entries."""
     protect = async_create_api_client(hass, entry)
@@ -82,6 +92,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, data_service.async_stop)
+    )
+    entry.async_on_unload(
+        hass.bus.async_listen(
+            EVENT_LOGGING_CHANGED, partial(_async_handle_logging_changed, data_service)
+        )
     )
 
     if (

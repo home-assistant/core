@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Generator, Iterable
 from datetime import timedelta
 import logging
+import time
 from typing import Any, cast
 
 from pyunifiprotect import ProtectApiClient
@@ -13,18 +14,21 @@ from pyunifiprotect.data import (
     Camera,
     Event,
     EventType,
+    FixSizeOrderedDict,
     Liveview,
     ModelType,
     ProtectAdoptableDeviceModel,
     WSSubscriptionMessage,
 )
 from pyunifiprotect.exceptions import ClientError, NotAuthorized
+from pyunifiprotect.test_util.anonymize import anonymize_data
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_DISABLE_RTSP,
@@ -39,6 +43,7 @@ from .const import (
 from .utils import async_dispatch_id as _ufpd, async_get_devices_by_type
 
 _LOGGER = logging.getLogger(__name__)
+_WS_LOGGER = logging.getLogger("homeassistant.components.unifiprotect.ws_debug")
 ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
 SMART_EVENTS = {
     EventType.SMART_DETECT,
@@ -83,6 +88,14 @@ class ProtectData:
         self.last_update_success = False
         self.api = protect
 
+        self._ws_debug_enabled = False
+        self._ws_debug_start_time = time.monotonic()
+        self._ws_debug_start_dt = dt_util.now()
+        self._ws_debug_messages: dict[str, dict[str, Any]] = FixSizeOrderedDict(
+            max_size=10000
+        )
+        self._ws_debug_unsub: Callable[[], None] | None = None
+
     @property
     def disable_stream(self) -> bool:
         """Check if RTSP is disabled."""
@@ -92,6 +105,15 @@ class ProtectData:
     def max_events(self) -> int:
         """Max number of events to load at once."""
         return self._entry.options.get(CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA)
+
+    @property
+    def ws_debug_data(self) -> dict[str, Any]:
+        """Debug data for Protect Websocket."""
+
+        return {
+            "start_time": self._ws_debug_start_dt.isoformat(),
+            "messages": self._ws_debug_messages,
+        }
 
     def get_by_types(
         self, device_types: Iterable[ModelType], ignore_unadopted: bool = True
@@ -112,6 +134,8 @@ class ProtectData:
             self._async_process_ws_message
         )
         await self.async_refresh()
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            self.async_enable_ws_debug()
 
     async def async_stop(self, *args: Any) -> None:
         """Stop processing data."""
@@ -214,6 +238,9 @@ class ProtectData:
 
     @callback
     def _async_process_ws_message(self, message: WSSubscriptionMessage) -> None:
+        if self._ws_debug_enabled:
+            self._async_ws_debug_handler(message)
+
         if message.new_obj is None:
             if isinstance(message.old_obj, ProtectAdoptableDeviceModel):
                 self._async_remove_device(message.old_obj)
@@ -228,8 +255,6 @@ class ProtectData:
 
         # trigger updates for camera that the event references
         elif isinstance(obj, Event):  # type: ignore[unreachable]
-            if _LOGGER.isEnabledFor(logging.DEBUG):
-                _LOGGER.debug("event WS msg: %s", obj.dict())
             if obj.type in SMART_EVENTS:
                 if obj.camera is not None:
                     if obj.end is None:
@@ -319,6 +344,40 @@ class ProtectData:
         _LOGGER.debug("Updating device: %s (%s)", device.name, device.mac)
         for update_callback in self._subscriptions[device.mac]:
             update_callback(device)
+
+    @callback
+    def _async_ws_debug_handler(self, message: WSSubscriptionMessage) -> None:
+        now = time.monotonic()
+        time_offset = now - self._ws_debug_start_time
+
+        data = {
+            "action": message.action,
+            "changed_data": message.changed_data,
+            "old_obj": message.old_obj.dict() if message.old_obj else None,
+        }
+        data = anonymize_data(data)
+        _WS_LOGGER.debug(data)
+
+    @callback
+    def async_enable_ws_debug(self) -> None:
+        """Enable debug logging for Protect Websocket."""
+
+        if self._ws_debug_enabled:
+            return
+
+        self.api.bootstrap.capture_ws_stats = True
+        self.api.bootstrap.clear_ws_stats()
+        self._ws_debug_enabled = True
+        self._ws_debug_start_time = time.monotonic()
+        self._ws_debug_start_dt = dt_util.now()
+        self._ws_debug_messages = FixSizeOrderedDict(max_size=10000)
+
+    @callback
+    def async_disable_ws_debug(self) -> None:
+        """Disable debug logging for Protect Websocket."""
+
+        self.api.bootstrap.capture_ws_stats = False
+        self._ws_debug_enabled = False
 
 
 @callback

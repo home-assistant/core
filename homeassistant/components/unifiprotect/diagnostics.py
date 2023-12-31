@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from pyunifiprotect.test_util.anonymize import anonymize_data
+from pyunifiprotect.utils import ws_stat_summmary
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -19,4 +20,8 @@ async def async_get_config_entry_diagnostics(
 
     data: ProtectData = hass.data[DOMAIN][config_entry.entry_id]
     bootstrap = cast(dict[str, Any], anonymize_data(data.api.bootstrap.unifi_dict()))
-    return {"bootstrap": bootstrap, "options": dict(config_entry.options)}
+    return {
+        "bootstrap": bootstrap,
+        "options": dict(config_entry.options),
+        "ws_stats": [s.__dict__ for s in data.api.bootstrap.ws_stats],
+    }
