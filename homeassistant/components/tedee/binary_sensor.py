@@ -23,7 +23,7 @@ from .entity import TedeeDescriptionEntity
 class TedeeBinarySensorEntityDescription(
     BinarySensorEntityDescription,
 ):
-    """Describes Tedee sensor entity."""
+    """Describes Tedee binary sensor entity."""
 
     is_on_fn: Callable[[TedeeLock], bool | None]
 
