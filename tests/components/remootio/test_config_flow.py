@@ -60,12 +60,12 @@ async def test_form_unsupported_device(hass: HomeAssistant) -> None:
             },
         )
 
-    _LOGGER.debug(f"init_result [{init_result}")
+    _LOGGER.debug("init_result [%s]", init_result)
     assert init_result
     assert init_result["type"] == RESULT_TYPE_FORM
     assert init_result["errors"] == {}
 
-    _LOGGER.debug(f"configure_result [{configure_result}")
+    _LOGGER.debug("configure_result [%s]", configure_result)
     assert configure_result
     assert configure_result["type"] == RESULT_TYPE_ABORT
     assert configure_result["reason"] == "unsupported_device"
@@ -96,12 +96,12 @@ async def test_form_invalid_user_input(hass: HomeAssistant) -> None:
             },
         )
 
-    _LOGGER.debug(f"init_result [{init_result}")
+    _LOGGER.debug("init_result [%s]", init_result)
     assert init_result
     assert init_result["type"] == RESULT_TYPE_FORM
     assert init_result["errors"] == {}
 
-    _LOGGER.debug(f"configure_result [{configure_result}")
+    _LOGGER.debug("configure_result [%s]", configure_result)
     assert configure_result
     assert configure_result["type"] == RESULT_TYPE_FORM
     assert configure_result["errors"] == {
@@ -134,12 +134,12 @@ async def test_form_incomplete_user_input(hass: HomeAssistant) -> None:
             },
         )
 
-    _LOGGER.debug(f"init_result [{init_result}")
+    _LOGGER.debug("init_result [%s]", init_result)
     assert init_result
     assert init_result["type"] == RESULT_TYPE_FORM
     assert init_result["errors"] == {}
 
-    _LOGGER.debug(f"configure_result [{configure_result}")
+    _LOGGER.debug("configure_result [%s]", configure_result)
     assert configure_result
     assert configure_result["type"] == RESULT_TYPE_FORM
     assert configure_result["errors"] == {
@@ -172,12 +172,12 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    _LOGGER.debug(f"init_result [{init_result}")
+    _LOGGER.debug("init_result [%s]", init_result)
     assert init_result
     assert init_result["type"] == RESULT_TYPE_FORM
     assert init_result["errors"] == {}
 
-    _LOGGER.debug(f"configure_result [{configure_result}")
+    _LOGGER.debug("configure_result [%s]", configure_result)
     assert configure_result
     assert configure_result["type"] == RESULT_TYPE_FORM
     assert configure_result["errors"] == {"base": "cannot_connect"}
@@ -208,12 +208,12 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             },
         )
 
-    _LOGGER.debug(f"init_result [{init_result}")
+    _LOGGER.debug("init_result [%s]", init_result)
     assert init_result
     assert init_result["type"] == RESULT_TYPE_FORM
     assert init_result["errors"] == {}
 
-    _LOGGER.debug(f"configure_result [{configure_result}")
+    _LOGGER.debug("configure_result [%s]", configure_result)
     assert configure_result
     assert configure_result["type"] == RESULT_TYPE_FORM
     assert configure_result["errors"] == {"base": "invalid_auth"}
@@ -257,12 +257,12 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
             },
         )
 
-    _LOGGER.debug(f"init_result [{init_result}")
+    _LOGGER.debug("init_result [%s]", init_result)
     assert init_result
     assert init_result["type"] == RESULT_TYPE_FORM
     assert init_result["errors"] == {}
 
-    _LOGGER.debug(f"configure_result [{configure_result}")
+    _LOGGER.debug("configure_result [%s]", configure_result)
     assert configure_result
     assert configure_result["type"] == RESULT_TYPE_ABORT
     assert configure_result["reason"] == "already_configured"
@@ -293,12 +293,12 @@ async def test_form(hass: HomeAssistant) -> None:
             },
         )
 
-    _LOGGER.debug(f"init_result [{init_result}")
+    _LOGGER.debug("init_result [%s]", init_result)
     assert init_result
     assert init_result["type"] == RESULT_TYPE_FORM
     assert init_result["errors"] == {}
 
-    _LOGGER.debug(f"configure_result [{configure_result}")
+    _LOGGER.debug("configure_result [%s]", configure_result)
     assert configure_result
     assert configure_result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert configure_result["data"] == {

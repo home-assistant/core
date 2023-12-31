@@ -1,7 +1,11 @@
 """Constants for the Remootio integration."""
+from homeassistant.const import CONF_TYPE
 
 # Domain of the integration
 DOMAIN = "remootio"
+
+# Event type of the integration
+EVENT_TYPE = f"{DOMAIN.lower()}_event"
 
 # Timeout used in methods of remootio.utils
 REMOOTIO_TIMEOUT = 60
@@ -21,6 +25,7 @@ CONF_DATA = "data"
 
 # Keys for event data fired by remootio.cover.RemootioCoverEventListener
 ATTR_SERIAL_NUMBER = CONF_SERIAL_NUMBER
+ATTR_TYPE = CONF_TYPE
 
 # Key for the dictionary entry which holds the instance of aioremootio.RemootioClient to connect to the Remootio device using the Remootio Websocket API
 REMOOTIO_CLIENT = "remootio_client"

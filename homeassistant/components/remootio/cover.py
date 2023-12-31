@@ -181,6 +181,7 @@ class RemootioCoverStateChangeListener(Listener[StateChange]):
             self._owner.unique_id,
             self._owner.state,
         )
+
         self._owner.async_write_ha_state()
 
 
@@ -200,7 +201,7 @@ class RemootioCoverEvent:
         device_serial_number: str | None,
     ) -> None:
         """Initialize an instance of this class."""
-        self._type = f"{DOMAIN.lower()}_{client_event_type.name.lower()}"
+        self._type = client_event_type.name.lower()
         self._entity_id = entity_id
         self._entity_name = entity_name
         self._device_serial_number = device_serial_number

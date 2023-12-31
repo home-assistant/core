@@ -11,11 +11,13 @@ from homeassistant.core import HomeAssistant, callback
 
 from .const import (
     ATTR_SERIAL_NUMBER,
+    ATTR_TYPE,
     CONF_API_AUTH_KEY,
     CONF_API_SECRET_KEY,
     CONF_SERIAL_NUMBER,
     DOMAIN,
     EVENT_HANDLER_CALLBACK,
+    EVENT_TYPE,
     REMOOTIO_CLIENT,
 )
 from .cover import RemootioCoverEvent
@@ -41,11 +43,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
         hass.bus.async_fire(
-            event.type,
+            EVENT_TYPE,
             {
                 ATTR_ENTITY_ID: event.entity_id,
                 ATTR_SERIAL_NUMBER: event.device_serial_number,
                 ATTR_NAME: event.entity_name,
+                ATTR_TYPE: event.type,
             },
         )
 
