@@ -94,7 +94,9 @@ class EntityComponent(Generic[_EntityT]):
         ] = {domain: self._async_init_entity_platform(domain, None)}
         self.async_add_entities = self._platforms[domain].async_add_entities
         self.add_entities = self._platforms[domain].add_entities
-        self._entities: dict[str, entity.Entity] = self._platforms[domain].entities
+        self._entities: dict[str, entity.Entity] = self._platforms[
+            domain
+        ].domain_entities
 
         hass.data.setdefault(DATA_INSTANCES, {})[domain] = self
 
