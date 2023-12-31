@@ -40,7 +40,11 @@ CONFIG_LOCATION = "location"
 CONFIG_LOCATION_LATITUDE = "latitude"
 CONFIG_LOCATION_LONGITUDE = "longitude"
 CONFIG_LOCATION_RADIUS = "radius"
-CONFIG_LOCATION_RADIUS_DEFAULT = 0.5  # in miles
+CONFIG_LOCATION_RADIUS_DEFAULT = DistanceConverter.convert(
+    0.5,
+    UnitOfLength.MILES,
+    UnitOfLength.METERS,
+)
 
 CONFIG_STATIONS = "stations"
 CONFIG_MNEMONIC = "mnemonic"
@@ -54,7 +58,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Construct the config flow."""
 
-        super().__init__()
         self._longitude = 0.0
         self._latitude = 0.0
         self._radius = 0.0
@@ -116,11 +119,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONFIG_LOCATION: {
                     CONFIG_LOCATION_LATITUDE: self.hass.config.latitude,
                     CONFIG_LOCATION_LONGITUDE: self.hass.config.longitude,
-                    CONFIG_LOCATION_RADIUS: DistanceConverter.convert(
-                        CONFIG_LOCATION_RADIUS_DEFAULT,
-                        UnitOfLength.MILES,
-                        UnitOfLength.METERS,
-                    ),
+                    CONFIG_LOCATION_RADIUS: CONFIG_LOCATION_RADIUS_DEFAULT,
                 }
             },
         )
@@ -173,12 +172,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         schema: vol.Schema = vol.Schema(
             {
-                vol.Required(CONFIG_STATIONS): SelectSelector(
+                vol.Required(CONFIG_STATIONS, default=None): SelectSelector(
                     SelectSelectorConfig(
                         options=options,
                         multiple=True,
                         mode=SelectSelectorMode.DROPDOWN,
-                    )
+                    ),
                 )
             }
         )

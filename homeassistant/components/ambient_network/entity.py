@@ -1,6 +1,8 @@
 """Base entity class for the Ambient Weather Network integration."""
 from __future__ import annotations
 
+from abc import abstractmethod
+
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -28,14 +30,15 @@ class AmbientNetworkEntity(CoordinatorEntity[AmbientNetworkDataUpdateCoordinator
         self.entity_description = description
         self.mnemonic = mnemonic
         self._device_id = mnemonic
-        self._attr_unique_id = f"{self._device_id}_{description.key}"
+        self._attr_unique_id = f"{mnemonic}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
+            identifiers={(DOMAIN, mnemonic)},
             manufacturer="Ambient Weather",
             name=self._device_id,
         )
         self._update_attrs()
 
+    @abstractmethod
     def _update_attrs(self) -> None:
         """Update state attributes."""
 
@@ -45,5 +48,5 @@ class AmbientNetworkEntity(CoordinatorEntity[AmbientNetworkDataUpdateCoordinator
     def _handle_coordinator_update(self) -> None:
         """Get the latest data and updates the state."""
 
-        self._update_attrs()  # pragma: no cover
-        super()._handle_coordinator_update()  # pragma: no cover
+        self._update_attrs()
+        super()._handle_coordinator_update()

@@ -9,9 +9,9 @@
           "longitude": "[%key:common::config_flow::data::longitude%]"
         }
       },
-      "station": {
+      "stations": {
         "title": "Station Selection",
-        "description": "Select a singular station for monitoring a specific physical location. Alternatively, opt for multiple stations to create a virtual station. The virtual station will calculate the average of weather data from the chosen stations, excluding those that are offline and any outlier data.",
+        "description": "Select a single station for precise information about a specific location. Alternatively, select multiple stations to create a virtual station that provides an average picture of the weather in a broader area. This virtual station will automatically exclude data from offline stations and any outliers to ensure accurate results.",
         "data": {
           "station": "Station"
         }
