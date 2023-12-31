@@ -81,7 +81,9 @@ class LaMarzoccoClient(LMCloud):
             await self._init_local_api(host)
 
             _LOGGER.debug("Init WebSocket in Background Task")
-            assert self._lm_local_api
+            if not self._lm_local_api:
+                raise RuntimeError("Local API not initialized")
+
             self.entry.async_create_background_task(
                 hass=self.hass,
                 target=self._lm_local_api.websocket_connect(
@@ -128,8 +130,10 @@ class LaMarzoccoClient(LMCloud):
         if self._lm_bluetooth is None:
             return
 
-        assert self.hass
-        assert self._lm_bluetooth.address
+        if not self._lm_bluetooth.address:
+            raise RuntimeError("Bluetooth address not set")
+        if not self.hass:
+            raise RuntimeError("HomeAssistant not set")
 
         ble_device = bluetooth.async_ble_device_from_address(
             self.hass, self._lm_bluetooth.address, connectable=True
