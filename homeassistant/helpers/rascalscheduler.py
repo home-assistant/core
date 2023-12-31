@@ -15,8 +15,10 @@ from homeassistant.const import (
     CONF_CONTINUE_ON_ERROR,
     DOMAIN_AUTOMATION,
     DOMAIN_PERSON,
+    DOMAIN_RASCALSCHEDULER,
     DOMAIN_SCRIPT,
     DOMAIN_ZONE,
+    RASC_SCHEDULED,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.util import slugify
@@ -26,16 +28,6 @@ from . import config_validation as cv
 _KT = TypeVar("_KT")
 _VT = TypeVar("_VT")
 
-
-DOMAIN = "rascalscheduler"
-CONFIG_ACTION_ID = "action_id"
-CONFIG_ENTITY_ID = "entity_id"
-CONFIG_ACTION_ENTITY = "action_entity"
-
-RASC_SCHEDULED = "scheduled"
-RASC_START = "start"
-RASC_COMPLETE = "complete"
-RASC_RESPONSE = "rasc_response"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +43,7 @@ def create_x_ready_queue(hass: HomeAssistant, entity_id: str) -> None:
 
     if full_name is not None:
         if domain not in domains:
-            scheduler = hass.data[DOMAIN]
+            scheduler = hass.data[DOMAIN_RASCALSCHEDULER]
             scheduler.ready_queues[entity_id] = QueueEntity(None)
             scheduler.active_routines[entity_id] = None
             scheduler.loops[entity_id] = scheduler.create_bg_loop()
@@ -62,11 +54,13 @@ def create_x_ready_queue(hass: HomeAssistant, entity_id: str) -> None:
 def delete_x_active_queue(hass: HomeAssistant, entity_id: str) -> None:
     """Delete x entity queue."""
     try:
-        scheduler = hass.data[DOMAIN]
+        scheduler = hass.data[DOMAIN_RASCALSCHEDULER]
 
-        del scheduler.active_routines[entity_id]
-        del scheduler.loops[entity_id]
         del scheduler.ready_queues[entity_id]
+        del scheduler.active_routines[entity_id]
+
+        scheduler.loops[entity_id].call_soon_threadsafe(scheduler.loops[entity_id].stop)
+        del scheduler.loops[entity_id]
 
         _LOGGER.info("Delete queue: %s", entity_id)
     except (KeyError, ValueError):

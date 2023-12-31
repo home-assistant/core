@@ -1199,9 +1199,18 @@ class EntityCategory(StrEnum):
 RASC_START = "start"
 RASC_COMPLETE = "complete"
 RASC_RESPONSE = "rasc_response"
+RASC_SCHEDULED = "scheduled"
 
 DOMAIN_AUTOMATION = "automation"
 DOMAIN_SCRIPT = "script"
 DOMAIN_PERSON = "person"
 DOMAIN_ZONE = "zone"
 DOMAIN_SENSOR = "sensor"
+DOMAIN_RASCALSCHEDULER = "rascalscheduler"
+
+NAME_SUN_NEXT_DAWN = "sun_next_dawn"
+NAME_SUN_NEXT_DUSK = "sun_next_dusk"
+NAME_SUN_NEXT_MIDNIGHT = "sun_next_midnight"
+NAME_SUN_NEXT_NOON = "sun_next_noon"
+NAME_SUN_NEXT_RISING = "sun_next_rising"
+NAME_SUN_NEXT_SETTING = "sun_next_setting"

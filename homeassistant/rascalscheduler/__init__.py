@@ -4,11 +4,24 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Sequence
 import json
+import logging
 import re
 import threading
 from typing import Any
 
 from homeassistant.components.script import BaseScriptEntity
+from homeassistant.const import (
+    CONF_ENTITY_ID,
+    CONF_PARALLEL,
+    CONF_SEQUENCE,
+    CONF_SERVICE,
+    CONF_TYPE,
+    DOMAIN_RASCALSCHEDULER,
+    DOMAIN_SCRIPT,
+    RASC_COMPLETE,
+    RASC_RESPONSE,
+    RASC_START,
+)
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.rascalscheduler import (
@@ -17,41 +30,29 @@ from homeassistant.helpers.rascalscheduler import (
     RoutineEntity,
 )
 
-from .const import (
-    DOMAIN,
-    LOGGER,
-    RASC_COMPLETE,
-    RASC_RESPONSE,
-    RASC_START,
-    SCRIPT_DOMAIN,
-)
+CONF_ROUTINE_ID = "routine_id"
+CONF_STEP = "step"
+CONF_HASS = "hass"
+CONF_ENTITY_REGISTRY = "entity_registry"
 
-CONFIG_ENTITY_ID = "entity_id"
-CONFIG_ROUTINE_ID = "routine_id"
-CONFIG_STEP = "step"
-CONFIG_HASS = "hass"
-CONFIG_ENTITY_REGISTRY = "entity_registry"
-
-PARALLEL_ITEM = "parallel"
-SEQUENCE_ITEM = "sequence"
-SERVICE_ITEM = "service"
-
-EVENT_TYPE = "type"
-EVENT_ENTITY_ID = "entity_id"
 
 TIMEOUT = 3000  # millisecond
+
+LOGGER = logging.getLogger(__package__)
 
 
 def setup_rascal_scheduler_entity(hass: HomeAssistant) -> None:
     """Set up RASC scheduler entity."""
     LOGGER.info("Setup rascal entity")
-    hass.data[DOMAIN] = RascalSchedulerEntity(hass)
-    hass.bus.async_listen(RASC_RESPONSE, hass.data[DOMAIN].event_listener)
+    hass.data[DOMAIN_RASCALSCHEDULER] = RascalSchedulerEntity(hass)
+    hass.bus.async_listen(
+        RASC_RESPONSE, hass.data[DOMAIN_RASCALSCHEDULER].event_listener
+    )
 
 
 def get_rascal_scheduler(hass: HomeAssistant) -> Any:
     """Get rascal scheduler."""
-    return hass.data[DOMAIN]
+    return hass.data[DOMAIN_RASCALSCHEDULER]
 
 
 def dag_operator(
@@ -66,25 +67,25 @@ def dag_operator(
     config: dict[str, Any] = {}
 
     # configuration for each node
-    config[CONFIG_STEP] = -1
-    config[CONFIG_ROUTINE_ID] = routine_id
-    config[CONFIG_HASS] = hass
+    config[CONF_STEP] = -1
+    config[CONF_ROUTINE_ID] = routine_id
+    config[CONF_HASS] = hass
 
     for _, script in enumerate(action_script):
         if (
-            PARALLEL_ITEM not in script
-            and SEQUENCE_ITEM not in script
-            and SEQUENCE_ITEM not in script
+            CONF_PARALLEL not in script
+            and CONF_SEQUENCE not in script
+            and CONF_SERVICE not in script
         ):
-            config[CONFIG_STEP] = config[CONFIG_STEP] + 1
-            action_id = config[CONFIG_ROUTINE_ID] + str(config[CONFIG_STEP])
+            config[CONF_STEP] = config[CONF_STEP] + 1
+            action_id = config[CONF_ROUTINE_ID] + str(config[CONF_STEP])
 
             entities[action_id] = ActionEntity(
                 hass=hass,
                 action=script,
                 action_id=action_id,
                 action_state=None,
-                routine_id=config[CONFIG_ROUTINE_ID],
+                routine_id=config[CONF_ROUTINE_ID],
             )
 
             for entity in next_parents:
@@ -114,41 +115,41 @@ def dfs(
 
     next_parents = []
     # print("script:", script)
-    if PARALLEL_ITEM in script:
+    if CONF_PARALLEL in script:
         for item in list(script.values())[0]:
             leaf_entities = dfs(item, config, parents, entities)
             for entity in leaf_entities:
                 next_parents.append(entity)
 
-    elif SEQUENCE_ITEM in script:
+    elif CONF_SEQUENCE in script:
         next_parents = parents
         for item in list(script.values())[0]:
             leaf_entities = dfs(item, config, next_parents, entities)
             next_parents = leaf_entities
 
-    elif SERVICE_ITEM in script:
-        script_component: EntityComponent[BaseScriptEntity] = config[CONFIG_HASS].data[
-            SCRIPT_DOMAIN
+    elif CONF_SERVICE in script:
+        script_component: EntityComponent[BaseScriptEntity] = config[CONF_HASS].data[
+            DOMAIN_SCRIPT
         ]
 
         if script_component is not None:
             baseScript = script_component.get_entity(list(script.values())[0])
             if baseScript is not None and baseScript.raw_config is not None:
                 next_parents = parents
-                for item in baseScript.raw_config[SEQUENCE_ITEM]:
+                for item in baseScript.raw_config[CONF_SEQUENCE]:
                     leaf_entities = dfs(item, config, next_parents, entities)
                     next_parents = leaf_entities
 
     else:
-        config[CONFIG_STEP] = config[CONFIG_STEP] + 1
-        action_id = config[CONFIG_ROUTINE_ID] + str(config[CONFIG_STEP])
+        config[CONF_STEP] = config[CONF_STEP] + 1
+        action_id = config[CONF_ROUTINE_ID] + str(config[CONF_STEP])
 
         entities[action_id] = ActionEntity(
-            hass=config[CONFIG_HASS],
+            hass=config[CONF_HASS],
             action=script,
             action_id=action_id,
             action_state=None,
-            routine_id=config[CONFIG_ROUTINE_ID],
+            routine_id=config[CONF_ROUTINE_ID],
         )
 
         for entity in parents:
@@ -279,11 +280,11 @@ class RascalSchedulerEntity(BaseActiveRoutines, BaseReadyQueues):
         for _, action_entity in routine_entity.actions.items():
             # convert number to entity id
             pattern = re.compile("^[^.]+[.][^.]+$")
-            if not pattern.match(action_entity.action[CONFIG_ENTITY_ID]):
-                registry = self.hass.data[CONFIG_ENTITY_REGISTRY]
-                action_entity.action[CONFIG_ENTITY_ID] = registry.async_get(
-                    action_entity.action[CONFIG_ENTITY_ID]
-                ).as_partial_dict[CONFIG_ENTITY_ID]
+            if not pattern.match(action_entity.action[CONF_ENTITY_ID]):
+                registry = self.hass.data[CONF_ENTITY_REGISTRY]
+                action_entity.action[CONF_ENTITY_ID] = registry.async_get(
+                    action_entity.action[CONF_ENTITY_ID]
+                ).as_partial_dict[CONF_ENTITY_ID]
 
             # if the entity doesn't have parents, set it to ready queues
             if not action_entity.parents:
@@ -297,7 +298,7 @@ class RascalSchedulerEntity(BaseActiveRoutines, BaseReadyQueues):
 
         """
 
-        entity_id = action_entity.action[CONFIG_ENTITY_ID]
+        entity_id = action_entity.action[CONF_ENTITY_ID]
 
         if self._active_routines[entity_id] is None:  # set as active routine
             self._set_active_routine(entity_id, action_entity)
@@ -353,8 +354,8 @@ class RascalSchedulerEntity(BaseActiveRoutines, BaseReadyQueues):
 
         """
 
-        eventType = event.data.get(EVENT_TYPE)
-        entityID = event.data.get(EVENT_ENTITY_ID)
+        eventType = event.data.get(CONF_TYPE)
+        entityID = event.data.get(CONF_ENTITY_ID)
         if entityID is not None:
             action_entity = self.get_active_routine(str(entityID))
 
@@ -372,7 +373,7 @@ class RascalSchedulerEntity(BaseActiveRoutines, BaseReadyQueues):
         if action_entity is None:
             return
 
-        entity_id = action_entity.action[CONFIG_ENTITY_ID]
+        entity_id = action_entity.action[CONF_ENTITY_ID]
 
         self._add_subroutines_to_ready_queues(action_entity)
 
