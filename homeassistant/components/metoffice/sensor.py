@@ -33,9 +33,12 @@ from .const import (
     DOMAIN,
     METOFFICE_COORDINATES,
     METOFFICE_DAILY_COORDINATOR,
+    METOFFICE_TWICE_DAILY_COORDINATOR,
     METOFFICE_HOURLY_COORDINATOR,
     METOFFICE_NAME,
+    MODE_3HOURLY,
     MODE_DAILY,
+    MODE_TWICE_DAILY,
     VISIBILITY_CLASSES,
     VISIBILITY_DISTANCE_CLASSES,
 )
@@ -151,7 +154,7 @@ async def async_setup_entry(
             MetOfficeCurrentSensor(
                 hass_data[METOFFICE_HOURLY_COORDINATOR],
                 hass_data,
-                True,
+                MODE_3HOURLY,
                 description,
             )
             for description in SENSOR_TYPES
@@ -160,7 +163,16 @@ async def async_setup_entry(
             MetOfficeCurrentSensor(
                 hass_data[METOFFICE_DAILY_COORDINATOR],
                 hass_data,
-                False,
+                MODE_DAILY,
+                description,
+            )
+            for description in SENSOR_TYPES
+        ]
+	+ [
+            MetOfficeCurrentSensor(
+                hass_data[METOFFICE_TWICE_DAILY_COORDINATOR],
+                hass_data,
+                MODE_TWICE_DAILY,
                 description,
             )
             for description in SENSOR_TYPES
@@ -181,25 +193,23 @@ class MetOfficeCurrentSensor(
         self,
         coordinator: DataUpdateCoordinator[MetOfficeData],
         hass_data: dict[str, Any],
-        use_3hourly: bool,
+        mode: str,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 
         self.entity_description = description
-        mode_label = "3-hourly" if use_3hourly else "daily"
-
         self._attr_device_info = get_device_info(
             coordinates=hass_data[METOFFICE_COORDINATES], name=hass_data[METOFFICE_NAME]
         )
-        self._attr_name = f"{description.name} {mode_label}"
+        self._attr_name = f"{description.name} {mode}"
         self._attr_unique_id = f"{description.key}_{hass_data[METOFFICE_COORDINATES]}"
-        if not use_3hourly:
-            self._attr_unique_id = f"{self._attr_unique_id}_{MODE_DAILY}"
-        self._attr_entity_registry_enabled_default = (
-            self.entity_description.entity_registry_enabled_default and use_3hourly
-        )
+        if mode != MODE_3HOURLY:
+            self._attr_unique_id = f"{self._attr_unique_id}_{mode}"
+            self._attr_entity_registry_enabled_default = False
+        else:
+            self._attr_entity_registry_enabled_default = self.entity_description.entity_registry_enabled_default
 
     @property
     def native_value(self) -> StateType:
