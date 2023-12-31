@@ -93,10 +93,10 @@ def tts_mutagen_mock_fixture():
     yield from tts_mutagen_mock_fixture_helper()
 
 
-@pytest.fixture(scope="session", autouse=True)
-def prevent_ffmpeg_subprocess() -> Generator[None, None, None]:
-    """Prevent ffmpeg from creating a subprocess."""
-    with patch(
-        "homeassistant.components.ffmpeg.FFVersion.get_version", return_value="6.0"
-    ):
-        yield
+# @pytest.fixture(scope="session", autouse=True)
+# def prevent_ffmpeg_subprocess() -> Generator[None, None, None]:
+#     """Prevent ffmpeg from creating a subprocess."""
+#     with patch(
+#         "homeassistant.components.ffmpeg.FFVersion.get_version", return_value="6.0"
+#     ):
+#         yield

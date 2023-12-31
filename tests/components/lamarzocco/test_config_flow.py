@@ -202,7 +202,7 @@ async def test_bluetooth_discovery(
         USER_INPUT,
     )
     assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "host_selection"
+    assert result2["step_id"] == "machine_selection"
 
     assert len(mock_lamarzocco.get_all_machines.mock_calls) == 1
     result3 = await hass.config_entries.flow.async_configure(
@@ -257,7 +257,7 @@ async def test_bluetooth_discovery_errors(
         USER_INPUT,
     )
     assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "host_selection"
+    assert result2["step_id"] == "machine_selection"
     assert len(mock_lamarzocco.get_all_machines.mock_calls) == 2
 
     mock_lamarzocco.check_local_connection.return_value = False

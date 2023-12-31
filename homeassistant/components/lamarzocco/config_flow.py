@@ -6,7 +6,7 @@ from typing import Any
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -31,28 +31,6 @@ from .lm_client import LaMarzoccoClient
 _LOGGER = logging.getLogger(__name__)
 
 
-async def get_machines(
-    hass: core.HomeAssistant, data: dict[str, Any]
-) -> list[tuple[str, str]]:
-    """Validate the user input allows us to connect."""
-
-    try:
-        lm = LaMarzoccoClient(hass=hass)
-        machines = await lm.get_all_machines(data)
-
-    except AuthFail:
-        _LOGGER.error("Server rejected login credentials")
-        raise InvalidAuth
-    except RequestNotSuccessful:
-        _LOGGER.error("Failed to connect to server")
-        raise CannotConnect
-
-    if not machines:
-        raise NoMachines
-
-    return machines
-
-
 class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for La Marzocco."""
 
@@ -74,14 +52,18 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 **self._discovered,
             }
 
+            lm = LaMarzoccoClient(hass=self.hass)
             try:
-                self._machines = await get_machines(self.hass, data)
-            except InvalidAuth:
+                self._machines = await lm.get_all_machines(data)
+            except AuthFail:
+                _LOGGER.debug("Server rejected login credentials")
                 errors["base"] = "invalid_auth"
-            except CannotConnect:
+            except RequestNotSuccessful:
+                _LOGGER.debug("Failed to connect to server")
                 errors["base"] = "cannot_connect"
-            except NoMachines:
-                errors["base"] = "no_machines"
+            else:
+                if not self._machines:
+                    errors["base"] = "no_machines"
 
             if not errors:
                 if self.reauth_entry:
@@ -98,7 +80,12 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         errors["base"] = "machine_not_found"
                     else:
                         self._config = data
-                        return await self.async_step_host_selection()
+                        return self.async_show_form(
+                            step_id="machine_selection",
+                            data_schema=vol.Schema(
+                                {vol.Optional(CONF_HOST): cv.string}
+                            ),
+                        )
 
             if not errors:
                 self._config = data
@@ -131,34 +118,18 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors[CONF_HOST] = "cannot_connect"
         return errors
 
-    async def async_step_host_selection(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Machine was discovered, only enter host."""
-        errors: dict[str, str] = {}
-        serial_number = self._discovered[CONF_MACHINE]
-        if user_input:
-            errors = await self.async_validate_host(serial_number, user_input)
-            if not errors:
-                return self.async_create_entry(
-                    title=serial_number,
-                    data=self._config | user_input,
-                )
-        return self.async_show_form(
-            step_id="host_selection",
-            data_schema=vol.Schema({vol.Optional(CONF_HOST): cv.string}),
-            errors=errors,
-        )
-
     async def async_step_machine_selection(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Let user select machine to connect to."""
         errors: dict[str, str] = {}
         if user_input:
-            serial_number = user_input[CONF_MACHINE]
-            await self.async_set_unique_id(serial_number)
-            self._abort_if_unique_id_configured()
+            if not self._discovered:
+                serial_number = user_input[CONF_MACHINE]
+                await self.async_set_unique_id(serial_number)
+                self._abort_if_unique_id_configured()
+            else:
+                serial_number = self._discovered[CONF_MACHINE]
 
             errors = await self.async_validate_host(serial_number, user_input)
 
@@ -234,15 +205,3 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
         )
-
-
-class NoMachines(exceptions.HomeAssistantError):
-    """Error to indicate we couldn't find machines."""
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""
