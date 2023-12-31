@@ -16,7 +16,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Nextcloud update entity."""
     coordinator: NextcloudDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    major = coordinator.data.get("system_version","0").split(".")[0]
+    major = coordinator.data.get("system_version", "0").split(".")[0]
     if int(major) < 28:
         return
     async_add_entities(
@@ -40,8 +40,7 @@ class NextcloudUpdateSensor(NextcloudEntity, UpdateEntity):
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         return self.coordinator.data.get(
-            "system_update_available_version",
-            self.installed_version
+            "system_update_available_version", self.installed_version
         )
 
     @property
