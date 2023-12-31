@@ -460,9 +460,14 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
             self._attr_is_on != previous_is_on
             or self._attr_available != previous_available
         ):
-            _LOGGER.debug("Updating state [%s (%s)] %s (%s) -> %s (%s)", device.name, device.mac,
-                previous_is_on, previous_available,
-                self._attr_is_on, self._attr_available
+            _LOGGER.debug(
+                "Updating state [%s (%s)] %s (%s) -> %s (%s)",
+                device.name,
+                device.mac,
+                previous_is_on,
+                previous_available,
+                self._attr_is_on,
+                self._attr_available,
             )
             self.async_write_ha_state()
 

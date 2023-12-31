@@ -228,7 +228,6 @@ class ProtectData:
 
         # trigger updates for camera that the event references
         elif isinstance(obj, Event):  # type: ignore[unreachable]
-            _LOGGER.debug("event WS msg: %s", obj.dict())
             if obj.type in SMART_EVENTS:
                 if obj.camera is not None:
                     if obj.end is None:

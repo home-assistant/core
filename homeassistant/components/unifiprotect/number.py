@@ -288,8 +288,13 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
             self._attr_native_value != previous_value
             or self._attr_available != previous_available
         ):
-            _LOGGER.debug("Updating state [%s (%s)] %s (%s) -> %s (%s)", device.name, device.mac,
-                previous_value, previous_available,
-                self._attr_native_value, self._attr_available
+            _LOGGER.debug(
+                "Updating state [%s (%s)] %s (%s) -> %s (%s)",
+                device.name,
+                device.mac,
+                previous_value,
+                previous_available,
+                self._attr_native_value,
+                self._attr_available,
             )
             self.async_write_ha_state()
