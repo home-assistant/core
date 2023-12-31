@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 from typing import Any
 
 from pyunifiprotect.data import (
@@ -27,6 +28,7 @@ from .entity import ProtectDeviceEntity, ProtectNVREntity, async_all_device_enti
 from .models import PermRequired, ProtectSetableKeysMixin, T
 from .utils import async_dispatch_id as _ufpd
 
+_LOGGER = logging.getLogger(__name__)
 ATTR_PREV_MIC = "prev_mic_level"
 ATTR_PREV_RECORD = "prev_record_mode"
 
@@ -458,6 +460,15 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
             self._attr_is_on != previous_is_on
             or self._attr_available != previous_available
         ):
+            _LOGGER.debug(
+                "Updating state [%s (%s)] %s (%s) -> %s (%s)",
+                device.name,
+                device.mac,
+                previous_is_on,
+                previous_available,
+                self._attr_is_on,
+                self._attr_available,
+            )
             self.async_write_ha_state()
 
 
