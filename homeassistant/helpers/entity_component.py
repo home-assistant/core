@@ -94,6 +94,7 @@ class EntityComponent(Generic[_EntityT]):
         ] = {domain: self._async_init_entity_platform(domain, None)}
         self.async_add_entities = self._platforms[domain].async_add_entities
         self.add_entities = self._platforms[domain].add_entities
+        self._entities: dict[str, entity.Entity] = self._platforms[domain].entities
 
         hass.data.setdefault(DATA_INSTANCES, {})[domain] = self
 
@@ -105,10 +106,7 @@ class EntityComponent(Generic[_EntityT]):
         callers that iterate over this asynchronously should make a copy
         using list() before iterating.
         """
-        return chain.from_iterable(
-            platform.entities.values()  # type: ignore[misc]
-            for platform in self._platforms.values()
-        )
+        return self._entities.values()  # type: ignore[return-value]
 
     def get_entity(self, entity_id: str) -> _EntityT | None:
         """Get an entity."""
@@ -237,7 +235,7 @@ class EntityComponent(Generic[_EntityT]):
             """Handle the service."""
 
             result = await service.entity_service_call(
-                self.hass, self._platforms.values(), func, call, required_features
+                self.hass, self._entities, func, call, required_features
             )
 
             if result:
@@ -270,7 +268,7 @@ class EntityComponent(Generic[_EntityT]):
         ) -> EntityServiceResponse | None:
             """Handle the service."""
             return await service.entity_service_call(
-                self.hass, self._platforms.values(), func, call, required_features
+                self.hass, self._entities, func, call, required_features
             )
 
         self.hass.services.async_register(
