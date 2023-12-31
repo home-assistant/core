@@ -167,7 +167,7 @@ aio-georss-gdacs==0.8
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.3.7
+aioairzone-cloud==0.3.8
 
 # homeassistant.components.airzone
 aioairzone==0.7.2
@@ -448,7 +448,7 @@ base36==0.1.1
 beautifulsoup4==4.12.2
 
 # homeassistant.components.zha
-bellows==0.37.4
+bellows==0.37.6
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.14.6
@@ -1265,7 +1265,7 @@ pyasuswrt==0.1.21
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==8.0.1
+pyatmo==8.0.2
 
 # homeassistant.components.apple_tv
 pyatv==0.14.3
@@ -1727,7 +1727,7 @@ pytrydan==0.4.0
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.22.3
+pyunifiprotect==4.22.4
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2175,7 +2175,7 @@ zeversolar==0.3.1
 zha-quirks==0.0.109
 
 # homeassistant.components.zha
-zigpy-deconz==0.22.3
+zigpy-deconz==0.22.4
 
 # homeassistant.components.zha
 zigpy-xbee==0.20.1
@@ -2187,7 +2187,7 @@ zigpy-zigate==0.12.0
 zigpy-znp==0.12.1
 
 # homeassistant.components.zha
-zigpy==0.60.2
+zigpy==0.60.3
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.55.2
