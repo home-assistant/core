@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Callable, Generator, Iterable
 from datetime import timedelta
 import logging
-import time
 from typing import Any, cast
 
 from pyunifiprotect import ProtectApiClient
@@ -14,7 +13,6 @@ from pyunifiprotect.data import (
     Camera,
     Event,
     EventType,
-    FixSizeOrderedDict,
     Liveview,
     ModelType,
     ProtectAdoptableDeviceModel,
@@ -28,7 +26,6 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_DISABLE_RTSP,
@@ -89,12 +86,6 @@ class ProtectData:
         self.api = protect
 
         self._ws_debug_enabled = False
-        self._ws_debug_start_time = time.monotonic()
-        self._ws_debug_start_dt = dt_util.now()
-        self._ws_debug_messages: dict[str, dict[str, Any]] = FixSizeOrderedDict(
-            max_size=10000
-        )
-        self._ws_debug_unsub: Callable[[], None] | None = None
 
     @property
     def disable_stream(self) -> bool:
@@ -105,15 +96,6 @@ class ProtectData:
     def max_events(self) -> int:
         """Max number of events to load at once."""
         return self._entry.options.get(CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA)
-
-    @property
-    def ws_debug_data(self) -> dict[str, Any]:
-        """Debug data for Protect Websocket."""
-
-        return {
-            "start_time": self._ws_debug_start_dt.isoformat(),
-            "messages": self._ws_debug_messages,
-        }
 
     def get_by_types(
         self, device_types: Iterable[ModelType], ignore_unadopted: bool = True
@@ -347,9 +329,6 @@ class ProtectData:
 
     @callback
     def _async_ws_debug_handler(self, message: WSSubscriptionMessage) -> None:
-        now = time.monotonic()
-        time_offset = now - self._ws_debug_start_time
-
         data = {
             "action": message.action,
             "changed_data": message.changed_data,
@@ -368,9 +347,6 @@ class ProtectData:
         self.api.bootstrap.capture_ws_stats = True
         self.api.bootstrap.clear_ws_stats()
         self._ws_debug_enabled = True
-        self._ws_debug_start_time = time.monotonic()
-        self._ws_debug_start_dt = dt_util.now()
-        self._ws_debug_messages = FixSizeOrderedDict(max_size=10000)
 
     @callback
     def async_disable_ws_debug(self) -> None:
