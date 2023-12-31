@@ -41,7 +41,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from .const import CONF_PROCESS, DOMAIN, NETWORK_TYPES
+from .const import CONF_PROCESS, DOMAIN
 from .coordinator import (
     MonitorCoordinator,
     SystemMonitorBootTimeCoordinator,
@@ -417,7 +417,7 @@ async def async_setup_platform(
     )
 
 
-async def async_setup_entry(
+async def async_setup_entry(  # noqa: C901
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up System Montor sensors based on a config entry."""
@@ -427,6 +427,45 @@ async def async_setup_entry(
     disk_arguments = await hass.async_add_executor_job(get_all_disk_mounts)
     network_arguments = await hass.async_add_executor_job(get_all_network_interfaces)
     cpu_temperature = await hass.async_add_executor_job(read_cpu_temperature)
+
+    disk_coordinators: dict[str, SystemMonitorDiskCoordinator] = {}
+    swap_coordinator = SystemMonitorSwapCoordinator(hass, "", "")
+    memory_coordinator = SystemMonitorMemoryCoordinator(hass, "", "")
+    net_io_coordinators: dict[tuple[str, str], SystemMonitorNetIOCoordinator] = {}
+    net_throughput_coordinators: dict[
+        tuple[str, str], SystemMonitorNetThroughputCoordinator
+    ] = {}
+    net_addr_coordinators: dict[tuple[str, str], SystemMonitorNetAddrCoordinator] = {}
+    system_load_coordinator = SystemMonitorLoadCoordinator(hass, "", "")
+    processor_coordinator = SystemMonitorProcessorCoordinator(hass, "", "")
+    boot_time_coordinator = SystemMonitorBootTimeCoordinator(hass, "", "")
+    process_coordinators: dict[str, SystemMonitorProcessCoordinator] = {}
+    cpu_temp_coordinator = SystemMonitorCPUtempCoordinator(hass, "", "")
+
+    for argument in disk_arguments:
+        disk_coordinators[argument] = SystemMonitorDiskCoordinator(hass, "", argument)
+    for _type, _ in SENSOR_TYPES.items():
+        if _type.startswith("network_") or _type.startswith("packets_"):
+            for argument in network_arguments:
+                net_io_coordinators[(_type, argument)] = SystemMonitorNetIOCoordinator(
+                    hass, _type, argument
+                )
+        if _type.startswith("throughput_"):
+            for argument in network_arguments:
+                net_throughput_coordinators[
+                    (_type, argument)
+                ] = SystemMonitorNetThroughputCoordinator(hass, _type, argument)
+        if _type.startswith("ipv"):
+            for argument in network_arguments:
+                net_addr_coordinators[
+                    (_type, argument)
+                ] = SystemMonitorNetAddrCoordinator(hass, _type, argument)
+        if _type == "process":
+            _entry: dict[str, list] = entry.options.get(SENSOR_DOMAIN, {})
+            for argument in _entry.get(CONF_PROCESS, []):
+                process_coordinators[argument] = SystemMonitorProcessCoordinator(
+                    hass, "", argument
+                )
 
     _LOGGER.debug("Setup from options %s", entry.options)
 
@@ -439,7 +478,7 @@ async def async_setup_entry(
                 loaded_resources.add(slugify(f"{_type}_{argument}"))
                 entities.append(
                     SystemMonitorSensor(
-                        hass,
+                        disk_coordinators[argument],
                         sensor_description,
                         entry.entry_id,
                         argument,
@@ -448,7 +487,7 @@ async def async_setup_entry(
                 )
             continue
 
-        if _type in NETWORK_TYPES:
+        if _type.startswith("network_") or _type.startswith("packets_"):
             for argument in network_arguments:
                 is_enabled = check_legacy_resource(
                     f"{_type}_{argument}", legacy_resources
@@ -456,7 +495,41 @@ async def async_setup_entry(
                 loaded_resources.add(slugify(f"{_type}_{argument}"))
                 entities.append(
                     SystemMonitorSensor(
-                        hass,
+                        net_io_coordinators[(_type, argument)],
+                        sensor_description,
+                        entry.entry_id,
+                        argument,
+                        is_enabled,
+                    )
+                )
+            continue
+
+        if _type.startswith("throughput_"):
+            for argument in network_arguments:
+                is_enabled = check_legacy_resource(
+                    f"{_type}_{argument}", legacy_resources
+                )
+                loaded_resources.add(f"{_type}_{argument}")
+                entities.append(
+                    SystemMonitorSensor(
+                        net_throughput_coordinators[(_type, argument)],
+                        sensor_description,
+                        entry.entry_id,
+                        argument,
+                        is_enabled,
+                    )
+                )
+            continue
+
+        if _type.startswith("ipv"):
+            for argument in network_arguments:
+                is_enabled = check_legacy_resource(
+                    f"{_type}_{argument}", legacy_resources
+                )
+                loaded_resources.add(f"{_type}_{argument}")
+                entities.append(
+                    SystemMonitorSensor(
+                        net_addr_coordinators[(_type, argument)],
                         sensor_description,
                         entry.entry_id,
                         argument,
@@ -472,12 +545,12 @@ async def async_setup_entry(
             continue
 
         if _type == "process":
-            _entry: dict[str, list] = entry.options.get(SENSOR_DOMAIN, {})
+            _entry = entry.options.get(SENSOR_DOMAIN, {})
             for argument in _entry.get(CONF_PROCESS, []):
                 loaded_resources.add(slugify(f"{_type}_{argument}"))
                 entities.append(
                     SystemMonitorSensor(
-                        hass,
+                        process_coordinators[argument],
                         sensor_description,
                         entry.entry_id,
                         argument,
@@ -486,17 +559,78 @@ async def async_setup_entry(
                 )
             continue
 
-        is_enabled = check_legacy_resource(f"{_type}_", legacy_resources)
-        loaded_resources.add(f"{_type}_")
-        entities.append(
-            SystemMonitorSensor(
-                hass,
-                sensor_description,
-                entry.entry_id,
-                "",
-                is_enabled,
+        if _type.startswith("swap_"):
+            is_enabled = check_legacy_resource(f"{_type}_", legacy_resources)
+            loaded_resources.add(f"{_type}_")
+            entities.append(
+                SystemMonitorSensor(
+                    swap_coordinator,
+                    sensor_description,
+                    entry.entry_id,
+                    "",
+                    is_enabled,
+                )
             )
-        )
+        if _type.startswith("memory_"):
+            is_enabled = check_legacy_resource(f"{_type}_", legacy_resources)
+            loaded_resources.add(f"{_type}_")
+            entities.append(
+                SystemMonitorSensor(
+                    memory_coordinator,
+                    sensor_description,
+                    entry.entry_id,
+                    "",
+                    is_enabled,
+                )
+            )
+        if _type.startswith("load_"):
+            is_enabled = check_legacy_resource(f"{_type}_", legacy_resources)
+            loaded_resources.add(f"{_type}_")
+            entities.append(
+                SystemMonitorSensor(
+                    system_load_coordinator,
+                    sensor_description,
+                    entry.entry_id,
+                    "",
+                    is_enabled,
+                )
+            )
+        if _type == "processor_use":
+            is_enabled = check_legacy_resource(f"{_type}_", legacy_resources)
+            loaded_resources.add(f"{_type}_")
+            entities.append(
+                SystemMonitorSensor(
+                    processor_coordinator,
+                    sensor_description,
+                    entry.entry_id,
+                    "",
+                    is_enabled,
+                )
+            )
+        if _type == "processor_temperature":
+            is_enabled = check_legacy_resource(f"{_type}_", legacy_resources)
+            loaded_resources.add(f"{_type}_")
+            entities.append(
+                SystemMonitorSensor(
+                    cpu_temp_coordinator,
+                    sensor_description,
+                    entry.entry_id,
+                    "",
+                    is_enabled,
+                )
+            )
+        if _type == "last_boot":
+            is_enabled = check_legacy_resource(f"{_type}_", legacy_resources)
+            loaded_resources.add(f"{_type}_")
+            entities.append(
+                SystemMonitorSensor(
+                    boot_time_coordinator,
+                    sensor_description,
+                    entry.entry_id,
+                    "",
+                    is_enabled,
+                )
+            )
 
     # Ensure legacy imported disk_* resources are loaded if they are not part
     # of mount points automatically discovered
@@ -515,7 +649,7 @@ async def async_setup_entry(
                 _LOGGER.debug("Loading legacy %s with argument %s", _type, argument)
                 entities.append(
                     SystemMonitorSensor(
-                        hass,
+                        disk_coordinators[argument],
                         SENSOR_TYPES[_type],
                         entry.entry_id,
                         argument,
@@ -535,16 +669,13 @@ class SystemMonitorSensor(CoordinatorEntity[MonitorCoordinator[_dataT]], SensorE
 
     def __init__(
         self,
-        hass: HomeAssistant,
+        coordinator: MonitorCoordinator,
         sensor_description: SysMonitorSensorEntityDescription,
         entry_id: str,
         argument: str = "",
         legacy_enabled: bool = False,
     ) -> None:
         """Initialize the sensor."""
-        coordinator: MonitorCoordinator = sensor_description.coordinator(
-            hass, sensor_description.key, argument
-        )
         super().__init__(coordinator)
         self.entity_description = sensor_description
         if self.entity_description.placeholder:
