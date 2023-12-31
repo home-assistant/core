@@ -258,6 +258,19 @@ class _BaseVacuum(Entity, cached_properties=BASE_CACHED_PROPERTIES_WITH_ATTR_):
         """Flag vacuum cleaner features that are supported."""
         return self._attr_supported_features
 
+    @property
+    def supported_features_compat(self) -> VacuumEntityFeature:
+        """Return the supported features as VacuumEntityFeature.
+
+        Remove this compatibility shim in 2025.1 or later.
+        """
+        features = self.supported_features
+        if type(features) is int:  # noqa: E721
+            new_features = VacuumEntityFeature(features)
+            self._report_deprecated_supported_features_values(new_features)
+            return new_features
+        return features
+
     @cached_property
     def battery_level(self) -> int | None:
         """Return the battery level of the vacuum cleaner."""
@@ -281,7 +294,7 @@ class _BaseVacuum(Entity, cached_properties=BASE_CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def capability_attributes(self) -> Mapping[str, Any] | None:
         """Return capability attributes."""
-        if VacuumEntityFeature.FAN_SPEED in self.supported_features:
+        if VacuumEntityFeature.FAN_SPEED in self.supported_features_compat:
             return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
         return None
 
@@ -289,7 +302,7 @@ class _BaseVacuum(Entity, cached_properties=BASE_CACHED_PROPERTIES_WITH_ATTR_):
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the vacuum cleaner."""
         data: dict[str, Any] = {}
-        supported_features = self.supported_features
+        supported_features = self.supported_features_compat
 
         if VacuumEntityFeature.BATTERY in supported_features:
             data[ATTR_BATTERY_LEVEL] = self.battery_level
@@ -471,7 +484,7 @@ class VacuumEntity(
         """Return the state attributes of the vacuum cleaner."""
         data = super().state_attributes
 
-        if VacuumEntityFeature.STATUS in self.supported_features:
+        if VacuumEntityFeature.STATUS in self.supported_features_compat:
             data[ATTR_STATUS] = self.status
 
         return data

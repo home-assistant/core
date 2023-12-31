@@ -101,7 +101,7 @@ QUERY_STATISTICS_SHORT_TERM = (
     StatisticsShortTerm.sum,
 )
 
-QUERY_STATISTICS_SUMMARY_MEAN = (
+QUERY_STATISTICS_SUMMARY_MEAN = (  # type: ignore[var-annotated]
     StatisticsShortTerm.metadata_id,
     func.avg(StatisticsShortTerm.mean),
     func.min(StatisticsShortTerm.min),
@@ -115,7 +115,7 @@ QUERY_STATISTICS_SUMMARY_SUM = (
     StatisticsShortTerm.state,
     StatisticsShortTerm.sum,
     func.row_number()
-    .over(  # type: ignore[no-untyped-call]
+    .over(
         partition_by=StatisticsShortTerm.metadata_id,
         order_by=StatisticsShortTerm.start_ts.desc(),
     )

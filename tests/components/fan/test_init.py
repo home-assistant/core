@@ -8,6 +8,7 @@ from homeassistant.components.fan import (
     DOMAIN,
     SERVICE_SET_PRESET_MODE,
     FanEntity,
+    FanEntityFeature,
     NotValidPresetModeError,
 )
 from homeassistant.core import HomeAssistant
@@ -156,3 +157,23 @@ def test_deprecated_constants(
 ) -> None:
     """Test deprecated constants."""
     import_and_test_deprecated_constant_enum(caplog, fan, enum, "SUPPORT_", "2025.1")
+
+
+def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated supported features ints."""
+
+    class MockFan(FanEntity):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return 1
+
+    entity = MockFan()
+    assert entity.supported_features_compat is FanEntityFeature(1)
+    assert "MockFan" in caplog.text
+    assert "is using deprecated supported features values" in caplog.text
+    assert "Instead it should use" in caplog.text
+    assert "FanEntityFeature.SET_SPEED" in caplog.text
+    caplog.clear()
+    assert entity.supported_features_compat is FanEntityFeature(1)
+    assert "is using deprecated supported features values" not in caplog.text
