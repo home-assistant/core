@@ -75,7 +75,6 @@ SENSORS: tuple[TechnoVESensorEntityDescription, ...] = (
     ),
     TechnoVESensorEntityDescription(
         key="current",
-        translation_key="current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,

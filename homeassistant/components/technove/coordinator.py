@@ -24,17 +24,16 @@ class TechnoVEDataUpdateCoordinator(DataUpdateCoordinator[TechnoVEStation]):
         entry: ConfigEntry,
     ) -> None:
         """Initialize global TechnoVE data updater."""
-        self.technove = TechnoVE(
-            entry.data[CONF_IP_ADDRESS], session=async_get_clientsession(hass)
-        )
-        self.unsub: CALLBACK_TYPE | None = None
-
         super().__init__(
             hass,
             LOGGER,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
+        self.technove = TechnoVE(
+            entry.data[CONF_IP_ADDRESS], session=async_get_clientsession(hass)
+        )
+        self.unsub: CALLBACK_TYPE | None = None
 
     async def _async_update_data(self) -> TechnoVEStation:
         """Fetch data from TechnoVE."""

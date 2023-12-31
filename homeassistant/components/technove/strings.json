@@ -27,38 +27,38 @@
   "entity": {
     "sensor": {
       "voltage_in": {
-        "name": "Input Voltage"
+        "name": "Input voltage"
       },
       "voltage_out": {
-        "name": "Output Voltage"
+        "name": "Output voltage"
       },
       "max_current": {
-        "name": "Max Current"
+        "name": "Max current"
       },
       "max_station_current": {
-        "name": "Max Station Current"
+        "name": "Max station current"
       },
       "current": {
         "name": "Current"
       },
       "energy_total": {
-        "name": "Total Energy Usage"
+        "name": "Total energy usage"
       },
       "energy_session": {
-        "name": "Last Session Energy Usage"
+        "name": "Last session energy usage"
       },
       "rssi": {
-        "name": "Wi-Fi Signal Strength"
+        "name": "Wi-Fi signal strength"
       },
       "ssid": {
-        "name": "Wi-Fi Network Name"
+        "name": "Wi-Fi network name"
       },
       "status": {
         "name": "Status",
         "state": {
           "65": "Unplugged",
-          "66": "Plugged, Waiting",
-          "67": "Plugged, Charging"
+          "66": "Plugged, waiting",
+          "67": "Plugged, charging"
         }
       }
     }
