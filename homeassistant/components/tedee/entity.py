@@ -29,7 +29,7 @@ class TedeeEntity(CoordinatorEntity[TedeeApiCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(lock.lock_id))},
             name=lock.lock_name,
-            manufacturer="tedee",
+            manufacturer="Tedee",
             model=lock.lock_type,
         )
 
