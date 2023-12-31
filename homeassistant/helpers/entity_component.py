@@ -93,11 +93,9 @@ class EntityComponent(Generic[_EntityT]):
         self._platforms: dict[
             str | tuple[str, timedelta | None, str | None], EntityPlatform
         ] = {domain: domain_platform}
-
         self.async_add_entities = domain_platform.async_add_entities
         self.add_entities = domain_platform.add_entities
         self._entities: dict[str, entity.Entity] = domain_platform.domain_entities
-
         hass.data.setdefault(DATA_INSTANCES, {})[domain] = self
 
     @property
