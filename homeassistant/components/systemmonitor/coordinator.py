@@ -190,7 +190,7 @@ class SystemMonitorProcessCoordinator(MonitorCoordinator[bool]):
         """Fetch data."""
         for proc in psutil.process_iter():
             try:
-                if self._argument == proc.name():
+                if self._argument.lower() == proc.name().lower():
                     return True
             except psutil.NoSuchProcess as err:
                 _LOGGER.warning(
