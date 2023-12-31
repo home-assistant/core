@@ -1,9 +1,10 @@
 """Test the Ambient Weather Network config flow."""
 
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aioambient import OpenAPI
+from geopy import Location, Nominatim
 import pytest
 
 from homeassistant.components.ambient_network.const import DOMAIN
@@ -20,6 +21,7 @@ async def test_happy_path(
     open_api: OpenAPI,
     devices_by_location: list[dict[str, Any]],
     config_entry: ConfigEntry,
+    geopy: Nominatim,
 ) -> None:
     """Test the happy path."""
 
@@ -44,27 +46,39 @@ async def test_happy_path(
     assert user_result["step_id"] == "stations"
     assert user_result["errors"] == {}
 
-    stations_result = await hass.config_entries.flow.async_configure(
-        user_result["flow_id"],
-        {
-            "stations": [
-                "AA:AA:AA:AA:AA:AA,SA,Station A1",
-                "BB:BB:BB:BB:BB:BB,SB,Station B2",
-            ]
-        },
-    )
+    with patch(
+        "homeassistant.components.ambient_network.config_flow.Nominatim",
+        return_value=geopy,
+    ), patch.object(
+        geopy,
+        "reverse",
+        Mock(
+            return_value=Location(
+                address="", point="0,0", raw={"address": {"city": "My City"}}
+            )
+        ),
+    ):
+        stations_result = await hass.config_entries.flow.async_configure(
+            user_result["flow_id"],
+            {
+                "stations": [
+                    "AA:AA:AA:AA:AA:AA,Station A1",
+                    "BB:BB:BB:BB:BB:BB,Station B2",
+                ]
+            },
+        )
 
     assert stations_result["type"] == FlowResultType.FORM
-    assert stations_result["step_id"] == "mnemonic"
+    assert stations_result["step_id"] == "station_name"
     assert stations_result["errors"] == {}
 
-    mnemonic_result = await hass.config_entries.flow.async_configure(
-        stations_result["flow_id"], {"mnemonic": "virtual_station"}
+    station_name_result = await hass.config_entries.flow.async_configure(
+        stations_result["flow_id"], {"station_name": "virtual_station"}
     )
 
-    assert mnemonic_result["type"] == FlowResultType.CREATE_ENTRY
-    assert mnemonic_result["title"] == config_entry.title
-    assert mnemonic_result["data"] == config_entry.data
+    assert station_name_result["type"] == FlowResultType.CREATE_ENTRY
+    assert station_name_result["title"] == config_entry.title
+    assert station_name_result["data"] == config_entry.data
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -134,13 +148,14 @@ async def test_no_station_selected(
     assert stations_result["reason"] == "no_stations_selected"
 
 
-async def test_empty_mnemonic(
+async def test_empty_station_name(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     open_api: OpenAPI,
     devices_by_location: list[dict[str, Any]],
+    geopy: Nominatim,
 ) -> None:
-    """Test that we abort if the mnemonic is empty."""
+    """Test that we abort if the station name is empty."""
 
     setup_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -163,19 +178,27 @@ async def test_empty_mnemonic(
     assert user_result["step_id"] == "stations"
     assert user_result["errors"] == {}
 
-    stations_result = await hass.config_entries.flow.async_configure(
-        user_result["flow_id"],
-        {
-            "stations": [
-                "AA:AA:AA:AA:AA:AA,SA,Station A1",
-                "BB:BB:BB:BB:BB:BB,SB,Station B2",
-            ]
-        },
+    with patch(
+        "homeassistant.components.ambient_network.config_flow.Nominatim",
+        return_value=geopy,
+    ), patch.object(
+        geopy,
+        "reverse",
+        Mock(side_effect=Exception("mocked error")),
+    ):
+        stations_result = await hass.config_entries.flow.async_configure(
+            user_result["flow_id"],
+            {
+                "stations": [
+                    "AA:AA:AA:AA:AA:AA,Station A1",
+                    "BB:BB:BB:BB:BB:BB,Station B2",
+                ]
+            },
+        )
+
+    station_name_result = await hass.config_entries.flow.async_configure(
+        stations_result["flow_id"], {"station_name": ""}
     )
 
-    mnemonic_result = await hass.config_entries.flow.async_configure(
-        stations_result["flow_id"], {"mnemonic": ""}
-    )
-
-    assert mnemonic_result["type"] == FlowResultType.ABORT
-    assert mnemonic_result["reason"] == "no_mnemonic_defined"
+    assert station_name_result["type"] == FlowResultType.ABORT
+    assert station_name_result["reason"] == "no_station_name_defined"

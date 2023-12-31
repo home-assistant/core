@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aioambient import OpenAPI
+from geopy import Nominatim
 import pytest
 
 from homeassistant.components import ambient_network
@@ -75,21 +76,25 @@ def config_entry_fixture() -> MockConfigEntry:
         domain=ambient_network.DOMAIN,
         title="virtual_station",
         data={
-            "mnemonic": "virtual_station",
+            "station_name": "virtual_station",
             "stations": [
                 {
-                    "name": "Station A1",
+                    "station_name": "Station A1",
                     "mac_address": "AA:AA:AA:AA:AA:AA",
-                    "mnemonic": "SA",
                 },
                 {
-                    "name": "Station B2",
+                    "station_name": "Station B2",
                     "mac_address": "BB:BB:BB:BB:BB:BB",
-                    "mnemonic": "SB",
                 },
             ],
         },
     )
+
+
+@pytest.fixture(name="geopy")
+def geopy_fixture() -> Nominatim:
+    """Create a mock Nominatim object."""
+    return AsyncMock()
 
 
 async def setup_platform(
@@ -103,7 +108,7 @@ async def setup_platform(
 
     # Perform a coordinator refresh
     coordinator = hass.data[ambient_network.DOMAIN][config_entry.entry_id]
-    assert await coordinator.async_refresh()
+    await coordinator.async_refresh()
     await hass.async_block_till_done()
 
     return
