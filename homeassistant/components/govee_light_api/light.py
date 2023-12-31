@@ -17,7 +17,6 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -26,7 +25,7 @@ from .capability import (
     GOVEE_DEVICE_CAPABILITIES,
     GoveeLightCapabilities,
 )
-from .const import DISPATCH_GOVEE_LIGHT_DISCOVERED, DOMAIN, MANUFACTURER
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import GoveeLocalApiCoordinator
 
 
@@ -47,7 +46,6 @@ async def async_setup_entry(
         if is_new:
             entity = GoveeLight(coordinator, device)
             async_add_entities([entity])
-            async_dispatcher_send(hass, DISPATCH_GOVEE_LIGHT_DISCOVERED, entity)
         return True
 
     await coordinator.set_discovery_callback(discovery_callback)
