@@ -773,10 +773,14 @@ def _get_permissible_entity_candidates(
 
     # We have already validated they have permissions to control all_referenced
     # entities so we do not need to check again.
-    assert all_referenced is not None
-    if single_entity := len(all_referenced) == 1 and list(all_referenced)[0]:
-        if (entity := entities.get(single_entity)) is not None:
-            return [entity]
+    if TYPE_CHECKING:
+        assert all_referenced is not None
+    if (
+        len(all_referenced) == 1
+        and (single_entity := list(all_referenced)[0])
+        and (entity := entities.get(single_entity)) is not None
+    ):
+        return [entity]
 
     return [entities[entity_id] for entity_id in all_referenced.intersection(entities)]
 
