@@ -186,5 +186,5 @@ class RpcNumber(ShellyRpcEntity):
         """Set value."""
         await self.call_rpc(
             self.entity_description.method,
-            {"config": {"id": self._id, self.entity_description.key: value}},
+            {"config": {"id": self._id, self.entity_description.sub_key: value}},
         )
