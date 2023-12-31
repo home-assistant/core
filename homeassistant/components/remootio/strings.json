@@ -34,5 +34,10 @@
       "device_class_required": "Controlled device's class is required",
       "device_class_invalid": "Controlled device's appears to be invalid"
     }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "left_open": "Left open"
+    }
   }
 }
