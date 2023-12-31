@@ -456,7 +456,9 @@ def remove_keys_with_empty_values(config: ConfigType) -> ConfigType:
     return {key: value for key, value in config.items() if value not in ("", None)}
 
 
-def check_type_schema_map(schema_map: dict[str, vol.Schema]) -> Callable:
+def check_type_schema_map(
+    schema_map: dict[str, vol.Schema],
+) -> Callable[[ConfigType], ConfigType]:
     """Check type specific schema against config."""
 
     def _check_type_schema(config: ConfigType) -> ConfigType:

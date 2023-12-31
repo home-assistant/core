@@ -54,7 +54,7 @@ _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
 
 
-@dataclass
+@dataclass(frozen=True)
 class ProtectSensorEntityDescription(
     ProtectRequiredKeysMixin[T], SensorEntityDescription
 ):
@@ -71,7 +71,7 @@ class ProtectSensorEntityDescription(
         return value
 
 
-@dataclass
+@dataclass(frozen=True)
 class ProtectSensorEventEntityDescription(
     ProtectEventMixin[T], SensorEntityDescription
 ):

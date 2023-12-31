@@ -10,6 +10,7 @@ from homeassistant.components.media_player import (
     BrowseMedia,
     MediaClass,
     MediaPlayerEnqueue,
+    MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
 from homeassistant.components.websocket_api.const import TYPE_RESULT
@@ -159,9 +160,6 @@ async def test_media_browse(
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.demo.media_player.MediaPlayerEntity.supported_features",
-        MediaPlayerEntityFeature.BROWSE_MEDIA,
-    ), patch(
         "homeassistant.components.media_player.MediaPlayerEntity.async_browse_media",
         return_value=BrowseMedia(
             media_class=MediaClass.DIRECTORY,
@@ -176,7 +174,7 @@ async def test_media_browse(
             {
                 "id": 5,
                 "type": "media_player/browse_media",
-                "entity_id": "media_player.bedroom",
+                "entity_id": "media_player.browse",
                 "media_content_type": "album",
                 "media_content_id": "abcd",
             }
@@ -202,9 +200,6 @@ async def test_media_browse(
     assert mock_browse_media.mock_calls[0][1] == ("album", "abcd")
 
     with patch(
-        "homeassistant.components.demo.media_player.MediaPlayerEntity.supported_features",
-        MediaPlayerEntityFeature.BROWSE_MEDIA,
-    ), patch(
         "homeassistant.components.media_player.MediaPlayerEntity.async_browse_media",
         return_value={"bla": "yo"},
     ):
@@ -212,7 +207,7 @@ async def test_media_browse(
             {
                 "id": 6,
                 "type": "media_player/browse_media",
-                "entity_id": "media_player.bedroom",
+                "entity_id": "media_player.browse",
             }
         )
 
@@ -231,19 +226,14 @@ async def test_group_members_available_when_off(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    # Fake group support for DemoYoutubePlayer
-    with patch(
-        "homeassistant.components.demo.media_player.MediaPlayerEntity.supported_features",
-        MediaPlayerEntityFeature.GROUPING | MediaPlayerEntityFeature.TURN_OFF,
-    ):
-        await hass.services.async_call(
-            "media_player",
-            "turn_off",
-            {ATTR_ENTITY_ID: "media_player.bedroom"},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        "media_player",
+        "turn_off",
+        {ATTR_ENTITY_ID: "media_player.group"},
+        blocking=True,
+    )
 
-    state = hass.states.get("media_player.bedroom")
+    state = hass.states.get("media_player.group")
     assert state.state == STATE_OFF
     assert "group_members" in state.attributes
 
@@ -339,3 +329,23 @@ async def test_get_async_get_browse_image_quoting(
         url = player.get_browse_image_url("album", media_content_id)
         await client.get(url)
         mock_browse_image.assert_called_with("album", media_content_id, None)
+
+
+def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated supported features ints."""
+
+    class MockMediaPlayerEntity(MediaPlayerEntity):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return 1
+
+    entity = MockMediaPlayerEntity()
+    assert entity.supported_features_compat is MediaPlayerEntityFeature(1)
+    assert "MockMediaPlayerEntity" in caplog.text
+    assert "is using deprecated supported features values" in caplog.text
+    assert "Instead it should use" in caplog.text
+    assert "MediaPlayerEntityFeature.PAUSE" in caplog.text
+    caplog.clear()
+    assert entity.supported_features_compat is MediaPlayerEntityFeature(1)
+    assert "is using deprecated supported features values" not in caplog.text

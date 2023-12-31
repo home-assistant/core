@@ -348,11 +348,12 @@ async def test_suffix(hass: HomeAssistant) -> None:
     assert round(float(state.state), config["sensor"]["round"]) == 0.0
 
 
-async def test_device_id(hass: HomeAssistant) -> None:
+async def test_device_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test for source entity device for Derivative."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     source_config_entry = MockConfigEntry()
     source_config_entry.add_to_hass(hass)
     source_device_entry = device_registry.async_get_or_create(

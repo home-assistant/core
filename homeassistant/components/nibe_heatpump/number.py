@@ -66,7 +66,7 @@ class Number(CoilEntity, NumberEntity):
             return
 
         try:
-            self._attr_native_value = float(data.value)
+            self._attr_native_value = float(data.value)  # type: ignore[arg-type]
         except ValueError:
             self._attr_native_value = None
 

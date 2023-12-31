@@ -217,7 +217,9 @@ class APIStatesView(HomeAssistantView):
                 if entity_perm(state.entity_id, "read")
             )
         response = web.Response(
-            body=f'[{",".join(states)}]', content_type=CONTENT_TYPE_JSON
+            body=f'[{",".join(states)}]',
+            content_type=CONTENT_TYPE_JSON,
+            zlib_executor_size=32768,
         )
         response.enable_compression()
         return response
@@ -389,17 +391,14 @@ class APIDomainServicesView(HomeAssistantView):
         )
 
         try:
-            async with timeout(SERVICE_WAIT_TIMEOUT):
-                # shield the service call from cancellation on connection drop
-                await shield(
-                    hass.services.async_call(
-                        domain, service, data, blocking=True, context=context
-                    )
+            # shield the service call from cancellation on connection drop
+            await shield(
+                hass.services.async_call(
+                    domain, service, data, blocking=True, context=context
                 )
+            )
         except (vol.Invalid, ServiceNotFound) as ex:
             raise HTTPBadRequest() from ex
-        except TimeoutError:
-            pass
         finally:
             cancel_listen()
 

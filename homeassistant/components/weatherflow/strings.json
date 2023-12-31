@@ -2,10 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "WeatherFlow discovery",
         "description": "Unable to discover Tempest WeatherFlow devices. Click submit to try again.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Tempest WeatherFlow device."
         }
       }
     },

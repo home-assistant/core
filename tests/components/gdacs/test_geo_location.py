@@ -44,7 +44,7 @@ from tests.common import async_fire_time_changed
 CONFIG = {gdacs.DOMAIN: {CONF_RADIUS: 200}}
 
 
-async def test_setup(hass: HomeAssistant) -> None:
+async def test_setup(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test the general setup of the integration."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -106,7 +106,6 @@ async def test_setup(hass: HomeAssistant) -> None:
             + len(hass.states.async_entity_ids("sensor"))
             == 4
         )
-        entity_registry = er.async_get(hass)
         assert len(entity_registry.entities) == 4
 
         state = hass.states.get("geo_location.drought_name_1")

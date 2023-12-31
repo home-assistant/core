@@ -35,20 +35,13 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_pvoutput_config_flow() -> Generator[None, MagicMock, None]:
-    """Return a mocked PVOutput client."""
-    with patch(
-        "homeassistant.components.pvoutput.config_flow.PVOutput", autospec=True
-    ) as pvoutput_mock:
-        yield pvoutput_mock.return_value
-
-
-@pytest.fixture
 def mock_pvoutput() -> Generator[None, MagicMock, None]:
     """Return a mocked PVOutput client."""
     with patch(
         "homeassistant.components.pvoutput.coordinator.PVOutput", autospec=True
-    ) as pvoutput_mock:
+    ) as pvoutput_mock, patch(
+        "homeassistant.components.pvoutput.config_flow.PVOutput", new=pvoutput_mock
+    ):
         pvoutput = pvoutput_mock.return_value
         pvoutput.status.return_value = Status.from_dict(
             load_json_object_fixture("status.json", DOMAIN)

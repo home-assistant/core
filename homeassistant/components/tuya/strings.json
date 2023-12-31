@@ -421,6 +421,19 @@
           "4": "Mood 4",
           "5": "Mood 5"
         }
+      },
+      "weather_delay": {
+        "name": "Weather delay",
+        "state": {
+          "cancel": "Cancel",
+          "24h": "24h",
+          "48h": "48h",
+          "72h": "72h",
+          "96h": "96h",
+          "120h": "120h",
+          "144h": "144h",
+          "168h": "168h"
+        }
       }
     },
     "sensor": {
@@ -555,6 +568,9 @@
       },
       "water_level": {
         "name": "Water level"
+      },
+      "total_watering_time": {
+        "name": "Total watering time"
       },
       "filter_utilization": {
         "name": "Filter utilization"

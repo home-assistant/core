@@ -1,5 +1,6 @@
 """Constants for the cloud component."""
 DOMAIN = "cloud"
+DATA_PLATFORMS_SETUP = "cloud_platforms_setup"
 REQUEST_TIMEOUT = 10
 
 PREF_ENABLE_ALEXA = "alexa_enabled"
@@ -13,6 +14,7 @@ PREF_GOOGLE_REPORT_STATE = "google_report_state"
 PREF_ALEXA_ENTITY_CONFIGS = "alexa_entity_configs"
 PREF_ALEXA_REPORT_STATE = "alexa_report_state"
 PREF_DISABLE_2FA = "disable_2fa"
+PREF_INSTANCE_ID = "instance_id"
 PREF_SHOULD_EXPOSE = "should_expose"
 PREF_GOOGLE_LOCAL_WEBHOOK_ID = "google_local_webhook_id"
 PREF_USERNAME = "username"
@@ -63,3 +65,5 @@ MODE_DEV = "development"
 MODE_PROD = "production"
 
 DISPATCHER_REMOTE_UPDATE = "cloud_remote_update"
+
+STT_ENTITY_UNIQUE_ID = "cloud-speech-to-text"

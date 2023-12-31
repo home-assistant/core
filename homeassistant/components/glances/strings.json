@@ -10,6 +10,9 @@
           "version": "Glances API Version (2 or 3)",
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the system running your Glances system monitor."
         }
       },
       "reauth_confirm": {

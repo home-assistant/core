@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from . import DOMAIN
+from .const import DOMAIN, RING_DEVICES
 from .entity import RingEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the switches for the Ring devices."""
-    devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
+    devices = hass.data[DOMAIN][config_entry.entry_id][RING_DEVICES]
     switches = []
 
     for device in devices["stickup_cams"]:

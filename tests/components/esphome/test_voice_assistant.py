@@ -337,6 +337,28 @@ async def test_send_tts_called(
         mock_send_tts.assert_called_with(_TEST_MEDIA_ID)
 
 
+async def test_send_tts_not_called_when_empty(
+    hass: HomeAssistant,
+    voice_assistant_udp_server_v1: VoiceAssistantUDPServer,
+    voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
+) -> None:
+    """Test the UDP server with a v1/v2 device doesn't call _send_tts when the output is empty."""
+    with patch(
+        "homeassistant.components.esphome.voice_assistant.VoiceAssistantUDPServer._send_tts"
+    ) as mock_send_tts:
+        voice_assistant_udp_server_v1._event_callback(
+            PipelineEvent(type=PipelineEventType.TTS_END, data={"tts_output": {}})
+        )
+
+        mock_send_tts.assert_not_called()
+
+        voice_assistant_udp_server_v2._event_callback(
+            PipelineEvent(type=PipelineEventType.TTS_END, data={"tts_output": {}})
+        )
+
+        mock_send_tts.assert_not_called()
+
+
 async def test_send_tts(
     hass: HomeAssistant,
     voice_assistant_udp_server_v2: VoiceAssistantUDPServer,
