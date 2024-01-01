@@ -69,6 +69,7 @@ homeassistant.components.anthemav.*
 homeassistant.components.apcupsd.*
 homeassistant.components.apprise.*
 homeassistant.components.aqualogic.*
+homeassistant.components.aquostv.*
 homeassistant.components.aranet.*
 homeassistant.components.aseko_pool_live.*
 homeassistant.components.assist_pipeline.*
