@@ -186,7 +186,7 @@ charset-normalizer==3.2.0
 lxml==4.9.4
 
 # dacite: Ensure we have a version that is able to handle type unions for Roborock.
-dacite>=1.8.0
+dacite>=1.7.0
 """
 
 GENERATED_MESSAGE = (
