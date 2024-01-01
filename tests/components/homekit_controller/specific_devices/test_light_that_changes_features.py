@@ -17,7 +17,7 @@ async def test_light_add_feature_at_runtime(
 ) -> None:
     """Test that new features can be added at runtime."""
 
-    # Set up a basic light that does not support oscillation
+    # Set up a basic light that does not support color
     accessories = await setup_accessories_from_file(
         hass, "home_assistant_bridge_basic_light.json"
     )
