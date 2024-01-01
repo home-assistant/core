@@ -33,9 +33,9 @@ from .const import (
     DOMAIN,
     METOFFICE_COORDINATES,
     METOFFICE_DAILY_COORDINATOR,
-    METOFFICE_TWICE_DAILY_COORDINATOR,
     METOFFICE_HOURLY_COORDINATOR,
     METOFFICE_NAME,
+    METOFFICE_TWICE_DAILY_COORDINATOR,
     MODE_3HOURLY,
     MODE_DAILY,
     MODE_TWICE_DAILY,
@@ -168,7 +168,7 @@ async def async_setup_entry(
             )
             for description in SENSOR_TYPES
         ]
-	+ [
+        + [
             MetOfficeCurrentSensor(
                 hass_data[METOFFICE_TWICE_DAILY_COORDINATOR],
                 hass_data,
@@ -209,7 +209,9 @@ class MetOfficeCurrentSensor(
             self._attr_unique_id = f"{self._attr_unique_id}_{mode}"
             self._attr_entity_registry_enabled_default = False
         else:
-            self._attr_entity_registry_enabled_default = self.entity_description.entity_registry_enabled_default
+            self._attr_entity_registry_enabled_default = (
+                self.entity_description.entity_registry_enabled_default
+            )
 
     @property
     def native_value(self) -> StateType:

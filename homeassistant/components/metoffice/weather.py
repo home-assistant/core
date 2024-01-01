@@ -80,7 +80,7 @@ async def async_setup_entry(
 def _build_forecast_data(timestep: Timestep) -> Forecast:
     data = Forecast(datetime=timestep.date.isoformat())
     forecast_hour = timestep.date.hour
-    data[ATTR_FORECAST_IS_DAYTIME] = (forecast_hour >= 6 and forecast_hour < 21)
+    data[ATTR_FORECAST_IS_DAYTIME] = 6 <= forecast_hour < 21
     if timestep.weather:
         data[ATTR_FORECAST_CONDITION] = CONDITION_MAP.get(timestep.weather.value)
     if timestep.precipitation:
@@ -118,7 +118,9 @@ class MetOfficeWeather(
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_wind_speed_unit = UnitOfSpeed.MILES_PER_HOUR
     _attr_supported_features = (
-        WeatherEntityFeature.FORECAST_HOURLY | WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_TWICE_DAILY
+        WeatherEntityFeature.FORECAST_HOURLY
+        | WeatherEntityFeature.FORECAST_DAILY
+        | WeatherEntityFeature.FORECAST_TWICE_DAILY
     )
 
     def __init__(

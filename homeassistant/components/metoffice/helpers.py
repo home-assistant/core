@@ -7,7 +7,7 @@ import sys
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util.dt import utcnow
 
-from .const import MODE_3HOURLY, MODE_DAILY, MODE_TWICE_DAILY
+from .const import MODE_3HOURLY, MODE_DAILY
 from .data import MetOfficeData
 
 if sys.version_info < (3, 12):
@@ -34,7 +34,7 @@ def fetch_site(
 def fetch_data(connection: datapoint.Manager, site: Site, mode: str) -> MetOfficeData:
     """Fetch weather and forecast from Datapoint API."""
 
-    if (mode == MODE_3HOURLY):
+    if mode == MODE_3HOURLY:
         datapoint_mode = "3hourly"
     else:
         datapoint_mode = "daily"
