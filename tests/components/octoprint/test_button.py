@@ -1,6 +1,7 @@
 """Test the OctoPrint buttons."""
 from unittest.mock import patch
 
+from freezegun import freeze_time
 from pyoctoprintapi import OctoprintPrinterInfo
 import pytest
 
@@ -194,9 +195,12 @@ async def test_stop_job(hass: HomeAssistant) -> None:
         assert len(stop_command.mock_calls) == 0
 
 
+@freeze_time("2023-01-01 00:00")
 async def test_shutdown_system(hass: HomeAssistant) -> None:
     """Test the shutdown system button."""
     await init_integration(hass, BUTTON_DOMAIN)
+
+    entity_id = "button.octoprint_shutdown_system"
 
     # Test shutting down the system
     with patch(
@@ -205,18 +209,23 @@ async def test_shutdown_system(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {
-                ATTR_ENTITY_ID: "button.octoprint_shutdown_system",
-            },
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 
         assert len(shutdown_command.mock_calls) == 1
 
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == "2023-01-01T00:00:00+00:00"
 
+
+@freeze_time("2023-01-01 00:00")
 async def test_reboot_system(hass: HomeAssistant) -> None:
     """Test the reboot system button."""
     await init_integration(hass, BUTTON_DOMAIN)
+
+    entity_id = "button.octoprint_reboot_system"
 
     # Test rebooting the system
     with patch(
@@ -226,17 +235,24 @@ async def test_reboot_system(hass: HomeAssistant) -> None:
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {
-                ATTR_ENTITY_ID: "button.octoprint_reboot_system",
+                ATTR_ENTITY_ID: entity_id,
             },
             blocking=True,
         )
 
         assert len(reboot_command.mock_calls) == 1
 
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == "2023-01-01T00:00:00+00:00"
 
+
+@freeze_time("2023-01-01 00:00")
 async def test_restart_octoprint(hass: HomeAssistant) -> None:
     """Test the restart octoprint button."""
     await init_integration(hass, BUTTON_DOMAIN)
+
+    entity_id = "button.octoprint_restart_octoprint"
 
     # Test restarting octoprint
     with patch(
@@ -246,9 +262,13 @@ async def test_restart_octoprint(hass: HomeAssistant) -> None:
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {
-                ATTR_ENTITY_ID: "button.octoprint_restart_octoprint",
+                ATTR_ENTITY_ID: entity_id,
             },
             blocking=True,
         )
 
         assert len(restart_command.mock_calls) == 1
+
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == "2023-01-01T00:00:00+00:00"
