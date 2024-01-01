@@ -1409,7 +1409,13 @@ class State:
 
         self.entity_id = entity_id
         self.state = state
-        self.attributes = ReadOnlyDict(attributes or {})
+        # State only creates and expects a ReadOnlyDict so
+        # there is no need to check for subclassing with
+        # isinstance here so we can use the faster type check.
+        if type(attributes) is not ReadOnlyDict:  # noqa: E721
+            self.attributes = ReadOnlyDict(attributes or {})
+        else:
+            self.attributes = attributes
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
@@ -1827,6 +1833,11 @@ class StateMachine:
             context = Context(id=ulid_at_time(timestamp))
         else:
             now = dt_util.utcnow()
+
+        if same_attr:
+            if TYPE_CHECKING:
+                assert old_state is not None
+            attributes = old_state.attributes
 
         state = State(
             entity_id,

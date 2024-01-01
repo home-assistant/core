@@ -1318,6 +1318,7 @@ omit =
     homeassistant/components/tado/device_tracker.py
     homeassistant/components/tado/sensor.py
     homeassistant/components/tado/water_heater.py
+    homeassistant/components/tami4/button.py
     homeassistant/components/tank_utility/sensor.py
     homeassistant/components/tankerkoenig/__init__.py
     homeassistant/components/tankerkoenig/binary_sensor.py

@@ -21,5 +21,20 @@
       "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "pullspring_enabled": {
+        "name": "Pullspring enabled"
+      },
+      "semi_locked": {
+        "name": "Semi locked"
+      }
+    },
+    "sensor": {
+      "pullspring_duration": {
+        "name": "Pullspring duration"
+      }
+    }
   }
 }
