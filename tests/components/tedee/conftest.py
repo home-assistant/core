@@ -15,6 +15,8 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
+WEBHOOK_ID = "55a7335ea8dee830eed4ef8f84cda8f6d80b83af0847dc74032e86120bffed5e"
+
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
