@@ -1,5 +1,5 @@
 """The base entity for the A. O. Smith integration."""
-from typing import TypeVar
+from typing import Any, TypeVar
 
 from py_aosmith import AOSmithAPIClient
 
@@ -37,12 +37,12 @@ class AOSmithStatusEntity(AOSmithEntity[AOSmithStatusCoordinator]):
     """Base entity for entities that use data from the status coordinator."""
 
     @property
-    def device(self):
+    def device(self) -> dict[str, Any] | None:
         """Shortcut to get the device status from the coordinator data."""
         return self.coordinator.data.get(self.junction_id)
 
     @property
-    def device_data(self):
+    def device_data(self) -> dict[str, Any] | None:
         """Shortcut to get the device data within the device status."""
         device = self.device
         return None if device is None else device.get("data", {})
