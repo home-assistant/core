@@ -7938,6 +7938,468 @@
     }),
   ])
 # ---
+# name: test_snapshots[home_assistant_bridge_humidifier]
+  list([
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:1',
+          ]),
+        ]),
+        'is_new': False,
+        'manufacturer': 'Home Assistant',
+        'model': 'Bridge',
+        'name': 'HASS Bridge S6',
+        'name_by_user': None,
+        'serial_number': None,
+        'suggested_area': None,
+        'sw_version': '2024.2.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.hass_bridge_s6_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'HASS Bridge S6 Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_1_2',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'HASS Bridge S6 Identify',
+            }),
+            'entity_id': 'button.hass_bridge_s6_identify',
+            'state': 'unknown',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:293334836',
+          ]),
+        ]),
+        'is_new': False,
+        'manufacturer': 'switchbot',
+        'model': 'WoHumi',
+        'name': 'Humidifier 182A',
+        'name_by_user': None,
+        'serial_number': None,
+        'suggested_area': None,
+        'sw_version': '2024.2.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.humidifier_182a_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Humidifier 182A Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_293334836_1_2',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Humidifier 182A Identify',
+            }),
+            'entity_id': 'button.humidifier_182a_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'available_modes': list([
+                'normal',
+                'auto',
+              ]),
+              'max_humidity': 100,
+              'min_humidity': 0,
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'humidifier',
+            'entity_category': None,
+            'entity_id': 'humidifier.humidifier_182a',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
+            'original_icon': None,
+            'original_name': 'Humidifier 182A',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': <HumidifierEntityFeature: 1>,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_293334836_8',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'available_modes': list([
+                'normal',
+                'auto',
+              ]),
+              'current_humidity': 0,
+              'device_class': 'humidifier',
+              'friendly_name': 'Humidifier 182A',
+              'humidity': 45,
+              'max_humidity': 100,
+              'min_humidity': 0,
+              'mode': 'normal',
+              'supported_features': <HumidifierEntityFeature: 1>,
+            }),
+            'entity_id': 'humidifier.humidifier_182a',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.humidifier_182a_current_humidity',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+            'original_icon': None,
+            'original_name': 'Humidifier 182A Current Humidity',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_293334836_8_9',
+            'unit_of_measurement': '%',
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'humidity',
+              'friendly_name': 'Humidifier 182A Current Humidity',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': '%',
+            }),
+            'entity_id': 'sensor.humidifier_182a_current_humidity',
+            'state': '0',
+          }),
+        }),
+      ]),
+    }),
+  ])
+# ---
+# name: test_snapshots[home_assistant_bridge_humidifier_new_range]
+  list([
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:1',
+          ]),
+        ]),
+        'is_new': False,
+        'manufacturer': 'Home Assistant',
+        'model': 'Bridge',
+        'name': 'HASS Bridge S6',
+        'name_by_user': None,
+        'serial_number': None,
+        'suggested_area': None,
+        'sw_version': '2024.2.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.hass_bridge_s6_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'HASS Bridge S6 Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_1_2',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'HASS Bridge S6 Identify',
+            }),
+            'entity_id': 'button.hass_bridge_s6_identify',
+            'state': 'unknown',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:293334836',
+          ]),
+        ]),
+        'is_new': False,
+        'manufacturer': 'switchbot',
+        'model': 'WoHumi',
+        'name': 'Humidifier 182A',
+        'name_by_user': None,
+        'serial_number': None,
+        'suggested_area': None,
+        'sw_version': '2024.2.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.humidifier_182a_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Humidifier 182A Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_293334836_1_2',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Humidifier 182A Identify',
+            }),
+            'entity_id': 'button.humidifier_182a_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'available_modes': list([
+                'normal',
+                'auto',
+              ]),
+              'max_humidity': 80,
+              'min_humidity': 20,
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'humidifier',
+            'entity_category': None,
+            'entity_id': 'humidifier.humidifier_182a',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <HumidifierDeviceClass.HUMIDIFIER: 'humidifier'>,
+            'original_icon': None,
+            'original_name': 'Humidifier 182A',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': <HumidifierEntityFeature: 1>,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_293334836_8',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'available_modes': list([
+                'normal',
+                'auto',
+              ]),
+              'current_humidity': 0,
+              'device_class': 'humidifier',
+              'friendly_name': 'Humidifier 182A',
+              'humidity': 45,
+              'max_humidity': 80,
+              'min_humidity': 20,
+              'mode': 'normal',
+              'supported_features': <HumidifierEntityFeature: 1>,
+            }),
+            'entity_id': 'humidifier.humidifier_182a',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': None,
+            'entity_id': 'sensor.humidifier_182a_current_humidity',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+            'original_icon': None,
+            'original_name': 'Humidifier 182A Current Humidity',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_293334836_8_9',
+            'unit_of_measurement': '%',
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'humidity',
+              'friendly_name': 'Humidifier 182A Current Humidity',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': '%',
+            }),
+            'entity_id': 'sensor.humidifier_182a_current_humidity',
+            'state': '0',
+          }),
+        }),
+      ]),
+    }),
+  ])
+# ---
 # name: test_snapshots[home_assistant_bridge_light]
   list([
     dict({
