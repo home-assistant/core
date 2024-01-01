@@ -5,6 +5,8 @@
     "stationtype": "AMBWeatherPro_V5.0.6",
     "dateutc": 1699474320000,
     "tempf": 82.9,
+    "dewPoint": 82.0,
+    "feelsLike": 85.0,
     "humidity": 60,
     "windspeedmph": 8.72,
     "windgustmph": 9.17,

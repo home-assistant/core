@@ -29,7 +29,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .climate_utils import ClimateUtils
 from .const import DOMAIN, ENTITY_STATION_NAME
 from .coordinator import AmbientNetworkDataUpdateCoordinator
 from .entity import AmbientNetworkEntity
@@ -309,32 +308,18 @@ async def async_setup_entry(
         entities: list[AmbientNetworkSensor] = []
         for description in SENSOR_DESCRIPTIONS:
             # Check whether any of the stations report this sensor value.
-            for station_data in coordinator.data.values():
-                sensor_keys: list[str]
-                if description.key == TYPE_FEELSLIKE:
-                    # Feels like is calculated from temperature, relative humidity, and
-                    # wind speed.
-                    sensor_keys = [TYPE_TEMPF, TYPE_HUMIDITY, TYPE_WINDSPEEDMPH]
-
-                elif description.key == TYPE_DEWPOINT:
-                    # Dew point is calculated from temperature and relative humidity.
-                    sensor_keys = [TYPE_TEMPF, TYPE_HUMIDITY]
-
-                else:
-                    # Everything else is calculated from the reported value directly.
-                    sensor_keys = [description.key]
-                if all(
-                    AmbientNetworkSensor.get_sensor_value(station_data, key) is not None
-                    for key in sensor_keys
-                ):
-                    entities.append(
-                        AmbientNetworkSensor(
-                            coordinator,
-                            description,
-                            coordinator.config_entry.data[ENTITY_STATION_NAME],
-                        )
+            if any(
+                AmbientNetworkSensor.get_sensor_value(station_data, description.key)
+                is not None
+                for station_data in coordinator.data.values()
+            ):
+                entities.append(
+                    AmbientNetworkSensor(
+                        coordinator,
+                        description,
+                        coordinator.config_entry.data[ENTITY_STATION_NAME],
                     )
-                    break
+                )
         async_add_entities(entities)
 
 
@@ -381,22 +366,7 @@ class AmbientNetworkSensor(AmbientNetworkEntity, SensorEntity):
     def _update_attrs(self) -> None:
         """Update sensor attributes."""
 
-        if self.entity_description.key == TYPE_FEELSLIKE:
-            # Feels like temperature is a virtual sensor that is calculated from
-            # temperature, humdidity, and windspeed.
-            self._attr_native_value = ClimateUtils.feels_like_fahrenheit(
-                self._calc_attrs(TYPE_TEMPF),
-                self._calc_attrs(TYPE_HUMIDITY),
-                self._calc_attrs(TYPE_WINDSPEEDMPH),
-            )
-        elif self.entity_description.key == TYPE_DEWPOINT:
-            # Dew point temperature is a virtual sensor that is calculated from
-            # temperature and humidity.
-            self._attr_native_value = ClimateUtils.dew_point_fahrenheit(
-                self._calc_attrs(TYPE_TEMPF), self._calc_attrs(TYPE_HUMIDITY)
-            )
-        else:
-            self._attr_native_value = self._calc_attrs(self.entity_description.key)
+        self._attr_native_value = self._calc_attrs(self.entity_description.key)
 
     @staticmethod
     def get_sensor_value(station_data: dict[str, Any], sensor_key: str) -> Any | None:
