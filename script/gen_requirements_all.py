@@ -24,7 +24,6 @@ COMMENT_REQUIREMENTS = (
     "beacontools",
     "beewi-smartclim",  # depends on bluepy
     "bluepy",
-    "dacite",
     "decora",
     "decora-wifi",
     "evdev",
