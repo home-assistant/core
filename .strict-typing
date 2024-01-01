@@ -58,6 +58,7 @@ homeassistant.components.alarm_control_panel.*
 homeassistant.components.alert.*
 homeassistant.components.alexa.*
 homeassistant.components.amazon_polly.*
+homeassistant.components.ambiclimate.*
 homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
