@@ -67,37 +67,44 @@ class AxisNetworkDevice:
     @property
     def host(self) -> str:
         """Return the host address of this device."""
-        return self.config_entry.data[CONF_HOST]  # type: ignore[no-any-return]
+        host: str = self.config_entry.data[CONF_HOST]
+        return host
 
     @property
     def port(self) -> int:
         """Return the HTTP port of this device."""
-        return self.config_entry.data[CONF_PORT]  # type: ignore[no-any-return]
+        port: int = self.config_entry.data[CONF_PORT]
+        return port
 
     @property
     def username(self) -> str:
         """Return the username of this device."""
-        return self.config_entry.data[CONF_USERNAME]  # type: ignore[no-any-return]
+        username: str = self.config_entry.data[CONF_USERNAME]
+        return username
 
     @property
     def password(self) -> str:
         """Return the password of this device."""
-        return self.config_entry.data[CONF_PASSWORD]  # type: ignore[no-any-return]
+        password: str = self.config_entry.data[CONF_PASSWORD]
+        return password
 
     @property
     def model(self) -> str:
         """Return the model of this device."""
-        return self.config_entry.data[CONF_MODEL]  # type: ignore[no-any-return]
+        model: str = self.config_entry.data[CONF_MODEL]
+        return model
 
     @property
     def name(self) -> str:
         """Return the name of this device."""
-        return self.config_entry.data[CONF_NAME]  # type: ignore[no-any-return]
+        name: str = self.config_entry.data[CONF_NAME]
+        return name
 
     @property
-    def unique_id(self) -> str | None:
+    def unique_id(self) -> str:
         """Return the unique ID (serial number) of this device."""
-        return self.config_entry.unique_id
+        assert (unique_id := self.config_entry.unique_id)
+        return unique_id
 
     # Options
 
@@ -169,8 +176,8 @@ class AxisNetworkDevice:
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             configuration_url=self.api.config.url,
-            connections={(CONNECTION_NETWORK_MAC, self.unique_id)},  # type: ignore[arg-type]
-            identifiers={(AXIS_DOMAIN, self.unique_id)},  # type: ignore[arg-type]
+            connections={(CONNECTION_NETWORK_MAC, self.unique_id)},
+            identifiers={(AXIS_DOMAIN, self.unique_id)},
             manufacturer=ATTR_MANUFACTURER,
             model=f"{self.model} {self.product_type}",
             name=self.name,
