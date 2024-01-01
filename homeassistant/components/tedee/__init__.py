@@ -119,8 +119,7 @@ def get_webhook_handler(
             return json_message_response("No request body", message_code=12)
 
         body = await request.json()
-        coordinator.tedee_client.parse_webhook_message(body)
-        coordinator.async_update_listeners()
+        coordinator.webhook_received(body)
 
         return json_message_response("Success", message_code=0)
 

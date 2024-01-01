@@ -3,6 +3,7 @@ from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 import time
+from typing import Any
 
 from pytedee_async import (
     TedeeClient,
@@ -84,3 +85,8 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             raise UpdateFailed("Error while updating data: %s" % str(ex)) from ex
         except (TedeeClientException, TimeoutError) as ex:
             raise UpdateFailed("Querying API failed. Error: %s" % str(ex)) from ex
+
+    def webhook_received(self, message: dict[str, Any]) -> None:
+        """Handle webhook message."""
+        self.tedee_client.parse_webhook_message(message)
+        self.async_update_listeners()
