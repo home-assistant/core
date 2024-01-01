@@ -1,6 +1,9 @@
 """Tests for the FinTS client."""
 
+from typing import Optional
+
 from fints.client import BankIdentifier, FinTSOperations
+import pytest
 
 from homeassistant.components.fints.sensor import (
     BankCredentials,
@@ -28,36 +31,39 @@ BANK_INFORMATION = {
     },
 }
 
-VALID_ACCOUNT_INFORMATION = BANK_INFORMATION | {
-    "account_number": "123456789",
-    "iban": "DE00123456789123456789",
-    "product_name": "Super Konto",
-    "type": 5,
-}
 
-NO_TYPE_INFORMATION = BANK_INFORMATION | {
-    "account_number": "123456789",
-    "iban": "DE1234567890123456789",
-    "product_name": "Account without type",
-    "type": None,
-}
-
-ACCOUNT_CONFIG_FALLBACK_INFORMATION = BANK_INFORMATION | {
-    "account_number": "123456789",
-    "iban": "DE081512345678912",
-    "product_name": "Account without type with fallback",
-    "type": None,
-}
-
-
-async def test_fints_client_is_balance_account() -> None:
-    """Check method is_balance_account."""
-
+@pytest.mark.parametrize(
+    (
+        "account_number",
+        "iban",
+        "product_name",
+        "account_type",
+        "expected_balance_result",
+        "expected_holdings_result",
+    ),
+    [
+        ("GIRO1", "GIRO1", "Valid balance account", 5, True, False),
+        (None, None, "Invalid account", None, False, False),
+        ("GIRO2", "GIRO2", "Account without type", None, False, False),
+        ("GIRO3", "GIRO3", "Balance account from fallback", None, True, False),
+        ("DEPOT1", "DEPOT1", "Valid holdings account", 33, False, True),
+        ("DEPOT2", "DEPOT2", "Holdings account from fallback", None, False, True),
+    ],
+)
+async def test_account_type(
+    account_number: Optional[str],
+    iban: Optional[str],
+    product_name: str,
+    account_type: Optional[int],
+    expected_balance_result: bool,
+    expected_holdings_result: bool,
+) -> None:
+    """Check client methods is_balance_account and is_holdings_account."""
     credentials = BankCredentials(
         blz=1234, login="test", pin="0000", url="https://example.com"
     )
-    account_config = {"DE081512345678912": True}
-    holdings_config = {}
+    account_config = {"GIRO3": True}
+    holdings_config = {"DEPOT2": True}
 
     client = FinTsClient(
         credentials=credentials,
@@ -68,106 +74,22 @@ async def test_fints_client_is_balance_account() -> None:
 
     client._account_information_fetched = True
     client._account_information = {
-        "DE00123456789123456789": VALID_ACCOUNT_INFORMATION,
-        "DE1234567890123456789": NO_TYPE_INFORMATION,
-        "DE081512345678912": ACCOUNT_CONFIG_FALLBACK_INFORMATION,
+        iban: BANK_INFORMATION
+        | {
+            "account_number": account_number,
+            "iban": iban,
+            "product_name": product_name,
+            "type": account_type,
+        }
     }
 
-    valid_account = SEPAAccount(
-        iban="DE00123456789123456789",
+    sepa_account = SEPAAccount(
+        iban=iban,
         bic="BANCODELTEST",
-        accountnumber="123456789",
-        subaccount=None,
-        blz="12345",
-    )
-    invalid_account = SEPAAccount(
-        iban=None, bic=None, accountnumber=None, subaccount=None, blz=None
-    )
-    no_type = SEPAAccount(
-        iban="DE1234567890123456789",
-        bic="BANCODELTEST",
-        accountnumber="123456789",
-        subaccount=None,
-        blz="12345",
-    )
-    account_config_fallback = SEPAAccount(
-        iban="DE081512345678912",
-        bic="BANCODELTEST",
-        accountnumber="123456789",
+        accountnumber=account_number,
         subaccount=None,
         blz="12345",
     )
 
-    assert client.is_balance_account(valid_account)
-    assert not client.is_balance_account(invalid_account)
-    assert not client.is_balance_account(no_type)
-    assert client.is_balance_account(account_config_fallback)
-
-
-VALID_HOLDINGS_INFORMATION = BANK_INFORMATION | {
-    "account_number": "123456789",
-    "iban": "DE00123456789123456789",
-    "product_name": "Super Depot",
-    "type": 33,
-}
-
-HOLDINGS_CONFIG_FALLBACK_INFORMATION = BANK_INFORMATION | {
-    "account_number": "DEPOT",
-    "iban": "DEPOT",
-    "product_name": "Account without type with fallback",
-    "type": None,
-}
-
-
-async def test_fints_client_is_holdings_account() -> None:
-    """Check method is_holdings_account."""
-
-    credentials = BankCredentials(
-        blz=1234, login="test", pin="0000", url="https://example.com"
-    )
-    account_config = {}
-    holdings_config = {"DEPOT": True}
-
-    client = FinTsClient(
-        credentials=credentials,
-        name="test",
-        account_config=account_config,
-        holdings_config=holdings_config,
-    )
-
-    client._account_information_fetched = True
-    client._account_information = {
-        "DE00123456789123456789": VALID_HOLDINGS_INFORMATION,
-        "DE1234567890123456789": NO_TYPE_INFORMATION,
-        "DEPOT": HOLDINGS_CONFIG_FALLBACK_INFORMATION,
-    }
-
-    valid_account = SEPAAccount(
-        iban="DE00123456789123456789",
-        bic="BANCODELTEST",
-        accountnumber="123456789",
-        subaccount=None,
-        blz="12345",
-    )
-    invalid_account = SEPAAccount(
-        iban=None, bic=None, accountnumber=None, subaccount=None, blz=None
-    )
-    no_type = SEPAAccount(
-        iban="DE1234567890123456789",
-        bic="BANCODELTEST",
-        accountnumber="123456789",
-        subaccount=None,
-        blz="12345",
-    )
-    account_config_fallback = SEPAAccount(
-        iban="DEPOT",
-        bic="BANCODELTEST",
-        accountnumber="DEPOT",
-        subaccount=None,
-        blz="12345",
-    )
-
-    assert client.is_holdings_account(valid_account)
-    assert not client.is_holdings_account(invalid_account)
-    assert not client.is_holdings_account(no_type)
-    assert client.is_holdings_account(account_config_fallback)
+    assert client.is_balance_account(sepa_account) == expected_balance_result
+    assert client.is_holdings_account(sepa_account) == expected_holdings_result
