@@ -156,9 +156,6 @@ async def _async_wol_buttons_list(
 
     new_wols: list[FritzBoxWOLButton] = []
 
-    if "X_AVM-DE_HostFilter1" not in avm_wrapper.connection.services:
-        return new_wols
-
     if avm_wrapper.unique_id not in data_fritz.wol_buttons:
         data_fritz.wol_buttons[avm_wrapper.unique_id] = set()
 
