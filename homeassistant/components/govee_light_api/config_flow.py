@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow
 
 from .const import (
-    CONF_LISENING_PORT_DEFAULT,
+    CONF_LISTENING_PORT_DEFAULT,
     CONF_MULTICAST_ADDRESS_DEFAULT,
     CONF_TARGET_PORT_DEFAULT,
     DOMAIN,
@@ -32,7 +32,7 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
         listening_address=adapter,
         broadcast_address=CONF_MULTICAST_ADDRESS_DEFAULT,
         broadcast_port=CONF_TARGET_PORT_DEFAULT,
-        listening_port=CONF_LISENING_PORT_DEFAULT,
+        listening_port=CONF_LISTENING_PORT_DEFAULT,
         discovery_enabled=True,
         discovery_interval=1,
         update_enabled=False,

@@ -6,7 +6,7 @@
         "data": {
           "multicast_address": "Multicast discovery address",
           "target_port": "API devices port",
-          "listening_port": "API listing port",
+          "listening_port": "API listening port",
           "discovery_interval": "Discovery interval",
           "bind_address": "Bind address"
         }
