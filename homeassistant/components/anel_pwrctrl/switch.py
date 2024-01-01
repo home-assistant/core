@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from anel_pwrctrl import DeviceMaster
+from anel_pwrctrl import Device, DeviceMaster, Switch
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
@@ -72,7 +72,7 @@ def setup_platform(
 class PwrCtrlSwitch(SwitchEntity):
     """Representation of a PwrCtrl switch."""
 
-    def __init__(self, port, parent_device):
+    def __init__(self, port: Switch, parent_device: PwrCtrlDevice) -> None:
         """Initialize the PwrCtrl switch."""
         self._port = port
         self._parent_device = parent_device
@@ -96,11 +96,11 @@ class PwrCtrlSwitch(SwitchEntity):
 class PwrCtrlDevice:
     """Device representation for per device throttling."""
 
-    def __init__(self, device):
+    def __init__(self, device: Device) -> None:
         """Initialize the PwrCtrl device."""
         self._device = device
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self) -> None:
         """Update the device and all its switches."""
         self._device.update()
