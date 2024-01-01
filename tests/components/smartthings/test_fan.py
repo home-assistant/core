@@ -7,6 +7,7 @@ from pysmartthings import Attribute, Capability
 
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
+    ATTR_PRESET_MODE,
     DOMAIN as FAN_DOMAIN,
     FanEntityFeature,
 )
@@ -194,3 +195,50 @@ async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
     await hass.config_entries.async_forward_entry_unload(config_entry, "fan")
     # Assert
     assert hass.states.get("fan.fan_1").state == STATE_UNAVAILABLE
+
+
+async def test_entity_state_preset_modes(hass: HomeAssistant, device_factory) -> None:
+    """Tests the state attributes properly match the fan preset mode."""
+    device = device_factory(
+        "Fan 1",
+        capabilities=[Capability.switch, Capability.air_conditioner_fan_mode],
+        status={
+            Attribute.switch: "on",
+            Attribute.fan_mode: "high",
+            Attribute.supported_ac_fan_modes: ["high", "low", "medium"],
+        },
+    )
+    await setup_platform(hass, FAN_DOMAIN, devices=[device])
+
+    # Dimmer 1
+    state = hass.states.get("fan.fan_1")
+    assert state.state == "on"
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == FanEntityFeature.PRESET_MODE
+    assert state.attributes[ATTR_PRESET_MODE] == "high"
+
+
+async def test_set_preset_mode(hass: HomeAssistant, device_factory) -> None:
+    """Test setting to specific fan mode."""
+    # Arrange
+    device = device_factory(
+        "Fan 1",
+        capabilities=[Capability.switch, Capability.air_conditioner_fan_mode],
+        status={
+            Attribute.switch: "off",
+            Attribute.fan_mode: "high",
+            Attribute.supported_ac_fan_modes: ["high", "low", "medium"],
+        },
+    )
+
+    await setup_platform(hass, FAN_DOMAIN, devices=[device])
+    # Act
+    await hass.services.async_call(
+        "fan",
+        "set_preset_mode",
+        {ATTR_ENTITY_ID: "fan.fan_1", ATTR_PRESET_MODE: "low"},
+        blocking=True,
+    )
+    # Assert
+    state = hass.states.get("fan.fan_1")
+    assert state is not None
+    assert state.attributes[ATTR_PRESET_MODE] == "low"

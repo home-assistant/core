@@ -41,18 +41,50 @@ async def async_setup_entry(
 
 def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
     """Return all capabilities supported if minimum required are present."""
-    supported = [Capability.switch, Capability.fan_speed]
-    # Must have switch and fan_speed
-    if all(capability in capabilities for capability in supported):
-        return supported
-    return None
+
+    # MUST support switch as we need a way to turn it on and off
+    if Capability.switch not in capabilities:
+        return None
+
+    # These are all optional but at least one must be supported
+    optional = [
+        Capability.air_conditioner_fan_mode,
+        Capability.fan_speed,
+    ]
+
+    # If none of the optional capabilities are supported then error
+    if not any(capability in capabilities for capability in optional):
+        return None
+
+    supported = [Capability.switch]
+
+    for capability in optional:
+        if capability in capabilities:
+            supported.append(capability)
+
+    return supported
 
 
 class SmartThingsFan(SmartThingsEntity, FanEntity):
     """Define a SmartThings Fan."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = FanEntityFeature(0)
     _attr_speed_count = int_states_in_range(SPEED_RANGE)
+
+    def __init__(self, device):
+        """Init the class."""
+        super().__init__(device)
+        self._attr_supported_features = self._determine_features()
+
+    def _determine_features(self):
+        flags = FanEntityFeature(0)
+
+        if self._device.get_capability(Capability.fan_speed):
+            flags |= FanEntityFeature.SET_SPEED
+        if self._device.get_capability(Capability.air_conditioner_fan_mode):
+            flags |= FanEntityFeature.PRESET_MODE
+
+        return flags
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
@@ -70,6 +102,16 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         # the entity state ahead of receiving the confirming push updates
         self.async_write_ha_state()
 
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset_mode of the fan."""
+        if (FanEntityFeature.PRESET_MODE in self._attr_supported_features) and (
+            self.preset_modes is not None
+        ):
+            if preset_mode in self.preset_modes:
+                await self._device.set_fan_mode(preset_mode, set_status=True)
+
+            self.async_write_ha_state()
+
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -77,7 +119,15 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn the fan on."""
-        await self._async_set_percentage(percentage)
+        if percentage is not None:
+            await self._async_set_percentage(percentage)
+        if preset_mode is not None:
+            await self.async_set_preset_mode(preset_mode)
+        else:
+            await self._device.switch_on(set_status=True)
+        # State is set optimistically in the command above, therefore update
+        # the entity state ahead of receiving the confirming push updates
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
@@ -92,6 +142,33 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         return self._device.status.switch
 
     @property
-    def percentage(self) -> int:
+    def percentage(self) -> int | None:
         """Return the current speed percentage."""
-        return ranged_value_to_percentage(SPEED_RANGE, self._device.status.fan_speed)
+        if FanEntityFeature.SET_SPEED in self._attr_supported_features:
+            return ranged_value_to_percentage(
+                SPEED_RANGE, self._device.status.fan_speed
+            )
+
+        return None
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode, e.g., auto, smart, interval, favorite.
+
+        Requires FanEntityFeature.SET_SPEED.
+        """
+        if FanEntityFeature.PRESET_MODE in self._attr_supported_features:
+            return self._device.status.fan_mode
+
+        return None
+
+    @property
+    def preset_modes(self) -> list[str] | None:
+        """Return a list of available preset modes.
+
+        Requires FanEntityFeature.SET_SPEED.
+        """
+        if FanEntityFeature.PRESET_MODE in self._attr_supported_features:
+            return self._device.status.supported_ac_fan_modes
+
+        return None
