@@ -29,11 +29,11 @@ async def test_sensors(
 
     sensor = hass.states.get("sensor.virtual_station_dew_point")
     assert sensor is not None
-    assert sensor.state == "20.9142888594875"
+    assert sensor.state == "26.8333333333333"
 
     sensor = hass.states.get("sensor.virtual_station_feels_like")
     assert sensor is not None
-    assert sensor.state == "31.2479199032778"
+    assert sensor.state == "30.3888888888889"
 
     sensor = hass.states.get("sensor.virtual_station_hourly_rain")
     assert sensor is not None
