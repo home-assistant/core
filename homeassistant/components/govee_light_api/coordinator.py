@@ -10,7 +10,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     CONF_DISCOVERY_INTERVAL_DEFAULT,
-    CONF_LISENING_PORT_DEFAULT,
+    CONF_LISTENING_PORT_DEFAULT,
     CONF_MULTICAST_ADDRESS_DEFAULT,
     CONF_TARGET_PORT_DEFAULT,
     SCAN_INTERVAL,
@@ -36,7 +36,7 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator):
             logger=_LOGGER,
             broadcast_address=CONF_MULTICAST_ADDRESS_DEFAULT,
             broadcast_port=CONF_TARGET_PORT_DEFAULT,
-            listening_port=CONF_LISENING_PORT_DEFAULT,
+            listening_port=CONF_LISTENING_PORT_DEFAULT,
             discovery_enabled=True,
             discovery_interval=CONF_DISCOVERY_INTERVAL_DEFAULT,
             discovered_callback=None,
