@@ -106,7 +106,7 @@ regex==2021.8.28
 # requirements so we can directly link HA versions to these library versions.
 anyio==4.1.0
 h11==0.14.0
-httpcore==0.18.0
+httpcore==1.0.2
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -180,6 +180,10 @@ get-mac==1000000000.0.0
 # They are build with mypyc, but causes issues with our wheel builder.
 # In order to do so, we need to constrain the version.
 charset-normalizer==3.2.0
+
+# lxml 5.0.0 currently does not build on alpine 3.18
+# https://bugs.launchpad.net/lxml/+bug/2047718
+lxml==4.9.4
 
 # dacite: Ensure we have a version that is able to handle type unions for Roborock.
 dacite>=1.8.0

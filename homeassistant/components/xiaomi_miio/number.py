@@ -108,14 +108,14 @@ ATTR_OSCILLATION_ANGLE = "angle"
 ATTR_VOLUME = "volume"
 
 
-@dataclass
+@dataclass(frozen=True)
 class XiaomiMiioNumberMixin:
     """A class that describes number entities."""
 
     method: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class XiaomiMiioNumberDescription(NumberEntityDescription, XiaomiMiioNumberMixin):
     """A class that describes number entities."""
 

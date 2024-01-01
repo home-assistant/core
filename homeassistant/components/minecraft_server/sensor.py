@@ -41,7 +41,7 @@ UNIT_PLAYERS_MAX = "players"
 UNIT_PLAYERS_ONLINE = "players"
 
 
-@dataclass
+@dataclass(frozen=True)
 class MinecraftServerEntityDescriptionMixin:
     """Mixin values for Minecraft Server entities."""
 
@@ -50,7 +50,7 @@ class MinecraftServerEntityDescriptionMixin:
     supported_server_types: set[MinecraftServerType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class MinecraftServerSensorEntityDescription(
     SensorEntityDescription, MinecraftServerEntityDescriptionMixin
 ):

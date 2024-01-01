@@ -14,7 +14,7 @@ ATTR_PRODUCT_NAME = "product_name"
 ATTR_AMOUNT = "amount"
 ATTR_PRODUCT_IDENTIFIERS = "product_identifiers"
 
-COUNTRY_CODES = ["NL", "DE", "BE"]
+COUNTRY_CODES = ["NL", "DE", "BE", "FR"]
 ATTRIBUTION = "Data provided by Picnic"
 ADDRESS = "address"
 CART_DATA = "cart_data"

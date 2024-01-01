@@ -93,7 +93,10 @@ def deserialize_entity_description(
     descriptions_class: type[EntityDescription], data: dict[str, Any]
 ) -> EntityDescription:
     """Deserialize an entity description."""
+    # pylint: disable=protected-access
     result: dict[str, Any] = {}
+    if hasattr(descriptions_class, "_dataclass"):
+        descriptions_class = descriptions_class._dataclass
     for field in cached_fields(descriptions_class):
         field_name = field.name
         # It would be nice if field.type returned the actual

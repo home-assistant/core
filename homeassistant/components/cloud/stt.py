@@ -13,36 +13,37 @@ from homeassistant.components.stt import (
     AudioCodecs,
     AudioFormats,
     AudioSampleRates,
-    Provider,
     SpeechMetadata,
     SpeechResult,
     SpeechResultState,
+    SpeechToTextEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .assist_pipeline import async_migrate_cloud_pipeline_stt_engine
 from .client import CloudClient
-from .const import DOMAIN
+from .const import DOMAIN, STT_ENTITY_UNIQUE_ID
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_get_engine(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> CloudProvider:
-    """Set up Cloud speech component."""
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Home Assistant Cloud speech platform via config entry."""
     cloud: Cloud[CloudClient] = hass.data[DOMAIN]
-
-    cloud_provider = CloudProvider(cloud)
-    if discovery_info is not None:
-        discovery_info["platform_loaded"].set()
-    return cloud_provider
+    async_add_entities([CloudProviderEntity(cloud)])
 
 
-class CloudProvider(Provider):
+class CloudProviderEntity(SpeechToTextEntity):
     """NabuCasa speech API provider."""
+
+    _attr_name = "Home Assistant Cloud"
+    _attr_unique_id = STT_ENTITY_UNIQUE_ID
 
     def __init__(self, cloud: Cloud[CloudClient]) -> None:
         """Home Assistant NabuCasa Speech to text."""
@@ -77,6 +78,10 @@ class CloudProvider(Provider):
     def supported_channels(self) -> list[AudioChannels]:
         """Return a list of supported channels."""
         return [AudioChannels.CHANNEL_MONO]
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity is about to be added to hass."""
+        await async_migrate_cloud_pipeline_stt_engine(self.hass, self.entity_id)
 
     async def async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]

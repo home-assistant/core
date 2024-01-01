@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+import logging
 
 from pyunifiprotect.data import (
     Camera,
@@ -25,8 +26,10 @@ from .entity import ProtectDeviceEntity, async_all_device_entities
 from .models import PermRequired, ProtectSetableKeysMixin, T
 from .utils import async_dispatch_id as _ufpd
 
+_LOGGER = logging.getLogger(__name__)
 
-@dataclass
+
+@dataclass(frozen=True)
 class NumberKeysMixin:
     """Mixin for required keys."""
 
@@ -35,7 +38,7 @@ class NumberKeysMixin:
     ufp_step: int | float
 
 
-@dataclass
+@dataclass(frozen=True)
 class ProtectNumberEntityDescription(
     ProtectSetableKeysMixin[T], NumberEntityDescription, NumberKeysMixin
 ):
@@ -285,4 +288,13 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
             self._attr_native_value != previous_value
             or self._attr_available != previous_available
         ):
+            _LOGGER.debug(
+                "Updating state [%s (%s)] %s (%s) -> %s (%s)",
+                device.name,
+                device.mac,
+                previous_value,
+                previous_available,
+                self._attr_native_value,
+                self._attr_available,
+            )
             self.async_write_ha_state()

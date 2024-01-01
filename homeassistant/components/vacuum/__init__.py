@@ -3,12 +3,11 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntFlag
 from functools import partial
 import logging
-from typing import Any, final
+from typing import TYPE_CHECKING, Any, final
 
 import voluptuous as vol
 
@@ -45,6 +44,11 @@ from homeassistant.loader import (
     async_suggest_report_issue,
     bind_hass,
 )
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -226,7 +230,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-class _BaseVacuum(Entity):
+BASE_CACHED_PROPERTIES_WITH_ATTR_ = {
+    "supported_features",
+    "battery_level",
+    "battery_icon",
+    "fan_speed",
+    "fan_speed_list",
+}
+
+
+class _BaseVacuum(Entity, cached_properties=BASE_CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a base vacuum.
 
     Contains common properties and functions for all vacuum devices.
@@ -240,27 +253,40 @@ class _BaseVacuum(Entity):
     _attr_fan_speed_list: list[str]
     _attr_supported_features: VacuumEntityFeature = VacuumEntityFeature(0)
 
-    @property
+    @cached_property
     def supported_features(self) -> VacuumEntityFeature:
         """Flag vacuum cleaner features that are supported."""
         return self._attr_supported_features
 
     @property
+    def supported_features_compat(self) -> VacuumEntityFeature:
+        """Return the supported features as VacuumEntityFeature.
+
+        Remove this compatibility shim in 2025.1 or later.
+        """
+        features = self.supported_features
+        if type(features) is int:  # noqa: E721
+            new_features = VacuumEntityFeature(features)
+            self._report_deprecated_supported_features_values(new_features)
+            return new_features
+        return features
+
+    @cached_property
     def battery_level(self) -> int | None:
         """Return the battery level of the vacuum cleaner."""
         return self._attr_battery_level
 
-    @property
+    @cached_property
     def battery_icon(self) -> str:
         """Return the battery icon for the vacuum cleaner."""
         return self._attr_battery_icon
 
-    @property
+    @cached_property
     def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
         return self._attr_fan_speed
 
-    @property
+    @cached_property
     def fan_speed_list(self) -> list[str]:
         """Get the list of available fan speed steps of the vacuum cleaner."""
         return self._attr_fan_speed_list
@@ -268,7 +294,7 @@ class _BaseVacuum(Entity):
     @property
     def capability_attributes(self) -> Mapping[str, Any] | None:
         """Return capability attributes."""
-        if self.supported_features & VacuumEntityFeature.FAN_SPEED:
+        if VacuumEntityFeature.FAN_SPEED in self.supported_features_compat:
             return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
         return None
 
@@ -276,12 +302,13 @@ class _BaseVacuum(Entity):
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the vacuum cleaner."""
         data: dict[str, Any] = {}
+        supported_features = self.supported_features_compat
 
-        if self.supported_features & VacuumEntityFeature.BATTERY:
+        if VacuumEntityFeature.BATTERY in supported_features:
             data[ATTR_BATTERY_LEVEL] = self.battery_level
             data[ATTR_BATTERY_ICON] = self.battery_icon
 
-        if self.supported_features & VacuumEntityFeature.FAN_SPEED:
+        if VacuumEntityFeature.FAN_SPEED in supported_features:
             data[ATTR_FAN_SPEED] = self.fan_speed
 
         return data
@@ -367,12 +394,18 @@ class _BaseVacuum(Entity):
         )
 
 
-@dataclass
-class VacuumEntityDescription(ToggleEntityDescription):
+class VacuumEntityDescription(ToggleEntityDescription, frozen_or_thawed=True):
     """A class that describes vacuum entities."""
 
 
-class VacuumEntity(_BaseVacuum, ToggleEntity):
+VACUUM_CACHED_PROPERTIES_WITH_ATTR_ = {
+    "status",
+}
+
+
+class VacuumEntity(
+    _BaseVacuum, ToggleEntity, cached_properties=VACUUM_CACHED_PROPERTIES_WITH_ATTR_
+):
     """Representation of a vacuum cleaner robot."""
 
     @callback
@@ -430,7 +463,7 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
     entity_description: VacuumEntityDescription
     _attr_status: str | None = None
 
-    @property
+    @cached_property
     def status(self) -> str | None:
         """Return the status of the vacuum cleaner."""
         return self._attr_status
@@ -451,7 +484,7 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
         """Return the state attributes of the vacuum cleaner."""
         data = super().state_attributes
 
-        if self.supported_features & VacuumEntityFeature.STATUS:
+        if VacuumEntityFeature.STATUS in self.supported_features_compat:
             data[ATTR_STATUS] = self.status
 
         return data
@@ -490,18 +523,24 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
         await self.hass.async_add_executor_job(partial(self.start_pause, **kwargs))
 
 
-@dataclass
-class StateVacuumEntityDescription(EntityDescription):
+class StateVacuumEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes vacuum entities."""
 
 
-class StateVacuumEntity(_BaseVacuum):
+STATE_VACUUM_CACHED_PROPERTIES_WITH_ATTR_ = {
+    "state",
+}
+
+
+class StateVacuumEntity(
+    _BaseVacuum, cached_properties=STATE_VACUUM_CACHED_PROPERTIES_WITH_ATTR_
+):
     """Representation of a vacuum cleaner robot that supports states."""
 
     entity_description: StateVacuumEntityDescription
     _attr_state: str | None = None
 
-    @property
+    @cached_property
     def state(self) -> str | None:
         """Return the state of the vacuum cleaner."""
         return self._attr_state
