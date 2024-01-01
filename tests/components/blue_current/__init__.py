@@ -1,42 +1,75 @@
 """Tests for the Blue Current integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from unittest.mock import patch
 
-from bluecurrent_api import Client
-
-from homeassistant.components.blue_current import DOMAIN, Connector
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.blue_current import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.common import MockConfigEntry
 
 
+class MockClient:
+    """A mocked version of the blue current api Client class."""
+
+    receiver: Callable
+
+    def __init__(self, charge_point, charge_point_status, grid) -> None:
+        """Initialize the mock client and sets the default responses."""
+        self.charge_point = charge_point
+        self.charge_point_status = charge_point_status
+        self.grid = grid
+
+    async def start_loop(self, receiver):
+        """Set the receiver."""
+        self.receiver = receiver
+
+    async def get_charge_points(self):
+        """Send a list of charge points to the callback."""
+        await self.receiver(
+            {
+                "object": "CHARGE_POINTS",
+                "data": [self.charge_point],
+            }
+        )
+
+    async def get_status(self, evse_id: str):
+        "Send the status of a charge point to the callback."
+        await self.receiver(
+            {
+                "object": "CH_STATUS",
+                "data": {"evse_id": evse_id} | self.charge_point_status,
+            }
+        )
+
+    async def get_grid_status(self, evse_id: str):
+        """Send the grid status to the callback."""
+        await self.receiver({"object": "GRID_STATUS", "data": self.grid})
+
+    async def wait_for_response(self):
+        """Fake wait for response."""
+
+    async def connect(self, token: str):
+        """Fake connect."""
+
+    async def disconnect(self):
+        """Fake disconnect."""
+
+
 async def init_integration(
-    hass: HomeAssistant, platform, data: dict, grid=None
-) -> MockConfigEntry:
+    hass: HomeAssistant,
+    platform,
+    charge_point: dict,
+    charge_point_status: dict,
+    grid=None,
+) -> MockClient:
     """Set up the Blue Current integration in Home Assistant."""
 
-    if grid is None:
-        grid = {}
+    client = MockClient(charge_point, charge_point_status, grid)
 
-    def init(
-        self: Connector, hass: HomeAssistant, config: ConfigEntry, client: Client
-    ) -> None:
-        """Mock grid and charge_points."""
-
-        self.config = config
-        self.hass = hass
-        self.client = client
-        self.charge_points = data
-        self.grid = grid
-        self.available = True
-
-    with patch(
-        "homeassistant.components.blue_current.PLATFORMS", [platform]
-    ), patch.object(Connector, "__init__", init), patch(
-        "homeassistant.components.blue_current.Client", autospec=True
+    with patch("homeassistant.components.blue_current.PLATFORMS", [platform]), patch(
+        "homeassistant.components.blue_current.Client", return_value=client
     ):
         config_entry = MockConfigEntry(
             domain=DOMAIN,
@@ -48,5 +81,4 @@ async def init_integration(
 
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        async_dispatcher_send(hass, "blue_current_value_update_101")
-    return config_entry
+    return client
