@@ -1,4 +1,4 @@
-"""Test for a Home Assistant bridge that changes cover features at runtime."""
+"""Test for a Home Assistant bridge that changes climate features at runtime."""
 
 
 from homeassistant.components.climate import ATTR_SWING_MODES, ClimateEntityFeature
@@ -18,7 +18,7 @@ async def test_cover_add_feature_at_runtime(
 ) -> None:
     """Test that new features can be added at runtime."""
 
-    # Set up a basic cover that does not support position
+    # Set up a basic heater cooler that does not support swing mode
     accessories = await setup_accessories_from_file(
         hass, "home_assistant_bridge_basic_heater_cooler.json"
     )
@@ -34,7 +34,7 @@ async def test_cover_add_feature_at_runtime(
     climate = entity_registry.async_get("climate.89_living_room")
     assert climate.unique_id == "00:00:00:00:00:00_1233851541_169"
 
-    # Now change the config to remove stop
+    # Now change the config to add swing mode
     accessories = await setup_accessories_from_file(
         hass, "home_assistant_bridge_heater_cooler.json"
     )
