@@ -66,6 +66,7 @@ homeassistant.components.android_ip_webcam.*
 homeassistant.components.androidtv_remote.*
 homeassistant.components.anova.*
 homeassistant.components.anthemav.*
+homeassistant.components.aosmith.*
 homeassistant.components.apcupsd.*
 homeassistant.components.apprise.*
 homeassistant.components.aqualogic.*
