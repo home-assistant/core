@@ -1,11 +1,11 @@
 """Init the tedee component."""
+import asyncio
 from collections.abc import Awaitable, Callable
 import logging
 from typing import Any
 
 from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response
-from yarl import URL
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.webhook import (
@@ -43,46 +43,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     webhook_registered = False
+    register_lock = asyncio.Lock()
 
     async def unregister_webhook(_: Any) -> None:
         nonlocal webhook_registered
-        if not webhook_registered:
-            return
-        await coordinator.tedee_client.delete_webhooks()
-        webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-        _LOGGER.debug("Unregistered Tedee webhook")
+        async with register_lock:
+            if not webhook_registered:
+                return
+            await coordinator.tedee_client.delete_webhooks()
+            webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+            _LOGGER.debug("Unregistered Tedee webhook")
 
     async def register_webhook() -> None:
         nonlocal webhook_registered
-        if webhook_registered:
-            return
-        webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
-        url = URL(webhook_url)
-        if url.scheme != "https" or url.port != 443:
-            _LOGGER.warning(
-                "Webhook not registered - "
-                "https and port 443 is required to register the webhook"
+        async with register_lock:
+            if webhook_registered:
+                return
+            webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
+            webhook_name = "Tedee"
+            if entry.title != NAME:
+                webhook_name = f"{NAME} {entry.title}"
+
+            webhook_register(
+                hass,
+                DOMAIN,
+                webhook_name,
+                entry.data[CONF_WEBHOOK_ID],
+                get_webhook_handler(coordinator),
+                allowed_methods=[METH_POST],
             )
-            return
-        webhook_name = "Tedee"
-        if entry.title != NAME:
-            webhook_name = f"{NAME} {entry.title}"
+            _LOGGER.debug("Registered Tedee webhook at hass: %s", webhook_url)
 
-        webhook_register(
-            hass,
-            DOMAIN,
-            webhook_name,
-            entry.data[CONF_WEBHOOK_ID],
-            get_webhook_handler(coordinator),
-            allowed_methods=[METH_POST],
-        )
-        _LOGGER.debug("Registered Withings webhook at hass: %s", webhook_url)
-
-        await coordinator.tedee_client.register_webhook(webhook_url)
-        entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
-        )
-        webhook_registered = True
+            await coordinator.tedee_client.register_webhook(webhook_url)
+            entry.async_on_unload(
+                hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
+            )
+            webhook_registered = True
 
     entry.async_create_background_task(
         hass, register_webhook(), "tedee_register_webhook"
