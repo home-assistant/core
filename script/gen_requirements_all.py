@@ -185,7 +185,8 @@ charset-normalizer==3.2.0
 # https://bugs.launchpad.net/lxml/+bug/2047718
 lxml==4.9.4
 
-# dacite: Ensure we have a version that is able to handle type unions for Roborock.
+# dacite: Ensure we have a version that is able to handle type unions for
+Roborock, NAM, Brother, and GIOS.
 dacite>=1.7.0
 """
 
