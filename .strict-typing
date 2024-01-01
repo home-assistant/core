@@ -49,6 +49,7 @@ homeassistant.components.aftership.*
 homeassistant.components.air_quality.*
 homeassistant.components.airly.*
 homeassistant.components.airnow.*
+homeassistant.components.airthings_ble.*
 homeassistant.components.airvisual.*
 homeassistant.components.airvisual_pro.*
 homeassistant.components.airzone.*
@@ -316,6 +317,7 @@ homeassistant.components.sfr_box.*
 homeassistant.components.shelly.*
 homeassistant.components.simplepush.*
 homeassistant.components.simplisafe.*
+homeassistant.components.siren.*
 homeassistant.components.skybell.*
 homeassistant.components.slack.*
 homeassistant.components.sleepiq.*
@@ -352,6 +354,7 @@ homeassistant.components.threshold.*
 homeassistant.components.tibber.*
 homeassistant.components.tile.*
 homeassistant.components.tilt_ble.*
+homeassistant.components.time.*
 homeassistant.components.todo.*
 homeassistant.components.tolo.*
 homeassistant.components.tplink.*
@@ -379,6 +382,7 @@ homeassistant.components.valve.*
 homeassistant.components.velbus.*
 homeassistant.components.vlc_telnet.*
 homeassistant.components.wake_on_lan.*
+homeassistant.components.wake_word.*
 homeassistant.components.wallbox.*
 homeassistant.components.water_heater.*
 homeassistant.components.watttime.*
