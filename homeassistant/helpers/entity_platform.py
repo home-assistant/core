@@ -20,19 +20,17 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
+    EntityServiceResponse,
     HomeAssistant,
     ServiceCall,
+    SupportsResponse,
     callback,
     split_entity_id,
     valid_entity_id,
 )
-from homeassistant.exceptions import (
-    HomeAssistantError,
-    PlatformNotReady,
-)
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.generated import languages
 from homeassistant.setup import async_start_setup
-from homeassistant.util.async_ import run_callback_threadsafe
 
 from . import (
     config_validation as cv,
@@ -305,7 +303,7 @@ class EntityPlatform:
         current_platform.set(self)
         logger = self.logger
         hass = self.hass
-        full_name = f"{self.domain}.{self.platform_name}"
+        full_name = f"{self.platform_name}.{self.domain}"
         object_id_language = (
             hass.config.language
             if hass.config.language in languages.NATIVE_ENTITY_IDS
@@ -430,12 +428,11 @@ class EntityPlatform:
         self, new_entities: Iterable[Entity], update_before_add: bool = False
     ) -> None:
         """Schedule adding entities for a single platform, synchronously."""
-        run_callback_threadsafe(
-            self.hass.loop,
+        self.hass.loop.call_soon_threadsafe(
             self._async_schedule_add_entities,
             list(new_entities),
             update_before_add,
-        ).result()
+        )
 
     @callback
     def _async_schedule_add_entities(
@@ -569,7 +566,8 @@ class EntityPlatform:
             self._get_parallel_updates_semaphore(hasattr(entity, "update")),
         )
 
-        # Update properties before we generate the entity_id
+        # Update properties before we generate the entity_id. This will happen
+        # also for disabled entities.
         if update_before_add:
             try:
                 await entity.async_device_update(warning=False)
@@ -620,8 +618,13 @@ class EntityPlatform:
                         **device_info,
                     )
                 except dev_reg.DeviceInfoError as exc:
-                    self.logger.error("Ignoring invalid device info: %s", str(exc))
-                    device = None
+                    self.logger.error(
+                        "%s: Not adding entity with invalid device info: %s",
+                        self.platform_name,
+                        str(exc),
+                    )
+                    entity.add_to_platform_abort()
+                    return
             else:
                 device = None
 
@@ -808,9 +811,10 @@ class EntityPlatform:
     def async_register_entity_service(
         self,
         name: str,
-        schema: dict[str, Any] | vol.Schema,
+        schema: dict[str | vol.Marker, Any] | vol.Schema,
         func: str | Callable[..., Any],
         required_features: Iterable[int] | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Register an entity service.
 
@@ -822,9 +826,9 @@ class EntityPlatform:
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
-        async def handle_service(call: ServiceCall) -> None:
+        async def handle_service(call: ServiceCall) -> EntityServiceResponse | None:
             """Handle the service."""
-            await service.entity_service_call(
+            return await service.entity_service_call(
                 self.hass,
                 [
                     plf
@@ -837,7 +841,7 @@ class EntityPlatform:
             )
 
         self.hass.services.async_register(
-            self.platform_name, name, handle_service, schema
+            self.platform_name, name, handle_service, schema, supports_response
         )
 
     async def _update_entity_states(self, now: datetime) -> None:

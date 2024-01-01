@@ -48,7 +48,7 @@ TYPE_RAIN_SENSOR_RAIN_START = "rain_sensor_rain_start"
 TYPE_ZONE_RUN_COMPLETION_TIME = "zone_run_completion_time"
 
 
-@dataclass
+@dataclass(frozen=True)
 class RainMachineSensorDataDescription(
     SensorEntityDescription,
     RainMachineEntityDescription,
@@ -57,7 +57,7 @@ class RainMachineSensorDataDescription(
     """Describe a RainMachine sensor."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class RainMachineSensorCompletionTimerDescription(
     SensorEntityDescription,
     RainMachineEntityDescription,
@@ -141,7 +141,6 @@ SENSOR_DESCRIPTIONS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
-        state_class=SensorStateClass.MEASUREMENT,
         api_category=DATA_PROVISION_SETTINGS,
         data_key="lastLeakDetected",
     ),
@@ -152,7 +151,6 @@ SENSOR_DESCRIPTIONS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
-        state_class=SensorStateClass.MEASUREMENT,
         api_category=DATA_PROVISION_SETTINGS,
         data_key="rainSensorRainStart",
     ),

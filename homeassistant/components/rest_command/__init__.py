@@ -16,10 +16,12 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "rest_command"
@@ -57,6 +59,23 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the REST command component."""
+
+    async def reload_service_handler(service: ServiceCall) -> None:
+        """Remove all rest_commands and load new ones from config."""
+        conf = await async_integration_yaml_config(hass, DOMAIN)
+
+        # conf will be None if the configuration can't be parsed
+        if conf is None:
+            return
+
+        existing = hass.services.async_services().get(DOMAIN, {})
+        for existing_service in existing:
+            if existing_service == SERVICE_RELOAD:
+                continue
+            hass.services.async_remove(DOMAIN, existing_service)
+
+        for name, command_config in conf[DOMAIN].items():
+            async_register_rest_command(name, command_config)
 
     @callback
     def async_register_rest_command(name, command_config):
@@ -155,5 +174,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     for name, command_config in config[DOMAIN].items():
         async_register_rest_command(name, command_config)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
+    )
 
     return True

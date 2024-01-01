@@ -19,7 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -30,7 +30,7 @@ _P = ParamSpec("_P")
 
 
 def with_error_wrapping(
-    func: Callable[Concatenate[SFRBoxButton, _P], Awaitable[_T]]
+    func: Callable[Concatenate[SFRBoxButton, _P], Awaitable[_T]],
 ) -> Callable[Concatenate[SFRBoxButton, _P], Coroutine[Any, Any, _T]]:
     """Catch SFR errors."""
 
@@ -49,14 +49,14 @@ def with_error_wrapping(
     return wrapper
 
 
-@dataclass
+@dataclass(frozen=True)
 class SFRBoxButtonMixin:
     """Mixin for SFR Box buttons."""
 
     async_press: Callable[[SFRBox], Coroutine[None, None, None]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SFRBoxButtonEntityDescription(ButtonEntityDescription, SFRBoxButtonMixin):
     """Description for SFR Box buttons."""
 

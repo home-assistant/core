@@ -37,6 +37,7 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_MODE,
     CONF_NAME,
+    CONF_PAYLOAD,
     CONF_TYPE,
     Platform,
 )
@@ -46,7 +47,6 @@ from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 from .const import (
     CONF_INVERT,
     CONF_KNX_EXPOSE,
-    CONF_PAYLOAD,
     CONF_PAYLOAD_LENGTH,
     CONF_RESET_AFTER,
     CONF_RESPOND_TO_READ,
@@ -553,6 +553,44 @@ class CoverSchema(KNXPlatformSchema):
                 vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             }
         ),
+    )
+
+
+class DateSchema(KNXPlatformSchema):
+    """Voluptuous schema for KNX date."""
+
+    PLATFORM = Platform.DATE
+
+    DEFAULT_NAME = "KNX Date"
+
+    ENTITY_SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
+            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
+            vol.Required(KNX_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+        }
+    )
+
+
+class DateTimeSchema(KNXPlatformSchema):
+    """Voluptuous schema for KNX date."""
+
+    PLATFORM = Platform.DATETIME
+
+    DEFAULT_NAME = "KNX DateTime"
+
+    ENTITY_SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
+            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
+            vol.Required(KNX_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+        }
     )
 
 

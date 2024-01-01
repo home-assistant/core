@@ -212,6 +212,7 @@ async def test_issues_created(
         "flow_id": ANY,
         "handler": DOMAIN,
         "last_step": None,
+        "preview": None,
         "step_id": "confirm",
         "type": "form",
     }
@@ -228,6 +229,7 @@ async def test_issues_created(
         "description_placeholders": None,
         "flow_id": flow_id,
         "handler": DOMAIN,
+        "minor_version": 1,
         "type": "create_entry",
         "version": 1,
     }

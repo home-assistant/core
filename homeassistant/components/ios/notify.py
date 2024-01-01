@@ -25,7 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 PUSH_URL = "https://ios-push.home-assistant.io/push"
 
 
-# pylint: disable=invalid-name
 def log_rate_limits(hass, target, resp, level=20):
     """Output rate limit log line at given level."""
     rate_limits = resp["rateLimits"]
@@ -53,9 +52,9 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> iOSNotificationService | None:
     """Get the iOS notification service."""
-    if "notify.ios" not in hass.config.components:
+    if "ios.notify" not in hass.config.components:
         # Need this to enable requirements checking in the app.
-        hass.config.components.add("notify.ios")
+        hass.config.components.add("ios.notify")
 
     if not ios.devices_with_push(hass):
         return None

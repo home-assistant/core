@@ -67,7 +67,7 @@ class AuthProvider:
     @property
     def name(self) -> str:
         """Return the name of the auth provider."""
-        return self.config.get(CONF_NAME, self.DEFAULT_TITLE)
+        return self.config.get(CONF_NAME, self.DEFAULT_TITLE)  # type: ignore[no-any-return]
 
     @property
     def support_mfa(self) -> bool:

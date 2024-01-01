@@ -6,6 +6,9 @@
         "description": "If you leave the host empty, discovery will be used to find devices.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your TP-Link device."
         }
       },
       "pick_device": {
@@ -23,6 +26,24 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_consumption": {
+        "name": "Current consumption"
+      },
+      "total_consumption": {
+        "name": "Total consumption"
+      },
+      "today_consumption": {
+        "name": "Today's consumption"
+      }
+    },
+    "switch": {
+      "led": {
+        "name": "LED"
+      }
     }
   },
   "services": {

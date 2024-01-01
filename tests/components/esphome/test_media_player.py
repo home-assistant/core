@@ -32,9 +32,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    mock_platform,
-)
+from tests.common import mock_platform
 from tests.typing import WebSocketGenerator
 
 

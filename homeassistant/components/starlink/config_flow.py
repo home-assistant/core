@@ -44,6 +44,7 @@ class StarlinkConfigFlow(ConfigFlow, domain=DOMAIN):
     async def get_device_id(self, url: str) -> str | None:
         """Get the device UID, or None if no device exists at the given URL."""
         context = ChannelContext(target=url)
+        response: str | None
         try:
             response = await self.hass.async_add_executor_job(get_id, context)
         except GrpcError:

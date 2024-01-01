@@ -21,8 +21,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -30,7 +29,7 @@ from .const import DOMAIN, SERVICE_TYPE_DEVICE_NAMES
 from .coordinator import EasyEnergyData, EasyEnergyDataUpdateCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class EasyEnergySensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -38,7 +37,7 @@ class EasyEnergySensorEntityDescriptionMixin:
     service_type: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class EasyEnergySensorEntityDescription(
     SensorEntityDescription, EasyEnergySensorEntityDescriptionMixin
 ):

@@ -17,13 +17,12 @@ from tests.common import MockConfigEntry
 
 async def test_watching(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
     mock_jellyfin: MagicMock,
 ) -> None:
     """Test the Jellyfin watching sensor."""
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
     state = hass.states.get("sensor.jellyfin_server")
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None

@@ -345,14 +345,16 @@ class CloudGoogleConfig(AbstractConfig):
         assistant_options = settings.get(CLOUD_GOOGLE, {})
         return not assistant_options.get(PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)
 
-    async def async_report_state(self, message: Any, agent_user_id: str) -> None:
+    async def async_report_state(
+        self, message: Any, agent_user_id: str, event_id: str | None = None
+    ) -> None:
         """Send a state report to Google."""
         try:
             await self._cloud.google_report_state.async_send_message(message)
         except ErrorResponse as err:
             _LOGGER.warning("Error reporting state - %s: %s", err.code, err.message)
 
-    async def _async_request_sync_devices(self, agent_user_id: str) -> int:
+    async def _async_request_sync_devices(self, agent_user_id: str) -> HTTPStatus | int:
         """Trigger a sync with Google."""
         if self._sync_entities_lock.locked():
             return HTTPStatus.OK

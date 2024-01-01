@@ -35,7 +35,7 @@ def icon_for_gauge_level(gauge_level: int | None = None, offset: int = 0) -> str
     return "mdi:gauge-low"
 
 
-@dataclass
+@dataclass(frozen=True)
 class RobotSensorEntityDescription(SensorEntityDescription, Generic[_RobotT]):
     """A class that describes robot sensor entities."""
 
@@ -66,7 +66,7 @@ class LitterRobotSensorEntity(LitterRobotEntity[_RobotT], SensorEntity):
 
 
 ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
-    LitterRobot: [
+    LitterRobot: [  # type: ignore[type-abstract]  # only used for isinstance check
         RobotSensorEntityDescription[LitterRobot](
             key="waste_drawer_level",
             translation_key="waste_drawer",

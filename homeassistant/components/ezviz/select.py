@@ -20,14 +20,14 @@ from .entity import EzvizEntity
 PARALLEL_UPDATES = 1
 
 
-@dataclass
+@dataclass(frozen=True)
 class EzvizSelectEntityDescriptionMixin:
     """Mixin values for EZVIZ Select entities."""
 
     supported_switch: int
 
 
-@dataclass
+@dataclass(frozen=True)
 class EzvizSelectEntityDescription(
     SelectEntityDescription, EzvizSelectEntityDescriptionMixin
 ):
@@ -62,8 +62,6 @@ async def async_setup_entry(
 
 class EzvizSelect(EzvizEntity, SelectEntity):
     """Representation of a EZVIZ select entity."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,

@@ -1,6 +1,7 @@
 """The tests for the Transport NSW (AU) sensor platform."""
 from unittest.mock import patch
 
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -42,6 +43,8 @@ async def test_transportnsw_config(mocked_get_departures, hass: HomeAssistant) -
     assert state.attributes["real_time"] == "y"
     assert state.attributes["destination"] == "Palm Beach"
     assert state.attributes["mode"] == "Bus"
+    assert state.attributes["device_class"] == SensorDeviceClass.DURATION
+    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
 
 
 def get_departuresMock_notFound(_stop_id, route, destination, api_key):

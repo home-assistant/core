@@ -10,8 +10,7 @@ from geocachingapi.models import GeocachingStatus
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -19,14 +18,14 @@ from .const import DOMAIN
 from .coordinator import GeocachingDataUpdateCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class GeocachingRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[GeocachingStatus], str | int | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class GeocachingSensorEntityDescription(
     SensorEntityDescription, GeocachingRequiredKeysMixin
 ):

@@ -2,17 +2,20 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from decimal import Decimal
+from types import ModuleType
 from typing import Any
 
 import pytest
 
+from homeassistant.components import sensor
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import (
     DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
     DOMAIN as SENSOR_DOMAIN,
+    NON_NUMERIC_DEVICE_CLASSES,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -25,6 +28,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNKNOWN,
+    EntityCategory,
     UnitOfEnergy,
     UnitOfLength,
     UnitOfMass,
@@ -44,9 +48,11 @@ from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.common import (
     MockConfigEntry,
+    MockEntityPlatform,
     MockModule,
     MockPlatform,
     async_mock_restore_state_shutdown_restart,
+    import_and_test_deprecated_constant_enum,
     mock_config_flow,
     mock_integration,
     mock_platform,
@@ -164,7 +170,7 @@ async def test_deprecated_last_reset(
         f"with state_class {state_class} has set last_reset. Setting last_reset for "
         "entities with state_class other than 'total' is not supported. Please update "
         "your configuration if state_class is manually configured, otherwise report it "
-        "to the custom integration author."
+        "to the author of the 'test' custom integration"
     ) in caplog.text
 
     state = hass.states.get("sensor.test")
@@ -177,7 +183,7 @@ async def test_datetime_conversion(
     enable_custom_integrations: None,
 ) -> None:
     """Test conversion of datetime."""
-    test_timestamp = datetime(2017, 12, 19, 18, 29, 42, tzinfo=timezone.utc)
+    test_timestamp = datetime(2017, 12, 19, 18, 29, 42, tzinfo=UTC)
     test_local_timestamp = test_timestamp.astimezone(
         dt_util.get_time_zone("Europe/Amsterdam")
     )
@@ -233,7 +239,7 @@ async def test_a_sensor_with_a_non_numeric_device_class(
     A non numeric sensor with a valid device class should never be
     handled as numeric because it has a device class.
     """
-    test_timestamp = datetime(2017, 12, 19, 18, 29, 42, tzinfo=timezone.utc)
+    test_timestamp = datetime(2017, 12, 19, 18, 29, 42, tzinfo=UTC)
     test_local_timestamp = test_timestamp.astimezone(
         dt_util.get_time_zone("Europe/Amsterdam")
     )
@@ -334,7 +340,7 @@ RESTORE_DATA = {
         "native_unit_of_measurement": None,
         "native_value": {
             "__type": "<class 'datetime.datetime'>",
-            "isoformat": datetime(2020, 2, 8, 15, tzinfo=timezone.utc).isoformat(),
+            "isoformat": datetime(2020, 2, 8, 15, tzinfo=UTC).isoformat(),
         },
     },
     "Decimal": {
@@ -375,7 +381,7 @@ RESTORE_DATA = {
         ),
         (date(2020, 2, 8), dict, RESTORE_DATA["date"], SensorDeviceClass.DATE, None),
         (
-            datetime(2020, 2, 8, 15, tzinfo=timezone.utc),
+            datetime(2020, 2, 8, 15, tzinfo=UTC),
             dict,
             RESTORE_DATA["datetime"],
             SensorDeviceClass.TIMESTAMP,
@@ -433,7 +439,7 @@ async def test_restore_sensor_save_state(
         (123.0, float, RESTORE_DATA["float"], SensorDeviceClass.TEMPERATURE, "°F"),
         (date(2020, 2, 8), date, RESTORE_DATA["date"], SensorDeviceClass.DATE, None),
         (
-            datetime(2020, 2, 8, 15, tzinfo=timezone.utc),
+            datetime(2020, 2, 8, 15, tzinfo=UTC),
             datetime,
             RESTORE_DATA["datetime"],
             SensorDeviceClass.TIMESTAMP,
@@ -1799,6 +1805,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         SensorDeviceClass.NITROGEN_MONOXIDE,
         SensorDeviceClass.NITROUS_OXIDE,
         SensorDeviceClass.OZONE,
+        SensorDeviceClass.PH,
         SensorDeviceClass.PM1,
         SensorDeviceClass.PM10,
         SensorDeviceClass.PM25,
@@ -1860,13 +1867,17 @@ async def test_device_classes_with_invalid_unit_of_measurement(
     ],
 )
 @pytest.mark.parametrize(
-    "native_value",
+    ("native_value", "problem"),
     [
-        "",
-        "abc",
-        "13.7.1",
-        datetime(2012, 11, 10, 7, 35, 1),
-        date(2012, 11, 10),
+        ("", "non-numeric"),
+        ("abc", "non-numeric"),
+        ("13.7.1", "non-numeric"),
+        (datetime(2012, 11, 10, 7, 35, 1), "non-numeric"),
+        (date(2012, 11, 10), "non-numeric"),
+        ("inf", "non-finite"),
+        (float("inf"), "non-finite"),
+        ("nan", "non-finite"),
+        (float("nan"), "non-finite"),
     ],
 )
 async def test_non_numeric_validation_error(
@@ -1874,6 +1885,7 @@ async def test_non_numeric_validation_error(
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
     native_value: Any,
+    problem: str,
     device_class: SensorDeviceClass | None,
     state_class: SensorStateClass | None,
     unit: str | None,
@@ -1898,7 +1910,7 @@ async def test_non_numeric_validation_error(
 
     assert (
         "thus indicating it has a numeric value; "
-        f"however, it has the non-numeric value: '{native_value}'"
+        f"however, it has the {problem} value: '{native_value}'"
     ) in caplog.text
 
 
@@ -2171,27 +2183,24 @@ async def test_unit_conversion_update(
 
     entity_registry = er.async_get(hass)
     platform = getattr(hass.components, "test.sensor")
-    platform.init(empty=True)
 
-    platform.ENTITIES["0"] = platform.MockSensor(
+    entity0 = platform.MockSensor(
         name="Test 0",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
         native_value=str(native_value),
         unique_id="very_unique",
     )
-    entity0 = platform.ENTITIES["0"]
 
-    platform.ENTITIES["1"] = platform.MockSensor(
+    entity1 = platform.MockSensor(
         name="Test 1",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
         native_value=str(native_value),
         unique_id="very_unique_1",
     )
-    entity1 = platform.ENTITIES["1"]
 
-    platform.ENTITIES["2"] = platform.MockSensor(
+    entity2 = platform.MockSensor(
         name="Test 2",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
@@ -2199,9 +2208,8 @@ async def test_unit_conversion_update(
         suggested_unit_of_measurement=suggested_unit,
         unique_id="very_unique_2",
     )
-    entity2 = platform.ENTITIES["2"]
 
-    platform.ENTITIES["3"] = platform.MockSensor(
+    entity3 = platform.MockSensor(
         name="Test 3",
         device_class=device_class,
         native_unit_of_measurement=native_unit,
@@ -2209,9 +2217,33 @@ async def test_unit_conversion_update(
         suggested_unit_of_measurement=suggested_unit,
         unique_id="very_unique_3",
     )
-    entity3 = platform.ENTITIES["3"]
 
-    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    entity4 = platform.MockSensor(
+        name="Test 4",
+        device_class=device_class,
+        native_unit_of_measurement=native_unit,
+        native_value=str(native_value),
+        unique_id="very_unique_4",
+    )
+
+    entity_platform = MockEntityPlatform(
+        hass, domain="sensor", platform_name="test", platform=None
+    )
+    await entity_platform.async_add_entities((entity0, entity1, entity2, entity3))
+
+    # Pre-register entity4
+    entry = entity_registry.async_get_or_create(
+        "sensor", "test", entity4.unique_id, unit_of_measurement=automatic_unit_1
+    )
+    entity4_entity_id = entry.entity_id
+    entity_registry.async_update_entity_options(
+        entity4_entity_id,
+        "sensor.private",
+        {
+            "suggested_unit_of_measurement": automatic_unit_1,
+        },
+    )
+
     await hass.async_block_till_done()
 
     # Registered entity -> Follow automatic unit conversion
@@ -2314,6 +2346,25 @@ async def test_unit_conversion_update(
     assert state.state == suggested_state
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == suggested_unit
 
+    # Entity 4 still has a pending request to refresh entity options
+    entry = entity_registry.async_get(entity4_entity_id)
+    assert entry.options == {
+        "sensor.private": {
+            "refresh_initial_entity_options": True,
+            "suggested_unit_of_measurement": automatic_unit_1,
+        }
+    }
+
+    # Add entity 4, the pending request to refresh entity options should be handled
+    await entity_platform.async_add_entities((entity4,))
+
+    state = hass.states.get(entity4_entity_id)
+    assert state.state == automatic_state_2
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == automatic_unit_2
+
+    entry = entity_registry.async_get(entity4_entity_id)
+    assert entry.options == {}
+
 
 class MockFlow(ConfigFlow):
     """Test flow."""
@@ -2376,7 +2427,7 @@ async def test_name(hass: HomeAssistant) -> None:
         config_entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
     ) -> None:
-        """Set up test stt platform via config entry."""
+        """Set up test sensor platform via config entry."""
         async_add_entities([entity1, entity2, entity3, entity4])
 
     mock_platform(
@@ -2437,3 +2488,93 @@ def test_async_rounded_state_registered_entity_with_display_precision(
     hass.states.async_set(entity_id, "-0.0")
     state = hass.states.get(entity_id)
     assert async_rounded_state(hass, entity_id, state) == "0.0000"
+
+
+def test_device_class_units_state_classes(hass: HomeAssistant) -> None:
+    """Test all numeric device classes have unit and state class."""
+    # DEVICE_CLASS_UNITS should include all device classes except:
+    # - SensorDeviceClass.MONETARY
+    # - Device classes enumerated in NON_NUMERIC_DEVICE_CLASSES
+    assert set(DEVICE_CLASS_UNITS) == set(
+        SensorDeviceClass
+    ) - NON_NUMERIC_DEVICE_CLASSES - {SensorDeviceClass.MONETARY}
+    # DEVICE_CLASS_STATE_CLASSES should include all device classes
+    assert set(DEVICE_CLASS_STATE_CLASSES) == set(SensorDeviceClass)
+
+
+async def test_entity_category_config_raises_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test error is raised when entity category is set to config."""
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test", entity_category=EntityCategory.CONFIG
+    )
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert (
+        "Entity sensor.test cannot be added as the entity category is set to config"
+        in caplog.text
+    )
+
+    assert not hass.states.get("sensor.test")
+
+
+@pytest.mark.parametrize(("enum"), list(sensor.SensorStateClass))
+@pytest.mark.parametrize(("module"), [sensor, sensor.const])
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: sensor.SensorStateClass,
+    module: ModuleType,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, module, enum, "STATE_CLASS_", "2025.1"
+    )
+
+
+@pytest.mark.parametrize(
+    ("enum"),
+    [
+        sensor.SensorDeviceClass.AQI,
+        sensor.SensorDeviceClass.BATTERY,
+        sensor.SensorDeviceClass.CO,
+        sensor.SensorDeviceClass.CO2,
+        sensor.SensorDeviceClass.CURRENT,
+        sensor.SensorDeviceClass.DATE,
+        sensor.SensorDeviceClass.ENERGY,
+        sensor.SensorDeviceClass.FREQUENCY,
+        sensor.SensorDeviceClass.GAS,
+        sensor.SensorDeviceClass.HUMIDITY,
+        sensor.SensorDeviceClass.ILLUMINANCE,
+        sensor.SensorDeviceClass.MONETARY,
+        sensor.SensorDeviceClass.NITROGEN_DIOXIDE,
+        sensor.SensorDeviceClass.NITROGEN_MONOXIDE,
+        sensor.SensorDeviceClass.NITROUS_OXIDE,
+        sensor.SensorDeviceClass.OZONE,
+        sensor.SensorDeviceClass.PM1,
+        sensor.SensorDeviceClass.PM10,
+        sensor.SensorDeviceClass.PM25,
+        sensor.SensorDeviceClass.POWER_FACTOR,
+        sensor.SensorDeviceClass.POWER,
+        sensor.SensorDeviceClass.PRESSURE,
+        sensor.SensorDeviceClass.SIGNAL_STRENGTH,
+        sensor.SensorDeviceClass.SULPHUR_DIOXIDE,
+        sensor.SensorDeviceClass.TEMPERATURE,
+        sensor.SensorDeviceClass.TIMESTAMP,
+        sensor.SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+        sensor.SensorDeviceClass.VOLTAGE,
+    ],
+)
+def test_deprecated_constants_sensor_device_class(
+    caplog: pytest.LogCaptureFixture,
+    enum: sensor.SensorStateClass,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, sensor, enum, "DEVICE_CLASS_", "2025.1"
+    )

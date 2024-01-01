@@ -48,8 +48,8 @@ async def test_lovelace_from_storage(
 
     assert response["result"] == {"yo": "hello"}
 
-    # Test with safe mode
-    hass.config.safe_mode = True
+    # Test with recovery mode
+    hass.config.recovery_mode = True
     await client.send_json({"id": 8, "type": "lovelace/config"})
     response = await client.receive_json()
     assert not response["success"]
@@ -141,7 +141,7 @@ async def test_lovelace_from_yaml(
     events = async_capture_events(hass, const.EVENT_LOVELACE_UPDATED)
 
     with patch(
-        "homeassistant.components.lovelace.dashboard.load_yaml",
+        "homeassistant.components.lovelace.dashboard.load_yaml_dict",
         return_value={"hello": "yo"},
     ):
         await client.send_json({"id": 7, "type": "lovelace/config"})
@@ -154,7 +154,7 @@ async def test_lovelace_from_yaml(
 
     # Fake new data to see we fire event
     with patch(
-        "homeassistant.components.lovelace.dashboard.load_yaml",
+        "homeassistant.components.lovelace.dashboard.load_yaml_dict",
         return_value={"hello": "yo2"},
     ):
         await client.send_json({"id": 8, "type": "lovelace/config", "force": True})
@@ -245,7 +245,7 @@ async def test_dashboard_from_yaml(
     events = async_capture_events(hass, const.EVENT_LOVELACE_UPDATED)
 
     with patch(
-        "homeassistant.components.lovelace.dashboard.load_yaml",
+        "homeassistant.components.lovelace.dashboard.load_yaml_dict",
         return_value={"hello": "yo"},
     ):
         await client.send_json(
@@ -260,7 +260,7 @@ async def test_dashboard_from_yaml(
 
     # Fake new data to see we fire event
     with patch(
-        "homeassistant.components.lovelace.dashboard.load_yaml",
+        "homeassistant.components.lovelace.dashboard.load_yaml_dict",
         return_value={"hello": "yo2"},
     ):
         await client.send_json(

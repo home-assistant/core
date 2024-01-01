@@ -16,14 +16,14 @@ from .entity import JellyfinEntity
 from .models import JellyfinData
 
 
-@dataclass
+@dataclass(frozen=True)
 class JellyfinSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[JellyfinDataT], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class JellyfinSensorEntityDescription(
     SensorEntityDescription, JellyfinSensorEntityDescriptionMixin
 ):

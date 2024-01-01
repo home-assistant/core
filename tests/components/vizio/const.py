@@ -1,4 +1,6 @@
 """Constants for the Vizio integration tests."""
+from ipaddress import ip_address
+
 from homeassistant.components import zeroconf
 from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
@@ -197,8 +199,8 @@ ZEROCONF_HOST = HOST.split(":")[0]
 ZEROCONF_PORT = HOST.split(":")[1]
 
 MOCK_ZEROCONF_SERVICE_INFO = zeroconf.ZeroconfServiceInfo(
-    host=ZEROCONF_HOST,
-    addresses=[ZEROCONF_HOST],
+    ip_address=ip_address(ZEROCONF_HOST),
+    ip_addresses=[ip_address(ZEROCONF_HOST)],
     hostname="mock_hostname",
     name=ZEROCONF_NAME,
     port=ZEROCONF_PORT,

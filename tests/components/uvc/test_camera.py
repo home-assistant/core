@@ -1,5 +1,5 @@
 """The tests for UVC camera module."""
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import call, patch
 
 import pytest
@@ -368,7 +368,7 @@ async def test_motion_recording_mode_properties(
     assert state
     assert state.state != STATE_RECORDING
     assert state.attributes["last_recording_start_time"] == datetime(
-        2021, 1, 8, 1, 56, 32, 367000, tzinfo=timezone.utc
+        2021, 1, 8, 1, 56, 32, 367000, tzinfo=UTC
     )
 
     mock_remote.return_value.get_camera.return_value["recordingIndicator"] = "DISABLED"

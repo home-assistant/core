@@ -6,6 +6,7 @@ from copy import deepcopy
 from typing import TYPE_CHECKING
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
+from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 import zigpy.backups
@@ -13,6 +14,7 @@ import zigpy.profiles.zha
 import zigpy.types
 from zigpy.types.named import EUI64
 import zigpy.zcl.clusters.general as general
+from zigpy.zcl.clusters.general import Groups
 import zigpy.zcl.clusters.security as security
 import zigpy.zdo.types as zdo_types
 
@@ -60,7 +62,7 @@ from .conftest import (
 )
 from .data import BASE_CUSTOM_CONFIGURATION, CONFIG_WITH_ALARM_OPTIONS
 
-from tests.common import MockUser
+from tests.common import MockConfigEntry, MockUser
 
 IEEE_SWITCH_DEVICE = "01:2d:6f:00:0a:90:69:e7"
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
@@ -226,6 +228,7 @@ async def test_device_cluster_commands(zha_client) -> None:
         assert command[TYPE] is not None
 
 
+@freeze_time("2023-09-23 20:16:00+00:00")
 async def test_list_devices(zha_client) -> None:
     """Test getting ZHA devices."""
     await zha_client.send_json({ID: 5, TYPE: "zha/devices"})
@@ -233,7 +236,7 @@ async def test_list_devices(zha_client) -> None:
     msg = await zha_client.receive_json()
 
     devices = msg["result"]
-    assert len(devices) == 2
+    assert len(devices) == 2 + 1  # the coordinator is included as well
 
     msg_id = 100
     for device in devices:
@@ -292,10 +295,12 @@ async def test_get_zha_config_with_alarm(
 
 
 async def test_update_zha_config(
-    zha_client, app_controller: ControllerApplication
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    zha_client,
+    app_controller: ControllerApplication,
 ) -> None:
     """Test updating ZHA custom configuration."""
-
     configuration: dict = deepcopy(CONFIG_WITH_ALARM_OPTIONS)
     configuration["data"]["zha_options"]["default_light_transition"] = 10
 
@@ -309,10 +314,12 @@ async def test_update_zha_config(
         msg = await zha_client.receive_json()
         assert msg["success"]
 
-        await zha_client.send_json({ID: 6, TYPE: "zha/configuration"})
-        msg = await zha_client.receive_json()
-        configuration = msg["result"]
-        assert configuration == configuration
+    await zha_client.send_json({ID: 6, TYPE: "zha/configuration"})
+    msg = await zha_client.receive_json()
+    configuration = msg["result"]
+    assert configuration == configuration
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 async def test_device_not_found(zha_client) -> None:
@@ -371,8 +378,13 @@ async def test_get_group_not_found(zha_client) -> None:
     assert msg["error"]["code"] == const.ERR_NOT_FOUND
 
 
-async def test_list_groupable_devices(zha_client, device_groupable) -> None:
+async def test_list_groupable_devices(
+    zha_client, device_groupable, zigpy_app_controller
+) -> None:
     """Test getting ZHA devices that have a group cluster."""
+    # Ensure the coordinator doesn't have a group cluster
+    coordinator = zigpy_app_controller.get_device(nwk=0x0000)
+    del coordinator.endpoints[1].in_clusters[Groups.cluster_id]
 
     await zha_client.send_json({ID: 10, TYPE: "zha/devices/groupable"})
 
@@ -479,6 +491,7 @@ async def app_controller(
 ) -> ControllerApplication:
     """Fixture for zigpy Application Controller."""
     await setup_zha()
+    zigpy_app_controller.permit.reset_mock()
     return zigpy_app_controller
 
 
@@ -933,6 +946,7 @@ async def test_websocket_bind_unbind_devices(
 @pytest.mark.parametrize("command_type", ["bind", "unbind"])
 async def test_websocket_bind_unbind_group(
     command_type: str,
+    hass: HomeAssistant,
     app_controller: ControllerApplication,
     zha_client,
 ) -> None:
@@ -940,8 +954,9 @@ async def test_websocket_bind_unbind_group(
 
     test_group_id = 0x0001
     gateway_mock = MagicMock()
+
     with patch(
-        "homeassistant.components.zha.websocket_api.get_gateway",
+        "homeassistant.components.zha.websocket_api.get_zha_gateway",
         return_value=gateway_mock,
     ):
         device_mock = MagicMock()

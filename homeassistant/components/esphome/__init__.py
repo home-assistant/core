@@ -1,9 +1,7 @@
 """Support for esphome devices."""
 from __future__ import annotations
 
-from aioesphomeapi import (
-    APIClient,
-)
+from aioesphomeapi import APIClient
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
@@ -17,10 +15,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_NOISE_PSK,
-    DOMAIN,
-)
+from .const import CONF_NOISE_PSK, DOMAIN
 from .dashboard import async_setup as async_setup_dashboard
 from .domain_data import DomainData
 
@@ -59,6 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry_data = RuntimeEntryData(
         client=cli,
         entry_id=entry.entry_id,
+        title=entry.title,
         store=domain_data.get_or_create_store(hass, entry),
         original_options=dict(entry.options),
     )

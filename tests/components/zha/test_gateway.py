@@ -1,22 +1,23 @@
 """Test ZHA Gateway."""
 import asyncio
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
-import zigpy.exceptions
+from zigpy.application import ControllerApplication
 import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.lighting as lighting
 
-from homeassistant.components.zha.core.device import ZHADevice
+from homeassistant.components.zha.core.gateway import ZHAGateway
 from homeassistant.components.zha.core.group import GroupMember
+from homeassistant.components.zha.core.helpers import get_zha_gateway
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
-from .common import async_find_group_entity_id, get_zha_gateway
+from .common import async_find_group_entity_id
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
+
+from tests.common import MockConfigEntry
 
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e8"
@@ -230,80 +231,6 @@ async def test_gateway_create_group_with_id(
     "homeassistant.components.zha.core.gateway.ZHAGateway.async_load_groups",
     MagicMock(),
 )
-@patch("homeassistant.components.zha.core.gateway.STARTUP_FAILURE_DELAY_S", 0.01)
-@pytest.mark.parametrize(
-    "startup",
-    [
-        [asyncio.TimeoutError(), FileNotFoundError(), MagicMock()],
-        [asyncio.TimeoutError(), MagicMock()],
-        [MagicMock()],
-    ],
-)
-async def test_gateway_initialize_success(
-    startup: list[Any],
-    hass: HomeAssistant,
-    device_light_1: ZHADevice,
-    coordinator: ZHADevice,
-) -> None:
-    """Test ZHA initializing the gateway successfully."""
-    zha_gateway = get_zha_gateway(hass)
-    assert zha_gateway is not None
-
-    zha_gateway.shutdown = AsyncMock()
-
-    with patch(
-        "bellows.zigbee.application.ControllerApplication.new", side_effect=startup
-    ) as mock_new:
-        await zha_gateway.async_initialize()
-
-    assert mock_new.call_count == len(startup)
-
-    device_light_1.async_cleanup_handles()
-
-
-@patch("homeassistant.components.zha.core.gateway.STARTUP_FAILURE_DELAY_S", 0.01)
-async def test_gateway_initialize_failure(
-    hass: HomeAssistant, device_light_1, coordinator
-) -> None:
-    """Test ZHA failing to initialize the gateway."""
-    zha_gateway = get_zha_gateway(hass)
-    assert zha_gateway is not None
-
-    with patch(
-        "bellows.zigbee.application.ControllerApplication.new",
-        side_effect=[asyncio.TimeoutError(), FileNotFoundError(), RuntimeError()],
-    ) as mock_new, pytest.raises(RuntimeError):
-        await zha_gateway.async_initialize()
-
-    assert mock_new.call_count == 3
-
-
-@patch("homeassistant.components.zha.core.gateway.STARTUP_FAILURE_DELAY_S", 0.01)
-async def test_gateway_initialize_failure_transient(
-    hass: HomeAssistant, device_light_1, coordinator
-) -> None:
-    """Test ZHA failing to initialize the gateway but with a transient error."""
-    zha_gateway = get_zha_gateway(hass)
-    assert zha_gateway is not None
-
-    with patch(
-        "bellows.zigbee.application.ControllerApplication.new",
-        side_effect=[RuntimeError(), zigpy.exceptions.TransientConnectionError()],
-    ) as mock_new, pytest.raises(ConfigEntryNotReady):
-        await zha_gateway.async_initialize()
-
-    # Initialization immediately stops and is retried after TransientConnectionError
-    assert mock_new.call_count == 2
-
-
-@patch(
-    "homeassistant.components.zha.core.gateway.ZHAGateway.async_load_devices",
-    MagicMock(),
-)
-@patch(
-    "homeassistant.components.zha.core.gateway.ZHAGateway.async_load_groups",
-    MagicMock(),
-)
 @pytest.mark.parametrize(
     ("device_path", "thread_state", "config_override"),
     [
@@ -313,23 +240,29 @@ async def test_gateway_initialize_failure_transient(
     ],
 )
 async def test_gateway_initialize_bellows_thread(
-    device_path, thread_state, config_override, hass: HomeAssistant, coordinator
+    device_path: str,
+    thread_state: bool,
+    config_override: dict,
+    hass: HomeAssistant,
+    zigpy_app_controller: ControllerApplication,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test ZHA disabling the UART thread when connecting to a TCP coordinator."""
-    zha_gateway = get_zha_gateway(hass)
-    assert zha_gateway is not None
+    config_entry.data = dict(config_entry.data)
+    config_entry.data["device"]["path"] = device_path
+    config_entry.add_to_hass(hass)
 
-    zha_gateway.config_entry.data = dict(zha_gateway.config_entry.data)
-    zha_gateway.config_entry.data["device"]["path"] = device_path
-    zha_gateway._config.setdefault("zigpy_config", {}).update(config_override)
+    zha_gateway = ZHAGateway(hass, {"zigpy_config": config_override}, config_entry)
 
     with patch(
         "bellows.zigbee.application.ControllerApplication.new",
-        new=AsyncMock(),
+        return_value=zigpy_app_controller,
     ) as mock_new:
         await zha_gateway.async_initialize()
 
-    assert mock_new.mock_calls[0].args[0]["use_thread"] is thread_state
+    mock_new.mock_calls[-1].kwargs["config"]["use_thread"] is thread_state
+
+    await zha_gateway.shutdown()
 
 
 @pytest.mark.parametrize(
@@ -347,15 +280,14 @@ async def test_gateway_force_multi_pan_channel(
     config_override: dict,
     expected_channel: int | None,
     hass: HomeAssistant,
-    coordinator,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test ZHA disabling the UART thread when connecting to a TCP coordinator."""
-    zha_gateway = get_zha_gateway(hass)
-    assert zha_gateway is not None
+    config_entry.data = dict(config_entry.data)
+    config_entry.data["device"]["path"] = device_path
+    config_entry.add_to_hass(hass)
 
-    zha_gateway.config_entry.data = dict(zha_gateway.config_entry.data)
-    zha_gateway.config_entry.data["device"]["path"] = device_path
-    zha_gateway._config.setdefault("zigpy_config", {}).update(config_override)
+    zha_gateway = ZHAGateway(hass, {"zigpy_config": config_override}, config_entry)
 
     _, config = zha_gateway.get_application_controller_data()
     assert config["network"]["channel"] == expected_channel

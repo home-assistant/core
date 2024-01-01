@@ -1,7 +1,7 @@
 """Diagnostics support for MQTT."""
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components import device_tracker
 from homeassistant.components.diagnostics import async_redact_data
@@ -45,7 +45,8 @@ def _async_get_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     mqtt_instance = get_mqtt_data(hass).client
-    assert mqtt_instance is not None
+    if TYPE_CHECKING:
+        assert mqtt_instance is not None
 
     redacted_config = async_redact_data(mqtt_instance.conf, REDACT_CONFIG)
 

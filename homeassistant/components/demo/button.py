@@ -5,7 +5,7 @@ from homeassistant.components import persistent_notification
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
@@ -22,7 +22,6 @@ async def async_setup_entry(
             DemoButton(
                 unique_id="push",
                 device_name="Push",
-                icon="mdi:gesture-tap-button",
             ),
         ]
     )
@@ -39,11 +38,9 @@ class DemoButton(ButtonEntity):
         self,
         unique_id: str,
         device_name: str,
-        icon: str,
     ) -> None:
         """Initialize the Demo button entity."""
         self._attr_unique_id = unique_id
-        self._attr_icon = icon
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             name=device_name,
@@ -54,3 +51,4 @@ class DemoButton(ButtonEntity):
         persistent_notification.async_create(
             self.hass, "Button pressed", title="Button"
         )
+        self.hass.bus.async_fire("demo_button_pressed")

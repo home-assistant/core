@@ -5,11 +5,10 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import HomeAssistantView, require_admin
 from homeassistant.components.sensor import async_update_suggested_units
-from homeassistant.config import async_check_ha_config_file
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import check_config, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import location, unit_system
 
@@ -28,13 +27,21 @@ class CheckConfigView(HomeAssistantView):
     url = "/api/config/core/check_config"
     name = "api:config:core:check_config"
 
+    @require_admin
     async def post(self, request):
         """Validate configuration and return results."""
-        errors = await async_check_ha_config_file(request.app["hass"])
 
-        state = "invalid" if errors else "valid"
+        res = await check_config.async_check_ha_config_file(request.app["hass"])
 
-        return self.json({"result": state, "errors": errors})
+        state = "invalid" if res.errors else "valid"
+
+        return self.json(
+            {
+                "result": state,
+                "errors": res.error_str or None,
+                "warnings": res.warning_str or None,
+            }
+        )
 
 
 @websocket_api.require_admin

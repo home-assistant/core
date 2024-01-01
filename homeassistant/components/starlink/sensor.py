@@ -40,14 +40,14 @@ async def async_setup_entry(
     )
 
 
-@dataclass
+@dataclass(frozen=True)
 class StarlinkSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[StarlinkData], datetime | StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class StarlinkSensorEntityDescription(
     SensorEntityDescription, StarlinkSensorEntityDescriptionMixin
 ):
@@ -130,6 +130,6 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         translation_key="ping_drop_rate",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        value_fn=lambda data: data.status["pop_ping_drop_rate"],
+        value_fn=lambda data: data.status["pop_ping_drop_rate"] * 100,
     ),
 )

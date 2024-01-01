@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CODE, CONF_CODE
+from homeassistant.const import ATTR_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -52,9 +52,7 @@ class YaleDoorlock(YaleEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Send unlock command."""
-        code: str | None = kwargs.get(
-            ATTR_CODE, self.coordinator.entry.options.get(CONF_CODE)
-        )
+        code: str | None = kwargs.get(ATTR_CODE)
         return await self.async_set_lock("unlocked", code)
 
     async def async_lock(self, **kwargs: Any) -> None:
@@ -81,14 +79,24 @@ class YaleDoorlock(YaleEntity, LockEntity):
                 )
         except YALE_ALL_ERRORS as error:
             raise HomeAssistantError(
-                f"Could not set lock for {self.lock_name}: {error}"
+                f"Could not set lock for {self.lock_name}: {error}",
+                translation_domain=DOMAIN,
+                translation_key="set_lock",
+                translation_placeholders={
+                    "name": self.lock_name,
+                    "error": str(error),
+                },
             ) from error
 
         if lock_state:
             self.coordinator.data["lock_map"][self._attr_unique_id] = command
             self.async_write_ha_state()
             return
-        raise HomeAssistantError("Could not set lock, check system ready for lock.")
+        raise HomeAssistantError(
+            "Could not set lock, check system ready for lock",
+            translation_domain=DOMAIN,
+            translation_key="could_not_change_lock",
+        )
 
     @property
     def is_locked(self) -> bool | None:

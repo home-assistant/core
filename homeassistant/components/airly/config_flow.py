@@ -1,13 +1,13 @@
 """Adds config flow for Airly."""
 from __future__ import annotations
 
+from asyncio import timeout
 from http import HTTPStatus
 from typing import Any
 
 from aiohttp import ClientSession
 from airly import Airly
 from airly.exceptions import AirlyError
-import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -105,7 +105,7 @@ async def test_location(
         measurements = airly.create_measurements_session_point(
             latitude=latitude, longitude=longitude
         )
-    async with async_timeout.timeout(10):
+    async with timeout(10):
         await measurements.update()
 
     current = measurements.current

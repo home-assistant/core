@@ -33,7 +33,6 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
                 "name": "My integration",
                 "round": 1,
                 "source": input_sensor_entity_id,
-                "unit_prefix": "none",
                 "unit_time": "min",
             },
         )
@@ -47,7 +46,6 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "name": "My integration",
         "round": 1.0,
         "source": "sensor.input",
-        "unit_prefix": "none",
         "unit_time": "min",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -59,7 +57,6 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         "name": "My integration",
         "round": 1.0,
         "source": "sensor.input",
-        "unit_prefix": "none",
         "unit_time": "min",
     }
     assert config_entry.title == "My integration"

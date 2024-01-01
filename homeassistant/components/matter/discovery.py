@@ -12,6 +12,7 @@ from homeassistant.core import callback
 from .binary_sensor import DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS
 from .climate import DISCOVERY_SCHEMAS as CLIMATE_SENSOR_SCHEMAS
 from .cover import DISCOVERY_SCHEMAS as COVER_SCHEMAS
+from .event import DISCOVERY_SCHEMAS as EVENT_SCHEMAS
 from .light import DISCOVERY_SCHEMAS as LIGHT_SCHEMAS
 from .lock import DISCOVERY_SCHEMAS as LOCK_SCHEMAS
 from .models import MatterDiscoverySchema, MatterEntityInfo
@@ -22,6 +23,7 @@ DISCOVERY_SCHEMAS: dict[Platform, list[MatterDiscoverySchema]] = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_SCHEMAS,
     Platform.CLIMATE: CLIMATE_SENSOR_SCHEMAS,
     Platform.COVER: COVER_SCHEMAS,
+    Platform.EVENT: EVENT_SCHEMAS,
     Platform.LIGHT: LIGHT_SCHEMAS,
     Platform.LOCK: LOCK_SCHEMAS,
     Platform.SENSOR: SENSOR_SCHEMAS,
@@ -113,8 +115,9 @@ def async_discover_entities(
             attributes_to_watch=attributes_to_watch,
             entity_description=schema.entity_description,
             entity_class=schema.entity_class,
+            should_poll=schema.should_poll,
         )
 
-        # prevent re-discovery of the same attributes
+        # prevent re-discovery of the primary attribute if not allowed
         if not schema.allow_multi:
-            discovered_attributes.update(attributes_to_watch)
+            discovered_attributes.update(schema.required_attributes)

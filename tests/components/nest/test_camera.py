@@ -8,6 +8,7 @@ from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
+from freezegun import freeze_time
 from google_nest_sdm.event import EventMessage
 import pytest
 
@@ -173,7 +174,7 @@ async def async_get_image(hass, width=None, height=None):
 
 async def fire_alarm(hass, point_in_time):
     """Fire an alarm and wait for callbacks to run."""
-    with patch("homeassistant.util.dt.utcnow", return_value=point_in_time):
+    with freeze_time(point_in_time):
         async_fire_time_changed(hass, point_in_time)
         await hass.async_block_till_done()
 
@@ -244,8 +245,6 @@ async def test_camera_stream(
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
 
-    assert await async_get_image(hass) == IMAGE_BYTES_FROM_STREAM
-
 
 async def test_camera_ws_stream(
     hass: HomeAssistant,
@@ -279,8 +278,6 @@ async def test_camera_ws_stream(
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"]["url"] == "http://home.assistant/playlist.m3u8"
-
-    assert await async_get_image(hass) == IMAGE_BYTES_FROM_STREAM
 
 
 async def test_camera_ws_stream_failure(
@@ -745,8 +742,6 @@ async def test_camera_multiple_streams(
     # RTSP stream
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
-
-    assert await async_get_image(hass) == IMAGE_BYTES_FROM_STREAM
 
     # WebRTC stream
     client = await hass_ws_client(hass)

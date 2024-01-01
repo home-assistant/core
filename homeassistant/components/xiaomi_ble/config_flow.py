@@ -123,7 +123,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             if len(bindkey) != 24:
                 errors["bindkey"] = "expected_24_characters"
             else:
-                self._discovered_device.bindkey = bytes.fromhex(bindkey)
+                self._discovered_device.set_bindkey(bytes.fromhex(bindkey))
 
                 # If we got this far we already know supported will
                 # return true so we don't bother checking that again
@@ -157,7 +157,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             if len(bindkey) != 32:
                 errors["bindkey"] = "expected_32_characters"
             else:
-                self._discovered_device.bindkey = bytes.fromhex(bindkey)
+                self._discovered_device.set_bindkey(bytes.fromhex(bindkey))
 
                 # If we got this far we already know supported will
                 # return true so we don't bother checking that again

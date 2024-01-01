@@ -1,0 +1,9 @@
+{
+  "domain": "schlage",
+  "name": "Schlage",
+  "codeowners": ["@dknowles2"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/schlage",
+  "iot_class": "cloud_polling",
+  "requirements": ["pyschlage==2023.12.1"]
+}

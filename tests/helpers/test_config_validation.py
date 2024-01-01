@@ -127,6 +127,35 @@ def test_url() -> None:
         assert schema(value)
 
 
+def test_configuration_url() -> None:
+    """Test URL."""
+    schema = vol.Schema(cv.configuration_url)
+
+    for value in (
+        "invalid",
+        None,
+        100,
+        "htp://ha.io",
+        "http//ha.io",
+        "http://??,**",
+        "https://??,**",
+        "homeassistant://??,**",
+    ):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    for value in (
+        "http://localhost",
+        "https://localhost/test/index.html",
+        "http://home-assistant.io",
+        "http://home-assistant.io/test/",
+        "https://community.home-assistant.io/",
+        "homeassistant://api",
+        "homeassistant://api/hassio_ingress/XXXXXXX",
+    ):
+        assert schema(value)
+
+
 def test_url_no_path() -> None:
     """Test URL."""
     schema = vol.Schema(cv.url_no_path)
@@ -510,6 +539,13 @@ def test_string(hass: HomeAssistant) -> None:
     for value in (True, 1, "hello"):
         schema(value)
 
+    # Test subclasses of str are returned
+    class MyString(str):
+        pass
+
+    my_string = MyString("hello")
+    assert schema(my_string) is my_string
+
     # Test template support
     for text, native in (
         ("[1, 2]", [1, 2]),
@@ -533,6 +569,9 @@ def test_string_with_no_html() -> None:
 
     with pytest.raises(vol.Invalid):
         schema("<b>Bold</b>")
+
+    with pytest.raises(vol.Invalid):
+        schema("HTML element names are <EM>case-insensitive</eM>.")
 
     for value in (
         True,
@@ -800,6 +839,7 @@ def test_selector_in_serializer() -> None:
         "selector": {
             "text": {
                 "multiline": False,
+                "multiple": False,
             }
         }
     }
@@ -1192,7 +1232,7 @@ def test_enum() -> None:
         schema("value3")
 
 
-def test_socket_timeout():  # pylint: disable=invalid-name
+def test_socket_timeout():
     """Test socket timeout validator."""
     schema = vol.Schema(cv.socket_timeout)
 
@@ -1591,3 +1631,19 @@ def test_platform_only_schema(
     cv.platform_only_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
     assert expected_message in caplog.text
     assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
+
+
+def test_domain() -> None:
+    """Test domain."""
+    with pytest.raises(vol.Invalid):
+        cv.domain_key(5)
+    with pytest.raises(vol.Invalid):
+        cv.domain_key("")
+    with pytest.raises(vol.Invalid):
+        cv.domain_key("hue ")
+    with pytest.raises(vol.Invalid):
+        cv.domain_key("hue  ")
+    assert cv.domain_key("hue") == "hue"
+    assert cv.domain_key("hue1") == "hue1"
+    assert cv.domain_key("hue 1") == "hue"
+    assert cv.domain_key("hue  1") == "hue"

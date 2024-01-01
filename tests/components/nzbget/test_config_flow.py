@@ -5,7 +5,7 @@ from pynzbgetapi import NZBGetAPIException
 
 from homeassistant.components.nzbget.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_SCAN_INTERVAL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -122,33 +122,3 @@ async def test_user_form_single_instance_allowed(hass: HomeAssistant) -> None:
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
-
-
-async def test_options_flow(hass: HomeAssistant, nzbget_api) -> None:
-    """Test updating options."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=ENTRY_CONFIG,
-        options={CONF_SCAN_INTERVAL: 5},
-    )
-    entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.nzbget.PLATFORMS", []):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.options[CONF_SCAN_INTERVAL] == 5
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    with _patch_async_setup_entry():
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={CONF_SCAN_INTERVAL: 15},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_SCAN_INTERVAL] == 15

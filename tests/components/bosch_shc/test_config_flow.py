@@ -1,4 +1,5 @@
 """Test the Bosch SHC config flow."""
+from ipaddress import ip_address
 from unittest.mock import PropertyMock, mock_open, patch
 
 from boschshcpy.exceptions import (
@@ -22,8 +23,8 @@ MOCK_SETTINGS = {
     "device": {"mac": "test-mac", "hostname": "test-host"},
 }
 DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
-    host="1.1.1.1",
-    addresses=["1.1.1.1"],
+    ip_address=ip_address("1.1.1.1"),
+    ip_addresses=[ip_address("1.1.1.1")],
     hostname="shc012345.local.",
     name="Bosch SHC [test-mac]._http._tcp.local.",
     port=0,
@@ -548,8 +549,8 @@ async def test_zeroconf_not_bosch_shc(hass: HomeAssistant, mock_zeroconf: None) 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.1.1.1",
-            addresses=["1.1.1.1"],
+            ip_address=ip_address("1.1.1.1"),
+            ip_addresses=[ip_address("1.1.1.1")],
             hostname="mock_hostname",
             name="notboschshc",
             port=None,

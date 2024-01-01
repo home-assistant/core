@@ -185,7 +185,15 @@ class JellyfinSource(MediaSource):
     async def _build_artists(self, library_id: str) -> list[BrowseMediaSource]:
         """Return all artists in the music library."""
         artists = await self._get_children(library_id, ITEM_TYPE_ARTIST)
-        artists = sorted(artists, key=lambda k: k[ITEM_KEY_NAME])
+        artists = sorted(
+            artists,
+            # Sort by whether an artist has an name first, then by name
+            # This allows for sorting artists with, without and with missing names
+            key=lambda k: (
+                ITEM_KEY_NAME not in k,
+                k.get(ITEM_KEY_NAME),
+            ),
+        )
         return [await self._build_artist(artist, False) for artist in artists]
 
     async def _build_artist(
@@ -216,7 +224,15 @@ class JellyfinSource(MediaSource):
     async def _build_albums(self, parent_id: str) -> list[BrowseMediaSource]:
         """Return all albums of a single artist as browsable media sources."""
         albums = await self._get_children(parent_id, ITEM_TYPE_ALBUM)
-        albums = sorted(albums, key=lambda k: k[ITEM_KEY_NAME])
+        albums = sorted(
+            albums,
+            # Sort by whether an album has an name first, then by name
+            # This allows for sorting albums with, without and with missing names
+            key=lambda k: (
+                ITEM_KEY_NAME not in k,
+                k.get(ITEM_KEY_NAME),
+            ),
+        )
         return [await self._build_album(album, False) for album in albums]
 
     async def _build_album(
@@ -249,9 +265,11 @@ class JellyfinSource(MediaSource):
         tracks = await self._get_children(album_id, ITEM_TYPE_AUDIO)
         tracks = sorted(
             tracks,
+            # Sort by whether a track has an index first, then by index
+            # This allows for sorting tracks with, without and with missing indices
             key=lambda k: (
                 ITEM_KEY_INDEX_NUMBER not in k,
-                k.get(ITEM_KEY_INDEX_NUMBER, None),
+                k.get(ITEM_KEY_INDEX_NUMBER),
             ),
         )
         return [
@@ -306,7 +324,15 @@ class JellyfinSource(MediaSource):
     async def _build_movies(self, library_id: str) -> list[BrowseMediaSource]:
         """Return all movies in the movie library."""
         movies = await self._get_children(library_id, ITEM_TYPE_MOVIE)
-        movies = sorted(movies, key=lambda k: k[ITEM_KEY_NAME])
+        movies = sorted(
+            movies,
+            # Sort by whether a movies has an name first, then by name
+            # This allows for sorting moveis with, without and with missing names
+            key=lambda k: (
+                ITEM_KEY_NAME not in k,
+                k.get(ITEM_KEY_NAME),
+            ),
+        )
         return [
             self._build_movie(movie)
             for movie in movies
@@ -359,7 +385,15 @@ class JellyfinSource(MediaSource):
     async def _build_tvshow(self, library_id: str) -> list[BrowseMediaSource]:
         """Return all series in the tv library."""
         series = await self._get_children(library_id, ITEM_TYPE_SERIES)
-        series = sorted(series, key=lambda k: k[ITEM_KEY_NAME])
+        series = sorted(
+            series,
+            # Sort by whether a seroes has an name first, then by name
+            # This allows for sorting series with, without and with missing names
+            key=lambda k: (
+                ITEM_KEY_NAME not in k,
+                k.get(ITEM_KEY_NAME),
+            ),
+        )
         return [await self._build_series(serie, False) for serie in series]
 
     async def _build_series(
@@ -390,7 +424,15 @@ class JellyfinSource(MediaSource):
     async def _build_seasons(self, series_id: str) -> list[BrowseMediaSource]:
         """Return all seasons in the series."""
         seasons = await self._get_children(series_id, ITEM_TYPE_SEASON)
-        seasons = sorted(seasons, key=lambda k: k[ITEM_KEY_NAME])
+        seasons = sorted(
+            seasons,
+            # Sort by whether a season has an index first, then by index
+            # This allows for sorting seasons with, without and with missing indices
+            key=lambda k: (
+                ITEM_KEY_INDEX_NUMBER not in k,
+                k.get(ITEM_KEY_INDEX_NUMBER),
+            ),
+        )
         return [await self._build_season(season, False) for season in seasons]
 
     async def _build_season(
@@ -421,7 +463,15 @@ class JellyfinSource(MediaSource):
     async def _build_episodes(self, season_id: str) -> list[BrowseMediaSource]:
         """Return all episode in the season."""
         episodes = await self._get_children(season_id, ITEM_TYPE_EPISODE)
-        episodes = sorted(episodes, key=lambda k: k[ITEM_KEY_NAME])
+        episodes = sorted(
+            episodes,
+            # Sort by whether an episode has an index first, then by index
+            # This allows for sorting episodes with, without and with missing indices
+            key=lambda k: (
+                ITEM_KEY_INDEX_NUMBER not in k,
+                k.get(ITEM_KEY_INDEX_NUMBER),
+            ),
+        )
         return [
             self._build_episode(episode)
             for episode in episodes

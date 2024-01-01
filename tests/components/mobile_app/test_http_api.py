@@ -13,7 +13,7 @@ from homeassistant.setup import async_setup_component
 
 from .const import REGISTER, REGISTER_CLEARTEXT, RENDER_TEMPLATE
 
-from tests.common import MockUser, mock_coro
+from tests.common import MockUser
 from tests.typing import ClientSessionGenerator
 
 
@@ -28,7 +28,6 @@ async def test_registration(
     with patch(
         "homeassistant.components.person.async_add_user_device_tracker",
         spec=True,
-        return_value=mock_coro(),
     ) as add_user_dev_track:
         resp = await api_client.post(
             "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT

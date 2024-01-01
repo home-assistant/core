@@ -18,7 +18,6 @@ KEY_COORDINATOR = "coordinator"
 KEY_MULTICAST_LISTENER = "multicast_listener"
 KEY_SETUP_LOCK = "setup_lock"
 KEY_UNSUB_STOP = "unsub_stop"
-KEY_VERSION = "version"
 
 ATTR_WIDTH = "width"
 ATTR_ABSOLUTE_POSITION = "absolute_position"

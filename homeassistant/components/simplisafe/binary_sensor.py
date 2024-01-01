@@ -19,12 +19,18 @@ from .const import DOMAIN, LOGGER
 
 SUPPORTED_BATTERY_SENSOR_TYPES = [
     DeviceTypes.CARBON_MONOXIDE,
+    DeviceTypes.DOORBELL,
     DeviceTypes.ENTRY,
     DeviceTypes.GLASS_BREAK,
+    DeviceTypes.KEYCHAIN,
     DeviceTypes.KEYPAD,
     DeviceTypes.LEAK,
+    DeviceTypes.LOCK,
     DeviceTypes.LOCK_KEYPAD,
     DeviceTypes.MOTION,
+    DeviceTypes.MOTION_V2,
+    DeviceTypes.PANIC_BUTTON,
+    DeviceTypes.REMOTE,
     DeviceTypes.SIREN,
     DeviceTypes.SMOKE,
     DeviceTypes.SMOKE_AND_CARBON_MONOXIDE,
@@ -37,6 +43,7 @@ TRIGGERED_SENSOR_TYPES = {
     DeviceTypes.GLASS_BREAK: BinarySensorDeviceClass.SAFETY,
     DeviceTypes.LEAK: BinarySensorDeviceClass.MOISTURE,
     DeviceTypes.MOTION: BinarySensorDeviceClass.MOTION,
+    DeviceTypes.MOTION_V2: BinarySensorDeviceClass.MOTION,
     DeviceTypes.SIREN: BinarySensorDeviceClass.SAFETY,
     DeviceTypes.SMOKE: BinarySensorDeviceClass.SMOKE,
     # Although this sensor can technically apply to both smoke and carbon, we use the

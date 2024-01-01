@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Generator
 import datetime
 import http
+import time
 from typing import Any, TypeVar
 from unittest.mock import Mock, mock_open, patch
 
@@ -20,6 +21,7 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.google import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -55,6 +57,35 @@ TEST_API_CALENDAR = {
     "summary": "We are, we are, a... Test Calendar",
     "colorId": "8",
     "defaultReminders": [],
+}
+
+TEST_EVENT = {
+    "summary": "Test All Day Event",
+    "start": {},
+    "end": {},
+    "location": "Test Cases",
+    "description": "test event",
+    "kind": "calendar#event",
+    "created": "2016-06-23T16:37:57.000Z",
+    "transparency": "transparent",
+    "updated": "2016-06-24T01:57:21.045Z",
+    "reminders": {"useDefault": True},
+    "organizer": {
+        "email": "uvrttabwegnui4gtia3vyqb@import.calendar.google.com",
+        "displayName": "Organizer Name",
+        "self": True,
+    },
+    "sequence": 0,
+    "creator": {
+        "email": "uvrttabwegnui4gtia3vyqb@import.calendar.google.com",
+        "displayName": "Organizer Name",
+        "self": True,
+    },
+    "id": "_c8rinwq863h45qnucyoi43ny8",
+    "etag": '"2933466882090000"',
+    "htmlLink": "https://www.google.com/calendar/event?eid=*******",
+    "iCalUID": "cydrevtfuybguinhomj@google.com",
+    "status": "confirmed",
 }
 
 CLIENT_ID = "client-id"
@@ -138,9 +169,7 @@ def token_scopes() -> list[str]:
 def token_expiry() -> datetime.datetime:
     """Expiration time for credentials used in the test."""
     # OAuth library returns an offset-naive timestamp
-    return datetime.datetime.fromtimestamp(
-        datetime.datetime.utcnow().timestamp()
-    ) + datetime.timedelta(hours=1)
+    return dt_util.utcnow().replace(tzinfo=None) + datetime.timedelta(hours=1)
 
 
 @pytest.fixture
@@ -161,9 +190,9 @@ def creds(
 
 
 @pytest.fixture
-def config_entry_token_expiry(token_expiry: datetime.datetime) -> float:
+def config_entry_token_expiry() -> float:
     """Fixture for token expiration value stored in the config entry."""
-    return token_expiry.timestamp()
+    return time.time() + 86400
 
 
 @pytest.fixture
@@ -190,7 +219,7 @@ def config_entry(
         domain=DOMAIN,
         unique_id=config_entry_unique_id,
         data={
-            "auth_implementation": "device_auth",
+            "auth_implementation": DOMAIN,
             "token": {
                 "access_token": "ACCESS_TOKEN",
                 "refresh_token": "REFRESH_TOKEN",
@@ -232,8 +261,8 @@ def mock_events_list(
 
 @pytest.fixture
 def mock_events_list_items(
-    mock_events_list: Callable[[dict[str, Any]], None]
-) -> Callable[list[[dict[str, Any]]], None]:
+    mock_events_list: Callable[[dict[str, Any]], None],
+) -> Callable[[list[dict[str, Any]]], None]:
     """Fixture to construct an API response containing event items."""
 
     def _put_items(items: list[dict[str, Any]]) -> None:
@@ -322,7 +351,9 @@ def component_setup(
     async def _setup_func() -> bool:
         assert await async_setup_component(hass, "application_credentials", {})
         await async_import_client_credential(
-            hass, DOMAIN, ClientCredential("client-id", "client-secret"), "device_auth"
+            hass,
+            DOMAIN,
+            ClientCredential("client-id", "client-secret"),
         )
         config_entry.add_to_hass(hass)
         return await hass.config_entries.async_setup(config_entry.entry_id)

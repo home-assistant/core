@@ -8,5 +8,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["pyairvisual", "pysmb"],
-  "requirements": ["pyairvisual==2022.12.1"]
+  "requirements": ["pyairvisual==2023.08.1"]
 }

@@ -1,5 +1,6 @@
 """Define tests for the Nettigo Air Monitor config flow."""
 import asyncio
+from ipaddress import ip_address
 from unittest.mock import patch
 
 from nettigo_air_monitor import ApiError, AuthFailedError, CannotGetMacError
@@ -14,8 +15,8 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
-    host="10.10.2.3",
-    addresses=["10.10.2.3"],
+    ip_address=ip_address("10.10.2.3"),
+    ip_addresses=[ip_address("10.10.2.3")],
     hostname="mock_hostname",
     name="mock_name",
     port=None,

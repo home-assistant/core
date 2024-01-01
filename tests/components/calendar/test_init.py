@@ -8,12 +8,18 @@ from unittest.mock import patch
 
 from freezegun import freeze_time
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.components.calendar import DOMAIN, SERVICE_LIST_EVENTS
+from homeassistant.components.calendar import (
+    DOMAIN,
+    LEGACY_SERVICE_LIST_EVENTS,
+    SERVICE_GET_EVENTS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.issue_registry import IssueRegistry
 import homeassistant.util.dt as dt_util
 
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -368,7 +374,7 @@ async def test_create_event_service_invalid_params(
     date_fields: dict[str, Any],
     expected_error: type[Exception],
     error_match: str | None,
-):
+) -> None:
     """Test creating an event using the create_event service."""
 
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
@@ -389,6 +395,41 @@ async def test_create_event_service_invalid_params(
 
 @freeze_time("2023-06-22 10:30:00+00:00")
 @pytest.mark.parametrize(
+    ("service", "expected"),
+    [
+        (
+            LEGACY_SERVICE_LIST_EVENTS,
+            {
+                "events": [
+                    {
+                        "start": "2023-06-22T05:00:00-06:00",
+                        "end": "2023-06-22T06:00:00-06:00",
+                        "summary": "Future Event",
+                        "description": "Future Description",
+                        "location": "Future Location",
+                    }
+                ]
+            },
+        ),
+        (
+            SERVICE_GET_EVENTS,
+            {
+                "calendar.calendar_1": {
+                    "events": [
+                        {
+                            "start": "2023-06-22T05:00:00-06:00",
+                            "end": "2023-06-22T06:00:00-06:00",
+                            "summary": "Future Event",
+                            "description": "Future Description",
+                            "location": "Future Location",
+                        }
+                    ]
+                }
+            },
+        ),
+    ],
+)
+@pytest.mark.parametrize(
     ("start_time", "end_time"),
     [
         ("2023-06-22T04:30:00-06:00", "2023-06-22T06:30:00-06:00"),
@@ -397,7 +438,12 @@ async def test_create_event_service_invalid_params(
     ],
 )
 async def test_list_events_service(
-    hass: HomeAssistant, set_time_zone: None, start_time: str, end_time: str
+    hass: HomeAssistant,
+    set_time_zone: None,
+    start_time: str,
+    end_time: str,
+    service: str,
+    expected: dict[str, Any],
 ) -> None:
     """Test listing events from the service call using exlplicit start and end time.
 
@@ -410,8 +456,9 @@ async def test_list_events_service(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_LIST_EVENTS,
-        {
+        service,
+        target={"entity_id": ["calendar.calendar_1"]},
+        service_data={
             "entity_id": "calendar.calendar_1",
             "start_date_time": start_time,
             "end_date_time": end_time,
@@ -419,35 +466,34 @@ async def test_list_events_service(
         blocking=True,
         return_response=True,
     )
-    assert response == {
-        "events": [
-            {
-                "start": "2023-06-22T05:00:00-06:00",
-                "end": "2023-06-22T06:00:00-06:00",
-                "summary": "Future Event",
-                "description": "Future Description",
-                "location": "Future Location",
-            }
-        ]
-    }
+    assert response == expected
 
 
 @pytest.mark.parametrize(
-    ("entity", "duration", "expected_events"),
+    ("service"),
+    [
+        (LEGACY_SERVICE_LIST_EVENTS),
+        SERVICE_GET_EVENTS,
+    ],
+)
+@pytest.mark.parametrize(
+    ("entity", "duration"),
     [
         # Calendar 1 has an hour long event starting in 30 minutes. No events in the
         # next 15 minutes, but it shows up an hour from now.
-        ("calendar.calendar_1", "00:15:00", []),
-        ("calendar.calendar_1", "01:00:00", ["Future Event"]),
+        ("calendar.calendar_1", "00:15:00"),
+        ("calendar.calendar_1", "01:00:00"),
         # Calendar 2 has a active event right now
-        ("calendar.calendar_2", "00:15:00", ["Current Event"]),
+        ("calendar.calendar_2", "00:15:00"),
     ],
 )
+@pytest.mark.freeze_time("2023-10-19 13:50:05")
 async def test_list_events_service_duration(
     hass: HomeAssistant,
     entity: str,
     duration: str,
-    expected_events: list[str],
+    service: str,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test listing events using a time duration."""
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
@@ -455,7 +501,7 @@ async def test_list_events_service_duration(
 
     response = await hass.services.async_call(
         DOMAIN,
-        SERVICE_LIST_EVENTS,
+        service,
         {
             "entity_id": entity,
             "duration": duration,
@@ -463,10 +509,7 @@ async def test_list_events_service_duration(
         blocking=True,
         return_response=True,
     )
-    assert response
-    assert "events" in response
-    events = response["events"]
-    assert [event["summary"] for event in events] == expected_events
+    assert response == snapshot
 
 
 async def test_list_events_positive_duration(hass: HomeAssistant) -> None:
@@ -477,7 +520,7 @@ async def test_list_events_positive_duration(hass: HomeAssistant) -> None:
     with pytest.raises(vol.Invalid, match="should be positive"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_LIST_EVENTS,
+            SERVICE_GET_EVENTS,
             {
                 "entity_id": "calendar.calendar_1",
                 "duration": "-01:00:00",
@@ -497,7 +540,7 @@ async def test_list_events_exclusive_fields(hass: HomeAssistant) -> None:
     with pytest.raises(vol.Invalid, match="at most one of"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_LIST_EVENTS,
+            SERVICE_GET_EVENTS,
             {
                 "entity_id": "calendar.calendar_1",
                 "end_date_time": end,
@@ -516,10 +559,47 @@ async def test_list_events_missing_fields(hass: HomeAssistant) -> None:
     with pytest.raises(vol.Invalid, match="at least one of"):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_LIST_EVENTS,
+            SERVICE_GET_EVENTS,
             {
                 "entity_id": "calendar.calendar_1",
             },
             blocking=True,
             return_response=True,
         )
+
+
+async def test_issue_deprecated_service_calendar_list_events(
+    hass: HomeAssistant,
+    issue_registry: IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the issue is raised on deprecated service weather.get_forecast."""
+
+    await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
+    await hass.async_block_till_done()
+
+    _ = await hass.services.async_call(
+        DOMAIN,
+        LEGACY_SERVICE_LIST_EVENTS,
+        target={"entity_id": ["calendar.calendar_1"]},
+        service_data={
+            "entity_id": "calendar.calendar_1",
+            "duration": "01:00:00",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    issue = issue_registry.async_get_issue(
+        "calendar", "deprecated_service_calendar_list_events"
+    )
+    assert issue
+    assert issue.issue_domain == "demo"
+    assert issue.issue_id == "deprecated_service_calendar_list_events"
+    assert issue.translation_key == "deprecated_service_calendar_list_events"
+
+    assert (
+        "Detected use of service 'calendar.list_events'. "
+        "This is deprecated and will stop working in Home Assistant 2024.6. "
+        "Use 'calendar.get_events' instead which supports multiple entities"
+    ) in caplog.text

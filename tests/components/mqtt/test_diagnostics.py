@@ -80,7 +80,7 @@ async def test_entry_diagnostics(
     expected_debug_info = {
         "entities": [
             {
-                "entity_id": "sensor.mqtt_sensor",
+                "entity_id": "sensor.none_mqtt_sensor",
                 "subscriptions": [{"topic": "foobar/sensor", "messages": []}],
                 "discovery_data": {
                     "payload": config_sensor,
@@ -109,13 +109,13 @@ async def test_entry_diagnostics(
                 "disabled": False,
                 "disabled_by": None,
                 "entity_category": None,
-                "entity_id": "sensor.mqtt_sensor",
+                "entity_id": "sensor.none_mqtt_sensor",
                 "icon": None,
                 "original_device_class": None,
                 "original_icon": None,
                 "state": {
                     "attributes": {"friendly_name": "MQTT Sensor"},
-                    "entity_id": "sensor.mqtt_sensor",
+                    "entity_id": "sensor.none_mqtt_sensor",
                     "last_changed": ANY,
                     "last_updated": ANY,
                     "state": "unknown",

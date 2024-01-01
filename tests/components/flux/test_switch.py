@@ -302,7 +302,6 @@ async def test_flux_before_sunrise_known_location(
     assert call.data[light.ATTR_XY_COLOR] == [0.606, 0.379]
 
 
-# pylint: disable=invalid-name
 async def test_flux_after_sunrise_before_sunset(
     hass: HomeAssistant, enable_custom_integrations: None
 ) -> None:
@@ -361,7 +360,6 @@ async def test_flux_after_sunrise_before_sunset(
     assert call.data[light.ATTR_XY_COLOR] == [0.439, 0.37]
 
 
-# pylint: disable=invalid-name
 async def test_flux_after_sunset_before_stop(
     hass: HomeAssistant, enable_custom_integrations: None
 ) -> None:
@@ -421,7 +419,6 @@ async def test_flux_after_sunset_before_stop(
     assert call.data[light.ATTR_XY_COLOR] == [0.506, 0.385]
 
 
-# pylint: disable=invalid-name
 async def test_flux_after_stop_before_sunrise(
     hass: HomeAssistant, enable_custom_integrations: None
 ) -> None:
@@ -480,7 +477,6 @@ async def test_flux_after_stop_before_sunrise(
     assert call.data[light.ATTR_XY_COLOR] == [0.606, 0.379]
 
 
-# pylint: disable=invalid-name
 async def test_flux_with_custom_start_stop_times(
     hass: HomeAssistant, enable_custom_integrations: None
 ) -> None:
@@ -603,7 +599,6 @@ async def test_flux_before_sunrise_stop_next_day(
     assert call.data[light.ATTR_XY_COLOR] == [0.606, 0.379]
 
 
-# pylint: disable=invalid-name
 async def test_flux_after_sunrise_before_sunset_stop_next_day(
     hass: HomeAssistant, enable_custom_integrations: None
 ) -> None:
@@ -666,7 +661,6 @@ async def test_flux_after_sunrise_before_sunset_stop_next_day(
     assert call.data[light.ATTR_XY_COLOR] == [0.439, 0.37]
 
 
-# pylint: disable=invalid-name
 @pytest.mark.parametrize("x", [0, 1])
 async def test_flux_after_sunset_before_midnight_stop_next_day(
     hass: HomeAssistant, x, enable_custom_integrations: None
@@ -730,7 +724,6 @@ async def test_flux_after_sunset_before_midnight_stop_next_day(
     assert call.data[light.ATTR_XY_COLOR] == [0.588, 0.386]
 
 
-# pylint: disable=invalid-name
 async def test_flux_after_sunset_after_midnight_stop_next_day(
     hass: HomeAssistant, enable_custom_integrations: None
 ) -> None:
@@ -793,7 +786,6 @@ async def test_flux_after_sunset_after_midnight_stop_next_day(
     assert call.data[light.ATTR_XY_COLOR] == [0.601, 0.382]
 
 
-# pylint: disable=invalid-name
 async def test_flux_after_stop_before_sunrise_stop_next_day(
     hass: HomeAssistant, enable_custom_integrations: None
 ) -> None:
@@ -856,7 +848,6 @@ async def test_flux_after_stop_before_sunrise_stop_next_day(
     assert call.data[light.ATTR_XY_COLOR] == [0.606, 0.379]
 
 
-# pylint: disable=invalid-name
 async def test_flux_with_custom_colortemps(
     hass: HomeAssistant, enable_custom_integrations: None
 ) -> None:
@@ -918,7 +909,6 @@ async def test_flux_with_custom_colortemps(
     assert call.data[light.ATTR_XY_COLOR] == [0.469, 0.378]
 
 
-# pylint: disable=invalid-name
 async def test_flux_with_custom_brightness(
     hass: HomeAssistant, enable_custom_integrations: None
 ) -> None:

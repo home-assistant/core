@@ -35,7 +35,7 @@ async def test_sensors(
     assert state
     assert entry.unique_id == "12345_energy_consumption"
     assert entry.entity_category is None
-    assert state.state == "1000"
+    assert state.state == "1000.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
@@ -51,7 +51,7 @@ async def test_sensors(
     assert state
     assert entry.unique_id == "12345_energy_generation"
     assert entry.entity_category is None
-    assert state.state == "500"
+    assert state.state == "500.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
@@ -83,7 +83,7 @@ async def test_sensors(
     assert state
     assert entry.unique_id == "12345_power_consumption"
     assert entry.entity_category is None
-    assert state.state == "2500"
+    assert state.state == "2500.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck's Solar Farm Power consumed"
@@ -98,7 +98,7 @@ async def test_sensors(
     assert state
     assert entry.unique_id == "12345_power_generation"
     assert entry.entity_category is None
-    assert state.state == "1500"
+    assert state.state == "1500.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)

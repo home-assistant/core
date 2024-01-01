@@ -9,8 +9,8 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -137,7 +137,7 @@ class IOSSensor(SensorEntity):
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
-        """Added to hass so need to register to dispatch."""
+        """Handle addition to hass: register to dispatch."""
         self._attr_native_value = self._device[ios.ATTR_BATTERY][
             self.entity_description.key
         ]

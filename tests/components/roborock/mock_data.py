@@ -1,17 +1,25 @@
 """Mock data for Roborock tests."""
 from __future__ import annotations
 
+from PIL import Image
 from roborock.containers import (
     CleanRecord,
     CleanSummary,
     Consumable,
     DnDTimer,
     HomeData,
+    MultiMapsList,
     NetworkInfo,
     S7Status,
     UserData,
 )
 from roborock.roborock_typing import DeviceProp
+from vacuum_map_parser_base.config.image_config import ImageConfig
+from vacuum_map_parser_base.map_data import ImageData
+from vacuum_map_parser_roborock.map_data_parser import MapData
+
+from homeassistant.components.roborock import CONF_BASE_URL, CONF_USER_DATA
+from homeassistant.const import CONF_USERNAME
 
 # All data is based on a U.S. customer with a Roborock S7 MaxV Ultra
 USER_EMAIL = "user@domain.com"
@@ -48,9 +56,9 @@ USER_DATA = UserData.from_dict(
 )
 
 MOCK_CONFIG = {
-    "username": USER_EMAIL,
-    "user_data": USER_DATA.as_dict(),
-    "base_url": None,
+    CONF_USERNAME: USER_EMAIL,
+    CONF_USER_DATA: USER_DATA.as_dict(),
+    CONF_BASE_URL: None,
 }
 
 HOME_DATA_RAW = {
@@ -61,7 +69,7 @@ HOME_DATA_RAW = {
     "geoName": None,
     "products": [
         {
-            "id": "abc123",
+            "id": "s7_product",
             "name": "Roborock S7 MaxV",
             "code": "a27",
             "model": "roborock.vacuum.a27",
@@ -227,7 +235,7 @@ HOME_DATA_RAW = {
             "runtimeEnv": None,
             "timeZoneId": "America/Los_Angeles",
             "iconUrl": "",
-            "productId": "abc123",
+            "productId": "s7_product",
             "lon": None,
             "lat": None,
             "share": False,
@@ -255,7 +263,45 @@ HOME_DATA_RAW = {
                 "120": 0,
             },
             "silentOtaSwitch": True,
-        }
+        },
+        {
+            "duid": "device_2",
+            "name": "Roborock S7 2",
+            "attribute": None,
+            "activeTime": 1672364449,
+            "localKey": "device_2",
+            "runtimeEnv": None,
+            "timeZoneId": "America/Los_Angeles",
+            "iconUrl": "",
+            "productId": "s7_product",
+            "lon": None,
+            "lat": None,
+            "share": False,
+            "shareTime": None,
+            "online": True,
+            "fv": "02.56.02",
+            "pv": "1.0",
+            "roomId": 2362003,
+            "tuyaUuid": None,
+            "tuyaMigrated": False,
+            "extra": '{"RRPhotoPrivacyVersion": "1"}',
+            "sn": "abc123",
+            "featureSet": "2234201184108543",
+            "newFeatureSet": "0000000000002041",
+            "deviceStatus": {
+                "121": 8,
+                "122": 100,
+                "123": 102,
+                "124": 203,
+                "125": 94,
+                "126": 90,
+                "127": 87,
+                "128": 0,
+                "133": 1,
+                "120": 0,
+            },
+            "silentOtaSwitch": True,
+        },
     ],
     "receivedDevices": [],
     "rooms": [
@@ -376,4 +422,33 @@ PROP = DeviceProp(
 
 NETWORK_INFO = NetworkInfo(
     ip="123.232.12.1", ssid="wifi", mac="ac:cc:cc:cc:cc", bssid="bssid", rssi=90
+)
+
+MULTI_MAP_LIST = MultiMapsList.from_dict(
+    {
+        "maxMultiMap": 4,
+        "maxBakMap": 1,
+        "multiMapCount": 2,
+        "mapInfo": [
+            {
+                "mapFlag": 0,
+                "addTime": 1686235489,
+                "length": 8,
+                "name": "Upstairs",
+                "bakMaps": [{"addTime": 1673304288}],
+            },
+            {
+                "mapFlag": 1,
+                "addTime": 1697579901,
+                "length": 10,
+                "name": "Downstairs",
+                "bakMaps": [{"addTime": 1695521431}],
+            },
+        ],
+    }
+)
+
+MAP_DATA = MapData(0, 0)
+MAP_DATA.image = ImageData(
+    100, 10, 10, 10, 10, ImageConfig(), Image.new("RGB", (1, 1)), lambda p: p
 )

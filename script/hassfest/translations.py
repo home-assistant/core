@@ -37,6 +37,7 @@ ALLOW_NAME_TRANSLATION = {
     "islamic_prayer_times",
     "local_calendar",
     "local_ip",
+    "local_todo",
     "nmap_tracker",
     "rpi_power",
     "waze_travel_time",
@@ -61,8 +62,9 @@ def allow_name_translation(integration: Integration) -> bool:
     """Validate that the translation name is not the same as the integration name."""
     # Only enforce for core because custom integrations can't be
     # added to allow list.
-    return integration.core and (
-        integration.domain in ALLOW_NAME_TRANSLATION
+    return (
+        not integration.core
+        or integration.domain in ALLOW_NAME_TRANSLATION
         or integration.quality_scale == "internal"
     )
 
@@ -213,6 +215,29 @@ def gen_data_entry_schema(
     return vol.All(*validators)
 
 
+def gen_issues_schema(config: Config, integration: Integration) -> dict[str, Any]:
+    """Generate the issues schema."""
+    return {
+        str: vol.All(
+            cv.has_at_least_one_key("description", "fix_flow"),
+            vol.Schema(
+                {
+                    vol.Required("title"): translation_value_validator,
+                    vol.Exclusive(
+                        "description", "fixable"
+                    ): translation_value_validator,
+                    vol.Exclusive("fix_flow", "fixable"): gen_data_entry_schema(
+                        config=config,
+                        integration=integration,
+                        flow_title=UNDEFINED,
+                        require_step_title=False,
+                    ),
+                },
+            ),
+        )
+    }
+
+
 def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
     """Generate a strings schema."""
     return vol.Schema(
@@ -264,25 +289,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
             vol.Optional("application_credentials"): {
                 vol.Optional("description"): translation_value_validator,
             },
-            vol.Optional("issues"): {
-                str: vol.All(
-                    cv.has_at_least_one_key("description", "fix_flow"),
-                    vol.Schema(
-                        {
-                            vol.Required("title"): translation_value_validator,
-                            vol.Exclusive(
-                                "description", "fixable"
-                            ): translation_value_validator,
-                            vol.Exclusive("fix_flow", "fixable"): gen_data_entry_schema(
-                                config=config,
-                                integration=integration,
-                                flow_title=UNDEFINED,
-                                require_step_title=False,
-                            ),
-                        },
-                    ),
-                )
-            },
+            vol.Optional("issues"): gen_issues_schema(config, integration),
             vol.Optional("entity_component"): cv.schema_with_slug_keys(
                 {
                     vol.Optional("name"): str,
@@ -326,6 +333,10 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 ),
                 slug_validator=cv.slug,
             ),
+            vol.Optional("exceptions"): cv.schema_with_slug_keys(
+                {vol.Optional("message"): translation_value_validator},
+                slug_validator=cv.slug,
+            ),
             vol.Optional("services"): cv.schema_with_slug_keys(
                 {
                     vol.Required("name"): translation_value_validator,
@@ -334,6 +345,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                         {
                             vol.Required("name"): str,
                             vol.Required("description"): translation_value_validator,
+                            vol.Optional("example"): translation_value_validator,
                         },
                         slug_validator=translation_key_validator,
                     ),
@@ -355,7 +367,8 @@ def gen_auth_schema(config: Config, integration: Integration) -> vol.Schema:
                     flow_title=REQUIRED,
                     require_step_title=True,
                 )
-            }
+            },
+            vol.Optional("issues"): gen_issues_schema(config, integration),
         }
     )
 
@@ -529,6 +542,11 @@ def validate_translation_file(  # noqa: C901
             integration.add_error(
                 "translations",
                 f"{reference['source']} contains invalid reference {reference['ref']}: Could not find {key}",
+            )
+        elif match := re.match(RE_REFERENCE, search[key]):
+            integration.add_error(
+                "translations",
+                f"Lokalise supports only one level of references: \"{reference['source']}\" should point to directly to \"{match.groups()[0]}\"",
             )
 
 

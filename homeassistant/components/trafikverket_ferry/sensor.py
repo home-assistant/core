@@ -14,8 +14,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -33,7 +32,7 @@ ICON = "mdi:ferry"
 SCAN_INTERVAL = timedelta(minutes=5)
 
 
-@dataclass
+@dataclass(frozen=True)
 class TrafikverketRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -41,7 +40,7 @@ class TrafikverketRequiredKeysMixin:
     info_fn: Callable[[dict[str, Any]], StateType | list] | None
 
 
-@dataclass
+@dataclass(frozen=True)
 class TrafikverketSensorEntityDescription(
     SensorEntityDescription, TrafikverketRequiredKeysMixin
 ):

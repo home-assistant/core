@@ -7,6 +7,7 @@ import math
 import re
 from urllib.parse import urlparse
 
+from aiohttp import web
 from dateutil import parser
 import pytest
 
@@ -394,6 +395,9 @@ async def test_ll_hls_playlist_bad_msn_part(
 ) -> None:
     """Test some playlist requests with invalid _HLS_msn/_HLS_part."""
 
+    async def _handler_bad_request(request):
+        raise web.HTTPBadRequest()
+
     await async_setup_component(
         hass,
         "stream",
@@ -412,6 +416,12 @@ async def test_ll_hls_playlist_bad_msn_part(
     hls = stream.add_provider(HLS_PROVIDER)
 
     hls_client = await hls_stream(stream)
+
+    # All GET calls to '/.../playlist.m3u8' should raise a HTTPBadRequest exception
+    hls_client.http_client.app.router._frozen = False
+    parsed_url = urlparse(stream.endpoint_url(HLS_PROVIDER))
+    url = "/".join(parsed_url.path.split("/")[:-1]) + "/playlist.m3u8"
+    hls_client.http_client.app.router.add_route("GET", url, _handler_bad_request)
 
     # If the Playlist URI contains an _HLS_part directive but no _HLS_msn
     # directive, the Server MUST return Bad Request, such as HTTP 400.

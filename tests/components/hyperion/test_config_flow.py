@@ -763,7 +763,6 @@ async def test_options_priority(hass: HomeAssistant) -> None:
             {ATTR_ENTITY_ID: TEST_ENTITY_ID_1},
             blocking=True,
         )
-        # pylint: disable-next=unsubscriptable-object
         assert client.async_send_set_color.call_args[1][CONF_PRIORITY] == new_priority
 
 

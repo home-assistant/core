@@ -31,6 +31,17 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "connection_state": {
+        "name": "Connection state"
+      },
+      "overlay": {
+        "name": "Overlay"
+      },
+      "early_start": {
+        "name": "Early start"
+      }
+    },
     "climate": {
       "tado": {
         "state_attributes": {
@@ -40,6 +51,32 @@
             }
           }
         }
+      }
+    },
+    "sensor": {
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "solar_percentage": {
+        "name": "Solar percentage"
+      },
+      "weather_condition": {
+        "name": "Weather condition"
+      },
+      "tado_mode": {
+        "name": "Tado mode"
+      },
+      "geofencing_mode": {
+        "name": "Geofencing mode"
+      },
+      "automatic_geofencing": {
+        "name": "Automatic geofencing"
+      },
+      "heating": {
+        "name": "Heating"
+      },
+      "ac": {
+        "name": "AC"
       }
     }
   },
@@ -85,6 +122,20 @@
           "description": "Offset you would like (depending on your device)."
         }
       }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_device_tracker": {
+      "title": "Tado YAML device tracker configuration imported",
+      "description": "Configuring the Tado Device Tracker using YAML is being removed.\nRemove the YAML device tracker configuration and restart Home Assistant."
+    },
+    "import_aborted": {
+      "title": "Import aborted",
+      "description": "Configuring the Tado Device Tracker using YAML is being removed.\n The import was aborted, due to an existing config entry being the same as the data being imported in the YAML. Remove the YAML device tracker configuration and restart Home Assistant. Please use the UI to configure Tado."
+    },
+    "failed_to_import": {
+      "title": "Failed to import",
+      "description": "Failed to import the configuration for the Tado Device Tracker. Please use the UI to configure Tado. Don't forget to delete the YAML configuration."
     }
   }
 }

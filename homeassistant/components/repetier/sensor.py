@@ -1,7 +1,6 @@
 """Support for monitoring Repetier Server Sensors."""
 from __future__ import annotations
 
-from datetime import datetime
 import logging
 import time
 
@@ -10,6 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
 
 from . import REPETIER_API, SENSOR_TYPES, UPDATE_SIGNAL, RepetierSensorEntityDescription
 
@@ -170,7 +170,7 @@ class RepetierJobEndSensor(RepetierSensor):
         print_time = data["print_time"]
         from_start = data["from_start"]
         time_end = start + round(print_time, 0)
-        self._state = datetime.utcfromtimestamp(time_end)
+        self._state = dt_util.utc_from_timestamp(time_end)
         remaining = print_time - from_start
         remaining_secs = int(round(remaining, 0))
         _LOGGER.debug(
@@ -192,7 +192,7 @@ class RepetierJobStartSensor(RepetierSensor):
         job_name = data["job_name"]
         start = data["start"]
         from_start = data["from_start"]
-        self._state = datetime.utcfromtimestamp(start)
+        self._state = dt_util.utc_from_timestamp(start)
         elapsed_secs = int(round(from_start, 0))
         _LOGGER.debug(
             "Job %s elapsed %s",

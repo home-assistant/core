@@ -38,3 +38,13 @@ set_operation_mode:
       example: eco
       selector:
         text:
+
+turn_on:
+  target:
+    entity:
+      domain: water_heater
+
+turn_off:
+  target:
+    entity:
+      domain: water_heater

@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -22,14 +22,14 @@ from . import PureEnergieData, PureEnergieDataUpdateCoordinator
 from .const import DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class PureEnergieSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[PureEnergieData], int | float]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PureEnergieSensorEntityDescription(
     SensorEntityDescription, PureEnergieSensorEntityDescriptionMixin
 ):

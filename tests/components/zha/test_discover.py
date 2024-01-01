@@ -20,12 +20,12 @@ import homeassistant.components.zha.core.const as zha_const
 from homeassistant.components.zha.core.device import ZHADevice
 import homeassistant.components.zha.core.discovery as disc
 from homeassistant.components.zha.core.endpoint import Endpoint
+from homeassistant.components.zha.core.helpers import get_zha_gateway
 import homeassistant.components.zha.core.registries as zha_regs
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
-from .common import get_zha_gateway
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 from .zha_devices_list import (
     DEV_SIG_ATTRIBUTES,
@@ -144,7 +144,7 @@ async def test_devices(
         _, platform, entity_cls, unique_id, cluster_handlers = call[0]
         # the factory can return None. We filter these out to get an accurate created entity count
         response = entity_cls.create_entity(unique_id, zha_dev, cluster_handlers)
-        if response and not contains_ignored_suffix(response.name):
+        if response and not contains_ignored_suffix(response.unique_id):
             created_entity_count += 1
             unique_id_head = UNIQUE_ID_HD.match(unique_id).group(
                 0

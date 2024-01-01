@@ -24,7 +24,7 @@ from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 PARALLEL_UPDATES = 0
 
 
-@dataclass
+@dataclass(frozen=True)
 class DeviceBaseEntityDescriptionMixin:
     """Mixin for required Sensibo Device description keys."""
 
@@ -35,7 +35,7 @@ class DeviceBaseEntityDescriptionMixin:
     data_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class SensiboDeviceSwitchEntityDescription(
     SwitchEntityDescription, DeviceBaseEntityDescriptionMixin
 ):
@@ -151,9 +151,10 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
     @async_handle_api_call
     async def async_turn_on_timer(self, key: str, value: bool) -> bool:
         """Make service call to api for setting timer."""
+        new_state = not self.device_data.device_on
         data = {
             "minutesFromNow": 60,
-            "acState": {**self.device_data.ac_states, "on": value},
+            "acState": {**self.device_data.ac_states, "on": new_state},
         }
         result = await self._client.async_set_timer(self._device_id, data)
         return bool(result.get("status") == "success")
@@ -183,7 +184,9 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         if self.device_data.smart_type is None:
             raise HomeAssistantError(
                 "Use Sensibo Enable Climate React Service once to enable switch or the"
-                " Sensibo app"
+                " Sensibo app",
+                translation_domain=DOMAIN,
+                translation_key="climate_react_not_available",
             )
         data: dict[str, Any] = {"enabled": value}
         result = await self._client.async_enable_climate_react(self._device_id, data)

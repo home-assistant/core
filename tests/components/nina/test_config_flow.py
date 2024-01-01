@@ -10,6 +10,7 @@ from pynina import ApiError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.nina.const import (
+    CONF_AREA_FILTER,
     CONF_HEADLINE_FILTER,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
@@ -38,6 +39,7 @@ DUMMY_DATA: dict[str, Any] = {
     CONST_REGION_R_TO_U: ["072320000000_0", "072320000000_1"],
     CONST_REGION_V_TO_Z: ["081270000000_0", "081270000000_1"],
     CONF_HEADLINE_FILTER: ".*corona.*",
+    CONF_AREA_FILTER: ".*",
 }
 
 DUMMY_RESPONSE_REGIONS: dict[str, Any] = json.loads(
@@ -146,6 +148,7 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
         title="NINA",
         data={
             CONF_HEADLINE_FILTER: deepcopy(DUMMY_DATA[CONF_HEADLINE_FILTER]),
+            CONF_AREA_FILTER: deepcopy(DUMMY_DATA[CONF_AREA_FILTER]),
             CONF_MESSAGE_SLOTS: deepcopy(DUMMY_DATA[CONF_MESSAGE_SLOTS]),
             CONST_REGION_A_TO_D: deepcopy(DUMMY_DATA[CONST_REGION_A_TO_D]),
             CONF_REGIONS: {"095760000000": "Aach"},
@@ -184,6 +187,7 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
 
         assert dict(config_entry.data) == {
             CONF_HEADLINE_FILTER: deepcopy(DUMMY_DATA[CONF_HEADLINE_FILTER]),
+            CONF_AREA_FILTER: deepcopy(DUMMY_DATA[CONF_AREA_FILTER]),
             CONF_MESSAGE_SLOTS: deepcopy(DUMMY_DATA[CONF_MESSAGE_SLOTS]),
             CONST_REGION_A_TO_D: ["072350000000_1"],
             CONST_REGION_E_TO_H: [],

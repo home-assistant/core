@@ -13,10 +13,15 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CURRENCY_EURO, PERCENTAGE, UnitOfEnergy, UnitOfVolume
+from homeassistant.const import (
+    CURRENCY_EURO,
+    PERCENTAGE,
+    UnitOfEnergy,
+    UnitOfTime,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -24,7 +29,7 @@ from .const import DOMAIN, SERVICE_TYPE_DEVICE_NAMES
 from .coordinator import EnergyZeroData, EnergyZeroDataUpdateCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnergyZeroSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -32,7 +37,7 @@ class EnergyZeroSensorEntityDescriptionMixin:
     service_type: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class EnergyZeroSensorEntityDescription(
     SensorEntityDescription, EnergyZeroSensorEntityDescriptionMixin
 ):
@@ -114,6 +119,14 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
         value_fn=lambda data: data.energy_today.pct_of_max_price,
+    ),
+    EnergyZeroSensorEntityDescription(
+        key="hours_priced_equal_or_lower",
+        translation_key="hours_priced_equal_or_lower",
+        service_type="today_energy",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        icon="mdi:clock",
+        value_fn=lambda data: data.energy_today.hours_priced_equal_or_lower,
     ),
 )
 

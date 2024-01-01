@@ -42,6 +42,11 @@ pytestmark = [pytest.mark.freeze_time("2022-12-07 15:00:00")]
             "today_energy",
         ),
         (
+            "sensor.energyzero_today_energy_hours_priced_equal_or_lower",
+            "today_energy_hours_priced_equal_or_lower",
+            "today_energy",
+        ),
+        (
             "sensor.energyzero_today_gas_current_hour_price",
             "today_gas_current_hour_price",
             "today_gas",

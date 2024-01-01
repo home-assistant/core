@@ -65,16 +65,16 @@ SCHEDULE_PARTS: dict[int, str] = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class VenstarSensorTypeMixin:
     """Mixin for sensor required keys."""
 
     value_fn: Callable[[VenstarDataUpdateCoordinator, str], Any]
-    name_fn: Callable[[VenstarDataUpdateCoordinator, str], str]
+    name_fn: Callable[[str], str]
     uom_fn: Callable[[Any], str | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class VenstarSensorEntityDescription(SensorEntityDescription, VenstarSensorTypeMixin):
     """Base description of a Sensor entity."""
 
@@ -146,17 +146,13 @@ class VenstarSensor(VenstarEntity, SensorEntity):
         super().__init__(coordinator, config)
         self.entity_description = entity_description
         self.sensor_name = sensor_name
+        self._attr_name = entity_description.name_fn(sensor_name)
         self._config = config
 
     @property
     def unique_id(self):
         """Return the unique id."""
         return f"{self._config.entry_id}_{self.sensor_name.replace(' ', '_')}_{self.entity_description.key}"
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self.entity_description.name_fn(self.coordinator, self.sensor_name)
 
     @property
     def native_value(self) -> int:
@@ -178,7 +174,7 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         value_fn=lambda coordinator, sensor_name: coordinator.client.get_sensor(
             sensor_name, "hum"
         ),
-        name_fn=lambda coordinator, sensor_name: f"{coordinator.client.name} {sensor_name} Humidity",
+        name_fn=lambda sensor_name: f"{sensor_name} Humidity",
     ),
     VenstarSensorEntityDescription(
         key="temp",
@@ -188,7 +184,7 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         value_fn=lambda coordinator, sensor_name: round(
             float(coordinator.client.get_sensor(sensor_name, "temp")), 1
         ),
-        name_fn=lambda coordinator, sensor_name: f"{coordinator.client.name} {sensor_name.replace(' Temp', '')} Temperature",
+        name_fn=lambda sensor_name: f"{sensor_name.replace(' Temp', '')} Temperature",
     ),
     VenstarSensorEntityDescription(
         key="co2",
@@ -198,7 +194,7 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         value_fn=lambda coordinator, sensor_name: coordinator.client.get_sensor(
             sensor_name, "co2"
         ),
-        name_fn=lambda coordinator, sensor_name: f"{coordinator.client.name} {sensor_name} CO2",
+        name_fn=lambda sensor_name: f"{sensor_name} CO2",
     ),
     VenstarSensorEntityDescription(
         key="iaq",
@@ -208,7 +204,7 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         value_fn=lambda coordinator, sensor_name: coordinator.client.get_sensor(
             sensor_name, "iaq"
         ),
-        name_fn=lambda coordinator, sensor_name: f"{coordinator.client.name} {sensor_name} IAQ",
+        name_fn=lambda sensor_name: f"{sensor_name} IAQ",
     ),
     VenstarSensorEntityDescription(
         key="battery",
@@ -218,7 +214,7 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         value_fn=lambda coordinator, sensor_name: coordinator.client.get_sensor(
             sensor_name, "battery"
         ),
-        name_fn=lambda coordinator, sensor_name: f"{coordinator.client.name} {sensor_name} Battery",
+        name_fn=lambda sensor_name: f"{sensor_name} Battery",
     ),
 )
 
@@ -227,7 +223,7 @@ RUNTIME_ENTITY = VenstarSensorEntityDescription(
     state_class=SensorStateClass.MEASUREMENT,
     uom_fn=lambda _: UnitOfTime.MINUTES,
     value_fn=lambda coordinator, sensor_name: coordinator.runtimes[-1][sensor_name],
-    name_fn=lambda coordinator, sensor_name: f"{coordinator.client.name} {RUNTIME_ATTRIBUTES[sensor_name]} Runtime",
+    name_fn=lambda sensor_name: f"{RUNTIME_ATTRIBUTES[sensor_name]} Runtime",
 )
 
 INFO_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
@@ -240,6 +236,6 @@ INFO_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         value_fn=lambda coordinator, sensor_name: SCHEDULE_PARTS[
             coordinator.client.get_info(sensor_name)
         ],
-        name_fn=lambda coordinator, sensor_name: f"{coordinator.client.name} Schedule Part",
+        name_fn=lambda _: "Schedule Part",
     ),
 )

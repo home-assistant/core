@@ -14,8 +14,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_SHOW_ON_MAP,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import (
     aiohttp_client,
@@ -23,15 +28,19 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+)
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
 )
+from homeassistant.helpers.typing import EventType
 
-from .const import CONF_SENSOR_INDICES, CONF_SHOW_ON_MAP, DOMAIN, LOGGER
+from .const import CONF_SENSOR_INDICES, DOMAIN, LOGGER
 
 CONF_DISTANCE = "distance"
 CONF_NEARBY_SENSOR_OPTIONS = "nearby_sensor_options"
@@ -420,7 +429,9 @@ class PurpleAirOptionsFlowHandler(config_entries.OptionsFlow):
         device_entities_removed_event = asyncio.Event()
 
         @callback
-        def async_device_entity_state_changed(_: Event) -> None:
+        def async_device_entity_state_changed(
+            _: EventType[EventStateChangedData],
+        ) -> None:
             """Listen and respond when all device entities are removed."""
             if all(
                 self.hass.states.get(entity_entry.entity_id) is None

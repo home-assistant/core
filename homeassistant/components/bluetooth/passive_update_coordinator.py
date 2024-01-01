@@ -85,6 +85,7 @@ class PassiveBluetoothDataUpdateCoordinator(
         change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
+        self._available = True
         self.async_update_listeners()
 
 

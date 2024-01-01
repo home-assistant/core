@@ -16,21 +16,21 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .model import DoorDevice
 
 
-@dataclass
+@dataclass(frozen=True)
 class AccSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable
 
 
-@dataclass
+@dataclass(frozen=True)
 class AccSensorEntityDescription(
     SensorEntityDescription, AccSensorEntityDescriptionMixin
 ):

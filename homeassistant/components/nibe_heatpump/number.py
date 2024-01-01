@@ -9,7 +9,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, CoilEntity, Coordinator
+from .const import DOMAIN
+from .coordinator import CoilEntity, Coordinator
 
 
 async def async_setup_entry(
@@ -50,13 +51,14 @@ class Number(CoilEntity, NumberEntity):
                 self._attr_native_min_value,
                 self._attr_native_max_value,
             ) = _get_numeric_limits(coil.size)
+            self._attr_native_min_value /= coil.factor
+            self._attr_native_max_value /= coil.factor
         else:
             self._attr_native_min_value = float(coil.min)
             self._attr_native_max_value = float(coil.max)
 
         self._attr_native_step = 1 / coil.factor
         self._attr_native_unit_of_measurement = coil.unit
-        self._attr_native_value = None
 
     def _async_read_coil(self, data: CoilData) -> None:
         if data.value is None:
@@ -64,7 +66,7 @@ class Number(CoilEntity, NumberEntity):
             return
 
         try:
-            self._attr_native_value = float(data.value)
+            self._attr_native_value = float(data.value)  # type: ignore[arg-type]
         except ValueError:
             self._attr_native_value = None
 

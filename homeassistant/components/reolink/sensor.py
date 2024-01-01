@@ -9,7 +9,6 @@ from decimal import Decimal
 from reolink_aio.api import Host
 
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -22,28 +21,51 @@ from homeassistant.helpers.typing import StateType
 
 from . import ReolinkData
 from .const import DOMAIN
-from .entity import ReolinkHostCoordinatorEntity
+from .entity import (
+    ReolinkChannelCoordinatorEntity,
+    ReolinkChannelEntityDescription,
+    ReolinkHostCoordinatorEntity,
+    ReolinkHostEntityDescription,
+)
 
 
-@dataclass
-class ReolinkHostSensorEntityDescriptionMixin:
-    """Mixin values for Reolink host sensor entities."""
+@dataclass(frozen=True, kw_only=True)
+class ReolinkSensorEntityDescription(
+    SensorEntityDescription,
+    ReolinkChannelEntityDescription,
+):
+    """A class that describes sensor entities for a camera channel."""
 
-    value: Callable[[Host], bool]
+    value: Callable[[Host, int], int]
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ReolinkHostSensorEntityDescription(
-    SensorEntityDescription, ReolinkHostSensorEntityDescriptionMixin
+    SensorEntityDescription,
+    ReolinkHostEntityDescription,
 ):
     """A class that describes host sensor entities."""
 
-    supported: Callable[[Host], bool] = lambda host: True
+    value: Callable[[Host], int | None]
 
+
+SENSORS = (
+    ReolinkSensorEntityDescription(
+        key="ptz_pan_position",
+        cmd_key="GetPtzCurPos",
+        translation_key="ptz_pan_position",
+        icon="mdi:pan",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value=lambda api, ch: api.ptz_pan_position(ch),
+        supported=lambda api, ch: api.supported(ch, "ptz_position"),
+    ),
+)
 
 HOST_SENSORS = (
     ReolinkHostSensorEntityDescription(
         key="wifi_signal",
+        cmd_key="GetWifiSignal",
         translation_key="wifi_signal",
         icon="mdi:wifi",
         state_class=SensorStateClass.MEASUREMENT,
@@ -63,13 +85,41 @@ async def async_setup_entry(
     """Set up a Reolink IP Camera."""
     reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list[ReolinkHostSensorEntity | EventConnectionSensorEntity] = [
-        ReolinkHostSensorEntity(reolink_data, entity_description)
-        for entity_description in HOST_SENSORS
-        if entity_description.supported(reolink_data.host.api)
+    entities: list[ReolinkSensorEntity | ReolinkHostSensorEntity] = [
+        ReolinkSensorEntity(reolink_data, channel, entity_description)
+        for entity_description in SENSORS
+        for channel in reolink_data.host.api.channels
+        if entity_description.supported(reolink_data.host.api, channel)
     ]
-    entities.append(EventConnectionSensorEntity(reolink_data))
+    entities.extend(
+        [
+            ReolinkHostSensorEntity(reolink_data, entity_description)
+            for entity_description in HOST_SENSORS
+            if entity_description.supported(reolink_data.host.api)
+        ]
+    )
     async_add_entities(entities)
+
+
+class ReolinkSensorEntity(ReolinkChannelCoordinatorEntity, SensorEntity):
+    """Base sensor class for Reolink IP camera sensors."""
+
+    entity_description: ReolinkSensorEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        channel: int,
+        entity_description: ReolinkSensorEntityDescription,
+    ) -> None:
+        """Initialize Reolink sensor."""
+        self.entity_description = entity_description
+        super().__init__(reolink_data, channel)
+
+    @property
+    def native_value(self) -> StateType | date | datetime | Decimal:
+        """Return the value reported by the sensor."""
+        return self.entity_description.value(self._host.api, self._channel)
 
 
 class ReolinkHostSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
@@ -82,40 +132,11 @@ class ReolinkHostSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
         reolink_data: ReolinkData,
         entity_description: ReolinkHostSensorEntityDescription,
     ) -> None:
-        """Initialize Reolink binary sensor."""
-        super().__init__(reolink_data)
+        """Initialize Reolink host sensor."""
         self.entity_description = entity_description
-
-        self._attr_unique_id = f"{self._host.unique_id}_{entity_description.key}"
+        super().__init__(reolink_data)
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
         return self.entity_description.value(self._host.api)
-
-
-class EventConnectionSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
-    """Reolink Event connection sensor."""
-
-    def __init__(
-        self,
-        reolink_data: ReolinkData,
-    ) -> None:
-        """Initialize Reolink binary sensor."""
-        super().__init__(reolink_data)
-        self.entity_description = SensorEntityDescription(
-            key="event_connection",
-            translation_key="event_connection",
-            icon="mdi:swap-horizontal",
-            device_class=SensorDeviceClass.ENUM,
-            entity_category=EntityCategory.DIAGNOSTIC,
-            entity_registry_enabled_default=False,
-            options=["onvif_push", "onvif_long_poll", "fast_poll"],
-        )
-
-        self._attr_unique_id = f"{self._host.unique_id}_{self.entity_description.key}"
-
-    @property
-    def native_value(self) -> str:
-        """Return the value reported by the sensor."""
-        return self._host.event_connection

@@ -39,7 +39,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .common import (
     DEVICE_COMMAND,
@@ -758,6 +758,75 @@ async def test_thermostat_set_temperature_hvac_mode(
     }
 
 
+@pytest.mark.parametrize(
+    ("setpoint", "target_low", "target_high", "expected_params"),
+    [
+        (
+            {
+                "heatCelsius": 19.0,
+                "coolCelsius": 25.0,
+            },
+            19.0,
+            20.0,
+            # Cool is accepted and lowers heat by the min range
+            {"heatCelsius": 18.33333, "coolCelsius": 20.0},
+        ),
+        (
+            {
+                "heatCelsius": 19.0,
+                "coolCelsius": 25.0,
+            },
+            24.0,
+            25.0,
+            # Cool is accepted and lowers heat by the min range
+            {"heatCelsius": 24.0, "coolCelsius": 25.66667},
+        ),
+    ],
+)
+async def test_thermostat_set_temperature_range_too_close(
+    hass: HomeAssistant,
+    setup_platform: PlatformSetup,
+    auth: FakeAuth,
+    create_device: CreateDevice,
+    setpoint: dict[str, Any],
+    target_low: float,
+    target_high: float,
+    expected_params: dict[str, Any],
+) -> None:
+    """Test setting an HVAC temperature range that is too small of a range."""
+    create_device.create(
+        {
+            "sdm.devices.traits.ThermostatHvac": {"status": "OFF"},
+            "sdm.devices.traits.ThermostatMode": {
+                "availableModes": ["HEAT", "COOL", "HEATCOOL", "OFF"],
+                "mode": "HEATCOOL",
+            },
+            "sdm.devices.traits.ThermostatTemperatureSetpoint": setpoint,
+        },
+    )
+    await setup_platform()
+
+    assert len(hass.states.async_all()) == 1
+    thermostat = hass.states.get("climate.my_thermostat")
+    assert thermostat is not None
+    assert thermostat.state == HVACMode.HEAT_COOL
+
+    # Move the target temp to be in too small of a range
+    await common.async_set_temperature(
+        hass,
+        target_temp_low=target_low,
+        target_temp_high=target_high,
+    )
+    await hass.async_block_till_done()
+
+    assert auth.method == "post"
+    assert auth.url == DEVICE_COMMAND
+    assert auth.json == {
+        "command": "sdm.devices.commands.ThermostatTemperatureSetpoint.SetRange",
+        "params": expected_params,
+    }
+
+
 async def test_thermostat_set_heat_cool(
     hass: HomeAssistant,
     setup_platform: PlatformSetup,
@@ -1123,7 +1192,7 @@ async def test_thermostat_invalid_fan_mode(
     assert thermostat.attributes[ATTR_FAN_MODE] == FAN_ON
     assert thermostat.attributes[ATTR_FAN_MODES] == [FAN_ON, FAN_OFF]
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await common.async_set_fan_mode(hass, FAN_LOW)
         await hass.async_block_till_done()
 
@@ -1405,7 +1474,7 @@ async def test_thermostat_invalid_set_preset_mode(
     assert thermostat.attributes[ATTR_PRESET_MODES] == [PRESET_ECO, PRESET_NONE]
 
     # Set preset mode that is invalid
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await common.async_set_preset_mode(hass, PRESET_SLEEP)
         await hass.async_block_till_done()
 

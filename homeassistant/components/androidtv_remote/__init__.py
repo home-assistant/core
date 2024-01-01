@@ -1,6 +1,8 @@
 """The Android TV Remote integration."""
 from __future__ import annotations
 
+import asyncio
+from asyncio import timeout
 import logging
 
 from androidtvremote2 import (
@@ -12,11 +14,11 @@ from androidtvremote2 import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import DOMAIN
-from .helpers import create_api
+from .helpers import create_api, get_enable_ime
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +27,7 @@ PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Android TV Remote from a config entry."""
-    api = create_api(hass, entry.data[CONF_HOST])
+    api = create_api(hass, entry.data[CONF_HOST], get_enable_ime(entry))
 
     @callback
     def is_available_updated(is_available: bool) -> None:
@@ -43,11 +45,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api.add_is_available_updated_callback(is_available_updated)
 
     try:
-        await api.async_connect()
+        async with timeout(5.0):
+            await api.async_connect()
     except InvalidAuth as exc:
         # The Android TV is hard reset or the certificate and key files were deleted.
         raise ConfigEntryAuthFailed from exc
-    except (CannotConnect, ConnectionClosed) as exc:
+    except (CannotConnect, ConnectionClosed, asyncio.TimeoutError) as exc:
         # The Android TV is network unreachable. Raise exception and let Home Assistant retry
         # later. If device gets a new IP address the zeroconf flow will update the config.
         raise ConfigEntryNotReady from exc
@@ -66,13 +69,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
-    def on_hass_stop(event) -> None:
+    def on_hass_stop(event: Event) -> None:
         """Stop push updates when hass stops."""
         api.disconnect()
 
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
     )
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
@@ -84,3 +88,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         api.disconnect()
 
     return unload_ok
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)

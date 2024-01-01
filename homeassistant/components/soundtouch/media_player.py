@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from functools import partial
 import logging
-import re
 from typing import Any
 
 from libsoundtouch.device import SoundTouchDevice
@@ -22,8 +21,11 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -75,21 +77,25 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_source_list = [
+        Source.AUX.value,
+        Source.BLUETOOTH.value,
+    ]
 
     def __init__(self, device: SoundTouchDevice) -> None:
         """Create SoundTouch media player entity."""
 
         self._device = device
 
-        self._attr_unique_id = self._device.config.device_id
+        self._attr_unique_id = device.config.device_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device.config.device_id)},
+            identifiers={(DOMAIN, device.config.device_id)},
             connections={
-                (CONNECTION_NETWORK_MAC, format_mac(self._device.config.mac_address))
+                (CONNECTION_NETWORK_MAC, format_mac(device.config.mac_address))
             },
             manufacturer="Bose Corporation",
-            model=self._device.config.type,
-            name=self._device.config.name,
+            model=device.config.type,
+            name=device.config.name,
         )
 
         self._status = None
@@ -127,14 +133,6 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
     def source(self):
         """Name of the current input source."""
         return self._status.source
-
-    @property
-    def source_list(self):
-        """List of available input sources."""
-        return [
-            Source.AUX.value,
-            Source.BLUETOOTH.value,
-        ]
 
     @property
     def is_volume_muted(self):
@@ -251,7 +249,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
     ) -> None:
         """Play a piece of media."""
         _LOGGER.debug("Starting media with media_id: %s", media_id)
-        if re.match(r"http?://", str(media_id)):
+        if str(media_id).lower().startswith("http://"):  # no https support
             # URL
             _LOGGER.debug("Playing URL %s", str(media_id))
             self._device.play_url(str(media_id))

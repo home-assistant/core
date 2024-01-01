@@ -1,4 +1,5 @@
 """Define tests for the OpenUV config flow."""
+from ipaddress import ip_address
 from unittest.mock import patch
 
 import pytest
@@ -7,6 +8,7 @@ from regenmaschine.errors import RainMachineError
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components import zeroconf
 from homeassistant.components.rainmachine import (
+    CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
     CONF_DEFAULT_ZONE_RUN_TIME,
     CONF_USE_APP_RUN_TIMES,
     DOMAIN,
@@ -105,12 +107,17 @@ async def test_options_flow(hass: HomeAssistant, config, config_entry) -> None:
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            user_input={CONF_DEFAULT_ZONE_RUN_TIME: 600, CONF_USE_APP_RUN_TIMES: False},
+            user_input={
+                CONF_DEFAULT_ZONE_RUN_TIME: 600,
+                CONF_USE_APP_RUN_TIMES: False,
+                CONF_ALLOW_INACTIVE_ZONES_TO_RUN: False,
+            },
         )
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert config_entry.options == {
             CONF_DEFAULT_ZONE_RUN_TIME: 600,
             CONF_USE_APP_RUN_TIMES: False,
+            CONF_ALLOW_INACTIVE_ZONES_TO_RUN: False,
         }
 
 
@@ -157,8 +164,8 @@ async def test_step_homekit_zeroconf_ip_already_exists(
             DOMAIN,
             context={"source": source},
             data=zeroconf.ZeroconfServiceInfo(
-                host="192.168.1.100",
-                addresses=["192.168.1.100"],
+                ip_address=ip_address("192.168.1.100"),
+                ip_addresses=[ip_address("192.168.1.100")],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -185,8 +192,8 @@ async def test_step_homekit_zeroconf_ip_change(
             DOMAIN,
             context={"source": source},
             data=zeroconf.ZeroconfServiceInfo(
-                host="192.168.1.2",
-                addresses=["192.168.1.2"],
+                ip_address=ip_address("192.168.1.2"),
+                ip_addresses=[ip_address("192.168.1.2")],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -214,8 +221,8 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
             DOMAIN,
             context={"source": source},
             data=zeroconf.ZeroconfServiceInfo(
-                host="192.168.1.100",
-                addresses=["192.168.1.100"],
+                ip_address=ip_address("192.168.1.100"),
+                ip_addresses=[ip_address("192.168.1.100")],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -264,8 +271,8 @@ async def test_discovery_by_homekit_and_zeroconf_same_time(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="192.168.1.100",
-                addresses=["192.168.1.100"],
+                ip_address=ip_address("192.168.1.100"),
+                ip_addresses=[ip_address("192.168.1.100")],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -284,8 +291,8 @@ async def test_discovery_by_homekit_and_zeroconf_same_time(
             DOMAIN,
             context={"source": config_entries.SOURCE_HOMEKIT},
             data=zeroconf.ZeroconfServiceInfo(
-                host="192.168.1.100",
-                addresses=["192.168.1.100"],
+                ip_address=ip_address("192.168.1.100"),
+                ip_addresses=[ip_address("192.168.1.100")],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
