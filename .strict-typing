@@ -42,6 +42,7 @@ homeassistant.components
 homeassistant.components.abode.*
 homeassistant.components.accuweather.*
 homeassistant.components.acer_projector.*
+homeassistant.components.acmeda.*
 homeassistant.components.actiontec.*
 homeassistant.components.adax.*
 homeassistant.components.adguard.*
