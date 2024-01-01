@@ -17,7 +17,6 @@ from homeassistant.components.webhook import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN, NAME
 from .coordinator import TedeeApiCoordinator
@@ -53,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
         _LOGGER.debug("Unregistered Tedee webhook")
 
-    async def register_webhook(_: Any) -> None:
+    async def register_webhook() -> None:
         nonlocal webhook_registered
         if webhook_registered:
             return
@@ -85,7 +84,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         webhook_registered = True
 
-    entry.async_on_unload(async_call_later(hass, 1, register_webhook))
+    entry.async_create_background_task(
+        hass, register_webhook(), "tedee_register_webhook"
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
