@@ -128,6 +128,7 @@ class DaikinToggleSwitch(SwitchEntity):
     """Switch state."""
 
     _attr_icon = TOGGLE_ICON
+    _attr_name = "Toggle"
     _attr_has_entity_name = True
 
     def __init__(self, api: DaikinApi) -> None:
