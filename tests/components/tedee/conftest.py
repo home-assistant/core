@@ -10,12 +10,12 @@ from pytedee_async.lock import TedeeLock
 import pytest
 
 from homeassistant.components.tedee.const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
-WEBHOOK_ID = "55a7335ea8dee830eed4ef8f84cda8f6d80b83af0847dc74032e86120bffed5e"
+WEBHOOK_ID = "bq33efxmdi3vxy55q2wbnudbra7iv8mjrq9x0gea33g4zqtd87093pwveg8xcb33"
 
 
 @pytest.fixture
@@ -27,6 +27,7 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_LOCAL_ACCESS_TOKEN: "api_token",
             CONF_HOST: "192.168.1.42",
+            CONF_WEBHOOK_ID: WEBHOOK_ID,
         },
         unique_id="0000-0000",
     )
