@@ -102,6 +102,8 @@ homeassistant.components.configurator.*
 homeassistant.components.cover.*
 homeassistant.components.cpuspeed.*
 homeassistant.components.crownstone.*
+homeassistant.components.date.*
+homeassistant.components.datetime.*
 homeassistant.components.deconz.*
 homeassistant.components.demo.*
 homeassistant.components.derivative.*
@@ -314,6 +316,7 @@ homeassistant.components.sfr_box.*
 homeassistant.components.shelly.*
 homeassistant.components.simplepush.*
 homeassistant.components.simplisafe.*
+homeassistant.components.siren.*
 homeassistant.components.skybell.*
 homeassistant.components.slack.*
 homeassistant.components.sleepiq.*
@@ -344,11 +347,14 @@ homeassistant.components.tailwind.*
 homeassistant.components.tami4.*
 homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
+homeassistant.components.tedee.*
 homeassistant.components.text.*
 homeassistant.components.threshold.*
 homeassistant.components.tibber.*
 homeassistant.components.tile.*
 homeassistant.components.tilt_ble.*
+homeassistant.components.time.*
+homeassistant.components.todo.*
 homeassistant.components.tolo.*
 homeassistant.components.tplink.*
 homeassistant.components.tplink_omada.*
@@ -375,6 +381,7 @@ homeassistant.components.valve.*
 homeassistant.components.velbus.*
 homeassistant.components.vlc_telnet.*
 homeassistant.components.wake_on_lan.*
+homeassistant.components.wake_word.*
 homeassistant.components.wallbox.*
 homeassistant.components.water_heater.*
 homeassistant.components.watttime.*

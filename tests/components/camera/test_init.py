@@ -993,3 +993,23 @@ def test_deprecated_support_constants(
     import_and_test_deprecated_constant_enum(
         caplog, camera, entity_feature, "SUPPORT_", "2025.1"
     )
+
+
+def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated supported features ints."""
+
+    class MockCamera(camera.Camera):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return 1
+
+    entity = MockCamera()
+    assert entity.supported_features_compat is camera.CameraEntityFeature(1)
+    assert "MockCamera" in caplog.text
+    assert "is using deprecated supported features values" in caplog.text
+    assert "Instead it should use" in caplog.text
+    assert "CameraEntityFeature.ON_OFF" in caplog.text
+    caplog.clear()
+    assert entity.supported_features_compat is camera.CameraEntityFeature(1)
+    assert "is using deprecated supported features values" not in caplog.text
