@@ -1,4 +1,4 @@
-"""Test for a Home Assistant bridge that changes fan features at runtime."""
+"""Test for a Home Assistant bridge that changes cover features at runtime."""
 
 
 from homeassistant.components.cover import CoverEntityFeature
@@ -24,12 +24,12 @@ async def test_cover_add_feature_at_runtime(
     )
     await setup_test_accessories(hass, accessories)
 
-    fan = entity_registry.async_get("cover.family_room_north")
-    assert fan.unique_id == "00:00:00:00:00:00_123016423_166"
+    cover = entity_registry.async_get("cover.family_room_north")
+    assert cover.unique_id == "00:00:00:00:00:00_123016423_166"
 
-    fan_state = hass.states.get("cover.family_room_north")
+    cover_state = hass.states.get("cover.family_room_north")
     assert (
-        fan_state.attributes[ATTR_SUPPORTED_FEATURES]
+        cover_state.attributes[ATTR_SUPPORTED_FEATURES]
         is CoverEntityFeature.OPEN
         | CoverEntityFeature.STOP
         | CoverEntityFeature.CLOSE
@@ -39,7 +39,7 @@ async def test_cover_add_feature_at_runtime(
     cover = entity_registry.async_get("cover.family_room_north")
     assert cover.unique_id == "00:00:00:00:00:00_123016423_166"
 
-    # Now change the config to remove close
+    # Now change the config to remove stop
     accessories = await setup_accessories_from_file(
         hass, "home_assistant_bridge_basic_cover.json"
     )

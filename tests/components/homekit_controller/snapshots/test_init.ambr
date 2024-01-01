@@ -6881,6 +6881,230 @@
     }),
   ])
 # ---
+# name: test_snapshots[home_assistant_bridge_basic_light]
+  list([
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:1',
+          ]),
+        ]),
+        'is_new': False,
+        'manufacturer': 'Home Assistant',
+        'model': 'Bridge',
+        'name': 'HASS Bridge S6',
+        'name_by_user': None,
+        'serial_number': None,
+        'suggested_area': None,
+        'sw_version': '2024.2.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.hass_bridge_s6_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'HASS Bridge S6 Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_1_2',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'HASS Bridge S6 Identify',
+            }),
+            'entity_id': 'button.hass_bridge_s6_identify',
+            'state': 'unknown',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '9.0.0',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:3982136094',
+          ]),
+        ]),
+        'is_new': False,
+        'manufacturer': 'FirstAlert',
+        'model': '1039102',
+        'name': 'Laundry Smoke ED78',
+        'name_by_user': None,
+        'serial_number': None,
+        'suggested_area': None,
+        'sw_version': '1.4.84',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.laundry_smoke_ed78_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Laundry Smoke ED78 Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_3982136094_1_597',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Laundry Smoke ED78 Identify',
+            }),
+            'entity_id': 'button.laundry_smoke_ed78_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'supported_color_modes': list([
+                <ColorMode.BRIGHTNESS: 'brightness'>,
+              ]),
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'light',
+            'entity_category': None,
+            'entity_id': 'light.laundry_smoke_ed78',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Laundry Smoke ED78',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_3982136094_608',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
+              'friendly_name': 'Laundry Smoke ED78',
+              'supported_color_modes': list([
+                <ColorMode.BRIGHTNESS: 'brightness'>,
+              ]),
+              'supported_features': <LightEntityFeature: 0>,
+            }),
+            'entity_id': 'light.laundry_smoke_ed78',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'sensor.laundry_smoke_ed78_battery',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+            'original_icon': 'mdi:battery-unknown',
+            'original_name': 'Laundry Smoke ED78 Battery',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_3982136094_604',
+            'unit_of_measurement': '%',
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'battery',
+              'friendly_name': 'Laundry Smoke ED78 Battery',
+              'icon': 'mdi:battery',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': '%',
+            }),
+            'entity_id': 'sensor.laundry_smoke_ed78_battery',
+            'state': '100',
+          }),
+        }),
+      ]),
+    }),
+  ])
+# ---
 # name: test_snapshots[home_assistant_bridge_cover]
   list([
     dict({
@@ -7708,6 +7932,233 @@
             }),
             'entity_id': 'fan.living_room_fan',
             'state': 'off',
+          }),
+        }),
+      ]),
+    }),
+  ])
+# ---
+# name: test_snapshots[home_assistant_bridge_light]
+  list([
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:1',
+          ]),
+        ]),
+        'is_new': False,
+        'manufacturer': 'Home Assistant',
+        'model': 'Bridge',
+        'name': 'HASS Bridge S6',
+        'name_by_user': None,
+        'serial_number': None,
+        'suggested_area': None,
+        'sw_version': '2024.2.0',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.hass_bridge_s6_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'HASS Bridge S6 Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_1_2',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'HASS Bridge S6 Identify',
+            }),
+            'entity_id': 'button.hass_bridge_s6_identify',
+            'state': 'unknown',
+          }),
+        }),
+      ]),
+    }),
+    dict({
+      'device': dict({
+        'area_id': None,
+        'config_entries': list([
+          'TestData',
+        ]),
+        'configuration_url': None,
+        'connections': list([
+        ]),
+        'disabled_by': None,
+        'entry_type': None,
+        'hw_version': '9.0.0',
+        'identifiers': list([
+          list([
+            'homekit_controller:accessory-id',
+            '00:00:00:00:00:00:aid:3982136094',
+          ]),
+        ]),
+        'is_new': False,
+        'manufacturer': 'FirstAlert',
+        'model': '1039102',
+        'name': 'Laundry Smoke ED78',
+        'name_by_user': None,
+        'serial_number': None,
+        'suggested_area': None,
+        'sw_version': '1.4.84',
+      }),
+      'entities': list([
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': None,
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'button',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'button.laundry_smoke_ed78_identify',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Laundry Smoke ED78 Identify',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_3982136094_1_597',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Laundry Smoke ED78 Identify',
+            }),
+            'entity_id': 'button.laundry_smoke_ed78_identify',
+            'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'supported_color_modes': list([
+                <ColorMode.HS: 'hs'>,
+              ]),
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'light',
+            'entity_category': None,
+            'entity_id': 'light.laundry_smoke_ed78',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Laundry Smoke ED78',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_3982136094_608',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'brightness': None,
+              'color_mode': None,
+              'friendly_name': 'Laundry Smoke ED78',
+              'hs_color': None,
+              'rgb_color': None,
+              'supported_color_modes': list([
+                <ColorMode.HS: 'hs'>,
+              ]),
+              'supported_features': <LightEntityFeature: 0>,
+              'xy_color': None,
+            }),
+            'entity_id': 'light.laundry_smoke_ed78',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'sensor.laundry_smoke_ed78_battery',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+            'original_icon': 'mdi:battery-unknown',
+            'original_name': 'Laundry Smoke ED78 Battery',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_3982136094_604',
+            'unit_of_measurement': '%',
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'battery',
+              'friendly_name': 'Laundry Smoke ED78 Battery',
+              'icon': 'mdi:battery',
+              'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+              'unit_of_measurement': '%',
+            }),
+            'entity_id': 'sensor.laundry_smoke_ed78_battery',
+            'state': '100',
           }),
         }),
       ]),
