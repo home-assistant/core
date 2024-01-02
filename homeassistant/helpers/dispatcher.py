@@ -4,20 +4,27 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from functools import partial
 import logging
-from typing import Any
+from typing import Any, Generic, TypeVarTuple
 
 from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
 
+_Ts = TypeVarTuple("_Ts")
+
 _LOGGER = logging.getLogger(__name__)
 DATA_DISPATCHER = "dispatcher"
 
+
+class SignalType(str, Generic[*_Ts]):
+    """Generic string class for signal to improve typing."""
+
+
 _DispatcherDataType = dict[
-    str,
+    SignalType[*_Ts],
     dict[
-        Callable[..., Any],
+        Callable[[*_Ts], Any],
         HassJob[..., None | Coroutine[Any, Any, None]] | None,
     ],
 ]
@@ -25,7 +32,7 @@ _DispatcherDataType = dict[
 
 @bind_hass
 def dispatcher_connect(
-    hass: HomeAssistant, signal: str, target: Callable[..., None]
+    hass: HomeAssistant, signal: SignalType[*_Ts], target: Callable[[*_Ts], None]
 ) -> Callable[[], None]:
     """Connect a callable function to a signal."""
     async_unsub = run_callback_threadsafe(
@@ -41,9 +48,9 @@ def dispatcher_connect(
 
 @callback
 def _async_remove_dispatcher(
-    dispatchers: _DispatcherDataType,
-    signal: str,
-    target: Callable[..., Any],
+    dispatchers: _DispatcherDataType[*_Ts],
+    signal: SignalType[*_Ts],
+    target: Callable[[*_Ts], Any],
 ) -> None:
     """Remove signal listener."""
     try:
@@ -62,7 +69,7 @@ def _async_remove_dispatcher(
 @callback
 @bind_hass
 def async_dispatcher_connect(
-    hass: HomeAssistant, signal: str, target: Callable[..., Any]
+    hass: HomeAssistant, signal: SignalType[*_Ts], target: Callable[[*_Ts], Any]
 ) -> Callable[[], None]:
     """Connect a callable function to a signal.
 
@@ -71,7 +78,7 @@ def async_dispatcher_connect(
     if DATA_DISPATCHER not in hass.data:
         hass.data[DATA_DISPATCHER] = {}
 
-    dispatchers: _DispatcherDataType = hass.data[DATA_DISPATCHER]
+    dispatchers: _DispatcherDataType[*_Ts] = hass.data[DATA_DISPATCHER]
 
     if signal not in dispatchers:
         dispatchers[signal] = {}
@@ -85,12 +92,14 @@ def async_dispatcher_connect(
 
 
 @bind_hass
-def dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None:
+def dispatcher_send(hass: HomeAssistant, signal: SignalType[*_Ts], *args: *_Ts) -> None:
     """Send signal and data."""
     hass.loop.call_soon_threadsafe(async_dispatcher_send, hass, signal, *args)
 
 
-def _format_err(signal: str, target: Callable[..., Any], *args: Any) -> str:
+def _format_err(
+    signal: SignalType[*_Ts], target: Callable[[*_Ts], Any], *args: *_Ts
+) -> str:
     """Format error message."""
     return "Exception in {} when dispatching '{}': {}".format(
         # Functions wrapped in partial do not have a __name__
@@ -101,7 +110,7 @@ def _format_err(signal: str, target: Callable[..., Any], *args: Any) -> str:
 
 
 def _generate_job(
-    signal: str, target: Callable[..., Any]
+    signal: SignalType[*_Ts], target: Callable[[*_Ts], Any]
 ) -> HassJob[..., None | Coroutine[Any, Any, None]]:
     """Generate a HassJob for a signal and target."""
     return HassJob(
@@ -112,14 +121,16 @@ def _generate_job(
 
 @callback
 @bind_hass
-def async_dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None:
+def async_dispatcher_send(
+    hass: HomeAssistant, signal: SignalType[*_Ts], *args: *_Ts
+) -> None:
     """Send signal and data.
 
     This method must be run in the event loop.
     """
     if (maybe_dispatchers := hass.data.get(DATA_DISPATCHER)) is None:
         return
-    dispatchers: _DispatcherDataType = maybe_dispatchers
+    dispatchers: _DispatcherDataType[*_Ts] = maybe_dispatchers
     if (target_list := dispatchers.get(signal)) is None:
         return
 
