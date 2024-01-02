@@ -1,0 +1,36 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Define the API key (token) for this installation",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "could_not_connect": "Could not connect to the Epion API"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "co2": {
+        "name": "CO2 (ppm)"
+      },
+      "temperature": {
+        "name": "Temperature (degrees Celsius)"
+      },
+      "pressure": {
+        "name": "Pressure (hPa)"
+      },
+      "humidity": {
+        "name": "Humidity"
+      }
+    }
+  }
+}
