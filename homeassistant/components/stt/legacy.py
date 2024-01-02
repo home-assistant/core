@@ -37,7 +37,6 @@ def async_get_provider(
     hass: HomeAssistant, domain: str | None = None
 ) -> Provider | None:
     """Return provider."""
-    if domain:
     providers: dict[str, Provider] = hass.data[DATA_PROVIDERS]
     if domain:
         return providers.get(domain)
