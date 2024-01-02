@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -13,8 +12,6 @@ from .const import DOMAIN
 from .coordinator import GoveeLocalApiCoordinator
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
