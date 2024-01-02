@@ -529,7 +529,7 @@ class FibaroDevice(Entity):
         return self.fibaro_device.value.bool_value(False)
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+    def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return the state attributes of the device."""
         attr = {"fibaro_id": self.fibaro_device.fibaro_id}
 
