@@ -185,6 +185,9 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         modes: set[ColorMode] = set()
         if device.is_variable_color_temp:
             modes.add(ColorMode.COLOR_TEMP)
+            temp_range = device.valid_temperature_range
+            self._attr_min_color_temp_kelvin = temp_range.min
+            self._attr_max_color_temp_kelvin = temp_range.max
         if device.is_color:
             modes.add(ColorMode.HS)
         if device.is_dimmable:
@@ -250,16 +253,6 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         if (transition := kwargs.get(ATTR_TRANSITION)) is not None:
             transition = int(transition * 1_000)
         await self.device.turn_off(transition=transition)
-
-    @property
-    def min_color_temp_kelvin(self) -> int:
-        """Return minimum supported color temperature."""
-        return cast(int, self.device.valid_temperature_range.min)
-
-    @property
-    def max_color_temp_kelvin(self) -> int:
-        """Return maximum supported color temperature."""
-        return cast(int, self.device.valid_temperature_range.max)
 
     @property
     def color_temp_kelvin(self) -> int:
