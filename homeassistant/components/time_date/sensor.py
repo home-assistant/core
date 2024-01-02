@@ -7,8 +7,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_DISPLAY_OPTIONS
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.const import CONF_DISPLAY_OPTIONS, EVENT_CORE_CONFIG_UPDATE
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -107,6 +107,15 @@ class TimeDateSensor(SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Set up first update."""
+
+        async def async_update_config(event: Event) -> None:
+            """Handle core config update."""
+            self._update_state_and_setup_listener()
+            self.async_write_ha_state()
+
+        self.async_on_remove(
+            self.hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, async_update_config)
+        )
         self._update_state_and_setup_listener()
 
     async def async_will_remove_from_hass(self) -> None:
