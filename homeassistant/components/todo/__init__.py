@@ -107,7 +107,10 @@ def _validate_supported_features(
             continue
         if not supported_features or not supported_features & desc.required_feature:
             raise ServiceValidationError(
-                f"Entity does not support setting field '{desc.service_field}'"
+                f"Entity does not support setting field '{desc.service_field}'",
+                translation_domain=DOMAIN,
+                translation_key="update_field_not_supported",
+                translation_placeholders={"service_field": desc.service_field},
             )
 
 

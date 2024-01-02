@@ -90,5 +90,10 @@
         "completed": "Completed"
       }
     }
+  },
+  "exceptions": {
+    "update_field_not_supported": {
+      "message": "Entity does not support setting field: {service_field}"
+    }
   }
 }
