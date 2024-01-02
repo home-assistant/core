@@ -9,7 +9,9 @@ from .const import DOMAIN
 from .coordinator import TedeeApiCoordinator
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.LOCK,
+    Platform.SENSOR,
 ]
 
 _LOGGER = logging.getLogger(__name__)
