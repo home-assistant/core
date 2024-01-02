@@ -181,6 +181,31 @@ async def test_states_non_default_timezone(
     state = hass.states.get("sensor.date_time_iso")
     assert state.state == "2020-10-17T12:42:00"
 
+    # Change time zone
+    await hass.config.async_update(time_zone="Europe/Prague")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.time")
+    assert state.state == "18:42"
+
+    state = hass.states.get("sensor.date")
+    assert state.state == "2020-10-17"
+
+    state = hass.states.get("sensor.time_utc")
+    assert state.state == "16:42"
+
+    state = hass.states.get("sensor.date_time")
+    assert state.state == "2020-10-17, 18:42"
+
+    state = hass.states.get("sensor.date_time_utc")
+    assert state.state == "2020-10-17, 16:42"
+
+    state = hass.states.get("sensor.internet_time")
+    assert state.state == "@738"
+
+    state = hass.states.get("sensor.date_time_iso")
+    assert state.state == "2020-10-17T18:42:00"
+
 
 @patch(
     "homeassistant.components.time_date.sensor.async_track_point_in_utc_time",
