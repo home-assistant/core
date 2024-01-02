@@ -949,16 +949,17 @@ async def _handle_entity_call(
     result: ServiceResponse = None
     if task is not None:
         result = await task
-        if asyncio.iscoroutine(result):
-            _LOGGER.error(
-                (
-                    "Service %s for %s incorrectly returns a coroutine object. Await result"
-                    " instead in service handler. Report bug to integration author"
-                ),
-                func,
-                entity.entity_id,
-            )
-            result = await result
+
+    if result and asyncio.iscoroutine(result):
+        _LOGGER.error(
+            (
+                "Service %s for %s incorrectly returns a coroutine object. Await result"
+                " instead in service handler. Report bug to integration author"
+            ),
+            func,
+            entity.entity_id,
+        )
+        result = await result
 
     return result
 
