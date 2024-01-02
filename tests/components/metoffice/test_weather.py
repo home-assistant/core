@@ -475,7 +475,7 @@ async def test_forecast_service(
     assert wavertree_data["wavertree_daily_mock"].call_count == 2
     assert wavertree_data["wavertree_hourly_mock"].call_count == 1
 
-    for forecast_type in ("daily", "hourly"):
+    for forecast_type in ("daily", "hourly", "twice_daily"):
         response = await hass.services.async_call(
             WEATHER_DOMAIN,
             service,
@@ -550,7 +550,7 @@ async def test_forecast_subscription(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    for forecast_type in ("daily", "hourly"):
+    for forecast_type in ("daily", "hourly", "twice_daily"):
         await client.send_json_auto_id(
             {
                 "type": "weather/subscribe_forecast",

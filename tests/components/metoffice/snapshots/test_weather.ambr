@@ -1317,6 +1317,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-26T12:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 9,
         'temperature': 13.0,
         'wind_bearing': 'WNW',
@@ -1325,6 +1326,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2020-04-27T12:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 14,
         'temperature': 11.0,
         'wind_bearing': 'NW',
@@ -1333,6 +1335,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-28T12:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 10,
         'temperature': 12.0,
         'wind_bearing': 'ENE',
@@ -1341,6 +1344,7 @@
       dict({
         'condition': 'rainy',
         'datetime': '2020-04-29T12:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 59,
         'temperature': 13.0,
         'wind_bearing': 'SE',
@@ -1355,6 +1359,7 @@
       dict({
         'condition': 'sunny',
         'datetime': '2020-04-25T15:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 1,
         'temperature': 19.0,
         'wind_bearing': 'S',
@@ -1363,6 +1368,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2020-04-25T18:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 2,
         'temperature': 17.0,
         'wind_bearing': 'WNW',
@@ -1371,6 +1377,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2020-04-25T21:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 1,
         'temperature': 14.0,
         'wind_bearing': 'NW',
@@ -1379,6 +1386,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2020-04-26T00:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 1,
         'temperature': 13.0,
         'wind_bearing': 'WSW',
@@ -1387,6 +1395,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2020-04-26T03:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 2,
         'temperature': 12.0,
         'wind_bearing': 'WNW',
@@ -1395,6 +1404,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-26T06:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 5,
         'temperature': 11.0,
         'wind_bearing': 'NW',
@@ -1403,6 +1413,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-26T09:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 5,
         'temperature': 12.0,
         'wind_bearing': 'WNW',
@@ -1411,6 +1422,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-26T12:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 6,
         'temperature': 12.0,
         'wind_bearing': 'WNW',
@@ -1419,6 +1431,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-26T15:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 5,
         'temperature': 12.0,
         'wind_bearing': 'NW',
@@ -1427,6 +1440,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-26T18:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 9,
         'temperature': 11.0,
         'wind_bearing': 'NW',
@@ -1435,6 +1449,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-26T21:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 9,
         'temperature': 10.0,
         'wind_bearing': 'NW',
@@ -1443,6 +1458,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-27T00:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 11,
         'temperature': 9.0,
         'wind_bearing': 'WNW',
@@ -1451,6 +1467,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-27T03:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 12,
         'temperature': 8.0,
         'wind_bearing': 'WNW',
@@ -1459,6 +1476,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-27T06:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 14,
         'temperature': 8.0,
         'wind_bearing': 'NW',
@@ -1467,6 +1485,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2020-04-27T09:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 6,
         'temperature': 9.0,
         'wind_bearing': 'NW',
@@ -1475,6 +1494,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2020-04-27T12:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 4,
         'temperature': 10.0,
         'wind_bearing': 'NW',
@@ -1483,6 +1503,7 @@
       dict({
         'condition': 'sunny',
         'datetime': '2020-04-27T15:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 1,
         'temperature': 10.0,
         'wind_bearing': 'NW',
@@ -1491,6 +1512,7 @@
       dict({
         'condition': 'sunny',
         'datetime': '2020-04-27T18:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 1,
         'temperature': 10.0,
         'wind_bearing': 'NW',
@@ -1499,6 +1521,7 @@
       dict({
         'condition': 'clear-night',
         'datetime': '2020-04-27T21:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 1,
         'temperature': 9.0,
         'wind_bearing': 'NW',
@@ -1507,6 +1530,7 @@
       dict({
         'condition': 'clear-night',
         'datetime': '2020-04-28T00:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 2,
         'temperature': 8.0,
         'wind_bearing': 'NNW',
@@ -1515,6 +1539,7 @@
       dict({
         'condition': 'clear-night',
         'datetime': '2020-04-28T03:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 3,
         'temperature': 7.0,
         'wind_bearing': 'W',
@@ -1523,6 +1548,7 @@
       dict({
         'condition': 'sunny',
         'datetime': '2020-04-28T06:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 5,
         'temperature': 6.0,
         'wind_bearing': 'S',
@@ -1531,6 +1557,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2020-04-28T09:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 6,
         'temperature': 9.0,
         'wind_bearing': 'ENE',
@@ -1539,6 +1566,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-28T12:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 10,
         'temperature': 11.0,
         'wind_bearing': 'ENE',
@@ -1547,6 +1575,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-28T15:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 10,
         'temperature': 12.0,
         'wind_bearing': 'N',
@@ -1555,6 +1584,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-28T18:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 10,
         'temperature': 11.0,
         'wind_bearing': 'N',
@@ -1563,6 +1593,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-28T21:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 9,
         'temperature': 10.0,
         'wind_bearing': 'NNE',
@@ -1571,6 +1602,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-29T00:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 6,
         'temperature': 9.0,
         'wind_bearing': 'E',
@@ -1579,6 +1611,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2020-04-29T03:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 3,
         'temperature': 8.0,
         'wind_bearing': 'SSE',
@@ -1587,6 +1620,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-29T06:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 9,
         'temperature': 8.0,
         'wind_bearing': 'SE',
@@ -1595,6 +1629,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-29T09:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 12,
         'temperature': 10.0,
         'wind_bearing': 'SE',
@@ -1603,6 +1638,7 @@
       dict({
         'condition': 'rainy',
         'datetime': '2020-04-29T12:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 47,
         'temperature': 12.0,
         'wind_bearing': 'SE',
@@ -1611,6 +1647,7 @@
       dict({
         'condition': 'pouring',
         'datetime': '2020-04-29T15:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 59,
         'temperature': 13.0,
         'wind_bearing': 'SSE',
@@ -1619,6 +1656,7 @@
       dict({
         'condition': 'rainy',
         'datetime': '2020-04-29T18:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 39,
         'temperature': 12.0,
         'wind_bearing': 'SSE',
@@ -1627,6 +1665,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-29T21:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 19,
         'temperature': 11.0,
         'wind_bearing': 'SSE',
@@ -1641,6 +1680,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-26T12:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 9,
         'temperature': 13.0,
         'wind_bearing': 'WNW',
@@ -1649,6 +1689,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2020-04-27T12:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 14,
         'temperature': 11.0,
         'wind_bearing': 'NW',
@@ -1657,6 +1698,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-28T12:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 10,
         'temperature': 12.0,
         'wind_bearing': 'ENE',
@@ -1665,6 +1707,7 @@
       dict({
         'condition': 'rainy',
         'datetime': '2020-04-29T12:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 59,
         'temperature': 13.0,
         'wind_bearing': 'SE',
@@ -1679,6 +1722,7 @@
       dict({
         'condition': 'sunny',
         'datetime': '2020-04-25T15:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 1,
         'temperature': 19.0,
         'wind_bearing': 'S',
@@ -1687,6 +1731,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2020-04-25T18:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 2,
         'temperature': 17.0,
         'wind_bearing': 'WNW',
@@ -1695,6 +1740,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2020-04-25T21:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 1,
         'temperature': 14.0,
         'wind_bearing': 'NW',
@@ -1703,6 +1749,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2020-04-26T00:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 1,
         'temperature': 13.0,
         'wind_bearing': 'WSW',
@@ -1711,6 +1758,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2020-04-26T03:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 2,
         'temperature': 12.0,
         'wind_bearing': 'WNW',
@@ -1719,6 +1767,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-26T06:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 5,
         'temperature': 11.0,
         'wind_bearing': 'NW',
@@ -1727,6 +1776,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-26T09:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 5,
         'temperature': 12.0,
         'wind_bearing': 'WNW',
@@ -1735,6 +1785,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-26T12:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 6,
         'temperature': 12.0,
         'wind_bearing': 'WNW',
@@ -1743,6 +1794,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-26T15:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 5,
         'temperature': 12.0,
         'wind_bearing': 'NW',
@@ -1751,6 +1803,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-26T18:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 9,
         'temperature': 11.0,
         'wind_bearing': 'NW',
@@ -1759,6 +1812,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-26T21:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 9,
         'temperature': 10.0,
         'wind_bearing': 'NW',
@@ -1767,6 +1821,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-27T00:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 11,
         'temperature': 9.0,
         'wind_bearing': 'WNW',
@@ -1775,6 +1830,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-27T03:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 12,
         'temperature': 8.0,
         'wind_bearing': 'WNW',
@@ -1783,6 +1839,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-27T06:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 14,
         'temperature': 8.0,
         'wind_bearing': 'NW',
@@ -1791,6 +1848,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2020-04-27T09:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 6,
         'temperature': 9.0,
         'wind_bearing': 'NW',
@@ -1799,6 +1857,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2020-04-27T12:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 4,
         'temperature': 10.0,
         'wind_bearing': 'NW',
@@ -1807,6 +1866,7 @@
       dict({
         'condition': 'sunny',
         'datetime': '2020-04-27T15:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 1,
         'temperature': 10.0,
         'wind_bearing': 'NW',
@@ -1815,6 +1875,7 @@
       dict({
         'condition': 'sunny',
         'datetime': '2020-04-27T18:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 1,
         'temperature': 10.0,
         'wind_bearing': 'NW',
@@ -1823,6 +1884,7 @@
       dict({
         'condition': 'clear-night',
         'datetime': '2020-04-27T21:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 1,
         'temperature': 9.0,
         'wind_bearing': 'NW',
@@ -1831,6 +1893,7 @@
       dict({
         'condition': 'clear-night',
         'datetime': '2020-04-28T00:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 2,
         'temperature': 8.0,
         'wind_bearing': 'NNW',
@@ -1839,6 +1902,7 @@
       dict({
         'condition': 'clear-night',
         'datetime': '2020-04-28T03:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 3,
         'temperature': 7.0,
         'wind_bearing': 'W',
@@ -1847,6 +1911,7 @@
       dict({
         'condition': 'sunny',
         'datetime': '2020-04-28T06:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 5,
         'temperature': 6.0,
         'wind_bearing': 'S',
@@ -1855,6 +1920,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2020-04-28T09:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 6,
         'temperature': 9.0,
         'wind_bearing': 'ENE',
@@ -1863,6 +1929,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-28T12:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 10,
         'temperature': 11.0,
         'wind_bearing': 'ENE',
@@ -1871,6 +1938,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-28T15:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 10,
         'temperature': 12.0,
         'wind_bearing': 'N',
@@ -1879,6 +1947,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-28T18:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 10,
         'temperature': 11.0,
         'wind_bearing': 'N',
@@ -1887,6 +1956,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-28T21:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 9,
         'temperature': 10.0,
         'wind_bearing': 'NNE',
@@ -1895,6 +1965,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-29T00:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 6,
         'temperature': 9.0,
         'wind_bearing': 'E',
@@ -1903,6 +1974,7 @@
       dict({
         'condition': 'partlycloudy',
         'datetime': '2020-04-29T03:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 3,
         'temperature': 8.0,
         'wind_bearing': 'SSE',
@@ -1911,6 +1983,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-29T06:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 9,
         'temperature': 8.0,
         'wind_bearing': 'SE',
@@ -1919,6 +1992,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-29T09:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 12,
         'temperature': 10.0,
         'wind_bearing': 'SE',
@@ -1927,6 +2001,7 @@
       dict({
         'condition': 'rainy',
         'datetime': '2020-04-29T12:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 47,
         'temperature': 12.0,
         'wind_bearing': 'SE',
@@ -1935,6 +2010,7 @@
       dict({
         'condition': 'pouring',
         'datetime': '2020-04-29T15:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 59,
         'temperature': 13.0,
         'wind_bearing': 'SSE',
@@ -1943,6 +2019,7 @@
       dict({
         'condition': 'rainy',
         'datetime': '2020-04-29T18:00:00+00:00',
+        'is_daytime': True,
         'precipitation_probability': 39,
         'temperature': 12.0,
         'wind_bearing': 'SSE',
@@ -1951,6 +2028,7 @@
       dict({
         'condition': 'cloudy',
         'datetime': '2020-04-29T21:00:00+00:00',
+        'is_daytime': False,
         'precipitation_probability': 19,
         'temperature': 11.0,
         'wind_bearing': 'SSE',
@@ -1960,6 +2038,84 @@
   })
 # ---
 # name: test_forecast_service[get_forecast].4
+  dict({
+    'forecast': list([
+      dict({
+        'condition': 'cloudy',
+        'datetime': '2020-04-26T00:00:00+00:00',
+        'is_daytime': False,
+        'precipitation_probability': 12,
+        'temperature': 8.0,
+        'wind_bearing': 'WNW',
+        'wind_speed': 6.44,
+      }),
+      dict({
+        'condition': 'cloudy',
+        'datetime': '2020-04-26T12:00:00+00:00',
+        'is_daytime': True,
+        'precipitation_probability': 9,
+        'temperature': 13.0,
+        'wind_bearing': 'WNW',
+        'wind_speed': 14.48,
+      }),
+      dict({
+        'condition': 'clear-night',
+        'datetime': '2020-04-27T00:00:00+00:00',
+        'is_daytime': False,
+        'precipitation_probability': 3,
+        'temperature': 6.0,
+        'wind_bearing': 'NNW',
+        'wind_speed': 6.44,
+      }),
+      dict({
+        'condition': 'partlycloudy',
+        'datetime': '2020-04-27T12:00:00+00:00',
+        'is_daytime': True,
+        'precipitation_probability': 14,
+        'temperature': 11.0,
+        'wind_bearing': 'NW',
+        'wind_speed': 14.48,
+      }),
+      dict({
+        'condition': 'cloudy',
+        'datetime': '2020-04-28T00:00:00+00:00',
+        'is_daytime': False,
+        'precipitation_probability': 9,
+        'temperature': 7.0,
+        'wind_bearing': 'E',
+        'wind_speed': 6.44,
+      }),
+      dict({
+        'condition': 'cloudy',
+        'datetime': '2020-04-28T12:00:00+00:00',
+        'is_daytime': True,
+        'precipitation_probability': 10,
+        'temperature': 12.0,
+        'wind_bearing': 'ENE',
+        'wind_speed': 11.27,
+      }),
+      dict({
+        'condition': 'cloudy',
+        'datetime': '2020-04-29T00:00:00+00:00',
+        'is_daytime': False,
+        'precipitation_probability': 19,
+        'temperature': 8.0,
+        'wind_bearing': 'SSE',
+        'wind_speed': 17.7,
+      }),
+      dict({
+        'condition': 'rainy',
+        'datetime': '2020-04-29T12:00:00+00:00',
+        'is_daytime': True,
+        'precipitation_probability': 59,
+        'temperature': 13.0,
+        'wind_bearing': 'SE',
+        'wind_speed': 20.92,
+      }),
+    ]),
+  })
+# ---
+# name: test_forecast_service[get_forecast].5
   dict({
     'forecast': list([
     ]),
@@ -1972,6 +2128,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-26T12:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 9,
           'temperature': 13.0,
           'wind_bearing': 'WNW',
@@ -1980,6 +2137,7 @@
         dict({
           'condition': 'partlycloudy',
           'datetime': '2020-04-27T12:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 14,
           'temperature': 11.0,
           'wind_bearing': 'NW',
@@ -1988,6 +2146,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-28T12:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 10,
           'temperature': 12.0,
           'wind_bearing': 'ENE',
@@ -1996,6 +2155,7 @@
         dict({
           'condition': 'rainy',
           'datetime': '2020-04-29T12:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 59,
           'temperature': 13.0,
           'wind_bearing': 'SE',
@@ -2012,6 +2172,7 @@
         dict({
           'condition': 'sunny',
           'datetime': '2020-04-25T15:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 1,
           'temperature': 19.0,
           'wind_bearing': 'S',
@@ -2020,6 +2181,7 @@
         dict({
           'condition': 'partlycloudy',
           'datetime': '2020-04-25T18:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 2,
           'temperature': 17.0,
           'wind_bearing': 'WNW',
@@ -2028,6 +2190,7 @@
         dict({
           'condition': 'partlycloudy',
           'datetime': '2020-04-25T21:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 1,
           'temperature': 14.0,
           'wind_bearing': 'NW',
@@ -2036,6 +2199,7 @@
         dict({
           'condition': 'partlycloudy',
           'datetime': '2020-04-26T00:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 1,
           'temperature': 13.0,
           'wind_bearing': 'WSW',
@@ -2044,6 +2208,7 @@
         dict({
           'condition': 'partlycloudy',
           'datetime': '2020-04-26T03:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 2,
           'temperature': 12.0,
           'wind_bearing': 'WNW',
@@ -2052,6 +2217,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-26T06:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 5,
           'temperature': 11.0,
           'wind_bearing': 'NW',
@@ -2060,6 +2226,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-26T09:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 5,
           'temperature': 12.0,
           'wind_bearing': 'WNW',
@@ -2068,6 +2235,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-26T12:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 6,
           'temperature': 12.0,
           'wind_bearing': 'WNW',
@@ -2076,6 +2244,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-26T15:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 5,
           'temperature': 12.0,
           'wind_bearing': 'NW',
@@ -2084,6 +2253,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-26T18:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 9,
           'temperature': 11.0,
           'wind_bearing': 'NW',
@@ -2092,6 +2262,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-26T21:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 9,
           'temperature': 10.0,
           'wind_bearing': 'NW',
@@ -2100,6 +2271,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-27T00:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 11,
           'temperature': 9.0,
           'wind_bearing': 'WNW',
@@ -2108,6 +2280,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-27T03:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 12,
           'temperature': 8.0,
           'wind_bearing': 'WNW',
@@ -2116,6 +2289,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-27T06:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 14,
           'temperature': 8.0,
           'wind_bearing': 'NW',
@@ -2124,6 +2298,7 @@
         dict({
           'condition': 'partlycloudy',
           'datetime': '2020-04-27T09:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 6,
           'temperature': 9.0,
           'wind_bearing': 'NW',
@@ -2132,6 +2307,7 @@
         dict({
           'condition': 'partlycloudy',
           'datetime': '2020-04-27T12:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 4,
           'temperature': 10.0,
           'wind_bearing': 'NW',
@@ -2140,6 +2316,7 @@
         dict({
           'condition': 'sunny',
           'datetime': '2020-04-27T15:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 1,
           'temperature': 10.0,
           'wind_bearing': 'NW',
@@ -2148,6 +2325,7 @@
         dict({
           'condition': 'sunny',
           'datetime': '2020-04-27T18:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 1,
           'temperature': 10.0,
           'wind_bearing': 'NW',
@@ -2156,6 +2334,7 @@
         dict({
           'condition': 'clear-night',
           'datetime': '2020-04-27T21:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 1,
           'temperature': 9.0,
           'wind_bearing': 'NW',
@@ -2164,6 +2343,7 @@
         dict({
           'condition': 'clear-night',
           'datetime': '2020-04-28T00:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 2,
           'temperature': 8.0,
           'wind_bearing': 'NNW',
@@ -2172,6 +2352,7 @@
         dict({
           'condition': 'clear-night',
           'datetime': '2020-04-28T03:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 3,
           'temperature': 7.0,
           'wind_bearing': 'W',
@@ -2180,6 +2361,7 @@
         dict({
           'condition': 'sunny',
           'datetime': '2020-04-28T06:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 5,
           'temperature': 6.0,
           'wind_bearing': 'S',
@@ -2188,6 +2370,7 @@
         dict({
           'condition': 'partlycloudy',
           'datetime': '2020-04-28T09:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 6,
           'temperature': 9.0,
           'wind_bearing': 'ENE',
@@ -2196,6 +2379,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-28T12:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 10,
           'temperature': 11.0,
           'wind_bearing': 'ENE',
@@ -2204,6 +2388,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-28T15:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 10,
           'temperature': 12.0,
           'wind_bearing': 'N',
@@ -2212,6 +2397,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-28T18:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 10,
           'temperature': 11.0,
           'wind_bearing': 'N',
@@ -2220,6 +2406,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-28T21:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 9,
           'temperature': 10.0,
           'wind_bearing': 'NNE',
@@ -2228,6 +2415,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-29T00:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 6,
           'temperature': 9.0,
           'wind_bearing': 'E',
@@ -2236,6 +2424,7 @@
         dict({
           'condition': 'partlycloudy',
           'datetime': '2020-04-29T03:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 3,
           'temperature': 8.0,
           'wind_bearing': 'SSE',
@@ -2244,6 +2433,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-29T06:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 9,
           'temperature': 8.0,
           'wind_bearing': 'SE',
@@ -2252,6 +2442,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-29T09:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 12,
           'temperature': 10.0,
           'wind_bearing': 'SE',
@@ -2260,6 +2451,7 @@
         dict({
           'condition': 'rainy',
           'datetime': '2020-04-29T12:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 47,
           'temperature': 12.0,
           'wind_bearing': 'SE',
@@ -2268,6 +2460,7 @@
         dict({
           'condition': 'pouring',
           'datetime': '2020-04-29T15:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 59,
           'temperature': 13.0,
           'wind_bearing': 'SSE',
@@ -2276,6 +2469,7 @@
         dict({
           'condition': 'rainy',
           'datetime': '2020-04-29T18:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 39,
           'temperature': 12.0,
           'wind_bearing': 'SSE',
@@ -2284,6 +2478,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-29T21:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 19,
           'temperature': 11.0,
           'wind_bearing': 'SSE',
@@ -2300,6 +2495,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-26T12:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 9,
           'temperature': 13.0,
           'wind_bearing': 'WNW',
@@ -2308,6 +2504,7 @@
         dict({
           'condition': 'partlycloudy',
           'datetime': '2020-04-27T12:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 14,
           'temperature': 11.0,
           'wind_bearing': 'NW',
@@ -2316,6 +2513,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-28T12:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 10,
           'temperature': 12.0,
           'wind_bearing': 'ENE',
@@ -2324,6 +2522,7 @@
         dict({
           'condition': 'rainy',
           'datetime': '2020-04-29T12:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 59,
           'temperature': 13.0,
           'wind_bearing': 'SE',
@@ -2340,6 +2539,7 @@
         dict({
           'condition': 'sunny',
           'datetime': '2020-04-25T15:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 1,
           'temperature': 19.0,
           'wind_bearing': 'S',
@@ -2348,6 +2548,7 @@
         dict({
           'condition': 'partlycloudy',
           'datetime': '2020-04-25T18:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 2,
           'temperature': 17.0,
           'wind_bearing': 'WNW',
@@ -2356,6 +2557,7 @@
         dict({
           'condition': 'partlycloudy',
           'datetime': '2020-04-25T21:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 1,
           'temperature': 14.0,
           'wind_bearing': 'NW',
@@ -2364,6 +2566,7 @@
         dict({
           'condition': 'partlycloudy',
           'datetime': '2020-04-26T00:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 1,
           'temperature': 13.0,
           'wind_bearing': 'WSW',
@@ -2372,6 +2575,7 @@
         dict({
           'condition': 'partlycloudy',
           'datetime': '2020-04-26T03:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 2,
           'temperature': 12.0,
           'wind_bearing': 'WNW',
@@ -2380,6 +2584,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-26T06:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 5,
           'temperature': 11.0,
           'wind_bearing': 'NW',
@@ -2388,6 +2593,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-26T09:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 5,
           'temperature': 12.0,
           'wind_bearing': 'WNW',
@@ -2396,6 +2602,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-26T12:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 6,
           'temperature': 12.0,
           'wind_bearing': 'WNW',
@@ -2404,6 +2611,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-26T15:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 5,
           'temperature': 12.0,
           'wind_bearing': 'NW',
@@ -2412,6 +2620,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-26T18:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 9,
           'temperature': 11.0,
           'wind_bearing': 'NW',
@@ -2420,6 +2629,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-26T21:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 9,
           'temperature': 10.0,
           'wind_bearing': 'NW',
@@ -2428,6 +2638,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-27T00:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 11,
           'temperature': 9.0,
           'wind_bearing': 'WNW',
@@ -2436,6 +2647,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-27T03:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 12,
           'temperature': 8.0,
           'wind_bearing': 'WNW',
@@ -2444,6 +2656,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-27T06:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 14,
           'temperature': 8.0,
           'wind_bearing': 'NW',
@@ -2452,6 +2665,7 @@
         dict({
           'condition': 'partlycloudy',
           'datetime': '2020-04-27T09:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 6,
           'temperature': 9.0,
           'wind_bearing': 'NW',
@@ -2460,6 +2674,7 @@
         dict({
           'condition': 'partlycloudy',
           'datetime': '2020-04-27T12:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 4,
           'temperature': 10.0,
           'wind_bearing': 'NW',
@@ -2468,6 +2683,7 @@
         dict({
           'condition': 'sunny',
           'datetime': '2020-04-27T15:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 1,
           'temperature': 10.0,
           'wind_bearing': 'NW',
@@ -2476,6 +2692,7 @@
         dict({
           'condition': 'sunny',
           'datetime': '2020-04-27T18:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 1,
           'temperature': 10.0,
           'wind_bearing': 'NW',
@@ -2484,6 +2701,7 @@
         dict({
           'condition': 'clear-night',
           'datetime': '2020-04-27T21:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 1,
           'temperature': 9.0,
           'wind_bearing': 'NW',
@@ -2492,6 +2710,7 @@
         dict({
           'condition': 'clear-night',
           'datetime': '2020-04-28T00:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 2,
           'temperature': 8.0,
           'wind_bearing': 'NNW',
@@ -2500,6 +2719,7 @@
         dict({
           'condition': 'clear-night',
           'datetime': '2020-04-28T03:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 3,
           'temperature': 7.0,
           'wind_bearing': 'W',
@@ -2508,6 +2728,7 @@
         dict({
           'condition': 'sunny',
           'datetime': '2020-04-28T06:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 5,
           'temperature': 6.0,
           'wind_bearing': 'S',
@@ -2516,6 +2737,7 @@
         dict({
           'condition': 'partlycloudy',
           'datetime': '2020-04-28T09:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 6,
           'temperature': 9.0,
           'wind_bearing': 'ENE',
@@ -2524,6 +2746,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-28T12:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 10,
           'temperature': 11.0,
           'wind_bearing': 'ENE',
@@ -2532,6 +2755,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-28T15:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 10,
           'temperature': 12.0,
           'wind_bearing': 'N',
@@ -2540,6 +2764,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-28T18:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 10,
           'temperature': 11.0,
           'wind_bearing': 'N',
@@ -2548,6 +2773,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-28T21:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 9,
           'temperature': 10.0,
           'wind_bearing': 'NNE',
@@ -2556,6 +2782,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-29T00:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 6,
           'temperature': 9.0,
           'wind_bearing': 'E',
@@ -2564,6 +2791,7 @@
         dict({
           'condition': 'partlycloudy',
           'datetime': '2020-04-29T03:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 3,
           'temperature': 8.0,
           'wind_bearing': 'SSE',
@@ -2572,6 +2800,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-29T06:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 9,
           'temperature': 8.0,
           'wind_bearing': 'SE',
@@ -2580,6 +2809,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-29T09:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 12,
           'temperature': 10.0,
           'wind_bearing': 'SE',
@@ -2588,6 +2818,7 @@
         dict({
           'condition': 'rainy',
           'datetime': '2020-04-29T12:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 47,
           'temperature': 12.0,
           'wind_bearing': 'SE',
@@ -2596,6 +2827,7 @@
         dict({
           'condition': 'pouring',
           'datetime': '2020-04-29T15:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 59,
           'temperature': 13.0,
           'wind_bearing': 'SSE',
@@ -2604,6 +2836,7 @@
         dict({
           'condition': 'rainy',
           'datetime': '2020-04-29T18:00:00+00:00',
+          'is_daytime': True,
           'precipitation_probability': 39,
           'temperature': 12.0,
           'wind_bearing': 'SSE',
@@ -2612,6 +2845,7 @@
         dict({
           'condition': 'cloudy',
           'datetime': '2020-04-29T21:00:00+00:00',
+          'is_daytime': False,
           'precipitation_probability': 19,
           'temperature': 11.0,
           'wind_bearing': 'SSE',
@@ -2625,6 +2859,86 @@
   dict({
     'weather.met_office_wavertree_daily': dict({
       'forecast': list([
+        dict({
+          'condition': 'cloudy',
+          'datetime': '2020-04-26T00:00:00+00:00',
+          'is_daytime': False,
+          'precipitation_probability': 12,
+          'temperature': 8.0,
+          'wind_bearing': 'WNW',
+          'wind_speed': 6.44,
+        }),
+        dict({
+          'condition': 'cloudy',
+          'datetime': '2020-04-26T12:00:00+00:00',
+          'is_daytime': True,
+          'precipitation_probability': 9,
+          'temperature': 13.0,
+          'wind_bearing': 'WNW',
+          'wind_speed': 14.48,
+        }),
+        dict({
+          'condition': 'clear-night',
+          'datetime': '2020-04-27T00:00:00+00:00',
+          'is_daytime': False,
+          'precipitation_probability': 3,
+          'temperature': 6.0,
+          'wind_bearing': 'NNW',
+          'wind_speed': 6.44,
+        }),
+        dict({
+          'condition': 'partlycloudy',
+          'datetime': '2020-04-27T12:00:00+00:00',
+          'is_daytime': True,
+          'precipitation_probability': 14,
+          'temperature': 11.0,
+          'wind_bearing': 'NW',
+          'wind_speed': 14.48,
+        }),
+        dict({
+          'condition': 'cloudy',
+          'datetime': '2020-04-28T00:00:00+00:00',
+          'is_daytime': False,
+          'precipitation_probability': 9,
+          'temperature': 7.0,
+          'wind_bearing': 'E',
+          'wind_speed': 6.44,
+        }),
+        dict({
+          'condition': 'cloudy',
+          'datetime': '2020-04-28T12:00:00+00:00',
+          'is_daytime': True,
+          'precipitation_probability': 10,
+          'temperature': 12.0,
+          'wind_bearing': 'ENE',
+          'wind_speed': 11.27,
+        }),
+        dict({
+          'condition': 'cloudy',
+          'datetime': '2020-04-29T00:00:00+00:00',
+          'is_daytime': False,
+          'precipitation_probability': 19,
+          'temperature': 8.0,
+          'wind_bearing': 'SSE',
+          'wind_speed': 17.7,
+        }),
+        dict({
+          'condition': 'rainy',
+          'datetime': '2020-04-29T12:00:00+00:00',
+          'is_daytime': True,
+          'precipitation_probability': 59,
+          'temperature': 13.0,
+          'wind_bearing': 'SE',
+          'wind_speed': 20.92,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_forecast_service[get_forecasts].5
+  dict({
+    'weather.met_office_wavertree_daily': dict({
+      'forecast': list([
       ]),
     }),
   })
@@ -2634,6 +2948,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 9,
       'temperature': 13.0,
       'wind_bearing': 'WNW',
@@ -2642,6 +2957,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-27T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 14,
       'temperature': 11.0,
       'wind_bearing': 'NW',
@@ -2650,6 +2966,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-28T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 10,
       'temperature': 12.0,
       'wind_bearing': 'ENE',
@@ -2658,6 +2975,7 @@
     dict({
       'condition': 'rainy',
       'datetime': '2020-04-29T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 59,
       'temperature': 13.0,
       'wind_bearing': 'SE',
@@ -2670,6 +2988,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 9,
       'temperature': 13.0,
       'wind_bearing': 'WNW',
@@ -2678,6 +2997,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-27T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 14,
       'temperature': 11.0,
       'wind_bearing': 'NW',
@@ -2686,6 +3006,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-28T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 10,
       'temperature': 12.0,
       'wind_bearing': 'ENE',
@@ -2694,6 +3015,7 @@
     dict({
       'condition': 'rainy',
       'datetime': '2020-04-29T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 59,
       'temperature': 13.0,
       'wind_bearing': 'SE',
@@ -2706,6 +3028,7 @@
     dict({
       'condition': 'sunny',
       'datetime': '2020-04-25T15:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 1,
       'temperature': 19.0,
       'wind_bearing': 'S',
@@ -2714,6 +3037,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-25T18:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 2,
       'temperature': 17.0,
       'wind_bearing': 'WNW',
@@ -2722,6 +3046,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-25T21:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 1,
       'temperature': 14.0,
       'wind_bearing': 'NW',
@@ -2730,6 +3055,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-26T00:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 1,
       'temperature': 13.0,
       'wind_bearing': 'WSW',
@@ -2738,6 +3064,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-26T03:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 2,
       'temperature': 12.0,
       'wind_bearing': 'WNW',
@@ -2746,6 +3073,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T06:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 5,
       'temperature': 11.0,
       'wind_bearing': 'NW',
@@ -2754,6 +3082,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T09:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 5,
       'temperature': 12.0,
       'wind_bearing': 'WNW',
@@ -2762,6 +3091,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 6,
       'temperature': 12.0,
       'wind_bearing': 'WNW',
@@ -2770,6 +3100,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T15:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 5,
       'temperature': 12.0,
       'wind_bearing': 'NW',
@@ -2778,6 +3109,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T18:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 9,
       'temperature': 11.0,
       'wind_bearing': 'NW',
@@ -2786,6 +3118,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T21:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 9,
       'temperature': 10.0,
       'wind_bearing': 'NW',
@@ -2794,6 +3127,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-27T00:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 11,
       'temperature': 9.0,
       'wind_bearing': 'WNW',
@@ -2802,6 +3136,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-27T03:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 12,
       'temperature': 8.0,
       'wind_bearing': 'WNW',
@@ -2810,6 +3145,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-27T06:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 14,
       'temperature': 8.0,
       'wind_bearing': 'NW',
@@ -2818,6 +3154,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-27T09:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 6,
       'temperature': 9.0,
       'wind_bearing': 'NW',
@@ -2826,6 +3163,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-27T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 4,
       'temperature': 10.0,
       'wind_bearing': 'NW',
@@ -2834,6 +3172,7 @@
     dict({
       'condition': 'sunny',
       'datetime': '2020-04-27T15:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 1,
       'temperature': 10.0,
       'wind_bearing': 'NW',
@@ -2842,6 +3181,7 @@
     dict({
       'condition': 'sunny',
       'datetime': '2020-04-27T18:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 1,
       'temperature': 10.0,
       'wind_bearing': 'NW',
@@ -2850,6 +3190,7 @@
     dict({
       'condition': 'clear-night',
       'datetime': '2020-04-27T21:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 1,
       'temperature': 9.0,
       'wind_bearing': 'NW',
@@ -2858,6 +3199,7 @@
     dict({
       'condition': 'clear-night',
       'datetime': '2020-04-28T00:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 2,
       'temperature': 8.0,
       'wind_bearing': 'NNW',
@@ -2866,6 +3208,7 @@
     dict({
       'condition': 'clear-night',
       'datetime': '2020-04-28T03:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 3,
       'temperature': 7.0,
       'wind_bearing': 'W',
@@ -2874,6 +3217,7 @@
     dict({
       'condition': 'sunny',
       'datetime': '2020-04-28T06:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 5,
       'temperature': 6.0,
       'wind_bearing': 'S',
@@ -2882,6 +3226,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-28T09:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 6,
       'temperature': 9.0,
       'wind_bearing': 'ENE',
@@ -2890,6 +3235,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-28T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 10,
       'temperature': 11.0,
       'wind_bearing': 'ENE',
@@ -2898,6 +3244,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-28T15:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 10,
       'temperature': 12.0,
       'wind_bearing': 'N',
@@ -2906,6 +3253,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-28T18:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 10,
       'temperature': 11.0,
       'wind_bearing': 'N',
@@ -2914,6 +3262,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-28T21:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 9,
       'temperature': 10.0,
       'wind_bearing': 'NNE',
@@ -2922,6 +3271,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-29T00:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 6,
       'temperature': 9.0,
       'wind_bearing': 'E',
@@ -2930,6 +3280,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-29T03:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 3,
       'temperature': 8.0,
       'wind_bearing': 'SSE',
@@ -2938,6 +3289,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-29T06:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 9,
       'temperature': 8.0,
       'wind_bearing': 'SE',
@@ -2946,6 +3298,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-29T09:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 12,
       'temperature': 10.0,
       'wind_bearing': 'SE',
@@ -2954,6 +3307,7 @@
     dict({
       'condition': 'rainy',
       'datetime': '2020-04-29T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 47,
       'temperature': 12.0,
       'wind_bearing': 'SE',
@@ -2962,6 +3316,7 @@
     dict({
       'condition': 'pouring',
       'datetime': '2020-04-29T15:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 59,
       'temperature': 13.0,
       'wind_bearing': 'SSE',
@@ -2970,6 +3325,7 @@
     dict({
       'condition': 'rainy',
       'datetime': '2020-04-29T18:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 39,
       'temperature': 12.0,
       'wind_bearing': 'SSE',
@@ -2978,6 +3334,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-29T21:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 19,
       'temperature': 11.0,
       'wind_bearing': 'SSE',
@@ -2990,6 +3347,7 @@
     dict({
       'condition': 'sunny',
       'datetime': '2020-04-25T15:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 1,
       'temperature': 19.0,
       'wind_bearing': 'S',
@@ -2998,6 +3356,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-25T18:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 2,
       'temperature': 17.0,
       'wind_bearing': 'WNW',
@@ -3006,6 +3365,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-25T21:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 1,
       'temperature': 14.0,
       'wind_bearing': 'NW',
@@ -3014,6 +3374,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-26T00:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 1,
       'temperature': 13.0,
       'wind_bearing': 'WSW',
@@ -3022,6 +3383,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-26T03:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 2,
       'temperature': 12.0,
       'wind_bearing': 'WNW',
@@ -3030,6 +3392,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T06:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 5,
       'temperature': 11.0,
       'wind_bearing': 'NW',
@@ -3038,6 +3401,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T09:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 5,
       'temperature': 12.0,
       'wind_bearing': 'WNW',
@@ -3046,6 +3410,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 6,
       'temperature': 12.0,
       'wind_bearing': 'WNW',
@@ -3054,6 +3419,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T15:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 5,
       'temperature': 12.0,
       'wind_bearing': 'NW',
@@ -3062,6 +3428,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T18:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 9,
       'temperature': 11.0,
       'wind_bearing': 'NW',
@@ -3070,6 +3437,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T21:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 9,
       'temperature': 10.0,
       'wind_bearing': 'NW',
@@ -3078,6 +3446,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-27T00:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 11,
       'temperature': 9.0,
       'wind_bearing': 'WNW',
@@ -3086,6 +3455,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-27T03:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 12,
       'temperature': 8.0,
       'wind_bearing': 'WNW',
@@ -3094,6 +3464,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-27T06:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 14,
       'temperature': 8.0,
       'wind_bearing': 'NW',
@@ -3102,6 +3473,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-27T09:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 6,
       'temperature': 9.0,
       'wind_bearing': 'NW',
@@ -3110,6 +3482,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-27T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 4,
       'temperature': 10.0,
       'wind_bearing': 'NW',
@@ -3118,6 +3491,7 @@
     dict({
       'condition': 'sunny',
       'datetime': '2020-04-27T15:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 1,
       'temperature': 10.0,
       'wind_bearing': 'NW',
@@ -3126,6 +3500,7 @@
     dict({
       'condition': 'sunny',
       'datetime': '2020-04-27T18:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 1,
       'temperature': 10.0,
       'wind_bearing': 'NW',
@@ -3134,6 +3509,7 @@
     dict({
       'condition': 'clear-night',
       'datetime': '2020-04-27T21:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 1,
       'temperature': 9.0,
       'wind_bearing': 'NW',
@@ -3142,6 +3518,7 @@
     dict({
       'condition': 'clear-night',
       'datetime': '2020-04-28T00:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 2,
       'temperature': 8.0,
       'wind_bearing': 'NNW',
@@ -3150,6 +3527,7 @@
     dict({
       'condition': 'clear-night',
       'datetime': '2020-04-28T03:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 3,
       'temperature': 7.0,
       'wind_bearing': 'W',
@@ -3158,6 +3536,7 @@
     dict({
       'condition': 'sunny',
       'datetime': '2020-04-28T06:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 5,
       'temperature': 6.0,
       'wind_bearing': 'S',
@@ -3166,6 +3545,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-28T09:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 6,
       'temperature': 9.0,
       'wind_bearing': 'ENE',
@@ -3174,6 +3554,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-28T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 10,
       'temperature': 11.0,
       'wind_bearing': 'ENE',
@@ -3182,6 +3563,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-28T15:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 10,
       'temperature': 12.0,
       'wind_bearing': 'N',
@@ -3190,6 +3572,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-28T18:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 10,
       'temperature': 11.0,
       'wind_bearing': 'N',
@@ -3198,6 +3581,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-28T21:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 9,
       'temperature': 10.0,
       'wind_bearing': 'NNE',
@@ -3206,6 +3590,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-29T00:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 6,
       'temperature': 9.0,
       'wind_bearing': 'E',
@@ -3214,6 +3599,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-29T03:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 3,
       'temperature': 8.0,
       'wind_bearing': 'SSE',
@@ -3222,6 +3608,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-29T06:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 9,
       'temperature': 8.0,
       'wind_bearing': 'SE',
@@ -3230,6 +3617,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-29T09:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 12,
       'temperature': 10.0,
       'wind_bearing': 'SE',
@@ -3238,6 +3626,7 @@
     dict({
       'condition': 'rainy',
       'datetime': '2020-04-29T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 47,
       'temperature': 12.0,
       'wind_bearing': 'SE',
@@ -3246,6 +3635,7 @@
     dict({
       'condition': 'pouring',
       'datetime': '2020-04-29T15:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 59,
       'temperature': 13.0,
       'wind_bearing': 'SSE',
@@ -3254,6 +3644,7 @@
     dict({
       'condition': 'rainy',
       'datetime': '2020-04-29T18:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 39,
       'temperature': 12.0,
       'wind_bearing': 'SSE',
@@ -3262,9 +3653,162 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-29T21:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 19,
       'temperature': 11.0,
       'wind_bearing': 'SSE',
+      'wind_speed': 20.92,
+    }),
+  ])
+# ---
+# name: test_forecast_subscription[weather.met_office_wavertree_3_hourly].4
+  list([
+    dict({
+      'condition': 'cloudy',
+      'datetime': '2020-04-26T00:00:00+00:00',
+      'is_daytime': False,
+      'precipitation_probability': 12,
+      'temperature': 8.0,
+      'wind_bearing': 'WNW',
+      'wind_speed': 6.44,
+    }),
+    dict({
+      'condition': 'cloudy',
+      'datetime': '2020-04-26T12:00:00+00:00',
+      'is_daytime': True,
+      'precipitation_probability': 9,
+      'temperature': 13.0,
+      'wind_bearing': 'WNW',
+      'wind_speed': 14.48,
+    }),
+    dict({
+      'condition': 'clear-night',
+      'datetime': '2020-04-27T00:00:00+00:00',
+      'is_daytime': False,
+      'precipitation_probability': 3,
+      'temperature': 6.0,
+      'wind_bearing': 'NNW',
+      'wind_speed': 6.44,
+    }),
+    dict({
+      'condition': 'partlycloudy',
+      'datetime': '2020-04-27T12:00:00+00:00',
+      'is_daytime': True,
+      'precipitation_probability': 14,
+      'temperature': 11.0,
+      'wind_bearing': 'NW',
+      'wind_speed': 14.48,
+    }),
+    dict({
+      'condition': 'cloudy',
+      'datetime': '2020-04-28T00:00:00+00:00',
+      'is_daytime': False,
+      'precipitation_probability': 9,
+      'temperature': 7.0,
+      'wind_bearing': 'E',
+      'wind_speed': 6.44,
+    }),
+    dict({
+      'condition': 'cloudy',
+      'datetime': '2020-04-28T12:00:00+00:00',
+      'is_daytime': True,
+      'precipitation_probability': 10,
+      'temperature': 12.0,
+      'wind_bearing': 'ENE',
+      'wind_speed': 11.27,
+    }),
+    dict({
+      'condition': 'cloudy',
+      'datetime': '2020-04-29T00:00:00+00:00',
+      'is_daytime': False,
+      'precipitation_probability': 19,
+      'temperature': 8.0,
+      'wind_bearing': 'SSE',
+      'wind_speed': 17.7,
+    }),
+    dict({
+      'condition': 'rainy',
+      'datetime': '2020-04-29T12:00:00+00:00',
+      'is_daytime': True,
+      'precipitation_probability': 59,
+      'temperature': 13.0,
+      'wind_bearing': 'SE',
+      'wind_speed': 20.92,
+    }),
+  ])
+# ---
+# name: test_forecast_subscription[weather.met_office_wavertree_3_hourly].5
+  list([
+    dict({
+      'condition': 'cloudy',
+      'datetime': '2020-04-26T00:00:00+00:00',
+      'is_daytime': False,
+      'precipitation_probability': 12,
+      'temperature': 8.0,
+      'wind_bearing': 'WNW',
+      'wind_speed': 6.44,
+    }),
+    dict({
+      'condition': 'cloudy',
+      'datetime': '2020-04-26T12:00:00+00:00',
+      'is_daytime': True,
+      'precipitation_probability': 9,
+      'temperature': 13.0,
+      'wind_bearing': 'WNW',
+      'wind_speed': 14.48,
+    }),
+    dict({
+      'condition': 'clear-night',
+      'datetime': '2020-04-27T00:00:00+00:00',
+      'is_daytime': False,
+      'precipitation_probability': 3,
+      'temperature': 6.0,
+      'wind_bearing': 'NNW',
+      'wind_speed': 6.44,
+    }),
+    dict({
+      'condition': 'partlycloudy',
+      'datetime': '2020-04-27T12:00:00+00:00',
+      'is_daytime': True,
+      'precipitation_probability': 14,
+      'temperature': 11.0,
+      'wind_bearing': 'NW',
+      'wind_speed': 14.48,
+    }),
+    dict({
+      'condition': 'cloudy',
+      'datetime': '2020-04-28T00:00:00+00:00',
+      'is_daytime': False,
+      'precipitation_probability': 9,
+      'temperature': 7.0,
+      'wind_bearing': 'E',
+      'wind_speed': 6.44,
+    }),
+    dict({
+      'condition': 'cloudy',
+      'datetime': '2020-04-28T12:00:00+00:00',
+      'is_daytime': True,
+      'precipitation_probability': 10,
+      'temperature': 12.0,
+      'wind_bearing': 'ENE',
+      'wind_speed': 11.27,
+    }),
+    dict({
+      'condition': 'cloudy',
+      'datetime': '2020-04-29T00:00:00+00:00',
+      'is_daytime': False,
+      'precipitation_probability': 19,
+      'temperature': 8.0,
+      'wind_bearing': 'SSE',
+      'wind_speed': 17.7,
+    }),
+    dict({
+      'condition': 'rainy',
+      'datetime': '2020-04-29T12:00:00+00:00',
+      'is_daytime': True,
+      'precipitation_probability': 59,
+      'temperature': 13.0,
+      'wind_bearing': 'SE',
       'wind_speed': 20.92,
     }),
   ])
@@ -3274,6 +3818,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 9,
       'temperature': 13.0,
       'wind_bearing': 'WNW',
@@ -3282,6 +3827,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-27T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 14,
       'temperature': 11.0,
       'wind_bearing': 'NW',
@@ -3290,6 +3836,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-28T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 10,
       'temperature': 12.0,
       'wind_bearing': 'ENE',
@@ -3298,6 +3845,7 @@
     dict({
       'condition': 'rainy',
       'datetime': '2020-04-29T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 59,
       'temperature': 13.0,
       'wind_bearing': 'SE',
@@ -3310,6 +3858,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 9,
       'temperature': 13.0,
       'wind_bearing': 'WNW',
@@ -3318,6 +3867,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-27T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 14,
       'temperature': 11.0,
       'wind_bearing': 'NW',
@@ -3326,6 +3876,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-28T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 10,
       'temperature': 12.0,
       'wind_bearing': 'ENE',
@@ -3334,6 +3885,7 @@
     dict({
       'condition': 'rainy',
       'datetime': '2020-04-29T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 59,
       'temperature': 13.0,
       'wind_bearing': 'SE',
@@ -3346,6 +3898,7 @@
     dict({
       'condition': 'sunny',
       'datetime': '2020-04-25T15:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 1,
       'temperature': 19.0,
       'wind_bearing': 'S',
@@ -3354,6 +3907,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-25T18:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 2,
       'temperature': 17.0,
       'wind_bearing': 'WNW',
@@ -3362,6 +3916,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-25T21:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 1,
       'temperature': 14.0,
       'wind_bearing': 'NW',
@@ -3370,6 +3925,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-26T00:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 1,
       'temperature': 13.0,
       'wind_bearing': 'WSW',
@@ -3378,6 +3934,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-26T03:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 2,
       'temperature': 12.0,
       'wind_bearing': 'WNW',
@@ -3386,6 +3943,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T06:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 5,
       'temperature': 11.0,
       'wind_bearing': 'NW',
@@ -3394,6 +3952,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T09:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 5,
       'temperature': 12.0,
       'wind_bearing': 'WNW',
@@ -3402,6 +3961,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 6,
       'temperature': 12.0,
       'wind_bearing': 'WNW',
@@ -3410,6 +3970,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T15:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 5,
       'temperature': 12.0,
       'wind_bearing': 'NW',
@@ -3418,6 +3979,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T18:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 9,
       'temperature': 11.0,
       'wind_bearing': 'NW',
@@ -3426,6 +3988,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T21:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 9,
       'temperature': 10.0,
       'wind_bearing': 'NW',
@@ -3434,6 +3997,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-27T00:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 11,
       'temperature': 9.0,
       'wind_bearing': 'WNW',
@@ -3442,6 +4006,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-27T03:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 12,
       'temperature': 8.0,
       'wind_bearing': 'WNW',
@@ -3450,6 +4015,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-27T06:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 14,
       'temperature': 8.0,
       'wind_bearing': 'NW',
@@ -3458,6 +4024,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-27T09:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 6,
       'temperature': 9.0,
       'wind_bearing': 'NW',
@@ -3466,6 +4033,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-27T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 4,
       'temperature': 10.0,
       'wind_bearing': 'NW',
@@ -3474,6 +4042,7 @@
     dict({
       'condition': 'sunny',
       'datetime': '2020-04-27T15:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 1,
       'temperature': 10.0,
       'wind_bearing': 'NW',
@@ -3482,6 +4051,7 @@
     dict({
       'condition': 'sunny',
       'datetime': '2020-04-27T18:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 1,
       'temperature': 10.0,
       'wind_bearing': 'NW',
@@ -3490,6 +4060,7 @@
     dict({
       'condition': 'clear-night',
       'datetime': '2020-04-27T21:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 1,
       'temperature': 9.0,
       'wind_bearing': 'NW',
@@ -3498,6 +4069,7 @@
     dict({
       'condition': 'clear-night',
       'datetime': '2020-04-28T00:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 2,
       'temperature': 8.0,
       'wind_bearing': 'NNW',
@@ -3506,6 +4078,7 @@
     dict({
       'condition': 'clear-night',
       'datetime': '2020-04-28T03:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 3,
       'temperature': 7.0,
       'wind_bearing': 'W',
@@ -3514,6 +4087,7 @@
     dict({
       'condition': 'sunny',
       'datetime': '2020-04-28T06:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 5,
       'temperature': 6.0,
       'wind_bearing': 'S',
@@ -3522,6 +4096,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-28T09:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 6,
       'temperature': 9.0,
       'wind_bearing': 'ENE',
@@ -3530,6 +4105,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-28T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 10,
       'temperature': 11.0,
       'wind_bearing': 'ENE',
@@ -3538,6 +4114,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-28T15:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 10,
       'temperature': 12.0,
       'wind_bearing': 'N',
@@ -3546,6 +4123,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-28T18:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 10,
       'temperature': 11.0,
       'wind_bearing': 'N',
@@ -3554,6 +4132,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-28T21:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 9,
       'temperature': 10.0,
       'wind_bearing': 'NNE',
@@ -3562,6 +4141,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-29T00:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 6,
       'temperature': 9.0,
       'wind_bearing': 'E',
@@ -3570,6 +4150,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-29T03:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 3,
       'temperature': 8.0,
       'wind_bearing': 'SSE',
@@ -3578,6 +4159,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-29T06:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 9,
       'temperature': 8.0,
       'wind_bearing': 'SE',
@@ -3586,6 +4168,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-29T09:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 12,
       'temperature': 10.0,
       'wind_bearing': 'SE',
@@ -3594,6 +4177,7 @@
     dict({
       'condition': 'rainy',
       'datetime': '2020-04-29T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 47,
       'temperature': 12.0,
       'wind_bearing': 'SE',
@@ -3602,6 +4186,7 @@
     dict({
       'condition': 'pouring',
       'datetime': '2020-04-29T15:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 59,
       'temperature': 13.0,
       'wind_bearing': 'SSE',
@@ -3610,6 +4195,7 @@
     dict({
       'condition': 'rainy',
       'datetime': '2020-04-29T18:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 39,
       'temperature': 12.0,
       'wind_bearing': 'SSE',
@@ -3618,6 +4204,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-29T21:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 19,
       'temperature': 11.0,
       'wind_bearing': 'SSE',
@@ -3630,6 +4217,7 @@
     dict({
       'condition': 'sunny',
       'datetime': '2020-04-25T15:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 1,
       'temperature': 19.0,
       'wind_bearing': 'S',
@@ -3638,6 +4226,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-25T18:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 2,
       'temperature': 17.0,
       'wind_bearing': 'WNW',
@@ -3646,6 +4235,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-25T21:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 1,
       'temperature': 14.0,
       'wind_bearing': 'NW',
@@ -3654,6 +4244,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-26T00:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 1,
       'temperature': 13.0,
       'wind_bearing': 'WSW',
@@ -3662,6 +4253,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-26T03:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 2,
       'temperature': 12.0,
       'wind_bearing': 'WNW',
@@ -3670,6 +4262,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T06:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 5,
       'temperature': 11.0,
       'wind_bearing': 'NW',
@@ -3678,6 +4271,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T09:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 5,
       'temperature': 12.0,
       'wind_bearing': 'WNW',
@@ -3686,6 +4280,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 6,
       'temperature': 12.0,
       'wind_bearing': 'WNW',
@@ -3694,6 +4289,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T15:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 5,
       'temperature': 12.0,
       'wind_bearing': 'NW',
@@ -3702,6 +4298,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T18:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 9,
       'temperature': 11.0,
       'wind_bearing': 'NW',
@@ -3710,6 +4307,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-26T21:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 9,
       'temperature': 10.0,
       'wind_bearing': 'NW',
@@ -3718,6 +4316,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-27T00:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 11,
       'temperature': 9.0,
       'wind_bearing': 'WNW',
@@ -3726,6 +4325,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-27T03:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 12,
       'temperature': 8.0,
       'wind_bearing': 'WNW',
@@ -3734,6 +4334,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-27T06:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 14,
       'temperature': 8.0,
       'wind_bearing': 'NW',
@@ -3742,6 +4343,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-27T09:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 6,
       'temperature': 9.0,
       'wind_bearing': 'NW',
@@ -3750,6 +4352,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-27T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 4,
       'temperature': 10.0,
       'wind_bearing': 'NW',
@@ -3758,6 +4361,7 @@
     dict({
       'condition': 'sunny',
       'datetime': '2020-04-27T15:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 1,
       'temperature': 10.0,
       'wind_bearing': 'NW',
@@ -3766,6 +4370,7 @@
     dict({
       'condition': 'sunny',
       'datetime': '2020-04-27T18:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 1,
       'temperature': 10.0,
       'wind_bearing': 'NW',
@@ -3774,6 +4379,7 @@
     dict({
       'condition': 'clear-night',
       'datetime': '2020-04-27T21:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 1,
       'temperature': 9.0,
       'wind_bearing': 'NW',
@@ -3782,6 +4388,7 @@
     dict({
       'condition': 'clear-night',
       'datetime': '2020-04-28T00:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 2,
       'temperature': 8.0,
       'wind_bearing': 'NNW',
@@ -3790,6 +4397,7 @@
     dict({
       'condition': 'clear-night',
       'datetime': '2020-04-28T03:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 3,
       'temperature': 7.0,
       'wind_bearing': 'W',
@@ -3798,6 +4406,7 @@
     dict({
       'condition': 'sunny',
       'datetime': '2020-04-28T06:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 5,
       'temperature': 6.0,
       'wind_bearing': 'S',
@@ -3806,6 +4415,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-28T09:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 6,
       'temperature': 9.0,
       'wind_bearing': 'ENE',
@@ -3814,6 +4424,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-28T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 10,
       'temperature': 11.0,
       'wind_bearing': 'ENE',
@@ -3822,6 +4433,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-28T15:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 10,
       'temperature': 12.0,
       'wind_bearing': 'N',
@@ -3830,6 +4442,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-28T18:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 10,
       'temperature': 11.0,
       'wind_bearing': 'N',
@@ -3838,6 +4451,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-28T21:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 9,
       'temperature': 10.0,
       'wind_bearing': 'NNE',
@@ -3846,6 +4460,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-29T00:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 6,
       'temperature': 9.0,
       'wind_bearing': 'E',
@@ -3854,6 +4469,7 @@
     dict({
       'condition': 'partlycloudy',
       'datetime': '2020-04-29T03:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 3,
       'temperature': 8.0,
       'wind_bearing': 'SSE',
@@ -3862,6 +4478,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-29T06:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 9,
       'temperature': 8.0,
       'wind_bearing': 'SE',
@@ -3870,6 +4487,7 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-29T09:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 12,
       'temperature': 10.0,
       'wind_bearing': 'SE',
@@ -3878,6 +4496,7 @@
     dict({
       'condition': 'rainy',
       'datetime': '2020-04-29T12:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 47,
       'temperature': 12.0,
       'wind_bearing': 'SE',
@@ -3886,6 +4505,7 @@
     dict({
       'condition': 'pouring',
       'datetime': '2020-04-29T15:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 59,
       'temperature': 13.0,
       'wind_bearing': 'SSE',
@@ -3894,6 +4514,7 @@
     dict({
       'condition': 'rainy',
       'datetime': '2020-04-29T18:00:00+00:00',
+      'is_daytime': True,
       'precipitation_probability': 39,
       'temperature': 12.0,
       'wind_bearing': 'SSE',
@@ -3902,9 +4523,162 @@
     dict({
       'condition': 'cloudy',
       'datetime': '2020-04-29T21:00:00+00:00',
+      'is_daytime': False,
       'precipitation_probability': 19,
       'temperature': 11.0,
       'wind_bearing': 'SSE',
+      'wind_speed': 20.92,
+    }),
+  ])
+# ---
+# name: test_forecast_subscription[weather.met_office_wavertree_daily].4
+  list([
+    dict({
+      'condition': 'cloudy',
+      'datetime': '2020-04-26T00:00:00+00:00',
+      'is_daytime': False,
+      'precipitation_probability': 12,
+      'temperature': 8.0,
+      'wind_bearing': 'WNW',
+      'wind_speed': 6.44,
+    }),
+    dict({
+      'condition': 'cloudy',
+      'datetime': '2020-04-26T12:00:00+00:00',
+      'is_daytime': True,
+      'precipitation_probability': 9,
+      'temperature': 13.0,
+      'wind_bearing': 'WNW',
+      'wind_speed': 14.48,
+    }),
+    dict({
+      'condition': 'clear-night',
+      'datetime': '2020-04-27T00:00:00+00:00',
+      'is_daytime': False,
+      'precipitation_probability': 3,
+      'temperature': 6.0,
+      'wind_bearing': 'NNW',
+      'wind_speed': 6.44,
+    }),
+    dict({
+      'condition': 'partlycloudy',
+      'datetime': '2020-04-27T12:00:00+00:00',
+      'is_daytime': True,
+      'precipitation_probability': 14,
+      'temperature': 11.0,
+      'wind_bearing': 'NW',
+      'wind_speed': 14.48,
+    }),
+    dict({
+      'condition': 'cloudy',
+      'datetime': '2020-04-28T00:00:00+00:00',
+      'is_daytime': False,
+      'precipitation_probability': 9,
+      'temperature': 7.0,
+      'wind_bearing': 'E',
+      'wind_speed': 6.44,
+    }),
+    dict({
+      'condition': 'cloudy',
+      'datetime': '2020-04-28T12:00:00+00:00',
+      'is_daytime': True,
+      'precipitation_probability': 10,
+      'temperature': 12.0,
+      'wind_bearing': 'ENE',
+      'wind_speed': 11.27,
+    }),
+    dict({
+      'condition': 'cloudy',
+      'datetime': '2020-04-29T00:00:00+00:00',
+      'is_daytime': False,
+      'precipitation_probability': 19,
+      'temperature': 8.0,
+      'wind_bearing': 'SSE',
+      'wind_speed': 17.7,
+    }),
+    dict({
+      'condition': 'rainy',
+      'datetime': '2020-04-29T12:00:00+00:00',
+      'is_daytime': True,
+      'precipitation_probability': 59,
+      'temperature': 13.0,
+      'wind_bearing': 'SE',
+      'wind_speed': 20.92,
+    }),
+  ])
+# ---
+# name: test_forecast_subscription[weather.met_office_wavertree_daily].5
+  list([
+    dict({
+      'condition': 'cloudy',
+      'datetime': '2020-04-26T00:00:00+00:00',
+      'is_daytime': False,
+      'precipitation_probability': 12,
+      'temperature': 8.0,
+      'wind_bearing': 'WNW',
+      'wind_speed': 6.44,
+    }),
+    dict({
+      'condition': 'cloudy',
+      'datetime': '2020-04-26T12:00:00+00:00',
+      'is_daytime': True,
+      'precipitation_probability': 9,
+      'temperature': 13.0,
+      'wind_bearing': 'WNW',
+      'wind_speed': 14.48,
+    }),
+    dict({
+      'condition': 'clear-night',
+      'datetime': '2020-04-27T00:00:00+00:00',
+      'is_daytime': False,
+      'precipitation_probability': 3,
+      'temperature': 6.0,
+      'wind_bearing': 'NNW',
+      'wind_speed': 6.44,
+    }),
+    dict({
+      'condition': 'partlycloudy',
+      'datetime': '2020-04-27T12:00:00+00:00',
+      'is_daytime': True,
+      'precipitation_probability': 14,
+      'temperature': 11.0,
+      'wind_bearing': 'NW',
+      'wind_speed': 14.48,
+    }),
+    dict({
+      'condition': 'cloudy',
+      'datetime': '2020-04-28T00:00:00+00:00',
+      'is_daytime': False,
+      'precipitation_probability': 9,
+      'temperature': 7.0,
+      'wind_bearing': 'E',
+      'wind_speed': 6.44,
+    }),
+    dict({
+      'condition': 'cloudy',
+      'datetime': '2020-04-28T12:00:00+00:00',
+      'is_daytime': True,
+      'precipitation_probability': 10,
+      'temperature': 12.0,
+      'wind_bearing': 'ENE',
+      'wind_speed': 11.27,
+    }),
+    dict({
+      'condition': 'cloudy',
+      'datetime': '2020-04-29T00:00:00+00:00',
+      'is_daytime': False,
+      'precipitation_probability': 19,
+      'temperature': 8.0,
+      'wind_bearing': 'SSE',
+      'wind_speed': 17.7,
+    }),
+    dict({
+      'condition': 'rainy',
+      'datetime': '2020-04-29T12:00:00+00:00',
+      'is_daytime': True,
+      'precipitation_probability': 59,
+      'temperature': 13.0,
+      'wind_bearing': 'SE',
       'wind_speed': 20.92,
     }),
   ])
