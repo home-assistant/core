@@ -95,10 +95,12 @@ async def async_setup_entry(
         )
         _LOGGER.warning("'beat': is deprecated and will be removed in version 2024.7")
 
-    entities = []
-    for option_type in entry.options[CONF_DISPLAY_OPTIONS]:
-        entities.append(TimeDateSensor(option_type, entry.entry_id))
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            TimeDateSensor(option_type, entry.entry_id)
+            for option_type in entry.options[CONF_DISPLAY_OPTIONS]
+        ]
+    )
 
 
 class TimeDateSensor(SensorEntity):
