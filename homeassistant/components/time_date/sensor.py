@@ -1,14 +1,14 @@
 """Support for showing the date and the time."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_DISPLAY_OPTIONS
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -50,7 +50,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Time and Date sensor."""
     if hass.config.time_zone is None:
-        _LOGGER.error("Timezone is not set in Home Assistant configuration")
+        _LOGGER.error("Timezone is not set in Home Assistant configuration")  # type: ignore[unreachable]
         return False
 
     if "beat" in config[CONF_DISPLAY_OPTIONS]:
@@ -78,28 +78,28 @@ async def async_setup_platform(
 class TimeDateSensor(SensorEntity):
     """Implementation of a Time and Date sensor."""
 
-    def __init__(self, hass, option_type):
+    def __init__(self, hass: HomeAssistant, option_type: str) -> None:
         """Initialize the sensor."""
         self._name = OPTION_TYPES[option_type]
         self.type = option_type
-        self._state = None
+        self._state: str | None = None
         self.hass = hass
-        self.unsub = None
+        self.unsub: CALLBACK_TYPE | None = None
 
         self._update_internal_state(dt_util.utcnow())
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Icon to use in the frontend, if any."""
         if "date" in self.type and "time" in self.type:
             return "mdi:calendar-clock"
@@ -119,7 +119,7 @@ class TimeDateSensor(SensorEntity):
             self.unsub()
             self.unsub = None
 
-    def get_next_interval(self):
+    def get_next_interval(self) -> datetime:
         """Compute next time an update should occur."""
         now = dt_util.utcnow()
 
@@ -141,7 +141,7 @@ class TimeDateSensor(SensorEntity):
 
         return next_interval
 
-    def _update_internal_state(self, time_date):
+    def _update_internal_state(self, time_date: datetime) -> None:
         time = dt_util.as_local(time_date).strftime(TIME_STR_FORMAT)
         time_utc = time_date.strftime(TIME_STR_FORMAT)
         date = dt_util.as_local(time_date).date().isoformat()
@@ -175,10 +175,12 @@ class TimeDateSensor(SensorEntity):
 
             self._state = f"@{beat:03d}"
         elif self.type == "date_time_iso":
-            self._state = dt_util.parse_datetime(f"{date} {time}").isoformat()
+            self._state = dt_util.parse_datetime(
+                f"{date} {time}", raise_on_error=True
+            ).isoformat()
 
     @callback
-    def point_in_time_listener(self, time_date):
+    def point_in_time_listener(self, time_date: datetime) -> None:
         """Get the latest data and update state."""
         self._update_internal_state(time_date)
         self.async_write_ha_state()
