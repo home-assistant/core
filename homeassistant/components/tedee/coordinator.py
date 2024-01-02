@@ -56,11 +56,11 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         # once every hours get all lock details, otherwise use the sync endpoint
         if self._next_get_locks <= time.time():
             _LOGGER.debug("Updating through /my/lock endpoint")
-            await self._async_update_locks(self._async_update_locks_and_bridge)
+            await self._async_update(self.tedee_client.get_locks)
             self._next_get_locks = time.time() + GET_LOCKS_INTERVAL_SECONDS
         else:
             _LOGGER.debug("Updating through /sync endpoint")
-            await self._async_update_locks(self.tedee_client.sync)
+            await self._async_update(self.tedee_client.sync)
 
         _LOGGER.debug(
             "available_locks: %s",
@@ -69,9 +69,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
 
         return self.tedee_client.locks_dict
 
-    async def _async_update_locks(
-        self, update_fn: Callable[[], Awaitable[None]]
-    ) -> None:
+    async def _async_update(self, update_fn: Callable[[], Awaitable[None]]) -> None:
         """Update locks based on update function."""
         try:
             await update_fn()
@@ -86,7 +84,11 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         except (TedeeClientException, TimeoutError) as ex:
             raise UpdateFailed("Querying API failed. Error: %s" % str(ex)) from ex
 
-    async def _async_update_locks_and_bridge(self) -> None:
-        """Update locks and bridge."""
-        await self.tedee_client.get_locks()
-        self.bridge = await self.tedee_client.get_local_bridge()
+    async def async_config_entry_first_refresh(self) -> None:
+        """Update data from API."""
+        await super().async_config_entry_first_refresh()
+
+        async def _async_get_bridge() -> None:
+            self.bridge = await self.tedee_client.get_local_bridge()
+
+        await self._async_update(_async_get_bridge)
