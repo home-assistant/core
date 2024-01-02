@@ -12,8 +12,11 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +52,23 @@ async def async_setup_platform(
     if hass.config.time_zone is None:
         _LOGGER.error("Timezone is not set in Home Assistant configuration")  # type: ignore[unreachable]
         return False
+
+    if "beat" in config[CONF_DISPLAY_OPTIONS]:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_beat",
+            breaks_in_ha_version="2024.7.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_beat",
+            translation_placeholders={
+                "config_key": "beat",
+                "display_options": "display_options",
+                "integration": DOMAIN,
+            },
+        )
+        _LOGGER.warning("'beat': is deprecated and will be removed in version 2024.7")
 
     async_add_entities(
         [TimeDateSensor(hass, variable) for variable in config[CONF_DISPLAY_OPTIONS]]
