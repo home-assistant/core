@@ -4,6 +4,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 import pytest
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.time_date.const import CONF_DISPLAY_OPTIONS, DOMAIN
@@ -33,6 +34,23 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
+async def test_user_flow_does_not_allow_beat(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test we get the forms."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+
+    with pytest.raises(vol.Invalid):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"display_options": ["time", "beat"]},
+        )
+
+
 async def test_single_instance(hass: HomeAssistant) -> None:
     """Test we get the forms."""
 
@@ -60,13 +78,13 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
-        data={CONF_DISPLAY_OPTIONS: ["time", "date"]},
+        data={CONF_DISPLAY_OPTIONS: ["time", "date", "beat"]},
     )
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Time & Date"
-    assert result["options"] == {"display_options": ["time", "date"]}
+    assert result["options"] == {"display_options": ["time", "date", "beat"]}
 
 
 async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
@@ -117,8 +135,8 @@ async def test_options(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"display_options": ["time", "date"]},
+        user_input={"display_options": ["time", "date", "beat"]},
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"] == {"display_options": ["time", "date"]}
+    assert result["data"] == {"display_options": ["time", "date", "beat"]}

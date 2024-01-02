@@ -22,7 +22,20 @@ from homeassistant.helpers.selector import (
 
 from .const import CONF_DISPLAY_OPTIONS, DOMAIN, OPTION_TYPES
 
-DATA_SCHEMA = vol.Schema(
+USER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DISPLAY_OPTIONS): SelectSelector(
+            SelectSelectorConfig(
+                options=[option for option in OPTION_TYPES if option != "beat"],
+                mode=SelectSelectorMode.DROPDOWN,
+                multiple=True,
+                translation_key="display_options",
+            )
+        ),
+    }
+)
+
+IMPORT_OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DISPLAY_OPTIONS): SelectSelector(
             SelectSelectorConfig(
@@ -48,15 +61,15 @@ async def validate_input(
 
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(
-        schema=DATA_SCHEMA,
+        schema=USER_SCHEMA,
         validate_user_input=validate_input,
     ),
     "import": SchemaFlowFormStep(
-        schema=DATA_SCHEMA,
+        schema=IMPORT_OPTIONS_SCHEMA,
         validate_user_input=validate_input,
     ),
 }
-OPTIONS_FLOW = {"init": SchemaFlowFormStep(schema=DATA_SCHEMA)}
+OPTIONS_FLOW = {"init": SchemaFlowFormStep(schema=IMPORT_OPTIONS_SCHEMA)}
 
 
 class TimeDateConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
