@@ -4,7 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterable, Coroutine
 import logging
-from typing import Any, cast
+from typing import Any
 
 from homeassistant.config import config_per_platform
 from homeassistant.core import HomeAssistant, callback
@@ -38,10 +38,12 @@ def async_get_provider(
 ) -> Provider | None:
     """Return provider."""
     if domain:
-        return cast(Provider | None, hass.data[DATA_PROVIDERS].get(domain))
+    providers: dict[str, Provider] = hass.data[DATA_PROVIDERS]
+    if domain:
+        return providers.get(domain)
 
     provider = async_default_provider(hass)
-    return hass.data[DATA_PROVIDERS][provider] if provider is not None else None
+    return providers[provider] if provider is not None else None
 
 
 @callback
