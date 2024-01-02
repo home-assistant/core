@@ -153,7 +153,7 @@ async def test_import_with_name(hass: HomeAssistant) -> None:
 async def test_bad_import(hass: HomeAssistant) -> None:
     """Test import step."""
     with patch(
-        "homeassistant.components.cert_expiry.helper.get_cert",
+        "homeassistant.components.cert_expiry.helper.async_get_cert",
         side_effect=ConnectionRefusedError(),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -198,7 +198,7 @@ async def test_abort_on_socket_failed(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.cert_expiry.helper.get_cert",
+        "homeassistant.components.cert_expiry.helper.async_get_cert",
         side_effect=socket.gaierror(),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -208,7 +208,7 @@ async def test_abort_on_socket_failed(hass: HomeAssistant) -> None:
     assert result["errors"] == {CONF_HOST: "resolve_failed"}
 
     with patch(
-        "homeassistant.components.cert_expiry.helper.get_cert",
+        "homeassistant.components.cert_expiry.helper.async_get_cert",
         side_effect=socket.timeout(),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -218,7 +218,7 @@ async def test_abort_on_socket_failed(hass: HomeAssistant) -> None:
     assert result["errors"] == {CONF_HOST: "connection_timeout"}
 
     with patch(
-        "homeassistant.components.cert_expiry.helper.get_cert",
+        "homeassistant.components.cert_expiry.helper.async_get_cert",
         side_effect=ConnectionRefusedError,
     ):
         result = await hass.config_entries.flow.async_configure(
