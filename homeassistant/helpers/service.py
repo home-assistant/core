@@ -790,7 +790,7 @@ def _get_permissible_entity_candidates(
 async def entity_service_call(
     hass: HomeAssistant,
     registered_entities: dict[str, Entity],
-    func: HassJob | str,
+    func: str | HassJob,
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
 ) -> EntityServiceResponse | None:
@@ -926,7 +926,7 @@ async def entity_service_call(
 async def _handle_entity_call(
     hass: HomeAssistant,
     entity: Entity,
-    func: HassJob | str,
+    func: str | HassJob,
     data: dict | ServiceCall,
     context: Context,
 ) -> ServiceResponse:

@@ -226,7 +226,7 @@ class EntityComponent(Generic[_EntityT]):
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
-        service_func: HassJob[..., Any] | str
+        service_func: str | HassJob
         service_func = func if isinstance(func, str) else HassJob(func)
 
         async def handle_service(
@@ -263,7 +263,7 @@ class EntityComponent(Generic[_EntityT]):
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
-        service_func: HassJob[..., Any] | str
+        service_func: str | HassJob
         service_func = func if isinstance(func, str) else HassJob(func)
 
         async def handle_service(
