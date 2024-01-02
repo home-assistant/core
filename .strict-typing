@@ -94,6 +94,7 @@ homeassistant.components.asuswrt.*
 homeassistant.components.auth.*
 homeassistant.components.automation.*
 homeassistant.components.awair.*
+homeassistant.components.axis.*
 homeassistant.components.backup.*
 homeassistant.components.baf.*
 homeassistant.components.bayesian.*
