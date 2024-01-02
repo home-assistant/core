@@ -1,10 +1,15 @@
 """Test initialization of tedee."""
+from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock
 from urllib.parse import urlparse
 
 from freezegun.api import FrozenDateTimeFactory
-from pytedee_async.exception import TedeeAuthException, TedeeClientException
+from pytedee_async.exception import (
+    TedeeAuthException,
+    TedeeClientException,
+    TedeeWebhookException,
+)
 import pytest
 
 from homeassistant.components.webhook import async_generate_url
@@ -12,7 +17,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
-from . import prepare_webhook_setup
 from .conftest import WEBHOOK_ID
 
 from tests.common import MockConfigEntry
@@ -75,9 +79,11 @@ async def test_cleanup_on_shutdown(
 
 
 @pytest.mark.parametrize(
-    ("body", "expected_code"),
+    ("body", "expected_code", "side_effect"),
     [
-        ({"hello": "world"}, 0),  # Success
+        ({"hello": "world"}, HTTPStatus.OK, None),  # Success
+        (None, HTTPStatus.BAD_REQUEST, None),  # Missing data
+        ({}, HTTPStatus.BAD_REQUEST, TedeeWebhookException),  # Error
     ],
 )
 async def test_webhook_post(
@@ -86,25 +92,23 @@ async def test_webhook_post(
     mock_tedee: MagicMock,
     hass_client_no_auth: ClientSessionGenerator,
     body: dict[str, Any],
-    expected_code: int,
+    expected_code: HTTPStatus,
     current_request_with_host: None,
+    side_effect: Exception,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test webhook callback."""
+
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    await prepare_webhook_setup(hass, freezer)
     client = await hass_client_no_auth()
     webhook_url = async_generate_url(hass, WEBHOOK_ID)
-
-    resp = await client.post(urlparse(webhook_url).path, data=body)
+    mock_tedee.parse_webhook_message.side_effect = side_effect
+    resp = await client.post(urlparse(webhook_url).path, json=body)
 
     # Wait for remaining tasks to complete.
     await hass.async_block_till_done()
 
-    data = await resp.json()
-    resp.close()
-
-    assert data["code"] == expected_code
+    assert resp.status == expected_code

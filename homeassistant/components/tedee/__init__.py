@@ -1,11 +1,13 @@
 """Init the tedee component."""
 import asyncio
 from collections.abc import Awaitable, Callable
+from http import HTTPStatus
 import logging
 from typing import Any
 
 from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response
+from pytedee_async.exception import TedeeWebhookException
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.webhook import (
@@ -101,11 +103,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def json_message_response(message: str, message_code: int) -> Response:
-    """Produce common json output."""
-    return HomeAssistantView.json({"message": message, "code": message_code})
-
-
 def get_webhook_handler(
     coordinator: TedeeApiCoordinator,
 ) -> Callable[[HomeAssistant, str, Request], Awaitable[Response | None]]:
@@ -116,11 +113,18 @@ def get_webhook_handler(
     ) -> Response | None:
         # Handle http post calls to the path.
         if not request.body_exists:
-            return json_message_response("No request body", message_code=12)
+            return HomeAssistantView.json(
+                result="No Body", status_code=HTTPStatus.BAD_REQUEST
+            )
 
         body = await request.json()
-        coordinator.webhook_received(body)
+        try:
+            coordinator.webhook_received(body)
+        except TedeeWebhookException as ex:
+            return HomeAssistantView.json(
+                result=str(ex), status_code=HTTPStatus.BAD_REQUEST
+            )
 
-        return json_message_response("Success", message_code=0)
+        return HomeAssistantView.json(result="OK", status_code=HTTPStatus.OK)
 
     return async_webhook_handler
