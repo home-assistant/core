@@ -1,16 +1,17 @@
 """Tests for Fritz!Tools button platform."""
+import copy
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.fritz.const import DOMAIN
+from homeassistant.components.fritz.const import DOMAIN, MeshRoles
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import MOCK_USER_DATA
+from .const import MOCK_MESH_DATA, MOCK_USER_DATA
 
 from tests.common import MockConfigEntry
 
@@ -105,3 +106,26 @@ async def test_wol_button(
 
         button = hass.states.get("button.printer_wake_on_lan")
         assert button.state != STATE_UNKNOWN
+
+
+async def test_wol_button_absent_for_mesh_slave(
+    hass: HomeAssistant,
+    fc_class_mock,
+    fh_class_mock,
+) -> None:
+    """Test WoL button not created if interviewed box is in slave mode."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    slave_mesh_data = copy.deepcopy(MOCK_MESH_DATA)
+    slave_mesh_data["nodes"][0]["mesh_role"] = MeshRoles.SLAVE
+    with patch(
+        "tests.components.fritz.conftest.FritzHostMock.get_mesh_topology",
+        return_value=slave_mesh_data,
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        assert entry.state == ConfigEntryState.LOADED
+
+        button = hass.states.get("button.printer_wake_on_lan")
+        assert button is None
