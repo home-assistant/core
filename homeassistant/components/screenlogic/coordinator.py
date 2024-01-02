@@ -48,6 +48,8 @@ async def async_get_connect_info(
 class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage the data update for the Screenlogic component."""
 
+    super_chlor_entities: dict = {}
+
     def __init__(
         self,
         hass: HomeAssistant,
