@@ -67,6 +67,11 @@ BLUETOOTH: list[dict[str, bool | str | int | list[int]]] = [
         "service_uuid": "e7a60001-6639-429f-94fd-86de8ea26897",
     },
     {
+        "connectable": False,
+        "domain": "edilkamin",
+        "local_name": "EDILKAMIN_*",
+    },
+    {
         "domain": "eufylife_ble",
         "local_name": "eufy T9140",
     },
