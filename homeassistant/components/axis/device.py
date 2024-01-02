@@ -3,7 +3,7 @@
 import asyncio
 from asyncio import timeout
 from types import MappingProxyType
-from typing import Any
+from typing import Any, cast
 
 import axis
 from axis.configuration import Configuration
@@ -103,8 +103,7 @@ class AxisNetworkDevice:
     @property
     def unique_id(self) -> str:
         """Return the unique ID (serial number) of this device."""
-        assert (unique_id := self.config_entry.unique_id)
-        return unique_id
+        return cast(str, self.config_entry.unique_id)
 
     # Options
 
