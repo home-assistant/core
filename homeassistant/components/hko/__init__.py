@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_DISTRICT, DOMAIN, KEY_DISTRICT, KEY_LOCATION
-from .data_coordinator import HKOUpdateCoordinator
+from .coordinator import HKOUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.WEATHER]
 

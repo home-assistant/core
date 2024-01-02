@@ -21,7 +21,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
 )
-from .data_coordinator import HKOUpdateCoordinator
+from .coordinator import HKOUpdateCoordinator
 
 
 async def async_setup_entry(
