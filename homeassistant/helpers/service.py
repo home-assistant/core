@@ -195,9 +195,10 @@ class ServiceTargetSelector:
 
     def __init__(self, service_call: ServiceCall) -> None:
         """Extract ids from service call data."""
-        entity_ids: str | list | None = service_call.data.get(ATTR_ENTITY_ID)
-        device_ids: str | list | None = service_call.data.get(ATTR_DEVICE_ID)
-        area_ids: str | list | None = service_call.data.get(ATTR_AREA_ID)
+        service_call_data = service_call.data
+        entity_ids: str | list | None = service_call_data.get(ATTR_ENTITY_ID)
+        device_ids: str | list | None = service_call_data.get(ATTR_DEVICE_ID)
+        area_ids: str | list | None = service_call_data.get(ATTR_AREA_ID)
 
         self.entity_ids = (
             set(cv.ensure_list(entity_ids)) if _has_match(entity_ids) else set()
