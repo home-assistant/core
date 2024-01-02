@@ -29,11 +29,10 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            host = (
-                self.reauth_entry.data[CONF_HOST]
-                if self.reauth_entry
-                else user_input[CONF_HOST]
-            )
+            if self.reauth_entry:
+                host = self.reauth_entry.data[CONF_HOST]
+            else:
+                host = user_input[CONF_HOST]
             local_access_token = user_input[CONF_LOCAL_ACCESS_TOKEN]
             tedee_client = TedeeClient(local_token=local_access_token, local_ip=host)
             try:
