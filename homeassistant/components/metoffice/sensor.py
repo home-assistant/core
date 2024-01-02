@@ -35,7 +35,6 @@ from .const import (
     METOFFICE_DAILY_COORDINATOR,
     METOFFICE_HOURLY_COORDINATOR,
     METOFFICE_NAME,
-    METOFFICE_TWICE_DAILY_COORDINATOR,
     MODE_3HOURLY,
     MODE_DAILY,
     MODE_TWICE_DAILY,
@@ -170,7 +169,7 @@ async def async_setup_entry(
         ]
         + [
             MetOfficeCurrentSensor(
-                hass_data[METOFFICE_TWICE_DAILY_COORDINATOR],
+                hass_data[METOFFICE_DAILY_COORDINATOR],
                 hass_data,
                 MODE_TWICE_DAILY,
                 description,

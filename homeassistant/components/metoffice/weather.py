@@ -33,10 +33,8 @@ from .const import (
     METOFFICE_DAILY_COORDINATOR,
     METOFFICE_HOURLY_COORDINATOR,
     METOFFICE_NAME,
-    METOFFICE_TWICE_DAILY_COORDINATOR,
     MODE_3HOURLY,
     MODE_DAILY,
-    MODE_TWICE_DAILY,
 )
 from .data import MetOfficeData
 
@@ -52,7 +50,7 @@ async def async_setup_entry(
         MetOfficeWeather(
             hass_data[METOFFICE_DAILY_COORDINATOR],
             hass_data[METOFFICE_HOURLY_COORDINATOR],
-            hass_data[METOFFICE_TWICE_DAILY_COORDINATOR],
+            hass_data[METOFFICE_DAILY_COORDINATOR],
             hass_data,
             MODE_DAILY,
         )
@@ -68,7 +66,7 @@ async def async_setup_entry(
             MetOfficeWeather(
                 hass_data[METOFFICE_DAILY_COORDINATOR],
                 hass_data[METOFFICE_HOURLY_COORDINATOR],
-                hass_data[METOFFICE_TWICE_DAILY_COORDINATOR],
+                hass_data[METOFFICE_DAILY_COORDINATOR],
                 hass_data,
                 MODE_3HOURLY,
             )
@@ -106,7 +104,7 @@ class MetOfficeWeather(
         TimestampDataUpdateCoordinator[MetOfficeData],
         TimestampDataUpdateCoordinator[MetOfficeData],
         TimestampDataUpdateCoordinator[MetOfficeData],
-        TimestampDataUpdateCoordinator[MetOfficeData],  # Can be removed in Python 3.12
+        TimestampDataUpdateCoordinator[MetOfficeData],
     ]
 ):
     """Implementation of a Met Office weather condition."""
@@ -135,8 +133,6 @@ class MetOfficeWeather(
 
         if mode == MODE_3HOURLY:
             observation_coordinator = coordinator_hourly
-        elif mode == MODE_TWICE_DAILY:
-            observation_coordinator = coordinator_twice_daily
         else:
             observation_coordinator = coordinator_daily
 
@@ -213,6 +209,7 @@ class MetOfficeWeather(
         return [
             _build_forecast_data(timestep)
             for timestep in self.coordinator.data.forecast
+            if self._attr_name != MODE_DAILY or timestep.date.hour > 6
         ]
 
     @callback
@@ -223,7 +220,9 @@ class MetOfficeWeather(
             self.forecast_coordinators["daily"],
         )
         return [
-            _build_forecast_data(timestep) for timestep in coordinator.data.forecast
+            _build_forecast_data(timestep)
+            for timestep in coordinator.data.forecast
+            if timestep.date.hour > 6
         ]
 
     @callback

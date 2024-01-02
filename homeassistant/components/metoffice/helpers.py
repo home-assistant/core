@@ -7,7 +7,7 @@ import sys
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util.dt import utcnow
 
-from .const import MODE_3HOURLY, MODE_DAILY
+from .const import MODE_3HOURLY
 from .data import MetOfficeData
 
 if sys.version_info < (3, 12):
@@ -53,9 +53,6 @@ def fetch_data(connection: datapoint.Manager, site: Site, mode: str) -> MetOffic
             for day in forecast.days
             for timestep in day.timesteps
             if timestep.date > time_now
-            and (
-                mode != MODE_DAILY or timestep.date.hour > 6
-            )  # ensures only one result per day in MODE_DAILY
         ],
         site=site,
     )
