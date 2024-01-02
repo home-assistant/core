@@ -10,7 +10,6 @@ from homeassistant.components.climate import (
     PRESET_COMFORT,
     PRESET_ECO,
     ClimateEntity,
-    ClimateEntityDescription,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -79,18 +78,9 @@ class RointeHaClimate(RointeRadiatorEntity, ClimateEntity):
 
         super().__init__(coordinator, radiator, unique_id=radiator.id)
 
-        self.entity_description = ClimateEntityDescription(
-            key="radiator",
-            name=radiator.name,
-        )
-
     @property
     def target_temperature(self) -> float | None:
         """Return the current temperature or None if the device is off."""
-
-        LOGGER.debug(
-            f"[{self._radiator.name}] :: target_temperature >> Mode: {self._radiator.mode} Power: {self._radiator.power}. Preset: {self._radiator.preset}"
-        )
 
         if (
             self._radiator.mode == RointeOperationMode.MANUAL
@@ -166,7 +156,7 @@ class RointeHaClimate(RointeRadiatorEntity, ClimateEntity):
         """Convert the device's preset to HA preset modes."""
 
         # Also captures "none" (man mode, temperature outside presets)
-        return ROINTE_HASS_MAP.get(self._radiator.preset, None)
+        return ROINTE_HASS_MAP.get(self._radiator.preset)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -176,7 +166,7 @@ class RointeHaClimate(RointeRadiatorEntity, ClimateEntity):
         LOGGER.debug("Setting temperature to %s", target_temperature)
 
         if not RADIATOR_TEMP_MIN <= target_temperature <= RADIATOR_TEMP_MAX:
-            raise ValueError(
+            raise HomeAssistantError(
                 f"Invalid set_temperature value (must be in range {RADIATOR_TEMP_MIN}, {RADIATOR_TEMP_MAX}): {target_temperature}"
             )
 
@@ -224,4 +214,3 @@ class RointeHaClimate(RointeRadiatorEntity, ClimateEntity):
 
         # Update the data
         await self.coordinator.async_refresh()
-        self.async_write_ha_state()

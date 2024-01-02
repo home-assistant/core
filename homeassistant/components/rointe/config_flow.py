@@ -28,7 +28,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Config flow init."""
         self.step_user_data: dict[str, Any] | None = None
-        self.step_user_local_id: str | None = None
         self.step_user_installations: dict[str, Any] | None = None
 
     async def async_step_user(
@@ -79,10 +78,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.step_user_data = user_input
         self.step_user_installations = installations
 
-        return await self.async_step_installation(None)
+        return await self.async_step_installation()
 
     async def async_step_installation(
-        self, user_input: dict[str, Any] | None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Select the installation."""
         if not user_input or CONF_INSTALLATION not in user_input:
