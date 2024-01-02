@@ -98,7 +98,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            TimeDateSensor(option_type, entry.entry_id)
+            TimeDateSensor(option_type)
             for option_type in entry.options[CONF_DISPLAY_OPTIONS]
         ]
     )
@@ -112,7 +112,7 @@ class TimeDateSensor(SensorEntity):
     _state: str | None = None
     unsub: CALLBACK_TYPE | None = None
 
-    def __init__(self, hass: HomeAssistant, option_type: str) -> None:
+    def __init__(self, option_type: str) -> None:
         """Initialize the sensor."""
         self._attr_translation_key = option_type
         self.type = option_type

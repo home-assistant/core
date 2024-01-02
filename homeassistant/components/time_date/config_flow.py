@@ -159,7 +159,7 @@ async def ws_start_preview(
             subscriptions.pop()()
 
     preview_entities = {
-        option_type: TimeDateSensor(option_type, "preview")
+        option_type: TimeDateSensor(option_type)
         for option_type in validated[CONF_DISPLAY_OPTIONS]
     }
 
