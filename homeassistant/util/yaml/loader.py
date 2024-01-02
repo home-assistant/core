@@ -81,7 +81,7 @@ class Secrets:
 
         _LOGGER.debug("Loading %s", secret_path)
         try:
-            secrets = load_yaml(secret_path)
+            secrets = load_yaml(str(secret_path))
 
             if not isinstance(secrets, dict):
                 raise HomeAssistantError("Secrets is not a dictionary")
