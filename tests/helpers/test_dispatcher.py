@@ -50,6 +50,12 @@ async def test_signal_type(hass: HomeAssistant) -> None:
 
     assert calls == [("Hello", 2), ("World", 3)]
 
+    # Test compatibility with string keys
+    async_dispatcher_send(hass, "test", "x", 4)
+    await hass.async_block_till_done()
+
+    assert calls == [("Hello", 2), ("World", 3), ("x", 4)]
+
 
 async def test_simple_function_unsub(hass: HomeAssistant) -> None:
     """Test simple function (executor) and unsub."""

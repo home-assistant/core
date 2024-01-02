@@ -24,6 +24,20 @@ class SignalType(Generic[*_Ts]):
 
     name: str
 
+    def __hash__(self) -> int:
+        """Return hash of name."""
+
+        return hash(self.name)
+
+    def __eq__(self, other: Any) -> bool:
+        """Check equality for dict keys to be compatible with str."""
+
+        if isinstance(other, str):
+            return self.name == other
+        if isinstance(other, SignalType):
+            return self.name == other.name
+        return False
+
 
 _DispatcherDataType = dict[
     SignalType[*_Ts] | str,
