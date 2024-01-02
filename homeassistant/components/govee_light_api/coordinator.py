@@ -19,7 +19,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class GoveeLocalApiCoordinator(DataUpdateCoordinator):
+class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     """Govee Local API coordinator."""
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -85,6 +85,6 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator):
         """Return a list of discovered Govee devices."""
         return self._controller.devices
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> list[GoveeDevice]:
         self._controller.send_update_message()
         return self._controller.devices

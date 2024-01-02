@@ -51,7 +51,7 @@ async def async_setup_entry(
     await coordinator.set_discovery_callback(discovery_callback)
 
 
-class GoveeLight(CoordinatorEntity, LightEntity):
+class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
     """Govee Light."""
 
     _attr_has_entity_name = True
@@ -105,7 +105,7 @@ class GoveeLight(CoordinatorEntity, LightEntity):
         return self._device.on
 
     @property
-    def brightness(self) -> int | None:
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return int((self._device.brightness / 100.0) * 255.0)
 

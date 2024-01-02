@@ -1,19 +1,13 @@
 {
   "config": {
     "step": {
-      "user": {
-        "title": "Configure multicast discovery",
-        "data": {
-          "multicast_address": "Multicast discovery address",
-          "target_port": "API devices port",
-          "listening_port": "API listening port",
-          "discovery_interval": "Discovery interval",
-          "bind_address": "Bind address"
-        }
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
   }
 }
