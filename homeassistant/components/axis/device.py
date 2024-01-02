@@ -101,10 +101,9 @@ class AxisNetworkDevice:
         return name
 
     @property
-    def unique_id(self) -> str:
+    def unique_id(self) -> str | None:
         """Return the unique ID (serial number) of this device."""
-        assert (unique_id := self.config_entry.unique_id)
-        return unique_id
+        return self.config_entry.unique_id
 
     # Options
 
@@ -176,8 +175,8 @@ class AxisNetworkDevice:
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             configuration_url=self.api.config.url,
-            connections={(CONNECTION_NETWORK_MAC, self.unique_id)},
-            identifiers={(AXIS_DOMAIN, self.unique_id)},
+            connections={(CONNECTION_NETWORK_MAC, self.unique_id)},  # type: ignore[arg-type]
+            identifiers={(AXIS_DOMAIN, self.unique_id)},  # type: ignore[arg-type]
             manufacturer=ATTR_MANUFACTURER,
             model=f"{self.model} {self.product_type}",
             name=self.name,
