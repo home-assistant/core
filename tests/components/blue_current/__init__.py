@@ -1,6 +1,7 @@
 """Tests for the Blue Current integration."""
 from __future__ import annotations
 
+from asyncio import Event
 from collections.abc import Callable
 from unittest.mock import patch
 
@@ -20,13 +21,16 @@ class MockClient:
         self.charge_point = charge_point
         self.charge_point_status = charge_point_status
         self.grid = grid
+        self.loop_start_task = Event()
 
     async def start_loop(self, receiver):
         """Set the receiver."""
         self.receiver = receiver
+        self.loop_start_task.set()
 
     async def get_charge_points(self):
         """Send a list of charge points to the callback."""
+        await self.loop_start_task.wait()
         await self.receiver(
             {
                 "object": "CHARGE_POINTS",

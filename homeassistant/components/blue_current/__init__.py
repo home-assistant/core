@@ -53,7 +53,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     except BlueCurrentException as err:
         raise ConfigEntryNotReady from err
 
-    hass.async_create_task(connector.start_loop(), "blue_current-webhook")
+    hass.async_create_background_task(connector.start_loop(), "blue_current-websocket")
+    await client.get_charge_points()
 
     await client.wait_for_response()
     hass.data[DOMAIN][config_entry.entry_id] = connector
@@ -108,15 +109,7 @@ class Connector:
         # gets charge point ids
         if object_name == CHARGE_POINTS:
             charge_points_data: list = message[DATA]
-            await asyncio.gather(
-                *(
-                    self.handle_charge_point(
-                        entry[EVSE_ID], entry[MODEL_TYPE], entry[ATTR_NAME]
-                    )
-                    for entry in charge_points_data
-                )
-            )
-            await self.client.get_grid_status(charge_points_data[0][EVSE_ID])
+            await self.handle_charge_point_data(charge_points_data)
 
         # gets charge point key / values
         elif object_name in VALUE_TYPES:
@@ -130,13 +123,21 @@ class Connector:
             self.grid = data
             self.dispatch_grid_update_signal()
 
+    async def handle_charge_point_data(self, charge_points_data: list) -> None:
+        """Handle incoming chargepoint data."""
+        await asyncio.gather(
+            *(
+                self.handle_charge_point(
+                    entry[EVSE_ID], entry[MODEL_TYPE], entry[ATTR_NAME]
+                )
+                for entry in charge_points_data
+            )
+        )
+        await self.client.get_grid_status(charge_points_data[0][EVSE_ID])
+
     async def handle_charge_point(self, evse_id: str, model: str, name: str) -> None:
         """Add the chargepoint and request their data."""
         self.add_charge_point(evse_id, model, name)
-        await self.get_charge_point_data(evse_id)
-
-    async def get_charge_point_data(self, evse_id: str) -> None:
-        """Get all the data of a charge point."""
         await self.client.get_status(evse_id)
 
     def add_charge_point(self, evse_id: str, model: str, name: str) -> None:
@@ -160,7 +161,6 @@ class Connector:
         """Start the receive loop."""
         try:
             await self.client.start_loop(self.on_data)
-            await self.client.get_charge_points()
         except BlueCurrentException as err:
             LOGGER.warning(
                 "Disconnected from the Blue Current websocket. Retrying to connect in background. %s",
