@@ -118,6 +118,7 @@ homeassistant.components.climate.*
 homeassistant.components.cloud.*
 homeassistant.components.command_line.*
 homeassistant.components.configurator.*
+homeassistant.components.counter.*
 homeassistant.components.cover.*
 homeassistant.components.cpuspeed.*
 homeassistant.components.crownstone.*
