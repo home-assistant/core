@@ -9,6 +9,7 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
+from .const import TIMEOUT
 from .errors import (
     ConnectionRefused,
     ConnectionTimeout,
@@ -29,14 +30,15 @@ async def async_get_cert(
     port: int,
 ) -> dict[str, Any]:
     """Get the certificate for the host and port combination."""
-    transport, _ = await hass.loop.create_connection(
-        asyncio.Protocol,
-        host,
-        port,
-        ssl=_get_default_ssl_context(),
-        happy_eyeballs_delay=0.25,
-        server_hostname=host,
-    )
+    async with asyncio.timeout(TIMEOUT):
+        transport, _ = await hass.loop.create_connection(
+            asyncio.Protocol,
+            host,
+            port,
+            ssl=_get_default_ssl_context(),
+            happy_eyeballs_delay=0.25,
+            server_hostname=host,
+        )
     try:
         return transport.get_extra_info("peercert")
     finally:
@@ -53,7 +55,7 @@ async def get_cert_expiry_timestamp(
         cert = await async_get_cert(hass, hostname, port)
     except socket.gaierror as err:
         raise ResolveFailed(f"Cannot resolve hostname: {hostname}") from err
-    except socket.timeout as err:
+    except asyncio.TimeoutError as err:
         raise ConnectionTimeout(
             f"Connection timeout with server: {hostname}:{port}"
         ) from err
