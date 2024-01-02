@@ -622,7 +622,7 @@ async def test_update_todo_item_service_by_summary_not_found(
 
     await create_mock_platform(hass, [test_entity])
 
-    with pytest.raises(HomeAssistantError, match="Unable to find"):
+    with pytest.raises(ServiceValidationError, match="Unable to find"):
         await hass.services.async_call(
             DOMAIN,
             "update_item",
@@ -931,7 +931,7 @@ async def test_remove_todo_item_service_by_summary_not_found(
 
     await create_mock_platform(hass, [test_entity])
 
-    with pytest.raises(HomeAssistantError, match="Unable to find"):
+    with pytest.raises(ServiceValidationError, match="Unable to find"):
         await hass.services.async_call(
             DOMAIN,
             "remove_item",

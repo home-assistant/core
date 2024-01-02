@@ -484,7 +484,12 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
     item = call.data["item"]
     found = _find_by_uid_or_summary(item, entity.todo_items)
     if not found:
-        raise HomeAssistantError(f"Unable to find To-do item '{item}'")
+        raise ServiceValidationError(
+            f"Unable to find To-do item '{item}'",
+            translation_domain=DOMAIN,
+            translation_key="item_not_found",
+            translation_placeholders={"item": item},
+        )
 
     _validate_supported_features(entity.supported_features, call.data)
 
@@ -512,7 +517,12 @@ async def _async_remove_todo_items(entity: TodoListEntity, call: ServiceCall) ->
     for item in call.data.get("item", []):
         found = _find_by_uid_or_summary(item, entity.todo_items)
         if not found or not found.uid:
-            raise HomeAssistantError(f"Unable to find To-do item '{item}")
+            raise ServiceValidationError(
+                f"Unable to find To-do item '{item}'",
+                translation_domain=DOMAIN,
+                translation_key="item_not_found",
+                translation_placeholders={"item": item},
+            )
         uids.append(found.uid)
     await entity.async_delete_todo_items(uids=uids)
 

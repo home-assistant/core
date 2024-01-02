@@ -92,6 +92,9 @@
     }
   },
   "exceptions": {
+    "item_not_found": {
+      "message": "Unable to find To-do item: {item}"
+    },
     "update_field_not_supported": {
       "message": "Entity does not support setting field: {service_field}"
     }
