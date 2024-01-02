@@ -1,9 +1,13 @@
 """The tests for time_date sensor platform."""
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
+from homeassistant.components.time_date.const import DOMAIN
 import homeassistant.components.time_date.sensor as time_date
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 
@@ -172,3 +176,39 @@ async def test_icons(hass: HomeAssistant) -> None:
     assert device.icon == "mdi:calendar-clock"
     device = time_date.TimeDateSensor(hass, "date_time_iso")
     assert device.icon == "mdi:calendar-clock"
+
+
+@pytest.mark.parametrize(
+    (
+        "display_options",
+        "expected_warnings",
+        "expected_issues",
+    ),
+    [
+        (["time", "date"], [], []),
+        (["beat"], ["'beat': is deprecated"], ["deprecated_beat"]),
+        (["time", "beat"], ["'beat': is deprecated"], ["deprecated_beat"]),
+    ],
+)
+async def test_deprecation_warning(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    display_options: list[str],
+    expected_warnings: list[str],
+    expected_issues: list[str],
+) -> None:
+    """Test deprecation warning for swatch beat."""
+    config = {"sensor": {"platform": "time_date", "display_options": display_options}}
+
+    await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    warnings = [record for record in caplog.records if record.levelname == "WARNING"]
+    assert len(warnings) == len(expected_warnings)
+    for expected_warning in expected_warnings:
+        assert any(expected_warning in warning.message for warning in warnings)
+
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == len(expected_issues)
+    for expected_issue in expected_issues:
+        assert (DOMAIN, expected_issue) in issue_registry.issues
