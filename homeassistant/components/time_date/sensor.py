@@ -86,8 +86,6 @@ class TimeDateSensor(SensorEntity):
         self.hass = hass
         self.unsub: CALLBACK_TYPE | None = None
 
-        self._update_internal_state(dt_util.utcnow())
-
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
@@ -109,9 +107,7 @@ class TimeDateSensor(SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Set up first update."""
-        self.unsub = async_track_point_in_utc_time(
-            self.hass, self.point_in_time_listener, self.get_next_interval()
-        )
+        self._update_state_and_setup_listener()
 
     async def async_will_remove_from_hass(self) -> None:
         """Cancel next update."""
@@ -119,25 +115,23 @@ class TimeDateSensor(SensorEntity):
             self.unsub()
             self.unsub = None
 
-    def get_next_interval(self) -> datetime:
+    def get_next_interval(self, time_date: datetime) -> datetime:
         """Compute next time an update should occur."""
-        now = dt_util.utcnow()
-
         if self.type == "date":
-            tomorrow = dt_util.as_local(now) + timedelta(days=1)
+            tomorrow = dt_util.as_local(time_date) + timedelta(days=1)
             return dt_util.start_of_local_day(tomorrow)
 
         if self.type == "beat":
             # Add 1 hour because @0 beats is at 23:00:00 UTC.
-            timestamp = dt_util.as_timestamp(now + timedelta(hours=1))
+            timestamp = dt_util.as_timestamp(time_date + timedelta(hours=1))
             interval = 86.4
         else:
-            timestamp = dt_util.as_timestamp(now)
+            timestamp = dt_util.as_timestamp(time_date)
             interval = 60
 
         delta = interval - (timestamp % interval)
-        next_interval = now + timedelta(seconds=delta)
-        _LOGGER.debug("%s + %s -> %s (%s)", now, delta, next_interval, self.type)
+        next_interval = time_date + timedelta(seconds=delta)
+        _LOGGER.debug("%s + %s -> %s (%s)", time_date, delta, next_interval, self.type)
 
         return next_interval
 
@@ -179,11 +173,16 @@ class TimeDateSensor(SensorEntity):
                 f"{date} {time}", raise_on_error=True
             ).isoformat()
 
+    def _update_state_and_setup_listener(self) -> None:
+        """Update state and setup listener for next interval."""
+        now = dt_util.utcnow()
+        self._update_internal_state(now)
+        self.unsub = async_track_point_in_utc_time(
+            self.hass, self.point_in_time_listener, self.get_next_interval(now)
+        )
+
     @callback
     def point_in_time_listener(self, time_date: datetime) -> None:
         """Get the latest data and update state."""
-        self._update_internal_state(time_date)
+        self._update_state_and_setup_listener()
         self.async_write_ha_state()
-        self.unsub = async_track_point_in_utc_time(
-            self.hass, self.point_in_time_listener, self.get_next_interval()
-        )
