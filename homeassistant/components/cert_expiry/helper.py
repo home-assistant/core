@@ -34,7 +34,7 @@ async def async_get_cert(
         host,
         port,
         ssl=_get_default_ssl_context(),
-        happy_eyeballs_delay=1,
+        happy_eyeballs_delay=0.25,
         server_hostname=host,
     )
     try:
