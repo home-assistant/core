@@ -6,7 +6,7 @@ from contextlib import suppress
 import datetime as dt
 from functools import partial
 import re
-from typing import Any
+from typing import Any, Literal, overload
 import zoneinfo
 
 import ciso8601
@@ -177,13 +177,32 @@ def start_of_local_day(dt_or_d: dt.date | dt.datetime | None = None) -> dt.datet
 # Copyright (c) Django Software Foundation and individual contributors.
 # All rights reserved.
 # https://github.com/django/django/blob/main/LICENSE
+@overload
 def parse_datetime(dt_str: str) -> dt.datetime | None:
+    ...
+
+
+@overload
+def parse_datetime(dt_str: str, *, raise_on_error: Literal[True]) -> dt.datetime:
+    ...
+
+
+@overload
+def parse_datetime(
+    dt_str: str, *, raise_on_error: Literal[False] | bool
+) -> dt.datetime | None:
+    ...
+
+
+def parse_datetime(dt_str: str, *, raise_on_error: bool = False) -> dt.datetime | None:
     """Parse a string and return a datetime.datetime.
 
     This function supports time zone offsets. When the input contains one,
     the output uses a timezone with a fixed offset from UTC.
     Raises ValueError if the input is well formatted but not a valid datetime.
-    Returns None if the input isn't well formatted.
+
+    If the input isn't well formatted, returns None if raise_on_error is False
+    or raises ValueError if it's True.
     """
     with suppress(ValueError, IndexError):
         return ciso8601.parse_datetime(dt_str)
