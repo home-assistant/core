@@ -11,6 +11,7 @@ from pytedee_async import (
     TedeeLocalAuthException,
     TedeeLock,
 )
+from pytedee_async.bridge import TedeeBridge
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -30,6 +31,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
     """Class to handle fetching data from the tedee API centrally."""
 
     config_entry: ConfigEntry
+    bridge: TedeeBridge
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize coordinator."""
@@ -54,7 +56,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         # once every hours get all lock details, otherwise use the sync endpoint
         if self._next_get_locks <= time.time():
             _LOGGER.debug("Updating through /my/lock endpoint")
-            await self._async_update_locks(self.tedee_client.get_locks)
+            await self._async_update_locks(self._async_update_locks_and_bridge)
             self._next_get_locks = time.time() + GET_LOCKS_INTERVAL_SECONDS
         else:
             _LOGGER.debug("Updating through /sync endpoint")
@@ -83,3 +85,8 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             raise UpdateFailed("Error while updating data: %s" % str(ex)) from ex
         except (TedeeClientException, TimeoutError) as ex:
             raise UpdateFailed("Querying API failed. Error: %s" % str(ex)) from ex
+
+    async def _async_update_locks_and_bridge(self) -> None:
+        """Update locks and bridge."""
+        await self.tedee_client.get_locks()
+        self.bridge = await self.tedee_client.get_local_bridge()
