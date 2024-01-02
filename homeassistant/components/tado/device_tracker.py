@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import PyTado
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -41,34 +40,23 @@ async def async_get_scanner(
 ) -> DeviceScanner | None:
     """Configure the Tado device scanner."""
     device_config = config["device_tracker"]
-    try:
-        import_result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_USERNAME: device_config[CONF_USERNAME],
-                CONF_PASSWORD: device_config[CONF_PASSWORD],
-                CONF_HOME_ID: device_config.get(CONF_HOME_ID),
-            },
-        )
-    except PyTado.exceptions.TadoWrongCredentialsException as err:
-        _LOGGER.error("Error importing Tado integration: %s", err)
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "failed_import_invalid_auth",
-            breaks_in_ha_version="2024.7.0",
-            is_fixable=False,
-            severity=IssueSeverity.ERROR,
-            translation_key="failed_import_invalid_auth",
-        )
-        return None
+    import_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_USERNAME: device_config[CONF_USERNAME],
+            CONF_PASSWORD: device_config[CONF_PASSWORD],
+            CONF_HOME_ID: device_config.get(CONF_HOME_ID),
+        },
+    )
 
     translation_key = "deprecated_yaml_import_device_tracker"
     if import_result.get("type") == FlowResultType.ABORT:
         translation_key = "import_aborted"
         if import_result.get("reason") == "import_failed":
             translation_key = "import_failed"
+        elif import_result.get("reason") == "import_failed_invalid_auth":
+            translation_key = "failed_import_invalid_auth"
 
     async_create_issue(
         hass,
