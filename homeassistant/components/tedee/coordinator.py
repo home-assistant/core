@@ -15,7 +15,7 @@ from pytedee_async import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
@@ -74,7 +74,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         try:
             await update_fn()
         except TedeeLocalAuthException as ex:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 "Authentication failed. Local access token is invalid"
             ) from ex
 
