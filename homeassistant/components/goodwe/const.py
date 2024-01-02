@@ -5,7 +5,13 @@ from homeassistant.const import Platform
 
 DOMAIN = "goodwe"
 
-PLATFORMS = [Platform.BUTTON, Platform.NUMBER, Platform.SELECT, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 DEFAULT_NAME = "GoodWe"
 SCAN_INTERVAL = timedelta(seconds=10)
