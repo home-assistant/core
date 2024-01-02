@@ -1157,6 +1157,26 @@ async def test_statemachine_force_update(hass: HomeAssistant) -> None:
     assert len(events) == 1
 
 
+async def test_statemachine_avoids_updating_attributes(hass: HomeAssistant) -> None:
+    """Test async_set avoids recreating ReadOnly dicts when possible."""
+    attrs = {"some_attr": "attr_value"}
+
+    hass.states.async_set("light.bowl", "off", attrs)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.bowl")
+    assert state.attributes == attrs
+
+    hass.states.async_set("light.bowl", "on", attrs)
+    await hass.async_block_till_done()
+
+    new_state = hass.states.get("light.bowl")
+    assert new_state.attributes == attrs
+
+    assert new_state.attributes is state.attributes
+    assert isinstance(new_state.attributes, ReadOnlyDict)
+
+
 def test_service_call_repr() -> None:
     """Test ServiceCall repr."""
     call = ha.ServiceCall("homeassistant", "start")
@@ -2605,6 +2625,9 @@ async def test_shutdown_job(hass: HomeAssistant) -> None:
     evt = asyncio.Event()
 
     async def shutdown_func() -> None:
+        # Sleep to ensure core is waiting for the task to finish
+        await asyncio.sleep(0.01)
+        # Set the event
         evt.set()
 
     job = HassJob(shutdown_func, "shutdown_job")

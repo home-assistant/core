@@ -45,3 +45,26 @@ def test_deprecated_support_alarm_constants(
     import_and_test_deprecated_constant_enum(
         caplog, module, entity_feature, "SUPPORT_ALARM_", "2025.1"
     )
+
+
+def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated supported features ints."""
+
+    class MockAlarmControlPanelEntity(alarm_control_panel.AlarmControlPanelEntity):
+        _attr_supported_features = 1
+
+    entity = MockAlarmControlPanelEntity()
+    assert (
+        entity.supported_features
+        is alarm_control_panel.AlarmControlPanelEntityFeature(1)
+    )
+    assert "MockAlarmControlPanelEntity" in caplog.text
+    assert "is using deprecated supported features values" in caplog.text
+    assert "Instead it should use" in caplog.text
+    assert "AlarmControlPanelEntityFeature.ARM_HOME" in caplog.text
+    caplog.clear()
+    assert (
+        entity.supported_features
+        is alarm_control_panel.AlarmControlPanelEntityFeature(1)
+    )
+    assert "is using deprecated supported features values" not in caplog.text
