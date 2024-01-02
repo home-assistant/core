@@ -49,12 +49,6 @@ class Tami4EdgeBoilButton(Tami4EdgeBaseEntity, ButtonEntity):
 
     entity_description: Tami4EdgeButtonEntityDescription
 
-    def __init__(
-        self, api: Tami4EdgeAPI, entity_description: Tami4EdgeButtonEntityDescription
-    ) -> None:
-        """Initialize the button entity."""
-        super().__init__(api, entity_description)
-
     def press(self) -> None:
         """Handle the button press."""
         self.entity_description.press_fn(self._api)
