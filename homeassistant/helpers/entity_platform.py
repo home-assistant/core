@@ -21,6 +21,7 @@ from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
     EntityServiceResponse,
+    HassJob,
     HomeAssistant,
     ServiceCall,
     SupportsResponse,
@@ -833,12 +834,15 @@ class EntityPlatform:
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
+        service_func: str | HassJob[..., Any]
+        service_func = func if isinstance(func, str) else HassJob(func)
+
         async def handle_service(call: ServiceCall) -> EntityServiceResponse | None:
             """Handle the service."""
             return await service.entity_service_call(
                 self.hass,
                 self.domain_entities,
-                func,
+                service_func,
                 call,
                 required_features,
             )
