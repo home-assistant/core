@@ -1,4 +1,4 @@
-"""Summary data from Nextcoud."""
+"""Update data from Nextcoud."""
 from __future__ import annotations
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityDescription
