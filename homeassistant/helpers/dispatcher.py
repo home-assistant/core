@@ -153,7 +153,7 @@ def dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None:
     ...
 
 
-@bind_hass
+@bind_hass  # type: ignore[misc]
 def dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None:
     """Send signal and data."""
     hass.loop.call_soon_threadsafe(async_dispatcher_send, hass, signal, *args)
@@ -171,7 +171,7 @@ def _format_err(signal: str, target: Callable[..., Any], *args: Any) -> str:
     ...
 
 
-def _format_err(signal: str, target: Callable[..., Any], *args: Any) -> str:
+def _format_err(signal: str, target: Callable[..., Any], *args: Any) -> str:  # type: ignore[misc]
     """Format error message."""
     return "Exception in {} when dispatching '{}': {}".format(
         # Functions wrapped in partial do not have a __name__
@@ -221,7 +221,7 @@ def async_dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None:
     ...
 
 
-@callback
+@callback  # type: ignore[misc]
 @bind_hass
 def async_dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None:
     """Send signal and data.
