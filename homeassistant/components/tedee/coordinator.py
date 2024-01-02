@@ -89,9 +89,9 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
     def webhook_received(self, message: dict[str, Any]) -> None:
         """Handle webhook message."""
         self.tedee_client.parse_webhook_message(message)
-        if time.time() <= self._next_full_update:
-            # update the coordinator data, reset the poll timer
-            self.async_set_updated_data(self.tedee_client.locks_dict)
-        else:
+        if self._next_full_update <= time.time():
             # allow a full update
             self.async_update_listeners()
+        else:
+            # update the coordinator data, reset the poll timer
+            self.async_set_updated_data(self.tedee_client.locks_dict)
