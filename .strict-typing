@@ -94,6 +94,7 @@ homeassistant.components.asuswrt.*
 homeassistant.components.auth.*
 homeassistant.components.automation.*
 homeassistant.components.awair.*
+homeassistant.components.axis.*
 homeassistant.components.backup.*
 homeassistant.components.baf.*
 homeassistant.components.bayesian.*
@@ -101,6 +102,7 @@ homeassistant.components.binary_sensor.*
 homeassistant.components.bitcoin.*
 homeassistant.components.blockchain.*
 homeassistant.components.blue_current.*
+homeassistant.components.blueprint.*
 homeassistant.components.bluetooth.*
 homeassistant.components.bluetooth_tracker.*
 homeassistant.components.bmw_connected_drive.*
@@ -116,6 +118,7 @@ homeassistant.components.clickatell.*
 homeassistant.components.clicksend.*
 homeassistant.components.climate.*
 homeassistant.components.cloud.*
+homeassistant.components.co2signal.*
 homeassistant.components.command_line.*
 homeassistant.components.configurator.*
 homeassistant.components.cover.*
