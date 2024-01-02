@@ -48,7 +48,7 @@ async def test_user_with_bad_cert(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.cert_expiry.helper.get_cert",
+        "homeassistant.components.cert_expiry.helper.async_get_cert",
         side_effect=ssl.SSLError("some error"),
     ):
         result = await hass.config_entries.flow.async_configure(
