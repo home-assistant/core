@@ -119,11 +119,11 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn the fan on."""
-        if percentage is not None:
+        if FanEntityFeature.SET_SPEED in self._attr_supported_features:
+            # If speed is set in features then turn the fan on with the speed.
             await self._async_set_percentage(percentage)
-        if preset_mode is not None:
-            await self.async_set_preset_mode(preset_mode)
         else:
+            # If speed is not valid then turn on the fan with the
             await self._device.switch_on(set_status=True)
         # State is set optimistically in the command above, therefore update
         # the entity state ahead of receiving the confirming push updates
