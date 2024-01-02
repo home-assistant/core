@@ -208,6 +208,8 @@ def parse_datetime(dt_str: str, *, raise_on_error: bool = False) -> dt.datetime 
         return ciso8601.parse_datetime(dt_str)
 
     if not (match := DATETIME_RE.match(dt_str)):
+        if raise_on_error:
+            raise ValueError
         return None
     kws: dict[str, Any] = match.groupdict()
     if kws["microsecond"]:
