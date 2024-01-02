@@ -155,7 +155,7 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         if TYPE_CHECKING:
             return None
 
-    async def _update_entity_state(self, now) -> None:
+    async def _update_entity_state(self, now: Any) -> None:
         """Update the state of the entity."""
         if self._process_updates is None:
             self._process_updates = asyncio.Lock()

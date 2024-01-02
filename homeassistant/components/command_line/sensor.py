@@ -108,7 +108,7 @@ class CommandSensor(ManualTriggerSensorEntity):
         """Initialize the sensor."""
         super().__init__(self.hass, config)
         self.data = data
-        self._attr_extra_state_attributes = {}
+        self._attr_extra_state_attributes: dict[str, Any] = {}
         self._json_attributes = json_attributes
         self._attr_native_value = None
         self._value_template = value_template
@@ -118,7 +118,7 @@ class CommandSensor(ManualTriggerSensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes."""
-        return cast(dict, self._attr_extra_state_attributes)
+        return self._attr_extra_state_attributes
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
@@ -134,7 +134,7 @@ class CommandSensor(ManualTriggerSensorEntity):
             ),
         )
 
-    async def _update_entity_state(self, now) -> None:
+    async def _update_entity_state(self, now: Any) -> None:
         """Update the state of the entity."""
         if self._process_updates is None:
             self._process_updates = asyncio.Lock()

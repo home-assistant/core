@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-from typing import cast
+from typing import Any, cast
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -126,7 +126,7 @@ class CommandBinarySensor(ManualTriggerEntity, BinarySensorEntity):
             ),
         )
 
-    async def _update_entity_state(self, now) -> None:
+    async def _update_entity_state(self, now: Any) -> None:
         """Update the state of the entity."""
         if self._process_updates is None:
             self._process_updates = asyncio.Lock()
