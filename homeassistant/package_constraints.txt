@@ -11,7 +11,7 @@ atomicwrites-homeassistant==1.4.1
 attrs==23.1.0
 awesomeversion==23.11.0
 bcrypt==4.0.1
-bleak-retry-connector==3.3.0
+bleak-retry-connector==3.4.0
 bleak==0.21.1
 bluetooth-adapters==0.16.2
 bluetooth-auto-recovery==1.2.3
@@ -28,7 +28,7 @@ habluetooth==2.0.1
 hass-nabucasa==0.75.1
 hassil==1.5.1
 home-assistant-bluetooth==1.11.0
-home-assistant-frontend==20231228.0
+home-assistant-frontend==20240101.0
 home-assistant-intents==2023.12.05
 httpx==0.26.0
 ifaddr==0.2.0
@@ -189,3 +189,7 @@ charset-normalizer==3.2.0
 # lxml 5.0.0 currently does not build on alpine 3.18
 # https://bugs.launchpad.net/lxml/+bug/2047718
 lxml==4.9.4
+
+# dacite: Ensure we have a version that is able to handle type unions for
+# Roborock, NAM, Brother, and GIOS.
+dacite>=1.7.0
