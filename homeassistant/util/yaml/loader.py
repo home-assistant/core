@@ -81,7 +81,7 @@ class Secrets:
 
         _LOGGER.debug("Loading %s", secret_path)
         try:
-            secrets = load_yaml(str(secret_path))
+            secrets = load_yaml(secret_path)
 
             if not isinstance(secrets, dict):
                 raise HomeAssistantError("Secrets is not a dictionary")
@@ -215,7 +215,9 @@ class SafeLineLoader(PythonSafeLoader):
 LoaderType = FastSafeLoader | PythonSafeLoader
 
 
-def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE | None:
+def load_yaml(
+    fname: str | os.PathLike[str], secrets: Secrets | None = None
+) -> JSON_TYPE | None:
     """Load a YAML file."""
     try:
         with open(fname, encoding="utf-8") as conf_file:
@@ -225,7 +227,9 @@ def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE | None:
         raise HomeAssistantError(exc) from exc
 
 
-def load_yaml_dict(fname: str, secrets: Secrets | None = None) -> dict:
+def load_yaml_dict(
+    fname: str | os.PathLike[str], secrets: Secrets | None = None
+) -> dict:
     """Load a YAML file and ensure the top level is a dict.
 
     Raise if the top level is not a dict.
