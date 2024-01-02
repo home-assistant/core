@@ -12,8 +12,11 @@ from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +63,25 @@ class TimeDateSensor(SensorEntity):
 
     def __init__(self, hass, option_type):
         """Initialize the sensor."""
+        if option_type == "beat":
+            async_create_issue(
+                hass,
+                DOMAIN,
+                "deprecated_beat",
+                breaks_in_ha_version="2024.7.0",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_beat",
+                translation_placeholders={
+                    "config_key": "beat",
+                    "display_options": "display_options",
+                    "integration": DOMAIN,
+                },
+            )
+            _LOGGER.warning(
+                "'beat': is deprecated and will be removed in version 2024.7"
+            )
+
         self._name = OPTION_TYPES[option_type]
         self.type = option_type
         self._state = None
