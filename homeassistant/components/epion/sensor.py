@@ -65,4 +65,8 @@ class EpionSensor(SensorEntity):
         if not myDevice:
             return 0 # No data available
 
-        return myDevice[self._measurement_key]
+        measurement = myDevice[self._measurement_key]
+        if not measurement:
+            return 0 # No relevant measurement available
+
+        return measurement
