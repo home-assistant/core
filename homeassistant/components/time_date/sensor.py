@@ -53,6 +53,23 @@ async def async_setup_platform(
         _LOGGER.error("Timezone is not set in Home Assistant configuration")
         return False
 
+    if "beat" in config[CONF_DISPLAY_OPTIONS]:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_beat",
+            breaks_in_ha_version="2024.7.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_beat",
+            translation_placeholders={
+                "config_key": "beat",
+                "display_options": "display_options",
+                "integration": DOMAIN,
+            },
+        )
+        _LOGGER.warning("'beat': is deprecated and will be removed in version 2024.7")
+
     async_add_entities(
         [TimeDateSensor(hass, variable) for variable in config[CONF_DISPLAY_OPTIONS]]
     )
@@ -63,25 +80,6 @@ class TimeDateSensor(SensorEntity):
 
     def __init__(self, hass, option_type):
         """Initialize the sensor."""
-        if option_type == "beat":
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "deprecated_beat",
-                breaks_in_ha_version="2024.7.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_beat",
-                translation_placeholders={
-                    "config_key": "beat",
-                    "display_options": "display_options",
-                    "integration": DOMAIN,
-                },
-            )
-            _LOGGER.warning(
-                "'beat': is deprecated and will be removed in version 2024.7"
-            )
-
         self._name = OPTION_TYPES[option_type]
         self.type = option_type
         self._state = None
