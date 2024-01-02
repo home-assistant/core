@@ -29,6 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     Context,
     EntityServiceResponse,
+    HassJob,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -789,7 +790,9 @@ def _get_permissible_entity_candidates(
 async def entity_service_call(
     hass: HomeAssistant,
     registered_entities: dict[str, Entity],
-    func: str | Callable[..., Coroutine[Any, Any, ServiceResponse]],
+    func: str
+    | Callable[..., Coroutine[Any, Any, ServiceResponse]]
+    | Callable[..., ServiceResponse],
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
 ) -> EntityServiceResponse | None:
@@ -925,7 +928,9 @@ async def entity_service_call(
 async def _handle_entity_call(
     hass: HomeAssistant,
     entity: Entity,
-    func: str | Callable[..., Coroutine[Any, Any, ServiceResponse]],
+    func: str
+    | Callable[..., Coroutine[Any, Any, ServiceResponse]]
+    | Callable[..., ServiceResponse],
     data: dict | ServiceCall,
     context: Context,
 ) -> ServiceResponse:
@@ -934,28 +939,27 @@ async def _handle_entity_call(
 
     task: asyncio.Future[ServiceResponse] | None
     if isinstance(func, str):
-        task = hass.async_run_job(
-            partial(getattr(entity, func), **data)  # type: ignore[arg-type]
+        task = hass.async_run_hass_job(
+            HassJob(partial(getattr(entity, func), **data))  # type: ignore[arg-type]
         )
     else:
-        task = hass.async_run_job(func, entity, data)
+        task = hass.async_run_hass_job(HassJob(func), entity, data)
 
     # Guard because callback functions do not return a task when passed to
     # async_run_job.
     result: ServiceResponse = None
     if task is not None:
         result = await task
-
-    if asyncio.iscoroutine(result):
-        _LOGGER.error(
-            (
-                "Service %s for %s incorrectly returns a coroutine object. Await result"
-                " instead in service handler. Report bug to integration author"
-            ),
-            func,
-            entity.entity_id,
-        )
-        result = await result
+        if asyncio.iscoroutine(result):
+            _LOGGER.error(
+                (
+                    "Service %s for %s incorrectly returns a coroutine object. Await result"
+                    " instead in service handler. Report bug to integration author"
+                ),
+                func,
+                entity.entity_id,
+            )
+            result = await result
 
     return result
 
