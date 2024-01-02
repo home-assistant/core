@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from datetime import timedelta
+from datetime import datetime, timedelta
 import json
 from typing import Any, cast
 
@@ -123,7 +123,7 @@ class CommandSensor(ManualTriggerSensorEntity):
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
-        await self._update_entity_state(None)
+        await self._update_entity_state()
         self.async_on_remove(
             async_track_time_interval(
                 self.hass,
@@ -134,7 +134,7 @@ class CommandSensor(ManualTriggerSensorEntity):
             ),
         )
 
-    async def _update_entity_state(self, now: Any) -> None:
+    async def _update_entity_state(self, now: datetime | None = None) -> None:
         """Update the state of the entity."""
         if self._process_updates is None:
             self._process_updates = asyncio.Lock()
