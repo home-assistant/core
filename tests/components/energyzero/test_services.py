@@ -133,3 +133,28 @@ async def test_service_validation(
             blocking=True,
             return_response=True,
         )
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize("service", [GAS_SERVICE_NAME, ENERGY_SERVICE_NAME])
+async def test_service_called_with_unloaded_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+) -> None:
+    """Test service calls with unloaded config entry."""
+
+    await mock_config_entry.async_unload(hass)
+
+    data = {"config_entry": mock_config_entry.entry_id, "incl_vat": True}
+
+    with pytest.raises(
+        ServiceValidationError, match=f"{mock_config_entry.title} is not loaded"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            data,
+            blocking=True,
+            return_response=True,
+        )
