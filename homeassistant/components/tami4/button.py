@@ -45,7 +45,7 @@ async def async_setup_entry(
 
 
 class Tami4EdgeButton(Tami4EdgeBaseEntity, ButtonEntity):
-    """Boil button entity for Tami4Edge."""
+    """Button entity for Tami4Edge."""
 
     entity_description: Tami4EdgeButtonEntityDescription
 
