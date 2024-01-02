@@ -78,6 +78,8 @@ async def async_setup_platform(
 class TimeDateSensor(SensorEntity):
     """Implementation of a Time and Date sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, hass: HomeAssistant, option_type: str) -> None:
         """Initialize the sensor."""
         self._name = OPTION_TYPES[option_type]
