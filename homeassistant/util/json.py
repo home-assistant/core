@@ -39,9 +39,10 @@ def json_loads(__obj: bytes | bytearray | memoryview | str) -> JsonValueType:
     This adds a workaround for orjson not handling subclasses of str,
     https://github.com/ijl/orjson/issues/445.
     """
-    if type(__obj) in (bytes, bytearray, memoryview, str):
-        return orjson.loads(__obj)  # type:ignore[no-any-return]
-    if isinstance(__obj, str):
+    # Avoid isinstance overhead for the common case
+    if type(__obj) not in (bytes, bytearray, memoryview, str) and isinstance(
+        __obj, str
+    ):
         return orjson.loads(str(__obj))  # type:ignore[no-any-return]
     return orjson.loads(__obj)  # type:ignore[no-any-return]
 
