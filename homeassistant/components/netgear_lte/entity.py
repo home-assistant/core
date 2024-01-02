@@ -21,13 +21,14 @@ class LTEEntity(CoordinatorEntity[NetgearLTEDataUpdateCoordinator]):
         """Initialize a Netgear LTE entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{description.key}_{coordinator.data.serial_number}"
+        data = coordinator.data
+        self._attr_unique_id = f"{description.key}_{data.serial_number}"
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}",
-            identifiers={(DOMAIN, coordinator.data.serial_number)},
+            identifiers={(DOMAIN, data.serial_number)},
             manufacturer=MANUFACTURER,
-            model=coordinator.data.items["general.model"],
-            serial_number=coordinator.data.serial_number,
-            sw_version=coordinator.data.items["general.fwversion"],
-            hw_version=coordinator.data.items["general.hwversion"],
+            model=data.items["general.model"],
+            serial_number=data.serial_number,
+            sw_version=data.items["general.fwversion"],
+            hw_version=data.items["general.hwversion"],
         )
