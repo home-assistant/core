@@ -441,7 +441,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         # otherwise leave unchanged.
         if (
             LYRIC_HVAC_MODES[hvac_mode] == LYRIC_HVAC_MODE_HEAT_COOL
-            and not self.changeableValues.autoChangeoverActive
+            and not self.device.changeableValues.autoChangeoverActive
         ):
             auto_changeover = True
         else:
