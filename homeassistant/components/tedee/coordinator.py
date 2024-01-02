@@ -41,7 +41,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             update_interval=SCAN_INTERVAL,
         )
 
-        self.bridge: TedeeBridge | None = None
+        self._bridge: TedeeBridge | None = None
         self.tedee_client = TedeeClient(
             local_token=self.config_entry.data[CONF_LOCAL_ACCESS_TOKEN],
             local_ip=self.config_entry.data[CONF_HOST],
@@ -49,12 +49,18 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
 
         self._next_get_locks = time.time()
 
+    @property
+    def bridge(self) -> TedeeBridge:
+        """Return bridge."""
+        assert self._bridge
+        return self._bridge
+
     async def _async_update_data(self) -> dict[int, TedeeLock]:
         """Fetch data from API endpoint."""
-        if self.bridge is None:
+        if self._bridge is None:
 
             async def _async_get_bridge() -> None:
-                self.bridge = await self.tedee_client.get_local_bridge()
+                self._bridge = await self.tedee_client.get_local_bridge()
 
             _LOGGER.debug("Update coordinator: Getting bridge from API")
             await self._async_update(_async_get_bridge)
