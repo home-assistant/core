@@ -205,17 +205,16 @@ class DiscovergySensor(CoordinatorEntity[DiscovergyUpdateCoordinator], SensorEnt
         super().__init__(coordinator)
 
         self.data_key = data_key
-
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.meter.full_serial_number}-{data_key}"
+
+        meter = coordinator.meter
+        self._attr_unique_id = f"{meter.full_serial_number}-{data_key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.meter.meter_id)},
-            name=f"{coordinator.meter.measurement_type.capitalize()} "
-            f"{coordinator.meter.location.street} "
-            f"{coordinator.meter.location.street_number}",
-            model=coordinator.meter.type,
+            identifiers={(DOMAIN, meter.meter_id)},
+            name=f"{meter.measurement_type.capitalize()} {meter.location.street} {meter.location.street_number}",
+            model=meter.type,
             manufacturer=MANUFACTURER,
-            serial_number=coordinator.meter.full_serial_number,
+            serial_number=meter.full_serial_number,
         )
 
     @property

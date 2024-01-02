@@ -19,7 +19,7 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Discovergy from a config entry."""
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = []
+    hass.data.setdefault(DOMAIN, {})
 
     client = Discovergy(
         email=entry.data[CONF_EMAIL],
@@ -40,6 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from err
 
     # Init coordinators for meters
+    coordinators = []
     for meter in meters:
         # Create coordinator for meter, set config entry and fetch initial data,
         # so we have data when entities are added
@@ -49,8 +50,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             discovergy_client=client,
         )
         await coordinator.async_config_entry_first_refresh()
-        hass.data[DOMAIN][entry.entry_id].append(coordinator)
+        coordinators.append(coordinator)
 
+    hass.data[DOMAIN][entry.entry_id] = coordinators
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
