@@ -22,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     EntityServiceResponse,
     Event,
+    HassJob,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -225,13 +226,16 @@ class EntityComponent(Generic[_EntityT]):
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
+        service_func: str | HassJob[..., Any]
+        service_func = func if isinstance(func, str) else HassJob(func)
+
         async def handle_service(
             call: ServiceCall,
         ) -> ServiceResponse:
             """Handle the service."""
 
             result = await service.entity_service_call(
-                self.hass, self._entities, func, call, required_features
+                self.hass, self._entities, service_func, call, required_features
             )
 
             if result:
@@ -259,12 +263,15 @@ class EntityComponent(Generic[_EntityT]):
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
+        service_func: str | HassJob[..., Any]
+        service_func = func if isinstance(func, str) else HassJob(func)
+
         async def handle_service(
             call: ServiceCall,
         ) -> EntityServiceResponse | None:
             """Handle the service."""
             return await service.entity_service_call(
-                self.hass, self._entities, func, call, required_features
+                self.hass, self._entities, service_func, call, required_features
             )
 
         self.hass.services.async_register(
