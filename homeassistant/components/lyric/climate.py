@@ -213,7 +213,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             self._attr_hvac_modes.append(HVACMode.HEAT_COOL)
 
         # Setup supported features
-        if self._attr_thermostat_type == LyricThermostatType.LCC:
+        if self._attr_thermostat_type is LyricThermostatType.LCC:
             self._attr_supported_features = SUPPORT_FLAGS_LCC
         else:
             self._attr_supported_features = SUPPORT_FLAGS_TCC
@@ -341,7 +341,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
             # If TCC device pass the heatCoolMode value, otherwise
             # if LCC device can skip the mode altogether
-            if self._attr_thermostat_type == LyricThermostatType.TCC:
+            if self._attr_thermostat_type is LyricThermostatType.TCC:
                 mode = HVAC_MODES[device.changeableValues.heatCoolMode]
             else:
                 mode = None
