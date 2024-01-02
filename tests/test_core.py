@@ -14,6 +14,7 @@ import time
 from typing import Any
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
+from freezegun import freeze_time
 import pytest
 from pytest_unordered import unordered
 import voluptuous as vol
@@ -57,7 +58,11 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .common import async_capture_events, async_mock_service
+from .common import (
+    async_capture_events,
+    async_mock_service,
+    import_and_test_deprecated_constant_enum,
+)
 
 PST = dt_util.get_time_zone("America/Los_Angeles")
 
@@ -1129,7 +1134,7 @@ async def test_statemachine_last_changed_not_updated_on_same_state(
 
     future = dt_util.utcnow() + timedelta(hours=10)
 
-    with patch("homeassistant.util.dt.utcnow", return_value=future):
+    with freeze_time(future):
         hass.states.async_set("light.Bowl", "on", {"attr": "triggers_change"})
         await hass.async_block_till_done()
 
@@ -1150,6 +1155,26 @@ async def test_statemachine_force_update(hass: HomeAssistant) -> None:
     hass.states.async_set("light.bowl", "on", None, True)
     await hass.async_block_till_done()
     assert len(events) == 1
+
+
+async def test_statemachine_avoids_updating_attributes(hass: HomeAssistant) -> None:
+    """Test async_set avoids recreating ReadOnly dicts when possible."""
+    attrs = {"some_attr": "attr_value"}
+
+    hass.states.async_set("light.bowl", "off", attrs)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.bowl")
+    assert state.attributes == attrs
+
+    hass.states.async_set("light.bowl", "on", attrs)
+    await hass.async_block_till_done()
+
+    new_state = hass.states.get("light.bowl")
+    assert new_state.attributes == attrs
+
+    assert new_state.attributes is state.attributes
+    assert isinstance(new_state.attributes, ReadOnlyDict)
 
 
 def test_service_call_repr() -> None:
@@ -2600,6 +2625,9 @@ async def test_shutdown_job(hass: HomeAssistant) -> None:
     evt = asyncio.Event()
 
     async def shutdown_func() -> None:
+        # Sleep to ensure core is waiting for the task to finish
+        await asyncio.sleep(0.01)
+        # Set the event
         evt.set()
 
     job = HassJob(shutdown_func, "shutdown_job")
@@ -2620,3 +2648,19 @@ async def test_cancel_shutdown_job(hass: HomeAssistant) -> None:
     cancel()
     await hass.async_stop()
     assert not evt.is_set()
+
+
+@pytest.mark.parametrize(
+    ("enum"),
+    [
+        ha.ConfigSource.DISCOVERED,
+        ha.ConfigSource.YAML,
+        ha.ConfigSource.STORAGE,
+    ],
+)
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: ha.ConfigSource,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(caplog, ha, enum, "SOURCE_", "2025.1")

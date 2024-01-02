@@ -18,14 +18,14 @@ from .const import DOMAIN, RING_API, RING_DEVICES, RING_NOTIFICATIONS_COORDINATO
 from .entity import RingEntityMixin
 
 
-@dataclass
+@dataclass(frozen=True)
 class RingRequiredKeysMixin:
     """Mixin for required keys."""
 
     category: list[str]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RingBinarySensorEntityDescription(
     BinarySensorEntityDescription, RingRequiredKeysMixin
 ):

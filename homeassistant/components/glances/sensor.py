@@ -30,7 +30,7 @@ from . import GlancesDataUpdateCoordinator
 from .const import CPU_ICON, DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class GlancesSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -38,7 +38,7 @@ class GlancesSensorEntityDescriptionMixin:
     name_suffix: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class GlancesSensorEntityDescription(
     SensorEntityDescription, GlancesSensorEntityDescriptionMixin
 ):

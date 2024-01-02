@@ -475,22 +475,12 @@
             "last_setup": 1558709954,
             "data_type": ["Temperature", "Humidity"],
             "battery_percent": 27,
-            "reachable": true,
+            "reachable": false,
             "firmware": 50,
             "last_message": 1644582699,
             "last_seen": 1644582699,
             "rf_status": 68,
-            "battery_vp": 4678,
-            "dashboard_data": {
-              "time_utc": 1644582648,
-              "Temperature": 9.4,
-              "Humidity": 57,
-              "min_temp": 6.7,
-              "max_temp": 9.8,
-              "date_max_temp": 1644534223,
-              "date_min_temp": 1644569369,
-              "temp_trend": "up"
-            }
+            "battery_vp": 4678
           },
           {
             "_id": "12:34:56:80:c1:ea",

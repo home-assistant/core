@@ -87,6 +87,7 @@ def mock_config_fixture():
             "device_id": "Home Assistant",
             "uid": "BlinkCamera_e1233333e2-0909-09cd-777a-123456789012",
             "token": "A_token",
+            "unique_id": "an_email@email.com",
             "host": "u034.immedia-semi.com",
             "region_id": "u034",
             "client_id": 123456,

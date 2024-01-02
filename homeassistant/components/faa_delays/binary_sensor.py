@@ -21,7 +21,7 @@ from . import FAADataUpdateCoordinator
 from .const import DOMAIN
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class FaaDelaysBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Mixin for required keys."""
 

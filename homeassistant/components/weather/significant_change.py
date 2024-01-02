@@ -5,7 +5,10 @@ from typing import Any
 
 from homeassistant.const import UnitOfPressure, UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.significant_change import check_absolute_change
+from homeassistant.helpers.significant_change import (
+    check_absolute_change,
+    check_valid_float,
+)
 
 from .const import (
     ATTR_WEATHER_APPARENT_TEMPERATURE,
@@ -60,15 +63,6 @@ VALID_CARDINAL_DIRECTIONS: list[str] = [
 ]
 
 
-def _check_valid_float(value: str | int | float) -> bool:
-    """Check if given value is a valid float."""
-    try:
-        float(value)
-    except ValueError:
-        return False
-    return True
-
-
 def _cardinal_to_degrees(value: str | int | float | None) -> int | float | None:
     """Translate a cardinal direction into azimuth angle (degrees)."""
     if not isinstance(value, str):
@@ -94,14 +88,15 @@ def async_check_significant_change(
     if old_state != new_state:
         return True
 
-    old_attrs_s = set(old_attrs.items())
-    new_attrs_s = set(new_attrs.items())
+    old_attrs_s = set(
+        {k: v for k, v in old_attrs.items() if k in SIGNIFICANT_ATTRIBUTES}.items()
+    )
+    new_attrs_s = set(
+        {k: v for k, v in new_attrs.items() if k in SIGNIFICANT_ATTRIBUTES}.items()
+    )
     changed_attrs: set[str] = {item[0] for item in old_attrs_s ^ new_attrs_s}
 
     for attr_name in changed_attrs:
-        if attr_name not in SIGNIFICANT_ATTRIBUTES:
-            continue
-
         old_attr_value = old_attrs.get(attr_name)
         new_attr_value = new_attrs.get(attr_name)
         absolute_change: float | None = None
@@ -109,11 +104,11 @@ def async_check_significant_change(
             old_attr_value = _cardinal_to_degrees(old_attr_value)
             new_attr_value = _cardinal_to_degrees(new_attr_value)
 
-        if new_attr_value is None or not _check_valid_float(new_attr_value):
+        if new_attr_value is None or not check_valid_float(new_attr_value):
             # New attribute value is invalid, ignore it
             continue
 
-        if old_attr_value is None or not _check_valid_float(old_attr_value):
+        if old_attr_value is None or not check_valid_float(old_attr_value):
             # Old attribute value was invalid, we should report again
             return True
 

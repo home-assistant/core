@@ -30,7 +30,7 @@ from .entity import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class BlockNumberDescription(BlockEntityDescription, NumberEntityDescription):
     """Class to describe a BLOCK sensor."""
 

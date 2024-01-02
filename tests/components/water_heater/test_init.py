@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 import voluptuous as vol
 
+from homeassistant.components import water_heater
 from homeassistant.components.water_heater import (
     SET_TEMPERATURE_SCHEMA,
     WaterHeaterEntity,
@@ -13,7 +14,7 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import async_mock_service
+from tests.common import async_mock_service, import_and_test_deprecated_constant_enum
 
 
 async def test_set_temp_schema_no_req(
@@ -96,3 +97,41 @@ async def test_sync_turn_off(hass: HomeAssistant) -> None:
     await water_heater.async_turn_off()
 
     assert water_heater.async_turn_off.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("enum"),
+    [
+        WaterHeaterEntityFeature.TARGET_TEMPERATURE,
+        WaterHeaterEntityFeature.OPERATION_MODE,
+        WaterHeaterEntityFeature.AWAY_MODE,
+    ],
+)
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: WaterHeaterEntityFeature,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, water_heater, enum, "SUPPORT_", "2025.1"
+    )
+
+
+def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated supported features ints."""
+
+    class MockWaterHeaterEntity(WaterHeaterEntity):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return 1
+
+    entity = MockWaterHeaterEntity()
+    assert entity.supported_features_compat is WaterHeaterEntityFeature(1)
+    assert "MockWaterHeaterEntity" in caplog.text
+    assert "is using deprecated supported features values" in caplog.text
+    assert "Instead it should use" in caplog.text
+    assert "WaterHeaterEntityFeature.TARGET_TEMPERATURE" in caplog.text
+    caplog.clear()
+    assert entity.supported_features_compat is WaterHeaterEntityFeature(1)
+    assert "is using deprecated supported features values" not in caplog.text

@@ -22,7 +22,6 @@ from aioshelly.const import (
     MODEL_VINTAGE_V2,
     MODEL_WALL_DISPLAY,
 )
-from awesomeversion import AwesomeVersion
 
 DOMAIN: Final = "shelly"
 
@@ -32,9 +31,6 @@ DATA_CONFIG_ENTRY: Final = "config_entry"
 CONF_COAP_PORT: Final = "coap_port"
 DEFAULT_COAP_PORT: Final = 5683
 FIRMWARE_PATTERN: Final = re.compile(r"^(\d{8})")
-
-# Firmware 1.11.0 release date, this firmware supports light transition
-LIGHT_TRANSITION_MIN_FIRMWARE_DATE: Final = 20210226
 
 # max light transition time in milliseconds
 MAX_TRANSITION_TIME: Final = 5000
@@ -186,8 +182,6 @@ UPTIME_DEVIATION: Final = 5
 ENTRY_RELOAD_COOLDOWN = 60
 
 SHELLY_GAS_MODELS = [MODEL_GAS]
-
-BLE_MIN_VERSION = AwesomeVersion("0.12.0-beta2")
 
 CONF_BLE_SCANNER_MODE = "ble_scanner_mode"
 

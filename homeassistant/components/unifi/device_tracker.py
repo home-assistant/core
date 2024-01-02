@@ -137,7 +137,7 @@ def async_device_heartbeat_timedelta_fn(
     return timedelta(seconds=device.next_interval + 60)
 
 
-@dataclass
+@dataclass(frozen=True)
 class UnifiEntityTrackerDescriptionMixin(Generic[HandlerT, ApiItemT]):
     """Device tracker local functions."""
 
@@ -147,7 +147,7 @@ class UnifiEntityTrackerDescriptionMixin(Generic[HandlerT, ApiItemT]):
     hostname_fn: Callable[[aiounifi.Controller, str], str | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class UnifiTrackerEntityDescription(
     UnifiEntityDescription[HandlerT, ApiItemT],
     UnifiEntityTrackerDescriptionMixin[HandlerT, ApiItemT],

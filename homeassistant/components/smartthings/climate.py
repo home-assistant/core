@@ -528,10 +528,10 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
 
     def _determine_preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
-        supported_modes = self._device.status.attributes[
+        supported_modes: list | None = self._device.status.attributes[
             "supportedAcOptionalMode"
         ].value
-        if WINDFREE in supported_modes:
+        if supported_modes and WINDFREE in supported_modes:
             return [WINDFREE]
         return None
 

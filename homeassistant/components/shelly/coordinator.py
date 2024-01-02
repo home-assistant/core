@@ -13,7 +13,6 @@ from aioshelly.block_device import BlockDevice, BlockUpdateType
 from aioshelly.const import MODEL_VALVE
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from aioshelly.rpc_device import RpcDevice, RpcUpdateType
-from awesomeversion import AwesomeVersion
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, EVENT_HOMEASSISTANT_STOP
@@ -33,7 +32,6 @@ from .const import (
     ATTR_DEVICE,
     ATTR_GENERATION,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
-    BLE_MIN_VERSION,
     CONF_BLE_SCANNER_MODE,
     CONF_SLEEP_PERIOD,
     DATA_CONFIG_ENTRY,
@@ -586,14 +584,6 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         )
         if ble_scanner_mode == BLEScannerMode.DISABLED and self.connected:
             await async_stop_scanner(self.device)
-            return
-        if AwesomeVersion(self.device.version) < BLE_MIN_VERSION:
-            LOGGER.error(
-                "BLE not supported on device %s with firmware %s; upgrade to %s",
-                self.name,
-                self.device.version,
-                BLE_MIN_VERSION,
-            )
             return
         if await async_ensure_ble_enabled(self.device):
             # BLE enable required a reboot, don't bother connecting

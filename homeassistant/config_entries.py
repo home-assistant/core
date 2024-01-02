@@ -205,6 +205,7 @@ class ConfigEntry:
     __slots__ = (
         "entry_id",
         "version",
+        "minor_version",
         "domain",
         "title",
         "data",
@@ -233,7 +234,9 @@ class ConfigEntry:
 
     def __init__(
         self,
+        *,
         version: int,
+        minor_version: int,
         domain: str,
         title: str,
         data: Mapping[str, Any],
@@ -252,6 +255,7 @@ class ConfigEntry:
 
         # Version of the configuration.
         self.version = version
+        self.minor_version = minor_version
 
         # Domain the configuration belongs to
         self.domain = domain
@@ -631,7 +635,8 @@ class ConfigEntry:
         while isinstance(handler, functools.partial):
             handler = handler.func  # type: ignore[unreachable]
 
-        if self.version == handler.VERSION:
+        same_major_version = self.version == handler.VERSION
+        if same_major_version and self.minor_version == handler.MINOR_VERSION:
             return True
 
         if not (integration := self._integration_for_domain):
@@ -639,6 +644,8 @@ class ConfigEntry:
         component = integration.get_component()
         supports_migrate = hasattr(component, "async_migrate_entry")
         if not supports_migrate:
+            if same_major_version:
+                return True
             _LOGGER.error(
                 "Migration handler not found for entry %s for %s",
                 self.title,
@@ -676,6 +683,7 @@ class ConfigEntry:
         return {
             "entry_id": self.entry_id,
             "version": self.version,
+            "minor_version": self.minor_version,
             "domain": self.domain,
             "title": self.title,
             "data": dict(self.data),
@@ -974,6 +982,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         entry = ConfigEntry(
             version=result["version"],
+            minor_version=result["minor_version"],
             domain=result["handler"],
             title=result["title"],
             data=result["data"],
@@ -1196,6 +1205,7 @@ class ConfigEntries:
 
             config_entry = ConfigEntry(
                 version=entry["version"],
+                minor_version=entry.get("minor_version", 1),
                 domain=domain,
                 entry_id=entry_id,
                 data=entry["data"],
