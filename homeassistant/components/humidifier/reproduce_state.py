@@ -32,10 +32,9 @@ async def _async_reproduce_states(
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
 
-    async def call_service(service: str, keys: Iterable, data=None):
+    async def call_service(service: str, keys: Iterable[str]) -> None:
         """Call service with set of attributes given."""
-        data = data or {}
-        data["entity_id"] = state.entity_id
+        data = {"entity_id": state.entity_id}
         for key in keys:
             if key in state.attributes:
                 data[key] = state.attributes[key]
