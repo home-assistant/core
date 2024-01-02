@@ -29,12 +29,11 @@ async def async_get_cert(
     port: int,
 ) -> dict[str, Any]:
     """Get the certificate for the host and port combination."""
-    ctx = _get_default_ssl_context()
     transport, _ = await hass.loop.create_connection(
         asyncio.Protocol,
         host,
         port,
-        ssl=ctx,
+        ssl=_get_default_ssl_context(),
         happy_eyeballs_delay=1,
         server_hostname=host,
     )
