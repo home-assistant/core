@@ -11,6 +11,11 @@
     }
   },
   "entity": {
+    "calendar": {
+      "moon_phases": {
+        "name": "Phases"
+      }
+    },
     "sensor": {
       "phase": {
         "name": "Phase",
