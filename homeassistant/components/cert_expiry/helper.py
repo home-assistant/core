@@ -1,4 +1,6 @@
 """Helper functions for the Cert Expiry platform."""
+import asyncio
+import datetime
 from functools import cache
 import socket
 import ssl
@@ -6,7 +8,6 @@ import ssl
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from .const import TIMEOUT
 from .errors import (
     ConnectionRefused,
     ConnectionTimeout,
@@ -21,28 +22,35 @@ def _get_default_ssl_context():
     return ssl.create_default_context()
 
 
-def get_cert(
+async def async_get_cert(
+    hass: HomeAssistant,
     host: str,
     port: int,
 ):
     """Get the certificate for the host and port combination."""
     ctx = _get_default_ssl_context()
-    address = (host, port)
-    with socket.create_connection(address, timeout=TIMEOUT) as sock, ctx.wrap_socket(
-        sock, server_hostname=address[0]
-    ) as ssock:
-        cert = ssock.getpeercert()
-        return cert
+    transport, _ = await hass.loop.create_connection(
+        asyncio.Protocol,
+        host,
+        port,
+        ssl=ctx,
+        happy_eyeballs_delay=1,
+        server_hostname=host,
+    )
+    try:
+        return transport.get_extra_info("peercert")
+    finally:
+        transport.close()
 
 
 async def get_cert_expiry_timestamp(
     hass: HomeAssistant,
     hostname: str,
     port: int,
-):
+) -> datetime.datetime:
     """Return the certificate's expiration timestamp."""
     try:
-        cert = await hass.async_add_executor_job(get_cert, hostname, port)
+        cert = await async_get_cert(hass, hostname, port)
     except socket.gaierror as err:
         raise ResolveFailed(f"Cannot resolve hostname: {hostname}") from err
     except socket.timeout as err:
