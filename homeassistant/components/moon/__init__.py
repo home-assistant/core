@@ -70,14 +70,16 @@ def get_moon_phases(
         current_date: datetime.datetime, current_phase: str
     ) -> datetime.datetime | None:
         """Get end date moon phase."""
+        date_moon_phase: datetime.datetime | None = None
         for date_phase in generate_daterange(
             current_date, current_date + datetime.timedelta(days=28)
         ):
             if (
                 moon_phase := get_moon_phase(date_phase)
             ) is not None and moon_phase != current_phase:
-                return date_phase
-        return None
+                date_moon_phase = date_phase
+                break
+        return date_moon_phase
 
     moon_phases = []
     moon_phase_previous = None
