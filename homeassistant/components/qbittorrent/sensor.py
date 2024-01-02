@@ -166,7 +166,9 @@ def count_torrents_in_states(
 ) -> int:
     """Count the number of torrents in specified states."""
     if "torrents" not in coordinator.data:
-        return 0  # or handle the absence of torrents data in coordinator.data accordingly
+        return (
+            0  # or handle the absence of torrents data in coordinator.data accordingly
+        )
 
     if not states:
         return len(coordinator.data["torrents"])
