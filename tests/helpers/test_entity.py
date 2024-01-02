@@ -1407,7 +1407,7 @@ async def test_repr(hass) -> None:
     my_entity = MyEntity(entity_id="test.test", available=False)
 
     # Not yet added
-    assert str(my_entity) == "<entity test.test=unknown>"
+    assert str(my_entity) == "<entity unknown.unknown=unknown>"
 
     # Added
     await platform.async_add_entities([my_entity])
@@ -1415,7 +1415,7 @@ async def test_repr(hass) -> None:
 
     # Removed
     await platform.async_remove_entity(my_entity.entity_id)
-    assert str(my_entity) == "<entity test.test=unknown>"
+    assert str(my_entity) == "<entity unknown.unknown=unknown>"
 
 
 async def test_warn_using_async_update_ha_state(

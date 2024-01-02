@@ -604,13 +604,13 @@ class HomeAssistant:
         # if TYPE_CHECKING to avoid the overhead of constructing
         # the type used for the cast. For history see:
         # https://github.com/home-assistant/core/pull/71960
-        if hassjob.job_type == HassJobType.Coroutinefunction:
+        if hassjob.job_type is HassJobType.Coroutinefunction:
             if TYPE_CHECKING:
                 hassjob.target = cast(
                     Callable[..., Coroutine[Any, Any, _R]], hassjob.target
                 )
             task = self.loop.create_task(hassjob.target(*args), name=hassjob.name)
-        elif hassjob.job_type == HassJobType.Callback:
+        elif hassjob.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
             self.loop.call_soon(hassjob.target, *args)
@@ -709,7 +709,7 @@ class HomeAssistant:
         # if TYPE_CHECKING to avoid the overhead of constructing
         # the type used for the cast. For history see:
         # https://github.com/home-assistant/core/pull/71960
-        if hassjob.job_type == HassJobType.Callback:
+        if hassjob.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
             hassjob.target(*args)
@@ -2215,11 +2215,11 @@ class ServiceRegistry:
         """Execute a service."""
         job = handler.job
         target = job.target
-        if job.job_type == HassJobType.Coroutinefunction:
+        if job.job_type is HassJobType.Coroutinefunction:
             if TYPE_CHECKING:
                 target = cast(Callable[..., Coroutine[Any, Any, _R]], target)
             return await target(service_call)
-        if job.job_type == HassJobType.Callback:
+        if job.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
                 target = cast(Callable[..., _R], target)
             return target(service_call)

@@ -91,7 +91,7 @@ __dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 
 @bind_hass
-def is_on(hass, entity_id):
+def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the humidifier is on based on the statemachine.
 
     Async friendly.

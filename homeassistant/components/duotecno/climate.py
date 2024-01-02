@@ -52,7 +52,7 @@ class DuotecnoClimate(DuotecnoEntity, ClimateEntity):
     _attr_translation_key = "duotecno"
 
     @property
-    def current_temperature(self) -> int | None:
+    def current_temperature(self) -> float | None:
         """Get the current temperature."""
         return self._unit.get_cur_temp()
 
