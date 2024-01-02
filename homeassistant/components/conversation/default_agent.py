@@ -29,7 +29,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_listen_entity_updates,
     async_should_expose,
 )
-from homeassistant.const import MATCH_ALL
+from homeassistant.const import EVENT_STATE_CHANGED, MATCH_ALL
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -138,9 +138,9 @@ class DefaultAgent(AbstractConversationAgent):
     @property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
-        return get_domains_and_languages()["homeassistant"]
+        return get_domains_and_languages()["homeassistant"]  # type: ignore[no-any-return]
 
-    async def async_initialize(self, config_intents):
+    async def async_initialize(self, config_intents: dict[str, Any] | None) -> None:
         """Initialize the default agent."""
         if "intent" not in self.hass.config.components:
             await setup.async_setup_component(self.hass, "intent", {})
@@ -160,7 +160,7 @@ class DefaultAgent(AbstractConversationAgent):
             run_immediately=True,
         )
         self.hass.bus.async_listen(
-            core.EVENT_STATE_CHANGED,
+            EVENT_STATE_CHANGED,
             self._async_handle_state_changed,
             run_immediately=True,
         )
@@ -372,9 +372,9 @@ class DefaultAgent(AbstractConversationAgent):
             speech = str(speech)
             speech = " ".join(speech.strip().split())
 
-        return speech
+        return speech  # type: ignore[no-any-return]
 
-    async def async_reload(self, language: str | None = None):
+    async def async_reload(self, language: str | None = None) -> None:
         """Clear cached intents for a language."""
         if language is None:
             self._lang_intents.clear()
@@ -383,7 +383,7 @@ class DefaultAgent(AbstractConversationAgent):
             self._lang_intents.pop(language, None)
             _LOGGER.debug("Cleared intents for language: %s", language)
 
-    async def async_prepare(self, language: str | None = None):
+    async def async_prepare(self, language: str | None = None) -> None:
         """Load intents for a language."""
         if language is None:
             language = self.hass.config.language
@@ -435,7 +435,7 @@ class DefaultAgent(AbstractConversationAgent):
                 )
                 if component_intents:
                     # Merge sentences into existing dictionary
-                    merge_dict(intents_dict, component_intents)
+                    merge_dict(intents_dict, component_intents)  # type: ignore[no-untyped-call]
 
                     # Will need to recreate graph
                     intents_changed = True
@@ -467,7 +467,7 @@ class DefaultAgent(AbstractConversationAgent):
                                 ),
                                 dict,
                             ):
-                                merge_dict(intents_dict, custom_sentences_yaml)
+                                merge_dict(intents_dict, custom_sentences_yaml)  # type: ignore[no-untyped-call]
                             else:
                                 _LOGGER.warning(
                                     "Custom sentences file does not match expected format path=%s",
@@ -488,7 +488,7 @@ class DefaultAgent(AbstractConversationAgent):
 
             # Load sentences from HA config for default language only
             if self._config_intents and (language == self.hass.config.language):
-                merge_dict(
+                merge_dict(  # type: ignore[no-untyped-call]
                     intents_dict,
                     {
                         "intents": {

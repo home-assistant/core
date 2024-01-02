@@ -8,6 +8,7 @@ import logging
 import re
 from typing import Any, Literal
 
+from aiohttp import web
 from hassil.recognize import RecognizeResult
 import voluptuous as vol
 
@@ -58,7 +59,7 @@ def agent_id_validator(value: Any) -> str:
     manager = _get_agent_manager(hass)
     if not manager.async_is_valid_agent_id(cv.string(value)):
         raise vol.Invalid("invalid agent ID")
-    return value
+    return value  # type: ignore[no-any-return]
 
 
 SERVICE_PROCESS_SCHEMA = vol.Schema(
@@ -106,7 +107,7 @@ def async_set_agent(
     hass: core.HomeAssistant,
     config_entry: ConfigEntry,
     agent: AbstractConversationAgent,
-):
+) -> None:
     """Set the agent to handle the conversations."""
     _get_agent_manager(hass).async_set_agent(config_entry.entry_id, agent)
 
@@ -116,7 +117,7 @@ def async_set_agent(
 def async_unset_agent(
     hass: core.HomeAssistant,
     config_entry: ConfigEntry,
-):
+) -> None:
     """Set the agent to handle the conversations."""
     _get_agent_manager(hass).async_unset_agent(config_entry.entry_id)
 
@@ -131,7 +132,7 @@ async def async_get_conversation_languages(
     all conversation agents.
     """
     agent_manager = _get_agent_manager(hass)
-    languages = set()
+    languages: set[str] = set()
 
     agent_ids: Iterable[str]
     if agent_id is None:
@@ -406,7 +407,7 @@ class ConversationProcessView(http.HomeAssistantView):
             }
         )
     )
-    async def post(self, request, data):
+    async def post(self, request: web.Request, data: dict[str, str]) -> web.Response:
         """Send a request for processing."""
         hass = request.app["hass"]
 
@@ -505,7 +506,7 @@ class AgentManager:
 
             async with self._builtin_agent_init_lock:
                 if self._builtin_agent is not None:
-                    return self._builtin_agent
+                    return self._builtin_agent  # type: ignore[unreachable]
 
                 self._builtin_agent = DefaultAgent(self.hass)
                 await self._builtin_agent.async_initialize(
