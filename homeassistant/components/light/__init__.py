@@ -345,6 +345,9 @@ def filter_turn_off_params(
     light: LightEntity, params: dict[str, Any]
 ) -> dict[str, Any]:
     """Filter out params not used in turn off or not supported by the light."""
+    if not params:
+        return params
+
     supported_features = light.supported_features_compat
 
     if LightEntityFeature.FLASH not in supported_features:
