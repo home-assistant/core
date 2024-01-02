@@ -14,7 +14,6 @@ from homeassistant.components import zeroconf
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import (
     CONF_FALLBACK,
@@ -139,15 +138,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except exceptions.HomeAssistantError:
             return self.async_abort(reason="import_failed")
         except PyTado.exceptions.TadoWrongCredentialsException:
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                "failed_import_invalid_auth",
-                breaks_in_ha_version="2024.6.0",
-                is_fixable=False,
-                severity=IssueSeverity.ERROR,
-                translation_key="failed_import_invalid_auth",
-            )
             return self.async_abort(reason="import_failed_invalid_auth")
 
         home_id = validate_result[UNIQUE_ID]
