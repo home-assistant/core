@@ -84,12 +84,11 @@ async def async_setup_entry(
             DOMAIN,
             "deprecated_beat",
             breaks_in_ha_version="2024.7.0",
-            is_fixable=False,
+            is_fixable=True,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_beat",
             translation_placeholders={
                 "config_key": "beat",
-                "display_options": "display_options",
                 "integration": DOMAIN,
             },
         )
