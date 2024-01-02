@@ -204,9 +204,11 @@ def parse_datetime(dt_str: str, *, raise_on_error: bool = False) -> dt.datetime 
     If the input isn't well formatted, returns None if raise_on_error is False
     or raises ValueError if it's True.
     """
+    # First try if the string can be parsed by the fast ciso8601 library
     with suppress(ValueError, IndexError):
         return ciso8601.parse_datetime(dt_str)
 
+    # ciso8601 failed to parse the string, fall back to regex
     if not (match := DATETIME_RE.match(dt_str)):
         if raise_on_error:
             raise ValueError
