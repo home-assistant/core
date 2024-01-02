@@ -52,7 +52,11 @@ async def test_device(
     assert device == snapshot
 
 
-async def test_update_failed(hass: HomeAssistant, setup_integration: None) -> None:
+async def test_update_failed(
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: None,
+    setup_integration: None,
+) -> None:
     """Test coordinator throws UpdateFailed after failed update."""
     with patch(
         "homeassistant.components.netgear_lte.eternalegypt.Modem.information",
