@@ -1,8 +1,10 @@
 """Support for showing the date and the time."""
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -138,6 +140,37 @@ class TimeDateSensor(SensorEntity):
         if "date" in self.type:
             return "mdi:calendar"
         return "mdi:clock"
+
+    @callback
+    def async_start_preview(
+        self,
+        preview_callback: Callable[[str, str, Mapping[str, Any]], None],
+    ) -> CALLBACK_TYPE:
+        """Render a preview."""
+
+        @callback
+        def point_in_time_listener(time_date: datetime | None) -> None:
+            """Update preview."""
+
+            now = dt_util.utcnow()
+            self._update_internal_state(now)
+            self.unsub = async_track_point_in_utc_time(
+                self.hass, point_in_time_listener, self.get_next_interval(now)
+            )
+            calculated_state = self._async_calculate_state()
+            preview_callback(
+                self.type, calculated_state.state, calculated_state.attributes
+            )
+
+        @callback
+        def async_stop_preview() -> None:
+            """Stop preview."""
+            if self.unsub:
+                self.unsub()
+                self.unsub = None
+
+        point_in_time_listener(None)
+        return async_stop_preview
 
     async def async_added_to_hass(self) -> None:
         """Set up first update."""
