@@ -175,6 +175,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
+    # Expose the storage collection so it can be interacted with programatically
+    # by other components (not only via. the websockets UI).
+    hass.data[DOMAIN] = storage_collection
+
     DictStorageCollectionWebsocket(
         storage_collection,
         DOMAIN,
