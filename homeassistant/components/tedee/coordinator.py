@@ -31,7 +31,6 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
     """Class to handle fetching data from the tedee API centrally."""
 
     config_entry: ConfigEntry
-    bridge: TedeeBridge
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize coordinator."""
@@ -42,6 +41,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             update_interval=SCAN_INTERVAL,
         )
 
+        self.bridge: TedeeBridge | None = None
         self.tedee_client = TedeeClient(
             local_token=self.config_entry.data[CONF_LOCAL_ACCESS_TOKEN],
             local_ip=self.config_entry.data[CONF_HOST],
@@ -51,6 +51,13 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
 
     async def _async_update_data(self) -> dict[int, TedeeLock]:
         """Fetch data from API endpoint."""
+        if self.bridge is None:
+
+            async def _async_get_bridge() -> None:
+                self.bridge = await self.tedee_client.get_local_bridge()
+
+            _LOGGER.debug("Update coordinator: Getting bridge from API")
+            await self._async_update(_async_get_bridge)
 
         _LOGGER.debug("Update coordinator: Getting locks from API")
         # once every hours get all lock details, otherwise use the sync endpoint
@@ -83,12 +90,3 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             raise UpdateFailed("Error while updating data: %s" % str(ex)) from ex
         except (TedeeClientException, TimeoutError) as ex:
             raise UpdateFailed("Querying API failed. Error: %s" % str(ex)) from ex
-
-    async def async_config_entry_first_refresh(self) -> None:
-        """Update data from API."""
-        await super().async_config_entry_first_refresh()
-
-        async def _async_get_bridge() -> None:
-            self.bridge = await self.tedee_client.get_local_bridge()
-
-        await self._async_update(_async_get_bridge)
