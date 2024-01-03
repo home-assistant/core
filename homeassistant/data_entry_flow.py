@@ -66,8 +66,6 @@ __dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 # Event that is fired when a flow is progressed via external or progress source.
 EVENT_DATA_ENTRY_FLOW_PROGRESSED = "data_entry_flow_progressed"
 
-_FlowResultT = TypeVar("_FlowResultT", bound="FlowResult")
-
 FLOW_NOT_COMPLETE_STEPS = {
     FlowResultType.FORM,
     FlowResultType.EXTERNAL_STEP,
@@ -76,6 +74,8 @@ FLOW_NOT_COMPLETE_STEPS = {
     FlowResultType.SHOW_PROGRESS_DONE,
     FlowResultType.MENU,
 }
+
+_FlowResultT = TypeVar("_FlowResultT", bound="FlowResult")
 
 
 @dataclass(slots=True)
@@ -135,26 +135,6 @@ class FlowResult(TypedDict, total=False):
     title: str
     type: FlowResultType
     url: str
-
-
-@callback
-def _async_flow_handler_to_flow_result(
-    flows: Iterable[FlowHandler], include_uninitialized: bool
-) -> list[FlowResult]:
-    """Convert a list of FlowHandler to a partial FlowResult that can be serialized."""
-    results = []
-    for flow in flows:
-        if not include_uninitialized and flow.cur_step is None:
-            continue
-        result = FlowResult(
-            flow_id=flow.flow_id,
-            handler=flow.handler,
-            context=flow.context,
-        )
-        if flow.cur_step:
-            result["step_id"] = flow.cur_step["step_id"]
-        results.append(result)
-    return results
 
 
 class FlowManager(abc.ABC, Generic[_FlowResultT]):
@@ -217,12 +197,12 @@ class FlowManager(abc.ABC, Generic[_FlowResultT]):
         """Return a flow in progress as a partial FlowResult."""
         if (flow := self._progress.get(flow_id)) is None:
             raise UnknownFlow
-        return _async_flow_handler_to_flow_result([flow], False)[0]  # type: ignore[return-value]
+        return self._async_flow_handler_to_flow_result([flow], False)[0]
 
     @callback
     def async_progress(self, include_uninitialized: bool = False) -> list[_FlowResultT]:
         """Return the flows in progress as a partial FlowResult."""
-        return _async_flow_handler_to_flow_result(  # type: ignore[return-value]
+        return self._async_flow_handler_to_flow_result(
             self._progress.values(), include_uninitialized
         )
 
@@ -238,7 +218,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT]):
         If match_context is specified, only return flows with a context that
         is a superset of match_context.
         """
-        return _async_flow_handler_to_flow_result(  # type: ignore[return-value]
+        return self._async_flow_handler_to_flow_result(
             self._async_progress_by_handler(handler, match_context),
             include_uninitialized,
         )
@@ -251,7 +231,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT]):
         include_uninitialized: bool = False,
     ) -> list[_FlowResultT]:
         """Return flows in progress init matching by data type as a partial FlowResult."""
-        return _async_flow_handler_to_flow_result(  # type: ignore[return-value]
+        return self._async_flow_handler_to_flow_result(
             (
                 progress
                 for progress in self._init_data_process_index.get(init_data_type, set())
@@ -478,6 +458,25 @@ class FlowManager(abc.ABC, Generic[_FlowResultT]):
         if flow.handler not in self._preview:
             self._preview.add(flow.handler)
             await flow.async_setup_preview(self.hass)
+
+    @callback
+    def _async_flow_handler_to_flow_result(
+        self, flows: Iterable[FlowHandler], include_uninitialized: bool
+    ) -> list[_FlowResultT]:
+        """Convert a list of FlowHandler to a partial FlowResult that can be serialized."""
+        results = []
+        for flow in flows:
+            if not include_uninitialized and flow.cur_step is None:
+                continue
+            result = self._flow_result(
+                flow_id=flow.flow_id,
+                handler=flow.handler,
+                context=flow.context,
+            )
+            if flow.cur_step:
+                result["step_id"] = flow.cur_step["step_id"]
+            results.append(result)
+        return results
 
 
 class FlowHandler(Generic[_FlowResultT]):
