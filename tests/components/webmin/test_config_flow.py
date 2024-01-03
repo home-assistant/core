@@ -103,6 +103,18 @@ async def test_form_user_errors(
             user_flow, TEST_USER_INPUT_FULL
         )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": error_type}
+
+    with patch(
+        "webmin_xmlrpc.client.WebminInstance.update",
+        return_value=load_json_object_fixture("webmin_update.json", DOMAIN),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_USER_INPUT_FULL
+        )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_USER_INPUT_FULL[CONF_NAME]
+    assert result["options"] == TEST_USER_INPUT_FULL

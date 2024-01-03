@@ -104,16 +104,9 @@ class WebminSensor(CoordinatorEntity[WebminUpdateCoordinator], SensorEntity):
         self.entity_description = description
         self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.mac_address}_{description.key}"
-        if self.entity_description.key in self.coordinator.data:
-            self._attr_available = True
-            self._attr_native_value = self.coordinator.data[self.entity_description.key]
-        else:
-            self._attr_available = False
+        self._attr_available = self.entity_description.key in self.coordinator.data
 
-    def _handle_coordinator_update(self) -> None:
-        if self.entity_description.key in self.coordinator.data:
-            self._attr_available = True
-            self._attr_native_value = self.coordinator.data[self.entity_description.key]
-        else:
-            self._attr_available = False
-        self.async_write_ha_state()
+    @property
+    def native_value(self) -> int | float:
+        """Return the state of the sensor."""
+        return self.coordinator.data[self.entity_description.key]

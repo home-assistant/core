@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
@@ -58,10 +58,8 @@ class WebminUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass, logger=LOGGER, name=DOMAIN, update_interval=DEFAULT_SCAN_INTERVAL
         )
 
-    @callback
     async def async_setup(self) -> None:
         """Provide needed data to the device info."""
-        self.data = await self.instance.update()
         ifaces = [iface for iface in self.data["active_interfaces"] if "ether" in iface]
         ifaces.sort(key=lambda x: x["ether"])
         self.mac_address = ifaces[0]["ether"]

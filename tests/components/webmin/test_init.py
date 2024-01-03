@@ -15,19 +15,19 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test successful unload of entry."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, options=TEST_USER_INPUT_REQUIRED, title="name"
+    )
+    entry.add_to_hass(hass)
+
     with patch(
         "webmin_xmlrpc.client.WebminInstance.update",
         return_value=load_json_object_fixture("webmin_update.json", DOMAIN),
-    ), patch(
-        "webmin_xmlrpc.client.WebminInstance.get_network_interfaces",
-        return_value=load_json_object_fixture("webmin_network_interfaces.json", DOMAIN),
     ):
-        entry = MockConfigEntry(
-            domain=DOMAIN, options=TEST_USER_INPUT_REQUIRED, title="name"
-        )
-        entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+
+    await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert isinstance(hass.data[DOMAIN][entry.entry_id], WebminUpdateCoordinator)
