@@ -23,6 +23,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
+        errors = {}
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_API_TOKEN])
             self._abort_if_unique_id_configured()
@@ -34,19 +35,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     await api.async_get_stations()
             except ClientResponseError as err:
                 if err.status == 401:
-                    return await self._show_setup_form({"base": "invalid_api_key"})
-                return await self._show_setup_form({"base": "cannot_connect"})
-            return self.async_create_entry(
-                title="Weatherflow REST",
-                data={CONF_API_TOKEN: api_token},
-            )
+                    errors["base"] = "invalid_api_key"
+                else:
+                    errors["base"] = "cannot_connect"
+            else:
+                return self.async_create_entry(
+                    title="Weatherflow REST",
+                    data={CONF_API_TOKEN: api_token},
+                )
 
-        return await self._show_setup_form(user_input)
-
-    async def _show_setup_form(self, errors=None):
-        """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
-            errors=errors or {},
+            errors=errors,
         )
