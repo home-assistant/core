@@ -700,3 +700,78 @@ async def test_option_flow_sensor_preview_config_entry_removed(
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"] == {"code": "home_assistant_error", "message": "Unknown error"}
+
+
+async def test_import(hass: HomeAssistant) -> None:
+    """Test import config flow."""
+
+    members = ["sensor.one", "sensor.two"]
+    for member in members:
+        hass.states.async_set(member, "on", {})
+
+    with patch(
+        "homeassistant.components.group.async_setup_entry", wraps=async_setup_entry
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                "ignore_non_numeric": False,
+                "entities": ["sensor.one", "sensor.two"],
+                "hide_members": False,
+                "type": "sum",
+                "name": "Sensor Group sum",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Sensor Group sum"
+    assert result["data"] == {}
+    assert result["options"] == {
+        "entities": members,
+        "group_type": "sensor",
+        "hide_members": False,
+        "name": "Sensor Group sum",
+        "ignore_non_numeric": False,
+        "type": "sum",
+    }
+
+
+async def test_import_already_exist(hass: HomeAssistant) -> None:
+    """Test import config flow."""
+
+    members = ["sensor.one", "sensor.two"]
+    for member in members:
+        hass.states.async_set(member, "on", {})
+
+    group_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entities": members,
+            "group_type": "sensor",
+            "hide_members": False,
+            "ignore_non_numeric": False,
+            "type": "sum",
+            "name": "Sensor Group sum",
+        },
+        title="Sensor Group sum",
+    )
+    group_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data={
+            "ignore_non_numeric": False,
+            "entities": members,
+            "hide_members": False,
+            "type": "sum",
+            "name": "Sensor Group sum",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "already_configured"}

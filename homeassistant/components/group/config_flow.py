@@ -1,6 +1,7 @@
 """Config flow for Group integration."""
 from __future__ import annotations
 
+from collections import ChainMap
 from collections.abc import Callable, Coroutine, Mapping
 from functools import partial
 from typing import Any, cast
@@ -15,6 +16,7 @@ from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
+    SchemaFlowError,
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
     SchemaOptionsFlowHandler,
@@ -43,6 +45,38 @@ _STATISTIC_MEASURES = [
     "sum",
     "product",
 ]
+
+
+def import_sensor() -> (
+    Callable[
+        [SchemaCommonFlowHandler, dict[str, Any]], Coroutine[Any, Any, dict[str, Any]]
+    ]
+):
+    """Import sensor."""
+
+    # Missing Make sure the new group config entry adopts the existing min_max entities by changing the config entry and unique_id
+    # Missing Remove the min_max config entry
+
+    async def _set_group_type(
+        handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Add group type to user input and test not imported."""
+        hass = handler.parent_handler.hass
+        entries = hass.config_entries.async_entries(DOMAIN)
+        match_dict = {"group_type": "sensor", **user_input}
+        for entry in entries:
+            if all(
+                item
+                in ChainMap(
+                    entry.options,  # type: ignore[arg-type]
+                    entry.data,  # type: ignore[arg-type]
+                ).items()
+                for item in match_dict.items()
+            ):
+                raise SchemaFlowError("already_configured")
+        return {"group_type": "sensor", **user_input}
+
+    return _set_group_type
 
 
 async def basic_group_options_schema(
@@ -262,6 +296,10 @@ OPTIONS_FLOW = {
     "switch": SchemaFlowFormStep(
         partial(light_switch_options_schema, "switch"),
         preview="group",
+    ),
+    "import": SchemaFlowFormStep(
+        SENSOR_CONFIG_SCHEMA,
+        validate_user_input=import_sensor(),
     ),
 }
 
