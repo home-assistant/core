@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+import logging
 from typing import Any
 
-from govee_local_api import GoveeDevice
+from govee_local_api import GoveeDevice, GoveeLightCapability
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -20,9 +20,10 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .capability import GOVEE_COORDINATORS_MAPPER, GOVEE_DEVICE_CAPABILITIES
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import GoveeLocalApiCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -34,15 +35,24 @@ async def async_setup_entry(
 
     coordinator: GoveeLocalApiCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_entities(
-        GoveeLight(coordinator, device) for device in coordinator.devices
-    )
+    def check_supported_devices(devices: list[GoveeDevice]) -> None:
+        for device in devices:
+            if not device.capabilities:
+                _LOGGER.warning(
+                    "Discovered an unsupported device. Model: %s", device.sku
+                )
 
     def discovery_callback(device: GoveeDevice, is_new: bool) -> bool:
         if is_new:
-            entity = GoveeLight(coordinator, device)
-            async_add_entities([entity])
+            devices = [device]
+            check_supported_devices(devices)
+            async_add_entities(GoveeLight(coordinator, d) for d in devices)
         return True
+
+    check_supported_devices(coordinator.devices)
+    async_add_entities(
+        GoveeLight(coordinator, device) for device in coordinator.devices
+    )
 
     await coordinator.set_discovery_callback(discovery_callback)
 
@@ -66,12 +76,19 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
 
         self._attr_unique_id = device.fingerprint
 
-        color_modes = GOVEE_DEVICE_CAPABILITIES.get(device.sku, set())
-        if ColorMode.COLOR_TEMP in color_modes:
-            self._attr_max_color_temp_kelvin = 9000
-            self._attr_min_color_temp_kelvin = 2000
-
-        if len(color_modes) == 0:
+        capabilities = device.capabilities
+        color_modes = set()
+        if capabilities:
+            if GoveeLightCapability.COLOR_RGB in capabilities:
+                color_modes.add(ColorMode.RGB)
+            if GoveeLightCapability.COLOR_KELVIN_TEMPERATURE in capabilities:
+                color_modes.add(ColorMode.COLOR_TEMP)
+                if ColorMode.COLOR_TEMP in color_modes:
+                    self._attr_max_color_temp_kelvin = 9000
+                    self._attr_min_color_temp_kelvin = 2000
+            if GoveeLightCapability.BRIGHTNESS in capabilities:
+                color_modes.add(ColorMode.BRIGHTNESS)
+        else:
             color_modes.add(ColorMode.ONOFF)
 
         self._attr_supported_color_modes = color_modes
@@ -141,12 +158,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
         elif ATTR_COLOR_TEMP_KELVIN in kwargs:
             self._attr_color_mode = ColorMode.COLOR_TEMP
             temperature: float = kwargs[ATTR_COLOR_TEMP_KELVIN]
-
-            converter: Callable[..., Any] = GOVEE_COORDINATORS_MAPPER.get(
-                ColorMode.COLOR_TEMP, lambda x: x
-            )
-
-            await self.coordinator.set_temperature(self._device, converter(temperature))
+            await self.coordinator.set_temperature(self._device, int(temperature))
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
