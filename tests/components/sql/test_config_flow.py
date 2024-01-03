@@ -124,7 +124,7 @@ async def test_flow_fails_db_url(recorder_mock: Recorder, hass: HomeAssistant) -
 async def test_flow_module_not_found(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
-    """Test config flow fails incorrect db url."""
+    """Test config flow fails module not found."""
     result4 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -430,7 +430,7 @@ async def test_options_flow_fails_db_url(
 async def test_options_flow_module_not_found(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
-    """Test options flow fails incorrect db url."""
+    """Test options flow fails module not found."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={},

@@ -56,7 +56,7 @@ async def test_setup_invalid_config(
 async def test_setup_module_not_found(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
-    """Test setup from yaml with invalid config."""
+    """Test setup from yaml with module not found."""
     with patch(
         "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
         side_effect=ModuleNotFoundError("No module named 'test'"),

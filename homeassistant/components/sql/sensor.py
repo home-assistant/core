@@ -35,7 +35,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
@@ -190,28 +190,44 @@ async def async_setup_sensor(
     sql_data = _async_get_or_init_domain_data(hass)
     uses_recorder_db = db_url == instance.db_url
     use_database_executor = False
-    if uses_recorder_db and instance.dialect_name == SupportedDialect.SQLITE:
-        use_database_executor = True
-        assert instance.engine is not None
-        sessmaker = scoped_session(sessionmaker(bind=instance.engine, future=True))
-    # For other databases we need to create a new engine since
-    # we want the connection to use the default timezone and these
-    # database engines will use QueuePool as its only sqlite that
-    # needs our custom pool. If there is already a session maker
-    # for this db_url we can use that so we do not create a new engine
-    # for every sensor.
-    elif db_url in sql_data.session_makers_by_db_url:
-        sessmaker = sql_data.session_makers_by_db_url[db_url]
-    elif sessmaker := await hass.async_add_executor_job(
-        _validate_and_get_session_maker_for_db_url,
-        hass,
-        db_url,
-        unique_id
-        if unique_id
-        else f"{redact_credentials(db_url)}-{redact_credentials(query_str)}",
-    ):
-        sql_data.session_makers_by_db_url[db_url] = sessmaker
-    else:
+
+    try:
+        if uses_recorder_db and instance.dialect_name == SupportedDialect.SQLITE:
+            use_database_executor = True
+            assert instance.engine is not None
+            sessmaker = scoped_session(sessionmaker(bind=instance.engine, future=True))
+        # For other databases we need to create a new engine since
+        # we want the connection to use the default timezone and these
+        # database engines will use QueuePool as its only sqlite that
+        # needs our custom pool. If there is already a session maker
+        # for this db_url we can use that so we do not create a new engine
+        # for every sensor.
+        elif db_url in sql_data.session_makers_by_db_url:
+            sessmaker = sql_data.session_makers_by_db_url[db_url]
+        elif sessmaker := await hass.async_add_executor_job(
+            _validate_and_get_session_maker_for_db_url,
+            db_url,
+        ):
+            sql_data.session_makers_by_db_url[db_url] = sessmaker
+        else:
+            return
+
+    except ModuleNotFoundError as error:
+        ir.async_create_issue(
+            hass=hass,
+            domain=DOMAIN,
+            issue_id=f"module_not_found_{redact_credentials(db_url)}",
+            translation_key="module_not_found",
+            translation_placeholders={
+                "link": f"https://home-assistant.io/integrations/sql{'#ms-sql' if db_url.startswith('mssql') else '#db_url'}",
+                "module": str(error)
+                .replace("No module named ", "")
+                .replace("'", "")
+                .strip(),
+            },
+            severity=IssueSeverity.ERROR,
+            is_fixable=False,
+        )
         return
 
     upper_query = query_str.upper()
@@ -272,9 +288,7 @@ async def async_setup_sensor(
     )
 
 
-def _validate_and_get_session_maker_for_db_url(
-    hass: HomeAssistant, db_url: str, unique_id: str
-) -> scoped_session | None:
+def _validate_and_get_session_maker_for_db_url(db_url: str) -> scoped_session | None:
     """Validate the db_url and return a session maker.
 
     This does I/O and should be run in the executor.
@@ -289,19 +303,7 @@ def _validate_and_get_session_maker_for_db_url(
 
     except ModuleNotFoundError as error:
         _LOGGER.debug("%s", error)
-        async_create_issue(
-            hass=hass,
-            domain=DOMAIN,
-            issue_id=f"module_not_found_{unique_id}",
-            translation_key="module_not_found",
-            translation_placeholders={
-                "link": f"https://next.home-assistant.io/integrations/sql{'#ms-sql' if db_url.startswith('mssql') else '#db_url'}",
-                "module": str(error).replace("No module named ", ""),
-            },
-            severity=IssueSeverity.ERROR,
-            is_fixable=False,
-        )
-        return None
+        raise ModuleNotFoundError(error) from error
 
     except SQLAlchemyError as err:
         _LOGGER.error(

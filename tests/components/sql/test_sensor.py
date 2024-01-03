@@ -10,10 +10,11 @@ import pytest
 from sqlalchemy import text as sql_text
 from sqlalchemy.exc import SQLAlchemyError
 
-from homeassistant.components.recorder import Recorder
+from homeassistant.components.recorder import CONF_DB_URL, Recorder
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.sql.const import CONF_QUERY, DOMAIN
 from homeassistant.components.sql.sensor import _generate_lambda_stmt
+from homeassistant.components.sql.util import redact_credentials
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_ICON,
@@ -388,6 +389,40 @@ async def test_invalid_url_setup_from_yaml(
         assert pattern not in caplog.text
     for pattern in expected_patterns:
         assert pattern in caplog.text
+
+
+async def test_issue_when_module_not_found(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+) -> None:
+    """Test we create an issue for module not found."""
+
+    config = {
+        "db_url": "mssql+pyodbc://username:password@SERVER_IP:1433/DB_NAME?charset=utf8&driver=FreeTDS",
+        "query": "SELECT 5 as value",
+        "column": "value",
+        "name": "count_tables",
+    }
+
+    with patch(
+        "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
+        side_effect=ModuleNotFoundError("No module named 'test'"),
+    ):
+        await init_integration(hass, config)
+    await hass.async_block_till_done()
+
+    assert not hass.states.async_all()
+    issue_registry = ir.async_get(hass)
+
+    issue_id = redact_credentials(config[CONF_DB_URL])
+
+    issue = issue_registry.async_get_issue(DOMAIN, f"module_not_found_{issue_id}")
+    assert issue is not None
+    assert issue.translation_key == "module_not_found"
+    assert issue.translation_placeholders == {
+        "link": "https://home-assistant.io/integrations/sql#ms-sql",
+        "module": "test",
+    }
 
 
 async def test_attributes_from_yaml_setup(
