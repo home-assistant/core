@@ -12,7 +12,28 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import get_moon_phases
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    STATE_FIRST_QUARTER,
+    STATE_FULL_MOON,
+    STATE_LAST_QUARTER,
+    STATE_NEW_MOON,
+    STATE_WANING_CRESCENT,
+    STATE_WANING_GIBBOUS,
+    STATE_WAXING_CRESCENT,
+    STATE_WAXING_GIBBOUS,
+)
+
+MOON_SUMMARY = {
+    STATE_FIRST_QUARTER: "First quarter",
+    STATE_FULL_MOON: "Full moon",
+    STATE_LAST_QUARTER: "Last quarter",
+    STATE_NEW_MOON: "New moon",
+    STATE_WANING_CRESCENT: "Waning crescent",
+    STATE_WANING_GIBBOUS: "Waning gibbous",
+    STATE_WAXING_CRESCENT: "Waxing crescent",
+    STATE_WAXING_GIBBOUS: "Waxing gibbous",
+}
 
 
 async def async_setup_entry(
@@ -62,18 +83,16 @@ class MoonCalendarEntity(CalendarEntity):
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming moon    phase."""
-        next_moon_phase = None
+        summary: str
         for moon_phase in self._obj_moon_phases:
             if moon_phase["date"] >= dt_util.now().date():
+                summary = MOON_SUMMARY.get(moon_phase["phase"], moon_phase["phase"])
                 next_moon_phase = (
                     moon_phase["date"],
-                    moon_phase["phase"],
+                    summary,
                     moon_phase["end"],
                 )
                 break
-
-        if next_moon_phase is None:
-            return None
 
         return CalendarEvent(
             summary=next_moon_phase[1],
@@ -94,8 +113,9 @@ class MoonCalendarEntity(CalendarEntity):
                 end_date is not None
                 and start_date.date() <= moon_phase["date"] <= end_date.date()
             ):
+                summary = MOON_SUMMARY.get(moon_phase["phase"], moon_phase["phase"])
                 event = CalendarEvent(
-                    summary=moon_phase["phase"],
+                    summary=summary,
                     start=moon_phase["date"],
                     end=moon_phase["end"],
                 )
