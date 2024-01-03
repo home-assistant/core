@@ -8,9 +8,11 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.time_date.const import CONF_DISPLAY_OPTIONS, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.entity_registry import EntityRegistry
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
@@ -220,6 +222,7 @@ async def test_option_flow_preview(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
+    entity_registry: EntityRegistry,
 ) -> None:
     """Test the option flow preview."""
     client = await hass_ws_client(hass)
@@ -229,6 +232,10 @@ async def test_option_flow_preview(
         domain=DOMAIN, data={}, options={"display_options": ["time"]}
     )
     config_entry.add_to_hass(hass)
+
+    entity_registry.async_get_or_create(
+        DOMAIN, SENSOR_DOMAIN, "time", config_entry=config_entry
+    )
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == FlowResultType.FORM
