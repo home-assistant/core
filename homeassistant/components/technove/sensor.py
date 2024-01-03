@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from technove import Station as TechnoVEStation
+from technove import Station as TechnoVEStation, Status
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -27,6 +27,8 @@ from homeassistant.helpers.typing import StateType
 from .const import DOMAIN
 from .coordinator import TechnoVEDataUpdateCoordinator
 from .models import TechnoVEEntity
+
+STATUS_TYPE = [s.value for s in Status]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -120,8 +122,10 @@ SENSORS: tuple[TechnoVESensorEntityDescription, ...] = (
     TechnoVESensorEntityDescription(
         key="status",
         translation_key="status",
+        device_class=SensorDeviceClass.ENUM,
+        options=STATUS_TYPE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda station: station.info.status,
+        value_fn=lambda station: station.info.status.value,
     ),
 )
 

@@ -2247,7 +2247,7 @@ python-songpal==0.16
 python-tado==0.17.0
 
 # homeassistant.components.technove
-python-technove==1.0.0
+python-technove==1.1.1
 
 # homeassistant.components.telegram_bot
 python-telegram-bot==13.1

@@ -56,9 +56,9 @@
       "status": {
         "name": "Status",
         "state": {
-          "65": "Unplugged",
-          "66": "Plugged, waiting",
-          "67": "Plugged, charging"
+          "unplugged": "Unplugged",
+          "plugged_waiting": "Plugged, waiting",
+          "plugged_charging": "Plugged, charging"
         }
       }
     }
