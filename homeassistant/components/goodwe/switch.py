@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 from typing import Any
+from datetime import timedelta
 
 from goodwe import Inverter, InverterError
 
@@ -22,6 +23,7 @@ from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL = timedelta(minutes=2)
 
 @dataclass(frozen=True)
 class GoodweSwitchEntityDescriptionBase:
