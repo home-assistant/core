@@ -153,7 +153,7 @@ class TechnoVESensorEntity(TechnoVEEntity, SensorEntity):
         description: TechnoVESensorEntityDescription,
     ) -> None:
         """Initialize a TechnoVE sensor entity."""
-        super().__init__(coordinator=coordinator, key=description.key)
+        super().__init__(coordinator, description.key)
         self.entity_description = description
 
     @property
