@@ -2,7 +2,7 @@
   "domain": "rachio",
   "name": "Rachio",
   "after_dependencies": ["cloud"],
-  "codeowners": ["@bdraco"],
+  "codeowners": ["@bdraco","@rfverbruggen"],
   "config_flow": true,
   "dependencies": ["http"],
   "dhcp": [
