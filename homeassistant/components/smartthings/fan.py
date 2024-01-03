@@ -103,13 +103,10 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset_mode of the fan."""
-        if (FanEntityFeature.PRESET_MODE in self._attr_supported_features) and (
-            self.preset_modes is not None
-        ):
-            if preset_mode in self.preset_modes:
-                await self._device.set_fan_mode(preset_mode, set_status=True)
+        if self.preset_modes is not None and preset_mode in self.preset_modes:
+            await self._device.set_fan_mode(preset_mode, set_status=True)
 
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_on(
         self,
