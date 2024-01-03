@@ -340,8 +340,12 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
-        if self._attr_supported_features is not None:
-            return self._attr_supported_features
+        if (features := self._attr_supported_features) is not None:
+            if type(features) is int:  # noqa: E721
+                new_features = CoverEntityFeature(features)
+                self._report_deprecated_supported_features_values(new_features)
+                return new_features
+            return features
 
         supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP

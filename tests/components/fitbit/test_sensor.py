@@ -599,21 +599,25 @@ async def test_settings_scope_config_entry(
 
 
 @pytest.mark.parametrize(
-    ("scopes"),
-    [(["heartrate"])],
+    ("scopes", "server_status"),
+    [
+        (["heartrate"], HTTPStatus.INTERNAL_SERVER_ERROR),
+        (["heartrate"], HTTPStatus.BAD_REQUEST),
+    ],
 )
 async def test_sensor_update_failed(
     hass: HomeAssistant,
     setup_credentials: None,
     integration_setup: Callable[[], Awaitable[bool]],
     requests_mock: Mocker,
+    server_status: HTTPStatus,
 ) -> None:
     """Test a failed sensor update when talking to the API."""
 
     requests_mock.register_uri(
         "GET",
         TIMESERIES_API_URL_FORMAT.format(resource="activities/heart"),
-        status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+        status_code=server_status,
     )
 
     assert await integration_setup()

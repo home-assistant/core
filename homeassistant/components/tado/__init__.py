@@ -26,9 +26,11 @@ from .const import (
     DOMAIN,
     INSIDE_TEMPERATURE_MEASUREMENT,
     PRESET_AUTO,
+    SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
     SIGNAL_TADO_UPDATE_RECEIVED,
     TEMP_OFFSET,
     UPDATE_LISTENER,
+    UPDATE_MOBILE_DEVICE_TRACK,
     UPDATE_TRACK,
 )
 
@@ -38,12 +40,14 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.DEVICE_TRACKER,
     Platform.SENSOR,
     Platform.WATER_HEATER,
 ]
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)
 SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_MOBILE_DEVICE_INTERVAL = timedelta(seconds=30)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -85,12 +89,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         SCAN_INTERVAL,
     )
 
+    update_mobile_devices = async_track_time_interval(
+        hass,
+        lambda now: tadoconnector.update_mobile_devices(),
+        SCAN_MOBILE_DEVICE_INTERVAL,
+    )
+
     update_listener = entry.add_update_listener(_async_update_listener)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA: tadoconnector,
         UPDATE_TRACK: update_track,
+        UPDATE_MOBILE_DEVICE_TRACK: update_mobile_devices,
         UPDATE_LISTENER: update_listener,
     }
 
@@ -127,6 +138,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id][UPDATE_TRACK]()
     hass.data[DOMAIN][entry.entry_id][UPDATE_LISTENER]()
+    hass.data[DOMAIN][entry.entry_id][UPDATE_MOBILE_DEVICE_TRACK]()
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
@@ -151,6 +163,7 @@ class TadoConnector:
         self.devices = None
         self.data = {
             "device": {},
+            "mobile_device": {},
             "weather": {},
             "geofence": {},
             "zone": {},
@@ -171,12 +184,37 @@ class TadoConnector:
         self.home_id = tado_home["id"]
         self.home_name = tado_home["name"]
 
+    def get_mobile_devices(self):
+        """Return the Tado mobile devices."""
+        return self.tado.getMobileDevices()
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the registered zones."""
         self.update_devices()
         self.update_zones()
         self.update_home()
+
+    def update_mobile_devices(self) -> None:
+        """Update the mobile devices."""
+        try:
+            mobile_devices = self.get_mobile_devices()
+        except RuntimeError:
+            _LOGGER.error("Unable to connect to Tado while updating mobile devices")
+            return
+
+        for mobile_device in mobile_devices:
+            self.data["mobile_device"][mobile_device["id"]] = mobile_device
+
+        _LOGGER.debug(
+            "Dispatching update to %s mobile devices: %s",
+            self.home_id,
+            mobile_devices,
+        )
+        dispatcher_send(
+            self.hass,
+            SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
+        )
 
     def update_devices(self):
         """Update the device data from Tado."""
