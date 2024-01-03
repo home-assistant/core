@@ -22,18 +22,11 @@ from .const import DOMAIN
 from .entity import OpenGarageEntity
 
 
-@dataclass(frozen=True)
-class OpenGarageButtonEntityDescriptionMixin:
-    """Mixin to describe a OpenGarage button entity."""
+@dataclass(frozen=True, kw_only=True)
+class OpenGarageButtonEntityDescription(ButtonEntityDescription):
+    """OpenGarage Browser button description."""
 
     press_action: Callable[[OpenGarage], Any]
-
-
-@dataclass(frozen=True)
-class OpenGarageButtonEntityDescription(
-    ButtonEntityDescription, OpenGarageButtonEntityDescriptionMixin
-):
-    """OpenGarage Browser button description."""
 
 
 BUTTONS: tuple[OpenGarageButtonEntityDescription, ...] = (
