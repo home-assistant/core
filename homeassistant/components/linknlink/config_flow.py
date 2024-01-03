@@ -33,7 +33,7 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the linknlink flow."""
         self.device: llk.Device = None
 
-    async def async_set_device(self, device, raise_on_progress=True):
+    async def async_set_device(self, device: llk.Device, raise_on_progress=True):
         """Define a device for the config flow."""
         if device.type not in DEVICE_TYPES:
             _LOGGER.error(

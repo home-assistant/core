@@ -20,7 +20,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error(
             "Unable to setup linknlink device - config=%s", coordinator.config.data
         )
-        # 测试下能不能继续完成解锁TODO
         raise ConfigEntryNotReady
 
     await coordinator.async_config_entry_first_refresh()

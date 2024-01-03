@@ -3,12 +3,15 @@ from __future__ import annotations
 
 from contextlib import suppress
 from datetime import timedelta
+from functools import partial
 import logging
 from typing import Any
 
 import linknlink as llk
 from linknlink.exceptions import (
     AuthenticationError,
+    AuthorizationError,
+    ConnectionClosedError,
     LinknLinkException,
     NetworkTimeoutError,
 )
@@ -23,7 +26,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -38,7 +40,7 @@ SCAN_INTERVAL = 10
 
 
 class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
-    """Class to manage fetching data."""
+    """In charge of get the data for a site."""
 
     api: llk.Device
 
@@ -122,7 +124,7 @@ class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
 
         except (NetworkTimeoutError, OSError) as err:
             _LOGGER.error("Failed to connect to the device [%s]: %s", api.host[0], err)
-            raise ConfigEntryNotReady from err
+            return False
 
         except LinknLinkException as err:
             _LOGGER.error(
@@ -161,19 +163,42 @@ class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
             )
         )
 
+    async def async_auth(self) -> bool:
+        """Authenticate to the device."""
+        try:
+            await self.hass.async_add_executor_job(self.api.auth)
+        except (LinknLinkException, OSError) as err:
+            _LOGGER.debug(
+                "Failed to authenticate to the device at %s: %s", self.api.host[0], err
+            )
+            if isinstance(err, AuthenticationError):
+                await self._async_handle_auth_error()
+            return False
+        return True
+
+    async def async_request(self, function, *args, **kwargs):
+        """Send a request to the device."""
+        request = partial(function, *args, **kwargs)
+        try:
+            return await self.hass.async_add_executor_job(request)
+        except (AuthorizationError, ConnectionClosedError):
+            if not await self.async_auth():
+                raise
+            return await self.hass.async_add_executor_job(request)
+
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the device."""
         if (
             self.api.type in DOMAINS_AND_TYPES[Platform.SENSOR]
             or self.api.type in DOMAINS_AND_TYPES[Platform.BINARY_SENSOR]
-        ):
-            data = self.api.check_sensors()
+        ) and hasattr(self.api, "check_sensors"):
+            data = await self.async_request(self.api.check_sensors)
             return data
         return {}
 
 
 class LinknLinkEntity(CoordinatorEntity[Coordinator]):
-    """LinknLinkEntity - In charge of get the data for a site."""
+    """To manage the device info."""
 
     def __init__(self, coordinator: Coordinator, context: Any = None) -> None:
         """Initialize coordinator entity."""
