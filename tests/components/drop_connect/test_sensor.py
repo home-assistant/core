@@ -1,9 +1,7 @@
 """Test DROP sensor entities."""
 
-from homeassistant.components.drop_connect.const import DOMAIN
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .common import (
     TEST_DATA_FILTER,
@@ -42,9 +40,9 @@ from tests.typing import MqttMockHAClient
 
 async def test_sensors_hub(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
     """Test DROP sensors for hubs."""
-    config_entry_hub().add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    entry = config_entry_hub()
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
 
     current_flow_sensor_name = "sensor.hub_drop_1_c0ffee_water_flow_rate"
     assert hass.states.get(current_flow_sensor_name).state == STATE_UNKNOWN
@@ -103,9 +101,9 @@ async def test_sensors_hub(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> 
 
 async def test_sensors_leak(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
     """Test DROP sensors for leak detectors."""
-    config_entry_leak().add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    entry = config_entry_leak()
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
 
     battery_sensor_name = "sensor.leak_detector_battery"
     assert hass.states.get(battery_sensor_name).state == STATE_UNKNOWN
@@ -130,9 +128,9 @@ async def test_sensors_softener(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient
 ) -> None:
     """Test DROP sensors for softeners."""
-    config_entry_softener().add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    entry = config_entry_softener()
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
 
     battery_sensor_name = "sensor.softener_battery"
     assert hass.states.get(battery_sensor_name).state == STATE_UNKNOWN
@@ -167,9 +165,9 @@ async def test_sensors_softener(
 
 async def test_sensors_filter(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
     """Test DROP sensors for filters."""
-    config_entry_filter().add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    entry = config_entry_filter()
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
 
     battery_sensor_name = "sensor.filter_battery"
     assert hass.states.get(battery_sensor_name).state == STATE_UNKNOWN
@@ -200,9 +198,9 @@ async def test_sensors_protection_valve(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient
 ) -> None:
     """Test DROP sensors for protection valves."""
-    config_entry_protection_valve().add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    entry = config_entry_protection_valve()
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
 
     battery_sensor_name = "sensor.protection_valve_battery"
     assert hass.states.get(battery_sensor_name).state == STATE_UNKNOWN
@@ -243,9 +241,9 @@ async def test_sensors_pump_controller(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient
 ) -> None:
     """Test DROP sensors for pump controllers."""
-    config_entry_pump_controller().add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    entry = config_entry_pump_controller()
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
 
     current_flow_sensor_name = "sensor.pump_controller_water_flow_rate"
     assert hass.states.get(current_flow_sensor_name).state == STATE_UNKNOWN
@@ -280,9 +278,9 @@ async def test_sensors_ro_filter(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient
 ) -> None:
     """Test DROP sensors for RO filters."""
-    config_entry_ro_filter().add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    entry = config_entry_ro_filter()
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
 
     tds_in_sensor_name = "sensor.ro_filter_inlet_tds"
     assert hass.states.get(tds_in_sensor_name).state == STATE_UNKNOWN
