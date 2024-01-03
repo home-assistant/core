@@ -68,7 +68,6 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
 class SmartThingsFan(SmartThingsEntity, FanEntity):
     """Define a SmartThings Fan."""
 
-    _attr_supported_features = FanEntityFeature(0)
     _attr_speed_count = int_states_in_range(SPEED_RANGE)
 
     def __init__(self, device):
