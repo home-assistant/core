@@ -32,9 +32,15 @@ class EpionConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
         errors: dict[str, str] | None = None
         if user_input is not None:
-            key_valid = await self._async_try_connect(user_input[CONF_API_KEY])
+            key_valid = await self.hass.async_add_executor_job(
+                self._check_api_key, user_input[CONF_API_KEY]
+            )
             if key_valid:
                 return self.async_create_entry(title="Epion integration", data={CONF_API_KEY: user_input[CONF_API_KEY]})
+        else:
+            user_input = {}
+            user_input[CONF_API_KEY] = ""
+
         return self.async_show_form(
             step_id="user",
             data_schema=Schema(
@@ -46,8 +52,7 @@ class EpionConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-    @staticmethod
-    async def _async_try_connect(api_key: str) -> bool:
+    def _check_api_key(self, api_key: str) -> bool:
         """Try to connect and see if the API key is valid.
         """
         api = Epion(api_key)

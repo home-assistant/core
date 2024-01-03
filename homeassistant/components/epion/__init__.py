@@ -31,10 +31,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.error("Could not retrieve details from Epion API")
         raise ConfigEntryNotReady from ex
 
-    if "details" not in response:
-        LOGGER.error("Missing details data in Epion response")
-        raise ConfigEntryNotReady
-
     if len(response["devices"]) == 0:
         LOGGER.error("Epion account is not active")
         return False
@@ -63,6 +59,7 @@ class EpionBase:
 
     def updateNow(self):
         self.last_response = self.epion.get_current()
+        LOGGER.info("Updated Epion server data, new sensors: %d", len(self.last_response['devices']))
         for epion_device in self.last_response['devices']:
             self.device_data[epion_device['deviceId']] = epion_device
 
