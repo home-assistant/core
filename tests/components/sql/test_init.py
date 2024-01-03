@@ -53,6 +53,18 @@ async def test_setup_invalid_config(
         await hass.async_block_till_done()
 
 
+async def test_setup_module_not_found(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test setup from yaml with invalid config."""
+    with patch(
+        "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
+        side_effect=ModuleNotFoundError("No module named 'test'"),
+    ):
+        assert not await async_setup_component(hass, DOMAIN, YAML_CONFIG_INVALID)
+        await hass.async_block_till_done()
+
+
 async def test_invalid_query(hass: HomeAssistant) -> None:
     """Test invalid query."""
     with pytest.raises(vol.Invalid):

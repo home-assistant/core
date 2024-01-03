@@ -97,9 +97,14 @@ def validate_sql_select(value: str) -> str:
 def validate_query(db_url: str, query: str, column: str) -> bool:
     """Validate SQL query."""
 
-    engine = sqlalchemy.create_engine(db_url, future=True)
-    sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
-    sess: Session = sessmaker()
+    try:
+        engine = sqlalchemy.create_engine(db_url, future=True)
+        sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
+        sess: Session = sessmaker()
+
+    except ModuleNotFoundError as error:
+        _LOGGER.debug("%s", error)
+        raise ModuleNotFoundError from error
 
     try:
         result: Result = sess.execute(sqlalchemy.text(query))
@@ -165,6 +170,8 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders = {"column": column}
             except MultipleResultsFound:
                 errors["query"] = "multiple_queries"
+            except ModuleNotFoundError:
+                errors["db_url"] = "module_not_found"
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
             except SQLParseError:
@@ -231,6 +238,8 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 description_placeholders = {"column": column}
             except MultipleResultsFound:
                 errors["query"] = "multiple_queries"
+            except ModuleNotFoundError:
+                errors["db_url"] = "module_not_found"
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
             except SQLParseError:

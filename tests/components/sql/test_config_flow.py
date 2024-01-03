@@ -121,6 +121,29 @@ async def test_flow_fails_db_url(recorder_mock: Recorder, hass: HomeAssistant) -
     assert result4["errors"] == {"db_url": "db_url_invalid"}
 
 
+async def test_flow_module_not_found(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test config flow fails incorrect db url."""
+    result4 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result4["type"] == FlowResultType.FORM
+    assert result4["step_id"] == config_entries.SOURCE_USER
+
+    with patch(
+        "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
+        side_effect=ModuleNotFoundError("No module named 'test'"),
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result4["flow_id"],
+            user_input=ENTRY_CONFIG,
+        )
+
+    assert result4["errors"] == {"db_url": "module_not_found"}
+
+
 async def test_flow_fails_invalid_query(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
@@ -402,6 +425,49 @@ async def test_options_flow_fails_db_url(
         )
 
     assert result2["errors"] == {"db_url": "db_url_invalid"}
+
+
+async def test_options_flow_module_not_found(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Test options flow fails incorrect db url."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={
+            "db_url": "sqlite://",
+            "name": "Get Value",
+            "query": "SELECT 5 as value",
+            "column": "value",
+            "unit_of_measurement": "MiB",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.sql.async_setup_entry",
+        return_value=True,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    with patch(
+        "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
+        side_effect=ModuleNotFoundError("No module named 'test'"),
+    ):
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                "db_url": "sqlite://",
+                "query": "SELECT 5 as size",
+                "column": "size",
+                "unit_of_measurement": "MiB",
+            },
+        )
+
+    assert result2["errors"] == {"db_url": "module_not_found"}
 
 
 async def test_options_flow_fails_invalid_query(
