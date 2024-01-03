@@ -1,4 +1,4 @@
-"""Adds config flow for System Monitor."""
+"""Config flow for Webmin."""
 from __future__ import annotations
 
 from collections.abc import Mapping
