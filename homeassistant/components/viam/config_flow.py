@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from const import CONF_ADDRESS, CONF_API_KEY
 from viam.app.viam_client import ViamClient
 from viam.rpc.dial import Credentials, DialOptions
 import voluptuous as vol
@@ -12,40 +13,43 @@ from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.selector import selector
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    selector,
+)
 
-from .const import DOMAIN
+from .const import CONF_API_ID, CONF_CREDENTIAL_TYPE, CONF_ROBOT, CONF_SECRET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
 STEP_AUTH_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("credential_type"): selector(
-            {
-                "select": {
-                    "options": [
-                        {"value": "api-key", "label": "Org API Key"},
-                        {
-                            "value": "robot-location-secret",
-                            "label": "Robot Location Secret",
-                        },
-                    ],
-                    "translation_key": "credential_type",
-                }
-            }
+        vol.Required(CONF_CREDENTIAL_TYPE): SelectSelector(
+            SelectSelectorConfig(
+                options=[
+                    SelectOptionDict(value="api-key", label="Org API Key"),
+                    SelectOptionDict(
+                        value="robot-location-secret", label="Robot Location Secret"
+                    ),
+                ],
+                translation_key=CONF_CREDENTIAL_TYPE,
+            )
         )
     }
 )
 STEP_AUTH_ROBOT_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("address"): str,
-        vol.Required("secret"): str,
+        vol.Required(CONF_ADDRESS): str,
+        vol.Required(CONF_SECRET): str,
     }
 )
 STEP_AUTH_ORG_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("api_id"): str,
-        vol.Required("api_key"): str,
+        vol.Required(CONF_API_ID): str,
+        vol.Required(CONF_API_KEY): str,
     }
 )
 
@@ -77,16 +81,16 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    credential_type = data["credential_type"]
-    auth_entity = data["api_id"]
-    secret = data["api_key"]
+    credential_type = data[CONF_CREDENTIAL_TYPE]
+    auth_entity = data[CONF_API_ID]
+    secret = data[CONF_API_KEY]
     if credential_type == "robot-location-secret":
-        auth_entity = data["address"]
-        secret = data["secret"]
+        auth_entity = data[CONF_ADDRESS]
+        secret = data[CONF_SECRET]
 
     hub = ViamHub(
         auth_entity,
-        data["credential_type"],
+        credential_type,
     )
 
     if not await hub.authenticate(secret):
@@ -123,7 +127,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self.credential_type = user_input["credential_type"]
+            self.credential_type = user_input[CONF_CREDENTIAL_TYPE]
             return await self.async_step_auth()
 
         return self.async_show_form(
@@ -172,7 +176,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         if user_input is not None:
             robot_id = next(
-                robot.id for robot in robots if robot.name == user_input["robot"]
+                robot.id for robot in robots if robot.name == user_input[CONF_ROBOT]
             )
             self.data.update(
                 {"robot_id": robot_id, "credential_type": self.credential_type}
@@ -184,7 +188,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="robot",
             data_schema=vol.Schema(
                 {
-                    vol.Required("robot"): selector(
+                    vol.Required(CONF_ROBOT): selector(
                         {"select": {"options": [robot.name for robot in robots]}}
                     )
                 }

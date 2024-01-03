@@ -1,3 +1,21 @@
 """Constants for the viam integration."""
 
 DOMAIN = "viam"
+
+CONF_API_ID = "api_id"
+CONF_SECRET = "secret"
+CONF_CREDENTIAL_TYPE = "credential_type"
+CONF_ROBOT = "robot"
+
+SERVICE_VALUES = "values"
+SERVICE_COMPONENT_NAME = "component_name"
+SERVICE_COMPONENT_TYPE = "component_type"
+SERVICE_FILEPATH = "filepath"
+SERVICE_CAMERA = "camera"
+SERVICE_CONFIDENCE = "confidence_threshold"
+SERVICE_ROBOT_ADDRESS = "robot_address"
+SERVICE_ROBOT_SECRET = "robot_secret"
+SERVICE_FILE_NAME = "file_name"
+SERVICE_CLASSIFIER_NAME = "classifier_name"
+SERVICE_COUNT = "count"
+SERVICE_DETECTOR_NAME = "detector_name"
