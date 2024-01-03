@@ -25,9 +25,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_API_TOKEN])
-            self._abort_if_unique_id_configured()
-            self._async_abort_entries_match()
+            self._async_abort_entries_match(user_input)
 
             # Validate Entry
             api_token = user_input[CONF_API_TOKEN]
