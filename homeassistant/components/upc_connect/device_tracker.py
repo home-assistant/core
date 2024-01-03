@@ -107,8 +107,6 @@ class UpcConnectTrackerEntity(ScannerEntity):
         active: bool,
     ) -> None:
         """Initialize an UPC connect entity."""
-        # _LOGGER.debug("UpcConnectTrackerEntity::__init__")
-
         self._mac_address = mac_address
         self._upc_connect_tracker = upc_connect_tracker
         self._tracked = self._upc_connect_tracker.devices.tracked

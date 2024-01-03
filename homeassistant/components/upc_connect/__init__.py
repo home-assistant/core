@@ -20,17 +20,6 @@ from .const import DOMAIN, PLATFORMS, TRACKER_SCAN_INTERVAL, UPC_CONNECT_TRACKED
 
 _LOGGER = logging.getLogger(__name__)
 
-# Device(
-#     mac='30:24:32:FE:33:14',
-#     hostname='homeassistant',
-#     ip=IPv4Address('192.168.0.52'),
-#     interface='UPC9468090',
-#     speed='526',
-#     interface_id='19',
-#     method='1',
-#     lease_time=datetime.datetime(1900, 1, 1, 0, 0)
-# )
-
 
 @dataclass
 class UpcConnectDevice:
