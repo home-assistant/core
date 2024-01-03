@@ -1,4 +1,4 @@
-"""Test the Kodi integration init."""
+"""Test the Enigma2 integration init."""
 from unittest.mock import patch
 
 from homeassistant.components.enigma2.const import DOMAIN
