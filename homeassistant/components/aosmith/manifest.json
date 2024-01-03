@@ -5,6 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/aosmith",
   "iot_class": "cloud_polling",
-  "quality_scale": "platinum",
   "requirements": ["py-aosmith==1.0.1"]
 }
