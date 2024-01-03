@@ -21,11 +21,6 @@ class WeatherFlowCloudDataUpdateCoordinator(
 
     def __init__(self, hass: HomeAssistant, api_token: str) -> None:
         """Initialize global WeatherFlow forecast data updater."""
-
-        # Store local variables
-        # self.hass = hass
-
-        # Extract API Token
         self.weather_api = WeatherFlowRestAPI(api_token=api_token)
 
         super().__init__(
