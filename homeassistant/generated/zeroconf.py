@@ -700,11 +700,6 @@ ZEROCONF = {
             "domain": "system_bridge",
         },
     ],
-    "_technove-stations._tcp.local.": [
-        {
-            "domain": "technove",
-        },
-    ],
     "_touch-able._tcp.local.": [
         {
             "domain": "apple_tv",

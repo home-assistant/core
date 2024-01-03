@@ -10,10 +10,6 @@
         "data_description": {
           "ip_address": "Hostname or IP address of your WLED device."
         }
-      },
-      "zeroconf_confirm": {
-        "description": "Do you want to add the TechnoVE Station named `{name}` to Home Assistant?",
-        "title": "Discovered TechnoVE station"
       }
     },
     "error": {

@@ -5,9 +5,8 @@ from typing import Any
 from technove import Station as TechnoVEStation, TechnoVE, TechnoVEConnectionError
 import voluptuous as vol
 
-from homeassistant.components import onboarding, zeroconf
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC
+from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -47,52 +46,6 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_IP_ADDRESS): str}),
             errors=errors or {},
-        )
-
-    async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
-        """Handle zeroconf discovery."""
-        # Abort quick if the mac address is provided by discovery info
-        if mac := discovery_info.properties.get(CONF_MAC):
-            await self.async_set_unique_id(mac)
-            self._abort_if_unique_id_configured(
-                updates={CONF_IP_ADDRESS: discovery_info.host}
-            )
-
-        self.discovered_host = discovery_info.host
-        try:
-            self.discovered_station = await self._async_get_station(discovery_info.host)
-        except TechnoVEConnectionError:
-            return self.async_abort(reason="cannot_connect")
-
-        await self.async_set_unique_id(self.discovered_station.info.mac_address)
-        self._abort_if_unique_id_configured(
-            updates={CONF_IP_ADDRESS: discovery_info.host}
-        )
-
-        self.context.update(
-            {
-                "title_placeholders": {"name": self.discovered_station.info.name},
-            }
-        )
-        return await self.async_step_zeroconf_confirm()
-
-    async def async_step_zeroconf_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle a flow initiated by zeroconf."""
-        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
-            return self.async_create_entry(
-                title=self.discovered_station.info.name,
-                data={
-                    CONF_IP_ADDRESS: self.discovered_host,
-                },
-            )
-
-        return self.async_show_form(
-            step_id="zeroconf_confirm",
-            description_placeholders={"name": self.discovered_station.info.name},
         )
 
     async def _async_get_station(self, host: str) -> TechnoVEStation:
