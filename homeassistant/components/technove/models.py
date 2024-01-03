@@ -13,7 +13,7 @@ class TechnoVEEntity(CoordinatorEntity[TechnoVEDataUpdateCoordinator]):
 
     def __init__(self, coordinator: TechnoVEDataUpdateCoordinator, key: str) -> None:
         """Initialize a base TechnoVE entity."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_{key}"
 
     @property
