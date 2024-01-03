@@ -48,8 +48,10 @@ class ConfirmRepairFlow(RepairsFlow):
         )
 
 
-class RepairsFlowManager(data_entry_flow.FlowManager):
+class RepairsFlowManager(data_entry_flow.FlowManager[data_entry_flow.FlowResult]):
     """Manage repairs flows."""
+
+    _flow_result = data_entry_flow.FlowResult
 
     async def async_create_flow(
         self,

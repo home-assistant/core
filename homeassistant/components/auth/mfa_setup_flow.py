@@ -35,8 +35,10 @@ DATA_SETUP_FLOW_MGR = "auth_mfa_setup_flow_manager"
 _LOGGER = logging.getLogger(__name__)
 
 
-class MfaFlowManager(data_entry_flow.FlowManager):
+class MfaFlowManager(data_entry_flow.FlowManager[data_entry_flow.FlowResult]):
     """Manage multi factor authentication flows."""
+
+    _flow_result = data_entry_flow.FlowResult
 
     async def async_create_flow(  # type: ignore[override]
         self,
