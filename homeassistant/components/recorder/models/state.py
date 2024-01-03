@@ -59,6 +59,7 @@ class LazyState(State):
         self._attributes: dict[str, Any] | None = None
         self._last_updated_ts: float | None = last_updated_ts or start_time_ts
         self.attr_cache = attr_cache
+        self.context = EMPTY_CONTEXT
 
     @cached_property  # type: ignore[override]
     def attributes(self) -> dict[str, Any]:
@@ -66,11 +67,6 @@ class LazyState(State):
         return decode_attributes_from_source(
             getattr(self._row, "attributes", None), self.attr_cache
         )
-
-    @cached_property
-    def context(self) -> Context:  # type: ignore[override]
-        """State context."""
-        return EMPTY_CONTEXT
 
     @cached_property
     def _last_changed_ts(self) -> float | None:
