@@ -33,6 +33,7 @@ from .const import (
     ATTR_GENERATION,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     CONF_BLE_SCANNER_MODE,
+    CONF_GEN,
     CONF_SLEEP_PERIOD,
     DATA_CONFIG_ENTRY,
     DOMAIN,
@@ -135,7 +136,7 @@ class ShellyCoordinatorBase(DataUpdateCoordinator[None], Generic[_DeviceT]):
             manufacturer="Shelly",
             model=aioshelly.const.MODEL_NAMES.get(self.model, self.model),
             sw_version=self.sw_version,
-            hw_version=f"gen{self.device.gen} ({self.model})",
+            hw_version=f"gen{self.entry.data[CONF_GEN]} ({self.model})",
             configuration_url=f"http://{self.entry.data[CONF_HOST]}",
         )
         self.device_id = device_entry.id
