@@ -69,13 +69,10 @@ class WeatherFlowWeather(
         self.station_id = station_id
         self._attr_unique_id = f"weatherflow_forecast_{station_id}"
 
-        # Obtain info from 1st outdoor device on station
-        outdoor_device = self.local_data.station.outdoor_devices[0]
-
         self._attr_device_info = DeviceInfo(
             name=self.local_data.station.name,
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, outdoor_device.serial_number)},
+            identifiers={(DOMAIN, f"{station_id}")},
             manufacturer=MANUFACTURER,
             configuration_url=f"https://tempestwx.com/station/{station_id}/grid",
         )
