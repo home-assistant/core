@@ -14,6 +14,7 @@ from homeassistant.components.lock import (
     LockEntity,
 )
 from homeassistant.const import (
+    ATTR_CODE,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_UNIQUE_ID,
@@ -27,7 +28,7 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, TemplateVarsType
 
 from .const import DOMAIN
 from .template_entity import (
@@ -36,6 +37,7 @@ from .template_entity import (
     rewrite_common_legacy_to_modern_conf,
 )
 
+CONF_CODE_FORMAT = "code_format"
 CONF_LOCK = "lock"
 CONF_UNLOCK = "unlock"
 
@@ -50,6 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_CODE_FORMAT): cv.is_regex,
     }
 ).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
 
@@ -90,6 +93,10 @@ class TemplateLock(TemplateEntity, LockEntity):
         self._state_template = config.get(CONF_VALUE_TEMPLATE)
         self._command_lock = Script(hass, config[CONF_LOCK], name, DOMAIN)
         self._command_unlock = Script(hass, config[CONF_UNLOCK], name, DOMAIN)
+        self._compiled_pattern = config.get(CONF_CODE_FORMAT)
+        self._attr_code_format = (
+            self._compiled_pattern.pattern if self._compiled_pattern else None
+        )
         self._optimistic = config.get(CONF_OPTIMISTIC)
         self._attr_assumed_state = bool(self._optimistic)
 
@@ -143,11 +150,25 @@ class TemplateLock(TemplateEntity, LockEntity):
         if self._optimistic:
             self._state = True
             self.async_write_ha_state()
-        await self.async_run_script(self._command_lock, context=self._context)
+
+        tpl_vars: TemplateVarsType = {
+            ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None
+        }
+
+        await self.async_run_script(
+            self._command_lock, run_variables=tpl_vars, context=self._context
+        )
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         if self._optimistic:
             self._state = False
             self.async_write_ha_state()
-        await self.async_run_script(self._command_unlock, context=self._context)
+
+        tpl_vars: TemplateVarsType = {
+            ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None
+        }
+
+        await self.async_run_script(
+            self._command_unlock, run_variables=tpl_vars, context=self._context
+        )
