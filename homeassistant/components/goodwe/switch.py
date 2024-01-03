@@ -82,7 +82,7 @@ class InverterSwitchEntity(SwitchEntity):
 
     entity_description: GoodweNumberEntityDescription
 
-    _attr_should_poll = False
+    _attr_should_poll = True
     _attr_has_entity_name = True
 
     def __init__(
@@ -110,18 +110,20 @@ class InverterSwitchEntity(SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._write_setting(1)
-        self._attr_is_on = True
-        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._write_setting(0)
-        self._attr_is_on = False
-        self.async_write_ha_state()
+
+    async def async_update(self):
+        """Update the state of the inverter."""
+        current_value = await self._inverter.read_setting(self.entity_description.key)
+        self._attr_is_on = current_value == 1
 
     async def _write_setting(self, value):
         try:
             await self._inverter.write_setting(self.entity_description.key, value)
+            self.async_schedule_update_ha_state(force_refresh=True)
         except InverterError as e:
             _LOGGER.error(
                 "Error writing setting: %s=%s: %s",
