@@ -2322,7 +2322,7 @@ def test_bitwise_or(hass: HomeAssistant) -> None:
     )
     assert tpl.async_render() == 8 | 2
 
-def test_bitwise_xor(hass):
+def test_bitwise_xor(hass: HomeAssistant) -> None:
     """Test bitwise_xor method."""
     tpl = template.Template(
         """
