@@ -383,8 +383,8 @@ def get_rpc_key_instances(keys_dict: dict[str, Any], key: str) -> list[str]:
     if key in keys_dict:
         return [key]
 
-    if key == "switch" and "cover:0" in keys_dict:
-        key = "cover"
+    # if key == "switch" and "cover:0" in keys_dict:
+    #     key = "cover"
 
     return [k for k in keys_dict if k.startswith(f"{key}:")]
 
@@ -401,18 +401,33 @@ def is_rpc_momentary_input(
     return cast(bool, config[key]["type"] == "button")
 
 
-def is_block_channel_type_light(settings: dict[str, Any], channel: int) -> bool:
+def is_block_channel_type_light(settings: dict[str, Any], channel: str) -> bool:
     """Return true if block channel appliance type is set to light."""
-    app_type = settings["relays"][channel].get("appliance_type")
+    app_type = settings["relays"][int(channel)].get("appliance_type")
     return app_type is not None and app_type.lower().startswith("light")
 
 
-def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
+def is_block_exclude_from_relay(settings: dict[str, Any], block: Block) -> bool:
+    """Return true if block should be excludeed from switch platform."""
+
+    if settings.get("mode") == "roller":
+        return True
+
+    if block.channel is None:
+        return False
+
+    return is_block_channel_type_light(settings, block.channel)
+
+
+def is_rpc_channel_type_light(
+    config: dict[str, Any], status: dict[str, Any], channel: str
+) -> bool:
     """Return true if rpc channel consumption type is set to light."""
     con_types = config["sys"].get("ui_data", {}).get("consumption_types")
-    if con_types is None or len(con_types) <= channel:
+    ch = int(channel.split(":")[1])
+    if con_types is None or len(con_types) <= int(ch):
         return False
-    return cast(str, con_types[channel]).lower().startswith("light")
+    return cast(str, con_types[ch]).lower().startswith("light")
 
 
 def is_rpc_thermostat_internal_actuator(status: dict[str, Any]) -> bool:

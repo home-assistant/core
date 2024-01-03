@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, Final, cast
 
 from aioshelly.block_device import Block
 from aioshelly.const import MODEL_2, MODEL_25, RPC_GENERATIONS
@@ -16,8 +16,10 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.const import STATE_ON, EntityCategory
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -34,7 +36,6 @@ from .entity import (
 )
 from .utils import (
     async_remove_orphaned_entities,
-    async_remove_shelly_entity,
     get_device_entry_gen,
     get_virtual_component_ids,
     is_block_channel_type_light,
@@ -265,12 +266,20 @@ class BlockSleepingMotionSwitch(
             self.last_state = last_state
 
 
-class BlockRelaySwitch(ShellyBlockEntity, SwitchEntity):
+class BlockRelaySwitch(ShellyBlockAttributeEntity, SwitchEntity):
     """Entity that controls a relay on Block based Shelly devices."""
 
-    def __init__(self, coordinator: ShellyBlockCoordinator, block: Block) -> None:
+    entity_description: BlockSwitchDescription
+
+    def __init__(
+        self,
+        coordinator: ShellyBlockCoordinator,
+        block: Block,
+        attribute: str,
+        description: BlockSwitchDescription,
+    ) -> None:
         """Initialize relay switch."""
-        super().__init__(coordinator, block)
+        super().__init__(coordinator, block, attribute, description, Platform.SWITCH)
         self.control_result: dict[str, Any] | None = None
 
     @property
