@@ -43,7 +43,13 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     EntityCategory,
 )
-from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Context,
+    HomeAssistant,
+    callback,
+    get_release_channel,
+)
 from homeassistant.exceptions import (
     HomeAssistantError,
     InvalidStateError,
@@ -245,6 +251,7 @@ class EntityDescription(metaclass=FrozenOrThawed, frozen_or_thawed=True):
     has_entity_name: bool = False
     name: str | UndefinedType | None = UNDEFINED
     translation_key: str | None = None
+    translation_placeholders: Mapping[str, str] | None = None
     unit_of_measurement: str | None = None
 
 
@@ -429,6 +436,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "state",
     "supported_features",
     "translation_key",
+    "translation_placeholders",
     "unique_id",
     "unit_of_measurement",
 }
@@ -472,6 +480,9 @@ class Entity(
 
     # If we reported this entity was added without its platform set
     _no_platform_reported = False
+
+    # If we reported the name translation placeholders do not match the name
+    _name_translation_placeholders_reported = False
 
     # Protect for multiple updates
     _update_staged = False
@@ -537,6 +548,7 @@ class Entity(
     _attr_state: StateType = STATE_UNKNOWN
     _attr_supported_features: int | None = None
     _attr_translation_key: str | None
+    _attr_translation_placeholders: Mapping[str, str]
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
 
@@ -628,6 +640,29 @@ class Entity(
             f".{self.translation_key}.name"
         )
 
+    def _substitute_name_placeholders(self, name: str) -> str:
+        """Substitute placeholders in entity name."""
+        try:
+            return name.format(**self.translation_placeholders)
+        except KeyError as err:
+            if not self._name_translation_placeholders_reported:
+                if get_release_channel() != "stable":
+                    raise HomeAssistantError("Missing placeholder %s" % err) from err
+                report_issue = self._suggest_report_issue()
+                _LOGGER.warning(
+                    (
+                        "Entity %s (%s) has translation placeholders '%s' which do not "
+                        "match the name '%s', please %s"
+                    ),
+                    self.entity_id,
+                    type(self),
+                    self.translation_placeholders,
+                    name,
+                    report_issue,
+                )
+                self._name_translation_placeholders_reported = True
+            return name
+
     def _name_internal(
         self,
         device_class_name: str | None,
@@ -643,7 +678,7 @@ class Entity(
         ):
             if TYPE_CHECKING:
                 assert isinstance(name, str)
-            return name
+            return self._substitute_name_placeholders(name)
         if hasattr(self, "entity_description"):
             description_name = self.entity_description.name
             if description_name is UNDEFINED and self._default_to_device_class_name():
@@ -852,6 +887,16 @@ class Entity(
         if hasattr(self, "entity_description"):
             return self.entity_description.translation_key
         return None
+
+    @final
+    @cached_property
+    def translation_placeholders(self) -> Mapping[str, str]:
+        """Return the translation placeholders for translated entity's name."""
+        if hasattr(self, "_attr_translation_placeholders"):
+            return self._attr_translation_placeholders
+        if hasattr(self, "entity_description"):
+            return self.entity_description.translation_placeholders or {}
+        return {}
 
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
@@ -1476,7 +1521,12 @@ class Entity(
             self.async_on_remove(self._async_unsubscribe_device_updates)
 
     def __repr__(self) -> str:
-        """Return the representation."""
+        """Return the representation.
+
+        If the entity is not added to a platform it's not safe to call _stringify_state.
+        """
+        if self._platform_state != EntityPlatformState.ADDED:
+            return f"<entity unknown.unknown={STATE_UNKNOWN}>"
         return f"<entity {self.entity_id}={self._stringify_state(self.available)}>"
 
     async def async_request_call(self, coro: Coroutine[Any, Any, _T]) -> _T:
