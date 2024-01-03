@@ -2,17 +2,9 @@
 from unittest.mock import MagicMock
 
 import pytest
+from syrupy import SnapshotAssertion
 
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ICON,
-    ATTR_UNIT_OF_MEASUREMENT,
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    STATE_UNKNOWN,
-    EntityCategory,
-    UnitOfElectricCurrent,
-)
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -22,6 +14,7 @@ from tests.common import MockConfigEntry
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_technove")
 async def test_sensors(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -30,50 +23,16 @@ async def test_sensors(
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-
-    assert (state := hass.states.get("sensor.technove_station_current"))
-    assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfElectricCurrent.AMPERE
+    entity_registry = er.async_get(hass)
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
     )
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.CURRENT
-    assert state.state == "23.75"
 
-    assert (entry := entity_registry.async_get("sensor.technove_station_current"))
-    assert entry.unique_id == "AA:AA:AA:AA:AA:BB_current"
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
-
-    assert (state := hass.states.get("sensor.technove_station_signal_strength"))
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.SIGNAL_STRENGTH
-    assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
-    )
-    assert state.state == "-82"
-
-    assert (
-        entry := entity_registry.async_get("sensor.technove_station_signal_strength")
-    )
-    assert entry.unique_id == "AA:AA:AA:AA:AA:BB_rssi"
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
-
-    assert (state := hass.states.get("sensor.technove_station_wi_fi_network_name"))
-    assert state.attributes.get(ATTR_ICON) == "mdi:wifi"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    assert state.state == "Connecting..."
-
-    assert (
-        entry := entity_registry.async_get("sensor.technove_station_wi_fi_network_name")
-    )
-    assert entry.unique_id == "AA:AA:AA:AA:AA:BB_ssid"
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
-
-    assert (state := hass.states.get("sensor.technove_station_status"))
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    assert state.state == "plugged_charging"
-
-    assert (entry := entity_registry.async_get("sensor.technove_station_status"))
-    assert entry.unique_id == "AA:AA:AA:AA:AA:BB_status"
-    assert entry.entity_category is EntityCategory.DIAGNOSTIC
+    assert entity_entries
+    for entity_entry in entity_entries:
+        assert hass.states.get(entity_entry.entity_id) == snapshot(
+            name=entity_entry.entity_id
+        )
 
 
 @pytest.mark.parametrize(
