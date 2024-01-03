@@ -103,7 +103,6 @@ SENSORS: tuple[TechnoVESensorEntityDescription, ...] = (
     ),
     TechnoVESensorEntityDescription(
         key="rssi",
-        translation_key="rssi",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,

@@ -34,17 +34,11 @@
       "max_station_current": {
         "name": "Max station current"
       },
-      "current": {
-        "name": "Current"
-      },
       "energy_total": {
         "name": "Total energy usage"
       },
       "energy_session": {
         "name": "Last session energy usage"
-      },
-      "rssi": {
-        "name": "Wi-Fi signal strength"
       },
       "ssid": {
         "name": "Wi-Fi network name"
