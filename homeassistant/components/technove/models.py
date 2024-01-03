@@ -19,12 +19,12 @@ class TechnoVEEntity(CoordinatorEntity[TechnoVEDataUpdateCoordinator]):
     @property
     def device_info(self) -> DeviceInfo:
         """Return information about this TechnoVE station."""
-        data = self.coordinator.data
+        info = self.coordinator.data.info
         return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, data.info.mac_address)},
-            identifiers={(DOMAIN, data.info.mac_address)},
-            name=data.info.name,
+            connections={(CONNECTION_NETWORK_MAC,info.mac_address)},
+            identifiers={(DOMAIN,info.mac_address)},
+            name=info.name,
             manufacturer="TechnoVE",
-            model=f"TechnoVE i{data.info.max_station_current}",
-            sw_version=data.info.version,
+            model=f"TechnoVE i{info.max_station_current}",
+            sw_version=info.version,
         )
