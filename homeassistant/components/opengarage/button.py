@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, cast
 
-import opengarage
+from opengarage import OpenGarage
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -26,7 +26,7 @@ from .entity import OpenGarageEntity
 class OpenGarageButtonEntityDescriptionMixin:
     """Mixin to describe a OpenGarage button entity."""
 
-    press_action: Callable[[opengarage.OpenGarage], Any]
+    press_action: Callable[[OpenGarage], Any]
 
 
 @dataclass
@@ -38,8 +38,7 @@ class OpenGarageButtonEntityDescription(
 
 BUTTONS: tuple[OpenGarageButtonEntityDescription, ...] = (
     OpenGarageButtonEntityDescription(
-        key="reboot_device",
-        translation_key="reboot_device",
+        key="restart",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_action=lambda opengarage: opengarage.reboot(),
@@ -66,7 +65,7 @@ async def async_setup_entry(
 
 
 class OpenGarageButtonEntity(OpenGarageEntity, ButtonEntity):
-    """Representation of a OpenGarage button."""
+    """Representation of an OpenGarage button."""
 
     entity_description: OpenGarageButtonEntityDescription
 
@@ -77,9 +76,7 @@ class OpenGarageButtonEntity(OpenGarageEntity, ButtonEntity):
         description: OpenGarageButtonEntityDescription,
     ) -> None:
         """Initialize the button."""
-        super().__init__(coordinator, device_id)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.data['name']}-{description.key}"
+        super().__init__(coordinator, device_id, description)
 
     async def async_press(self) -> None:
         """Set the value of the entity."""

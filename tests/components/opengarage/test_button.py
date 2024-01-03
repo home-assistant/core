@@ -13,18 +13,17 @@ async def test_buttons(
     hass: HomeAssistant,
     mock_opengarage: MagicMock,
     init_integration: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test standard OpenGarage buttons."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
-    entry = entity_registry.async_get("button.abcdef_reboot_device")
+    entry = entity_registry.async_get("button.abcdef_restart")
     assert entry
-    assert entry.unique_id == "abcdef-reboot_device"
+    assert entry.unique_id == "12345_restart"
     await hass.services.async_call(
         button.DOMAIN,
         button.SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.abcdef_reboot_device"},
+        {ATTR_ENTITY_ID: "button.abcdef_restart"},
         blocking=True,
     )
     assert len(mock_opengarage.reboot.mock_calls) == 1
