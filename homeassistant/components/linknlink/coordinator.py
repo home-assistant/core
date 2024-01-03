@@ -16,15 +16,8 @@ from linknlink.exceptions import (
     NetworkTimeoutError,
 )
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MAC,
-    CONF_NAME,
-    CONF_TIMEOUT,
-    CONF_TYPE,
-    Platform,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_TIMEOUT, CONF_TYPE, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -153,14 +146,6 @@ class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
             self.name,
             self.api.model,
             self.api.host[0],
-        )
-
-        self.hass.async_create_task(
-            self.hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_REAUTH},
-                data={CONF_NAME: self.name, **self.config.data},
-            )
         )
 
     async def async_auth(self) -> bool:

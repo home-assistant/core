@@ -19,7 +19,6 @@ from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import DEFAULT_TIMEOUT, DEVICE_TYPES, DOMAIN
-from .helpers import format_mac
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,7 +89,7 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 hello = partial(llk.hello, host, timeout=timeout)
-                device = await self.hass.async_add_executor_job(hello)
+                linknlink = await self.hass.async_add_executor_job(hello)
 
             except NetworkTimeoutError:
                 errors["base"] = "cannot_connect"
@@ -108,29 +107,15 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     err_msg = str(err)
 
             else:
-                device.timeout = timeout
+                linknlink.timeout = timeout
 
-                if self.source != config_entries.SOURCE_REAUTH:
-                    await self.async_set_device(device)
-                    self._abort_if_unique_id_configured(
-                        updates={CONF_HOST: device.host[0], CONF_TIMEOUT: timeout}
-                    )
-                    return await self.async_step_auth()
-
-                if device.mac == self.device.mac:
-                    await self.async_set_device(device, raise_on_progress=False)
-                    return await self.async_step_auth()
-
-                errors["base"] = "invalid_host"
-                err_msg = (
-                    "This is not the device you are looking for. The MAC "
-                    f"address must be {format_mac(self.device.mac)}"
+                await self.async_set_device(linknlink)
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: linknlink.host[0], CONF_TIMEOUT: timeout}
                 )
+                return await self.async_step_auth()
 
             _LOGGER.error("Failed to connect to the device at %s: %s", host, err_msg)
-
-            if self.source == config_entries.SOURCE_IMPORT:
-                return self.async_abort(reason=errors["base"])
 
         data_schema = {
             vol.Required(CONF_HOST): str,
@@ -173,18 +158,6 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         else:
             await self.async_set_unique_id(device.mac.hex())
-            if self.source == config_entries.SOURCE_IMPORT:
-                _LOGGER.warning(
-                    (
-                        "%s (%s at %s) is ready to be configured. Click "
-                        "Configuration in the sidebar, click Integrations and "
-                        "click Configure on the device to complete the setup"
-                    ),
-                    device.name,
-                    device.model,
-                    device.host[0],
-                )
-
             if device.is_locked:
                 return await self.async_step_unlock()
             return await self.async_step_finish()
