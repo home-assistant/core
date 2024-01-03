@@ -640,7 +640,7 @@ class Entity(
             f".{self.translation_key}.name"
         )
 
-    def _substitue_name_placeholders(self, name: str) -> str:
+    def _substitute_name_placeholders(self, name: str) -> str:
         """Substitute placeholders in entity name."""
         try:
             return name.format(**self.translation_placeholders)
@@ -678,7 +678,7 @@ class Entity(
         ):
             if TYPE_CHECKING:
                 assert isinstance(name, str)
-            return self._substitue_name_placeholders(name)
+            return self._substitute_name_placeholders(name)
         if hasattr(self, "entity_description"):
             description_name = self.entity_description.name
             if description_name is UNDEFINED and self._default_to_device_class_name():
