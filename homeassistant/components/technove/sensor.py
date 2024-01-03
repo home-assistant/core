@@ -145,7 +145,6 @@ async def async_setup_entry(
 class TechnoVESensorEntity(TechnoVEEntity, SensorEntity):
     """Defines a TechnoVE sensor entity."""
 
-    _attr_has_entity_name = True
     entity_description: TechnoVESensorEntityDescription
 
     def __init__(
@@ -154,9 +153,8 @@ class TechnoVESensorEntity(TechnoVEEntity, SensorEntity):
         description: TechnoVESensorEntityDescription,
     ) -> None:
         """Initialize a TechnoVE sensor entity."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(coordinator=coordinator, key=description.key)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.data.info.mac_address}_{description.key}"
 
     @property
     def native_value(self) -> StateType:

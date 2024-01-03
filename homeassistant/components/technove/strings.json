@@ -8,7 +8,7 @@
           "ip_address": "[%key:common::config_flow::data::ip%]"
         },
         "data_description": {
-          "ip_address": "Hostname or IP address of your WLED device."
+          "ip_address": "Hostname or IP address of your TechnoVE station."
         }
       }
     },

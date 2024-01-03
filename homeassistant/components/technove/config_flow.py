@@ -16,10 +16,6 @@ from .const import DOMAIN
 class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for TechnoVE."""
 
-    VERSION = 1
-    discovered_host: str
-    discovered_station: TechnoVEStation
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -45,7 +41,7 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_IP_ADDRESS): str}),
-            errors=errors or {},
+            errors=errors,
         )
 
     async def _async_get_station(self, host: str) -> TechnoVEStation:

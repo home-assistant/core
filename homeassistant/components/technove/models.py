@@ -11,16 +11,20 @@ class TechnoVEEntity(CoordinatorEntity[TechnoVEDataUpdateCoordinator]):
 
     _attr_has_entity_name = True
 
+    def __init__(self, coordinator: TechnoVEDataUpdateCoordinator, key: str) -> None:
+        """Initialize a base TechnoVE entity."""
+        super().__init__(coordinator=coordinator)
+        self._attr_unique_id = f"{coordinator.data.info.mac_address}_{key}"
+
     @property
     def device_info(self) -> DeviceInfo:
         """Return information about this TechnoVE station."""
+        data = self.coordinator.data
         return DeviceInfo(
-            connections={
-                (CONNECTION_NETWORK_MAC, self.coordinator.data.info.mac_address)
-            },
-            identifiers={(DOMAIN, self.coordinator.data.info.mac_address)},
-            name=self.coordinator.data.info.name,
+            connections={(CONNECTION_NETWORK_MAC, data.info.mac_address)},
+            identifiers={(DOMAIN, data.info.mac_address)},
+            name=data.info.name,
             manufacturer="TechnoVE",
-            model=f"TechnoVE i{self.coordinator.data.info.max_station_current}",
-            sw_version=self.coordinator.data.info.version,
+            model=f"TechnoVE i{data.info.max_station_current}",
+            sw_version=data.info.version,
         )

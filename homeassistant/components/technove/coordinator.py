@@ -5,7 +5,7 @@ from technove import Station as TechnoVEStation, TechnoVE, TechnoVEError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -17,12 +17,7 @@ class TechnoVEDataUpdateCoordinator(DataUpdateCoordinator[TechnoVEStation]):
 
     config_entry: ConfigEntry
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        *,
-        entry: ConfigEntry,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize global TechnoVE data updater."""
         super().__init__(
             hass,
@@ -31,9 +26,9 @@ class TechnoVEDataUpdateCoordinator(DataUpdateCoordinator[TechnoVEStation]):
             update_interval=SCAN_INTERVAL,
         )
         self.technove = TechnoVE(
-            entry.data[CONF_IP_ADDRESS], session=async_get_clientsession(hass)
+            self.config_entry.data[CONF_IP_ADDRESS],
+            session=async_get_clientsession(hass),
         )
-        self.unsub: CALLBACK_TYPE | None = None
 
     async def _async_update_data(self) -> TechnoVEStation:
         """Fetch data from TechnoVE."""
