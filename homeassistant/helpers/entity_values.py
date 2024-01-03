@@ -42,7 +42,7 @@ class EntityValues:
         self._glob = compiled
 
     @lru_cache(maxsize=_MAX_EXPECTED_ENTITIES)
-    def get(self, entity_id: str) -> dict[str, str]:
+    def get(self, entity_id: str) -> dict[str, str] | None:
         """Get config for an entity id."""
         domain, _ = split_entity_id(entity_id)
         result: dict[str, str] = {}
@@ -58,4 +58,4 @@ class EntityValues:
         if self._exact is not None and entity_id in self._exact:
             result.update(self._exact[entity_id])
 
-        return result
+        return result if result else None

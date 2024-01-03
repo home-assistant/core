@@ -25,6 +25,12 @@ def test_override_by_domain() -> None:
     assert store.get(ent) == {"key": "value"}
 
 
+def test_no_values() -> None:
+    """Test None is return with no values."""
+    store = EV(domain={"test": {"key": "value"}})
+    assert store.get("unrelated.none") is None
+
+
 def test_override_by_glob() -> None:
     """Test values with glob match."""
     store = EV(glob={"test.?e*": {"key": "value"}})
