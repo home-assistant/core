@@ -561,6 +561,7 @@ FLOWS = {
         "waze_travel_time",
         "weatherflow",
         "weatherkit",
+        "webmin",
         "webostv",
         "wemo",
         "whirlpool",
