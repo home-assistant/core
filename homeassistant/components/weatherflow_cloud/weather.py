@@ -78,9 +78,6 @@ class WeatherFlowWeather(
             identifiers={(DOMAIN, outdoor_device.serial_number)},
             manufacturer=MANUFACTURER,
             configuration_url=f"https://tempestwx.com/station/{station_id}/grid",
-            serial_number=outdoor_device.serial_number,
-            sw_version=outdoor_device.firmware_revision,
-            hw_version=outdoor_device.hardware_revision,
         )
 
     @property
