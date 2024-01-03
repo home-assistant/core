@@ -308,6 +308,21 @@
       },
       "day_night_switch_threshold": {
         "name": "Day night switch threshold"
+      },
+      "image_brightness": {
+        "name": "Image brightness"
+      },
+      "image_contrast": {
+        "name": "Image contrast"
+      },
+      "image_saturation": {
+        "name": "Image saturation"
+      },
+      "image_sharpness": {
+        "name": "Image sharpness"
+      },
+      "image_hue": {
+        "name": "Image hue"
       }
     },
     "select": {
