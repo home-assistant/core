@@ -99,22 +99,48 @@ def test_load_translations_files(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("language", "expected_translation", "expect_error"),
+    ("language", "expected_translation", "expected_errors"),
     (
         (
             "en",
-            {"component.test.entity.switch.outlet.name": "Outlet {placeholder}"},
-            False,
+            {
+                "component.test.entity.switch.other1.name": "Other 1",
+                "component.test.entity.switch.other2.name": "Other 2",
+                "component.test.entity.switch.other3.name": "Other 3",
+                "component.test.entity.switch.other4.name": "Other 4",
+                "component.test.entity.switch.outlet.name": "Outlet {placeholder}",
+            },
+            [],
         ),
         (
             "es",
-            {"component.test.entity.switch.outlet.name": "Enchufe {placeholder}"},
-            False,
+            {
+                "component.test.entity.switch.other1.name": "Otra 1",
+                "component.test.entity.switch.other2.name": "Otra 2",
+                "component.test.entity.switch.other3.name": "Otra 3",
+                "component.test.entity.switch.other4.name": "Otra 4",
+                "component.test.entity.switch.outlet.name": "Enchufe {placeholder}",
+            },
+            [],
         ),
         (
             "de",
-            {"component.test.entity.switch.outlet.name": "Outlet {placeholder}"},
-            True,
+            {
+                # Correct
+                "component.test.entity.switch.other1.name": "Anderes 1",
+                # Translation has placeholder missing in English
+                "component.test.entity.switch.other2.name": "Other 2",
+                # Correct (empty translation)
+                "component.test.entity.switch.other3.name": "",
+                # Translation missing
+                "component.test.entity.switch.other4.name": "Other 4",
+                # Mismatch in placeholders
+                "component.test.entity.switch.outlet.name": "Outlet {placeholder}",
+            },
+            [
+                "component.test.entity.switch.other2.name",
+                "component.test.entity.switch.outlet.name",
+            ],
         ),
     ),
 )
@@ -124,7 +150,7 @@ async def test_load_translations_files_invalid_localized_placeholders(
     caplog: pytest.LogCaptureFixture,
     language: str,
     expected_translation: dict,
-    expect_error: bool,
+    expected_errors: bool,
 ) -> None:
     """Test the load translation files with invalid localized placeholders."""
     caplog.clear()
@@ -133,10 +159,14 @@ async def test_load_translations_files_invalid_localized_placeholders(
     )
     assert translations == expected_translation
 
-    assert (
-        f"Validation of placeholders for localized ({language}) strings failed."
-        in caplog.text
-    ) == expect_error
+    assert ("Validation of translation placeholders" in caplog.text) == (
+        len(expected_errors) > 0
+    )
+    for expected_error in expected_errors:
+        assert (
+            f"Validation of translation placeholders for localized ({language}) string {expected_error} failed."
+            in caplog.text
+        )
 
 
 async def test_get_translations(
