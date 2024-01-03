@@ -530,8 +530,8 @@ build.json @home-assistant/supervisor
 /tests/components/hive/ @Rendili @KJonline
 /homeassistant/components/hlk_sw16/ @jameshilliard
 /tests/components/hlk_sw16/ @jameshilliard
-/homeassistant/components/holiday/ @jrieger
-/tests/components/holiday/ @jrieger
+/homeassistant/components/holiday/ @jrieger @gjohansson-ST
+/tests/components/holiday/ @jrieger @gjohansson-ST
 /homeassistant/components/home_connect/ @DavidMStraub
 /tests/components/home_connect/ @DavidMStraub
 /homeassistant/components/home_plus_control/ @chemaaa
@@ -1299,8 +1299,8 @@ build.json @home-assistant/supervisor
 /tests/components/system_bridge/ @timmo001
 /homeassistant/components/systemmonitor/ @gjohansson-ST
 /tests/components/systemmonitor/ @gjohansson-ST
-/homeassistant/components/tado/ @michaelarnauts @chiefdragon
-/tests/components/tado/ @michaelarnauts @chiefdragon
+/homeassistant/components/tado/ @michaelarnauts @chiefdragon @erwindouna
+/tests/components/tado/ @michaelarnauts @chiefdragon @erwindouna
 /homeassistant/components/tag/ @balloob @dmulcahey
 /tests/components/tag/ @balloob @dmulcahey
 /homeassistant/components/tailscale/ @frenck
@@ -1316,6 +1316,8 @@ build.json @home-assistant/supervisor
 /tests/components/tasmota/ @emontnemery
 /homeassistant/components/tautulli/ @ludeeus @tkdrob
 /tests/components/tautulli/ @ludeeus @tkdrob
+/homeassistant/components/tedee/ @patrickhilker @zweckj
+/tests/components/tedee/ @patrickhilker @zweckj
 /homeassistant/components/tellduslive/ @fredrike
 /tests/components/tellduslive/ @fredrike
 /homeassistant/components/template/ @PhracturedBlue @tetienne @home-assistant/core

@@ -55,6 +55,7 @@ SLOW_ADD_MIN_TIMEOUT = 500
 
 PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
+DATA_DOMAIN_ENTITIES = "domain_entities"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
 _LOGGER = getLogger(__name__)
@@ -146,6 +147,10 @@ class EntityPlatform:
         hass.data.setdefault(DATA_ENTITY_PLATFORM, {}).setdefault(
             self.platform_name, []
         ).append(self)
+
+        self.domain_entities: dict[str, Entity] = hass.data.setdefault(
+            DATA_DOMAIN_ENTITIES, {}
+        ).setdefault(domain, {})
 
     def __repr__(self) -> str:
         """Represent an EntityPlatform."""
@@ -734,6 +739,7 @@ class EntityPlatform:
 
         entity_id = entity.entity_id
         self.entities[entity_id] = entity
+        self.domain_entities[entity_id] = entity
 
         if not restored:
             # Reserve the state in the state machine
@@ -746,6 +752,7 @@ class EntityPlatform:
         def remove_entity_cb() -> None:
             """Remove entity from entities dict."""
             self.entities.pop(entity_id)
+            self.domain_entities.pop(entity_id)
 
         entity.async_on_remove(remove_entity_cb)
 
@@ -830,11 +837,7 @@ class EntityPlatform:
             """Handle the service."""
             return await service.entity_service_call(
                 self.hass,
-                [
-                    plf
-                    for plf in self.hass.data[DATA_ENTITY_PLATFORM][self.platform_name]
-                    if plf.domain == self.domain
-                ],
+                self.domain_entities,
                 func,
                 call,
                 required_features,

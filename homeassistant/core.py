@@ -604,13 +604,13 @@ class HomeAssistant:
         # if TYPE_CHECKING to avoid the overhead of constructing
         # the type used for the cast. For history see:
         # https://github.com/home-assistant/core/pull/71960
-        if hassjob.job_type == HassJobType.Coroutinefunction:
+        if hassjob.job_type is HassJobType.Coroutinefunction:
             if TYPE_CHECKING:
                 hassjob.target = cast(
                     Callable[..., Coroutine[Any, Any, _R]], hassjob.target
                 )
             task = self.loop.create_task(hassjob.target(*args), name=hassjob.name)
-        elif hassjob.job_type == HassJobType.Callback:
+        elif hassjob.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
             self.loop.call_soon(hassjob.target, *args)
@@ -709,7 +709,7 @@ class HomeAssistant:
         # if TYPE_CHECKING to avoid the overhead of constructing
         # the type used for the cast. For history see:
         # https://github.com/home-assistant/core/pull/71960
-        if hassjob.job_type == HassJobType.Callback:
+        if hassjob.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
             hassjob.target(*args)
@@ -889,7 +889,7 @@ class HomeAssistant:
                         continue
                     tasks.append(task_or_none)
                 if tasks:
-                    asyncio.gather(*tasks, return_exceptions=True)
+                    await asyncio.gather(*tasks, return_exceptions=True)
         except asyncio.TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for shutdown jobs to complete, the shutdown will"
@@ -1409,7 +1409,13 @@ class State:
 
         self.entity_id = entity_id
         self.state = state
-        self.attributes = ReadOnlyDict(attributes or {})
+        # State only creates and expects a ReadOnlyDict so
+        # there is no need to check for subclassing with
+        # isinstance here so we can use the faster type check.
+        if type(attributes) is not ReadOnlyDict:  # noqa: E721
+            self.attributes = ReadOnlyDict(attributes or {})
+        else:
+            self.attributes = attributes
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
@@ -1828,6 +1834,11 @@ class StateMachine:
         else:
             now = dt_util.utcnow()
 
+        if same_attr:
+            if TYPE_CHECKING:
+                assert old_state is not None
+            attributes = old_state.attributes
+
         state = State(
             entity_id,
             new_state,
@@ -1970,13 +1981,20 @@ class ServiceRegistry:
             Coroutine[Any, Any, ServiceResponse] | ServiceResponse | None,
         ],
         schema: vol.Schema | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Register a service.
 
         Schema is called to coerce and validate the service data.
         """
         run_callback_threadsafe(
-            self._hass.loop, self.async_register, domain, service, service_func, schema
+            self._hass.loop,
+            self.async_register,
+            domain,
+            service,
+            service_func,
+            schema,
+            supports_response,
         ).result()
 
     @callback
@@ -2197,11 +2215,11 @@ class ServiceRegistry:
         """Execute a service."""
         job = handler.job
         target = job.target
-        if job.job_type == HassJobType.Coroutinefunction:
+        if job.job_type is HassJobType.Coroutinefunction:
             if TYPE_CHECKING:
                 target = cast(Callable[..., Coroutine[Any, Any, _R]], target)
             return await target(service_call)
-        if job.job_type == HassJobType.Callback:
+        if job.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
                 target = cast(Callable[..., _R], target)
             return target(service_call)

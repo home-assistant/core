@@ -671,11 +671,10 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             converter := UNIT_CONVERTERS.get(device_class)
         ):
             # Unit conversion needed
-            converted_numerical_value = converter.convert(
-                float(numerical_value),
+            converted_numerical_value = converter.converter_factory(
                 native_unit_of_measurement,
                 unit_of_measurement,
-            )
+            )(float(numerical_value))
 
             # If unit conversion is happening, and there's no rounding for display,
             # do a best effort rounding here.
@@ -733,17 +732,6 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             )
 
         return value
-
-    def __repr__(self) -> str:
-        """Return the representation.
-
-        Entity.__repr__ includes the state in the generated string, this fails if we're
-        called before self.hass is set.
-        """
-        if not self.hass:
-            return f"<Entity {self.name}>"
-
-        return super().__repr__()
 
     def _suggested_precision_or_none(self) -> int | None:
         """Return suggested display precision, or None if not set."""

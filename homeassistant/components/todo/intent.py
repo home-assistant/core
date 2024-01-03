@@ -22,7 +22,7 @@ class ListAddItemIntent(intent.IntentHandler):
     intent_type = INTENT_LIST_ADD_ITEM
     slot_schema = {"item": cv.string, "name": cv.string}
 
-    async def async_handle(self, intent_obj: intent.Intent):
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -13,6 +14,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -42,11 +44,13 @@ async def async_setup_entry(
     """Set up the sensor from a config entry created in the integrations UI."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    name = config_entry.title
+    unique_id = config_entry.unique_id
+
+    if TYPE_CHECKING:
+        assert unique_id
 
     async_add_entities(
-        [SwissPublicTransportSensor(coordinator, name)],
-        True,
+        [SwissPublicTransportSensor(coordinator, unique_id)],
     )
 
 
@@ -101,14 +105,22 @@ class SwissPublicTransportSensor(
 
     _attr_attribution = "Data provided by transport.opendata.ch"
     _attr_icon = "mdi:bus"
+    _attr_has_entity_name = True
+    _attr_translation_key = "departure"
 
     def __init__(
-        self, coordinator: SwissPublicTransportDataUpdateCoordinator, name: str
+        self,
+        coordinator: SwissPublicTransportDataUpdateCoordinator,
+        unique_id: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._coordinator = coordinator
-        self._attr_name = name
+        self._attr_unique_id = f"{unique_id}_departure"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer="Opendata.ch",
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:

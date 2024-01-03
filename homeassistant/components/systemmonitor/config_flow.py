@@ -86,7 +86,7 @@ async def validate_import_sensor_setup(
 async def get_sensor_setup_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     """Return process sensor setup schema."""
     hass = handler.parent_handler.hass
-    processes = await hass.async_add_executor_job(get_all_running_processes)
+    processes = list(await hass.async_add_executor_job(get_all_running_processes))
     return vol.Schema(
         {
             vol.Required(CONF_PROCESS): SelectSelector(

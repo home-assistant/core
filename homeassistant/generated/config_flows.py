@@ -14,6 +14,7 @@ FLOWS = {
         "template",
         "threshold",
         "tod",
+        "trend",
         "utility_meter",
     ],
     "integration": [
@@ -499,6 +500,7 @@ FLOWS = {
         "tankerkoenig",
         "tasmota",
         "tautulli",
+        "tedee",
         "tellduslive",
         "tesla_wall_connector",
         "tessie",

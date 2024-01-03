@@ -401,6 +401,19 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the list of supported features."""
         return self._attr_supported_features
 
+    @property
+    def supported_features_compat(self) -> WaterHeaterEntityFeature:
+        """Return the supported features as WaterHeaterEntityFeature.
+
+        Remove this compatibility shim in 2025.1 or later.
+        """
+        features = self.supported_features
+        if type(features) is int:  # noqa: E721
+            new_features = WaterHeaterEntityFeature(features)
+            self._report_deprecated_supported_features_values(new_features)
+            return new_features
+        return features
+
 
 async def async_service_away_mode(
     entity: WaterHeaterEntity, service: ServiceCall
