@@ -14,7 +14,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "unique_id": "A configuration with this API key has already been configured."
+      "already_configured": "A configuration with this API key has already been configured."
     }
   }
 }
