@@ -55,6 +55,8 @@ async def async_get_scanner(
         translation_key = "import_aborted"
         if import_result.get("reason") == "import_failed":
             translation_key = "import_failed"
+        if import_result.get("reason") == "import_failed_invalid_auth":
+            translation_key = "import_failed_invalid_auth"
 
     async_create_issue(
         hass,
