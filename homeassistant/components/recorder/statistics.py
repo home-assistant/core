@@ -101,7 +101,7 @@ QUERY_STATISTICS_SHORT_TERM = (
     StatisticsShortTerm.sum,
 )
 
-QUERY_STATISTICS_SUMMARY_MEAN = (  # type: ignore[var-annotated]
+QUERY_STATISTICS_SUMMARY_MEAN = (
     StatisticsShortTerm.metadata_id,
     func.avg(StatisticsShortTerm.mean),
     func.min(StatisticsShortTerm.min),
