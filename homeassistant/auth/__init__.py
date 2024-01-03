@@ -77,8 +77,10 @@ async def auth_manager_from_config(
     return manager
 
 
-class AuthManagerFlowManager(data_entry_flow.FlowManager):
+class AuthManagerFlowManager(data_entry_flow.FlowManager[FlowResult]):
     """Manage authentication flows."""
+
+    _flow_result = FlowResult
 
     def __init__(self, hass: HomeAssistant, auth_manager: AuthManager) -> None:
         """Init auth manager flows."""

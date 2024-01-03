@@ -828,15 +828,17 @@ current_entry: ContextVar[ConfigEntry | None] = ContextVar(
 )
 
 
-class ConfigEntryFlowResult(FlowResult):
+class ConfigFlowResult(FlowResult):
     """Types result dict for config entry."""
 
     version: int
     minor_version: int
 
 
-class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigEntryFlowResult]):
+class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
     """Manage all the config entry flows that are in progress."""
+
+    _flow_result = ConfigFlowResult
 
     def __init__(
         self,
@@ -875,7 +877,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigEntryFlowResult
 
     async def async_init(
         self, handler: str, *, context: dict[str, Any] | None = None, data: Any = None
-    ) -> ConfigEntryFlowResult:
+    ) -> ConfigFlowResult:
         """Start a configuration flow."""
         if not context or "source" not in context:
             raise KeyError("Context not set or doesn't have a source set")
@@ -908,7 +910,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigEntryFlowResult
         handler: str,
         context: dict,
         data: Any,
-    ) -> tuple[data_entry_flow.FlowHandler, ConfigEntryFlowResult]:
+    ) -> tuple[data_entry_flow.FlowHandler, ConfigFlowResult]:
         """Run the init in a task to allow it to be canceled at shutdown."""
         flow = await self.async_create_flow(handler, context=context, data=data)
         if not flow:
@@ -937,8 +939,8 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigEntryFlowResult
         await self._discovery_debouncer.async_shutdown()
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.FlowHandler, result: ConfigEntryFlowResult
-    ) -> ConfigEntryFlowResult:
+        self, flow: data_entry_flow.FlowHandler, result: ConfigFlowResult
+    ) -> ConfigFlowResult:
         """Finish a config flow and add an entry."""
         flow = cast(ConfigFlow, flow)
 
@@ -1024,7 +1026,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigEntryFlowResult
         return flow
 
     async def async_post_init(
-        self, flow: data_entry_flow.FlowHandler, result: ConfigEntryFlowResult
+        self, flow: data_entry_flow.FlowHandler, result: ConfigFlowResult
     ) -> None:
         """After a flow is initialised trigger new flow notifications."""
         source = flow.context["source"]
@@ -1523,8 +1525,10 @@ def _async_abort_entries_match(
             raise data_entry_flow.AbortFlow("already_configured")
 
 
-class ConfigFlow(data_entry_flow.FlowHandler[ConfigEntryFlowResult]):
+class ConfigFlow(data_entry_flow.FlowHandler[ConfigFlowResult]):
     """Base class for config flows with some helpers."""
+
+    _flow_result = ConfigFlowResult
 
     def __init_subclass__(cls, *, domain: str | None = None, **kwargs: Any) -> None:
         """Initialize a subclass, register if possible."""
@@ -1687,7 +1691,7 @@ class ConfigFlow(data_entry_flow.FlowHandler[ConfigEntryFlowResult]):
         self,
         include_uninitialized: bool = False,
         match_context: dict[str, Any] | None = None,
-    ) -> list[ConfigEntryFlowResult]:
+    ) -> list[ConfigFlowResult]:
         """Return other in progress flows for current domain."""
         return [
             flw
@@ -1699,22 +1703,18 @@ class ConfigFlow(data_entry_flow.FlowHandler[ConfigEntryFlowResult]):
             if flw["flow_id"] != self.flow_id
         ]
 
-    async def async_step_ignore(
-        self, user_input: dict[str, Any]
-    ) -> ConfigEntryFlowResult:
+    async def async_step_ignore(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Ignore this config flow."""
         await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
         return self.async_create_entry(title=user_input["title"], data={})
 
-    async def async_step_unignore(
-        self, user_input: dict[str, Any]
-    ) -> ConfigEntryFlowResult:
+    async def async_step_unignore(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Rediscover a config entry by it's unique_id."""
         return self.async_abort(reason="not_implemented")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigEntryFlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         return self.async_abort(reason="not_implemented")
 
@@ -1747,14 +1747,14 @@ class ConfigFlow(data_entry_flow.FlowHandler[ConfigEntryFlowResult]):
 
     async def _async_step_discovery_without_unique_id(
         self,
-    ) -> ConfigEntryFlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         await self._async_handle_discovery_without_unique_id()
         return await self.async_step_user()
 
     async def async_step_discovery(
         self, discovery_info: DiscoveryInfoType
-    ) -> ConfigEntryFlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         return await self._async_step_discovery_without_unique_id()
 
@@ -1764,7 +1764,7 @@ class ConfigFlow(data_entry_flow.FlowHandler[ConfigEntryFlowResult]):
         *,
         reason: str,
         description_placeholders: Mapping[str, str] | None = None,
-    ) -> ConfigEntryFlowResult:
+    ) -> ConfigFlowResult:
         """Abort the config flow."""
         # Remove reauth notification if no reauth flows are in progress
         if self.source == SOURCE_REAUTH and not any(
@@ -1783,55 +1783,53 @@ class ConfigFlow(data_entry_flow.FlowHandler[ConfigEntryFlowResult]):
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
-    ) -> ConfigEntryFlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by Bluetooth discovery."""
         return await self._async_step_discovery_without_unique_id()
 
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
-    ) -> ConfigEntryFlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by DHCP discovery."""
         return await self._async_step_discovery_without_unique_id()
 
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
-    ) -> ConfigEntryFlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by HASS IO discovery."""
         return await self._async_step_discovery_without_unique_id()
 
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
-    ) -> ConfigEntryFlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by integration specific discovery."""
         return await self._async_step_discovery_without_unique_id()
 
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
-    ) -> ConfigEntryFlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by Homekit discovery."""
         return await self._async_step_discovery_without_unique_id()
 
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
-    ) -> ConfigEntryFlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by MQTT discovery."""
         return await self._async_step_discovery_without_unique_id()
 
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by SSDP discovery."""
         return await self._async_step_discovery_without_unique_id()
 
-    async def async_step_usb(
-        self, discovery_info: UsbServiceInfo
-    ) -> ConfigEntryFlowResult:
+    async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle a flow initialized by USB discovery."""
         return await self._async_step_discovery_without_unique_id()
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
-    ) -> ConfigEntryFlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by Zeroconf discovery."""
         return await self._async_step_discovery_without_unique_id()
 
@@ -1844,7 +1842,7 @@ class ConfigFlow(data_entry_flow.FlowHandler[ConfigEntryFlowResult]):
         description: str | None = None,
         description_placeholders: Mapping[str, str] | None = None,
         options: Mapping[str, Any] | None = None,
-    ) -> ConfigEntryFlowResult:
+    ) -> ConfigFlowResult:
         """Finish config flow and create a config entry."""
         result = super().async_create_entry(
             title=title,
@@ -1854,12 +1852,16 @@ class ConfigFlow(data_entry_flow.FlowHandler[ConfigEntryFlowResult]):
         )
 
         result["options"] = options or {}
+        result["minor_version"] = self.MINOR_VERSION
+        result["version"] = self.VERSION
 
-        return cast(ConfigEntryFlowResult, result)
+        return result
 
 
-class OptionsFlowManager(data_entry_flow.FlowManager):
+class OptionsFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
     """Flow to set options for a configuration entry."""
+
+    _flow_result = ConfigFlowResult
 
     def _async_get_config_entry(self, config_entry_id: str) -> ConfigEntry:
         """Return config entry or raise if not found."""
@@ -1885,8 +1887,8 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         return handler.async_get_options_flow(entry)
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
-    ) -> data_entry_flow.FlowResult:
+        self, flow: data_entry_flow.FlowHandler, result: ConfigFlowResult
+    ) -> ConfigFlowResult:
         """Finish an options flow and update options for configuration entry.
 
         Flow.handler and entry_id is the same thing to map flow with entry.
@@ -1914,8 +1916,10 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
             await flow.async_setup_preview(self.hass)
 
 
-class OptionsFlow(data_entry_flow.FlowHandler):
+class OptionsFlow(data_entry_flow.FlowHandler[ConfigFlowResult]):
     """Base class for config options flows."""
+
+    _flow_result = ConfigFlowResult
 
     handler: str
 

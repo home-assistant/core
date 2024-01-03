@@ -93,8 +93,10 @@ class MultiFactorAuthModule:
         raise NotImplementedError
 
 
-class SetupFlow(data_entry_flow.FlowHandler):
+class SetupFlow(data_entry_flow.FlowHandler[FlowResult]):
     """Handler for the setup flow."""
+
+    _flow_result = FlowResult
 
     def __init__(
         self, auth_module: MultiFactorAuthModule, setup_schema: vol.Schema, user_id: str

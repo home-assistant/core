@@ -382,7 +382,7 @@ class SchemaConfigFlowHandler(config_entries.ConfigFlow, ABC):
         self,
         data: Mapping[str, Any],
         **kwargs: Any,
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Finish config flow and create a config entry."""
         self.async_config_flow_finished(data)
         return super().async_create_entry(
@@ -449,7 +449,7 @@ class SchemaOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         self,
         data: Mapping[str, Any],
         **kwargs: Any,
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Finish config flow and create a config entry."""
         if self._async_options_flow_finished:
             self._async_options_flow_finished(self.hass, data)
