@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable, Mapping
 import logging
+import string
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
@@ -242,6 +243,42 @@ class _TranslationCache:
 
         self.loaded[language].update(components)
 
+    def _validate_placeholders(
+        self,
+        language: str,
+        updated_resources: dict[str, Any],
+        cached_resources: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Validate if updated resources have same placeholders as cached resources."""
+        if cached_resources is None:
+            return updated_resources
+
+        mismatches: set[str] = set()
+
+        for key, value in updated_resources.items():
+            if key not in cached_resources:
+                continue
+            tuples = list(string.Formatter().parse(value))
+            updated_placeholders = {tup[1] for tup in tuples if tup[1] is not None}
+
+            tuples = list(string.Formatter().parse(cached_resources[key]))
+            cached_placeholders = {tup[1] for tup in tuples if tup[1] is not None}
+            if updated_placeholders != cached_placeholders:
+                _LOGGER.error(
+                    (
+                        "Validation of translation placeholders for localized (%s) string "
+                        "%s failed"
+                    ),
+                    language,
+                    key,
+                )
+                mismatches.add(key)
+
+        for mismatch in mismatches:
+            del updated_resources[mismatch]
+
+        return updated_resources
+
     @callback
     def _build_category_cache(
         self,
@@ -274,12 +311,14 @@ class _TranslationCache:
                 ).setdefault(category, {})
 
                 if isinstance(resource, dict):
-                    category_cache.update(
-                        recursive_flatten(
-                            f"component.{component}.{category}.",
-                            resource,
-                        )
+                    resources_flatten = recursive_flatten(
+                        f"component.{component}.{category}.",
+                        resource,
                     )
+                    resources_flatten = self._validate_placeholders(
+                        language, resources_flatten, category_cache
+                    )
+                    category_cache.update(resources_flatten)
                 else:
                     category_cache[f"component.{component}.{category}"] = resource
 
