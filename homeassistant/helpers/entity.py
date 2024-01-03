@@ -540,7 +540,7 @@ class Entity(
     _attr_state: StateType = STATE_UNKNOWN
     _attr_supported_features: int | None = None
     _attr_translation_key: str | None
-    _attr_translation_placeholders: Mapping[str, str] | None
+    _attr_translation_placeholders: Mapping[str, str]
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
 
@@ -637,14 +637,10 @@ class Entity(
         tuples = list(string.Formatter().parse(name))
         if tuples[0][1] is None:
             return name
-        if (translation_placeholders := self.translation_placeholders) is not None:
-            if TYPE_CHECKING:
-                assert isinstance(translation_placeholders, Mapping)
-            try:
-                return name.format(**translation_placeholders)
-            except KeyError as err:
-                raise HomeAssistantError("Missing placeholder %s" % err) from err
-        raise HomeAssistantError("Missing property _attr_translation_placeholders")
+        try:
+            return name.format(**self.translation_placeholders)
+        except KeyError as err:
+            raise HomeAssistantError("Missing placeholder %s" % err) from err
 
     def _name_internal(
         self,
@@ -873,13 +869,13 @@ class Entity(
 
     @final
     @cached_property
-    def translation_placeholders(self) -> Mapping[str, str] | None:
+    def translation_placeholders(self) -> Mapping[str, str]:
         """Return the translation placeholders for translated entity's name."""
         if hasattr(self, "_attr_translation_placeholders"):
             return self._attr_translation_placeholders
         if hasattr(self, "entity_description"):
-            return self.entity_description.translation_placeholders
-        return None
+            return self.entity_description.translation_placeholders or {}
+        return {}
 
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
