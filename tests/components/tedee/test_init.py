@@ -82,29 +82,23 @@ async def test_cleanup_disconnected_locks(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    devices = dr.async_entries_for_config_entry(
-        device_registry, mock_config_entry.entry_id
-    )
-    assert devices == snapshot
-
-    for device in devices:
-        entities = er.async_entries_for_device(
-            entity_registry, device.id, include_disabled_entities=True
+    def assert_current_registry_state() -> None:
+        devices = dr.async_entries_for_config_entry(
+            device_registry, mock_config_entry.entry_id
         )
-        assert entities == snapshot
+        assert devices == snapshot
+
+        for device in devices:
+            entities = er.async_entries_for_device(
+                entity_registry, device.id, include_disabled_entities=True
+            )
+            assert entities == snapshot
+
+    assert_current_registry_state()
 
     # remove a lock and reload integration
     mock_tedee.locks_dict.pop(12345)
 
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
 
-    devices = dr.async_entries_for_config_entry(
-        device_registry, mock_config_entry.entry_id
-    )
-
-    assert devices == snapshot
-    for device in devices:
-        entities = er.async_entries_for_device(
-            entity_registry, device.id, include_disabled_entities=True
-        )
-        assert entities == snapshot
+    assert_current_registry_state()
