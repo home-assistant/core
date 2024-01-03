@@ -32,7 +32,6 @@ class WeatherFlowCloudDataUpdateCoordinator(
 
     async def _async_update_data(self) -> dict[int, WeatherFlowData]:
         """Fetch data from WeatherFlow Forecast."""
-        LOGGER.debug("Updating Tempest Data")
         try:
             async with self.weather_api:
                 return await self.weather_api.get_all_data()
