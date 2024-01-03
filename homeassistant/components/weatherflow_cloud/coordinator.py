@@ -23,7 +23,7 @@ class WeatherFlowCloudDataUpdateCoordinator(
         """Initialize global WeatherFlow forecast data updater."""
 
         # Store local variables
-        self.hass = hass
+        # self.hass = hass
 
         # Extract API Token
         self.weather_api = WeatherFlowRestAPI(api_token=api_token)

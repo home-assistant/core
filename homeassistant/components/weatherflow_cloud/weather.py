@@ -56,6 +56,7 @@ class WeatherFlowWeather(
     _attr_supported_features = (
         WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
     )
+    _attr_name = None
 
     def __init__(
         self,
@@ -67,7 +68,6 @@ class WeatherFlowWeather(
 
         self.station_id = station_id
         self._attr_unique_id = f"weatherflow_forecast_{station_id}"
-        self._attr_name = None
 
         # Obtain info from 1st outdoor device on station
         outdoor_device = self.local_data.station.outdoor_devices[0]
