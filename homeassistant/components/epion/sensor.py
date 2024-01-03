@@ -17,6 +17,7 @@ from homeassistant.const import PERCENTAGE, UnitOfPressure, UnitOfTemperature, C
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity import generate_entity_id
 
 from .const import CONF_SITE_ID, DATA_API_CLIENT, DOMAIN, LOGGER
 
@@ -36,7 +37,10 @@ async def async_setup_entry(
     current_data = epionBase.last_response
     for epion_device in current_data['devices']:
         # Keys are: deviceId, deviceName, locationId, lastMeasurement, co2, temperature, humidity, pressure
-        entities.append(EpionSensor(epionBase, epion_device, "co2"))
+        entities.append(EpionSensor(epionBase, epion_device, "co2", hass))
+        entities.append(EpionSensor(epionBase, epion_device, "temperature", hass))
+        entities.append(EpionSensor(epionBase, epion_device, "humidity", hass))
+        entities.append(EpionSensor(epionBase, epion_device, "pressure", hass))
 
     async_add_entities(entities)
 
@@ -44,47 +48,74 @@ async def async_setup_entry(
 class EpionSensor(SensorEntity):
     """Representation of an Epion Air sensor."""
 
-    def __init__(self, epion_base, epion_device, key) -> None:
+    def __init__(self, epion_base, epion_device, key, hass) -> None:
         """Initialize an EpionSensor."""
         self._epion_base = epion_base
         self._epion_device = epion_device
         self._measurement_key = key
-        self._last_value = self.extract_value()
-        self._attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
-        self._attr_device_class = SensorDeviceClass.CO2
+        self._last_value: float | None = self.extract_value()
+        self._display_name = ""
+        if key == "temperature":
+            self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+            self._attr_device_class = SensorDeviceClass.TEMPERATURE
+            self._display_name = "Temperature"
+        elif key == "humidity":
+            self._attr_native_unit_of_measurement = PERCENTAGE
+            self._attr_device_class = SensorDeviceClass.HUMIDITY
+            self._display_name = "Humidity"
+        elif key == "pressure":
+            self._attr_native_unit_of_measurement = UnitOfPressure.HPA
+            self._attr_device_class = SensorDeviceClass.ATMOSPHERIC_PRESSURE
+            self._display_name = "Pressure"
+        else:
+            self._attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
+            self._attr_device_class = SensorDeviceClass.CO2
+            self._display_name = "CO2"
+
         self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, epion_device['deviceId'])},
             manufacturer="Epion",
             name=epion_device['deviceName']
         )
-
-    @property
-    def name(self):
-        myDeviceId = self._epion_device['deviceId']
-        if myDeviceId not in self._epion_base.device_data:
-            if "deviceName" in self._epion_device:
-                return self._epion_device["deviceName"]
-            return f"Epion - {myDeviceId}"
-        myDevice = self._epion_base.device_data[myDeviceId]
-        return myDevice["deviceName"]
+        self.entity_id = generate_entity_id("sensor.{}", f"{epion_device['deviceId']}_{key}", hass=hass)
 
     @property
     def unique_id(self):
         """Return the unique ID for this sensor."""
-        return self._epion_device['deviceId']
+        return f"{self._epion_device['deviceId']}_{self._measurement_key}"
 
     @property
-    def native_value(self) -> float:
-        """Return the value reported by the sensor."""
-        return round(self._last_value, 1)
+    def name(self):
+        myDeviceId = self._epion_device['deviceId']
+        deviceName = ""
+        if myDeviceId not in self._epion_base.device_data:
+            if "deviceName" in self._epion_device:
+                deviceName = self._epion_device["deviceName"]
+            else:
+                deviceName = myDeviceId
+        else:
+            myDevice = self._epion_base.device_data[myDeviceId]
+            deviceName = myDevice["deviceName"]
+        return f"{deviceName} {self._display_name}"
 
-    def extract_value(self) -> float:
+    @property
+    def native_value(self) -> float | None:
+        """Return the value reported by the sensor."""
+        if self._last_value is not None:
+            return round(self._last_value, 1)
+        return None
+
+    @property
+    def available(self) -> bool:
+        return self._last_value is not None
+
+    def extract_value(self) -> float | None:
         myDeviceId = self._epion_device['deviceId']
         # LOGGER.info("Attempting update for %s, known sensors: %d", myDeviceId, len(self._epion_base.device_data))
         if myDeviceId not in self._epion_base.device_data:
             # LOGGER.error("Missing Epion device %s from %d sensors", myDeviceId, len(self._epion_base.device_data))
-            return 0  # No data available, this can happen during startup or if the device (temporarily) stopped sending data
+            return None# No data available, this can happen during startup or if the device (temporarily) stopped sending data
 
         myDevice = self._epion_base.device_data[myDeviceId]
         # if not myDevice:
@@ -92,7 +123,7 @@ class EpionSensor(SensorEntity):
 
         if self._measurement_key not in myDevice:
             LOGGER.debug("Missing Epion metric %s from device %s", self._measurement_key, myDeviceId)
-            return 0  # No relevant measurement available
+            return None# No relevant measurement available
 
         measurement = myDevice[self._measurement_key]
         LOGGER.info("Epion device %s data %f", myDeviceId, measurement)
