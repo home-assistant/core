@@ -140,31 +140,20 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
     @property
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
-        if FanEntityFeature.SET_SPEED in self._attr_supported_features:
-            return ranged_value_to_percentage(
-                SPEED_RANGE, self._device.status.fan_speed
-            )
-
-        return None
+        return ranged_value_to_percentage(SPEED_RANGE, self._device.status.fan_speed)
 
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., auto, smart, interval, favorite.
 
-        Requires FanEntityFeature.SET_SPEED.
+        Requires FanEntityFeature.PRESET_MODE.
         """
-        if FanEntityFeature.PRESET_MODE in self._attr_supported_features:
-            return self._device.status.fan_mode
-
-        return None
+        return self._device.status.fan_mode
 
     @property
     def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes.
 
-        Requires FanEntityFeature.SET_SPEED.
+        Requires FanEntityFeature.PRESET_MODE.
         """
-        if FanEntityFeature.PRESET_MODE in self._attr_supported_features:
-            return self._device.status.supported_ac_fan_modes
-
-        return None
+        return self._device.status.supported_ac_fan_modes
