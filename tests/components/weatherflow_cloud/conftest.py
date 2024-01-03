@@ -17,10 +17,38 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_get_stations_combined() -> Generator[AsyncMock, None, None]:
+def mock_get_stations() -> Generator[AsyncMock, None, None]:
+    """Mock get_stations with a sequence of responses."""
+    side_effects = [
+        True,
+    ]
+
+    with patch(
+        "weatherflow4py.api.WeatherFlowRestAPI.async_get_stations",
+        side_effect=side_effects,
+    ) as mock_get_stations:
+        yield mock_get_stations
+
+
+@pytest.fixture
+def mock_get_stations_500_error() -> Generator[AsyncMock, None, None]:
     """Mock get_stations with a sequence of responses."""
     side_effects = [
         ClientResponseError(Mock(), (), status=500),
+        True,
+    ]
+
+    with patch(
+        "weatherflow4py.api.WeatherFlowRestAPI.async_get_stations",
+        side_effect=side_effects,
+    ) as mock_get_stations:
+        yield mock_get_stations
+
+
+@pytest.fixture
+def mock_get_stations_401_error() -> Generator[AsyncMock, None, None]:
+    """Mock get_stations with a sequence of responses."""
+    side_effects = [
         ClientResponseError(Mock(), (), status=401),
         True,
     ]
