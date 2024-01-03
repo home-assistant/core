@@ -6,62 +6,24 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_TYPE
+from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
 )
 
-from .const import CONF_ENTITY_IDS, CONF_ROUND_DIGITS, DOMAIN
-
-_STATISTIC_MEASURES = [
-    "min",
-    "max",
-    "mean",
-    "median",
-    "last",
-    "range",
-    "sum",
-]
-
-
-OPTIONS_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ENTITY_IDS): selector.EntitySelector(
-            selector.EntitySelectorConfig(
-                domain=[SENSOR_DOMAIN, NUMBER_DOMAIN, INPUT_NUMBER_DOMAIN],
-                multiple=True,
-            ),
-        ),
-        vol.Required(CONF_TYPE): selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=_STATISTIC_MEASURES, translation_key=CONF_TYPE
-            ),
-        ),
-        vol.Required(CONF_ROUND_DIGITS, default=2): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0, max=6, mode=selector.NumberSelectorMode.BOX
-            ),
-        ),
-    }
-)
+from .const import DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required("name"): selector.TextSelector(),
     }
-).extend(OPTIONS_SCHEMA.schema)
+)
 
 CONFIG_FLOW = {
-    "user": SchemaFlowFormStep(CONFIG_SCHEMA),
-}
-
-OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+    "user": SchemaFlowFormStep(vol.Schema({})),
 }
 
 
@@ -69,8 +31,12 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for Min/Max."""
 
     config_flow = CONFIG_FLOW
-    options_flow = OPTIONS_FLOW
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options["name"]) if "name" in options else ""
+
+    @callback
+    def async_config_flow_finished(self, options: Mapping[str, Any]) -> None:
+        """Abort the flow as it should not be setup."""
+        raise AbortFlow(reason="being_removed")
