@@ -431,6 +431,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "state",
     "supported_features",
     "translation_key",
+    "translation_placeholders",
     "unique_id",
     "unit_of_measurement",
 }
@@ -870,7 +871,8 @@ class Entity(
             return self.entity_description.translation_key
         return None
 
-    @property
+    @final
+    @cached_property
     def translation_placeholders(self) -> Mapping[str, str] | None:
         """Return the translation placeholders for translated entity's name."""
         if hasattr(self, "_attr_translation_placeholders"):
