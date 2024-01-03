@@ -59,7 +59,7 @@ async def test_form_user(
 ):
     """Test a successful user initiated flow."""
     with patch(
-        "webmin_xmlrpc.client.WebminInstance.update",
+        "homeassistant.components.webmin.config_flow.WebminInstance.update",
         return_value=load_json_object_fixture("webmin_update.json", DOMAIN),
     ):
         result = await hass.config_entries.flow.async_configure(user_flow, test_config)
@@ -96,7 +96,7 @@ async def test_form_user_errors(
 ) -> None:
     """Test we handle errors."""
     with patch(
-        "webmin_xmlrpc.client.WebminInstance.update",
+        "homeassistant.components.webmin.config_flow.WebminInstance.update",
         side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -108,7 +108,7 @@ async def test_form_user_errors(
     assert result["errors"] == {"base": error_type}
 
     with patch(
-        "webmin_xmlrpc.client.WebminInstance.update",
+        "homeassistant.components.webmin.config_flow.WebminInstance.update",
         return_value=load_json_object_fixture("webmin_update.json", DOMAIN),
     ):
         result = await hass.config_entries.flow.async_configure(
