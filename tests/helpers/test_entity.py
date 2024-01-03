@@ -1003,6 +1003,8 @@ async def _test_friendly_name(
         "expected_friendly_name",
     ),
     (
+        (None, "Entity Blu", "Device Bla", "Entity Blu"),
+        (None, None, "Device Bla", None),
         (False, "Entity Blu", "Device Bla", "Entity Blu"),
         (False, None, "Device Bla", None),
         (True, "Entity Blu", "Device Bla", "Device Bla Entity Blu"),
@@ -1040,6 +1042,9 @@ async def test_friendly_name_attr(
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
     (
+        (None, "Entity Blu", "Entity Blu"),
+        (None, None, None),
+        (None, UNDEFINED, None),
         (False, "Entity Blu", "Entity Blu"),
         (False, None, None),
         (False, UNDEFINED, None),
@@ -1077,9 +1082,12 @@ async def test_friendly_name_description(
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
     (
+        (None, "Entity Blu", "Entity Blu"),
+        (None, None, None),
+        (None, UNDEFINED, None),
         (False, "Entity Blu", "Entity Blu"),
         (False, None, None),
-        (False, UNDEFINED, None),
+        (False, UNDEFINED, "English cls"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
         (True, UNDEFINED, "Device Bla English cls"),
@@ -1140,6 +1148,9 @@ async def test_friendly_name_description_device_class_name(
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
     (
+        (None, "Entity Blu", "Entity Blu"),
+        (None, None, None),
+        (None, UNDEFINED, None),
         (False, "Entity Blu", "Entity Blu"),
         (False, None, None),
         (False, UNDEFINED, None),
@@ -1176,6 +1187,9 @@ async def test_friendly_name_property(
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
     (
+        (None, "Entity Blu", "Entity Blu"),
+        (None, None, None),
+        (None, UNDEFINED, None),
         (False, "Entity Blu", "Entity Blu"),
         (False, None, None),
         (False, UNDEFINED, None),
@@ -1237,7 +1251,8 @@ async def test_friendly_name_property_device_class_name(
 @pytest.mark.parametrize(
     ("has_entity_name", "expected_friendly_name"),
     (
-        (False, None),
+        (None, None),
+        (False, "English cls"),
         (True, "Device Bla English cls"),
     ),
 )
@@ -2126,19 +2141,19 @@ async def test_cached_entity_property_delete_attr(hass: HomeAssistant) -> None:
     assert not hasattr(ent, f"_attr_{property}")
     with pytest.raises(AttributeError):
         delattr(ent, f"_attr_{property}")
-    assert getattr(ent, property) is False
+    assert getattr(ent, property) is None
 
     with pytest.raises(AttributeError):
         delattr(ent, f"_attr_{property}")
     assert not hasattr(ent, f"_attr_{property}")
-    assert getattr(ent, property) is False
+    assert getattr(ent, property) is None
 
     setattr(ent, f"_attr_{property}", True)
     assert getattr(ent, property) is True
 
     delattr(ent, f"_attr_{property}")
     assert not hasattr(ent, f"_attr_{property}")
-    assert getattr(ent, property) is False
+    assert getattr(ent, property) is None
 
 
 async def test_cached_entity_property_class_attribute(hass: HomeAssistant) -> None:

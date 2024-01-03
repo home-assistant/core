@@ -172,7 +172,7 @@ class RegistryEntry:
         default=None,
         converter=attr.converters.default_if_none(factory=uuid_util.random_uuid_hex),  # type: ignore[misc]
     )
-    has_entity_name: bool = attr.ib(default=False)
+    has_entity_name: bool | None = attr.ib(default=None)
     name: str | None = attr.ib(default=None)
     options: ReadOnlyEntityOptionsType = attr.ib(
         default=None, converter=_protect_entity_options
@@ -398,7 +398,7 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
         if old_major_version == 1 and old_minor_version < 7:
             # Version 1.7 adds has_entity_name
             for entity in data["entities"]:
-                entity["has_entity_name"] = False
+                entity["has_entity_name"] = None
 
         if old_major_version == 1 and old_minor_version < 8:
             # Cleanup after frontend bug which incorrectly updated device_class
@@ -617,7 +617,7 @@ class EntityRegistry:
         config_entry: ConfigEntry | None | UndefinedType = UNDEFINED,
         device_id: str | None | UndefinedType = UNDEFINED,
         entity_category: EntityCategory | UndefinedType | None = UNDEFINED,
-        has_entity_name: bool | UndefinedType = UNDEFINED,
+        has_entity_name: bool | None | UndefinedType = UNDEFINED,
         original_device_class: str | None | UndefinedType = UNDEFINED,
         original_icon: str | None | UndefinedType = UNDEFINED,
         original_name: str | None | UndefinedType = UNDEFINED,
@@ -698,7 +698,7 @@ class EntityRegistry:
             entity_category=none_if_undefined(entity_category),
             entity_id=entity_id,
             hidden_by=hidden_by,
-            has_entity_name=none_if_undefined(has_entity_name) or False,
+            has_entity_name=none_if_undefined(has_entity_name),
             id=entity_registry_id,
             options=initial_options,
             original_device_class=none_if_undefined(original_device_class),
@@ -821,7 +821,7 @@ class EntityRegistry:
         entity_category: EntityCategory | None | UndefinedType = UNDEFINED,
         hidden_by: RegistryEntryHider | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
-        has_entity_name: bool | UndefinedType = UNDEFINED,
+        has_entity_name: bool | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
@@ -948,7 +948,7 @@ class EntityRegistry:
         entity_category: EntityCategory | None | UndefinedType = UNDEFINED,
         hidden_by: RegistryEntryHider | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
-        has_entity_name: bool | UndefinedType = UNDEFINED,
+        has_entity_name: bool | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,

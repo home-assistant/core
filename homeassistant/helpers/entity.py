@@ -242,7 +242,7 @@ class EntityDescription(metaclass=FrozenOrThawed, frozen_or_thawed=True):
     entity_registry_visible_default: bool = True
     force_update: bool = False
     icon: str | None = None
-    has_entity_name: bool = False
+    has_entity_name: bool | None = None
     name: str | UndefinedType | None = UNDEFINED
     translation_key: str | None = None
     unit_of_measurement: str | None = None
@@ -579,20 +579,20 @@ class Entity(
         return not self.name
 
     @cached_property
-    def has_entity_name(self) -> bool:
+    def has_entity_name(self) -> bool | None:
         """Return if the name of the entity is describing only the entity itself."""
         if hasattr(self, "_attr_has_entity_name"):
             return self._attr_has_entity_name
         if hasattr(self, "entity_description"):
             return self.entity_description.has_entity_name
-        return False
+        return None
 
     def _device_class_name_helper(
         self,
         component_translations: dict[str, Any],
     ) -> str | None:
         """Return a translated name of the entity based on its device class."""
-        if not self.has_entity_name:
+        if self.has_entity_name is None:
             return None
         device_class_key = self.device_class or "_"
         platform = self.platform
@@ -636,10 +636,8 @@ class Entity(
         """Return the name of the entity."""
         if hasattr(self, "_attr_name"):
             return self._attr_name
-        if (
-            self.has_entity_name
-            and (name_translation_key := self._name_translation_key)
-            and (name := platform_translations.get(name_translation_key))
+        if (name_translation_key := self._name_translation_key) and (
+            name := platform_translations.get(name_translation_key)
         ):
             if TYPE_CHECKING:
                 assert isinstance(name, str)
