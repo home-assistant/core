@@ -37,14 +37,9 @@ class AzureDataExplorerClient:
         self._cluster_ingest_uri = data[CONF_ADX_CLUSTER_INGEST_URI]
         self._database = data[CONF_ADX_DATABASE_NAME]
         self._table = data[CONF_ADX_TABLE_NAME]
-        self._client_id = data[CONF_APP_REG_ID]
-        self._client_secret = data[CONF_APP_REG_SECRET]
-        self._authority_id = data[CONF_AUTHORITY_ID]
-        self._use_queued_ingestion = data[CONF_USE_FREE]
-
-        self._cluster_query_uri = self._cluster_ingest_uri.replace(
-            "https://ingest-", "https://"
-        )
+        # self._cluster_query_uri = self._cluster_ingest_uri.replace(
+        #     "https://ingest-", "https://"
+        # )
 
         self._ingestion_properties = IngestionProperties(
             database=self._database,
@@ -56,12 +51,12 @@ class AzureDataExplorerClient:
         # Create cLient for ingesting and querying data
         kcsb = KustoConnectionStringBuilder.with_aad_application_key_authentication(
             self._cluster_ingest_uri,
-            self._client_id,
-            self._client_secret,
-            self._authority_id,
+            data[CONF_APP_REG_ID],
+            data[CONF_APP_REG_SECRET],
+            data[CONF_AUTHORITY_ID],
         )
 
-        if self._use_queued_ingestion is True:
+        if data[CONF_USE_FREE] is True:
             # Queded is the only option supported on free tear of ADX
             self.write_client = QueuedIngestClient(kcsb)
         else:
