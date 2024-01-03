@@ -20,11 +20,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .capability import (
-    GOVEE_COORDINATORS_MAPPER,
-    GOVEE_DEVICE_CAPABILITIES,
-    GoveeLightCapabilities,
-)
+from .capability import GOVEE_COORDINATORS_MAPPER, GOVEE_DEVICE_CAPABILITIES
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import GoveeLocalApiCoordinator
 
@@ -68,26 +64,18 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
         self._device = device
         self._device.set_update_callback(self._update_callback)
 
-        capabilities: set[GoveeLightCapabilities] = GOVEE_DEVICE_CAPABILITIES.get(
-            device.sku, set()
-        )
-
         self._attr_unique_id = device.fingerprint
 
-        color_modes = set()
-        if GoveeLightCapabilities.COLOR_RGB in capabilities:
-            color_modes.add(ColorMode.RGB)
-        if GoveeLightCapabilities.COLOR_KELVIN_TEMPERATURE in capabilities:
-            color_modes.add(ColorMode.COLOR_TEMP)
+        color_modes = GOVEE_DEVICE_CAPABILITIES.get(device.sku, set())
+        if ColorMode.COLOR_TEMP in color_modes:
             self._attr_max_color_temp_kelvin = 9000
             self._attr_min_color_temp_kelvin = 2000
-        if GoveeLightCapabilities.BRIGHTNESS in capabilities:
-            color_modes.add(ColorMode.BRIGHTNESS)
 
         if len(color_modes) == 0:
             color_modes.add(ColorMode.ONOFF)
 
         self._attr_supported_color_modes = color_modes
+
         self._attr_device_info = DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
@@ -155,7 +143,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
             temperature: float = kwargs[ATTR_COLOR_TEMP_KELVIN]
 
             converter: Callable[..., Any] = GOVEE_COORDINATORS_MAPPER.get(
-                GoveeLightCapabilities.COLOR_KELVIN_TEMPERATURE, lambda x: x
+                ColorMode.COLOR_TEMP, lambda x: x
             )
 
             await self.coordinator.set_temperature(self._device, converter(temperature))

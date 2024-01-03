@@ -3,36 +3,28 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from enum import Enum, auto
 from typing import Any
 
+from homeassistant.components.light import ColorMode
 
-class GoveeLightCapabilities(Enum):
-    """Govee Lights capabilities."""
-
-    COLOR_RGB = auto()
-    COLOR_KELVIN_TEMPERATURE = auto()
-    BRIGHTNESS = auto()
-
-
-GOVEE_COORDINATORS_MAPPER: dict[GoveeLightCapabilities, Callable[..., Any]] = {
-    GoveeLightCapabilities.COLOR_KELVIN_TEMPERATURE: lambda color: color
+GOVEE_COORDINATORS_MAPPER: dict[ColorMode, Callable[..., Any]] = {
+    ColorMode.COLOR_TEMP: lambda color: color
 }
 
-GOVEE_DEVICE_CAPABILITIES: dict[str, set[GoveeLightCapabilities]] = {
+GOVEE_DEVICE_CAPABILITIES: dict[str, set[ColorMode]] = {
     "H615A": {
-        GoveeLightCapabilities.COLOR_RGB,
-        GoveeLightCapabilities.COLOR_KELVIN_TEMPERATURE,
-        GoveeLightCapabilities.BRIGHTNESS,
+        ColorMode.RGB,
+        ColorMode.COLOR_TEMP,
+        ColorMode.BRIGHTNESS,
     },
     "H619A": {
-        GoveeLightCapabilities.COLOR_RGB,
-        GoveeLightCapabilities.COLOR_KELVIN_TEMPERATURE,
-        GoveeLightCapabilities.BRIGHTNESS,
+        ColorMode.RGB,
+        ColorMode.COLOR_TEMP,
+        ColorMode.BRIGHTNESS,
     },
     "H618A": {
-        GoveeLightCapabilities.COLOR_RGB,
-        GoveeLightCapabilities.COLOR_KELVIN_TEMPERATURE,
-        GoveeLightCapabilities.BRIGHTNESS,
+        ColorMode.RGB,
+        ColorMode.COLOR_TEMP,
+        ColorMode.BRIGHTNESS,
     },
 }
