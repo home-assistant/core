@@ -74,8 +74,6 @@ async def async_setup_entry(
 
 async def async_get_scanner(hass: HomeAssistant, config: ConfigType) -> None:
     """Validate the configuration and return a UPC connect scanner."""
-    # _LOGGER.debug("async_get_scanner: config=%s", config)
-
     validated_config = config[DEVICE_TRACKER_DOMAIN]
 
     hass.async_create_task(
