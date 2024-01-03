@@ -11,7 +11,6 @@ from enum import Enum, IntFlag, auto
 import functools as ft
 import logging
 import math
-import string
 import sys
 from timeit import default_timer as timer
 from typing import (
@@ -476,6 +475,9 @@ class Entity(
     # If we reported this entity was added without its platform set
     _no_platform_reported = False
 
+    # If we reported the name translation placeholders do not match the name
+    _name_translation_placeholders_reported = False
+
     # Protect for multiple updates
     _update_staged = False
 
@@ -632,15 +634,26 @@ class Entity(
             f".{self.translation_key}.name"
         )
 
-    def _name_placeholders(self, name: str) -> str:
-        """Process possible placeholders in entity name."""
-        tuples = list(string.Formatter().parse(name))
-        if tuples[0][1] is None:
-            return name
+    def _substitue_name_placeholders(self, name: str) -> str:
+        """Substitute placeholders in entity name."""
         try:
             return name.format(**self.translation_placeholders)
-        except KeyError as err:
-            raise HomeAssistantError("Missing placeholder %s" % err) from err
+        except KeyError:
+            if not self._name_translation_placeholders_reported:
+                report_issue = self._suggest_report_issue()
+                _LOGGER.warning(
+                    (
+                        "Entity %s (%s) has translation placeholders '%s' which do not "
+                        "match the name '%s', please %s"
+                    ),
+                    self.entity_id,
+                    type(self),
+                    self.translation_placeholders,
+                    name,
+                    report_issue,
+                )
+                self._name_translation_placeholders_reported = True
+            return name
 
     def _name_internal(
         self,
@@ -657,7 +670,7 @@ class Entity(
         ):
             if TYPE_CHECKING:
                 assert isinstance(name, str)
-            return self._name_placeholders(name)
+            return self._substitue_name_placeholders(name)
         if hasattr(self, "entity_description"):
             description_name = self.entity_description.name
             if description_name is UNDEFINED and self._default_to_device_class_name():

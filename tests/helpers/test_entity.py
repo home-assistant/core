@@ -1242,7 +1242,10 @@ async def test_entity_name_translation_placeholders(
                 },
             },
             {"placeholder": "special"},
-            "HomeAssistantError: Missing placeholder '2ndplaceholder'",
+            (
+                "has translation placeholders '{'placeholder': 'special'}' which do "
+                "not match the name '{placeholder} English ent {2ndplaceholder}'"
+            ),
         ),
         (
             "test_entity",
@@ -1252,7 +1255,10 @@ async def test_entity_name_translation_placeholders(
                 },
             },
             None,
-            "HomeAssistantError: Missing property _attr_translation_placeholders",
+            (
+                "has translation placeholders '{}' which do "
+                "not match the name '{placeholder} English ent'"
+            ),
         ),
     ),
 )
