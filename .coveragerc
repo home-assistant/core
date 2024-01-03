@@ -1415,7 +1415,6 @@ omit =
     homeassistant/components/unifiled/*
     homeassistant/components/upb/__init__.py
     homeassistant/components/upb/light.py
-    homeassistant/components/upc_connect/*
     homeassistant/components/upcloud/__init__.py
     homeassistant/components/upcloud/binary_sensor.py
     homeassistant/components/upcloud/switch.py

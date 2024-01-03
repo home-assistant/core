@@ -515,6 +515,7 @@ FLOWS = {
         "unifi",
         "unifiprotect",
         "upb",
+        "upc_connect",
         "upcloud",
         "upnp",
         "uptime",
