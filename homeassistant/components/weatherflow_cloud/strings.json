@@ -3,7 +3,6 @@
     "step": {
       "user": {
         "description": "Set up a WeatherFlow Forecast Station",
-        "title": "WeatherFlow Forecast",
         "data": {
           "api_token": "Personal api token"
         }
