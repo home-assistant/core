@@ -22,14 +22,14 @@ from .const import DOMAIN
 from .entity import OpenGarageEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class OpenGarageButtonEntityDescriptionMixin:
     """Mixin to describe a OpenGarage button entity."""
 
     press_action: Callable[[OpenGarage], Any]
 
 
-@dataclass
+@dataclass(frozen=True)
 class OpenGarageButtonEntityDescription(
     ButtonEntityDescription, OpenGarageButtonEntityDescriptionMixin
 ):
@@ -79,7 +79,7 @@ class OpenGarageButtonEntity(OpenGarageEntity, ButtonEntity):
         super().__init__(coordinator, device_id, description)
 
     async def async_press(self) -> None:
-        """Set the value of the entity."""
+        """Press the button."""
         await self.entity_description.press_action(
             self.coordinator.open_garage_connection
         )
