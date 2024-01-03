@@ -13,7 +13,7 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up TechnoVE from a config entry."""
-    coordinator = TechnoVEDataUpdateCoordinator(hass, entry=entry)
+    coordinator = TechnoVEDataUpdateCoordinator(hass)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
