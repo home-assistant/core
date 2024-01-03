@@ -1525,10 +1525,14 @@ def _async_abort_entries_match(
             raise data_entry_flow.AbortFlow("already_configured")
 
 
-class ConfigFlow(data_entry_flow.FlowHandler[ConfigFlowResult]):
-    """Base class for config flows with some helpers."""
+class ConfigEntryBaseFlow(data_entry_flow.FlowHandler[ConfigFlowResult]):
+    """Base class for config and option flows."""
 
     _flow_result = ConfigFlowResult
+
+
+class ConfigFlow(ConfigEntryBaseFlow):
+    """Base class for config flows with some helpers."""
 
     def __init_subclass__(cls, *, domain: str | None = None, **kwargs: Any) -> None:
         """Initialize a subclass, register if possible."""
@@ -1916,10 +1920,8 @@ class OptionsFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
             await flow.async_setup_preview(self.hass)
 
 
-class OptionsFlow(data_entry_flow.FlowHandler[ConfigFlowResult]):
+class OptionsFlow(ConfigEntryBaseFlow):
     """Base class for config options flows."""
-
-    _flow_result = ConfigFlowResult
 
     handler: str
 
