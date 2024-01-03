@@ -61,13 +61,8 @@ class WebminUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @callback
     async def async_setup(self) -> None:
         """Provide needed data to the device info."""
-        ifaces = [
-            iface
-            for iface in (await self.instance.get_network_interfaces())[
-                "active_interfaces"
-            ]
-            if "ether" in iface
-        ]
+        self.data = await self.instance.update()
+        ifaces = [iface for iface in self.data["active_interfaces"] if "ether" in iface]
         ifaces.sort(key=lambda x: x["ether"])
         self.mac_address = ifaces[0]["ether"]
         self.device_info["connections"] = {

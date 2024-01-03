@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -14,13 +16,65 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import WebminUpdateCoordinator
 
-SENSOR_TYPES = [
+SENSOR_TYPES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="load_1m",
         name="Load (1m)",
         icon="mdi:cpu-64-bit",
         state_class=SensorStateClass.MEASUREMENT,
-    )
+    ),
+    SensorEntityDescription(
+        key="load_5m",
+        name="Load (5m)",
+        icon="mdi:cpu-64-bit",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="load_15m",
+        name="Load (15m)",
+        icon="mdi:cpu-64-bit",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="mem_total",
+        name="Total Memory",
+        icon="mdi:memory",
+        native_unit_of_measurement=UnitOfInformation.KIBIBYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="mem_free",
+        name="Free Memory",
+        icon="mdi:memory",
+        native_unit_of_measurement=UnitOfInformation.KIBIBYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="swap_total",
+        name="Total Swap",
+        icon="mdi:memory",
+        native_unit_of_measurement=UnitOfInformation.KIBIBYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="swap_free",
+        name="Free Swap",
+        icon="mdi:memory",
+        native_unit_of_measurement=UnitOfInformation.KIBIBYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 ]
 
 
@@ -50,8 +104,16 @@ class WebminSensor(CoordinatorEntity[WebminUpdateCoordinator], SensorEntity):
         self.entity_description = description
         self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.mac_address}_{description.key}"
+        if self.entity_description.key in self.coordinator.data:
+            self._attr_available = True
+            self._attr_native_value = self.coordinator.data[self.entity_description.key]
+        else:
+            self._attr_available = False
 
     def _handle_coordinator_update(self) -> None:
         if self.entity_description.key in self.coordinator.data:
+            self._attr_available = True
             self._attr_native_value = self.coordinator.data[self.entity_description.key]
+        else:
+            self._attr_available = False
         self.async_write_ha_state()
