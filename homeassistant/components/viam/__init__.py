@@ -24,33 +24,47 @@ from homeassistant.core import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    SERVICE_CAMERA,
+    SERVICE_CLASSIFIER_NAME,
+    SERVICE_COMPONENT_NAME,
+    SERVICE_COMPONENT_TYPE,
+    SERVICE_CONFIDENCE,
+    SERVICE_COUNT,
+    SERVICE_DETECTOR_NAME,
+    SERVICE_FILE_NAME,
+    SERVICE_FILEPATH,
+    SERVICE_ROBOT_ADDRESS,
+    SERVICE_ROBOT_SECRET,
+    SERVICE_VALUES,
+)
 
 DATA_CAPTURE_SERVICE_SCHEMA = vol.Schema(
     {
-        vol.Required("values"): vol.All(dict),
-        vol.Required("component_name"): vol.All(str),
-        vol.Required("component_type", default="sensor"): vol.All(str),
+        vol.Required(SERVICE_VALUES): vol.All(dict),
+        vol.Required(SERVICE_COMPONENT_NAME): vol.All(str),
+        vol.Required(SERVICE_COMPONENT_TYPE, default="sensor"): vol.All(str),
     }
 )
 
 IMAGE_SERVICE_FIELDS = {
-    vol.Optional("filepath"): vol.All(str, vol.IsFile),
-    vol.Optional("camera"): vol.All(str),
+    vol.Optional(SERVICE_FILEPATH): vol.All(str, vol.IsFile),
+    vol.Optional(SERVICE_CAMERA): vol.All(str),
 }
 VISION_SERVICE_FIELDS = {
-    vol.Optional("confidence", default="0.6"): vol.All(
+    vol.Optional(SERVICE_CONFIDENCE, default="0.6"): vol.All(
         str, vol.Coerce(float), vol.Range(min=0, max=1)
     ),
-    vol.Optional("robot_address"): vol.All(str),
-    vol.Optional("robot_secret"): vol.All(str),
+    vol.Optional(SERVICE_ROBOT_ADDRESS): vol.All(str),
+    vol.Optional(SERVICE_ROBOT_SECRET): vol.All(str),
 }
 
 CAPTURE_IMAGE_SERVICE_SCHEMA = vol.Schema(
     {
         **IMAGE_SERVICE_FIELDS,
-        vol.Optional("file_name", default="camera"): vol.All(str),
-        vol.Optional("component_name"): vol.All(str),
+        vol.Optional(SERVICE_FILE_NAME, default="camera"): vol.All(str),
+        vol.Optional(SERVICE_COMPONENT_NAME): vol.All(str),
     }
 )
 
@@ -58,8 +72,8 @@ CLASSIFICATION_SERVICE_SCHEMA = vol.Schema(
     {
         **IMAGE_SERVICE_FIELDS,
         **VISION_SERVICE_FIELDS,
-        vol.Required("classifier_name"): vol.All(str),
-        vol.Optional("count", default="2"): vol.All(str, vol.Coerce(int)),
+        vol.Required(SERVICE_CLASSIFIER_NAME): vol.All(str),
+        vol.Optional(SERVICE_COUNT, default="2"): vol.All(str, vol.Coerce(int)),
     }
 )
 
@@ -67,9 +81,15 @@ DETECTIONS_SERVICE_SCHEMA = vol.Schema(
     {
         **IMAGE_SERVICE_FIELDS,
         **VISION_SERVICE_FIELDS,
-        vol.Required("detector_name"): vol.All(str),
+        vol.Required(SERVICE_DETECTOR_NAME): vol.All(str),
     }
 )
+
+
+def _fetch_image(filepath: str | None):
+    if filepath is None:
+        return None
+    return Image.open(filepath)
 
 
 class ViamManager:
@@ -124,9 +144,9 @@ class ViamManager:
         parts: list[RobotPart] = await self.client.app_client.get_robot_parts(
             robot_id=self.data["robot_id"]
         )
-        values = [call.data.get("values")]
-        component_type = call.data.get("component_type", "sensor")
-        component_name = call.data.get("component_name")
+        values = [call.data.get(SERVICE_VALUES)]
+        component_type = call.data.get(SERVICE_COMPONENT_TYPE, "sensor")
+        component_name = call.data.get(SERVICE_COMPONENT_NAME)
 
         await self.client.data_client.tabular_data_capture_upload(
             tabular_data=values,
@@ -142,10 +162,10 @@ class ViamManager:
         parts: list[RobotPart] = await self.client.app_client.get_robot_parts(
             robot_id=self.data["robot_id"]
         )
-        filepath = call.data.get("filepath")
-        camera = call.data.get("camera")
-        component_name = call.data.get("component_name")
-        file_name = call.data.get("file_name", "camera")
+        filepath = call.data.get(SERVICE_FILEPATH)
+        camera = call.data.get(SERVICE_CAMERA)
+        component_name = call.data.get(SERVICE_COMPONENT_NAME)
+        file_name = call.data.get(SERVICE_FILE_NAME, "camera")
 
         if filepath is not None:
             await self.client.data_client.file_upload_from_path(
@@ -165,17 +185,17 @@ class ViamManager:
 
     async def get_classifications(self, call: ServiceCall) -> ServiceResponse:
         """Accept input configuration to request classifications."""
-        filepath = call.data.get("filepath")
-        camera = call.data.get("camera")
-        classifier_name = call.data.get("classifier_name")
-        count = int(call.data.get("count", 2))
-        confidence_threshold = float(call.data.get("confidence_threshold", 0.6))
+        filepath = call.data.get(SERVICE_FILEPATH)
+        camera = call.data.get(SERVICE_CAMERA)
+        classifier_name = call.data.get(SERVICE_CLASSIFIER_NAME)
+        count = int(call.data.get(SERVICE_COUNT, 2))
+        confidence_threshold = float(call.data.get(SERVICE_CONFIDENCE, 0.6))
 
         async with await self._get_robot_client(
-            call.data.get("robot_secret"), call.data.get("robot_address")
+            call.data.get(SERVICE_ROBOT_SECRET), call.data.get(SERVICE_ROBOT_ADDRESS)
         ) as robot:
             classifier = VisionClient.from_robot(robot, classifier_name)
-            image = Image.open(filepath) if filepath is not None else None
+            image = await self.hass.async_add_executor_job(_fetch_image, filepath)
             cam_bytes = (
                 await self._get_image_from_camera(camera) if camera is not None else b""
             )
@@ -201,16 +221,16 @@ class ViamManager:
 
     async def get_detections(self, call: ServiceCall) -> ServiceResponse:
         """Accept input configuration to request detections."""
-        filepath = call.data.get("filepath")
-        camera = call.data.get("camera")
-        detector_name = call.data.get("detector_name")
-        confidence_threshold = float(call.data.get("confidence_threshold", 0.6))
+        filepath = call.data.get(SERVICE_FILEPATH)
+        camera = call.data.get(SERVICE_CAMERA)
+        detector_name = call.data.get(SERVICE_DETECTOR_NAME)
+        confidence_threshold = float(call.data.get(SERVICE_CONFIDENCE, 0.6))
 
         async with await self._get_robot_client(
-            call.data.get("robot_secret"), call.data.get("robot_address")
+            call.data.get(SERVICE_ROBOT_SECRET), call.data.get(SERVICE_ROBOT_ADDRESS)
         ) as robot:
             detector = VisionClient.from_robot(robot, detector_name)
-            image = Image.open(filepath) if filepath is not None else None
+            image = await self.hass.async_add_executor_job(_fetch_image, filepath)
             cam_bytes = (
                 await self._get_image_from_camera(camera) if camera is not None else b""
             )
@@ -255,6 +275,7 @@ class ViamManager:
         if cam_entity is None:
             raise ServiceValidationError(
                 f"A camera entity called {camera_name} was not found",
+                translation_domain=DOMAIN,
                 translation_key="camera_entity_not_found",
                 translation_placeholders={
                     "camera_name": camera_name,
@@ -266,6 +287,7 @@ class ViamManager:
         if cam is None:
             raise ServiceValidationError(
                 f"A camera for the entity {camera_name} was not found",
+                translation_domain=DOMAIN,
                 translation_key="camera_not_found",
                 translation_placeholders={"camera_name": camera_name},
             )
@@ -282,6 +304,7 @@ class ViamManager:
             if robot_secret is None or robot_address is None:
                 raise ServiceValidationError(
                     "The robot location and secret are required for this connection type.",
+                    translation_domain=DOMAIN,
                     translation_key="robot_credentials_required",
                 )
             address = robot_address
@@ -290,6 +313,7 @@ class ViamManager:
         if address is None or payload is None:
             raise ServiceValidationError(
                 "The necessary credentials for the RobotClient could not be found.",
+                translation_domain=DOMAIN,
                 translation_key="robot_credentials_not_found",
             )
 
