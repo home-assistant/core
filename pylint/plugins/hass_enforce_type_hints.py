@@ -482,7 +482,7 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
     "config_flow": [
         ClassTypeHintMatch(
             base_class="FlowHandler",
-            exclude_base_classes={"ConfigFlow", "OptionsFlow"},
+            exclude_base_classes={"ConfigEntryBaseFlow"},
             matches=[
                 TypeHintMatch(
                     function_name="async_step_*",

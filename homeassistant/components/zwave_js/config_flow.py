@@ -4,7 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 import logging
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 import aiohttp
 from serial.tools import list_ports
@@ -24,12 +24,7 @@ from homeassistant.components.hassio import (
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import (
-    AbortFlow,
-    FlowHandler,
-    FlowManager,
-    FlowResult,
-)
+from homeassistant.data_entry_flow import AbortFlow, FlowManager
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import disconnect_client
@@ -156,10 +151,7 @@ async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
     return await hass.async_add_executor_job(get_usb_ports)
 
 
-_FlowResultT = TypeVar("_FlowResultT", bound="FlowResult")
-
-
-class BaseZwaveJSFlow(FlowHandler[_FlowResultT], ABC, Generic[_FlowResultT]):
+class BaseZwaveJSFlow(config_entries.ConfigEntryBaseFlow, ABC):
     """Represent the base config flow for Z-Wave JS."""
 
     def __init__(self) -> None:
@@ -184,7 +176,7 @@ class BaseZwaveJSFlow(FlowHandler[_FlowResultT], ABC, Generic[_FlowResultT]):
 
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
-    ) -> _FlowResultT:
+    ) -> config_entries.ConfigFlowResult:
         """Install Z-Wave JS add-on."""
         if not self.install_task:
             self.install_task = self.hass.async_create_task(self._async_install_addon())
@@ -206,13 +198,13 @@ class BaseZwaveJSFlow(FlowHandler[_FlowResultT], ABC, Generic[_FlowResultT]):
 
     async def async_step_install_failed(
         self, user_input: dict[str, Any] | None = None
-    ) -> _FlowResultT:
+    ) -> config_entries.ConfigFlowResult:
         """Add-on installation failed."""
         return self.async_abort(reason="addon_install_failed")
 
     async def async_step_start_addon(
         self, user_input: dict[str, Any] | None = None
-    ) -> _FlowResultT:
+    ) -> config_entries.ConfigFlowResult:
         """Start Z-Wave JS add-on."""
         if not self.start_task:
             self.start_task = self.hass.async_create_task(self._async_start_addon())
@@ -232,7 +224,7 @@ class BaseZwaveJSFlow(FlowHandler[_FlowResultT], ABC, Generic[_FlowResultT]):
 
     async def async_step_start_failed(
         self, user_input: dict[str, Any] | None = None
-    ) -> _FlowResultT:
+    ) -> config_entries.ConfigFlowResult:
         """Add-on start failed."""
         return self.async_abort(reason="addon_start_failed")
 
@@ -276,13 +268,13 @@ class BaseZwaveJSFlow(FlowHandler[_FlowResultT], ABC, Generic[_FlowResultT]):
     @abstractmethod
     async def async_step_configure_addon(
         self, user_input: dict[str, Any] | None = None
-    ) -> _FlowResultT:
+    ) -> config_entries.ConfigFlowResult:
         """Ask for config for Z-Wave JS add-on."""
 
     @abstractmethod
     async def async_step_finish_addon_setup(
         self, user_input: dict[str, Any] | None = None
-    ) -> _FlowResultT:
+    ) -> config_entries.ConfigFlowResult:
         """Prepare info needed to complete the config entry.
 
         Get add-on discovery info and server version info.
@@ -332,11 +324,7 @@ class BaseZwaveJSFlow(FlowHandler[_FlowResultT], ABC, Generic[_FlowResultT]):
         return discovery_info_config
 
 
-class ConfigFlow(
-    BaseZwaveJSFlow[config_entries.ConfigFlowResult],
-    config_entries.ConfigFlow,
-    domain=DOMAIN,
-):
+class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Z-Wave JS."""
 
     VERSION = 1
@@ -702,9 +690,7 @@ class ConfigFlow(
         )
 
 
-class OptionsFlowHandler(
-    BaseZwaveJSFlow[config_entries.ConfigFlowResult], config_entries.OptionsFlow
-):
+class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
     """Handle an options flow for Z-Wave JS."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
