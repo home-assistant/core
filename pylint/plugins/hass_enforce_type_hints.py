@@ -565,7 +565,7 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
         ClassTypeHintMatch(
-            base_class="OptionsFlowasd",
+            base_class="OptionsFlow",
             matches=[
                 TypeHintMatch(
                     function_name="async_step_*",
