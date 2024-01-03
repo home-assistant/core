@@ -58,7 +58,7 @@ from .coordinator import (
 from .entity import WithingsEntity
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WithingsMeasurementSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
@@ -233,10 +233,37 @@ MEASUREMENT_SENSORS: dict[
         translation_key="vascular_age",
         entity_registry_enabled_default=False,
     ),
+    MeasurementType.VISCERAL_FAT: WithingsMeasurementSensorEntityDescription(
+        key="visceral_fat",
+        measurement_type=MeasurementType.VISCERAL_FAT,
+        translation_key="visceral_fat_index",
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.ELECTRODERMAL_ACTIVITY_FEET: WithingsMeasurementSensorEntityDescription(
+        key="electrodermal_activity_feet",
+        measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_FEET,
+        translation_key="electrodermal_activity_feet",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.ELECTRODERMAL_ACTIVITY_LEFT_FOOT: WithingsMeasurementSensorEntityDescription(
+        key="electrodermal_activity_left_foot",
+        measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_LEFT_FOOT,
+        translation_key="electrodermal_activity_left_foot",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+    ),
+    MeasurementType.ELECTRODERMAL_ACTIVITY_RIGHT_FOOT: WithingsMeasurementSensorEntityDescription(
+        key="electrodermal_activity_right_foot",
+        measurement_type=MeasurementType.ELECTRODERMAL_ACTIVITY_RIGHT_FOOT,
+        translation_key="electrodermal_activity_right_foot",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+    ),
 }
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WithingsSleepSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
@@ -396,7 +423,7 @@ SLEEP_SENSORS = [
 ]
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WithingsActivitySensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
@@ -494,7 +521,7 @@ SLEEP_GOAL = "sleep"
 WEIGHT_GOAL = "weight"
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WithingsGoalsSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
@@ -531,7 +558,7 @@ GOALS_SENSORS: dict[str, WithingsGoalsSensorEntityDescription] = {
 }
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class WithingsWorkoutSensorEntityDescription(SensorEntityDescription):
     """Immutable class for describing withings data."""
 
