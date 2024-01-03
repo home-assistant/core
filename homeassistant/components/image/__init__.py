@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from random import SystemRandom
-from typing import Final, final
+from typing import TYPE_CHECKING, Final, final
 
 from aiohttp import hdrs, web
 import httpx
@@ -29,6 +29,12 @@ from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
 from .const import DOMAIN, IMAGE_TIMEOUT  # noqa: F401
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,7 +128,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-class ImageEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "content_type",
+    "image_last_updated",
+    "image_url",
+}
+
+
+class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """The base class for image entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
@@ -143,7 +156,7 @@ class ImageEntity(Entity):
         self.access_tokens: collections.deque = collections.deque([], 2)
         self.async_update_token()
 
-    @property
+    @cached_property
     def content_type(self) -> str:
         """Image content type."""
         return self._attr_content_type
@@ -155,12 +168,12 @@ class ImageEntity(Entity):
             return self._attr_entity_picture
         return ENTITY_IMAGE_URL.format(self.entity_id, self.access_tokens[-1])
 
-    @property
+    @cached_property
     def image_last_updated(self) -> datetime | None:
-        """The time when the image was last updated."""
+        """Time the image was last updated."""
         return self._attr_image_last_updated
 
-    @property
+    @cached_property
     def image_url(self) -> str | None | UndefinedType:
         """Return URL of image."""
         return self._attr_image_url

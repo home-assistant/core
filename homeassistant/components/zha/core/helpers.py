@@ -442,6 +442,7 @@ class ZHAData:
     device_trigger_cache: dict[str, tuple[str, dict]] = dataclasses.field(
         default_factory=dict
     )
+    allow_polling: bool = dataclasses.field(default=False)
 
 
 def get_zha_data(hass: HomeAssistant) -> ZHAData:

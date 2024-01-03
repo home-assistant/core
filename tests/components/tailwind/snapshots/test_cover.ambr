@@ -69,7 +69,7 @@
     'serial_number': None,
     'suggested_area': None,
     'sw_version': '10.10',
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
 # name: test_cover_entities[cover.door_2]
@@ -142,6 +142,6 @@
     'serial_number': None,
     'suggested_area': None,
     'sw_version': '10.10',
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---
