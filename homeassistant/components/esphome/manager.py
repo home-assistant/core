@@ -720,12 +720,13 @@ def build_service_name(device_info: EsphomeDeviceInfo, service: UserService) -> 
 
 
 @callback
-def _register_service(
+def _async_register_service(
     hass: HomeAssistant,
     entry_data: RuntimeEntryData,
     device_info: EsphomeDeviceInfo,
     service: UserService,
 ) -> None:
+    """Register a service on a node."""
     service_name = build_service_name(device_info, service)
     schema = {}
     fields = {}
@@ -755,15 +756,17 @@ def _register_service(
         partial(execute_service, entry_data, service),
         vol.Schema(schema),
     )
-
-    service_desc = {
-        "description": (
-            f"Calls the service {service.name} of the node {device_info.name}"
-        ),
-        "fields": fields,
-    }
-
-    async_set_service_schema(hass, DOMAIN, service_name, service_desc)
+    async_set_service_schema(
+        hass,
+        DOMAIN,
+        service_name,
+        {
+            "description": (
+                f"Calls the service {service.name} of the node {device_info.name}"
+            ),
+            "fields": fields,
+        },
+    )
 
 
 @callback
@@ -775,8 +778,8 @@ def _setup_services(
         # Can happen if device has never connected or .storage cleared
         return
     old_services = entry_data.services.copy()
-    to_unregister = []
-    to_register = []
+    to_unregister: list[UserService] = []
+    to_register: list[UserService] = []
     for service in services:
         if service.key in old_services:
             # Already exists
@@ -798,7 +801,7 @@ def _setup_services(
         hass.services.async_remove(DOMAIN, service_name)
 
     for service in to_register:
-        _register_service(hass, entry_data, device_info, service)
+        _async_register_service(hass, entry_data, device_info, service)
 
 
 async def cleanup_instance(hass: HomeAssistant, entry: ConfigEntry) -> RuntimeEntryData:
