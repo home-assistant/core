@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 
 from airthings_ble import AirthingsBluetoothDeviceData
-from bleak_retry_connector import close_stale_connections
+from bleak_retry_connector import close_stale_connections_by_address
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
@@ -31,6 +31,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     is_metric = hass.config.units is METRIC_SYSTEM
     assert address is not None
 
+    await close_stale_connections_by_address(address)
+
     ble_device = bluetooth.async_ble_device_from_address(hass, address)
 
     if not ble_device:
@@ -42,8 +44,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Get data from Airthings BLE."""
         ble_device = bluetooth.async_ble_device_from_address(hass, address)
         airthings = AirthingsBluetoothDeviceData(_LOGGER, elevation, is_metric)
-
-        await close_stale_connections(ble_device)
 
         try:
             data = await airthings.update_device(ble_device)
