@@ -4,11 +4,10 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Final, Optional, cast
+from typing import Any, Final, Optional
 
 from kasa import (
     AuthenticationException,
-    ConnectionType,
     Credentials,
     DeviceConfig,
     Discover,
@@ -37,19 +36,14 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.httpx_client import create_async_httpx_client
-from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_CONNECTION_TYPE,
     CONF_DEVICE_CONFIG,
-    CONF_USES_HTTP,
     CONNECT_TIMEOUT,
     DISCOVERY_TIMEOUT,
     DOMAIN,
     PLATFORMS,
-    STORAGE_KEY,
-    STORAGE_VERSION,
 )
 from .coordinator import TPLinkDataUpdateCoordinator
 from .models import TPLinkData
@@ -78,7 +72,9 @@ def async_trigger_discovery(
                 CONF_NAME: device.alias,
                 CONF_HOST: device.host,
                 CONF_MAC: formatted_mac,
-                CONF_DEVICE_CONFIG: device.config,
+                CONF_DEVICE_CONFIG: device.config.to_dict(
+                    credentials_hash=device.credentials_hash
+                ),
             },
         )
 
@@ -106,8 +102,8 @@ async def async_discover_devices(hass: HomeAssistant) -> dict[str, SmartDevice]:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the TP-Link component."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_STORE] = _get_store(hass)
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
 
     if discovered_devices := await async_discover_devices(hass):
         async_trigger_discovery(hass, discovered_devices)
@@ -129,21 +125,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
 
     credentials = await get_credentials(hass)
-    connection_type = None
 
-    if connection_type_dict := entry.data.get(CONF_CONNECTION_TYPE):
+    config = None
+    if config_dict := entry.data.get(CONF_DEVICE_CONFIG):
         try:
-            connection_type = ConnectionType.from_dict(connection_type_dict)
+            config = DeviceConfig.from_dict(config_dict)
         except SmartDeviceException:
             _LOGGER.warning(
-                "Invalid connection type dict for %s: %s", host, connection_type_dict
+                "Invalid connection type dict for %s: %s", host, config_dict
             )
-
-    config = DeviceConfig(host, timeout=CONNECT_TIMEOUT)
-    if entry.data.get(CONF_USES_HTTP) is True:
+    if not config:
+        config = DeviceConfig(host)
+    config.timeout = CONNECT_TIMEOUT
+    if config.uses_http is True:
         config.http_client = create_async_httpx_client(hass, verify_ssl=False)
-    if connection_type:
-        config.connection_type = connection_type
     if credentials:
         config.credentials = credentials
     try:
@@ -153,15 +148,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SmartDeviceException as ex:
         raise ConfigEntryNotReady from ex
 
-    # Save the connection_type if not already saved
-    ctype = device.config.connection_type
-    if not connection_type_dict or connection_type != ctype:
+    device_config_dict = device.config.to_dict(credentials_hash=device.credentials_hash)
+    if device_config_dict != config_dict:
         hass.config_entries.async_update_entry(
             entry,
             data={
                 **entry.data,
-                CONF_CONNECTION_TYPE: ctype.to_dict(),
-                CONF_USES_HTTP: device.config.uses_http,
+                CONF_DEVICE_CONFIG: device_config_dict,
             },
         )
     found_mac = dr.format_mac(device.mac)
@@ -206,12 +199,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Cleanup caches before removing config entry."""
-    if len(hass.config_entries.async_entries(DOMAIN)) == 1:
-        await _get_store(hass).async_remove()
-
-
 def legacy_device_id(device: SmartDevice) -> str:
     """Convert the device id so it matches what was used in the original version."""
     device_id: str = device.device_id
@@ -222,34 +209,21 @@ def legacy_device_id(device: SmartDevice) -> str:
     return device_id.split("_")[1]
 
 
-def _get_store(hass: HomeAssistant) -> Store[dict[str, dict[str, str]]]:
-    if DOMAIN in hass.data and DATA_STORE in hass.data[DOMAIN]:
-        return cast(Store[dict[str, dict[str, str]]], hass.data[DOMAIN][DATA_STORE])
-    return Store[dict[str, dict[str, str]]](hass, STORAGE_VERSION, STORAGE_KEY)
-
-
 async def get_credentials(hass: HomeAssistant) -> Optional[Credentials]:
-    """Retrieve the credentials from hass data or the Store."""
+    """Retrieve the credentials from hass data."""
     if DOMAIN in hass.data and CONF_AUTHENTICATION in hass.data[DOMAIN]:
         auth = hass.data[DOMAIN][CONF_AUTHENTICATION]
-        return Credentials(auth[CONF_USERNAME], auth[CONF_PASSWORD])
-
-    storage_data = await _get_store(hass).async_load()
-    if storage_data and (auth := storage_data[CONF_AUTHENTICATION]):
-        # If hass data is initialised cache the credentials
-        if DOMAIN in hass.data:
-            hass.data[DOMAIN][CONF_AUTHENTICATION] = auth
         return Credentials(auth[CONF_USERNAME], auth[CONF_PASSWORD])
 
     return None
 
 
 async def set_credentials(hass: HomeAssistant, username: str, password: str) -> None:
-    """Save the credentials to the Store."""
+    """Save the credentials to HASS data."""
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
     auth = {
         CONF_USERNAME: username,
         CONF_PASSWORD: password,
     }
-    storage_data = {CONF_AUTHENTICATION: auth}
-    await _get_store(hass).async_save(storage_data)
     hass.data[DOMAIN][CONF_AUTHENTICATION] = auth

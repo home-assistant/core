@@ -8,7 +8,6 @@ from typing import Any, Optional
 from kasa import (
     AuthenticationException,
     Credentials,
-    DeviceConfig,
     Discover,
     SmartDevice,
     SmartDeviceException,
@@ -35,13 +34,7 @@ from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import async_discover_devices, get_credentials, set_credentials
-from .const import (
-    CONF_CONNECTION_TYPE,
-    CONF_DEVICE_CONFIG,
-    CONF_USES_HTTP,
-    CONNECT_TIMEOUT,
-    DOMAIN,
-)
+from .const import CONF_DEVICE_CONFIG, CONNECT_TIMEOUT, DOMAIN
 
 STEP_AUTH_DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
@@ -54,6 +47,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for tplink."""
 
     VERSION = 1
+    MINOR_VERSION = 2
     reauth_entry: ConfigEntry | None = None
 
     def __init__(self) -> None:
@@ -77,20 +71,30 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info[CONF_DEVICE_CONFIG],
         )
 
+    @callback
+    def _update_config_if_entry_in_setup_retry(self, config: dict) -> None:
+        for entry in self._async_current_entries(include_ignore=True):
+            if entry.unique_id != self.unique_id:
+                continue
+            if entry.state == ConfigEntryState.SETUP_RETRY:
+                entry_config_dict = entry.data.get(CONF_DEVICE_CONFIG)
+                if entry_config_dict != config:
+                    self.hass.config_entries.async_update_entry(
+                        entry, data={**entry.data, CONF_DEVICE_CONFIG: config}
+                    )
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(entry.entry_id),
+                        f"config entry reload {entry.title} {entry.domain} {entry.entry_id}",
+                    )
+
     async def _async_handle_discovery(
-        self, host: str, mac: str, config: Optional[DeviceConfig] = None
+        self, host: str, mac: str, config: Optional[dict] = None
     ) -> FlowResult:
         """Handle any discovery."""
         await self.async_set_unique_id(dr.format_mac(mac))
         if config:
-            updates = {
-                CONF_HOST: host,
-                CONF_CONNECTION_TYPE: config.connection_type.to_dict(),
-                CONF_USES_HTTP: config.uses_http,
-            }
-        else:
-            updates = {CONF_HOST: host}
-        self._abort_if_unique_id_configured(updates=updates)
+            self._update_config_if_entry_in_setup_retry(config)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         self._async_abort_entries_match({CONF_HOST: host})
         self.context[CONF_HOST] = host
         for progress in self._async_in_progress():
@@ -216,13 +220,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that auth is required."""
         errors = {}
         host = self.context[CONF_HOST]
+        assert self._discovered_device is not None
         if user_input:
             credentials = Credentials(
                 user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             )
             try:
-                device = await self._async_try_discover_and_update(
-                    host, credentials, raise_on_progress=False
+                device = await self._async_try_connect(
+                    self._discovered_device, credentials
                 )
             except AuthenticationException:
                 errors["base"] = "invalid_auth"
@@ -264,7 +269,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self._discovered_device, credentials
                 )
             except AuthenticationException:
-                return await self.async_step_pick_device_auth_confirm()
+                return await self.async_step_user_auth_confirm()
             except SmartDeviceException:
                 return self.async_abort(reason="cannot_connect")
             return self._async_create_entry_from_device(device)
@@ -286,43 +291,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="pick_device",
             data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
-        )
-
-    async def async_step_pick_device_auth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Dialog that informs the user that auth is required."""
-        errors = {}
-        host = self.context[CONF_HOST]
-        assert self._discovered_device is not None
-        if user_input:
-            credentials = Credentials(
-                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-            )
-            try:
-                device = await self._async_try_connect(
-                    self._discovered_device, credentials
-                )
-            except AuthenticationException:
-                errors["base"] = "invalid_auth"
-            except SmartDeviceException:
-                errors["base"] = "cannot_connect"
-            else:
-                await set_credentials(
-                    self.hass, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-                )
-                async_call_later(
-                    self.hass,
-                    REAUTH_REFLOW_CALL_LATER_SECS,
-                    self._async_reload_requires_auth_entries,
-                )
-                return self._async_create_entry_from_device(device)
-
-        return self.async_show_form(
-            step_id="pick_device_auth_confirm",
-            data_schema=STEP_AUTH_DATA_SCHEMA,
-            errors=errors,
-            description_placeholders={CONF_HOST: host},
         )
 
     async def _async_reload_requires_auth_entries(self, _now: datetime) -> None:
@@ -347,8 +315,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_HOST: device.host,
                 CONF_ALIAS: device.alias,
                 CONF_MODEL: device.model,
-                CONF_CONNECTION_TYPE: device.config.connection_type.to_dict(),
-                CONF_USES_HTTP: device.config.uses_http,
+                CONF_DEVICE_CONFIG: device.config.to_dict(
+                    credentials_hash=device.credentials_hash
+                ),
             },
         )
 
@@ -359,7 +328,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         raise_on_progress: bool = True,
     ) -> SmartDevice:
         """Try to connect."""
-        self._async_abort_entries_match({CONF_HOST: host})
         self._discovered_device = await Discover.discover_single(
             host, credentials=credentials
         )

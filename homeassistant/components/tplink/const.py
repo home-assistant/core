@@ -33,8 +33,6 @@ ATTR_TODAY_ENERGY_KWH: Final = "today_energy_kwh"
 ATTR_TOTAL_ENERGY_KWH: Final = "total_energy_kwh"
 
 CONF_DEVICE_CONFIG: Final = "device_config"
-CONF_CONNECTION_TYPE: Final = "connection_type"
-CONF_USES_HTTP: Final = "uses_http"
 CONF_DIMMER: Final = "dimmer"
 CONF_LIGHT: Final = "light"
 CONF_STRIP: Final = "strip"
