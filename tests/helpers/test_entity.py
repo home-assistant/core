@@ -1231,6 +1231,7 @@ async def test_entity_name_translation_placeholders(
         "translation_key",
         "translations",
         "placeholders",
+        "release_channel",
         "expected_error",
     ),
     (
@@ -1242,6 +1243,7 @@ async def test_entity_name_translation_placeholders(
                 },
             },
             {"placeholder": "special"},
+            "stable",
             (
                 "has translation placeholders '{'placeholder': 'special'}' which do "
                 "not match the name '{placeholder} English ent {2ndplaceholder}'"
@@ -1251,10 +1253,22 @@ async def test_entity_name_translation_placeholders(
             "test_entity",
             {
                 "en": {
+                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent {2ndplaceholder}"
+                },
+            },
+            {"placeholder": "special"},
+            "beta",
+            "HomeAssistantError: Missing placeholder '2ndplaceholder'",
+        ),
+        (
+            "test_entity",
+            {
+                "en": {
                     "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent"
                 },
             },
             None,
+            "stable",
             (
                 "has translation placeholders '{}' which do "
                 "not match the name '{placeholder} English ent'"
@@ -1267,6 +1281,7 @@ async def test_entity_name_translation_placeholder_errors(
     translation_key: str | None,
     translations: dict[str, str] | None,
     placeholders: dict[str, str] | None,
+    release_channel: str,
     expected_error: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -1311,6 +1326,8 @@ async def test_entity_name_translation_placeholder_errors(
     with patch(
         "homeassistant.helpers.entity_platform.translation.async_get_translations",
         side_effect=async_get_translations,
+    ), patch(
+        "homeassistant.helpers.entity.get_release_channel", return_value=release_channel
     ):
         await entity_platform.async_setup_entry(config_entry)
 

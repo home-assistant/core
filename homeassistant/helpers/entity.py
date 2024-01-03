@@ -43,7 +43,13 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     EntityCategory,
 )
-from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Context,
+    HomeAssistant,
+    callback,
+    get_release_channel,
+)
 from homeassistant.exceptions import (
     HomeAssistantError,
     InvalidStateError,
@@ -638,8 +644,10 @@ class Entity(
         """Substitute placeholders in entity name."""
         try:
             return name.format(**self.translation_placeholders)
-        except KeyError:
+        except KeyError as err:
             if not self._name_translation_placeholders_reported:
+                if get_release_channel() != "stable":
+                    raise HomeAssistantError("Missing placeholder %s" % err) from err
                 report_issue = self._suggest_report_issue()
                 _LOGGER.warning(
                     (
