@@ -31,7 +31,7 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the linknlink flow."""
-        self.device = None
+        self.device: llk.Device = None
 
     async def async_set_device(self, device, raise_on_progress=True):
         """Define a device for the config flow."""
@@ -80,7 +80,7 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_device(device)
         return await self.async_step_auth()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -142,7 +142,7 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_auth(self):
+    async def async_step_auth(self) -> FlowResult:
         """Authenticate to the device."""
         device = self.device
         errors = {}
@@ -195,7 +195,7 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="auth", errors=errors)
 
-    async def async_step_reset(self, user_input=None, errors=None):
+    async def async_step_reset(self, user_input=None, errors=None) -> FlowResult:
         """Guide the user to unlock the device manually.
 
         We are unable to authenticate because the device is locked.
@@ -218,7 +218,7 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             {CONF_HOST: device.host[0], CONF_TIMEOUT: device.timeout}
         )
 
-    async def async_step_unlock(self, user_input=None):
+    async def async_step_unlock(self, user_input=None) -> FlowResult:
         """Unlock the device.
 
         The authentication succeeded, but the device is locked.
@@ -272,10 +272,9 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_finish(self, user_input=None):
+    async def async_step_finish(self, user_input=None) -> FlowResult:
         """Choose a name for the device and create config entry."""
         device = self.device
-        errors = {}
 
         # Abort reauthentication flow.
         self._abort_if_unique_id_configured(
@@ -295,5 +294,5 @@ class linknlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         data_schema = {vol.Required(CONF_NAME, default=device.name): str}
         return self.async_show_form(
-            step_id="finish", data_schema=vol.Schema(data_schema), errors=errors
+            step_id="finish", data_schema=vol.Schema(data_schema), errors={}
         )

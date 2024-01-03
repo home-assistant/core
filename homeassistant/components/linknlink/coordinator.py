@@ -1,13 +1,14 @@
-"""Support for linknlink devices."""
+"""LinknLink Coordinator."""
+from __future__ import annotations
+
 from contextlib import suppress
-from functools import partial
+from datetime import timedelta
 import logging
+from typing import Any
 
 import linknlink as llk
 from linknlink.exceptions import (
     AuthenticationError,
-    AuthorizationError,
-    ConnectionClosedError,
     LinknLinkException,
     NetworkTimeoutError,
 )
@@ -24,53 +25,57 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DEFAULT_PORT, DOMAIN, DOMAINS_AND_TYPES
-from .updater import get_update_manager
 
 _LOGGER = logging.getLogger(__name__)
+SCAN_INTERVAL = 10
 
 
-def get_domains(device_type: str) -> set[Platform]:
-    """Return the domains available for a device type."""
-    return {d for d, t in DOMAINS_AND_TYPES.items() if device_type in t}
-
-
-class LinknLinkDevice:
-    """Manages a linknlink device."""
+class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
+    """Class to manage fetching data."""
 
     api: llk.Device
 
     def __init__(self, hass: HomeAssistant, config: ConfigEntry) -> None:
-        """Initialize the device."""
+        """Initialize the data service."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=config.title,
+            update_interval=timedelta(seconds=SCAN_INTERVAL),
+        )
         self.hass = hass
         self.config = config
-        self.update_manager = None
         self.fw_version: int | None = None
         self.authorized: bool | None = None
         self.reset_jobs: list[CALLBACK_TYPE] = []
 
     @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self.config.title
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique id of the device."""
-        return self.config.unique_id
-
-    @property
-    def mac_address(self) -> str:
-        """Return the mac address of the device."""
-        return self.config.data[CONF_MAC]
-
-    @property
     def available(self) -> bool | None:
         """Return True if the device is available."""
-        if self.update_manager is None:
-            return False
-        return self.update_manager.available
+        return self.api.auth()
+
+    def unload(self) -> None:
+        """Cancel jobs."""
+        while self.reset_jobs:
+            self.reset_jobs.pop()()
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.api.mac.hex())},
+            name=self.config.title,
+            manufacturer=self.api.manufacturer,
+            model=self.api.model,
+            sw_version=str(self.fw_version),
+        )
 
     @staticmethod
     async def async_update(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -126,56 +131,9 @@ class LinknLinkDevice:
             return False
 
         self.authorized = True
-
-        update_manager = get_update_manager(self)
-        coordinator = update_manager.coordinator
-        await coordinator.async_config_entry_first_refresh()
-
-        self.update_manager = update_manager
-        self.hass.data[DOMAIN].devices[config.entry_id] = self
         self.reset_jobs.append(config.add_update_listener(self.async_update))
 
-        # Forward entry setup to related domains.
-        await self.hass.config_entries.async_forward_entry_setups(
-            config, get_domains(self.api.type)
-        )
-
         return True
-
-    async def async_unload(self) -> bool:
-        """Unload the device and related entities."""
-        if self.update_manager is None:
-            return True
-
-        while self.reset_jobs:
-            self.reset_jobs.pop()()
-
-        return await self.hass.config_entries.async_unload_platforms(
-            self.config, get_domains(self.api.type)
-        )
-
-    async def async_auth(self) -> bool:
-        """Authenticate to the device."""
-        try:
-            await self.hass.async_add_executor_job(self.api.auth)
-        except (LinknLinkException, OSError) as err:
-            _LOGGER.debug(
-                "Failed to authenticate to the device at %s: %s", self.api.host[0], err
-            )
-            if isinstance(err, AuthenticationError):
-                await self._async_handle_auth_error()
-            return False
-        return True
-
-    async def async_request(self, function, *args, **kwargs):
-        """Send a request to the device."""
-        request = partial(function, *args, **kwargs)
-        try:
-            return await self.hass.async_add_executor_job(request)
-        except (AuthorizationError, ConnectionClosedError):
-            if not await self.async_auth():
-                raise
-            return await self.hass.async_add_executor_job(request)
 
     async def _async_handle_auth_error(self) -> None:
         """Handle an authentication error."""
@@ -202,3 +160,22 @@ class LinknLinkDevice:
                 data={CONF_NAME: self.name, **self.config.data},
             )
         )
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Fetch data from the device."""
+        if (
+            self.api.type in DOMAINS_AND_TYPES[Platform.SENSOR]
+            or self.api.type in DOMAINS_AND_TYPES[Platform.BINARY_SENSOR]
+        ):
+            data = self.api.check_sensors()
+            return data
+        return {}
+
+
+class LinknLinkEntity(CoordinatorEntity[Coordinator]):
+    """LinknLinkEntity - In charge of get the data for a site."""
+
+    def __init__(self, coordinator: Coordinator, context: Any = None) -> None:
+        """Initialize coordinator entity."""
+        super().__init__(coordinator, context)
+        self._attr_device_info = coordinator.device_info

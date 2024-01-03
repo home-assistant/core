@@ -3,6 +3,7 @@ from base64 import b64decode
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
@@ -34,7 +35,7 @@ def format_mac(mac):
     return ":".join([format(octet, "02x") for octet in mac])
 
 
-def import_device(hass, host):
+def import_device(hass: HomeAssistant, host):
     """Create a config flow for a device."""
     configured_hosts = {
         entry.data.get(CONF_HOST) for entry in hass.config_entries.async_entries(DOMAIN)

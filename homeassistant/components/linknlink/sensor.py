@@ -9,13 +9,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LinknLinkEntity
+from .coordinator import Coordinator, LinknLinkEntity
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+HUMITURE_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="envtemp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -37,9 +37,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the linknlink sensor."""
-    device = hass.data[DOMAIN].devices[config_entry.entry_id]
-    sensors = [LinknLinkSensor(device, description) for description in SENSOR_TYPES]
-    async_add_entities(sensors)
+
+    coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    async_add_entities(
+        LinknLinkSensor(coordinator, description) for description in HUMITURE_SENSORS
+    )
 
 
 class LinknLinkSensor(LinknLinkEntity, SensorEntity):
@@ -47,14 +49,27 @@ class LinknLinkSensor(LinknLinkEntity, SensorEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, device, description: SensorEntityDescription) -> None:
+    def __init__(
+        self,
+        coordinator: Coordinator,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(device)
+        super().__init__(coordinator)
         self.entity_description = description
 
-        self._attr_native_value = self._coordinator.data[description.key]
-        self._attr_unique_id = f"{device.unique_id}-{description.key}"
+        self._attr_native_value = float(self.coordinator.data[description.key])
+        self._attr_unique_id = f"{coordinator.api.mac.hex()}-{description.key}"
 
-    def _update_state(self, data):
-        """Update the state of the entity."""
-        self._attr_native_value = data[self.entity_description.key]
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle coordinator update."""
+        self._update_attr()
+        super()._handle_coordinator_update()
+
+    @callback
+    def _update_attr(self) -> None:
+        """Update attributes for sensor."""
+        self._attr_native_value = float(
+            self.coordinator.data[self.entity_description.key]
+        )

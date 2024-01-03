@@ -7,11 +7,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .entity import LinknLinkEntity
+from .coordinator import Coordinator, LinknLinkEntity
 
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
@@ -27,12 +27,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the linknlink binary sensor."""
-    device = hass.data[DOMAIN].devices[config_entry.entry_id]
-    binarysensors = [
-        LinknLinkBinarySensor(device, description)
+
+    coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    async_add_entities(
+        LinknLinkBinarySensor(coordinator, description)
         for description in BINARY_SENSOR_TYPES
-    ]
-    async_add_entities(binarysensors)
+    )
 
 
 class LinknLinkBinarySensor(LinknLinkEntity, BinarySensorEntity):
@@ -40,14 +40,25 @@ class LinknLinkBinarySensor(LinknLinkEntity, BinarySensorEntity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, device, description: BinarySensorEntityDescription) -> None:
+    def __init__(
+        self,
+        coordinator: Coordinator,
+        description: BinarySensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(device)
+        super().__init__(coordinator)
         self.entity_description = description
 
-        self._attr_native_value = self._coordinator.data[description.key]
-        self._attr_unique_id = f"{device.unique_id}-{description.key}"
+        self._attr_is_on = bool(self.coordinator.data[description.key])
+        self._attr_unique_id = f"{coordinator.api.mac.hex()}-{description.key}"
 
-    def _update_state(self, data):
-        """Update the state of the entity."""
-        self._attr_native_value = data[self.entity_description.key]
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle coordinator update."""
+        self._update_attr()
+        super()._handle_coordinator_update()
+
+    @callback
+    def _update_attr(self) -> None:
+        """Update attributes for sensor."""
+        self._attr_is_on = bool(self.coordinator.data[self.entity_description.key])
