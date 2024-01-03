@@ -7,7 +7,12 @@ from typing import Any
 from pytankerkoenig import customException, getNearbyStations
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -19,7 +24,6 @@ from homeassistant.const import (
     UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     LocationSelector,
@@ -48,7 +52,7 @@ async def async_get_nearby_stations(
         return {"ok": False, "message": err, "exception": True}
 
 
-class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -62,14 +66,14 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if not user_input:
             return self._show_form_user()
@@ -98,7 +102,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_select_station(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the step select_station of a flow initialized by the user."""
         if not user_input:
             return self.async_show_form(
@@ -114,13 +118,15 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             options={CONF_SHOW_ON_MAP: True},
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Perform reauth confirm upon an API authentication error."""
         if not user_input:
             return self._show_form_reauth()
@@ -140,7 +146,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self,
         user_input: dict[str, Any] | None = None,
         errors: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         if user_input is None:
             user_input = {}
         return self.async_show_form(
@@ -186,7 +192,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self,
         user_input: dict[str, Any] | None = None,
         errors: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         if user_input is None:
             user_input = {}
         return self.async_show_form(
@@ -203,7 +209,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _create_entry(
         self, data: dict[str, Any], options: dict[str, Any]
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         return self.async_create_entry(
             title=data[CONF_NAME],
             data=data,
@@ -211,17 +217,17 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Handle an options flow."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
         self._stations: dict[str, str] = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
             self.hass.config_entries.async_update_entry(

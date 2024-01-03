@@ -7,26 +7,32 @@ import pylitejet
 from serial import SerialException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
-from homeassistant.data_entry_flow import FlowResult, FlowResultType
+from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import CONF_DEFAULT_TRANSITION, DOMAIN
 
 
-class LiteJetOptionsFlow(config_entries.OptionsFlow):
+class LiteJetOptionsFlow(OptionsFlow):
     """Handle LiteJet options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize LiteJet options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage LiteJet options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -46,15 +52,15 @@ class LiteJetOptionsFlow(config_entries.OptionsFlow):
         )
 
 
-class LiteJetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class LiteJetConfigFlow(ConfigFlow, domain=DOMAIN):
     """LiteJet config flow."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Create a LiteJet config entry based upon user input."""
         if self._async_current_entries():
-            if self.context["source"] == config_entries.SOURCE_IMPORT:
+            if self.context["source"] == SOURCE_IMPORT:
                 async_create_issue(
                     self.hass,
                     HOMEASSISTANT_DOMAIN,
@@ -78,7 +84,7 @@ class LiteJetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 system = await pylitejet.open(port)
             except SerialException:
-                if self.context["source"] == config_entries.SOURCE_IMPORT:
+                if self.context["source"] == SOURCE_IMPORT:
                     async_create_issue(
                         self.hass,
                         DOMAIN,
@@ -106,7 +112,7 @@ class LiteJetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> FlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import litejet config from configuration.yaml."""
         new_data = {CONF_PORT: import_data[CONF_PORT]}
         result = await self.async_step_user(new_data)
@@ -130,7 +136,7 @@ class LiteJetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> LiteJetOptionsFlow:
         """Get the options flow for this handler."""
         return LiteJetOptionsFlow(config_entry)

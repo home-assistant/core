@@ -14,7 +14,12 @@ from here_routing import (
 from here_transit import HERETransitError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -23,7 +28,6 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     EntitySelector,
@@ -91,7 +95,7 @@ def get_user_step_schema(data: dict[str, Any]) -> vol.Schema:
     )
 
 
-class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for HERE Travel Time."""
 
     VERSION = 1
@@ -103,14 +107,14 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> HERETravelTimeOptionsFlow:
         """Get the options flow."""
         return HERETravelTimeOptionsFlow(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         user_input = user_input or {}
@@ -129,7 +133,7 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=get_user_step_schema(user_input), errors=errors
         )
 
-    async def async_step_origin_menu(self, _: None = None) -> FlowResult:
+    async def async_step_origin_menu(self, _: None = None) -> ConfigFlowResult:
         """Show the origin menu."""
         return self.async_show_menu(
             step_id="origin_menu",
@@ -138,7 +142,7 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_origin_coordinates(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Configure origin by using gps coordinates."""
         if user_input is not None:
             self._config[CONF_ORIGIN_LATITUDE] = user_input[CONF_ORIGIN][CONF_LATITUDE]
@@ -159,7 +163,7 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="origin_coordinates", data_schema=schema)
 
-    async def async_step_destination_menu(self, _: None = None) -> FlowResult:
+    async def async_step_destination_menu(self, _: None = None) -> ConfigFlowResult:
         """Show the destination menu."""
         return self.async_show_menu(
             step_id="destination_menu",
@@ -168,7 +172,7 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_origin_entity(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Configure origin by using an entity."""
         if user_input is not None:
             self._config[CONF_ORIGIN_ENTITY_ID] = user_input[CONF_ORIGIN_ENTITY_ID]
@@ -179,7 +183,7 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_destination_coordinates(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Configure destination by using gps coordinates."""
         if user_input is not None:
             self._config[CONF_DESTINATION_LATITUDE] = user_input[CONF_DESTINATION][
@@ -211,7 +215,7 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_destination_entity(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Configure destination by using an entity."""
         if user_input is not None:
             self._config[CONF_DESTINATION_ENTITY_ID] = user_input[
@@ -228,17 +232,17 @@ class HERETravelTimeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="destination_entity", data_schema=schema)
 
 
-class HERETravelTimeOptionsFlow(config_entries.OptionsFlow):
+class HERETravelTimeOptionsFlow(OptionsFlow):
     """Handle HERE Travel Time options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize HERE Travel Time options flow."""
         self.config_entry = config_entry
         self._config: dict[str, Any] = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the HERE Travel Time options."""
         if user_input is not None:
             self._config = user_input
@@ -257,7 +261,7 @@ class HERETravelTimeOptionsFlow(config_entries.OptionsFlow):
 
         return self.async_show_form(step_id="init", data_schema=schema)
 
-    async def async_step_time_menu(self, _: None = None) -> FlowResult:
+    async def async_step_time_menu(self, _: None = None) -> ConfigFlowResult:
         """Show the time menu."""
         return self.async_show_menu(
             step_id="time_menu",
@@ -266,13 +270,13 @@ class HERETravelTimeOptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_no_time(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Create Options Entry."""
         return self.async_create_entry(title="", data=self._config)
 
     async def async_step_arrival_time(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Configure arrival time."""
         if user_input is not None:
             self._config[CONF_ARRIVAL_TIME] = user_input[CONF_ARRIVAL_TIME]
@@ -286,7 +290,7 @@ class HERETravelTimeOptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_departure_time(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Configure departure time."""
         if user_input is not None:
             self._config[CONF_DEPARTURE_TIME] = user_input[CONF_DEPARTURE_TIME]

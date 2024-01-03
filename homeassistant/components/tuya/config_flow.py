@@ -6,7 +6,7 @@ from typing import Any
 from tuya_iot import AuthType, TuyaOpenAPI
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_COUNTRY_CODE, CONF_PASSWORD, CONF_USERNAME
 
 from .const import (
@@ -28,7 +28,7 @@ from .const import (
 )
 
 
-class TuyaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TuyaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Tuya Config Flow."""
 
     @staticmethod

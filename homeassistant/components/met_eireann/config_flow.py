@@ -2,14 +2,14 @@
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, HOME_LOCATION_NAME
 
 
-class MetEireannFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class MetEireannFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Met Eireann component."""
 
     VERSION = 1

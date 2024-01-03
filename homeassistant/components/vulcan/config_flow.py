@@ -16,9 +16,8 @@ from vulcan import (
     Vulcan,
 )
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PIN, CONF_REGION, CONF_TOKEN
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import DOMAIN
@@ -33,7 +32,7 @@ LOGIN_SCHEMA = {
 }
 
 
-class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class VulcanFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Uonet+ Vulcan config flow."""
 
     VERSION = 1
@@ -241,7 +240,9 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
 

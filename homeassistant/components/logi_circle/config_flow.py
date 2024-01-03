@@ -7,8 +7,8 @@ from logi_circle import LogiCircle
 from logi_circle.exception import AuthorizationFailed
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_CLIENT_ID,
@@ -53,7 +53,7 @@ def register_flow_implementation(
     }
 
 
-class LogiCircleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class LogiCircleFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Logi Circle component."""
 
     VERSION = 1

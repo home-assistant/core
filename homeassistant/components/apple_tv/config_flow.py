@@ -15,11 +15,17 @@ from pyatv.convert import model_str, protocol_str
 from pyatv.helpers import get_unique_id
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    SOURCE_ZEROCONF,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -79,7 +85,7 @@ async def device_scan(hass, identifier, loop):
     return None, None
 
 
-class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Apple TV."""
 
     VERSION = 1
@@ -87,7 +93,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Get options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
@@ -133,7 +139,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return entry.unique_id
         return None
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle initial step when updating invalid credentials."""
         self.context["title_placeholders"] = {
             "name": entry_data[CONF_NAME],
@@ -181,7 +189,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle device found via zeroconf."""
         if discovery_info.ip_address.version == 6:
             return self.async_abort(reason="ipv6_not_supported")
@@ -255,7 +263,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for flow in self._async_in_progress(include_uninitialized=True):
             context = flow["context"]
             if (
-                context.get("source") != config_entries.SOURCE_ZEROCONF
+                context.get("source") != SOURCE_ZEROCONF
                 or context.get(CONF_ADDRESS) != host
             ):
                 continue
@@ -342,7 +350,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_IDENTIFIERS: list(combined_identifiers),
                     },
                 )
-                if entry.source != config_entries.SOURCE_IGNORE:
+                if entry.source != SOURCE_IGNORE:
                     self.hass.async_create_task(
                         self.hass.config_entries.async_reload(entry.entry_id)
                     )

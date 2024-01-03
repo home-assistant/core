@@ -5,8 +5,7 @@ from typing import Any
 
 from cpuinfo import cpuinfo
 
-from homeassistant.config_entries import ConfigFlow
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import DOMAIN
 
@@ -20,7 +19,7 @@ class CPUSpeedFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         await self.async_set_unique_id(DOMAIN)
         self._abort_if_unique_id_configured()

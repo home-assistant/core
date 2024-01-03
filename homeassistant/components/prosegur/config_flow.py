@@ -7,10 +7,10 @@ from pyprosegur.auth import COUNTRY, Auth
 from pyprosegur.installation import Installation
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client, selector
 
 from .const import CONF_CONTRACT, DOMAIN
@@ -28,7 +28,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(hass: HomeAssistant, data):
     """Validate the user input allows us to connect."""
     session = aiohttp_client.async_get_clientsession(hass)
     auth = Auth(session, data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_COUNTRY])
@@ -41,7 +41,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise CannotConnect from ConnectionError
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ProsegurConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Prosegur Alarm."""
 
     VERSION = 1
@@ -74,7 +74,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_choose_contract(
         self, user_input: Any | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Let user decide which contract is being setup."""
 
         if user_input:
@@ -103,7 +103,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with Prosegur."""
         self.entry = cast(
             ConfigEntry,
@@ -155,9 +157,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""

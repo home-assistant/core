@@ -6,8 +6,7 @@ import logging
 from meteofrance_api.client import MeteoFranceClient
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlow
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
 
@@ -16,7 +15,7 @@ from .const import CONF_CITY, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class MeteoFranceFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Meteo-France config flow."""
 
     VERSION = 1

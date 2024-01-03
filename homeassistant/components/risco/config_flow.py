@@ -8,7 +8,12 @@ from typing import Any
 from pyrisco import CannotConnectError, RiscoCloud, RiscoLocal, UnauthorizedError
 import voluptuous as vol
 
-from homeassistant import config_entries, core
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -22,7 +27,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
 )
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -63,7 +68,7 @@ HA_STATES = [
 ]
 
 
-async def validate_cloud_input(hass: core.HomeAssistant, data) -> dict[str, str]:
+async def validate_cloud_input(hass: HomeAssistant, data) -> dict[str, str]:
     """Validate the user input allows us to connect to Risco Cloud.
 
     Data has the keys from CLOUD_SCHEMA with values provided by the user.
@@ -79,7 +84,7 @@ async def validate_cloud_input(hass: core.HomeAssistant, data) -> dict[str, str]
 
 
 async def validate_local_input(
-    hass: core.HomeAssistant, data: Mapping[str, str]
+    hass: HomeAssistant, data: Mapping[str, str]
 ) -> dict[str, Any]:
     """Validate the user input allows us to connect to a local panel.
 
@@ -107,19 +112,19 @@ async def validate_local_input(
     return {"title": site_id, "comm_delay": comm_delay}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class RiscoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Risco."""
 
     VERSION = 1
 
     def __init__(self) -> None:
         """Init the config flow."""
-        self._reauth_entry: config_entries.ConfigEntry | None = None
+        self._reauth_entry: ConfigEntry | None = None
 
     @staticmethod
-    @core.callback
+    @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> RiscoOptionsFlowHandler:
         """Define the config flow to handle options."""
         return RiscoOptionsFlowHandler(config_entry)
@@ -163,7 +168,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="cloud", data_schema=CLOUD_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self._reauth_entry = await self.async_set_unique_id(entry_data[CONF_USERNAME])
         return await self.async_step_cloud()
@@ -200,10 +207,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class RiscoOptionsFlowHandler(config_entries.OptionsFlow):
+class RiscoOptionsFlowHandler(OptionsFlow):
     """Handle a Risco options flow."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize."""
         self.config_entry = config_entry
         self._data = {**DEFAULT_OPTIONS, **config_entry.options}

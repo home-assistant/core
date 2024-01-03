@@ -17,10 +17,14 @@ from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_OLD_DISCOVERY,
@@ -105,7 +109,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         return None
 
     @callback
-    def _async_create_entry(self) -> FlowResult:
+    def _async_create_entry(self) -> ConfigFlowResult:
         """Async create flow handler entry."""
         return self.async_create_entry(
             title=self._name,
@@ -121,7 +125,9 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         ssdp_location: ParseResult = urlparse(discovery_info.ssdp_location or "")
         self._host = ssdp_location.hostname
@@ -161,7 +167,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user-confirmation of discovered node."""
         if user_input is None:
             return self._show_setup_form_confirm()
@@ -179,7 +185,9 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self._async_create_entry()
 
-    def _show_setup_form_init(self, errors: dict[str, str] | None = None) -> FlowResult:
+    def _show_setup_form_init(
+        self, errors: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -196,7 +204,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def _show_setup_form_confirm(
         self, errors: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="confirm",
@@ -212,7 +220,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._show_setup_form_init()
@@ -232,7 +240,9 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self._async_create_entry()
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle flow upon an API authentication error."""
         self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         self._host = entry_data[CONF_HOST]
@@ -243,7 +253,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def _show_setup_form_reauth_confirm(
         self, user_input: dict[str, Any], errors: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show the reauth form to the user."""
         default_username = user_input.get(CONF_USERNAME)
         return self.async_show_form(
@@ -260,7 +270,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
             return self._show_setup_form_reauth_confirm(
@@ -298,7 +308,7 @@ class FritzBoxToolsOptionsFlowHandler(OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle options flow."""
 
         if user_input is not None:

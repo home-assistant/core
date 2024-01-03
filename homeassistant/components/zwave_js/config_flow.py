@@ -11,7 +11,6 @@ from serial.tools import list_ports
 import voluptuous as vol
 from zwave_js_server.version import VersionInfo, get_server_version
 
-from homeassistant import config_entries, exceptions
 from homeassistant.components import usb
 from homeassistant.components.hassio import (
     AddonError,
@@ -22,9 +21,21 @@ from homeassistant.components.hassio import (
     is_hassio,
 )
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.config_entries import (
+    SOURCE_USB,
+    ConfigEntriesFlowManager,
+    ConfigEntry,
+    ConfigEntryBaseFlow,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+    OptionsFlowManager,
+)
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow, FlowManager
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import disconnect_client
@@ -151,7 +162,7 @@ async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
     return await hass.async_add_executor_job(get_usb_ports)
 
 
-class BaseZwaveJSFlow(config_entries.ConfigEntryBaseFlow, ABC):
+class BaseZwaveJSFlow(ConfigEntryBaseFlow, ABC):
     """Represent the base config flow for Z-Wave JS."""
 
     def __init__(self) -> None:
@@ -176,7 +187,7 @@ class BaseZwaveJSFlow(config_entries.ConfigEntryBaseFlow, ABC):
 
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Install Z-Wave JS add-on."""
         if not self.install_task:
             self.install_task = self.hass.async_create_task(self._async_install_addon())
@@ -198,13 +209,13 @@ class BaseZwaveJSFlow(config_entries.ConfigEntryBaseFlow, ABC):
 
     async def async_step_install_failed(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Add-on installation failed."""
         return self.async_abort(reason="addon_install_failed")
 
     async def async_step_start_addon(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Start Z-Wave JS add-on."""
         if not self.start_task:
             self.start_task = self.hass.async_create_task(self._async_start_addon())
@@ -224,7 +235,7 @@ class BaseZwaveJSFlow(config_entries.ConfigEntryBaseFlow, ABC):
 
     async def async_step_start_failed(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Add-on start failed."""
         return self.async_abort(reason="addon_start_failed")
 
@@ -268,13 +279,13 @@ class BaseZwaveJSFlow(config_entries.ConfigEntryBaseFlow, ABC):
     @abstractmethod
     async def async_step_configure_addon(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Ask for config for Z-Wave JS add-on."""
 
     @abstractmethod
     async def async_step_finish_addon_setup(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Prepare info needed to complete the config entry.
 
         Get add-on discovery info and server version info.
@@ -324,7 +335,7 @@ class BaseZwaveJSFlow(config_entries.ConfigEntryBaseFlow, ABC):
         return discovery_info_config
 
 
-class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
+class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Z-Wave JS."""
 
     VERSION = 1
@@ -337,21 +348,19 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         self._usb_discovery = False
 
     @property
-    def flow_manager(self) -> config_entries.ConfigEntriesFlowManager:
+    def flow_manager(self) -> ConfigEntriesFlowManager:
         """Return the correct flow manager."""
         return self.hass.config_entries.flow
 
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Return the options flow."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_import(
-        self, data: dict[str, Any]
-    ) -> config_entries.ConfigFlowResult:
+    async def async_step_import(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Handle imported data.
 
         This step will be used when importing data
@@ -365,7 +374,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if is_hassio(self.hass):
             return await self.async_step_on_supervisor()
@@ -374,7 +383,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         home_id = str(discovery_info.properties["homeId"])
         await self.async_set_unique_id(home_id)
@@ -385,7 +394,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Confirm the setup."""
         if user_input is not None:
             return await self.async_step_manual({CONF_URL: self.ws_address})
@@ -401,7 +410,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_usb(
         self, discovery_info: usb.UsbServiceInfo
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle USB Discovery."""
         if not is_hassio(self.hass):
             return self.async_abort(reason="discovery_requires_supervisor")
@@ -444,7 +453,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_usb_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle USB Discovery confirmation."""
         if user_input is None:
             return self.async_show_form(
@@ -458,7 +467,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle a manual configuration."""
         if user_input is None:
             return self.async_show_form(
@@ -496,7 +505,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Receive configuration from add-on discovery info.
 
         This flow is triggered by the Z-Wave JS add-on.
@@ -522,7 +531,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_hassio_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Confirm the add-on discovery."""
         if user_input is not None:
             return await self.async_step_on_supervisor(
@@ -533,7 +542,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_on_supervisor(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle logic when on Supervisor host."""
         if user_input is None:
             return self.async_show_form(
@@ -568,7 +577,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_configure_addon(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Ask for config for Z-Wave JS add-on."""
         addon_info = await self._async_get_addon_info()
         addon_config = addon_info.options
@@ -633,7 +642,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_finish_addon_setup(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Prepare info needed to complete the config entry.
 
         Get add-on discovery info and server version info.
@@ -643,7 +652,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info = await self._async_get_addon_discovery_info()
             self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"
 
-        if not self.unique_id or self.context["source"] == config_entries.SOURCE_USB:
+        if not self.unique_id or self.context["source"] == SOURCE_USB:
             if not self.version_info:
                 try:
                     self.version_info = await async_get_version_info(
@@ -669,7 +678,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         return self._async_create_entry_from_vars()
 
     @callback
-    def _async_create_entry_from_vars(self) -> config_entries.ConfigFlowResult:
+    def _async_create_entry_from_vars(self) -> ConfigFlowResult:
         """Return a config entry for the flow."""
         # Abort any other flows that may be in progress
         for progress in self._async_in_progress():
@@ -690,10 +699,10 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
+class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
     """Handle an options flow for Z-Wave JS."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Set up the options flow."""
         super().__init__()
         self.config_entry = config_entry
@@ -701,7 +710,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
         self.revert_reason: str | None = None
 
     @property
-    def flow_manager(self) -> config_entries.OptionsFlowManager:
+    def flow_manager(self) -> OptionsFlowManager:
         """Return the correct flow manager."""
         return self.hass.config_entries.options
 
@@ -712,7 +721,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if is_hassio(self.hass):
             return await self.async_step_on_supervisor()
@@ -721,7 +730,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle a manual configuration."""
         if user_input is None:
             return self.async_show_form(
@@ -766,7 +775,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
 
     async def async_step_on_supervisor(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle logic when on Supervisor host."""
         if user_input is None:
             return self.async_show_form(
@@ -787,7 +796,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
 
     async def async_step_configure_addon(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Ask for config for Z-Wave JS add-on."""
         addon_info = await self._async_get_addon_info()
         addon_config = addon_info.options
@@ -826,7 +835,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
 
             if (
                 self.config_entry.data.get(CONF_USE_ADDON)
-                and self.config_entry.state == config_entries.ConfigEntryState.LOADED
+                and self.config_entry.state == ConfigEntryState.LOADED
             ):
                 # Disconnect integration before restarting add-on.
                 await disconnect_client(self.hass, self.config_entry)
@@ -875,13 +884,13 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
 
     async def async_step_start_failed(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Add-on start failed."""
         return await self.async_revert_addon_config(reason="addon_start_failed")
 
     async def async_step_finish_addon_setup(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Prepare info needed to complete the config entry update.
 
         Get add-on discovery info and server version info.
@@ -927,9 +936,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
         )
         return self.async_create_entry(title=TITLE, data={})
 
-    async def async_revert_addon_config(
-        self, reason: str
-    ) -> config_entries.ConfigFlowResult:
+    async def async_revert_addon_config(self, reason: str) -> ConfigFlowResult:
         """Abort the options flow.
 
         If the add-on options have been changed, revert those and restart add-on.
@@ -957,11 +964,11 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
         return await self.async_step_configure_addon(addon_config_input)
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Indicate connection error."""
 
 
-class InvalidInput(exceptions.HomeAssistantError):
+class InvalidInput(HomeAssistantError):
     """Error to indicate input data is invalid."""
 
     def __init__(self, error: str) -> None:

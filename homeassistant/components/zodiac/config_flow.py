@@ -4,7 +4,6 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_NAME, DOMAIN
 
@@ -26,6 +25,6 @@ class ZodiacConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user")
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from configuration.yaml."""
         return await self.async_step_user(user_input)

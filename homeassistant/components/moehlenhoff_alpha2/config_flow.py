@@ -6,7 +6,7 @@ import aiohttp
 from moehlenhoff_alpha2 import Alpha2Base
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 
 from .const import DOMAIN
 
@@ -34,7 +34,7 @@ async def validate_input(data):
     return {"title": base.name}
 
 
-class Alpha2BaseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class Alpha2BaseConfigFlow(ConfigFlow, domain=DOMAIN):
     """Möhlenhoff Alpha2 config flow."""
 
     VERSION = 1

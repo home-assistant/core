@@ -18,10 +18,10 @@ from aiohomekit.model.status_flags import StatusFlags
 from aiohomekit.utils import domain_supported, domain_to_name, serialize_broadcast_key
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, KNOWN_DEVICES
@@ -82,7 +82,7 @@ def formatted_category(category: Categories) -> str:
 @callback
 def find_existing_config_entry(
     hass: HomeAssistant, upper_case_hkid: str
-) -> config_entries.ConfigEntry | None:
+) -> ConfigEntry | None:
     """Return a set of the configured hosts."""
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.data.get("AccessoryPairingID") == upper_case_hkid:
@@ -106,7 +106,7 @@ def ensure_pin_format(pin: str, allow_insecure_setup_codes: Any = None) -> str:
     return "-".join(match.groups())
 
 
-class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a HomeKit config flow."""
 
     VERSION = 1
@@ -127,7 +127,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow start."""
         errors: dict[str, str] = {}
 
@@ -177,7 +177,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_unignore(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_unignore(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Rediscover a previously ignored discover."""
         unique_id = user_input["unique_id"]
         await self.async_set_unique_id(unique_id)
@@ -219,7 +219,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a discovered HomeKit accessory.
 
         This flow is triggered by the discovery component.
@@ -368,7 +368,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth(
         self, discovery_info: bluetooth.BluetoothServiceInfoBleak
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         if not aiohomekit_const.BLE_TRANSPORT_SUPPORTED:
             return self.async_abort(reason="ignored_model")
@@ -416,7 +416,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_pair(
         self, pair_info: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Pair with a new HomeKit accessory."""
         # If async_step_pair is called with no pairing code then we do the M1
         # phase of pairing. If this is successful the device enters pairing
@@ -523,7 +523,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_busy_error(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Retry pairing after the accessory is busy."""
         if user_input is not None:
             return await self.async_step_pair()
@@ -532,7 +532,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_max_tries_error(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Retry pairing after the accessory has reached max tries."""
         if user_input is not None:
             return await self.async_step_pair()
@@ -541,7 +541,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_protocol_error(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Retry pairing after the accessory has a protocol error."""
         if user_input is not None:
             return await self.async_step_pair()
@@ -553,7 +553,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self,
         errors: dict[str, str] | None = None,
         description_placeholders: dict[str, str] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         assert self.category
 
         placeholders = self.context["title_placeholders"] = {
@@ -572,7 +572,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(schema),
         )
 
-    async def _entry_from_accessory(self, pairing: AbstractPairing) -> FlowResult:
+    async def _entry_from_accessory(self, pairing: AbstractPairing) -> ConfigFlowResult:
         """Return a config entry from an initialized bridge."""
         # The bulk of the pairing record is stored on the config entry.
         # A specific exception is the 'accessories' key. This is more

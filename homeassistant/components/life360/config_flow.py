@@ -8,10 +8,14 @@ from typing import Any, cast
 from life360 import Life360, Life360Error, LoginError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -64,7 +68,7 @@ class Life360ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return Life360OptionsFlow(config_entry)
 
-    async def _async_verify(self, step_id: str) -> FlowResult:
+    async def _async_verify(self, step_id: str) -> ConfigFlowResult:
         """Attempt to authorize the provided credentials."""
         if not self._api:
             self._api = Life360(
@@ -110,7 +114,7 @@ class Life360ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a config flow initiated by the user."""
         if not user_input:
             return self.async_show_form(
@@ -125,7 +129,7 @@ class Life360ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self._async_verify("user")
 
-    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> ConfigFlowResult:
         """Handle reauthorization."""
         self._username = data[CONF_USERNAME]
         self._reauth_entry = self.hass.config_entries.async_get_entry(
@@ -135,7 +139,9 @@ class Life360ConfigFlow(ConfigFlow, domain=DOMAIN):
         # simple reauthorization will be successful.
         return await self.async_step_reauth_confirm(dict(data))
 
-    async def async_step_reauth_confirm(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauthorization completion."""
         if not user_input:
             return self.async_show_form(
@@ -156,7 +162,7 @@ class Life360OptionsFlow(OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle account options."""
         options = self.config_entry.options
 

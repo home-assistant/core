@@ -9,11 +9,11 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
+    ConfigFlowResult,
     OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -83,7 +83,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Initialize user input."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -102,7 +102,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_friends(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Form to select other users and friends."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -159,7 +159,7 @@ class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Initialize form."""
         errors: dict[str, str] = {}
         if user_input is not None:

@@ -1,14 +1,14 @@
 """Config flow for Home Assistant Supervisor integration."""
 import logging
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 
 from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class HassIoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Home Assistant Supervisor."""
 
     VERSION = 1

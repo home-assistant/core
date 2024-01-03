@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlow
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -24,7 +24,7 @@ DATA_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-class GdacsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class GdacsFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a GDACS config flow."""
 
     async def _show_form(self, errors=None):
@@ -70,7 +70,7 @@ class GdacsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             self._abort_if_unique_id_configured()
         except AbortFlow:
-            if self.context["source"] == config_entries.SOURCE_IMPORT:
+            if self.context["source"] == SOURCE_IMPORT:
                 async_create_issue(
                     self.hass,
                     HOMEASSISTANT_DOMAIN,

@@ -7,10 +7,9 @@ from typing import Any
 from aiovodafone import VodafoneStationSercommApi, exceptions as aiovodafone_exceptions
 import voluptuous as vol
 
-from homeassistant import core
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import HomeAssistant
 
 from .const import _LOGGER, DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
 
@@ -30,9 +29,7 @@ def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
 STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
 
-async def validate_input(
-    hass: core.HomeAssistant, data: dict[str, Any]
-) -> dict[str, str]:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect."""
 
     api = VodafoneStationSercommApi(
@@ -56,7 +53,7 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -88,7 +85,9 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=user_form_schema(user_input), errors=errors
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauth flow."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert self.entry
@@ -97,7 +96,7 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle reauth confirm."""
         assert self.entry
         errors = {}

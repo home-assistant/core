@@ -11,10 +11,15 @@ from aiohttp import ClientError, ClientResponseError
 import pymelcloud
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.data_entry_flow import AbortFlow, FlowResult, FlowResultType
+from homeassistant.data_entry_flow import AbortFlow, FlowResultType
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
@@ -27,7 +32,7 @@ async def async_create_import_issue(
     hass: HomeAssistant, source: str, issue: str, success: bool = False
 ) -> None:
     """Create issue from import."""
-    if source != config_entries.SOURCE_IMPORT:
+    if source != SOURCE_IMPORT:
         return
     if not success:
         async_create_issue(
@@ -56,14 +61,14 @@ async def async_create_import_issue(
     )
 
 
-class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
 
-    entry: config_entries.ConfigEntry | None = None
+    entry: ConfigEntry | None = None
 
-    async def _create_entry(self, username: str, token: str) -> FlowResult:
+    async def _create_entry(self, username: str, token: str) -> ConfigFlowResult:
         """Register new entry."""
         await self.async_set_unique_id(username)
         try:
@@ -81,7 +86,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         *,
         password: str | None = None,
         token: str | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Create client."""
         try:
             async with asyncio.timeout(10):
@@ -115,7 +120,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """User initiated config flow."""
         if user_input is None:
             return self.async_show_form(
@@ -127,7 +132,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         username = user_input[CONF_USERNAME]
         return await self._create_client(username, password=user_input[CONF_PASSWORD])
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry."""
         result = await self._create_client(
             user_input[CONF_USERNAME], token=user_input[CONF_TOKEN]
@@ -136,14 +141,16 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await async_create_import_issue(self.hass, self.context["source"], "", True)
         return result
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with MELCloud."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle re-authentication with MELCloud."""
         errors: dict[str, str] = {}
 

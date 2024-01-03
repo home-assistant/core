@@ -6,8 +6,9 @@ from aiohttp import ClientError, ClientResponseError
 from py_nightscout import Api as NightscoutAPI
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_API_KEY, CONF_URL
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 from .utils import hash_from_url
@@ -35,7 +36,7 @@ async def _validate_input(data):
     return {"title": status.name}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class NightscoutConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Nightscout."""
 
     VERSION = 1
@@ -63,7 +64,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class InputValidationError(exceptions.HomeAssistantError):
+class InputValidationError(HomeAssistantError):
     """Error to indicate we cannot proceed due to invalid input."""
 
     def __init__(self, base: str) -> None:

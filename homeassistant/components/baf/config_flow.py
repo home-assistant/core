@@ -10,10 +10,9 @@ from aiobafi6 import Device, Service
 from aiobafi6.discovery import PORT
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN, RUN_TIMEOUT
 from .models import BAFDiscovery
@@ -35,7 +34,7 @@ async def async_try_connect(ip_address: str) -> Device:
     return device
 
 
-class BAFFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class BAFFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle BAF discovery config flow."""
 
     VERSION = 1
@@ -46,7 +45,7 @@ class BAFFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         if discovery_info.ip_address.version == 6:
             return self.async_abort(reason="ipv6_not_supported")
@@ -62,7 +61,7 @@ class BAFFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
         assert self.discovery is not None
         discovery = self.discovery
@@ -84,7 +83,7 @@ class BAFFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         ip_address = (user_input or {}).get(CONF_IP_ADDRESS, "")

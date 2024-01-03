@@ -7,10 +7,11 @@ import logging
 from aiopvapi.helpers.aiorequest import AioRequest
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
 from homeassistant.components import dhcp, zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import async_get_device_info
@@ -23,7 +24,7 @@ HAP_SUFFIX = "._hap._tcp.local."
 POWERVIEW_SUFFIX = "._powerview._tcp.local."
 
 
-async def validate_input(hass: core.HomeAssistant, hub_address: str) -> dict[str, str]:
+async def validate_input(hass: HomeAssistant, hub_address: str) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -46,7 +47,7 @@ async def validate_input(hass: core.HomeAssistant, hub_address: str) -> dict[str
     }
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class HunterDouglasConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Hunter Douglas PowerView."""
 
     VERSION = 1
@@ -86,7 +87,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return info, None
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
         self.discovered_ip = discovery_info.ip
         self.discovered_name = discovery_info.hostname
@@ -94,7 +97,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self.discovered_ip = discovery_info.host
         name = discovery_info.name.removesuffix(POWERVIEW_SUFFIX)
@@ -103,7 +106,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_homekit(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle HomeKit discovery."""
         self.discovered_ip = discovery_info.host
         name = discovery_info.name.removesuffix(HAP_SUFFIX)
@@ -149,5 +152,5 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""

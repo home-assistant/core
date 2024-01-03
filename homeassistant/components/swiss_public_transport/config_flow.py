@@ -9,9 +9,8 @@ from opendata_transport.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -27,14 +26,14 @@ DATA_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-class SwissPublicTransportConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
     """Swiss public transport config flow."""
 
     VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Async user step to set up the connection."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -71,7 +70,7 @@ class SwissPublicTransportConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders=PLACEHOLDERS,
         )
 
-    async def async_step_import(self, import_input: dict[str, Any]) -> FlowResult:
+    async def async_step_import(self, import_input: dict[str, Any]) -> ConfigFlowResult:
         """Async import step to set up the connection."""
         self._async_abort_entries_match(
             {

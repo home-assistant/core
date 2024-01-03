@@ -5,9 +5,8 @@ from typing import Any
 
 from homeassistant.components import usb
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 from .util import get_usb_service_info
@@ -26,7 +25,9 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return the options flow."""
         return HomeAssistantSkyConnectOptionsFlow(config_entry)
 
-    async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
+    async def async_step_usb(
+        self, discovery_info: usb.UsbServiceInfo
+    ) -> ConfigFlowResult:
         """Handle usb discovery."""
         device = discovery_info.device
         vid = discovery_info.vid

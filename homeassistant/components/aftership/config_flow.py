@@ -7,10 +7,9 @@ from typing import Any
 from pyaftership import AfterShip, AfterShipException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
@@ -26,7 +25,7 @@ class AfterShipConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -49,7 +48,7 @@ class AfterShipConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
+    async def async_step_import(self, config: dict[str, Any]) -> ConfigFlowResult:
         """Import configuration from yaml."""
         async_create_issue(
             self.hass,

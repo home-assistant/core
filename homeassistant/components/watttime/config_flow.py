@@ -8,8 +8,12 @@ from aiowatttime import Client
 from aiowatttime.errors import CoordinatesNotFoundError, InvalidCredentialsError
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -18,7 +22,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import (
@@ -68,7 +71,7 @@ def get_unique_id(data: dict[str, Any]) -> str:
     return f"{data[CONF_LATITUDE]}, {data[CONF_LONGITUDE]}"
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class WattTimeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for WattTime."""
 
     VERSION = 1
@@ -80,7 +83,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_validate_credentials(
         self, username: str, password: str, error_step_id: str, error_schema: vol.Schema
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Validate input credentials and proceed accordingly."""
         session = aiohttp_client.async_get_clientsession(self.hass)
 
@@ -128,7 +131,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_coordinates(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the coordinates step."""
         if not user_input:
             return self.async_show_form(
@@ -174,7 +177,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_location(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the "pick a location" step."""
         if not user_input:
             return self.async_show_form(
@@ -190,14 +193,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return await self.async_step_coordinates()
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self._data = {**entry_data}
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle re-auth completion."""
         if not user_input:
             return self.async_show_form(
@@ -217,7 +222,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if not user_input:
             return self.async_show_form(
@@ -232,7 +237,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class WattTimeOptionsFlowHandler(config_entries.OptionsFlow):
+class WattTimeOptionsFlowHandler(OptionsFlow):
     """Handle a WattTime options flow."""
 
     def __init__(self, entry: ConfigEntry) -> None:
@@ -241,7 +246,7 @@ class WattTimeOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(data=user_input)
