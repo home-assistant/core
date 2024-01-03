@@ -1,7 +1,7 @@
 {
   "domain": "co2signal",
   "name": "Electricity Maps",
-  "codeowners": ["@jpbede"],
+  "codeowners": ["@jpbede", "@VIKTORVAV99"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/co2signal",
   "integration_type": "service",

@@ -13,8 +13,8 @@ from pytrafikverket.exceptions import (
 from pytrafikverket.trafikverket_camera import CameraInfo
 
 from homeassistant import config_entries
-from homeassistant.components.trafikverket_camera.const import CONF_LOCATION, DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_ID
+from homeassistant.components.trafikverket_camera.const import DOMAIN
+from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_LOCATION
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

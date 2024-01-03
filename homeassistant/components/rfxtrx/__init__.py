@@ -6,7 +6,7 @@ import binascii
 from collections.abc import Callable, Mapping
 import copy
 import logging
-from typing import Any, NamedTuple, cast
+from typing import Any, NamedTuple, TypeVarTuple, cast
 
 import RFXtrx as rfxtrxmod
 import voluptuous as vol
@@ -49,6 +49,8 @@ from .const import (
 DEFAULT_OFF_DELAY = 2.0
 
 SIGNAL_EVENT = f"{DOMAIN}_event"
+
+_Ts = TypeVarTuple("_Ts")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -145,7 +147,7 @@ def _create_rfx(config: Mapping[str, Any]) -> rfxtrxmod.Connect:
 
 
 def _get_device_lookup(
-    devices: dict[str, dict[str, Any]]
+    devices: dict[str, dict[str, Any]],
 ) -> dict[DeviceTuple, dict[str, Any]]:
     """Get a lookup structure for devices."""
     lookup = {}
@@ -438,7 +440,7 @@ def get_device_id(
 
 
 def get_device_tuple_from_identifiers(
-    identifiers: set[tuple[str, str]]
+    identifiers: set[tuple[str, str]],
 ) -> DeviceTuple | None:
     """Calculate the device tuple from a device entry."""
     identifier = next((x for x in identifiers if x[0] == DOMAIN and len(x) == 4), None)
@@ -559,6 +561,8 @@ class RfxtrxCommandEntity(RfxtrxEntity):
         """Initialzie a switch or light device."""
         super().__init__(device, device_id, event=event)
 
-    async def _async_send(self, fun: Callable[..., None], *args: Any) -> None:
-        rfx_object = self.hass.data[DOMAIN][DATA_RFXOBJECT]
+    async def _async_send(
+        self, fun: Callable[[rfxtrxmod.PySerialTransport, *_Ts], None], *args: *_Ts
+    ) -> None:
+        rfx_object: rfxtrxmod.Connect = self.hass.data[DOMAIN][DATA_RFXOBJECT]
         await self.hass.async_add_executor_job(fun, rfx_object.transport, *args)

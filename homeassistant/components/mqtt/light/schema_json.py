@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from contextlib import suppress
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
@@ -367,10 +367,10 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             if brightness_supported(self.supported_color_modes):
                 try:
                     if brightness := values["brightness"]:
-                        scale = self._config[CONF_BRIGHTNESS_SCALE]
-                        self._attr_brightness = min(
-                            255,
-                            round(brightness * 255 / scale),  # type: ignore[operator]
+                        if TYPE_CHECKING:
+                            assert isinstance(brightness, float)
+                        self._attr_brightness = color_util.value_to_brightness(
+                            (1, self._config[CONF_BRIGHTNESS_SCALE]), brightness
                         )
                     else:
                         _LOGGER.debug(
@@ -594,13 +594,12 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         self._set_flash_and_transition(message, **kwargs)
 
         if ATTR_BRIGHTNESS in kwargs and self._config[CONF_BRIGHTNESS]:
-            brightness_normalized = kwargs[ATTR_BRIGHTNESS] / DEFAULT_BRIGHTNESS_SCALE
-            brightness_scale = self._config[CONF_BRIGHTNESS_SCALE]
-            device_brightness = min(
-                round(brightness_normalized * brightness_scale), brightness_scale
+            device_brightness = color_util.brightness_to_value(
+                (1, self._config[CONF_BRIGHTNESS_SCALE]),
+                kwargs[ATTR_BRIGHTNESS],
             )
             # Make sure the brightness is not rounded down to 0
-            device_brightness = max(device_brightness, 1)
+            device_brightness = max(round(device_brightness), 1)
             message["brightness"] = device_brightness
 
             if self._optimistic:

@@ -27,7 +27,7 @@ from .const import DOMAIN
 from .coordinator import ForecastSolarDataUpdateCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class ForecastSolarSensorEntityDescription(SensorEntityDescription):
     """Describes a Forecast.Solar Sensor."""
 

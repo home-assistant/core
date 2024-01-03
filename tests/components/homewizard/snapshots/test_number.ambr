@@ -14,7 +14,7 @@
     'entity_id': 'number.device_status_light_brightness',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '100.0',
   })
 # ---
 # name: test_number_entities[HWE-SKT].1

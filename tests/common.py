@@ -6,6 +6,7 @@ from collections import OrderedDict
 from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
+from enum import Enum
 import functools as ft
 from functools import lru_cache
 from io import StringIO
@@ -15,10 +16,12 @@ import os
 import pathlib
 import threading
 import time
+from types import ModuleType
 from typing import Any, NoReturn
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
+import pytest
 import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader
@@ -87,6 +90,10 @@ from homeassistant.util.json import (
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.uuid as uuid_util
 import homeassistant.util.yaml.loader as yaml_loader
+
+from tests.testing_config.custom_components.test_constant_deprecation import (
+    import_deprecated_costant,
+)
 
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
@@ -890,6 +897,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         domain="test",
         data=None,
         version=1,
+        minor_version=1,
         entry_id=None,
         source=config_entries.SOURCE_USER,
         title="Mock Title",
@@ -910,6 +918,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
             "pref_disable_polling": pref_disable_polling,
             "options": options,
             "version": version,
+            "minor_version": minor_version,
             "title": title,
             "unique_id": unique_id,
             "disabled_by": disabled_by,
@@ -1216,7 +1225,7 @@ class MockEntity(entity.Entity):
 
 @contextmanager
 def mock_storage(
-    data: dict[str, Any] | None = None
+    data: dict[str, Any] | None = None,
 ) -> Generator[dict[str, Any], None, None]:
     """Mock storage.
 
@@ -1427,7 +1436,7 @@ ANY = _HA_ANY()
 def raise_contains_mocks(val: Any) -> None:
     """Raise for mocks."""
     if isinstance(val, Mock):
-        raise TypeError
+        raise TypeError(val)
 
     if isinstance(val, dict):
         for dict_value in val.values():
@@ -1458,3 +1467,59 @@ def async_mock_cloud_connection_status(hass: HomeAssistant, connected: bool) -> 
     else:
         state = CloudConnectionState.CLOUD_DISCONNECTED
     async_dispatcher_send(hass, SIGNAL_CLOUD_CONNECTION_STATE, state)
+
+
+def import_and_test_deprecated_constant_enum(
+    caplog: pytest.LogCaptureFixture,
+    module: ModuleType,
+    replacement: Enum,
+    constant_prefix: str,
+    breaks_in_ha_version: str,
+) -> None:
+    """Import and test deprecated constant replaced by a enum.
+
+    - Import deprecated enum
+    - Assert value is the same as the replacement
+    - Assert a warning is logged
+    - Assert the deprecated constant is included in the modules.__dir__()
+    """
+    import_and_test_deprecated_constant(
+        caplog,
+        module,
+        constant_prefix + replacement.name,
+        f"{replacement.__class__.__name__}.{replacement.name}",
+        replacement,
+        breaks_in_ha_version,
+    )
+
+
+def import_and_test_deprecated_constant(
+    caplog: pytest.LogCaptureFixture,
+    module: ModuleType,
+    constant_name: str,
+    replacement_name: str,
+    replacement: Any,
+    breaks_in_ha_version: str,
+) -> None:
+    """Import and test deprecated constant replaced by a value.
+
+    - Import deprecated constant
+    - Assert value is the same as the replacement
+    - Assert a warning is logged
+    - Assert the deprecated constant is included in the modules.__dir__()
+    """
+    value = import_deprecated_costant(module, constant_name)
+    assert value == replacement
+    assert (
+        module.__name__,
+        logging.WARNING,
+        (
+            f"{constant_name} was used from test_constant_deprecation,"
+            f" this is a deprecated constant which will be removed in HA Core {breaks_in_ha_version}. "
+            f"Use {replacement_name} instead, please report "
+            "it to the author of the 'test_constant_deprecation' custom integration"
+        ),
+    ) in caplog.record_tuples
+
+    # verify deprecated constant is included in dir()
+    assert constant_name in dir(module)

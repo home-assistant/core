@@ -67,18 +67,20 @@ class HassIOIngress(HomeAssistantView):
         self._websession = websession
 
     @lru_cache
-    def _create_url(self, token: str, path: str) -> str:
+    def _create_url(self, token: str, path: str) -> URL:
         """Create URL to service."""
         base_path = f"/ingress/{token}/"
         url = f"http://{self._host}{base_path}{quote(path)}"
 
         try:
-            if not URL(url).path.startswith(base_path):
-                raise HTTPBadRequest()
+            target_url = URL(url)
         except ValueError as err:
             raise HTTPBadRequest() from err
 
-        return url
+        if not target_url.path.startswith(base_path):
+            raise HTTPBadRequest()
+
+        return target_url
 
     async def _handle(
         self, request: web.Request, token: str, path: str
@@ -128,7 +130,7 @@ class HassIOIngress(HomeAssistantView):
 
         # Support GET query
         if request.query_string:
-            url = f"{url}?{request.query_string}"
+            url = url.with_query(request.query_string)
 
         # Start proxy
         async with self._websession.ws_connect(

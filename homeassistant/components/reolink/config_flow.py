@@ -10,13 +10,19 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_PROTOCOL,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import CONF_PROTOCOL, CONF_USE_HTTPS, DOMAIN
+from .const import CONF_USE_HTTPS, DOMAIN
 from .exceptions import ReolinkException, ReolinkWebhookException, UserNotAdmin
 from .host import ReolinkHost
 from .util import is_connected

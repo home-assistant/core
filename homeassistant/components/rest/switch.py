@@ -171,7 +171,7 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
         try:
             req = await self.set_device_state(body_on_t)
 
-            if req.status_code == HTTPStatus.OK:
+            if HTTPStatus.OK <= req.status_code < HTTPStatus.MULTIPLE_CHOICES:
                 self._attr_is_on = True
             else:
                 _LOGGER.error(
@@ -186,7 +186,7 @@ class RestSwitch(ManualTriggerEntity, SwitchEntity):
 
         try:
             req = await self.set_device_state(body_off_t)
-            if req.status_code == HTTPStatus.OK:
+            if HTTPStatus.OK <= req.status_code < HTTPStatus.MULTIPLE_CHOICES:
                 self._attr_is_on = False
             else:
                 _LOGGER.error(

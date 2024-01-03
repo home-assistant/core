@@ -37,13 +37,28 @@
           "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
         }
       },
-      "noise_suppression": {
-        "name": "Noise suppression"
+      "noise_suppression_level": {
+        "name": "Noise suppression level",
+        "state": {
+          "off": "Off",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High",
+          "max": "Max"
+        }
       }
     },
     "switch": {
       "mute": {
         "name": "Mute"
+      }
+    },
+    "number": {
+      "auto_gain": {
+        "name": "Auto gain"
+      },
+      "volume_multiplier": {
+        "name": "Mic volume"
       }
     }
   }

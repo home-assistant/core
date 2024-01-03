@@ -1,5 +1,6 @@
 """Tests for the Wyoming integration."""
 import asyncio
+from unittest.mock import patch
 
 from wyoming.event import Event
 from wyoming.info import (
@@ -14,6 +15,10 @@ from wyoming.info import (
     WakeModel,
     WakeProgram,
 )
+
+from homeassistant.components.wyoming import DOMAIN
+from homeassistant.components.wyoming.devices import SatelliteDevice
+from homeassistant.core import HomeAssistant
 
 TEST_ATTR = Attribution(name="Test", url="http://www.test.com")
 STT_INFO = Info(
@@ -124,3 +129,19 @@ class MockAsyncTcpClient:
         self.host = host
         self.port = port
         return self
+
+
+async def reload_satellite(
+    hass: HomeAssistant, config_entry_id: str
+) -> SatelliteDevice:
+    """Reload config entry with satellite info and returns new device."""
+    with patch(
+        "homeassistant.components.wyoming.data.load_wyoming_info",
+        return_value=SATELLITE_INFO,
+    ), patch(
+        "homeassistant.components.wyoming.satellite.WyomingSatellite.run"
+    ) as _run_mock:
+        # _run_mock: satellite task does not actually run
+        await hass.config_entries.async_reload(config_entry_id)
+
+    return hass.data[DOMAIN][config_entry_id].satellite.device

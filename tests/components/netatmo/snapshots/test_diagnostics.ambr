@@ -590,6 +590,7 @@
       }),
       'disabled_by': None,
       'domain': 'netatmo',
+      'minor_version': 1,
       'options': dict({
         'weather_areas': dict({
           'Home avg': dict({

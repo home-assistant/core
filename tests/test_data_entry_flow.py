@@ -10,7 +10,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import HomeAssistant
 from homeassistant.util.decorator import Registry
 
-from .common import async_capture_events
+from .common import async_capture_events, import_and_test_deprecated_constant_enum
 
 
 @pytest.fixture
@@ -802,3 +802,14 @@ async def test_find_flows_by_init_data_type(
     )
     assert len(wifi_flows) == 0
     assert len(manager.async_progress()) == 0
+
+
+@pytest.mark.parametrize(("enum"), list(data_entry_flow.FlowResultType))
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: data_entry_flow.FlowResultType,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, data_entry_flow, enum, "RESULT_TYPE_", "2025.1"
+    )

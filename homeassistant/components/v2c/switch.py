@@ -7,7 +7,13 @@ import logging
 from typing import Any
 
 from pytrydan import Trydan, TrydanData
-from pytrydan.models.trydan import PauseState
+from pytrydan.models.trydan import (
+    ChargePointTimerState,
+    DynamicState,
+    LockState,
+    PauseDynamicState,
+    PauseState,
+)
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -21,7 +27,7 @@ from .entity import V2CBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class V2CRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -30,7 +36,7 @@ class V2CRequiredKeysMixin:
     turn_off_fn: Callable[[Trydan], Coroutine[Any, Any, Any]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class V2CSwitchEntityDescription(SwitchEntityDescription, V2CRequiredKeysMixin):
     """Describes a V2C EVSE switch entity."""
 
@@ -43,6 +49,39 @@ TRYDAN_SWITCHES = (
         value_fn=lambda evse_data: evse_data.paused == PauseState.PAUSED,
         turn_on_fn=lambda evse: evse.pause(),
         turn_off_fn=lambda evse: evse.resume(),
+    ),
+    V2CSwitchEntityDescription(
+        key="locked",
+        translation_key="locked",
+        icon="mdi:lock",
+        value_fn=lambda evse_data: evse_data.locked == LockState.ENABLED,
+        turn_on_fn=lambda evse: evse.lock(),
+        turn_off_fn=lambda evse: evse.unlock(),
+    ),
+    V2CSwitchEntityDescription(
+        key="timer",
+        translation_key="timer",
+        icon="mdi:timer",
+        value_fn=lambda evse_data: evse_data.timer == ChargePointTimerState.TIMER_ON,
+        turn_on_fn=lambda evse: evse.timer(),
+        turn_off_fn=lambda evse: evse.timer_disable(),
+    ),
+    V2CSwitchEntityDescription(
+        key="dynamic",
+        translation_key="dynamic",
+        icon="mdi:gauge",
+        value_fn=lambda evse_data: evse_data.dynamic == DynamicState.ENABLED,
+        turn_on_fn=lambda evse: evse.dynamic(),
+        turn_off_fn=lambda evse: evse.dynamic_disable(),
+    ),
+    V2CSwitchEntityDescription(
+        key="pause_dynamic",
+        translation_key="pause_dynamic",
+        icon="mdi:pause",
+        value_fn=lambda evse_data: evse_data.pause_dynamic
+        == PauseDynamicState.NOT_MODULATING,
+        turn_on_fn=lambda evse: evse.pause_dynamic(),
+        turn_off_fn=lambda evse: evse.resume_dynamic(),
     ),
 )
 
