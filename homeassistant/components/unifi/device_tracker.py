@@ -51,6 +51,8 @@ CLIENT_CONNECTED_ATTRIBUTES = [
     "radio",
     "radio_proto",
     "vlan",
+    "rssi",
+    "signal",
 ]
 
 CLIENT_STATIC_ATTRIBUTES = [
