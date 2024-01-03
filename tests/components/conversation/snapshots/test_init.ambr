@@ -249,7 +249,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Turned on light',
+          'speech': 'Turned on the light',
         }),
       }),
     }),
@@ -279,7 +279,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Turned on light',
+          'speech': 'Turned on the light',
         }),
       }),
     }),
@@ -309,7 +309,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Turned on light',
+          'speech': 'Turned on the light',
         }),
       }),
     }),
@@ -339,7 +339,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Turned on light',
+          'speech': 'Turned on the light',
         }),
       }),
     }),
