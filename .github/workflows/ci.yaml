@@ -36,7 +36,7 @@ env:
   CACHE_VERSION: 5
   PIP_CACHE_VERSION: 4
   MYPY_CACHE_VERSION: 6
-  HA_SHORT_VERSION: "2023.12"
+  HA_SHORT_VERSION: "2024.1"
   DEFAULT_PYTHON: "3.11"
   ALL_PYTHON_VERSIONS: "['3.11', '3.12']"
   # 10.3 is the oldest supported version
@@ -225,7 +225,7 @@ jobs:
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -269,7 +269,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -309,7 +309,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -348,7 +348,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -443,7 +443,7 @@ jobs:
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -511,7 +511,7 @@ jobs:
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -543,7 +543,7 @@ jobs:
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -576,7 +576,7 @@ jobs:
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -620,7 +620,7 @@ jobs:
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -702,7 +702,7 @@ jobs:
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -854,7 +854,7 @@ jobs:
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true
@@ -978,7 +978,7 @@ jobs:
         uses: actions/checkout@v4.1.1
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.7.1
+        uses: actions/setup-python@v5.0.0
         with:
           python-version: ${{ matrix.python-version }}
           check-latest: true

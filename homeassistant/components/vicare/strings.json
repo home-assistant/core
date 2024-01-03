@@ -80,9 +80,6 @@
       },
       "comfort_temperature": {
         "name": "Comfort temperature"
-      },
-      "eco_temperature": {
-        "name": "Eco temperature"
       }
     },
     "sensor": {

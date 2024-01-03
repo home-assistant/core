@@ -14,6 +14,7 @@ import time
 from typing import Any
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
+from freezegun import freeze_time
 import pytest
 from pytest_unordered import unordered
 import voluptuous as vol
@@ -36,6 +37,7 @@ from homeassistant.const import (
 )
 import homeassistant.core as ha
 from homeassistant.core import (
+    CoreState,
     HassJob,
     HomeAssistant,
     ServiceCall,
@@ -56,7 +58,11 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .common import async_capture_events, async_mock_service
+from .common import (
+    async_capture_events,
+    async_mock_service,
+    import_and_test_deprecated_constant_enum,
+)
 
 PST = dt_util.get_time_zone("America/Los_Angeles")
 
@@ -397,6 +403,32 @@ async def test_stage_shutdown(hass: HomeAssistant) -> None:
     assert len(test_close) == 1
     assert len(test_final_write) == 1
     assert len(test_all) == 2
+
+
+async def test_stage_shutdown_timeouts(hass: HomeAssistant) -> None:
+    """Simulate a shutdown, test timeouts at each step."""
+
+    with patch.object(hass.timeout, "async_timeout", side_effect=asyncio.TimeoutError):
+        await hass.async_stop()
+
+    assert hass.state == CoreState.stopped
+
+
+async def test_stage_shutdown_generic_error(hass: HomeAssistant, caplog) -> None:
+    """Simulate a shutdown, test that a generic error at the final stage doesn't prevent it."""
+
+    task = asyncio.Future()
+    hass._tasks.add(task)
+
+    def fail_the_task(_):
+        task.set_exception(Exception("test_exception"))
+
+    with patch.object(task, "cancel", side_effect=fail_the_task) as patched_call:
+        await hass.async_stop()
+        assert patched_call.called
+
+    assert "test_exception" in caplog.text
+    assert hass.state == ha.CoreState.stopped
 
 
 async def test_stage_shutdown_with_exit_code(hass: HomeAssistant) -> None:
@@ -1102,7 +1134,7 @@ async def test_statemachine_last_changed_not_updated_on_same_state(
 
     future = dt_util.utcnow() + timedelta(hours=10)
 
-    with patch("homeassistant.util.dt.utcnow", return_value=future):
+    with freeze_time(future):
         hass.states.async_set("light.Bowl", "on", {"attr": "triggers_change"})
         await hass.async_block_till_done()
 
@@ -2566,3 +2598,49 @@ def test_hassjob_passing_job_type():
         HassJob(not_callback_func, job_type=ha.HassJobType.Callback).job_type
         == ha.HassJobType.Callback
     )
+
+
+async def test_shutdown_job(hass: HomeAssistant) -> None:
+    """Test async_add_shutdown_job."""
+    evt = asyncio.Event()
+
+    async def shutdown_func() -> None:
+        # Sleep to ensure core is waiting for the task to finish
+        await asyncio.sleep(0.01)
+        # Set the event
+        evt.set()
+
+    job = HassJob(shutdown_func, "shutdown_job")
+    hass.async_add_shutdown_job(job)
+    await hass.async_stop()
+    assert evt.is_set()
+
+
+async def test_cancel_shutdown_job(hass: HomeAssistant) -> None:
+    """Test cancelling a job added to async_add_shutdown_job."""
+    evt = asyncio.Event()
+
+    async def shutdown_func() -> None:
+        evt.set()
+
+    job = HassJob(shutdown_func, "shutdown_job")
+    cancel = hass.async_add_shutdown_job(job)
+    cancel()
+    await hass.async_stop()
+    assert not evt.is_set()
+
+
+@pytest.mark.parametrize(
+    ("enum"),
+    [
+        ha.ConfigSource.DISCOVERED,
+        ha.ConfigSource.YAML,
+        ha.ConfigSource.STORAGE,
+    ],
+)
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: ha.ConfigSource,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(caplog, ha, enum, "SOURCE_", "2025.1")

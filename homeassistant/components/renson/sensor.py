@@ -52,7 +52,7 @@ from .coordinator import RensonCoordinator
 from .entity import RensonEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class RensonSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -60,7 +60,7 @@ class RensonSensorEntityDescriptionMixin:
     raw_format: bool
 
 
-@dataclass
+@dataclass(frozen=True)
 class RensonSensorEntityDescription(
     SensorEntityDescription, RensonSensorEntityDescriptionMixin
 ):

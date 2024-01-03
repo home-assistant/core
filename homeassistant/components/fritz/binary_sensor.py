@@ -26,7 +26,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzBinarySensorEntityDescription(
     BinarySensorEntityDescription, FritzEntityDescription
 ):

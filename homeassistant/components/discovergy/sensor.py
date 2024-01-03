@@ -35,7 +35,7 @@ def _get_and_scale(reading: Reading, key: str, scale: int) -> datetime | float |
     return None
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class DiscovergySensorEntityDescription(SensorEntityDescription):
     """Class to describe a Discovergy sensor entity."""
 

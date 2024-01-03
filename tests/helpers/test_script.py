@@ -9,6 +9,7 @@ from types import MappingProxyType
 from unittest import mock
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
@@ -385,7 +386,10 @@ async def test_calling_service_response_data(
                             "target": {},
                         },
                         "running_script": False,
-                    }
+                    },
+                    "variables": {
+                        "my_response": {"data": "value-12345"},
+                    },
                 }
             ],
             "1": [
@@ -398,10 +402,7 @@ async def test_calling_service_response_data(
                             "target": {},
                         },
                         "running_script": False,
-                    },
-                    "variables": {
-                        "my_response": {"data": "value-12345"},
-                    },
+                    }
                 }
             ],
         }
@@ -1162,13 +1163,13 @@ async def test_wait_template_not_schedule(hass: HomeAssistant) -> None:
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"result": {"wait": {"completed": True, "remaining": None}}}],
-            "2": [
+            "1": [
                 {
-                    "result": {"event": "test_event", "event_data": {}},
+                    "result": {"wait": {"completed": True, "remaining": None}},
                     "variables": {"wait": {"completed": True, "remaining": None}},
                 }
             ],
+            "2": [{"result": {"event": "test_event", "event_data": {}}}],
         }
     )
 
@@ -1229,13 +1230,13 @@ async def test_wait_timeout(
     else:
         variable_wait = {"wait": {"trigger": None, "remaining": 0.0}}
     expected_trace = {
-        "0": [{"result": variable_wait}],
-        "1": [
+        "0": [
             {
-                "result": {"event": "test_event", "event_data": {}},
+                "result": variable_wait,
                 "variables": variable_wait,
             }
         ],
+        "1": [{"result": {"event": "test_event", "event_data": {}}}],
     }
     assert_action_trace(expected_trace)
 
@@ -1290,19 +1291,14 @@ async def test_wait_continue_on_timeout(
     else:
         variable_wait = {"wait": {"trigger": None, "remaining": 0.0}}
     expected_trace = {
-        "0": [{"result": variable_wait}],
+        "0": [{"result": variable_wait, "variables": variable_wait}],
     }
     if continue_on_timeout is False:
         expected_trace["0"][0]["result"]["timeout"] = True
         expected_trace["0"][0]["error_type"] = asyncio.TimeoutError
         expected_script_execution = "aborted"
     else:
-        expected_trace["1"] = [
-            {
-                "result": {"event": "test_event", "event_data": {}},
-                "variables": variable_wait,
-            }
-        ]
+        expected_trace["1"] = [{"result": {"event": "test_event", "event_data": {}}}]
         expected_script_execution = "finished"
     assert_action_trace(expected_trace, expected_script_execution)
 
@@ -1346,13 +1342,13 @@ async def test_wait_template_with_utcnow(hass: HomeAssistant) -> None:
 
     try:
         non_matching_time = start_time.replace(hour=3)
-        with patch("homeassistant.util.dt.utcnow", return_value=non_matching_time):
+        with freeze_time(non_matching_time):
             hass.async_create_task(script_obj.async_run(context=Context()))
             await asyncio.wait_for(wait_started_flag.wait(), 1)
             assert script_obj.is_running
 
         match_time = start_time.replace(hour=12)
-        with patch("homeassistant.util.dt.utcnow", return_value=match_time):
+        with freeze_time(match_time):
             async_fire_time_changed(hass, match_time)
     except (AssertionError, asyncio.TimeoutError):
         await script_obj.async_stop()
@@ -1378,15 +1374,13 @@ async def test_wait_template_with_utcnow_no_match(hass: HomeAssistant) -> None:
 
     try:
         non_matching_time = start_time.replace(hour=3)
-        with patch("homeassistant.util.dt.utcnow", return_value=non_matching_time):
+        with freeze_time(non_matching_time):
             hass.async_create_task(script_obj.async_run(context=Context()))
             await asyncio.wait_for(wait_started_flag.wait(), 1)
             assert script_obj.is_running
 
         second_non_matching_time = start_time.replace(hour=4)
-        with patch(
-            "homeassistant.util.dt.utcnow", return_value=second_non_matching_time
-        ):
+        with freeze_time(second_non_matching_time):
             async_fire_time_changed(hass, second_non_matching_time)
 
         async with asyncio.timeout(0.1):
@@ -3270,12 +3264,12 @@ async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
                             "description": "state of switch.trigger",
                         },
                     }
-                }
+                },
+                "variables": {"wait": {"remaining": None}},
             }
         ],
         "0/parallel/1/sequence/0": [
             {
-                "variables": {},
                 "result": {
                     "event": "test_event",
                     "event_data": {"hello": "from action 2", "what": "world"},
@@ -3284,7 +3278,6 @@ async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
         ],
         "0/parallel/0/sequence/1": [
             {
-                "variables": {"wait": {"remaining": None}},
                 "result": {
                     "event": "test_event",
                     "event_data": {"hello": "from action 1", "what": "world"},
@@ -4463,7 +4456,7 @@ async def test_set_variable(
     assert f"Executing step {alias}" in caplog.text
 
     expected_trace = {
-        "0": [{}],
+        "0": [{"variables": {"variable": "value"}}],
         "1": [
             {
                 "result": {
@@ -4475,7 +4468,6 @@ async def test_set_variable(
                     },
                     "running_script": False,
                 },
-                "variables": {"variable": "value"},
             }
         ],
     }
@@ -4505,7 +4497,7 @@ async def test_set_redefines_variable(
     assert mock_calls[1].data["value"] == 2
 
     expected_trace = {
-        "0": [{}],
+        "0": [{"variables": {"variable": "1"}}],
         "1": [
             {
                 "result": {
@@ -4516,11 +4508,10 @@ async def test_set_redefines_variable(
                         "target": {},
                     },
                     "running_script": False,
-                },
-                "variables": {"variable": "1"},
+                }
             }
         ],
-        "2": [{}],
+        "2": [{"variables": {"variable": 2}}],
         "3": [
             {
                 "result": {
@@ -4531,8 +4522,7 @@ async def test_set_redefines_variable(
                         "target": {},
                     },
                     "running_script": False,
-                },
-                "variables": {"variable": 2},
+                }
             }
         ],
     }

@@ -1,14 +1,12 @@
 """Config flow for OpenAI Conversation integration."""
 from __future__ import annotations
 
-from functools import partial
 import logging
 import types
 from types import MappingProxyType
 from typing import Any
 
 import openai
-from openai import error
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -59,8 +57,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    openai.api_key = data[CONF_API_KEY]
-    await hass.async_add_executor_job(partial(openai.Model.list, request_timeout=10))
+    client = openai.AsyncOpenAI(api_key=data[CONF_API_KEY])
+    await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -81,9 +79,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await validate_input(self.hass, user_input)
-        except error.APIConnectionError:
+        except openai.APIConnectionError:
             errors["base"] = "cannot_connect"
-        except error.AuthenticationError:
+        except openai.AuthenticationError:
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")

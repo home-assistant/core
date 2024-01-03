@@ -84,7 +84,7 @@ async def ban_middleware(
 
 
 def log_invalid_auth(
-    func: Callable[Concatenate[_HassViewT, Request, _P], Awaitable[Response]]
+    func: Callable[Concatenate[_HassViewT, Request, _P], Awaitable[Response]],
 ) -> Callable[Concatenate[_HassViewT, Request, _P], Coroutine[Any, Any, Response]]:
     """Decorate function to handle invalid auth or failed login attempts."""
 

@@ -60,6 +60,7 @@ class WyomingSatellite:
 
         self.device.set_is_muted_listener(self._muted_changed)
         self.device.set_pipeline_listener(self._pipeline_changed)
+        self.device.set_audio_settings_listener(self._audio_settings_changed)
 
     async def run(self) -> None:
         """Run and maintain a connection to satellite."""
@@ -131,6 +132,12 @@ class WyomingSatellite:
 
     def _pipeline_changed(self) -> None:
         """Run when device pipeline changes."""
+
+        # Cancel any running pipeline
+        self._audio_queue.put_nowait(None)
+
+    def _audio_settings_changed(self) -> None:
+        """Run when device audio settings."""
 
         # Cancel any running pipeline
         self._audio_queue.put_nowait(None)
@@ -227,6 +234,11 @@ class WyomingSatellite:
                     end_stage=end_stage,
                     tts_audio_output="wav",
                     pipeline_id=pipeline_id,
+                    audio_settings=assist_pipeline.AudioSettings(
+                        noise_suppression_level=self.device.noise_suppression_level,
+                        auto_gain_dbfs=self.device.auto_gain,
+                        volume_multiplier=self.device.volume_multiplier,
+                    ),
                     device_id=self.device.device_id,
                 )
             )

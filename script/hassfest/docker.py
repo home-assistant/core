@@ -59,9 +59,10 @@ WORKDIR /config
 
 def _generate_dockerfile() -> str:
     timeout = (
-        core.STAGE_1_SHUTDOWN_TIMEOUT
-        + core.STAGE_2_SHUTDOWN_TIMEOUT
-        + core.STAGE_3_SHUTDOWN_TIMEOUT
+        core.STOPPING_STAGE_SHUTDOWN_TIMEOUT
+        + core.STOP_STAGE_SHUTDOWN_TIMEOUT
+        + core.FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT
+        + core.CLOSE_STAGE_SHUTDOWN_TIMEOUT
         + executor.EXECUTOR_SHUTDOWN_TIMEOUT
         + thread.THREADING_SHUTDOWN_TIMEOUT
         + 10

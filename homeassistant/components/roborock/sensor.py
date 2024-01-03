@@ -36,14 +36,14 @@ from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoborockSensorDescriptionMixin:
     """A class that describes sensor entities."""
 
     value_fn: Callable[[DeviceProp], StateType | datetime.datetime]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoborockSensorDescription(
     SensorEntityDescription, RoborockSensorDescriptionMixin
 ):
