@@ -164,7 +164,7 @@ async def test_load_translations_files_invalid_localized_placeholders(
     )
     for expected_error in expected_errors:
         assert (
-            f"Validation of translation placeholders for localized ({language}) string {expected_error} failed."
+            f"Validation of translation placeholders for localized ({language}) string {expected_error} failed"
             in caplog.text
         )
 
