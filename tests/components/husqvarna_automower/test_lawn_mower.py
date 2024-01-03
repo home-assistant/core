@@ -2,32 +2,34 @@
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aioautomower.model import MowerAttributes, MowerList
 from aioautomower.session import AutomowerSession
 import pytest
 
 from homeassistant.components.husqvarna_automower import DOMAIN
+from homeassistant.components.lawn_mower import LawnMowerActivity
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .common import setup_integration
-from .utils import make_complete_mower_list
+from .utils import make_mower_list
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
 
 _LOGGER = logging.getLogger(__name__)
+
+TEST_MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 
 
 @pytest.mark.enable_socket
 @pytest.mark.asyncio
-async def setup_entity(hass: HomeAssistant):
+async def setup_entity(hass: HomeAssistant, mowers):
     """Set up entity and config entry."""
 
     config_entry: MockConfigEntry = await setup_integration(hass)
 
     config_entry.add_to_hass(hass)
     token_decoded = load_fixture("token_decoded.json", DOMAIN)
-    mowers = make_complete_mower_list()
-
     with patch(
         "aioautomower.session.AutomowerSession",
         return_value=AsyncMock(
@@ -44,9 +46,7 @@ async def setup_entity(hass: HomeAssistant):
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session",
         return_value=AsyncMock(),
-    ), patch(
-        "jwt.decode", return_value=token_decoded
-    ), patch(
+    ), patch("jwt.decode", return_value=token_decoded), patch(
         "homeassistant.components.husqvarna_automower.coordinator.AutomowerDataUpdateCoordinator._async_update_data",
         return_value=mowers,
     ) as mock_impl:
@@ -58,75 +58,61 @@ async def setup_entity(hass: HomeAssistant):
 
     return config_entry
 
-    # @pytest.mark.asyncio
-    # async def test_lawn_mower_state(hass: HomeAssistant) -> None:
-    #     """Test lawn_mower state."""
-    #     await setup_entity(hass)
-    #     # coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN]["automower_test"]
-    #     # lawn_mower1 = AutomowerLawnMowerEntity(MWR_ONE_ID, coordinator)
 
-    #     lawn_mower1 = hass.states.get("lawn_mower.test_mower_1")
+@pytest.mark.asyncio
+async def test_lawn_mower_docked(hass: HomeAssistant) -> None:
+    """Test lawn_mower state."""
+    mower = load_json_value_fixture("mower.json", DOMAIN)
+    mowers: MowerList = make_mower_list(mower)
+    await setup_entity(hass, mowers)
+    lawn_mower1 = hass.states.get("lawn_mower.test_mower_1")
+    assert lawn_mower1.state == LawnMowerActivity.DOCKED
 
-    #     _LOGGER.debug("lawn_mower1:%s", lawn_mower1.as_dict())
 
-    #     assert lawn_mower1.state == LawnMowerActivity.DOCKED
-    #     assert lawn_mower1.state == LawnMowerActivity.PAUSED
+@pytest.mark.asyncio
+async def test_lawn_mower_paused(hass: HomeAssistant) -> None:
+    """Test lawn_mower state."""
+    mower = load_json_value_fixture("mower.json", DOMAIN)
+    mowers: MowerList = make_mower_list(mower)
+    mower_data: MowerAttributes = mowers[TEST_MOWER_ID]
+    mower_data.mower.state = "PAUSED"
+    await setup_entity(hass, mowers)
+    lawn_mower1 = hass.states.get("lawn_mower.test_mower_1")
+    assert lawn_mower1.state == LawnMowerActivity.PAUSED
 
-    #     set_state(MowerStates.WAIT_POWER_UP)
-    #     assert lawn_mower1.state == LawnMowerActivity.PAUSED
-    #     set_state(MowerStates.IN_OPERATION)
-    #     set_activity(MowerActivities.MOWING)
-    #     assert lawn_mower1.state == LawnMowerActivity.MOWING
 
-    #     set_activity(MowerActivities.LEAVING)
-    #     assert lawn_mower1.state == LawnMowerActivity.MOWING
+@pytest.mark.asyncio
+async def test_lawn_mower_mowing(hass: HomeAssistant) -> None:
+    """Test lawn_mower state."""
+    mower = load_json_value_fixture("mower.json", DOMAIN)
+    mowers: MowerList = make_mower_list(mower)
+    mower_data: MowerAttributes = mowers[TEST_MOWER_ID]
+    mower_data.mower.activity = "MOWING"
+    await setup_entity(hass, mowers)
+    lawn_mower1 = hass.states.get("lawn_mower.test_mower_1")
+    assert lawn_mower1.state == LawnMowerActivity.MOWING
 
-    #     set_activity(MowerActivities.GOING_HOME)
-    #     assert lawn_mower1.state == LawnMowerActivity.MOWING
 
-    #     set_state(MowerStates.RESTRICTED)
-    #     set_activity(MowerActivities.PARKED_IN_CS)
-    #     assert lawn_mower1.state == LawnMowerActivity.DOCKED
-
-    #     set_activity(MowerActivities.CHARGING)
-    #     assert lawn_mower1.state == LawnMowerActivity.DOCKED
-    #     set_activity(MowerActivities.UNKNOWN)
-    #     set_state(MowerStates.FATAL_ERROR)
-    #     assert lawn_mower1.state == LawnMowerActivity.ERROR
-
-    #     set_state(MowerStates.ERROR)
-    #     assert lawn_mower1.state == LawnMowerActivity.ERROR
-
-    #     set_state(MowerStates.ERROR_AT_POWER_UP)
-    #     assert lawn_mower1.state == LawnMowerActivity.ERROR
-
-    #     set_state(MowerStates.NOT_APPLICABLE)
-    #     assert lawn_mower1.state == LawnMowerActivity.ERROR
-
-    #     set_state(MowerStates.UNKNOWN)
-    #     assert lawn_mower1.state == LawnMowerActivity.ERROR
-
-    #     set_state(MowerStates.STOPPED)
-    #     assert lawn_mower1.state == LawnMowerActivity.ERROR
-
-    #     set_state(MowerStates.OFF)
-    #     assert lawn_mower1.state == LawnMowerActivity.ERROR
-
-    #     set_activity(MowerActivities.STOPPED_IN_GARDEN)
-    #     assert lawn_mower1.state == LawnMowerActivity.ERROR
-
-    #     set_activity(MowerActivities.UNKNOWN)
-    #     assert lawn_mower1.state == LawnMowerActivity.ERROR
-
-    #     set_activity(MowerActivities.NOT_APPLICABLE)
-    # assert lawn_mower1.state == LawnMowerActivity.ERROR
+@pytest.mark.asyncio
+async def test_lawn_mower_error(hass: HomeAssistant) -> None:
+    """Test lawn_mower state."""
+    mower = load_json_value_fixture("mower.json", DOMAIN)
+    mowers: MowerList = make_mower_list(mower)
+    mower_data: MowerAttributes = mowers[TEST_MOWER_ID]
+    mower_data.mower.activity = "NOT_APPLICABLE"
+    mower_data.mower.state = "ERROR"
+    await setup_entity(hass, mowers)
+    lawn_mower1 = hass.states.get("lawn_mower.test_mower_1")
+    assert lawn_mower1.state == LawnMowerActivity.ERROR
 
 
 @pytest.mark.asyncio
 async def test_lawn_mower_commands(hass: HomeAssistant) -> None:
     """Test lawn_mower commands."""
 
-    await setup_entity(hass)
+    mower = load_json_value_fixture("mower.json", DOMAIN)
+    mowers = make_mower_list(mower)
+    await setup_entity(hass, mowers)
 
     await hass.services.async_call(
         "lawn_mower",

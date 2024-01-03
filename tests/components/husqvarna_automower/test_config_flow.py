@@ -65,7 +65,7 @@ async def test_full_flow(
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
-    token = load_fixture("jwt.js", DOMAIN)
+    token = load_fixture("jwt", DOMAIN)
 
     aioclient_mock.post(
         OAUTH2_TOKEN,

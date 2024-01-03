@@ -10,7 +10,7 @@ USER_ID = "123"
 async def setup_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Create the Nuki device."""
 
-    token = load_fixture("jwt.js", DOMAIN)
+    token = load_fixture("jwt", DOMAIN)
 
     entry = MockConfigEntry(
         version=1,
