@@ -25,19 +25,11 @@ from .entity import YoLinkEntity
 OPTIONS_VALUME = "options_volume"
 
 
-@dataclass
-class YoLinkNumberTypeConfigEntityDescriptionMixin:
-    """Mixin for device type."""
-
-    exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
-
-
-@dataclass
-class YoLinkNumberTypeConfigEntityDescription(
-    YoLinkNumberTypeConfigEntityDescriptionMixin, NumberEntityDescription
-):
+@dataclass(frozen=True, kw_only=True)
+class YoLinkNumberTypeConfigEntityDescription(NumberEntityDescription):
     """YoLink NumberEntity description."""
 
+    exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
     value: Callable = lambda state: state
 
 
