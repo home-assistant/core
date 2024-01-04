@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -150,6 +150,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
 
     cleanup_disconnected_cams(hass, config_entry.entry_id, host)
+
+    # Can be remove in HA 2024.6.0
+    entity_reg = er.async_get(hass)
+    entities = er.async_entries_for_config_entry(entity_reg, config_entry.entry_id)
+    for entity in entities:
+        if entity.domain == "light" and entity.unique_id.endswith("ir_lights"):
+            entity_reg.async_remove(entity.entity_id)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 

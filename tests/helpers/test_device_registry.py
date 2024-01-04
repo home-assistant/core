@@ -17,7 +17,11 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 
-from tests.common import MockConfigEntry, flush_store
+from tests.common import (
+    MockConfigEntry,
+    flush_store,
+    import_and_test_deprecated_constant_enum,
+)
 
 
 @pytest.fixture
@@ -2012,3 +2016,12 @@ async def test_loading_invalid_configuration_url_from_storage(
         identifiers={("serial", "123456ABCDEF")},
     )
     assert entry.configuration_url == "invalid"
+
+
+@pytest.mark.parametrize(("enum"), list(dr.DeviceEntryDisabler))
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: dr.DeviceEntryDisabler,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(caplog, dr, enum, "DISABLED_", "2025.1")

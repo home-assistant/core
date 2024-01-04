@@ -1,7 +1,6 @@
 """Read status of SunWEG inverters."""
 from __future__ import annotations
 
-import datetime
 import logging
 from types import MappingProxyType
 from typing import Any
@@ -16,10 +15,9 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from . import SunWEGData
-from .const import CONF_PLANT_ID, DEFAULT_PLANT_ID, DOMAIN
+from .const import CONF_PLANT_ID, DEFAULT_PLANT_ID, DOMAIN, DeviceType
 from .sensor_types.inverter import INVERTER_SENSOR_TYPES
 from .sensor_types.phase import PHASE_SENSOR_TYPES
 from .sensor_types.sensor_entity_description import SunWEGSensorEntityDescription
@@ -67,7 +65,7 @@ async def async_setup_entry(
             name=f"{name} Total",
             unique_id=f"{plant_id}-{description.key}",
             description=description,
-            device_type="total",
+            device_type=DeviceType.TOTAL,
         )
         for description in TOTAL_SENSOR_TYPES
     ]
@@ -80,7 +78,7 @@ async def async_setup_entry(
                 name=f"{device.name}",
                 unique_id=f"{device.sn}-{description.key}",
                 description=description,
-                device_type="inverter",
+                device_type=DeviceType.INVERTER,
                 inverter_id=device.id,
             )
             for device in devices
@@ -96,7 +94,7 @@ async def async_setup_entry(
                 unique_id=f"{device.sn}-{phase.name}-{description.key}",
                 description=description,
                 inverter_id=device.id,
-                device_type="phase",
+                device_type=DeviceType.PHASE,
                 deep_name=phase.name,
             )
             for device in devices
@@ -113,7 +111,7 @@ async def async_setup_entry(
                 unique_id=f"{device.sn}-{string.name}-{description.key}",
                 description=description,
                 inverter_id=device.id,
-                device_type="string",
+                device_type=DeviceType.STRING,
                 deep_name=string.name,
             )
             for device in devices
@@ -137,7 +135,7 @@ class SunWEGInverter(SensorEntity):
         name: str,
         unique_id: str,
         description: SunWEGSensorEntityDescription,
-        device_type: str,
+        device_type: DeviceType,
         inverter_id: int = 0,
         deep_name: str | None = None,
     ) -> None:
@@ -160,18 +158,20 @@ class SunWEGInverter(SensorEntity):
             name=name,
         )
 
-    @property
-    def native_value(
-        self,
-    ) -> StateType | datetime.datetime:
-        """Return the state of the sensor."""
-        return self.probe.get_data(
-            self.entity_description,
-            device_type=self.device_type,
-            inverter_id=self.inverter_id,
-            deep_name=self.deep_name,
-        )
-
     def update(self) -> None:
         """Get the latest data from the Sun WEG API and updates the state."""
         self.probe.update()
+        (
+            self._attr_native_value,
+            self._attr_native_unit_of_measurement,
+        ) = self.probe.get_data(
+            api_variable_key=self.entity_description.api_variable_key,
+            api_variable_unit=self.entity_description.api_variable_unit,
+            deep_name=self.deep_name,
+            device_type=self.device_type,
+            inverter_id=self.inverter_id,
+            name=self.entity_description.name,
+            native_unit_of_measurement=self.native_unit_of_measurement,
+            never_resets=self.entity_description.never_resets,
+            previous_value_drop_threshold=self.entity_description.previous_value_drop_threshold,
+        )

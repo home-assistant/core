@@ -39,7 +39,7 @@ SENSOR_KIND_TEMPERATURE = "temperature"
 SENSOR_KIND_UPTIME = "uptime"
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValveControllerSensorDescription(
     SensorEntityDescription, ValveControllerEntityDescription
 ):

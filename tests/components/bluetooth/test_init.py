@@ -8,6 +8,7 @@ from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import DEFAULT_ADDRESS
 from habluetooth import scanner
+from habluetooth.wrappers import HaBleakScannerWrapper
 import pytest
 
 from homeassistant.components import bluetooth
@@ -35,7 +36,6 @@ from homeassistant.components.bluetooth.match import (
     SERVICE_DATA_UUID,
     SERVICE_UUID,
 )
-from homeassistant.components.bluetooth.wrappers import HaBleakScannerWrapper
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
@@ -2816,7 +2816,7 @@ async def test_scanner_count_connectable(
 ) -> None:
     """Test getting the connectable scanner count."""
     scanner = FakeScanner("any", "any")
-    cancel = bluetooth.async_register_scanner(hass, scanner, False)
+    cancel = bluetooth.async_register_scanner(hass, scanner)
     assert bluetooth.async_scanner_count(hass, connectable=True) == 1
     cancel()
 
@@ -2824,7 +2824,7 @@ async def test_scanner_count_connectable(
 async def test_scanner_count(hass: HomeAssistant, enable_bluetooth: None) -> None:
     """Test getting the connectable and non-connectable scanner count."""
     scanner = FakeScanner("any", "any")
-    cancel = bluetooth.async_register_scanner(hass, scanner, False)
+    cancel = bluetooth.async_register_scanner(hass, scanner)
     assert bluetooth.async_scanner_count(hass, connectable=False) == 2
     cancel()
 
