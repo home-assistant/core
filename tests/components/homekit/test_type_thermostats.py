@@ -68,6 +68,8 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_TEMPERATURE_UNIT,
     EVENT_HOMEASSISTANT_START,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     UnitOfTemperature,
 )
 from homeassistant.core import CoreState, HomeAssistant
@@ -2446,3 +2448,70 @@ async def test_thermostat_with_supported_features_target_temp_but_fan_mode_set(
 
     assert acc.ordered_fan_speeds == []
     assert not acc.fan_chars
+
+
+async def test_thermostat_handles_unknown_state(
+    hass: HomeAssistant, hk_driver, events
+) -> None:
+    """Test a thermostat can handle unknown state."""
+    entity_id = "climate.test"
+    attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_MIN_TEMP: 44.6,
+        ATTR_MAX_TEMP: 95,
+        ATTR_PRESET_MODES: ["home", "away"],
+        ATTR_TEMPERATURE: 67,
+        ATTR_TARGET_TEMP_HIGH: None,
+        ATTR_TARGET_TEMP_LOW: None,
+        ATTR_FAN_MODE: FAN_AUTO,
+        ATTR_FAN_MODES: None,
+        ATTR_HVAC_ACTION: HVACAction.IDLE,
+        ATTR_PRESET_MODE: "home",
+        ATTR_FRIENDLY_NAME: "Rec Room",
+        ATTR_HVAC_MODES: [
+            HVACMode.OFF,
+            HVACMode.HEAT,
+        ],
+    }
+    hass.states.async_set(
+        entity_id,
+        HVACMode.OFF,
+        attrs,
+    )
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    await acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.char_target_heat_cool.value == 0
+    assert acc.available is True
+    hass.states.async_set(
+        entity_id,
+        STATE_UNKNOWN,
+        attrs,
+    )
+    await hass.async_block_till_done()
+
+    assert acc.char_target_heat_cool.value == 0
+    assert acc.available is True
+
+    hass.states.async_set(
+        entity_id,
+        HVACMode.OFF,
+        attrs,
+    )
+    await hass.async_block_till_done()
+    assert acc.char_target_heat_cool.value == 0
+    assert acc.available is True
+
+    hass.states.async_set(
+        entity_id,
+        STATE_UNAVAILABLE,
+        attrs,
+    )
+    await hass.async_block_till_done()
+
+    assert acc.char_target_heat_cool.value == 0
+    assert acc.available is False
