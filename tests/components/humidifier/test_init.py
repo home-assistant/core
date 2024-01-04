@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components import humidifier
 from homeassistant.components.humidifier import (
+    ATTR_MODE,
     HumidifierEntity,
     HumidifierEntityFeature,
 )
@@ -75,6 +76,8 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
     """Test deprecated supported features ints."""
 
     class MockHumidifierEntity(HumidifierEntity):
+        _attr_mode = "mode1"
+
         @property
         def supported_features(self) -> int:
             """Return supported features."""
@@ -89,3 +92,5 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
     caplog.clear()
     assert entity.supported_features_compat is HumidifierEntityFeature(1)
     assert "is using deprecated supported features values" not in caplog.text
+
+    assert entity.state_attributes[ATTR_MODE] == "mode1"
