@@ -299,3 +299,12 @@ def dir_with_deprecated_constants(module_globals: dict[str, Any]) -> list[str]:
         for name in module_globals
         if name.startswith(_PREFIX_DEPRECATED)
     ]
+
+
+def all_with_deprecated_constants(module_globals: dict[str, Any]) -> list[str]:
+    """Generate a list for __all___ with deprecated constants."""
+    return [itm for itm in module_globals if not itm.startswith("_")] + [
+        name.removeprefix(_PREFIX_DEPRECATED)
+        for name in module_globals
+        if name.startswith(_PREFIX_DEPRECATED)
+    ]
