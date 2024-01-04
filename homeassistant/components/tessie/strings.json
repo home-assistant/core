@@ -274,10 +274,10 @@
         "name": "Rear passenger window"
       },
       "vehicle_state_df": {
-        "name": "Front Driver door"
+        "name": "Front driver door"
       },
       "vehicle_state_pf": {
-        "name": "Front Passenger door"
+        "name": "Front passenger door"
       },
       "vehicle_state_dr": {
         "name": "Rear driver door"
