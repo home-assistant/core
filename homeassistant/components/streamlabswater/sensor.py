@@ -35,6 +35,7 @@ SENSORS: tuple[StreamlabsWaterSensorEntityDescription, ...] = (
         translation_key="daily_usage",
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         device_class=SensorDeviceClass.WATER,
+        suggested_display_precision=1,
         value_fn=lambda data: data.daily_usage,
     ),
     StreamlabsWaterSensorEntityDescription(
@@ -42,6 +43,7 @@ SENSORS: tuple[StreamlabsWaterSensorEntityDescription, ...] = (
         translation_key="monthly_usage",
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         device_class=SensorDeviceClass.WATER,
+        suggested_display_precision=1,
         value_fn=lambda data: data.monthly_usage,
     ),
     StreamlabsWaterSensorEntityDescription(
@@ -49,6 +51,7 @@ SENSORS: tuple[StreamlabsWaterSensorEntityDescription, ...] = (
         translation_key="yearly_usage",
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         device_class=SensorDeviceClass.WATER,
+        suggested_display_precision=1,
         value_fn=lambda data: data.yearly_usage,
     ),
 )
