@@ -1,7 +1,7 @@
 """Valves for the Elexa Guardian integration."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Callable, Coroutine, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
@@ -56,9 +56,9 @@ class ValveControllerValveDescription(
     is_closed_fn: Callable[[dict[str, Any]], bool]
     is_closing_fn: Callable[[dict[str, Any]], bool]
     is_opening_fn: Callable[[dict[str, Any]], bool]
-    close_coro_fn: Callable[[Client], Awaitable]
-    halt_coro_fn: Callable[[Client], Awaitable]
-    open_coro_fn: Callable[[Client], Awaitable]
+    close_coro_fn: Callable[[Client], Coroutine[Any, Any, None]]
+    halt_coro_fn: Callable[[Client], Coroutine[Any, Any, None]]
+    open_coro_fn: Callable[[Client], Coroutine[Any, Any, None]]
 
 
 async def async_close_valve(client: Client) -> None:
