@@ -1425,7 +1425,7 @@ openhomedevice==2.2.0
 opensensemap-api==0.2.0
 
 # homeassistant.components.enigma2
-openwebifpy==4.0.3
+openwebifpy==4.0.4
 
 # homeassistant.components.luci
 openwrt-luci-rpc==1.1.16
@@ -1819,7 +1819,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.5.2
+pyinsteon==1.5.3
 
 # homeassistant.components.intesishome
 pyintesishome==1.8.0
