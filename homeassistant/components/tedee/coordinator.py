@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 import time
 
+from aiohttp import ClientSession
 from pytedee_async import (
     TedeeClient,
     TedeeClientException,
@@ -32,7 +33,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, session: ClientSession) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
@@ -45,6 +46,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         self.tedee_client = TedeeClient(
             local_token=self.config_entry.data[CONF_LOCAL_ACCESS_TOKEN],
             local_ip=self.config_entry.data[CONF_HOST],
+            session=session,
         )
 
         self._next_get_locks = time.time()
