@@ -15,6 +15,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_MANUAL, DEFAULT_INTERVAL, DOMAIN, PLATFORMS
 from .coordinator import FastdotcomDataUpdateCoordindator
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Fast.com component. (deprecated)."""
+    """Set up the Fastdotcom component."""
     if DOMAIN in config:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
@@ -43,6 +44,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 data=config[DOMAIN],
             )
         )
+    async_setup_services(hass)
     return True
 
 
