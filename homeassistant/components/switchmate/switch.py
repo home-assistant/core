@@ -36,7 +36,7 @@ def setup_platform(
 ) -> None:
     """Perform the setup for Switchmate devices."""
     name = config.get(CONF_NAME)
-    mac_addr = config[CONF_MAC]
+    mac_addr = str(config[CONF_MAC])
     flip_on_off = config[CONF_FLIP_ON_OFF]
     add_entities([SwitchmateEntity(mac_addr, name, flip_on_off)], True)
 
