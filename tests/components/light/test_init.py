@@ -2589,3 +2589,24 @@ def test_filter_supported_color_modes() -> None:
     # ColorMode.BRIGHTNESS has priority over ColorMode.ONOFF
     supported = {light.ColorMode.ONOFF, light.ColorMode.BRIGHTNESS}
     assert light.filter_supported_color_modes(supported) == {light.ColorMode.BRIGHTNESS}
+
+
+def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated supported features ints."""
+
+    class MockLightEntityEntity(light.LightEntity):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return 1
+
+    entity = MockLightEntityEntity()
+    assert entity.supported_features_compat is light.LightEntityFeature(1)
+    assert "MockLightEntityEntity" in caplog.text
+    assert "is using deprecated supported features values" in caplog.text
+    assert "Instead it should use" in caplog.text
+    assert "LightEntityFeature" in caplog.text
+    assert "and color modes" in caplog.text
+    caplog.clear()
+    assert entity.supported_features_compat is light.LightEntityFeature(1)
+    assert "is using deprecated supported features values" not in caplog.text
