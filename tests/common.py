@@ -1531,5 +1531,5 @@ def import_and_test_deprecated_constant(
 def help_test_all(module: ModuleType) -> None:
     """Test module.__all__ is correctly set."""
     assert set(module.__all__) == {
-        [itm for itm in module.__dir__() if not itm.startswith("_")]
+        itm for itm in module.__dir__() if not itm.startswith("_")
     }
