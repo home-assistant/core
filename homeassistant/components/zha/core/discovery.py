@@ -203,9 +203,20 @@ class ProbeEndpoint:
             if platform is None:
                 continue
 
-            cluster_handler_class = zha_regs.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
-                cluster_id, ClusterHandler
+            cluster_handler_classes = zha_regs.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
+                cluster_id, {None: ClusterHandler}
             )
+
+            quirk_id = (
+                endpoint.device.quirk_id
+                if endpoint.device.quirk_id in cluster_handler_classes
+                else None
+            )
+
+            cluster_handler_class = cluster_handler_classes.get(
+                quirk_id, ClusterHandler
+            )
+
             cluster_handler = cluster_handler_class(cluster, endpoint)
             self.probe_single_cluster(platform, cluster_handler, endpoint)
 

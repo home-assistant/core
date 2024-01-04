@@ -186,16 +186,22 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             data_to_send = {"text": event.data["tts_input"]}
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END:
             assert event.data is not None
-            path = event.data["tts_output"]["url"]
-            url = async_process_play_media_url(self.hass, path)
-            data_to_send = {"url": url}
+            tts_output = event.data["tts_output"]
+            if tts_output:
+                path = tts_output["url"]
+                url = async_process_play_media_url(self.hass, path)
+                data_to_send = {"url": url}
 
-            if self.device_info.voice_assistant_version >= 2:
-                media_id = event.data["tts_output"]["media_id"]
-                self._tts_task = self.hass.async_create_background_task(
-                    self._send_tts(media_id), "esphome_voice_assistant_tts"
-                )
+                if self.device_info.voice_assistant_version >= 2:
+                    media_id = tts_output["media_id"]
+                    self._tts_task = self.hass.async_create_background_task(
+                        self._send_tts(media_id), "esphome_voice_assistant_tts"
+                    )
+                else:
+                    self._tts_done.set()
             else:
+                # Empty TTS response
+                data_to_send = {}
                 self._tts_done.set()
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_END:
             assert event.data is not None

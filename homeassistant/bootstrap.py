@@ -27,6 +27,7 @@ from .const import (
 from .exceptions import HomeAssistantError
 from .helpers import (
     area_registry,
+    config_validation as cv,
     device_registry,
     entity,
     entity_registry,
@@ -473,7 +474,9 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
 def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     """Get domains of components to set up."""
     # Filter out the repeating and common config section [homeassistant]
-    domains = {key.partition(" ")[0] for key in config if key != core.DOMAIN}
+    domains = {
+        domain for key in config if (domain := cv.domain_key(key)) != core.DOMAIN
+    }
 
     # Add config entry domains
     if not hass.config.recovery_mode:

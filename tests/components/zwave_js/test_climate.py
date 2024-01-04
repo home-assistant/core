@@ -40,6 +40,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
 
 from .common import (
@@ -278,7 +279,7 @@ async def test_thermostat_v2(
     client.async_send_command.reset_mock()
 
     # Test setting invalid fan mode
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,
@@ -692,7 +693,7 @@ async def test_preset_and_no_setpoint(
     assert state.attributes[ATTR_TEMPERATURE] is None
     assert state.attributes[ATTR_PRESET_MODE] == "Full power"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         # Test setting invalid preset mode
         await hass.services.async_call(
             CLIMATE_DOMAIN,

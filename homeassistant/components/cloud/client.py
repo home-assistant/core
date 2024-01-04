@@ -6,7 +6,7 @@ from datetime import datetime
 from http import HTTPStatus
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import aiohttp
 from hass_nabucasa.client import CloudClient as Interface
@@ -22,11 +22,17 @@ from homeassistant.core import Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util.aiohttp import MockRequest, serialize_response
 
 from . import alexa_config, google_config
 from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN
 from .prefs import CloudPreferences
+
+VALID_REPAIR_TRANSLATION_KEYS = {
+    "warn_bad_custom_domain_configuration",
+    "reset_bad_custom_domain_configuration",
+}
 
 
 class CloudClient(Interface):
@@ -302,3 +308,24 @@ class CloudClient(Interface):
     ) -> None:
         """Update local list of cloudhooks."""
         await self._prefs.async_update(cloudhooks=data)
+
+    async def async_create_repair_issue(
+        self,
+        identifier: str,
+        translation_key: str,
+        *,
+        placeholders: dict[str, str] | None = None,
+        severity: Literal["error", "warning"] = "warning",
+    ) -> None:
+        """Create a repair issue."""
+        if translation_key not in VALID_REPAIR_TRANSLATION_KEYS:
+            raise ValueError(f"Invalid translation key {translation_key}")
+        async_create_issue(
+            hass=self._hass,
+            domain=DOMAIN,
+            issue_id=identifier,
+            translation_key=translation_key,
+            translation_placeholders=placeholders,
+            severity=IssueSeverity(severity),
+            is_fixable=False,
+        )

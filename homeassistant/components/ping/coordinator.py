@@ -40,7 +40,7 @@ class PingUpdateCoordinator(DataUpdateCoordinator[PingResult]):
             hass,
             _LOGGER,
             name=f"Ping {ping.ip_address}",
-            update_interval=timedelta(minutes=5),
+            update_interval=timedelta(seconds=30),
         )
 
     async def _async_update_data(self) -> PingResult:

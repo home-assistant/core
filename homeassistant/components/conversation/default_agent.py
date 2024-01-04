@@ -196,6 +196,7 @@ class DefaultAgent(AbstractConversationAgent):
             lang_intents,
             slot_lists,
             intent_context,
+            language,
         )
 
         return result
@@ -283,6 +284,7 @@ class DefaultAgent(AbstractConversationAgent):
         lang_intents: LanguageIntents,
         slot_lists: dict[str, SlotList],
         intent_context: dict[str, Any] | None,
+        language: str,
     ) -> RecognizeResult | None:
         """Search intents for a match to user input."""
         # Prioritize matches with entity names above area names
@@ -292,6 +294,7 @@ class DefaultAgent(AbstractConversationAgent):
             lang_intents.intents,
             slot_lists=slot_lists,
             intent_context=intent_context,
+            language=language,
         ):
             if "name" in result.entities:
                 return result
@@ -656,7 +659,7 @@ class DefaultAgent(AbstractConversationAgent):
         if device_area is None:
             return None
 
-        return {"area": device_area.name}
+        return {"area": device_area.id}
 
     def _get_error_text(
         self, response_type: ResponseType, lang_intents: LanguageIntents | None

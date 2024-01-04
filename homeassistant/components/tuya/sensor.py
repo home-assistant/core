@@ -38,7 +38,7 @@ from .const import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class TuyaSensorEntityDescription(SensorEntityDescription):
     """Describes Tuya sensor entity."""
 
@@ -514,6 +514,18 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             name=None,
             icon="mdi:gas-cylinder",
             state_class=SensorStateClass.MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
+    ),
+    # Smart Water Timer
+    "sfkzq": (
+        # Total seconds of irrigation. Read-write value; the device appears to ignore the write action (maybe firmware bug)
+        TuyaSensorEntityDescription(
+            key=DPCode.TIME_USE,
+            translation_key="total_watering_time",
+            icon="mdi:history",
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         *BATTERY_SENSORS,
     ),

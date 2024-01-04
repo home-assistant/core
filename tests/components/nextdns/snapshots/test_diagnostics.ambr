@@ -9,6 +9,7 @@
       'disabled_by': None,
       'domain': 'nextdns',
       'entry_id': 'd9aa37407ddac7b964a99e86312288d6',
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
