@@ -215,6 +215,19 @@ class MockESPHomeDevice:
         """Mock connecting."""
         await self.on_connect()
 
+    def set_home_assistant_state_subscription_callback(
+        self,
+        on_state_sub: Callable[[str, str | None], None],
+    ) -> None:
+        """Set the state call callback."""
+        self.state_callback = on_state_sub
+
+    def mock_home_assistant_state_subscription(
+        self, entity_id: str, attribute: str | None
+    ) -> None:
+        """Mock a state subscription."""
+        self.state_callback(entity_id, attribute)
+
 
 async def _mock_generic_device_entry(
     hass: HomeAssistant,
@@ -260,6 +273,12 @@ async def _mock_generic_device_entry(
         """Subscribe to service calls."""
         mock_device.set_service_call_callback(callback)
 
+    async def _subscribe_home_assistant_states(
+        on_state_sub: Callable[[str, str | None], None],
+    ) -> None:
+        """Subscribe to home assistant states."""
+        mock_device.set_home_assistant_state_subscription_callback(on_state_sub)
+
     mock_client.device_info = AsyncMock(return_value=device_info)
     mock_client.subscribe_voice_assistant = AsyncMock(return_value=Mock())
     mock_client.list_entities_services = AsyncMock(
@@ -267,6 +286,7 @@ async def _mock_generic_device_entry(
     )
     mock_client.subscribe_states = _subscribe_states
     mock_client.subscribe_service_calls = _subscribe_service_calls
+    mock_client.subscribe_home_assistant_states = _subscribe_home_assistant_states
 
     try_connect_done = Event()
 

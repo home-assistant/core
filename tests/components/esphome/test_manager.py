@@ -533,6 +533,63 @@ async def test_connection_aborted_wrong_device(
     assert "Unexpected device found at" not in caplog.text
 
 
+async def test_state_subscription(
+    mock_client: APIClient,
+    hass: HomeAssistant,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test we subscribe to state changes."""
+    device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set("binary_sensor.test", "on", {"bool": True, "float": 3.0})
+    device.mock_home_assistant_state_subscription("binary_sensor.test", None)
+    await hass.async_block_till_done()
+    assert mock_client.send_home_assistant_state.mock_calls == [
+        call("binary_sensor.test", None, "on")
+    ]
+    mock_client.send_home_assistant_state.reset_mock()
+    hass.states.async_set("binary_sensor.test", "off", {"bool": True, "float": 3.0})
+    await hass.async_block_till_done()
+    assert mock_client.send_home_assistant_state.mock_calls == [
+        call("binary_sensor.test", None, "off")
+    ]
+    mock_client.send_home_assistant_state.reset_mock()
+    device.mock_home_assistant_state_subscription("binary_sensor.test", "bool")
+    await hass.async_block_till_done()
+    assert mock_client.send_home_assistant_state.mock_calls == [
+        call("binary_sensor.test", "bool", "on")
+    ]
+    mock_client.send_home_assistant_state.reset_mock()
+    hass.states.async_set("binary_sensor.test", "off", {"bool": False, "float": 3.0})
+    await hass.async_block_till_done()
+    assert mock_client.send_home_assistant_state.mock_calls == [
+        call("binary_sensor.test", "bool", "off")
+    ]
+    mock_client.send_home_assistant_state.reset_mock()
+    device.mock_home_assistant_state_subscription("binary_sensor.test", "float")
+    await hass.async_block_till_done()
+    assert mock_client.send_home_assistant_state.mock_calls == [
+        call("binary_sensor.test", "float", "3.0")
+    ]
+    mock_client.send_home_assistant_state.reset_mock()
+    hass.states.async_set("binary_sensor.test", "on", {"bool": True, "float": 4.0})
+    await hass.async_block_till_done()
+    assert mock_client.send_home_assistant_state.mock_calls == [
+        call("binary_sensor.test", None, "on"),
+        call("binary_sensor.test", "bool", "on"),
+        call("binary_sensor.test", "float", "4.0"),
+    ]
+    mock_client.send_home_assistant_state.reset_mock()
+
+
 async def test_debug_logging(
     mock_client: APIClient,
     hass: HomeAssistant,
