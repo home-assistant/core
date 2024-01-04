@@ -7,23 +7,25 @@ import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_NAME, DEGREE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-API_PATH = "/api/torque"
-
-DEFAULT_NAME = "vehicle"
-DOMAIN = "torque"
-
-ENTITY_NAME_FORMAT = "{0} {1}"
-
-SENSOR_EMAIL_FIELD = "eml"
-SENSOR_NAME_KEY = r"userFullName(\w+)"
-SENSOR_UNIT_KEY = r"userUnit(\w+)"
-SENSOR_VALUE_KEY = r"k(\w+)"
+from .const import (
+    API_PATH,
+    DEFAULT_NAME,
+    DOMAIN,
+    ENTITY_NAME_FORMAT,
+    SENSOR_EMAIL_FIELD,
+    SENSOR_NAME_KEY,
+    SENSOR_UNIT_KEY,
+    SENSOR_VALUE_KEY,
+)
 
 NAME_KEY = re.compile(SENSOR_NAME_KEY)
 UNIT_KEY = re.compile(SENSOR_UNIT_KEY)
@@ -42,20 +44,63 @@ def convert_pid(value):
     return int(value, 16)
 
 
-def setup_platform(
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the sensor from a config entry created in the integrations UI."""
+    vehicle = config_entry.data.get(CONF_NAME)
+    email = config_entry.data.get(CONF_EMAIL)
+    sensors: dict[int, TorqueSensor] = {}
+
+    hass.http.register_view(
+        TorqueReceiveDataView(email, vehicle, sensors, async_add_entities)
+    )
+
+
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Torque platform."""
-    vehicle = config.get(CONF_NAME)
-    email = config.get(CONF_EMAIL)
-    sensors: dict[int, TorqueSensor] = {}
-
-    hass.http.register_view(
-        TorqueReceiveDataView(email, vehicle, sensors, add_entities)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
     )
+
+    if (
+        result["type"] == FlowResultType.CREATE_ENTRY
+        or result["reason"] == "already_configured"
+    ):
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.7.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Torque",
+            },
+        )
+    else:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_${result['reason']}",
+            breaks_in_ha_version="2024.7.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_${result['reason']}",
+        )
 
 
 class TorqueReceiveDataView(HomeAssistantView):
