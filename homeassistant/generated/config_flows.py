@@ -215,6 +215,7 @@ FLOWS = {
         "homewizard",
         "honeywell",
         "huawei_lte",
+        "huawei_smart_logger",
         "hue",
         "huisbaasje",
         "hunterdouglas_powerview",

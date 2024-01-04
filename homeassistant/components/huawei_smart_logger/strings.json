@@ -1,0 +1,95 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Provide the login information for the Smart Logger 3000",
+        "data": {
+          "host": "Local IP Address of the Smart Logger on your network",
+          "username": "Smart logger username used to access the smart logger web UI",
+          "password": "Smart logger password used to access the smart logger web UI"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "rated_ess_power": {
+        "name": "Rated ESS Power"
+      },
+      "total_discharge": {
+        "name": "Total Battery Discharge"
+      },
+      "total_charge": {
+        "name": "Total Battery Charge"
+      },
+      "currentday_discharge_capacity": {
+        "name": "Current Day Battery Discharge Capacity"
+      },
+      "currentday_charge_capacity": {
+        "name": "Current Day Charge Capacity"
+      },
+      "reactive_ess_power": {
+        "name": "Reactive ESS Power"
+      },
+      "reactive_pv_power": {
+        "name": "Reactive PV Power"
+      },
+      "battery_chargedischarge_power": {
+        "name": "Battery Charge Dischard Power"
+      },
+      "pv_output_power": {
+        "name": "PV Output Power"
+      },
+      "total_power_consumption": {
+        "name": "Total Power Consumption"
+      },
+      "total_feedin_to_grid": {
+        "name": "Total Feedin To Grid"
+      },
+      "total_supply_from_grid": {
+        "name": "Total Supply From Grid"
+      },
+      "total_power_supply_from_grid": {
+        "name": "Total Power Supply From Grid"
+      },
+      "current_day_consumption": {
+        "name": "Current Day Consumption"
+      },
+      "current_day_supply_from_grid": {
+        "name": "Current Day Supply From Grid"
+      },
+      "todays_power_supply_from_grid": {
+        "name": "Todays Power Supply From Grid"
+      },
+      "reactive_power": {
+        "name": "Reactive Power"
+      },
+      "active_power": {
+        "name": "Active Power"
+      },
+      "load_power": {
+        "name": "Load Power"
+      },
+      "soc": {
+        "name": "Battery Charge Perent"
+      },
+      "current_day_feedin_to_grid": {
+        "name": "Current Day FeedIn To Grid"
+      },
+      "gridtied_active_power": {
+        "name": "Grid Tied Active Power"
+      },
+      "gridtied_reactive_power": {
+        "name": "Grid Tied Reactive Power"
+      }
+    }
+  }
+}

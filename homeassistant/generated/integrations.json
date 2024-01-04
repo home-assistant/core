@@ -2546,6 +2546,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "huawei_smart_logger": {
+      "name": "HuaweiSmartLogger3000",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "huisbaasje": {
       "name": "Huisbaasje",
       "integration_type": "hub",
