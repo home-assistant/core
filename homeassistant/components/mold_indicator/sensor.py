@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
@@ -16,31 +17,38 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    HomeAssistant,
+    State,
+    callback,
+)
+from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_change_event,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 from homeassistant.util.unit_conversion import TemperatureConverter
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
+from .const import (
+    ATTR_CRITICAL_TEMP,
+    ATTR_DEWPOINT,
+    CONF_CALIBRATION_FACTOR,
+    CONF_INDOOR_HUMIDITY,
+    CONF_INDOOR_TEMP,
+    CONF_OUTDOOR_TEMP,
+    DEFAULT_NAME,
+    DOMAIN,
+    MAGNUS_K2,
+    MAGNUS_K3,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_CRITICAL_TEMP = "estimated_critical_temp"
-ATTR_DEWPOINT = "dewpoint"
-
-CONF_CALIBRATION_FACTOR = "calibration_factor"
-CONF_INDOOR_HUMIDITY = "indoor_humidity_sensor"
-CONF_INDOOR_TEMP = "indoor_temp_sensor"
-CONF_OUTDOOR_TEMP = "outdoor_temp_sensor"
-
-DEFAULT_NAME = "Mold Indicator"
-
-MAGNUS_K2 = 17.62
-MAGNUS_K3 = 243.12
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -53,18 +61,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up MoldIndicator sensor."""
-    name = config.get(CONF_NAME, DEFAULT_NAME)
-    indoor_temp_sensor = config.get(CONF_INDOOR_TEMP)
-    outdoor_temp_sensor = config.get(CONF_OUTDOOR_TEMP)
-    indoor_humidity_sensor = config.get(CONF_INDOOR_HUMIDITY)
-    calib_factor = config.get(CONF_CALIBRATION_FACTOR)
+    """Set up the sensor from a config entry created in the integrations UI."""
+    unique_id = config_entry.unique_id
+    name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
+    indoor_temp_sensor = config_entry.data.get(CONF_INDOOR_TEMP)
+    outdoor_temp_sensor = config_entry.data.get(CONF_OUTDOOR_TEMP)
+    indoor_humidity_sensor = config_entry.data.get(CONF_INDOOR_HUMIDITY)
+    calib_factor = config_entry.data.get(CONF_CALIBRATION_FACTOR)
 
     async_add_entities(
         [
@@ -75,10 +83,54 @@ async def async_setup_platform(
                 outdoor_temp_sensor,
                 indoor_humidity_sensor,
                 calib_factor,
+                unique_id,
             )
-        ],
-        False,
+        ]
     )
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up MoldIndicator sensor."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
+    )
+
+    if (
+        result["type"] == FlowResultType.CREATE_ENTRY
+        or result["reason"] == "already_configured"
+    ):
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.7.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Mold Indicator",
+            },
+        )
+    else:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_${result['reason']}",
+            breaks_in_ha_version="2024.7.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_${result['reason']}",
+        )
 
 
 class MoldIndicator(SensorEntity):
@@ -94,8 +146,10 @@ class MoldIndicator(SensorEntity):
         outdoor_temp_sensor,
         indoor_humidity_sensor,
         calib_factor,
+        unique_id,
     ):
         """Initialize the sensor."""
+        self._attr_unique_id = unique_id
         self._state = None
         self._name = name
         self._indoor_temp_sensor = indoor_temp_sensor
@@ -224,7 +278,7 @@ class MoldIndicator(SensorEntity):
             )
             return None
 
-        # convert to celsius if necessary
+        # Convert to Celsius if necessary
         if unit == UnitOfTemperature.FAHRENHEIT:
             return TemperatureConverter.convert(
                 temp, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS

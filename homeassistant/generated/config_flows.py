@@ -303,6 +303,7 @@ FLOWS = {
         "modem_callerid",
         "modern_forms",
         "moehlenhoff_alpha2",
+        "mold_indicator",
         "monoprice",
         "moon",
         "mopeka",
