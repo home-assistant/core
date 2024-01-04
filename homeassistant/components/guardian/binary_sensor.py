@@ -41,14 +41,14 @@ SENSOR_KIND_LEAK_DETECTED = "leak_detected"
 SENSOR_KIND_MOVED = "moved"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class BinarySensorDescriptionMixin:
     """Define an entity description mixin for Guardian binary sensors."""
 
     is_on_fn: Callable[[dict[str, Any]], bool]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class PairedSensorBinarySensorDescription(
     BinarySensorEntityDescription,
     BinarySensorDescriptionMixin,
@@ -56,7 +56,7 @@ class PairedSensorBinarySensorDescription(
     """Describe a Guardian paired sensor binary sensor."""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ValveControllerBinarySensorDescription(
     BinarySensorEntityDescription,
     ValveControllerEntityDescription,

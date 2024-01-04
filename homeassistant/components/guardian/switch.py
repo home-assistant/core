@@ -36,7 +36,7 @@ ON_STATES = {
 }
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SwitchDescriptionMixin:
     """Define an entity description mixin for Guardian switches."""
 
@@ -46,7 +46,7 @@ class SwitchDescriptionMixin:
     on_fn: Callable[[Client], Awaitable]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ValveControllerSwitchDescription(
     SwitchEntityDescription, ValveControllerEntityDescription, SwitchDescriptionMixin
 ):

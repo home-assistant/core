@@ -42,19 +42,19 @@ SENSOR_KIND_TEMPERATURE = "temperature"
 SENSOR_KIND_UPTIME = "uptime"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SensorDescriptionMixin:
     """Define an entity description mixin for Guardian sensors."""
 
     value_fn: Callable[[dict[str, Any]], StateType]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class PairedSensorDescription(SensorEntityDescription, SensorDescriptionMixin):
     """Describe a Guardian paired sensor."""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ValveControllerSensorDescription(
     SensorEntityDescription, ValveControllerEntityDescription, SensorDescriptionMixin
 ):
