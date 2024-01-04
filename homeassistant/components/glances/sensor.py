@@ -249,54 +249,26 @@ async def async_setup_entry(
     """Set up the Glances sensors."""
 
     coordinator: GlancesDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    name = config_entry.data.get(CONF_NAME)
     entities = []
-
-    @callback
-    def _migrate_old_unique_ids(
-        hass: HomeAssistant, old_unique_id: str, new_key: str
-    ) -> None:
-        """Migrate unique IDs to the new format."""
-        ent_reg = er.async_get(hass)
-
-        if entity_id := ent_reg.async_get_entity_id(
-            Platform.SENSOR, DOMAIN, old_unique_id
-        ):
-            ent_reg.async_update_entity(
-                entity_id, new_unique_id=f"{config_entry.entry_id}-{new_key}"
-            )
 
     for sensor_type, sensors in coordinator.data.items():
         if sensor_type in ["fs", "sensors", "raid"]:
             for sensor_label, params in sensors.items():
                 for param in params:
                     if sensor_description := SENSOR_TYPES.get((sensor_type, param)):
-                        _migrate_old_unique_ids(
-                            hass,
-                            f"{coordinator.host}-{name} {sensor_label} {sensor_description.name_suffix}",
-                            f"{sensor_label}-{sensor_description.key}",
-                        )
                         entities.append(
                             GlancesSensor(
                                 coordinator,
-                                name,
-                                sensor_label,
                                 sensor_description,
+                                sensor_label,
                             )
                         )
         else:
             for sensor in sensors:
                 if sensor_description := SENSOR_TYPES.get((sensor_type, sensor)):
-                    _migrate_old_unique_ids(
-                        hass,
-                        f"{coordinator.host}-{name}  {sensor_description.name_suffix}",
-                        f"-{sensor_description.key}",
-                    )
                     entities.append(
                         GlancesSensor(
                             coordinator,
-                            name,
-                            "",
                             sensor_description,
                         )
                     )
@@ -313,13 +285,11 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
     def __init__(
         self,
         coordinator: GlancesDataUpdateCoordinator,
-        name: str | None,
-        sensor_name_prefix: str,
         description: GlancesSensorEntityDescription,
+        sensor_key: str | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._sensor_name_prefix = sensor_name_prefix
         self.entity_description = description
         self._attr_name = f"{sensor_name_prefix} {description.name_suffix}".strip()
         self._attr_device_info = DeviceInfo(
