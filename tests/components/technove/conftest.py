@@ -32,13 +32,13 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def device_fixture() -> str:
+def device_fixture() -> TechnoVEStation:
     """Return the device fixture for a specific device."""
-    return "station_charging"
+    return TechnoVEStation(load_json_object_fixture("station_charging.json", DOMAIN))
 
 
 @pytest.fixture
-def mock_technove(device_fixture: str) -> Generator[MagicMock, None, None]:
+def mock_technove(device_fixture: TechnoVEStation) -> Generator[MagicMock, None, None]:
     """Return a mocked TechnoVE client."""
     with patch(
         "homeassistant.components.technove.coordinator.TechnoVE", autospec=True
@@ -46,9 +46,7 @@ def mock_technove(device_fixture: str) -> Generator[MagicMock, None, None]:
         "homeassistant.components.technove.config_flow.TechnoVE", new=technove_mock
     ):
         technove = technove_mock.return_value
-        technove.update.return_value = TechnoVEStation(
-            load_json_object_fixture(f"{device_fixture}.json", DOMAIN)
-        )
+        technove.update.return_value = device_fixture
         technove.ip_address = "127.0.0.1"
         yield technove
 
