@@ -88,7 +88,6 @@ class AnthemAVR(MediaPlayerEntity):
                 via_device=(DOMAIN, mac_address),
             )
         else:
-            self._attr_name = None
             self._attr_unique_id = mac_address
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, mac_address)},
