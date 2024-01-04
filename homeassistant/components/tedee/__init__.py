@@ -4,7 +4,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
 from .coordinator import TedeeApiCoordinator
@@ -39,7 +39,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     def cleanup_disconnected_locks() -> None:
         device_registry = dr.async_get(hass)
-        entity_registry = er.async_get(hass)
         devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
         devices_to_remove = devices.copy()
         for device in devices:
@@ -51,11 +50,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     break
 
         for device in devices_to_remove:
-            entities_to_remove = er.async_entries_for_device(
-                entity_registry, device.id, include_disabled_entities=True
-            )
-            for entity in entities_to_remove:
-                entity_registry.async_remove(entity.entity_id)
             device_registry.async_remove_device(device.id)
 
     cleanup_disconnected_locks()
