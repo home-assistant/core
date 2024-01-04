@@ -308,10 +308,8 @@ class FritzBoxBaseCoordinatorSwitch(CoordinatorEntity[AvmWrapper], SwitchEntity)
         await self._async_handle_turn_on_off(turn_on=False)
 
 
-class FritzBoxBaseSwitch(FritzBoxBaseEntity):
+class FritzBoxBaseSwitch(FritzBoxBaseEntity, SwitchEntity):
     """Fritz switch base class."""
-
-    _attr_is_on: bool | None
 
     def __init__(
         self,
@@ -380,7 +378,7 @@ class FritzBoxBaseSwitch(FritzBoxBaseEntity):
         self._attr_is_on = turn_on
 
 
-class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
+class FritzBoxPortSwitch(FritzBoxBaseSwitch):
     """Defines a FRITZ!Box Tools PortForward switch."""
 
     def __init__(
@@ -553,7 +551,7 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         return True
 
 
-class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
+class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
     """Defines a FRITZ!Box Tools Wifi switch."""
 
     def __init__(
