@@ -37,20 +37,15 @@ ON_STATES = {
 
 
 @dataclass(frozen=True, kw_only=True)
-class SwitchDescriptionMixin:
-    """Define an entity description mixin for Guardian switches."""
+class ValveControllerSwitchDescription(
+    SwitchEntityDescription, ValveControllerEntityDescription
+):
+    """Describe a Guardian valve controller switch."""
 
     extra_state_attributes_fn: Callable[[dict[str, Any]], Mapping[str, Any]]
     is_on_fn: Callable[[dict[str, Any]], bool]
     off_fn: Callable[[Client], Awaitable]
     on_fn: Callable[[Client], Awaitable]
-
-
-@dataclass(frozen=True, kw_only=True)
-class ValveControllerSwitchDescription(
-    SwitchEntityDescription, ValveControllerEntityDescription, SwitchDescriptionMixin
-):
-    """Describe a Guardian valve controller switch."""
 
 
 async def _async_disable_ap(client: Client) -> None:

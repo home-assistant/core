@@ -42,27 +42,19 @@ SENSOR_KIND_MOVED = "moved"
 
 
 @dataclass(frozen=True, kw_only=True)
-class BinarySensorDescriptionMixin:
-    """Define an entity description mixin for Guardian binary sensors."""
+class PairedSensorBinarySensorDescription(BinarySensorEntityDescription):
+    """Describe a Guardian paired sensor binary sensor."""
 
     is_on_fn: Callable[[dict[str, Any]], bool]
 
 
 @dataclass(frozen=True, kw_only=True)
-class PairedSensorBinarySensorDescription(
-    BinarySensorEntityDescription,
-    BinarySensorDescriptionMixin,
-):
-    """Describe a Guardian paired sensor binary sensor."""
-
-
-@dataclass(frozen=True, kw_only=True)
 class ValveControllerBinarySensorDescription(
-    BinarySensorEntityDescription,
-    ValveControllerEntityDescription,
-    BinarySensorDescriptionMixin,
+    BinarySensorEntityDescription, ValveControllerEntityDescription
 ):
     """Describe a Guardian valve controller binary sensor."""
+
+    is_on_fn: Callable[[dict[str, Any]], bool]
 
 
 PAIRED_SENSOR_DESCRIPTIONS = (
