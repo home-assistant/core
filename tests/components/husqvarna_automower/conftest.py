@@ -9,11 +9,41 @@ from homeassistant.components.husqvarna_automower.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .common import setup_integration
-
 from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
 
 TEST_MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
+USER_ID = "123"
+
+
+@pytest.fixture(scope="session")
+def load_jwt_fixture():
+    """Load Fixture data."""
+    return load_fixture("jwt", DOMAIN)
+
+
+@pytest.fixture
+def mock_config_entry(load_jwt_fixture) -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        title="Husqvarna Automower of Erika Mustermann",
+        data={
+            "auth_implementation": "husqvarna_automower_433e5fdf_5129_452c_ba7f_fadce3213042",
+            "token": {
+                "access_token": load_jwt_fixture,
+                "scope": "iam:read amc:api",
+                "expires_in": 86399,
+                "refresh_token": "3012bc9f-7a65-4240-b817-9154ffdcc30f",
+                "provider": "husqvarna",
+                "user_id": USER_ID,
+                "token_type": "Bearer",
+                "expires_at": 1697753347,
+            },
+        },
+        unique_id=USER_ID,
+        entry_id="automower_test",
+    )
 
 
 @pytest.fixture(scope="session")
@@ -33,28 +63,28 @@ def mower_list_fixture(load_mower_fixture):
     return mowers
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def activity():
     """Defaults value for activity."""
     return "PARKED_IN_CS"
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def state():
     """Defaults value for state."""
     return "RESTRICTED"
 
 
 @pytest.fixture
-async def setup_entity(hass: HomeAssistant, mower_list_fixture, activity, state):
+async def setup_entity(
+    hass: HomeAssistant, mower_list_fixture, mock_config_entry, activity, state
+):
     """Set up entity and config entry."""
 
     mower_data: MowerAttributes = mower_list_fixture[TEST_MOWER_ID]
-    if activity:
-        mower_data.mower.activity = activity
-    if state:
-        mower_data.mower.state = state
-    config_entry: MockConfigEntry = await setup_integration(hass)
+    mower_data.mower.activity = activity
+    mower_data.mower.state = state
+    config_entry: MockConfigEntry = mock_config_entry
     config_entry.add_to_hass(hass)
     token_decoded = load_fixture("token_decoded.json", DOMAIN)
     with patch(
