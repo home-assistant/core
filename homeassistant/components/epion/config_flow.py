@@ -26,7 +26,7 @@ class EpionConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
-        errors: dict[str, str] | None = None
+        errors = {}
         if user_input is not None:
             key_valid = await self.hass.async_add_executor_job(
                 self._check_api_key, user_input[CONF_API_KEY]
@@ -36,6 +36,8 @@ class EpionConfigFlow(ConfigFlow, domain=DOMAIN):
                     title="Epion integration",
                     data={CONF_API_KEY: user_input[CONF_API_KEY]},
                 )
+            else:
+                errors["base"] = "invalid_api_key"
         else:
             user_input = {}
             user_input[CONF_API_KEY] = ""
@@ -55,7 +57,10 @@ class EpionConfigFlow(ConfigFlow, domain=DOMAIN):
         api = Epion(api_key)
         try:
             return len(api.get_current()["devices"]) > 0
-        except (ConnectTimeout, HTTPError, KeyError) as ex:
+        except HTTPError as ex:
+            if ex.response.status_code == 401:
+                return False
+        except (ConnectTimeout, KeyError) as ex:
             raise AbortFlow(
                 "Epion API unreachable or unexpected response, is your API key active?"
             ) from ex
