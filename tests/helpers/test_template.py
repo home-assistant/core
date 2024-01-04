@@ -1175,8 +1175,19 @@ def test_as_datetime(hass: HomeAssistant, input) -> None:
     )
 
 
+@pytest.mark.parametrize(
+    "input",
+    (
+        "2021-06-03 13:00:00.000000+00:00",
+        "1986-07-09T12:00:00Z",
+        "2016-10-19 15:22:05.588122+0100",
+        "2016-10-19",
+        "2021-01-01 00:00:01",
+        "invalid",
+    ),
+)
 def test_as_datetime_local(hass: HomeAssistant, input) -> None:
-    """Test converting a timestamp string to a date object and convert to local timezone."""
+    """Test converting a timestamp string to a date object."""
     expected = dt_util.parse_datetime(input)
     if expected is not None:
         expected = str(dt_util.as_local(expected))
@@ -1190,6 +1201,19 @@ def test_as_datetime_local(hass: HomeAssistant, input) -> None:
     assert (
         template.Template(
             f"{{{{ '{input}' | as_datetime(local=true) }}}}", hass
+        ).async_render()
+        == expected
+    )
+
+    assert (
+        template.Template(
+            f"{{{{ as_datetime('{input}', local=true) }}}}", hass
+        ).async_render()
+        == expected
+    )
+    assert (
+        template.Template(
+            f"{{{{ '{input}' | as_datetime(true) }}}}", hass
         ).async_render()
         == expected
     )
@@ -1342,7 +1366,7 @@ def test_as_datetime_from_datetime_local(hass: HomeAssistant, input, output) -> 
 
 def test_as_datetime_default(hass: HomeAssistant) -> None:
     """Test converting a UNIX timestamp to a date object."""
-    tests = ["invalid", ["a", "list"], {"a": "dict"}]
+    tests = ['"invalid"', ["a", "list"], {"a": "dict"}]
     for input in tests:
         # expected = dt_util.parse_datetime(input)
         assert (
