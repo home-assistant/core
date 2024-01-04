@@ -541,7 +541,7 @@ async def test_state_subscription(
         Awaitable[MockESPHomeDevice],
     ],
 ) -> None:
-    """Test we subscribe to state changes."""
+    """Test ESPHome subscribes to state changes."""
     device: MockESPHomeDevice = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=[],
