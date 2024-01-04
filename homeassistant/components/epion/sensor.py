@@ -1,27 +1,24 @@
 """Support for Epion API."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any
-
-from epion import Epion
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
-    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfPressure, UnitOfTemperature, CONCENTRATION_PARTS_PER_MILLION
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    PERCENTAGE,
+    UnitOfPressure,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_SITE_ID, DATA_API_CLIENT, DOMAIN, LOGGER
-
-
+from .const import DATA_API_CLIENT, DOMAIN
 
 
 async def async_setup_entry(
@@ -34,7 +31,7 @@ async def async_setup_entry(
 
     entities = []
     current_data = epion_base.last_response
-    for epion_device in current_data['devices']:
+    for epion_device in current_data["devices"]:
         # Relevant keys are: deviceId, deviceName, locationId, lastMeasurement, co2, temperature, humidity, pressure
         entities.append(EpionSensor(epion_base, epion_device, "co2", hass))
         entities.append(EpionSensor(epion_base, epion_device, "temperature", hass))
@@ -73,11 +70,13 @@ class EpionSensor(SensorEntity):
 
         self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, epion_device['deviceId'])},
+            identifiers={(DOMAIN, epion_device["deviceId"])},
             manufacturer="Epion",
-            name=epion_device['deviceName']
+            name=epion_device["deviceName"],
         )
-        self.entity_id = generate_entity_id("sensor.{}", f"{epion_device['deviceId']}_{key}", hass=hass)
+        self.entity_id = generate_entity_id(
+            "sensor.{}", f"{epion_device['deviceId']}_{key}", hass=hass
+        )
 
     @property
     def unique_id(self):
@@ -86,14 +85,11 @@ class EpionSensor(SensorEntity):
 
     @property
     def name(self):
-        my_device_id = self._epion_device['deviceId']
+        my_device_id = self._epion_device["deviceId"]
         device_name = "Unknown"
 
         if my_device_id not in self._epion_base.device_data:
-            if "deviceName" in self._epion_device:
-                device_name = self._epion_device["deviceName"]
-            else:
-                device_name = my_device_id
+            device_name = self._epion_device.get("deviceName", my_device_id)
         else:
             my_device = self._epion_base.device_data[my_device_id]
             device_name = my_device["deviceName"]
@@ -112,14 +108,14 @@ class EpionSensor(SensorEntity):
 
     def extract_value(self) -> float | None:
         """Extract the sensor measurement value from the cached data, or None if it can't be found."""
-        my_device_id = self._epion_device['deviceId']
+        my_device_id = self._epion_device["deviceId"]
         if my_device_id not in self._epion_base.device_data:
-            return None# No data available, this can happen during startup or if the device (temporarily) stopped sending data
+            return None  # No data available, this can happen during startup or if the device (temporarily) stopped sending data
 
         my_device = self._epion_base.device_data[my_device_id]
 
         if self._measurement_key not in my_device:
-            return None# No relevant measurement available
+            return None  # No relevant measurement available
 
         measurement = my_device[self._measurement_key]
 

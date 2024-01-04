@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import socket
 
-from requests.exceptions import ConnectTimeout, HTTPError
 from epion import Epion
+from requests.exceptions import ConnectTimeout, HTTPError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
@@ -13,8 +13,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-
-from .const import CONF_SITE_ID, DATA_API_CLIENT, DOMAIN, LOGGER, REFRESH_INTERVAL
+from .const import DATA_API_CLIENT, DOMAIN, LOGGER, REFRESH_INTERVAL
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -35,7 +34,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.error("Epion account is not active")
         return False
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {DATA_API_CLIENT: EpionBase(hass, api, response)}
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        DATA_API_CLIENT: EpionBase(hass, api, response)
+    }
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
@@ -47,6 +48,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         del hass.data[DOMAIN][entry.entry_id]
     return unload_ok
 
+
 class EpionBase:
     """An object to hold the Epion API instance."""
 
@@ -57,12 +59,13 @@ class EpionBase:
         self.last_response = last_response
         self.device_data = {}
 
-    def updateNow(self):
+    def update_now(self):
+        """Run the update now."""
         self.last_response = self.epion.get_current()
-        for epion_device in self.last_response['devices']:
-            self.device_data[epion_device['deviceId']] = epion_device
+        for epion_device in self.last_response["devices"]:
+            self.device_data[epion_device["deviceId"]] = epion_device
 
     @Throttle(REFRESH_INTERVAL)
     async def async_update(self):
         """Update all Epion data."""
-        await self.hass.async_add_executor_job(self.updateNow)
+        await self.hass.async_add_executor_job(self.update_now)
