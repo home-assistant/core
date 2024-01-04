@@ -6,7 +6,6 @@ MOCK_USER_INPUT: dict[str, Any] = {
     "host": "0.0.0.0",
     "username": "username",
     "password": "password",
-    "version": 3,
     "port": 61208,
     "ssl": False,
     "verify_ssl": True,
