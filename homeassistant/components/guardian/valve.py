@@ -47,8 +47,10 @@ class GuardianValveState(StrEnum):
 
 
 @dataclass(frozen=True)
-class ValveDescriptionMixin:
-    """Define an entity description mixin for Guardian valves."""
+class ValveControllerValveDescription(
+    ValveEntityDescription, ValveControllerEntityDescription
+):
+    """Describe a Guardian valve controller valve."""
 
     extra_state_attributes_fn: Callable[[dict[str, Any]], Mapping[str, Any]]
     is_closed_fn: Callable[[dict[str, Any]], bool]
@@ -57,13 +59,6 @@ class ValveDescriptionMixin:
     close_coro_fn: Callable[[Client], Awaitable]
     halt_coro_fn: Callable[[Client], Awaitable]
     open_coro_fn: Callable[[Client], Awaitable]
-
-
-@dataclass(frozen=True)
-class ValveControllerValveDescription(
-    ValveEntityDescription, ValveControllerEntityDescription, ValveDescriptionMixin
-):
-    """Describe a Guardian valve controller valve."""
 
 
 async def async_close_valve(client: Client) -> None:
