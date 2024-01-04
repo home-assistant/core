@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import zigpy.profiles.zha
+from zigpy.zcl.clusters import hvac
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.homeautomation as homeautomation
 import zigpy.zcl.clusters.measurement as measurement
@@ -278,6 +279,19 @@ async def async_test_device_temperature(hass, cluster, entity_id):
     assert_state(hass, entity_id, "29.0", UnitOfTemperature.CELSIUS)
 
 
+async def async_test_setpoint_change_source(hass, cluster, entity_id):
+    """Test the translation of numerical state into enum text."""
+    await send_attributes_report(hass, cluster, {0x0030: 0x01})
+    hass_state = hass.states.get(entity_id)
+    assert hass_state.state == "Schedule"
+
+
+async def async_test_pi_heating_demand(hass, cluster, entity_id):
+    """Test pi heating demand is correctly returned."""
+    await send_attributes_report(hass, cluster, {0x0008: 1})
+    assert_state(hass, entity_id, "1.0", "%")
+
+
 @pytest.mark.parametrize(
     (
         "cluster_id",
@@ -412,6 +426,26 @@ async def async_test_device_temperature(hass, cluster, entity_id):
             async_test_device_temperature,
             1,
             None,
+            None,
+        ),
+        (
+            hvac.Thermostat.cluster_id,
+            "setpoint_change_source",
+            async_test_setpoint_change_source,
+            10,
+            {
+                "setpoint_change_source": 0x00,
+            },
+            None,
+        ),
+        (
+            hvac.Thermostat.cluster_id,
+            "pi_heating_demand",
+            async_test_pi_heating_demand,
+            10,
+            {
+                "pi_heating_demand": None,
+            },
             None,
         ),
     ),
