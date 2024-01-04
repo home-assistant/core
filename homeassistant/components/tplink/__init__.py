@@ -19,10 +19,11 @@ from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_ALIAS,
     CONF_AUTHENTICATION,
     CONF_HOST,
     CONF_MAC,
-    CONF_NAME,
+    CONF_MODEL,
     CONF_PASSWORD,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STARTED,
@@ -48,8 +49,7 @@ from .const import (
 from .coordinator import TPLinkDataUpdateCoordinator
 from .models import TPLinkData
 
-# DISCOVERY_INTERVAL = timedelta(minutes=15)
-DISCOVERY_INTERVAL = timedelta(seconds=30)
+DISCOVERY_INTERVAL = timedelta(minutes=15)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,7 +69,7 @@ def async_trigger_discovery(
             DOMAIN,
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={
-                CONF_NAME: device.alias,
+                CONF_ALIAS: device.alias,
                 CONF_HOST: device.host,
                 CONF_MAC: formatted_mac,
                 CONF_DEVICE_CONFIG: device.config.to_dict(
@@ -102,8 +102,7 @@ async def async_discover_devices(hass: HomeAssistant) -> dict[str, SmartDevice]:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the TP-Link component."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
 
     if discovered_devices := await async_discover_devices(hass):
         async_trigger_discovery(hass, discovered_devices)
@@ -149,12 +148,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from ex
 
     device_config_dict = device.config.to_dict(credentials_hash=device.credentials_hash)
+    updates = {}
     if device_config_dict != config_dict:
+        updates[CONF_DEVICE_CONFIG] = device_config_dict
+    if entry.data.get(CONF_ALIAS) != device.alias:
+        updates[CONF_ALIAS] = device.alias
+    if entry.data.get(CONF_MODEL) != device.model:
+        updates[CONF_MODEL] = device.model
+    if updates:
         hass.config_entries.async_update_entry(
             entry,
             data={
                 **entry.data,
-                CONF_DEVICE_CONFIG: device_config_dict,
+                **updates,
             },
         )
     found_mac = dr.format_mac(device.mac)
@@ -220,10 +226,8 @@ async def get_credentials(hass: HomeAssistant) -> Optional[Credentials]:
 
 async def set_credentials(hass: HomeAssistant, username: str, password: str) -> None:
     """Save the credentials to HASS data."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
     auth = {
         CONF_USERNAME: username,
         CONF_PASSWORD: password,
     }
-    hass.data[DOMAIN][CONF_AUTHENTICATION] = auth
+    hass.data.setdefault(DOMAIN, {})[CONF_AUTHENTICATION] = auth

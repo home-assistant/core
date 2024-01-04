@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime
 from typing import Any, Optional
 
 from kasa import (
@@ -29,7 +28,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -39,8 +37,6 @@ from .const import CONF_DEVICE_CONFIG, CONNECT_TIMEOUT, DOMAIN
 STEP_AUTH_DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
 )
-
-REAUTH_REFLOW_CALL_LATER_SECS = 0.2
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -132,9 +128,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_discovery_confirm()
 
         if user_input:
-            credentials = Credentials(
-                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-            )
+            username = user_input[CONF_USERNAME]
+            password = user_input[CONF_PASSWORD]
+            credentials = Credentials(username, password)
             try:
                 device = await self._async_try_connect(
                     self._discovered_device, credentials
@@ -145,14 +141,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
             else:
                 self._discovered_device = device
-                await set_credentials(
-                    self.hass, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-                )
-                async_call_later(
-                    self.hass,
-                    REAUTH_REFLOW_CALL_LATER_SECS,
-                    self._async_reload_requires_auth_entries,
-                )
+                await set_credentials(self.hass, username, password)
+                self.hass.async_create_task(self._async_reload_requires_auth_entries())
                 return await self.async_step_discovery_confirm()
 
         placeholders = {
@@ -195,6 +185,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if not (host := user_input[CONF_HOST]):
                 return await self.async_step_pick_device()
+            self._async_abort_entries_match({CONF_HOST: host})
             self.context[CONF_HOST] = host
             credentials = await get_credentials(self.hass)
             try:
@@ -222,9 +213,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         host = self.context[CONF_HOST]
         assert self._discovered_device is not None
         if user_input:
-            credentials = Credentials(
-                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-            )
+            username = user_input[CONF_USERNAME]
+            password = user_input[CONF_PASSWORD]
+            credentials = Credentials(username, password)
             try:
                 device = await self._async_try_connect(
                     self._discovered_device, credentials
@@ -234,14 +225,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except SmartDeviceException:
                 errors["base"] = "cannot_connect"
             else:
-                await set_credentials(
-                    self.hass, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-                )
-                async_call_later(
-                    self.hass,
-                    REAUTH_REFLOW_CALL_LATER_SECS,
-                    self._async_reload_requires_auth_entries,
-                )
+                await set_credentials(self.hass, username, password)
+                self.hass.async_create_task(self._async_reload_requires_auth_entries())
                 return self._async_create_entry_from_device(device)
 
         return self.async_show_form(
@@ -293,7 +278,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
         )
 
-    async def _async_reload_requires_auth_entries(self, _now: datetime) -> None:
+    async def _async_reload_requires_auth_entries(self) -> None:
         entries: list[ConfigEntry] = self._async_current_entries(include_ignore=False)
         for entry in entries:
             if self.reauth_entry and entry.entry_id == self.reauth_entry.entry_id:
@@ -325,7 +310,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self,
         host: str,
         credentials: Optional[Credentials],
-        raise_on_progress: bool = True,
+        raise_on_progress: bool,
     ) -> SmartDevice:
         """Try to connect."""
         self._discovered_device = await Discover.discover_single(
@@ -380,32 +365,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input:
             host = self.reauth_entry.data[CONF_HOST]
-            credentials = Credentials(
-                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-            )
+            username = user_input[CONF_USERNAME]
+            password = user_input[CONF_PASSWORD]
+            credentials = Credentials(username, password)
             try:
                 await self._async_try_discover_and_update(
-                    host, credentials=credentials, raise_on_progress=True
+                    host,
+                    credentials=credentials,
+                    raise_on_progress=True,
                 )
             except AuthenticationException:
                 errors["base"] = "invalid_auth"
             except SmartDeviceException:
                 errors["base"] = "unknown"
             else:
-                await set_credentials(
-                    self.hass, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-                )
+                await set_credentials(self.hass, username, password)
                 await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-                async_call_later(
-                    self.hass,
-                    REAUTH_REFLOW_CALL_LATER_SECS,
-                    self._async_reload_requires_auth_entries,
-                )
+                self.hass.async_create_task(self._async_reload_requires_auth_entries())
                 return self.async_abort(reason="reauth_successful")
 
         # Old config entries will not have these values.
-        alias = self.reauth_entry.data.get(CONF_ALIAS) or "[alias]"
-        model = self.reauth_entry.data.get(CONF_MODEL) or "[model]"
+        alias = self.reauth_entry.data.get(CONF_ALIAS) or "unknown"
+        model = self.reauth_entry.data.get(CONF_MODEL) or "unknown"
 
         placeholders = {
             "name": alias,

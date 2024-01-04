@@ -20,6 +20,7 @@ from . import (
     IP_ADDRESS,
     MAC_ADDRESS,
     _mocked_dimmer,
+    _patch_connect,
     _patch_discovery,
     _patch_single_discovery,
 )
@@ -57,7 +58,7 @@ async def test_config_entry_reload(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    with _patch_discovery(), _patch_single_discovery():
+    with _patch_discovery(), _patch_single_discovery(), _patch_connect():
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
         assert already_migrated_config_entry.state == ConfigEntryState.LOADED
@@ -72,7 +73,9 @@ async def test_config_entry_retry(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    with _patch_discovery(no_device=True), _patch_single_discovery(no_device=True):
+    with _patch_discovery(no_device=True), _patch_single_discovery(
+        no_device=True
+    ), _patch_connect(no_device=True):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
         assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
@@ -102,7 +105,9 @@ async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
         original_name="Rollout dimmer",
     )
 
-    with _patch_discovery(device=dimmer), _patch_single_discovery(device=dimmer):
+    with _patch_discovery(device=dimmer), _patch_single_discovery(
+        device=dimmer
+    ), _patch_connect(device=dimmer):
         await setup.async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
@@ -126,7 +131,7 @@ async def test_config_entry_wrong_mac_Address(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=mismatched_mac
     )
     already_migrated_config_entry.add_to_hass(hass)
-    with _patch_discovery(), _patch_single_discovery():
+    with _patch_discovery(), _patch_single_discovery(), _patch_connect():
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
         assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
