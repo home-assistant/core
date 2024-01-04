@@ -1,10 +1,9 @@
 """Test the Ambient Weather Network config flow."""
 
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 from aioambient import OpenAPI
-from geopy import Location, Nominatim
 import pytest
 
 from homeassistant.components.ambient_network.const import DOMAIN
@@ -21,7 +20,6 @@ async def test_happy_path(
     open_api: OpenAPI,
     devices_by_location: list[dict[str, Any]],
     config_entry: ConfigEntry,
-    geopy: Nominatim,
 ) -> None:
     """Test the happy path."""
 
@@ -43,30 +41,15 @@ async def test_happy_path(
         )
 
     assert user_result["type"] == FlowResultType.FORM
-    assert user_result["step_id"] == "stations"
+    assert user_result["step_id"] == "station"
     assert user_result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.ambient_network.config_flow.Nominatim",
-        return_value=geopy,
-    ), patch.object(
-        geopy,
-        "reverse",
-        Mock(
-            return_value=Location(
-                address="", point="0,0", raw={"address": {"city": "My City"}}
-            )
-        ),
-    ):
-        stations_result = await hass.config_entries.flow.async_configure(
-            user_result["flow_id"],
-            {
-                "stations": [
-                    "AA:AA:AA:AA:AA:AA,Station A1",
-                    "BB:BB:BB:BB:BB:BB,Station B2",
-                ]
-            },
-        )
+    stations_result = await hass.config_entries.flow.async_configure(
+        user_result["flow_id"],
+        {
+            "station": "AA:AA:AA:AA:AA:AA,Station A1",
+        },
+    )
 
     assert stations_result["type"] == FlowResultType.FORM
     assert stations_result["step_id"] == "station_name"
@@ -111,49 +94,11 @@ async def test_no_station_found(
     assert user_result["reason"] == "no_stations_found"
 
 
-async def test_no_station_selected(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    open_api: OpenAPI,
-    devices_by_location: list[dict[str, Any]],
-) -> None:
-    """Test that we abort when there is no station selected."""
-
-    setup_result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert setup_result["type"] == FlowResultType.FORM
-    assert setup_result["step_id"] == "user"
-    assert setup_result["errors"] == {}
-
-    with patch.object(
-        open_api,
-        "get_devices_by_location",
-        AsyncMock(return_value=devices_by_location),
-    ):
-        user_result = await hass.config_entries.flow.async_configure(
-            setup_result["flow_id"],
-            {"location": {"latitude": 10.0, "longitude": 20.0, "radius": 1.0}},
-        )
-
-    assert user_result["type"] == FlowResultType.FORM
-    assert user_result["step_id"] == "stations"
-    assert user_result["errors"] == {}
-
-    stations_result = await hass.config_entries.flow.async_configure(
-        user_result["flow_id"], {"stations": []}
-    )
-
-    assert stations_result["type"] == FlowResultType.ABORT
-    assert stations_result["reason"] == "no_stations_selected"
-
-
 async def test_empty_station_name(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     open_api: OpenAPI,
     devices_by_location: list[dict[str, Any]],
-    geopy: Nominatim,
 ) -> None:
     """Test that we abort if the station name is empty."""
 
@@ -175,26 +120,15 @@ async def test_empty_station_name(
         )
 
     assert user_result["type"] == FlowResultType.FORM
-    assert user_result["step_id"] == "stations"
+    assert user_result["step_id"] == "station"
     assert user_result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.ambient_network.config_flow.Nominatim",
-        return_value=geopy,
-    ), patch.object(
-        geopy,
-        "reverse",
-        Mock(side_effect=Exception("mocked error")),
-    ):
-        stations_result = await hass.config_entries.flow.async_configure(
-            user_result["flow_id"],
-            {
-                "stations": [
-                    "AA:AA:AA:AA:AA:AA,Station A1",
-                    "BB:BB:BB:BB:BB:BB,Station B2",
-                ]
-            },
-        )
+    stations_result = await hass.config_entries.flow.async_configure(
+        user_result["flow_id"],
+        {
+            "station": "AA:AA:AA:AA:AA:AA,Station A1",
+        },
+    )
 
     station_name_result = await hass.config_entries.flow.async_configure(
         stations_result["flow_id"], {"station_name": ""}

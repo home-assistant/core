@@ -5,7 +5,6 @@ import logging
 
 DOMAIN = "ambient_network"
 
-ENTITY_STATIONS = "stations"
 ENTITY_MAC_ADDRESS = "mac_address"
 ENTITY_STATION_NAME = "station_name"
 

@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/ambient_network",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "loggers": ["aioambient", "geopy"],
+  "loggers": ["aioambient"],
   "requirements": ["aioambient==2023.12.0"]
 }

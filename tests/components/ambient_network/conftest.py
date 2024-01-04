@@ -6,7 +6,6 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aioambient import OpenAPI
-from geopy import Nominatim
 import pytest
 
 from homeassistant.components import ambient_network
@@ -75,26 +74,8 @@ def config_entry_fixture() -> MockConfigEntry:
     return MockConfigEntry(
         domain=ambient_network.DOMAIN,
         title="virtual_station",
-        data={
-            "station_name": "virtual_station",
-            "stations": [
-                {
-                    "station_name": "Station A1",
-                    "mac_address": "AA:AA:AA:AA:AA:AA",
-                },
-                {
-                    "station_name": "Station B2",
-                    "mac_address": "BB:BB:BB:BB:BB:BB",
-                },
-            ],
-        },
+        data={"station_name": "virtual_station", "mac_address": "AA:AA:AA:AA:AA:AA"},
     )
-
-
-@pytest.fixture(name="geopy")
-def geopy_fixture() -> Nominatim:
-    """Create a mock Nominatim object."""
-    return AsyncMock()
 
 
 async def setup_platform(
