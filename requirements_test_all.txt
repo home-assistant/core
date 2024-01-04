@@ -103,7 +103,7 @@ PyViCare==2.32.0
 PyXiaomiGateway==0.14.3
 
 # homeassistant.components.rachio
-RachioPy==1.0.3
+RachioPy==1.1.0
 
 # homeassistant.components.python_script
 RestrictedPython==7.0
@@ -585,7 +585,7 @@ discovery30303==0.2.1
 dremel3dpy==2.1.1
 
 # homeassistant.components.drop_connect
-dropmqttapi==1.0.1
+dropmqttapi==1.0.2
 
 # homeassistant.components.dsmr
 dsmr-parser==1.3.1
@@ -1382,7 +1382,7 @@ pyialarm==2.2.0
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.5.2
+pyinsteon==1.5.3
 
 # homeassistant.components.ipma
 pyipma==3.0.7
