@@ -55,6 +55,12 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieBinarySensorEntityDescription(
+        key="charge_state_conn_charge_cable",
+        is_on=lambda x: x != "<invalid>",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    ),
+    TessieBinarySensorEntityDescription(
         key="climate_state_auto_seat_climate_left",
         device_class=BinarySensorDeviceClass.HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
