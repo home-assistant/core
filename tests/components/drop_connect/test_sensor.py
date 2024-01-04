@@ -94,7 +94,7 @@ from tests.typing import MqttMockHAClient
         "ro_filter",
     ],
 )
-async def test_sensors_hub(
+async def test_sensors(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
     entity_registry: er.EntityRegistry,
@@ -104,7 +104,7 @@ async def test_sensors_hub(
     reset: str,
     data: str,
 ) -> None:
-    """Test DROP sensors for hubs."""
+    """Test DROP sensors."""
     config_entry.add_to_hass(hass)
 
     with patch("homeassistant.components.drop_connect.PLATFORMS", [Platform.SENSOR]):

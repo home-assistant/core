@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors_hub[filter][sensor.filter_battery-entry]
+# name: test_sensors[filter][sensor.filter_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -35,7 +35,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors_hub[filter][sensor.filter_battery-state]
+# name: test_sensors[filter][sensor.filter_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -50,7 +50,7 @@
     'state': '12',
   })
 # ---
-# name: test_sensors_hub[filter][sensor.filter_current_water_pressure-entry]
+# name: test_sensors[filter][sensor.filter_current_water_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -89,7 +89,7 @@
     'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
   })
 # ---
-# name: test_sensors_hub[filter][sensor.filter_current_water_pressure-state]
+# name: test_sensors[filter][sensor.filter_current_water_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
@@ -104,7 +104,7 @@
     'state': '263.3797174',
   })
 # ---
-# name: test_sensors_hub[filter][sensor.filter_water_flow_rate-entry]
+# name: test_sensors[filter][sensor.filter_water_flow_rate-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -140,7 +140,7 @@
     'unit_of_measurement': 'gpm',
   })
 # ---
-# name: test_sensors_hub[filter][sensor.filter_water_flow_rate-state]
+# name: test_sensors[filter][sensor.filter_water_flow_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Filter Water flow rate',
@@ -155,7 +155,7 @@
     'state': '19.84',
   })
 # ---
-# name: test_sensors_hub[hub][sensor.hub_drop_1_c0ffee_average_daily_water_usage-entry]
+# name: test_sensors[hub][sensor.hub_drop_1_c0ffee_average_daily_water_usage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -194,7 +194,7 @@
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
-# name: test_sensors_hub[hub][sensor.hub_drop_1_c0ffee_average_daily_water_usage-state]
+# name: test_sensors[hub][sensor.hub_drop_1_c0ffee_average_daily_water_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
@@ -209,7 +209,7 @@
     'state': '287.691295584',
   })
 # ---
-# name: test_sensors_hub[hub][sensor.hub_drop_1_c0ffee_battery-entry]
+# name: test_sensors[hub][sensor.hub_drop_1_c0ffee_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -245,7 +245,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors_hub[hub][sensor.hub_drop_1_c0ffee_battery-state]
+# name: test_sensors[hub][sensor.hub_drop_1_c0ffee_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -260,7 +260,7 @@
     'state': '50',
   })
 # ---
-# name: test_sensors_hub[hub][sensor.hub_drop_1_c0ffee_current_water_pressure-entry]
+# name: test_sensors[hub][sensor.hub_drop_1_c0ffee_current_water_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -299,7 +299,7 @@
     'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
   })
 # ---
-# name: test_sensors_hub[hub][sensor.hub_drop_1_c0ffee_current_water_pressure-state]
+# name: test_sensors[hub][sensor.hub_drop_1_c0ffee_current_water_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
@@ -314,7 +314,7 @@
     'state': '428.8538854',
   })
 # ---
-# name: test_sensors_hub[hub][sensor.hub_drop_1_c0ffee_high_water_pressure_today-entry]
+# name: test_sensors[hub][sensor.hub_drop_1_c0ffee_high_water_pressure_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -353,7 +353,7 @@
     'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
   })
 # ---
-# name: test_sensors_hub[hub][sensor.hub_drop_1_c0ffee_high_water_pressure_today-state]
+# name: test_sensors[hub][sensor.hub_drop_1_c0ffee_high_water_pressure_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
@@ -368,7 +368,7 @@
     'state': '427.474934',
   })
 # ---
-# name: test_sensors_hub[hub][sensor.hub_drop_1_c0ffee_low_water_pressure_today-entry]
+# name: test_sensors[hub][sensor.hub_drop_1_c0ffee_low_water_pressure_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -407,7 +407,7 @@
     'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
   })
 # ---
-# name: test_sensors_hub[hub][sensor.hub_drop_1_c0ffee_low_water_pressure_today-state]
+# name: test_sensors[hub][sensor.hub_drop_1_c0ffee_low_water_pressure_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
@@ -422,7 +422,7 @@
     'state': '420.580177',
   })
 # ---
-# name: test_sensors_hub[hub][sensor.hub_drop_1_c0ffee_peak_water_flow_rate_today-entry]
+# name: test_sensors[hub][sensor.hub_drop_1_c0ffee_peak_water_flow_rate_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -458,7 +458,7 @@
     'unit_of_measurement': 'gpm',
   })
 # ---
-# name: test_sensors_hub[hub][sensor.hub_drop_1_c0ffee_peak_water_flow_rate_today-state]
+# name: test_sensors[hub][sensor.hub_drop_1_c0ffee_peak_water_flow_rate_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Hub DROP-1_C0FFEE Peak water flow rate today',
@@ -473,7 +473,7 @@
     'state': '13.8',
   })
 # ---
-# name: test_sensors_hub[hub][sensor.hub_drop_1_c0ffee_total_water_used_today-entry]
+# name: test_sensors[hub][sensor.hub_drop_1_c0ffee_total_water_used_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -512,7 +512,7 @@
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
-# name: test_sensors_hub[hub][sensor.hub_drop_1_c0ffee_total_water_used_today-state]
+# name: test_sensors[hub][sensor.hub_drop_1_c0ffee_total_water_used_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
@@ -527,7 +527,7 @@
     'state': '881.13030096168',
   })
 # ---
-# name: test_sensors_hub[hub][sensor.hub_drop_1_c0ffee_water_flow_rate-entry]
+# name: test_sensors[hub][sensor.hub_drop_1_c0ffee_water_flow_rate-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -563,7 +563,7 @@
     'unit_of_measurement': 'gpm',
   })
 # ---
-# name: test_sensors_hub[hub][sensor.hub_drop_1_c0ffee_water_flow_rate-state]
+# name: test_sensors[hub][sensor.hub_drop_1_c0ffee_water_flow_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Hub DROP-1_C0FFEE Water flow rate',
@@ -578,7 +578,7 @@
     'state': '5.77',
   })
 # ---
-# name: test_sensors_hub[leak][sensor.leak_detector_battery-entry]
+# name: test_sensors[leak][sensor.leak_detector_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -614,7 +614,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors_hub[leak][sensor.leak_detector_battery-state]
+# name: test_sensors[leak][sensor.leak_detector_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -629,7 +629,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors_hub[leak][sensor.leak_detector_temperature-entry]
+# name: test_sensors[leak][sensor.leak_detector_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -665,7 +665,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors_hub[leak][sensor.leak_detector_temperature-state]
+# name: test_sensors[leak][sensor.leak_detector_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -680,7 +680,7 @@
     'state': '20.1111111111111',
   })
 # ---
-# name: test_sensors_hub[protection_valve][sensor.protection_valve_battery-entry]
+# name: test_sensors[protection_valve][sensor.protection_valve_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -716,7 +716,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors_hub[protection_valve][sensor.protection_valve_battery-state]
+# name: test_sensors[protection_valve][sensor.protection_valve_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -731,7 +731,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors_hub[protection_valve][sensor.protection_valve_current_water_pressure-entry]
+# name: test_sensors[protection_valve][sensor.protection_valve_current_water_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -770,7 +770,7 @@
     'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
   })
 # ---
-# name: test_sensors_hub[protection_valve][sensor.protection_valve_current_water_pressure-state]
+# name: test_sensors[protection_valve][sensor.protection_valve_current_water_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
@@ -785,7 +785,7 @@
     'state': '422.6486041',
   })
 # ---
-# name: test_sensors_hub[protection_valve][sensor.protection_valve_temperature-entry]
+# name: test_sensors[protection_valve][sensor.protection_valve_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -821,7 +821,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors_hub[protection_valve][sensor.protection_valve_temperature-state]
+# name: test_sensors[protection_valve][sensor.protection_valve_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -836,7 +836,7 @@
     'state': '21.3888888888889',
   })
 # ---
-# name: test_sensors_hub[protection_valve][sensor.protection_valve_water_flow_rate-entry]
+# name: test_sensors[protection_valve][sensor.protection_valve_water_flow_rate-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -872,7 +872,7 @@
     'unit_of_measurement': 'gpm',
   })
 # ---
-# name: test_sensors_hub[protection_valve][sensor.protection_valve_water_flow_rate-state]
+# name: test_sensors[protection_valve][sensor.protection_valve_water_flow_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Protection Valve Water flow rate',
@@ -887,7 +887,7 @@
     'state': '7.1',
   })
 # ---
-# name: test_sensors_hub[pump_controller][sensor.pump_controller_current_water_pressure-entry]
+# name: test_sensors[pump_controller][sensor.pump_controller_current_water_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -926,7 +926,7 @@
     'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
   })
 # ---
-# name: test_sensors_hub[pump_controller][sensor.pump_controller_current_water_pressure-state]
+# name: test_sensors[pump_controller][sensor.pump_controller_current_water_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
@@ -941,7 +941,7 @@
     'state': '428.8538854',
   })
 # ---
-# name: test_sensors_hub[pump_controller][sensor.pump_controller_temperature-entry]
+# name: test_sensors[pump_controller][sensor.pump_controller_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -977,7 +977,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors_hub[pump_controller][sensor.pump_controller_temperature-state]
+# name: test_sensors[pump_controller][sensor.pump_controller_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -992,7 +992,7 @@
     'state': '20.4444444444444',
   })
 # ---
-# name: test_sensors_hub[pump_controller][sensor.pump_controller_water_flow_rate-entry]
+# name: test_sensors[pump_controller][sensor.pump_controller_water_flow_rate-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1028,7 +1028,7 @@
     'unit_of_measurement': 'gpm',
   })
 # ---
-# name: test_sensors_hub[pump_controller][sensor.pump_controller_water_flow_rate-state]
+# name: test_sensors[pump_controller][sensor.pump_controller_water_flow_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Pump Controller Water flow rate',
@@ -1043,7 +1043,7 @@
     'state': '2.2',
   })
 # ---
-# name: test_sensors_hub[ro_filter][sensor.ro_filter_cartridge_1_life_remaining-entry]
+# name: test_sensors[ro_filter][sensor.ro_filter_cartridge_1_life_remaining-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1079,7 +1079,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors_hub[ro_filter][sensor.ro_filter_cartridge_1_life_remaining-state]
+# name: test_sensors[ro_filter][sensor.ro_filter_cartridge_1_life_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'RO Filter Cartridge 1 life remaining',
@@ -1094,7 +1094,7 @@
     'state': '59',
   })
 # ---
-# name: test_sensors_hub[ro_filter][sensor.ro_filter_cartridge_2_life_remaining-entry]
+# name: test_sensors[ro_filter][sensor.ro_filter_cartridge_2_life_remaining-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1130,7 +1130,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors_hub[ro_filter][sensor.ro_filter_cartridge_2_life_remaining-state]
+# name: test_sensors[ro_filter][sensor.ro_filter_cartridge_2_life_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'RO Filter Cartridge 2 life remaining',
@@ -1145,7 +1145,7 @@
     'state': '80',
   })
 # ---
-# name: test_sensors_hub[ro_filter][sensor.ro_filter_cartridge_3_life_remaining-entry]
+# name: test_sensors[ro_filter][sensor.ro_filter_cartridge_3_life_remaining-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1181,7 +1181,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors_hub[ro_filter][sensor.ro_filter_cartridge_3_life_remaining-state]
+# name: test_sensors[ro_filter][sensor.ro_filter_cartridge_3_life_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'RO Filter Cartridge 3 life remaining',
@@ -1196,7 +1196,7 @@
     'state': '59',
   })
 # ---
-# name: test_sensors_hub[ro_filter][sensor.ro_filter_inlet_tds-entry]
+# name: test_sensors[ro_filter][sensor.ro_filter_inlet_tds-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1232,7 +1232,7 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensors_hub[ro_filter][sensor.ro_filter_inlet_tds-state]
+# name: test_sensors[ro_filter][sensor.ro_filter_inlet_tds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'RO Filter Inlet TDS',
@@ -1247,7 +1247,7 @@
     'state': '164',
   })
 # ---
-# name: test_sensors_hub[ro_filter][sensor.ro_filter_outlet_tds-entry]
+# name: test_sensors[ro_filter][sensor.ro_filter_outlet_tds-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1283,7 +1283,7 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensors_hub[ro_filter][sensor.ro_filter_outlet_tds-state]
+# name: test_sensors[ro_filter][sensor.ro_filter_outlet_tds-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'RO Filter Outlet TDS',
@@ -1298,7 +1298,7 @@
     'state': '9',
   })
 # ---
-# name: test_sensors_hub[softener][sensor.softener_battery-entry]
+# name: test_sensors[softener][sensor.softener_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1334,7 +1334,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors_hub[softener][sensor.softener_battery-state]
+# name: test_sensors[softener][sensor.softener_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -1349,7 +1349,7 @@
     'state': '20',
   })
 # ---
-# name: test_sensors_hub[softener][sensor.softener_capacity_remaining-entry]
+# name: test_sensors[softener][sensor.softener_capacity_remaining-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1388,7 +1388,7 @@
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
-# name: test_sensors_hub[softener][sensor.softener_capacity_remaining-state]
+# name: test_sensors[softener][sensor.softener_capacity_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
@@ -1403,7 +1403,7 @@
     'state': '3785.411784',
   })
 # ---
-# name: test_sensors_hub[softener][sensor.softener_current_water_pressure-entry]
+# name: test_sensors[softener][sensor.softener_current_water_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1442,7 +1442,7 @@
     'unit_of_measurement': <UnitOfPressure.KPA: 'kPa'>,
   })
 # ---
-# name: test_sensors_hub[softener][sensor.softener_current_water_pressure-state]
+# name: test_sensors[softener][sensor.softener_current_water_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
@@ -1457,7 +1457,7 @@
     'state': '348.1852285',
   })
 # ---
-# name: test_sensors_hub[softener][sensor.softener_water_flow_rate-entry]
+# name: test_sensors[softener][sensor.softener_water_flow_rate-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1493,7 +1493,7 @@
     'unit_of_measurement': 'gpm',
   })
 # ---
-# name: test_sensors_hub[softener][sensor.softener_water_flow_rate-state]
+# name: test_sensors[softener][sensor.softener_water_flow_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Softener Water flow rate',
