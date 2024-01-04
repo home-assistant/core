@@ -140,7 +140,7 @@ def handle_exceptions(
     ) -> None:
         """Wrap the provided function."""
         try:
-            await func(entity)
+            await func(entity, *args, **kwargs)
         except GuardianError as err:
             raise HomeAssistantError(err) from err
 
