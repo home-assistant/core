@@ -26,7 +26,7 @@ dependencies    = [
     "aiohttp==3.9.1",
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-url-dispatcher==0.3.0",
-    "aiohttp-zlib-ng==0.2.0",
+    "aiohttp-zlib-ng==0.1.3",
     "astral==2.2",
     "attrs==23.1.0",
     "atomicwrites-homeassistant==1.4.1",
