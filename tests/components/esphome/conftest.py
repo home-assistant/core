@@ -180,6 +180,9 @@ class MockESPHomeDevice:
         self.service_call_callback: Callable[[HomeassistantServiceCall], None]
         self.on_disconnect: Callable[[bool], None]
         self.on_connect: Callable[[bool], None]
+        self.home_assistant_state_subscription_callback: Callable[
+            [str, str | None], None
+        ]
 
     def set_state_callback(self, state_callback: Callable[[EntityState], None]) -> None:
         """Set the state callback."""
@@ -220,13 +223,13 @@ class MockESPHomeDevice:
         on_state_sub: Callable[[str, str | None], None],
     ) -> None:
         """Set the state call callback."""
-        self.state_callback = on_state_sub
+        self.home_assistant_state_subscription_callback = on_state_sub
 
     def mock_home_assistant_state_subscription(
         self, entity_id: str, attribute: str | None
     ) -> None:
         """Mock a state subscription."""
-        self.state_callback(entity_id, attribute)
+        self.home_assistant_state_subscription_callback(entity_id, attribute)
 
 
 async def _mock_generic_device_entry(
