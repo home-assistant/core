@@ -4422,6 +4422,16 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "SinopeHVACAction",
                 DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_hvac_action",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-513-pi_heating_demand"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["thermostat"],
+                DEV_SIG_ENT_MAP_CLASS: "PiHeatingDemand",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_pi_heating_demand",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-513-setpoint_change_source"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["thermostat"],
+                DEV_SIG_ENT_MAP_CLASS: "SetpointChangeSource",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_setpoint_change_source",
+            },
         },
     },
     {
@@ -4511,6 +4521,16 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["thermostat"],
                 DEV_SIG_ENT_MAP_CLASS: "SinopeHVACAction",
                 DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_hvac_action",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-513-pi_heating_demand"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["thermostat"],
+                DEV_SIG_ENT_MAP_CLASS: "PiHeatingDemand",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_pi_heating_demand",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-513-setpoint_change_source"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["thermostat"],
+                DEV_SIG_ENT_MAP_CLASS: "SetpointChangeSource",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_setpoint_change_source",
             },
         },
     },
@@ -4804,6 +4824,16 @@ DEVICES = [
                 DEV_SIG_CLUSTER_HANDLERS: ["thermostat"],
                 DEV_SIG_ENT_MAP_CLASS: "ThermostatHVACAction",
                 DEV_SIG_ENT_MAP_ID: "sensor.zen_within_zen_01_hvac_action",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-513-pi_heating_demand"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["thermostat"],
+                DEV_SIG_ENT_MAP_CLASS: "PiHeatingDemand",
+                DEV_SIG_ENT_MAP_ID: "sensor.zen_within_zen_01_pi_heating_demand",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-513-setpoint_change_source"): {
+                DEV_SIG_CLUSTER_HANDLERS: ["thermostat"],
+                DEV_SIG_ENT_MAP_CLASS: "SetpointChangeSource",
+                DEV_SIG_ENT_MAP_ID: "sensor.zen_within_zen_01_setpoint_change_source",
             },
         },
     },
