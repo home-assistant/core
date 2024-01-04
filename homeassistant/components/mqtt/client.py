@@ -93,10 +93,6 @@ SUBSCRIBE_COOLDOWN = 0.1
 UNSUBSCRIBE_COOLDOWN = 0.1
 TIMEOUT_ACK = 10
 
-MQTT_ENTRIES_NAMING_BLOG_URL = (
-    "https://developers.home-assistant.io/blog/2023-057-21-change-naming-mqtt-entities/"
-)
-
 SubscribePayloadType = str | bytes  # Only bytes if encoding is None
 
 
