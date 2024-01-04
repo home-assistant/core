@@ -160,6 +160,12 @@ jobs:
               sed -i "s|pyezviz|# pyezviz|g" ${requirement_file}
               sed -i "s|pykrakenapi|# pykrakenapi|g" ${requirement_file}
             fi
+
+            # Some speedups are only for 64-bit
+            if [ "${{ matrix.arch }}" = "x86_64" ] || [ "${{ matrix.arch }}" = "aarch64" ]; then
+              sed -i "s|aiohttp-zlib-ng|aiohttp-zlib-ng\[isal\]|g" ${requirement_file}
+            fi
+
           done
 
       - name: Split requirements all
