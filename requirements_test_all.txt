@@ -1313,7 +1313,7 @@ pydexcom==0.2.3
 pydiscovergy==2.0.5
 
 # homeassistant.components.hydrawise
-pydrawise==2023.11.0
+pydrawise==2024.1.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
