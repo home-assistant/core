@@ -12,14 +12,13 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import StreamlabsCoordinator
 from .const import DOMAIN
 from .coordinator import StreamlabsData
+from .entity import StreamlabsWaterEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -72,10 +71,8 @@ async def async_setup_entry(
     )
 
 
-class StreamLabsSensor(CoordinatorEntity[StreamlabsCoordinator], SensorEntity):
+class StreamLabsSensor(StreamlabsWaterEntity, SensorEntity):
     """Monitors the daily water usage."""
-
-    _attr_has_entity_name = True
 
     entity_description: StreamlabsWaterSensorEntityDescription
 
@@ -86,18 +83,8 @@ class StreamLabsSensor(CoordinatorEntity[StreamlabsCoordinator], SensorEntity):
         entity_description: StreamlabsWaterSensorEntityDescription,
     ) -> None:
         """Initialize the daily water usage device."""
-        super().__init__(coordinator)
-        self._location_id = location_id
-        self._attr_unique_id = f"{location_id}-{entity_description.key}"
+        super().__init__(coordinator, location_id, entity_description.key)
         self.entity_description = entity_description
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, location_id)}, name=self.location_data.name
-        )
-
-    @property
-    def location_data(self) -> StreamlabsData:
-        """Returns the data object."""
-        return self.coordinator.data[self._location_id]
 
     @property
     def native_value(self) -> StateType:

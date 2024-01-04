@@ -32,6 +32,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "away_mode": {
+        "name": "Away mode"
+      }
+    },
     "sensor": {
       "daily_usage": {
         "name": "Daily usage"
