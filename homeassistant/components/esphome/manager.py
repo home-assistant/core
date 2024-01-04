@@ -203,14 +203,19 @@ class ESPHomeManager:
                     template.render_complex(data_template, service.variables)
                 )
             except TemplateError as ex:
-                _LOGGER.error("Error rendering data template for %s: %s", self.host, ex)
+                _LOGGER.error(
+                    "Error rendering data template %s for %s: %s",
+                    service.data_template,
+                    self.host,
+                    ex,
+                )
                 return
 
         if service.is_event:
             device_id = self.device_id
             # ESPHome uses service call packet for both events and service calls
             # Ensure the user can only send events of form 'esphome.xyz'
-            if domain != "esphome":
+            if domain != DOMAIN:
                 _LOGGER.error(
                     "Can only generate events under esphome domain! (%s)", self.host
                 )
