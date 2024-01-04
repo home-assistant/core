@@ -6,10 +6,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall
+from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_MANUAL, DEFAULT_INTERVAL, DOMAIN, PLATFORMS
@@ -49,9 +50,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Fast.com from a config entry."""
     coordinator = FastdotcomDataUpdateCoordindator(hass)
 
-    async def _request_refresh(event: Event) -> None:
-        """Request a refresh."""
-        await coordinator.async_request_refresh()
+    async def _async_finish_startup(hass: HomeAssistant) -> None:
+        """Run this only when HA has finished its startup."""
+        await coordinator.async_config_entry_first_refresh()
+        await hass.config_entries.async_forward_entry_setups(
+            entry,
+            PLATFORMS,
+        )
 
     async def _request_refresh_service(call: ServiceCall) -> None:
         """Request a refresh via the service."""
@@ -67,19 +72,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         await coordinator.async_request_refresh()
 
-    if hass.state == CoreState.running:
-        await coordinator.async_config_entry_first_refresh()
-    else:
-        # Don't start the speedtest when HA is starting up
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _request_refresh)
-
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     hass.services.async_register(DOMAIN, "speedtest", _request_refresh_service)
 
-    await hass.config_entries.async_forward_entry_setups(
-        entry,
-        PLATFORMS,
-    )
+    async_at_started(hass, _async_finish_startup)
 
     return True
 
