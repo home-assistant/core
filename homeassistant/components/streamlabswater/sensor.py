@@ -27,7 +27,7 @@ async def async_setup_entry(
 
     entities = []
 
-    for location_id in coordinator.data.values():
+    for location_id in coordinator.data:
         entities.extend(
             [
                 StreamLabsDailyUsage(coordinator, location_id),
@@ -44,11 +44,13 @@ class StreamLabsDailyUsage(CoordinatorEntity[StreamlabsCoordinator], SensorEntit
 
     _attr_device_class = SensorDeviceClass.WATER
     _attr_native_unit_of_measurement = UnitOfVolume.GALLONS
+    _key = "daily_usage"
 
     def __init__(self, coordinator: StreamlabsCoordinator, location_id: str) -> None:
         """Initialize the daily water usage device."""
         super().__init__(coordinator)
         self._location_id = location_id
+        self._attr_unique_id = f"{location_id}-{self._key}"
 
     @property
     def location_data(self) -> StreamlabsData:
@@ -69,6 +71,8 @@ class StreamLabsDailyUsage(CoordinatorEntity[StreamlabsCoordinator], SensorEntit
 class StreamLabsMonthlyUsage(StreamLabsDailyUsage):
     """Monitors the monthly water usage."""
 
+    _key = "monthly_usage"
+
     @property
     def name(self) -> str:
         """Return the name for monthly usage."""
@@ -82,6 +86,8 @@ class StreamLabsMonthlyUsage(StreamLabsDailyUsage):
 
 class StreamLabsYearlyUsage(StreamLabsDailyUsage):
     """Monitors the yearly water usage."""
+
+    _key = "yearly_usage"
 
     @property
     def name(self) -> str:

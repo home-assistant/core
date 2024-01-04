@@ -34,6 +34,7 @@ from homeassistant.util.dt import utcnow
 from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
     CONF_COAP_PORT,
+    CONF_GEN,
     DEFAULT_COAP_PORT,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
@@ -281,7 +282,7 @@ def get_info_auth(info: dict[str, Any]) -> bool:
 
 def get_info_gen(info: dict[str, Any]) -> int:
     """Return the device generation from shelly info."""
-    return int(info.get("gen", 1))
+    return int(info.get(CONF_GEN, 1))
 
 
 def get_model_name(info: dict[str, Any]) -> str:
@@ -325,7 +326,7 @@ def get_rpc_entity_name(
 
 def get_device_entry_gen(entry: ConfigEntry) -> int:
     """Return the device generation from config entry."""
-    return entry.data.get("gen", 1)
+    return entry.data.get(CONF_GEN, 1)
 
 
 def get_rpc_key_instances(keys_dict: dict[str, Any], key: str) -> list[str]:

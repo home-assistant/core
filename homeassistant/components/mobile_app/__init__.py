@@ -118,7 +118,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await create_cloud_hook()
 
     if (
-        CONF_CLOUDHOOK_URL not in registration
+        CONF_CLOUDHOOK_URL not in entry.data
         and cloud.async_active_subscription(hass)
         and cloud.async_is_connected(hass)
     ):

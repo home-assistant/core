@@ -365,26 +365,7 @@ class GuardianEntity(CoordinatorEntity[GuardianDataUpdateCoordinator]):
         """Initialize."""
         super().__init__(coordinator)
 
-        self._attr_extra_state_attributes = {}
         self.entity_description = description
-
-    @callback
-    def _async_update_from_latest_data(self) -> None:
-        """Update the entity's underlying data.
-
-        This should be extended by Guardian platforms.
-        """
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Respond to a DataUpdateCoordinator update."""
-        self._async_update_from_latest_data()
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-        self._async_update_from_latest_data()
 
 
 class PairedSensorEntity(GuardianEntity):
@@ -410,14 +391,14 @@ class PairedSensorEntity(GuardianEntity):
         self._attr_unique_id = f"{paired_sensor_uid}_{description.key}"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ValveControllerEntityDescriptionMixin:
     """Define an entity description mixin for valve controller entities."""
 
     api_category: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ValveControllerEntityDescription(
     EntityDescription, ValveControllerEntityDescriptionMixin
 ):
