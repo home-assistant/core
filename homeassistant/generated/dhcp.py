@@ -287,7 +287,10 @@ DHCP: list[dict[str, str | bool]] = [
     },
     {
         "domain": "linknlink",
-        "hostname": "linknlink_*",
+        "registered_devices": True,
+    },
+    {
+        "domain": "linknlink",
         "macaddress": "E04B41*",
     },
     {

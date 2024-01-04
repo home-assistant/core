@@ -45,6 +45,7 @@ class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
             name=config.title,
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
+        self.name = config.title
         self.hass = hass
         self.config = config
         self.fw_version: int | None = None

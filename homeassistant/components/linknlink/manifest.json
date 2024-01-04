@@ -5,7 +5,9 @@
   "config_flow": true,
   "dhcp": [
     {
-      "hostname": "linknlink_*",
+      "registered_devices": true
+    },
+    {
       "macaddress": "E04B41*"
     }
   ],
