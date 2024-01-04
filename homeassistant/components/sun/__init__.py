@@ -363,7 +363,7 @@ class Sun(Entity):
 
     @callback
     def update_durations(self, now: datetime | None = None) -> None:
-        """Calculate the dayligh, night, sunrise and sunset durations."""
+        """Calculate the daylight, night, sunrise and sunset durations."""
         # First update sun position to assure the values are up-to-date.
         if self._update_sun_position_listener:
             self._update_sun_position_listener()
