@@ -721,12 +721,11 @@ class DefaultAgent(AbstractConversationAgent):
             return _DEFAULT_ERROR_TEXT
 
         response_key = response_type.value
-        response_str = lang_intents.error_responses.get(response_key)
-
-        if not response_str:
-            return _DEFAULT_ERROR_TEXT
-
+        response_str = (
+            lang_intents.error_responses.get(response_key) or _DEFAULT_ERROR_TEXT
+        )
         response_template = template.Template(response_str, self.hass)
+
         return response_template.async_render(response_args)
 
     def register_trigger(

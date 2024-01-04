@@ -447,3 +447,19 @@ async def test_error_missing_area(hass: HomeAssistant, init_components) -> None:
     assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert result.response.speech["plain"]["speech"] == "No area named missing area"
+
+
+async def test_error_match_failure(hass: HomeAssistant, init_components) -> None:
+    """Test response with complete match failure."""
+    with patch(
+        "homeassistant.components.conversation.default_agent.recognize_all",
+        return_value=[],
+    ):
+        result = await conversation.async_converse(
+            hass, "do something", None, Context(), None
+        )
+
+        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert (
+            result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH
+        )
