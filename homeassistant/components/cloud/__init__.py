@@ -177,7 +177,6 @@ def async_active_subscription(hass: HomeAssistant) -> bool:
     return async_is_logged_in(hass) and not hass.data[DOMAIN].subscription_expired
 
 
-@bind_hass
 async def async_get_or_create_cloudhook(hass: HomeAssistant, webhook_id: str) -> str:
     """Get or create a cloudhook."""
     if not async_is_connected(hass):

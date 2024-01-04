@@ -16,6 +16,7 @@ from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import slugify
 
+from . import create_cloud_hook
 from .const import (
     ATTR_APP_DATA,
     ATTR_APP_ID,
@@ -69,9 +70,7 @@ class RegistrationsView(HomeAssistantView):
         webhook_id = secrets.token_hex()
 
         if cloud.async_active_subscription(hass):
-            data[CONF_CLOUDHOOK_URL] = await cloud.async_create_cloudhook(
-                hass, webhook_id
-            )
+            data[CONF_CLOUDHOOK_URL] = await create_cloud_hook(hass, webhook_id, None)
 
         data[CONF_WEBHOOK_ID] = webhook_id
 
