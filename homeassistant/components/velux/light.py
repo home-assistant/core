@@ -1,7 +1,6 @@
 """Support for Velux lights."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from pyvlx import Intensity, PyVLX
@@ -14,7 +13,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, VeluxEntity
 
-_LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 
@@ -26,7 +24,6 @@ async def async_setup_entry(
     pyvlx: PyVLX = hass.data[DOMAIN][entry.entry_id]
     for node in pyvlx.nodes:
         if isinstance(node, LighteningDevice):
-            _LOGGER.debug("Light will be added: %s", node.name)
             entities.append(VeluxLight(node))
     async_add_entities(entities)
 
