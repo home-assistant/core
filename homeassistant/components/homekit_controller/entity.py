@@ -1,6 +1,7 @@
 """Homekit Controller entities."""
 from __future__ import annotations
 
+import contextlib
 from typing import Any
 
 from aiohomekit.model.characteristics import (
@@ -73,6 +74,16 @@ class HomeKitEntity(Entity):
         """Handle accessory discovery changes."""
         if not self._async_remove_entity_if_accessory_or_service_disappeared():
             self._async_reconfigure()
+
+    @callback
+    def _async_clear_property_cache(self, properties: tuple[str, ...]) -> None:
+        """Clear the cache of properties."""
+        for prop in properties:
+            # suppress is slower than try-except-pass, but
+            # we do not expect to have many properties to clear
+            # or this to be called often.
+            with contextlib.suppress(AttributeError):
+                delattr(self, prop)
 
     @callback
     def _async_reconfigure(self) -> None:
