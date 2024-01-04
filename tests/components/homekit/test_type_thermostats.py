@@ -1,6 +1,7 @@
 """Test different accessory types: Thermostats."""
 from unittest.mock import patch
 
+from pyhap.characteristic import Characteristic
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
 import pytest
 
@@ -2484,8 +2485,9 @@ async def test_thermostat_handles_unknown_state(
 
     await acc.run()
     await hass.async_block_till_done()
+    heat_cool_char: Characteristic = acc.char_target_heat_cool
 
-    assert acc.char_target_heat_cool.value == HC_HEAT_COOL_OFF
+    assert heat_cool_char.value == HC_HEAT_COOL_OFF
     assert acc.available is True
     hass.states.async_set(
         entity_id,
@@ -2494,7 +2496,7 @@ async def test_thermostat_handles_unknown_state(
     )
     await hass.async_block_till_done()
 
-    assert acc.char_target_heat_cool.value == HC_HEAT_COOL_OFF
+    assert heat_cool_char.value == HC_HEAT_COOL_OFF
     assert acc.available is True
 
     hass.states.async_set(
@@ -2503,7 +2505,7 @@ async def test_thermostat_handles_unknown_state(
         attrs,
     )
     await hass.async_block_till_done()
-    assert acc.char_target_heat_cool.value == HC_HEAT_COOL_OFF
+    assert heat_cool_char.value == HC_HEAT_COOL_OFF
     assert acc.available is True
 
     hass.states.async_set(
@@ -2513,7 +2515,7 @@ async def test_thermostat_handles_unknown_state(
     )
     await hass.async_block_till_done()
 
-    assert acc.char_target_heat_cool.value == HC_HEAT_COOL_OFF
+    assert heat_cool_char.value == HC_HEAT_COOL_OFF
     assert acc.available is False
 
     hass.states.async_set(
@@ -2523,7 +2525,7 @@ async def test_thermostat_handles_unknown_state(
     )
     await hass.async_block_till_done()
 
-    assert acc.char_target_heat_cool.value == HC_HEAT_COOL_OFF
+    assert heat_cool_char.value == HC_HEAT_COOL_OFF
     assert acc.available is True
     hass.states.async_set(
         entity_id,
@@ -2532,11 +2534,27 @@ async def test_thermostat_handles_unknown_state(
     )
     await hass.async_block_till_done()
 
-    assert acc.char_target_heat_cool.value == HC_HEAT_COOL_OFF
+    assert heat_cool_char.value == HC_HEAT_COOL_OFF
     assert acc.available is True
+    call_set_hvac_mode = async_mock_service(hass, DOMAIN_CLIMATE, "set_hvac_mode")
 
-    acc.char_target_heat_cool.client_update_value(HC_HEAT_COOL_HEAT)
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: heat_cool_char.to_HAP()[HAP_REPR_IID],
+                    HAP_REPR_VALUE: HC_HEAT_COOL_HEAT,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    assert acc.char_target_heat_cool.value == HC_HEAT_COOL_HEAT
+    assert heat_cool_char.value == HC_HEAT_COOL_HEAT
     assert acc.available is True
+    assert call_set_hvac_mode
+    assert call_set_hvac_mode[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_hvac_mode[0].data[ATTR_HVAC_MODE] == HVACMode.HEAT
