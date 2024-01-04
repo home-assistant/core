@@ -19,7 +19,12 @@ from hassil.intents import (
     TextSlotList,
     WildcardSlotList,
 )
-from hassil.recognize import RecognizeResult, recognize_all
+from hassil.recognize import (
+    RecognizeResult,
+    UnmatchedEntity,
+    UnmatchedTextEntity,
+    recognize_all,
+)
 from hassil.util import merge_dict
 from home_assistant_intents import get_domains_and_languages, get_intents
 import yaml
@@ -213,11 +218,34 @@ class DefaultAgent(AbstractConversationAgent):
         lang_intents = self._lang_intents.get(language)
 
         if result is None:
+            # Intent was not recognized
             _LOGGER.debug("No intent was matched for '%s'", user_input.text)
             return _make_error_result(
                 language,
                 intent.IntentResponseErrorCode.NO_INTENT_MATCH,
                 self._get_error_text(ResponseType.NO_INTENT, lang_intents),
+                conversation_id,
+            )
+
+        if result.unmatched_entities:
+            # Intent was recognized, but not entity/area names, etc.
+            _LOGGER.debug(
+                "Recognized intent '%s' for template '%s' but had unmatched: %s",
+                result.intent.name,
+                result.intent_sentence.text
+                if result.intent_sentence is not None
+                else "",
+                result.unmatched_entities_list,
+            )
+            error_response_type, error_response_args = _get_unmatched_response(
+                result.unmatched_entities
+            )
+            return _make_error_result(
+                language,
+                intent.IntentResponseErrorCode.NO_VALID_TARGETS,
+                self._get_error_text(
+                    error_response_type, lang_intents, **error_response_args
+                ),
                 conversation_id,
             )
 
@@ -302,7 +330,35 @@ class DefaultAgent(AbstractConversationAgent):
             # Keep looking in case an entity has the same name
             maybe_result = result
 
-        return maybe_result
+        if maybe_result is not None:
+            # Successful strict match
+            return maybe_result
+
+        # Try again with missing entities enabled
+        for result in recognize_all(
+            user_input.text,
+            lang_intents.intents,
+            slot_lists=slot_lists,
+            intent_context=intent_context,
+            allow_unmatched_entities=True,
+        ):
+            if maybe_result is None:
+                # First result
+                maybe_result = result
+            elif len(result.unmatched_entities) < len(maybe_result.unmatched_entities):
+                # Fewer unmatched entities
+                maybe_result = result
+            elif len(result.unmatched_entities) == len(maybe_result.unmatched_entities):
+                if result.text_chunks_matched > maybe_result.text_chunks_matched:
+                    # More literal text chunks matched
+                    maybe_result = result
+
+        if (maybe_result is not None) and maybe_result.unmatched_entities:
+            # Failed to match, but we have more information about why in unmatched_entities
+            return maybe_result
+
+        # Complete match failure
+        return None
 
     async def _build_speech(
         self,
@@ -655,15 +711,22 @@ class DefaultAgent(AbstractConversationAgent):
         return {"area": device_area.id}
 
     def _get_error_text(
-        self, response_type: ResponseType, lang_intents: LanguageIntents | None
+        self,
+        response_type: ResponseType,
+        lang_intents: LanguageIntents | None,
+        **response_args,
     ) -> str:
         """Get response error text by type."""
         if lang_intents is None:
             return _DEFAULT_ERROR_TEXT
 
         response_key = response_type.value
-        response_str = lang_intents.error_responses.get(response_key)
-        return response_str or _DEFAULT_ERROR_TEXT
+        response_str = (
+            lang_intents.error_responses.get(response_key) or _DEFAULT_ERROR_TEXT
+        )
+        response_template = template.Template(response_str, self.hass)
+
+        return response_template.async_render(response_args)
 
     def register_trigger(
         self,
@@ -781,6 +844,27 @@ def _make_error_result(
     response.async_set_error(error_code, response_text)
 
     return ConversationResult(response, conversation_id)
+
+
+def _get_unmatched_response(
+    unmatched_entities: dict[str, UnmatchedEntity],
+) -> tuple[ResponseType, dict[str, Any]]:
+    error_response_type = ResponseType.NO_INTENT
+    error_response_args: dict[str, Any] = {}
+
+    if unmatched_name := unmatched_entities.get("name"):
+        # Unmatched device or entity
+        assert isinstance(unmatched_name, UnmatchedTextEntity)
+        error_response_type = ResponseType.NO_ENTITY
+        error_response_args["entity"] = unmatched_name.text
+
+    elif unmatched_area := unmatched_entities.get("area"):
+        # Unmatched area
+        assert isinstance(unmatched_area, UnmatchedTextEntity)
+        error_response_type = ResponseType.NO_AREA
+        error_response_args["area"] = unmatched_area.text
+
+    return error_response_type, error_response_args
 
 
 def _collect_list_references(expression: Expression, list_names: set[str]) -> None:
