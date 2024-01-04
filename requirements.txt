@@ -30,6 +30,7 @@ PyYAML==6.0.1
 requests==2.31.0
 typing-extensions>=4.9.0,<5.0
 ulid-transform==0.9.0
+urllib3>=1.26.5,<2
 voluptuous==0.13.1
 voluptuous-serialize==2.6.0
 yarl==1.9.4

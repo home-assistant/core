@@ -24,12 +24,12 @@ dbus-fast==2.21.0
 fnv-hash-fast==0.5.0
 ha-av==10.1.1
 ha-ffmpeg==3.1.0
-habluetooth==2.0.1
+habluetooth==2.0.2
 hass-nabucasa==0.75.1
 hassil==1.5.1
 home-assistant-bluetooth==1.11.0
-home-assistant-frontend==20240101.0
-home-assistant-intents==2023.12.05
+home-assistant-frontend==20240104.0
+home-assistant-intents==2024.1.2
 httpx==0.26.0
 ifaddr==0.2.0
 janus==1.0.0
@@ -52,9 +52,10 @@ pyudev==0.23.2
 PyYAML==6.0.1
 requests==2.31.0
 scapy==2.5.0
-SQLAlchemy==2.0.24
+SQLAlchemy==2.0.25
 typing-extensions>=4.9.0,<5.0
 ulid-transform==0.9.0
+urllib3>=1.26.5,<2
 voluptuous-serialize==2.6.0
 voluptuous==0.13.1
 webrtc-noise-gain==1.2.3
@@ -64,11 +65,6 @@ zeroconf==0.131.0
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
 pycryptodome>=3.6.6
-
-# Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
-# Temporary setting an upper bound, to prevent compat issues with urllib3>=2
-# https://github.com/home-assistant/core/issues/97248
-urllib3>=1.26.5,<2
 
 # Constrain httplib2 to protect against GHSA-93xj-8mrv-444m
 # https://github.com/advisories/GHSA-93xj-8mrv-444m
