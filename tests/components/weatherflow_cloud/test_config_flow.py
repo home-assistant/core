@@ -3,6 +3,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.weatherflow_cloud.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -80,3 +81,30 @@ async def test_config_errors(
 
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] == {"base": expected_error}
+
+
+async def test_reauth(hass: HomeAssistant, mock_get_stations_401_error) -> None:
+    """Test a reauth_flow."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_TOKEN: "same_same",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id}, data=None
+    )
+    assert result["type"] == FlowResultType.FORM
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
+        data={CONF_API_TOKEN: "SAME_SAME"},
+    )
+
+    assert result["reason"] == "reauth_successful"

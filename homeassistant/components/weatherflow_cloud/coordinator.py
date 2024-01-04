@@ -7,6 +7,7 @@ from weatherflow4py.models.unified import WeatherFlowData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
@@ -36,4 +37,6 @@ class WeatherFlowCloudDataUpdateCoordinator(
             async with self.weather_api:
                 return await self.weather_api.get_all_data()
         except ClientResponseError as err:
+            if err.status == 401:
+                raise ConfigEntryAuthFailed(err) from err
             raise UpdateFailed(f"Update failed: {err}") from err

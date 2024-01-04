@@ -48,10 +48,7 @@ def mock_get_stations_500_error() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_get_stations_401_error() -> Generator[AsyncMock, None, None]:
     """Mock get_stations with a sequence of responses."""
-    side_effects = [
-        ClientResponseError(Mock(), (), status=401),
-        True,
-    ]
+    side_effects = [ClientResponseError(Mock(), (), status=401), True, True, True]
 
     with patch(
         "weatherflow4py.api.WeatherFlowRestAPI.async_get_stations",
