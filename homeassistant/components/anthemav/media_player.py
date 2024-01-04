@@ -82,7 +82,7 @@ class AnthemAVR(MediaPlayerEntity):
             self._attr_unique_id = unique_id
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, unique_id)},
-                name=f"zone {zone_number}",
+                name=f"Zone {zone_number}",
                 manufacturer=MANUFACTURER,
                 model=model,
                 via_device=(DOMAIN, mac_address),
