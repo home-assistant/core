@@ -17,7 +17,7 @@ async def test_sensor_states(
 ) -> None:
     """Test sensor states are correctly collected from library."""
 
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT, entry_id="test")
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
