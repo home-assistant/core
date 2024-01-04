@@ -84,5 +84,5 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 # otherwise this module will be logged for using deprecated constants and not the custom component
 # These can be removed if no deprecated constant are in this module anymore
 __getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
+__dir__ = partial(dir_with_deprecated_constants, module_globals=[*globals().keys()])
 __all__ = all_with_deprecated_constants(globals())

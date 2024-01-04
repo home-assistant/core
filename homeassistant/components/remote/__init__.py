@@ -263,5 +263,5 @@ class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
 
 # These can be removed if no deprecated constant are in this module anymore
 __getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = ft.partial(dir_with_deprecated_constants, module_globals=globals())
+__dir__ = ft.partial(dir_with_deprecated_constants, module_globals=[*globals().keys()])
 __all__ = all_with_deprecated_constants(globals())
