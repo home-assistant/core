@@ -142,6 +142,8 @@ def handle_exceptions(
         try:
             await func(entity, *args, **kwargs)
         except GuardianError as err:
-            raise HomeAssistantError(err) from err
+            raise HomeAssistantError(
+                f"Error while calling {func.__name__}: {err}"
+            ) from err
 
     return wrapper
