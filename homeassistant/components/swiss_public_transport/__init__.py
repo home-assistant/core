@@ -10,6 +10,7 @@ from opendata_transport.exceptions import (
 from homeassistant import config_entries, core
 from homeassistant.const import Platform
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_DESTINATION, CONF_START, DOMAIN
@@ -65,3 +66,37 @@ async def async_unload_entry(
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_migrate_entry(
+    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
+) -> bool:
+    """Migrate config entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version > 3:
+        # This means the user has downgraded from a future version
+        return False
+
+    if config_entry.version == 1:
+        new = {**config_entry.data}
+
+        # Remove wrongly registered devices
+        device_registry = dr.async_get(hass)
+        device_entries = dr.async_entries_for_config_entry(
+            device_registry, config_entry_id=config_entry.entry_id
+        )
+        for dev in device_entries:
+            device_registry.async_remove_device(dev.id)
+
+        # Set a valid unique id for config entries
+        config_entry.unique_id = (
+            f"{config_entry.data[CONF_START]} {config_entry.data[CONF_DESTINATION]}"
+        )
+
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, data=new)
+
+    _LOGGER.debug("Migration to version %s successful", config_entry.version)
+
+    return True
