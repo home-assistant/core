@@ -44,7 +44,7 @@ class StreamlabsCoordinator(DataUpdateCoordinator[dict[str, StreamlabsData]]):
     def _update_data(self) -> dict[str, StreamlabsData]:
         locations = self.client.get_locations()
         res = {}
-        for location in locations:
+        for location in locations["locations"]:
             location_id = location["locationId"]
             water_usage = self.client.get_water_usage_summary(location_id)
             res[location_id] = StreamlabsData(
