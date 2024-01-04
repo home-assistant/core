@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components import water_heater
 from homeassistant.components.water_heater import (
+    ATTR_OPERATION_LIST,
     ATTR_OPERATION_MODE,
     SET_TEMPERATURE_SCHEMA,
     WaterHeaterEntity,
@@ -141,3 +142,4 @@ def test_deprecated_supported_features_ints(
     assert entity.supported_features_compat is WaterHeaterEntityFeature(2)
     assert "is using deprecated supported features values" not in caplog.text
     assert entity.state_attributes[ATTR_OPERATION_MODE] == "mode1"
+    assert entity.capability_attributes[ATTR_OPERATION_LIST] == ["mode1", "mode2"]
