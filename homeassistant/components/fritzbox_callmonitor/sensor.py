@@ -65,6 +65,7 @@ async def async_setup_entry(
     unique_id = f"{serial_number}-{phonebook_id}"
 
     sensor = FritzBoxCallSensor(
+        phonebook_name=config_entry.title,
         unique_id=unique_id,
         fritzbox_phonebook=fritzbox_phonebook,
         prefixes=prefixes,
@@ -86,6 +87,7 @@ class FritzBoxCallSensor(SensorEntity):
 
     def __init__(
         self,
+        phonebook_name: str,
         unique_id: str,
         fritzbox_phonebook: FritzBoxPhonebook,
         prefixes: list[str] | None,
@@ -100,6 +102,7 @@ class FritzBoxCallSensor(SensorEntity):
         self._monitor: FritzBoxCallMonitor | None = None
         self._attributes: dict[str, str | list[str]] = {}
 
+        self._attr_translation_placeholders = {"phonebook_name": phonebook_name}
         self._attr_unique_id = unique_id
         self._attr_native_value = CallState.IDLE
         self._attr_device_info = DeviceInfo(
