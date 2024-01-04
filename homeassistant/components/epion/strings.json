@@ -20,13 +20,13 @@
   "entity": {
     "sensor": {
       "co2": {
-        "name": "CO2 (ppm)"
+        "name": "CO2"
       },
       "temperature": {
-        "name": "Temperature (degrees Celsius)"
+        "name": "Temperature"
       },
       "pressure": {
-        "name": "Pressure (hPa)"
+        "name": "Pressure"
       },
       "humidity": {
         "name": "Humidity"

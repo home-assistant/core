@@ -53,8 +53,7 @@ class EpionConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
     def _check_api_key(self, api_key: str) -> bool:
-        """Try to connect and see if the API key is valid.
-        """
+        """Try to connect and see if the API key is valid."""
         api = Epion(api_key)
         try:
             return len(api.get_current()["devices"]) > 0

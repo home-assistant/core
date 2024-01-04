@@ -59,7 +59,6 @@ class EpionBase:
 
     def updateNow(self):
         self.last_response = self.epion.get_current()
-        LOGGER.info("Updated Epion server data, new sensors: %d", len(self.last_response['devices']))
         for epion_device in self.last_response['devices']:
             self.device_data[epion_device['deviceId']] = epion_device
 

@@ -30,17 +30,16 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add an Epion entry."""
-    # Add the needed sensors to hass
-    epionBase = hass.data[DOMAIN][entry.entry_id][DATA_API_CLIENT]
+    epion_base = hass.data[DOMAIN][entry.entry_id][DATA_API_CLIENT]
 
     entities = []
-    current_data = epionBase.last_response
+    current_data = epion_base.last_response
     for epion_device in current_data['devices']:
-        # Keys are: deviceId, deviceName, locationId, lastMeasurement, co2, temperature, humidity, pressure
-        entities.append(EpionSensor(epionBase, epion_device, "co2", hass))
-        entities.append(EpionSensor(epionBase, epion_device, "temperature", hass))
-        entities.append(EpionSensor(epionBase, epion_device, "humidity", hass))
-        entities.append(EpionSensor(epionBase, epion_device, "pressure", hass))
+        # Relevant keys are: deviceId, deviceName, locationId, lastMeasurement, co2, temperature, humidity, pressure
+        entities.append(EpionSensor(epion_base, epion_device, "co2", hass))
+        entities.append(EpionSensor(epion_base, epion_device, "temperature", hass))
+        entities.append(EpionSensor(epion_base, epion_device, "humidity", hass))
+        entities.append(EpionSensor(epion_base, epion_device, "pressure", hass))
 
     async_add_entities(entities)
 
@@ -87,17 +86,18 @@ class EpionSensor(SensorEntity):
 
     @property
     def name(self):
-        myDeviceId = self._epion_device['deviceId']
-        deviceName = ""
-        if myDeviceId not in self._epion_base.device_data:
+        my_device_id = self._epion_device['deviceId']
+        device_name = "Unknown"
+
+        if my_device_id not in self._epion_base.device_data:
             if "deviceName" in self._epion_device:
-                deviceName = self._epion_device["deviceName"]
+                device_name = self._epion_device["deviceName"]
             else:
-                deviceName = myDeviceId
+                device_name = my_device_id
         else:
-            myDevice = self._epion_base.device_data[myDeviceId]
-            deviceName = myDevice["deviceName"]
-        return f"{deviceName} {self._display_name}"
+            my_device = self._epion_base.device_data[my_device_id]
+            device_name = my_device["deviceName"]
+        return f"{device_name} {self._display_name}"
 
     @property
     def native_value(self) -> float | None:
@@ -111,22 +111,17 @@ class EpionSensor(SensorEntity):
         return self._last_value is not None
 
     def extract_value(self) -> float | None:
-        myDeviceId = self._epion_device['deviceId']
-        # LOGGER.info("Attempting update for %s, known sensors: %d", myDeviceId, len(self._epion_base.device_data))
-        if myDeviceId not in self._epion_base.device_data:
-            # LOGGER.error("Missing Epion device %s from %d sensors", myDeviceId, len(self._epion_base.device_data))
+        """Extract the sensor measurement value from the cached data, or None if it can't be found."""
+        my_device_id = self._epion_device['deviceId']
+        if my_device_id not in self._epion_base.device_data:
             return None# No data available, this can happen during startup or if the device (temporarily) stopped sending data
 
-        myDevice = self._epion_base.device_data[myDeviceId]
-        # if not myDevice:
-        # return 0 # No data available
+        my_device = self._epion_base.device_data[my_device_id]
 
-        if self._measurement_key not in myDevice:
-            LOGGER.debug("Missing Epion metric %s from device %s", self._measurement_key, myDeviceId)
+        if self._measurement_key not in my_device:
             return None# No relevant measurement available
 
-        measurement = myDevice[self._measurement_key]
-        LOGGER.info("Epion device %s data %f", myDeviceId, measurement)
+        measurement = my_device[self._measurement_key]
 
         return measurement
 
