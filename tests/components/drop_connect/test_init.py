@@ -1,4 +1,5 @@
-"""Test DROP coordinator."""
+"""Test DROP initialisation."""
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
