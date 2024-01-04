@@ -82,6 +82,7 @@ from .exceptions import (
     Unauthorized,
 )
 from .helpers.deprecation import (
+    DeprecatedConstantEnum,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -151,9 +152,11 @@ class ConfigSource(enum.StrEnum):
 
 
 # SOURCE_* are deprecated as of Home Assistant 2022.2, use ConfigSource instead
-_DEPRECATED_SOURCE_DISCOVERED = (ConfigSource.DISCOVERED, "2025.1")
-_DEPRECATED_SOURCE_STORAGE = (ConfigSource.STORAGE, "2025.1")
-_DEPRECATED_SOURCE_YAML = (ConfigSource.YAML, "2025.1")
+_DEPRECATED_SOURCE_DISCOVERED = DeprecatedConstantEnum(
+    ConfigSource.DISCOVERED, "2025.1"
+)
+_DEPRECATED_SOURCE_STORAGE = DeprecatedConstantEnum(ConfigSource.STORAGE, "2025.1")
+_DEPRECATED_SOURCE_YAML = DeprecatedConstantEnum(ConfigSource.YAML, "2025.1")
 
 
 # Both can be removed if no deprecated constant are in this module anymore
