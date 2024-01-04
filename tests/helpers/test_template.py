@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import json
 import logging
 import math
@@ -1175,8 +1175,19 @@ def test_as_datetime(hass: HomeAssistant, input) -> None:
     )
 
 
+@pytest.mark.parametrize(
+    "input",
+    (
+        "2021-06-03 13:00:00.000000+00:00",
+        "1986-07-09T12:00:00Z",
+        "2016-10-19 15:22:05.588122+0100",
+        "2016-10-19",
+        "2021-01-01 00:00:01",
+        "invalid",
+    ),
+)
 def test_as_datetime_local(hass: HomeAssistant, input) -> None:
-    """Test converting a timestamp string to a date object and convert to local timezone."""
+    """Test converting a timestamp string to a date object."""
     expected = dt_util.parse_datetime(input)
     if expected is not None:
         expected = str(dt_util.as_local(expected))
@@ -1194,132 +1205,172 @@ def test_as_datetime_local(hass: HomeAssistant, input) -> None:
         == expected
     )
 
+    assert (
+        template.Template(
+            f"{{{{ as_datetime('{input}', local=true) }}}}", hass
+        ).async_render()
+        == expected
+    )
+    assert (
+        template.Template(
+            f"{{{{ '{input}' | as_datetime(true) }}}}", hass
+        ).async_render()
+        == expected
+    )
 
-def test_as_datetime_from_timestamp(hass: HomeAssistant) -> None:
-    """Test converting a UNIX timestamp to a date object."""
-    tests = [
+
+@pytest.mark.parametrize(
+    ("input", "output"),
+    [
         (1469119144, "2016-07-21 16:39:04+00:00"),
         (1469119144.0, "2016-07-21 16:39:04+00:00"),
         (-1, "1969-12-31 23:59:59+00:00"),
-    ]
-    for input, output in tests:
-        # expected = dt_util.parse_datetime(input)
-        if output is not None:
-            output = str(output)
+    ],
+)
+def test_as_datetime_from_timestamp(hass: HomeAssistant, input, output) -> None:
+    """Test converting a UNIX timestamp to a date object."""
 
-        assert (
-            template.Template(f"{{{{ as_datetime({input}) }}}}", hass).async_render()
-            == output
-        )
-        assert (
-            template.Template(f"{{{{ {input} | as_datetime }}}}", hass).async_render()
-            == output
-        )
-        assert (
-            template.Template(f"{{{{ as_datetime('{input}') }}}}", hass).async_render()
-            == output
-        )
-        assert (
-            template.Template(f"{{{{ '{input}' | as_datetime }}}}", hass).async_render()
-            == output
-        )
+    assert (
+        template.Template(f"{{{{ as_datetime('{input}') }}}}", hass).async_render()
+        == output
+    )
+    assert (
+        template.Template(f"{{{{ '{input}' | as_datetime }}}}", hass).async_render()
+        == output
+    )
+    assert (
+        template.Template(f"{{{{ as_datetime('{input}') }}}}", hass).async_render()
+        == output
+    )
+    assert (
+        template.Template(f"{{{{ '{input}' | as_datetime }}}}", hass).async_render()
+        == output
+    )
 
 
-def test_as_datetime_from_timestamp_local(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "input",
+    [
+        1469119144,
+        1469119144.0,
+        -1,
+    ],
+)
+def test_as_datetime_from_timestamp_local(hass: HomeAssistant, input) -> None:
     """Test converting a UNIX timestamp to a date object and convert to local timezone."""
-    tests = [1469119144, 1469119144.0, -1]
-    for input in tests:
-        expected = str(dt_util.as_local(dt_util.utc_from_timestamp(input)))
+    expected = str(dt_util.as_local(dt_util.utc_from_timestamp(input)))
 
-        assert (
-            template.Template(
-                f"{{{{ as_datetime({input}, local=true) }}}}", hass
-            ).async_render()
-            == expected
-        )
-        assert (
-            template.Template(
-                f"{{{{ {input} | as_datetime(local=true) }}}}", hass
-            ).async_render()
-            == expected
-        )
-        assert (
-            template.Template(
-                f"{{{{ as_datetime('{input}', true) }}}}", hass
-            ).async_render()
-            == expected
-        )
-        assert (
-            template.Template(
-                f"{{{{ '{input}' | as_datetime(true) }}}}", hass
-            ).async_render()
-            == expected
-        )
+    assert (
+        template.Template(
+            f"{{{{ as_datetime('{input}', local=true) }}}}", hass
+        ).async_render()
+        == expected
+    )
+    assert (
+        template.Template(
+            f"{{{{ '{input}' | as_datetime(local=true) }}}}", hass
+        ).async_render()
+        == expected
+    )
+    assert (
+        template.Template(
+            f"{{{{ as_datetime('{input}', true) }}}}", hass
+        ).async_render()
+        == expected
+    )
+    assert (
+        template.Template(
+            f"{{{{ '{input}' | as_datetime(true) }}}}", hass
+        ).async_render()
+        == expected
+    )
 
 
-def test_as_datetime_from_datetime(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("input", "output"),
+    [
+        (
+            "datetime",
+            "2024-01-01 15:10:00+00:00",
+        ),
+        (
+            "date",
+            "2024-01-01 00:00:00",
+        ),
+        (
+            "time",
+            "2024-01-01 15:10:00",
+        ),
+    ],
+)
+def test_as_datetime_from_datetime(hass: HomeAssistant, input, output) -> None:
     """Test converting a datetime object to a date object."""
-    now = datetime.now()
-    today = dt_util.start_of_local_day()
-    tests = [
-        (now, now),
-        (now.date(), datetime.combine(now.date(), today.time())),
-        (now.time(), now),
-    ]
-    for input, output in tests:
-        output = str(output)
-
+    test_date = "2024-01-01 15:10:00+00:00"
+    if input == "date":
         assert (
-            template.Template(f"{{{{ as_datetime({input}) }}}}", hass).async_render()
+            template.Template(
+                f"{{{{ as_datetime('{test_date}').date() | as_datetime }}}}", hass
+            ).async_render()
             == output
         )
-        assert (
-            template.Template(f"{{{{ {input} | as_datetime }}}}", hass).async_render()
-            == output
+    elif input == "time":
+        today = date.today()
+        output = datetime.combine(
+            date=today, time=dt_util.parse_datetime(test_date).time()
         )
+        assert template.Template(
+            f"{{{{ as_datetime('{test_date}').time() | as_datetime }}}}", hass
+        ).async_render() == str(output)
+    else:
         assert (
-            template.Template(f"{{{{ as_datetime('{input}') }}}}", hass).async_render()
-            == output
-        )
-        assert (
-            template.Template(f"{{{{ '{input}' | as_datetime }}}}", hass).async_render()
+            template.Template(
+                f"{{{{ as_datetime(as_datetime('{test_date}')) }}}}", hass
+            ).async_render()
             == output
         )
 
 
-def test_as_datetime_from_datetime_local(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("input", "output"),
+    [
+        (
+            "datetime",
+            "2024-01-01 07:10:00-08:00",
+        ),
+        (
+            "date",
+            "2024-01-01 00:00:00-08:00",
+        ),
+        (
+            "time",
+            "2024-01-01 15:10:00-08:00",
+        ),
+    ],
+)
+def test_as_datetime_from_datetime_local(hass: HomeAssistant, input, output) -> None:
     """Test converting a datetime object to a date object and convert to local timezone."""
-    now = datetime.now()
-    today = dt_util.start_of_local_day()
-    tests = [
-        (now, now),
-        (now.date(), datetime.combine(now.date(), today.time())),
-        (now.time(), now),
-    ]
-    for input, output in tests:
-        output = str(dt_util.as_local(output))
-
+    test_date = "2024-01-01 15:10:00+00:00"
+    if input == "date":
         assert (
             template.Template(
-                f"{{{{ as_datetime({input}, local=true) }}}}", hass
+                f"{{{{ as_datetime('{test_date}').date() | as_datetime(local=true) }}}}",
+                hass,
             ).async_render()
             == output
         )
-        assert (
-            template.Template(
-                f"{{{{ {input} | as_datetime(local=true) }}}}", hass
-            ).async_render()
-            == output
+    elif input == "time":
+        today = date.today()
+        local_tz = dt_util.as_local(dt_util.parse_datetime(test_date)).tzinfo
+        output = datetime.combine(
+            today, dt_util.parse_datetime(test_date).time(), local_tz
         )
+        assert template.Template(
+            f"{{{{ as_datetime('{test_date}').time() | as_datetime(true) }}}}", hass
+        ).async_render() == str(output)
+    else:
         assert (
             template.Template(
-                f"{{{{ as_datetime('{input}', true) }}}}", hass
-            ).async_render()
-            == output
-        )
-        assert (
-            template.Template(
-                f"{{{{ '{input}' | as_datetime(local=true) }}}}", hass
+                f"{{{{ as_datetime(as_datetime('{test_date}'), true) }}}}", hass
             ).async_render()
             == output
         )
@@ -1327,7 +1378,7 @@ def test_as_datetime_from_datetime_local(hass: HomeAssistant) -> None:
 
 def test_as_datetime_default(hass: HomeAssistant) -> None:
     """Test converting a UNIX timestamp to a date object."""
-    tests = ["invalid", ["a", "list"], {"a": "dict"}]
+    tests = ['"invalid"', ["a", "list"], {"a": "dict"}]
     for input in tests:
         # expected = dt_util.parse_datetime(input)
         assert (
