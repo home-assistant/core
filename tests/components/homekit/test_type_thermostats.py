@@ -2485,7 +2485,7 @@ async def test_thermostat_handles_unknown_state(
     await acc.run()
     await hass.async_block_till_done()
 
-    assert acc.char_target_heat_cool.value == 0
+    assert acc.char_target_heat_cool.value == HC_HEAT_COOL_OFF
     assert acc.available is True
     hass.states.async_set(
         entity_id,
@@ -2494,7 +2494,7 @@ async def test_thermostat_handles_unknown_state(
     )
     await hass.async_block_till_done()
 
-    assert acc.char_target_heat_cool.value == 0
+    assert acc.char_target_heat_cool.value == HC_HEAT_COOL_OFF
     assert acc.available is True
 
     hass.states.async_set(
@@ -2503,7 +2503,7 @@ async def test_thermostat_handles_unknown_state(
         attrs,
     )
     await hass.async_block_till_done()
-    assert acc.char_target_heat_cool.value == 0
+    assert acc.char_target_heat_cool.value == HC_HEAT_COOL_OFF
     assert acc.available is True
 
     hass.states.async_set(
@@ -2513,5 +2513,30 @@ async def test_thermostat_handles_unknown_state(
     )
     await hass.async_block_till_done()
 
-    assert acc.char_target_heat_cool.value == 0
+    assert acc.char_target_heat_cool.value == HC_HEAT_COOL_OFF
     assert acc.available is False
+
+    hass.states.async_set(
+        entity_id,
+        HVACMode.OFF,
+        attrs,
+    )
+    await hass.async_block_till_done()
+
+    assert acc.char_target_heat_cool.value == HC_HEAT_COOL_OFF
+    assert acc.available is True
+    hass.states.async_set(
+        entity_id,
+        STATE_UNKNOWN,
+        attrs,
+    )
+    await hass.async_block_till_done()
+
+    assert acc.char_target_heat_cool.value == HC_HEAT_COOL_OFF
+    assert acc.available is True
+
+    acc.char_target_heat_cool.client_update_value(HC_HEAT_COOL_HEAT)
+    await hass.async_block_till_done()
+
+    assert acc.char_target_heat_cool.value == HC_HEAT_COOL_HEAT
+    assert acc.available is True
