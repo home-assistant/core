@@ -5,7 +5,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 from .coordinator import TedeeApiCoordinator
@@ -22,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Integration setup."""
 
-    coordinator = TedeeApiCoordinator(hass, async_get_clientsession(hass))
+    coordinator = TedeeApiCoordinator(hass)
 
     await coordinator.async_config_entry_first_refresh()
 
