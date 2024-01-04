@@ -214,7 +214,7 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
         if self.target_humidity is not None:
             data[ATTR_HUMIDITY] = self.target_humidity
 
-        if HumidifierEntityFeature.MODES in self.supported_features:
+        if HumidifierEntityFeature.MODES in self.supported_features_compat:
             data[ATTR_MODE] = self.mode
 
         return data
