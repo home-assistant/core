@@ -29,7 +29,6 @@ class EntityDomainReplacementStrategy:
 
     old_domain: str
     old_unique_id: str
-    replacement_entity_id: str
 
 
 @callback
