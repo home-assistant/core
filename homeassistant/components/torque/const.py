@@ -5,9 +5,7 @@ DOMAIN: Final = "torque"
 
 API_PATH = "/api/torque"
 
-DEFAULT_NAME = "vehicle"
-
-ENTITY_NAME_FORMAT = "{0} {1}"
+ISSUE_PLACEHOLDER = {"url": "/config/integrations/dashboard/add?domain=torque"}
 
 SENSOR_EMAIL_FIELD = "eml"
 SENSOR_NAME_KEY = r"userFullName(\w+)"

@@ -5,8 +5,8 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.torque import config_flow
-from homeassistant.components.torque.const import DEFAULT_NAME, DOMAIN
-from homeassistant.const import CONF_EMAIL, CONF_NAME
+from homeassistant.components.torque.const import DOMAIN
+from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -15,7 +15,6 @@ from tests.common import MockConfigEntry
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 MOCK_DATA_STEP = {
-    CONF_NAME: DEFAULT_NAME,
     CONF_EMAIL: "test@example.org",
 }
 
@@ -40,13 +39,11 @@ async def test_flow_user_init_data_success(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["result"].title == DEFAULT_NAME
 
     assert result["data"] == MOCK_DATA_STEP
 
 
 MOCK_DATA_IMPORT = {
-    CONF_NAME: DEFAULT_NAME,
     CONF_EMAIL: "test@example.org",
 }
 
