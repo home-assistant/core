@@ -27,7 +27,7 @@ async def async_setup_entry(
 
     entities = []
 
-    for location_id in coordinator.data.values():
+    for location_id in coordinator.data:
         entities.extend(
             [
                 StreamLabsDailyUsage(coordinator, location_id),
