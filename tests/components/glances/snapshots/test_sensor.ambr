@@ -28,7 +28,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a2e39a34b81c403748efeeebbcc5be99--docker_active',
+    'unique_id': 'test--docker_active',
     'unit_of_measurement': None,
   })
 # ---
@@ -75,7 +75,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a2e39a34b81c403748efeeebbcc5be99--docker_cpu_use',
+    'unique_id': 'test--docker_cpu_use',
     'unit_of_measurement': '%',
   })
 # ---
@@ -123,7 +123,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a2e39a34b81c403748efeeebbcc5be99--docker_memory_use',
+    'unique_id': 'test--docker_memory_use',
     'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
   })
 # ---
@@ -172,7 +172,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a2e39a34b81c403748efeeebbcc5be99-cpu_thermal 1-temperature_core',
+    'unique_id': 'test-cpu_thermal 1-temperature_core',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -220,7 +220,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a2e39a34b81c403748efeeebbcc5be99-err_temp-temperature_hdd',
+    'unique_id': 'test-err_temp-temperature_hdd',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -268,7 +268,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a2e39a34b81c403748efeeebbcc5be99-md1-available',
+    'unique_id': 'test-md1-available',
     'unit_of_measurement': None,
   })
 # ---
@@ -315,7 +315,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a2e39a34b81c403748efeeebbcc5be99-md1-used',
+    'unique_id': 'test-md1-used',
     'unit_of_measurement': None,
   })
 # ---
@@ -362,7 +362,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a2e39a34b81c403748efeeebbcc5be99-md3-available',
+    'unique_id': 'test-md3-available',
     'unit_of_measurement': None,
   })
 # ---
@@ -409,7 +409,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a2e39a34b81c403748efeeebbcc5be99-md3-used',
+    'unique_id': 'test-md3-used',
     'unit_of_measurement': None,
   })
 # ---
@@ -456,7 +456,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a2e39a34b81c403748efeeebbcc5be99-/media-disk_free',
+    'unique_id': 'test-/media-disk_free',
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
@@ -505,7 +505,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a2e39a34b81c403748efeeebbcc5be99-/media-disk_use',
+    'unique_id': 'test-/media-disk_use',
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
@@ -554,7 +554,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a2e39a34b81c403748efeeebbcc5be99-/media-disk_use_percent',
+    'unique_id': 'test-/media-disk_use_percent',
     'unit_of_measurement': '%',
   })
 # ---
@@ -602,7 +602,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a2e39a34b81c403748efeeebbcc5be99-na_temp-temperature_hdd',
+    'unique_id': 'test-na_temp-temperature_hdd',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -650,7 +650,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a2e39a34b81c403748efeeebbcc5be99--memory_free',
+    'unique_id': 'test--memory_free',
     'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
   })
 # ---
@@ -699,7 +699,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a2e39a34b81c403748efeeebbcc5be99--memory_use',
+    'unique_id': 'test--memory_use',
     'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
   })
 # ---
@@ -748,7 +748,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a2e39a34b81c403748efeeebbcc5be99--memory_use_percent',
+    'unique_id': 'test--memory_use_percent',
     'unit_of_measurement': '%',
   })
 # ---
@@ -796,7 +796,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a2e39a34b81c403748efeeebbcc5be99-/ssl-disk_free',
+    'unique_id': 'test-/ssl-disk_free',
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
@@ -845,7 +845,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a2e39a34b81c403748efeeebbcc5be99-/ssl-disk_use',
+    'unique_id': 'test-/ssl-disk_use',
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
@@ -894,7 +894,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'a2e39a34b81c403748efeeebbcc5be99-/ssl-disk_use_percent',
+    'unique_id': 'test-/ssl-disk_use_percent',
     'unit_of_measurement': '%',
   })
 # ---

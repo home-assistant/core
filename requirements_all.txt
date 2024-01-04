@@ -1038,7 +1038,7 @@ hole==0.8.0
 holidays==0.39
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240103.3
+home-assistant-frontend==20240104.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.1.2
@@ -1443,7 +1443,7 @@ oralb-ble==0.17.6
 oru==0.1.11
 
 # homeassistant.components.orvibo
-orvibo==1.1.1
+orvibo==1.1.2
 
 # homeassistant.components.ourgroceries
 ourgroceries==1.5.4
