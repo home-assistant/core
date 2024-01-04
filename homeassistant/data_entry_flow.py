@@ -137,7 +137,7 @@ class FlowResult(TypedDict, total=False):
     url: str
 
 
-class FlowManager(abc.ABC, Generic[_FlowResultT]):
+class BaseFlowManager(abc.ABC, Generic[_FlowResultT]):
     """Manage all the flows that are in progress."""
 
     def __init__(
@@ -147,9 +147,9 @@ class FlowManager(abc.ABC, Generic[_FlowResultT]):
         """Initialize the flow manager."""
         self.hass = hass
         self._preview: set[str] = set()
-        self._progress: dict[str, FlowHandler] = {}
-        self._handler_progress_index: dict[str, set[FlowHandler]] = {}
-        self._init_data_process_index: dict[type, set[FlowHandler]] = {}
+        self._progress: dict[str, BaseFlowHandler] = {}
+        self._handler_progress_index: dict[str, set[BaseFlowHandler]] = {}
+        self._init_data_process_index: dict[type, set[BaseFlowHandler]] = {}
 
     _flow_result: Callable[..., _FlowResultT]
 
@@ -160,7 +160,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT]):
         *,
         context: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
-    ) -> FlowHandler[_FlowResultT]:
+    ) -> BaseFlowHandler[_FlowResultT]:
         """Create a flow for specified handler.
 
         Handler key is the domain of the component that we want to set up.
@@ -168,11 +168,13 @@ class FlowManager(abc.ABC, Generic[_FlowResultT]):
 
     @abc.abstractmethod
     async def async_finish_flow(
-        self, flow: FlowHandler, result: _FlowResultT
+        self, flow: BaseFlowHandler, result: _FlowResultT
     ) -> _FlowResultT:
         """Finish a data entry flow."""
 
-    async def async_post_init(self, flow: FlowHandler, result: _FlowResultT) -> None:
+    async def async_post_init(
+        self, flow: BaseFlowHandler, result: _FlowResultT
+    ) -> None:
         """Entry has finished executing its first step asynchronously."""
 
     @callback
@@ -243,7 +245,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT]):
     @callback
     def _async_progress_by_handler(
         self, handler: str, match_context: dict[str, Any] | None
-    ) -> list[FlowHandler[_FlowResultT]]:
+    ) -> list[BaseFlowHandler[_FlowResultT]]:
         """Return the flows in progress by handler.
 
         If match_context is specified, only return flows with a context that
@@ -358,7 +360,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT]):
         self._async_remove_flow_progress(flow_id)
 
     @callback
-    def _async_add_flow_progress(self, flow: FlowHandler[_FlowResultT]) -> None:
+    def _async_add_flow_progress(self, flow: BaseFlowHandler[_FlowResultT]) -> None:
         """Add a flow to in progress."""
         if flow.init_data is not None:
             init_data_type = type(flow.init_data)
@@ -367,7 +369,9 @@ class FlowManager(abc.ABC, Generic[_FlowResultT]):
         self._handler_progress_index.setdefault(flow.handler, set()).add(flow)
 
     @callback
-    def _async_remove_flow_from_index(self, flow: FlowHandler[_FlowResultT]) -> None:
+    def _async_remove_flow_from_index(
+        self, flow: BaseFlowHandler[_FlowResultT]
+    ) -> None:
         """Remove a flow from in progress."""
         if flow.init_data is not None:
             init_data_type = type(flow.init_data)
@@ -392,7 +396,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT]):
 
     async def _async_handle_step(
         self,
-        flow: FlowHandler[_FlowResultT],
+        flow: BaseFlowHandler[_FlowResultT],
         step_id: str,
         user_input: dict | BaseServiceInfo | None,
     ) -> _FlowResultT:
@@ -443,7 +447,9 @@ class FlowManager(abc.ABC, Generic[_FlowResultT]):
 
         return result
 
-    def _raise_if_step_does_not_exist(self, flow: FlowHandler, step_id: str) -> None:
+    def _raise_if_step_does_not_exist(
+        self, flow: BaseFlowHandler, step_id: str
+    ) -> None:
         """Raise if the step does not exist."""
         method = f"async_step_{step_id}"
 
@@ -453,7 +459,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT]):
                 f"Handler {self.__class__.__name__} doesn't support step {step_id}"
             )
 
-    async def _async_setup_preview(self, flow: FlowHandler) -> None:
+    async def _async_setup_preview(self, flow: BaseFlowHandler) -> None:
         """Set up preview for a flow handler."""
         if flow.handler not in self._preview:
             self._preview.add(flow.handler)
@@ -461,7 +467,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT]):
 
     @callback
     def _async_flow_handler_to_flow_result(
-        self, flows: Iterable[FlowHandler], include_uninitialized: bool
+        self, flows: Iterable[BaseFlowHandler], include_uninitialized: bool
     ) -> list[_FlowResultT]:
         """Convert a list of FlowHandler to a partial FlowResult that can be serialized."""
         results = []
@@ -479,7 +485,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT]):
         return results
 
 
-class FlowHandler(Generic[_FlowResultT]):
+class BaseFlowHandler(Generic[_FlowResultT]):
     """Handle a data entry flow."""
 
     _flow_result: Callable[..., _FlowResultT]
@@ -695,3 +701,7 @@ class FlowHandler(Generic[_FlowResultT]):
     @staticmethod
     async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview."""
+
+
+class FlowHandler(BaseFlowHandler[FlowResult]):
+    """Handle a data entry flow."""
