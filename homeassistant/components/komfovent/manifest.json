@@ -1,9 +1,0 @@
-{
-  "domain": "komfovent",
-  "name": "Komfovent",
-  "codeowners": ["@ProstoSanja"],
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/komfovent",
-  "iot_class": "local_polling",
-  "requirements": ["komfovent-api==0.0.3"]
-}

@@ -268,7 +268,7 @@ async def test_platform_error_slow_setup(
         await component.async_setup({DOMAIN: {"platform": "test_platform"}})
         await hass.async_block_till_done()
         assert len(called) == 1
-        assert "test_domain.test_platform" not in hass.config.components
+        assert "test_platform.test_domain" not in hass.config.components
         assert "test_platform is taking longer than 0 seconds" in caplog.text
 
     # Cleanup lingering (setup_platform) task after test is done
@@ -833,7 +833,7 @@ async def test_setup_entry(
 
     assert await entity_platform.async_setup_entry(config_entry)
     await hass.async_block_till_done()
-    full_name = f"{entity_platform.domain}.{config_entry.domain}"
+    full_name = f"{config_entry.domain}.{entity_platform.domain}"
     assert full_name in hass.config.components
     assert len(hass.states.async_entity_ids()) == 1
     assert len(entity_registry.entities) == 1
@@ -856,7 +856,7 @@ async def test_setup_entry_platform_not_ready(
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
         assert not await ent_platform.async_setup_entry(config_entry)
 
-    full_name = f"{ent_platform.domain}.{config_entry.domain}"
+    full_name = f"{config_entry.domain}.{ent_platform.domain}"
     assert full_name not in hass.config.components
     assert len(async_setup_entry.mock_calls) == 1
     assert "Platform test not ready yet" in caplog.text
@@ -877,7 +877,7 @@ async def test_setup_entry_platform_not_ready_with_message(
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
         assert not await ent_platform.async_setup_entry(config_entry)
 
-    full_name = f"{ent_platform.domain}.{config_entry.domain}"
+    full_name = f"{config_entry.domain}.{ent_platform.domain}"
     assert full_name not in hass.config.components
     assert len(async_setup_entry.mock_calls) == 1
 
@@ -904,7 +904,7 @@ async def test_setup_entry_platform_not_ready_from_exception(
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
         assert not await ent_platform.async_setup_entry(config_entry)
 
-    full_name = f"{ent_platform.domain}.{config_entry.domain}"
+    full_name = f"{config_entry.domain}.{ent_platform.domain}"
     assert full_name not in hass.config.components
     assert len(async_setup_entry.mock_calls) == 1
 
@@ -1669,7 +1669,7 @@ async def test_setup_entry_with_entities_that_block_forever(
     ):
         assert await platform.async_setup_entry(config_entry)
         await hass.async_block_till_done()
-    full_name = f"{platform.domain}.{config_entry.domain}"
+    full_name = f"{config_entry.domain}.{platform.domain}"
     assert full_name in hass.config.components
     assert len(hass.states.async_entity_ids()) == 0
     assert len(entity_registry.entities) == 1

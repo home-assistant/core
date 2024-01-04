@@ -33,7 +33,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-@dataclass
+@dataclass(frozen=True)
 class BalboaBinarySensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -41,7 +41,7 @@ class BalboaBinarySensorEntityDescriptionMixin:
     on_off_icons: tuple[str, str]
 
 
-@dataclass
+@dataclass(frozen=True)
 class BalboaBinarySensorEntityDescription(
     BinarySensorEntityDescription, BalboaBinarySensorEntityDescriptionMixin
 ):

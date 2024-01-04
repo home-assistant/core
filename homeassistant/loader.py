@@ -131,6 +131,14 @@ class HomeKitDiscoveredIntegration:
     always_discover: bool
 
 
+class ZeroconfMatcher(TypedDict, total=False):
+    """Matcher for zeroconf."""
+
+    domain: str
+    name: str
+    properties: dict[str, str]
+
+
 class Manifest(TypedDict, total=False):
     """Integration manifest.
 
@@ -374,7 +382,7 @@ async def async_get_application_credentials(hass: HomeAssistant) -> list[str]:
     ]
 
 
-def async_process_zeroconf_match_dict(entry: dict[str, Any]) -> dict[str, Any]:
+def async_process_zeroconf_match_dict(entry: dict[str, Any]) -> ZeroconfMatcher:
     """Handle backwards compat with zeroconf matchers."""
     entry_without_type: dict[str, Any] = entry.copy()
     del entry_without_type["type"]
@@ -396,21 +404,21 @@ def async_process_zeroconf_match_dict(entry: dict[str, Any]) -> dict[str, Any]:
             else:
                 prop_dict = entry_without_type["properties"]
             prop_dict[moved_prop] = value.lower()
-    return entry_without_type
+    return cast(ZeroconfMatcher, entry_without_type)
 
 
 async def async_get_zeroconf(
     hass: HomeAssistant,
-) -> dict[str, list[dict[str, str | dict[str, str]]]]:
+) -> dict[str, list[ZeroconfMatcher]]:
     """Return cached list of zeroconf types."""
-    zeroconf: dict[str, list[dict[str, str | dict[str, str]]]] = ZEROCONF.copy()  # type: ignore[assignment]
+    zeroconf: dict[str, list[ZeroconfMatcher]] = ZEROCONF.copy()  # type: ignore[assignment]
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
         if not integration.zeroconf:
             continue
         for entry in integration.zeroconf:
-            data: dict[str, str | dict[str, str]] = {"domain": integration.domain}
+            data: ZeroconfMatcher = {"domain": integration.domain}
             if isinstance(entry, dict):
                 typ = entry["type"]
                 data.update(async_process_zeroconf_match_dict(entry))

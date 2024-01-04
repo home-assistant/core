@@ -21,7 +21,7 @@ class GetTemperatureIntent(intent.IntentHandler):
     """Handle GetTemperature intents."""
 
     intent_type = INTENT_GET_TEMPERATURE
-    slot_schema = {vol.Optional("area"): str}
+    slot_schema = {vol.Optional("area"): str, vol.Optional("name"): str}
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
@@ -48,6 +48,20 @@ class GetTemperatureIntent(intent.IntentHandler):
 
             if climate_state is None:
                 raise intent.IntentHandleError(f"No climate entity in area {area_name}")
+
+            climate_entity = component.get_entity(climate_state.entity_id)
+        elif "name" in slots:
+            # Filter by name
+            entity_name = slots["name"]["value"]
+
+            for maybe_climate in intent.async_match_states(
+                hass, name=entity_name, domains=[DOMAIN]
+            ):
+                climate_state = maybe_climate
+                break
+
+            if climate_state is None:
+                raise intent.IntentHandleError(f"No climate entity named {entity_name}")
 
             climate_entity = component.get_entity(climate_state.entity_id)
         else:

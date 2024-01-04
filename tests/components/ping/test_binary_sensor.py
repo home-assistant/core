@@ -10,11 +10,7 @@ from syrupy.filters import props
 
 from homeassistant.components.ping.const import CONF_IMPORTED_BY, DOMAIN
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-    issue_registry as ir,
-)
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -24,7 +20,6 @@ from tests.common import MockConfigEntry
 async def test_setup_and_update(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -33,10 +28,6 @@ async def test_setup_and_update(
     # check if binary sensor is there
     entry = entity_registry.async_get("binary_sensor.10_10_10_10")
     assert entry == snapshot(exclude=props("unique_id"))
-
-    # check the device
-    device = device_registry.async_get_device({(DOMAIN, "10.10.10.10")})
-    assert device == snapshot
 
     state = hass.states.get("binary_sensor.10_10_10_10")
     assert state == snapshot

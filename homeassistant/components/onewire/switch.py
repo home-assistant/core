@@ -22,7 +22,7 @@ from .onewire_entities import OneWireEntity, OneWireEntityDescription
 from .onewirehub import OneWireHub
 
 
-@dataclass
+@dataclass(frozen=True)
 class OneWireSwitchEntityDescription(OneWireEntityDescription, SwitchEntityDescription):
     """Class describing OneWire switch entities."""
 
