@@ -157,7 +157,7 @@ BASE_COMPONENT_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
         ): cv.positive_int,
-        vol.Optional(CONF_LAZY_ERROR, default=0): cv.positive_int,
+        vol.Optional(CONF_LAZY_ERROR): cv.positive_int,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
@@ -190,7 +190,7 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_STRUCTURE): cv.string,
         vol.Optional(CONF_SCALE, default=1): number_validator,
         vol.Optional(CONF_OFFSET, default=0): number_validator,
-        vol.Optional(CONF_PRECISION, default=0): cv.positive_int,
+        vol.Optional(CONF_PRECISION): cv.positive_int,
         vol.Optional(
             CONF_SWAP,
         ): vol.In(
@@ -374,7 +374,7 @@ MODBUS_SCHEMA = vol.Schema(
         vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
         vol.Optional(CONF_CLOSE_COMM_ON_ERROR): cv.boolean,
         vol.Optional(CONF_DELAY, default=0): cv.positive_int,
-        vol.Optional(CONF_RETRIES, default=3): cv.positive_int,
+        vol.Optional(CONF_RETRIES): cv.positive_int,
         vol.Optional(CONF_RETRY_ON_EMPTY): cv.boolean,
         vol.Optional(CONF_MSG_WAIT): cv.positive_int,
         vol.Optional(CONF_BINARY_SENSORS): vol.All(

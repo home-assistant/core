@@ -196,7 +196,7 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
             await mock_client.detect_event.wait()
 
         assert not device.is_active
-        assert device.is_enabled
+        assert not device.is_muted
 
         # Wake word is detected
         event_callback(
@@ -312,35 +312,36 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
 
-async def test_satellite_disabled(hass: HomeAssistant) -> None:
-    """Test callback for a satellite that has been disabled."""
-    on_disabled_event = asyncio.Event()
+async def test_satellite_muted(hass: HomeAssistant) -> None:
+    """Test callback for a satellite that has been muted."""
+    on_muted_event = asyncio.Event()
 
     original_make_satellite = wyoming._make_satellite
 
-    def make_disabled_satellite(
+    def make_muted_satellite(
         hass: HomeAssistant, config_entry: ConfigEntry, service: WyomingService
     ):
         satellite = original_make_satellite(hass, config_entry, service)
-        satellite.device.is_enabled = False
+        satellite.device.set_is_muted(True)
 
         return satellite
 
-    async def on_disabled(self):
-        on_disabled_event.set()
+    async def on_muted(self):
+        self.device.set_is_muted(False)
+        on_muted_event.set()
 
     with patch(
         "homeassistant.components.wyoming.data.load_wyoming_info",
         return_value=SATELLITE_INFO,
     ), patch(
-        "homeassistant.components.wyoming._make_satellite", make_disabled_satellite
+        "homeassistant.components.wyoming._make_satellite", make_muted_satellite
     ), patch(
-        "homeassistant.components.wyoming.satellite.WyomingSatellite.on_disabled",
-        on_disabled,
+        "homeassistant.components.wyoming.satellite.WyomingSatellite.on_muted",
+        on_muted,
     ):
         await setup_config_entry(hass)
         async with asyncio.timeout(1):
-            await on_disabled_event.wait()
+            await on_muted_event.wait()
 
 
 async def test_satellite_restart(hass: HomeAssistant) -> None:
@@ -368,11 +369,19 @@ async def test_satellite_restart(hass: HomeAssistant) -> None:
 
 async def test_satellite_reconnect(hass: HomeAssistant) -> None:
     """Test satellite reconnect call after connection refused."""
-    on_reconnect_event = asyncio.Event()
+    num_reconnects = 0
+    reconnect_event = asyncio.Event()
+    stopped_event = asyncio.Event()
 
     async def on_reconnect(self):
-        self.stop()
-        on_reconnect_event.set()
+        nonlocal num_reconnects
+        num_reconnects += 1
+        if num_reconnects >= 2:
+            reconnect_event.set()
+            self.stop()
+
+    async def on_stopped(self):
+        stopped_event.set()
 
     with patch(
         "homeassistant.components.wyoming.data.load_wyoming_info",
@@ -383,10 +392,14 @@ async def test_satellite_reconnect(hass: HomeAssistant) -> None:
     ), patch(
         "homeassistant.components.wyoming.satellite.WyomingSatellite.on_reconnect",
         on_reconnect,
+    ), patch(
+        "homeassistant.components.wyoming.satellite.WyomingSatellite.on_stopped",
+        on_stopped,
     ):
         await setup_config_entry(hass)
         async with asyncio.timeout(1):
-            await on_reconnect_event.wait()
+            await reconnect_event.wait()
+            await stopped_event.wait()
 
 
 async def test_satellite_disconnect_before_pipeline(hass: HomeAssistant) -> None:

@@ -90,23 +90,6 @@ def _todo_item(resource: caldav.CalendarObjectResource) -> TodoItem | None:
     )
 
 
-def _to_ics_fields(item: TodoItem) -> dict[str, Any]:
-    """Convert a TodoItem to the set of add or update arguments."""
-    item_data: dict[str, Any] = {}
-    if summary := item.summary:
-        item_data["summary"] = summary
-    if status := item.status:
-        item_data["status"] = TODO_STATUS_MAP_INV.get(status, "NEEDS-ACTION")
-    if due := item.due:
-        if isinstance(due, datetime):
-            item_data["due"] = dt_util.as_utc(due).strftime("%Y%m%dT%H%M%SZ")
-        else:
-            item_data["due"] = due.strftime("%Y%m%d")
-    if description := item.description:
-        item_data["description"] = description
-    return item_data
-
-
 class WebDavTodoListEntity(TodoListEntity):
     """CalDAV To-do list entity."""
 
@@ -143,9 +126,18 @@ class WebDavTodoListEntity(TodoListEntity):
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
+        item_data: dict[str, Any] = {}
+        if summary := item.summary:
+            item_data["summary"] = summary
+        if status := item.status:
+            item_data["status"] = TODO_STATUS_MAP_INV.get(status, "NEEDS-ACTION")
+        if due := item.due:
+            item_data["due"] = due
+        if description := item.description:
+            item_data["description"] = description
         try:
             await self.hass.async_add_executor_job(
-                partial(self._calendar.save_todo, **_to_ics_fields(item)),
+                partial(self._calendar.save_todo, **item_data),
             )
         except (requests.ConnectionError, DAVError) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
@@ -162,7 +154,17 @@ class WebDavTodoListEntity(TodoListEntity):
         except (requests.ConnectionError, DAVError) as err:
             raise HomeAssistantError(f"CalDAV lookup error: {err}") from err
         vtodo = todo.icalendar_component  # type: ignore[attr-defined]
-        vtodo.update(**_to_ics_fields(item))
+        vtodo["SUMMARY"] = item.summary or ""
+        if status := item.status:
+            vtodo["STATUS"] = TODO_STATUS_MAP_INV.get(status, "NEEDS-ACTION")
+        if due := item.due:
+            todo.set_due(due)  # type: ignore[attr-defined]
+        else:
+            vtodo.pop("DUE", None)
+        if description := item.description:
+            vtodo["DESCRIPTION"] = description
+        else:
+            vtodo.pop("DESCRIPTION", None)
         try:
             await self.hass.async_add_executor_job(
                 partial(

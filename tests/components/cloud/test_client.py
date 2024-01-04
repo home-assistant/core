@@ -7,7 +7,10 @@ from aiohttp import web
 import pytest
 
 from homeassistant.components.cloud import DOMAIN
-from homeassistant.components.cloud.client import CloudClient
+from homeassistant.components.cloud.client import (
+    VALID_REPAIR_TRANSLATION_KEYS,
+    CloudClient,
+)
 from homeassistant.components.cloud.const import (
     PREF_ALEXA_REPORT_STATE,
     PREF_ENABLE_ALEXA,
@@ -21,6 +24,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
 from homeassistant.const import CONTENT_TYPE_JSON, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -381,3 +385,46 @@ async def test_cloud_connection_info(hass: HomeAssistant) -> None:
         "version": HA_VERSION,
         "instance_id": "12345678901234567890",
     }
+
+
+@pytest.mark.parametrize(
+    "translation_key",
+    sorted(VALID_REPAIR_TRANSLATION_KEYS),
+)
+async def test_async_create_repair_issue_known(
+    cloud: MagicMock,
+    mock_cloud_setup: None,
+    issue_registry: IssueRegistry,
+    translation_key: str,
+) -> None:
+    """Test create repair issue for known repairs."""
+    identifier = f"test_identifier_{translation_key}"
+    await cloud.client.async_create_repair_issue(
+        identifier=identifier,
+        translation_key=translation_key,
+        placeholders={"custom_domains": "example.com"},
+        severity="warning",
+    )
+    issue = issue_registry.async_get_issue(domain=DOMAIN, issue_id=identifier)
+    assert issue is not None
+
+
+async def test_async_create_repair_issue_unknown(
+    cloud: MagicMock,
+    mock_cloud_setup: None,
+    issue_registry: IssueRegistry,
+) -> None:
+    """Test not creating repair issue for unknown repairs."""
+    identifier = "abc123"
+    with pytest.raises(
+        ValueError,
+        match="Invalid translation key unknown_translation_key",
+    ):
+        await cloud.client.async_create_repair_issue(
+            identifier=identifier,
+            translation_key="unknown_translation_key",
+            placeholders={"custom_domains": "example.com"},
+            severity="error",
+        )
+    issue = issue_registry.async_get_issue(domain=DOMAIN, issue_id=identifier)
+    assert issue is None

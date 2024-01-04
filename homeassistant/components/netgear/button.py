@@ -19,14 +19,14 @@ from .entity import NetgearRouterCoordinatorEntity
 from .router import NetgearRouter
 
 
-@dataclass
+@dataclass(frozen=True)
 class NetgearButtonEntityDescriptionRequired:
     """Required attributes of NetgearButtonEntityDescription."""
 
     action: Callable[[NetgearRouter], Callable[[], Coroutine[Any, Any, None]]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class NetgearButtonEntityDescription(
     ButtonEntityDescription, NetgearButtonEntityDescriptionRequired
 ):

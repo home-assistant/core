@@ -93,6 +93,7 @@
       'disabled_by': None,
       'domain': 'airzone_cloud',
       'entry_id': 'd186e31edb46d64d14b9b2f11f1ebd9f',
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -323,6 +324,12 @@
       }),
       'systems': dict({
         'system1': dict({
+          'aq-index': 1,
+          'aq-pm-1': 3,
+          'aq-pm-10': 3,
+          'aq-pm-2.5': 4,
+          'aq-present': True,
+          'aq-status': 'good',
           'available': True,
           'errors': list([
             dict({
@@ -397,6 +404,19 @@
         'zone1': dict({
           'action': 1,
           'active': True,
+          'aq-active': False,
+          'aq-index': 1,
+          'aq-mode-conf': 'auto',
+          'aq-mode-values': list([
+            'off',
+            'on',
+            'auto',
+          ]),
+          'aq-pm-1': 3,
+          'aq-pm-10': 3,
+          'aq-pm-2.5': 4,
+          'aq-present': True,
+          'aq-status': 'good',
           'available': True,
           'humidity': 30,
           'id': 'zone1',
@@ -444,6 +464,19 @@
         'zone2': dict({
           'action': 6,
           'active': False,
+          'aq-active': False,
+          'aq-index': 1,
+          'aq-mode-conf': 'auto',
+          'aq-mode-values': list([
+            'off',
+            'on',
+            'auto',
+          ]),
+          'aq-pm-1': 3,
+          'aq-pm-10': 3,
+          'aq-pm-2.5': 4,
+          'aq-present': True,
+          'aq-status': 'good',
           'available': True,
           'humidity': 24,
           'id': 'zone2',

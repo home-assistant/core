@@ -4,14 +4,9 @@ import logging
 
 import pytest
 
-from homeassistant.components.knx.const import (
-    CONF_PAYLOAD,
-    CONF_PAYLOAD_LENGTH,
-    DOMAIN,
-    KNX_ADDRESS,
-)
+from homeassistant.components.knx.const import CONF_PAYLOAD_LENGTH, DOMAIN, KNX_ADDRESS
 from homeassistant.components.knx.schema import ButtonSchema
-from homeassistant.const import CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_NAME, CONF_PAYLOAD, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 

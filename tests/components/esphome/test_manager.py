@@ -2,7 +2,15 @@
 from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, call
 
-from aioesphomeapi import APIClient, DeviceInfo, EntityInfo, EntityState, UserService
+from aioesphomeapi import (
+    APIClient,
+    DeviceInfo,
+    EntityInfo,
+    EntityState,
+    UserService,
+    UserServiceArg,
+    UserServiceArgType,
+)
 import pytest
 
 from homeassistant import config_entries
@@ -45,7 +53,7 @@ async def test_esphome_device_with_old_bluetooth(
     await hass.async_block_till_done()
     issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(
-        "esphome", "ble_firmware_outdated-11:22:33:44:55:aa"
+        "esphome", "ble_firmware_outdated-11:22:33:44:55:AA"
     )
     assert (
         issue.learn_more_url
@@ -87,7 +95,10 @@ async def test_esphome_device_with_password(
     issue_registry = ir.async_get(hass)
     assert (
         issue_registry.async_get_issue(
-            "esphome", "api_password_deprecated-11:22:33:44:55:aa"
+            # This issue uses the ESPHome mac address which
+            # is always UPPER case
+            "esphome",
+            "api_password_deprecated-11:22:33:44:55:AA",
         )
         is not None
     )
@@ -118,8 +129,10 @@ async def test_esphome_device_with_current_bluetooth(
     await hass.async_block_till_done()
     issue_registry = ir.async_get(hass)
     assert (
+        # This issue uses the ESPHome device info mac address which
+        # is always UPPER case
         issue_registry.async_get_issue(
-            "esphome", "ble_firmware_outdated-11:22:33:44:55:aa"
+            "esphome", "ble_firmware_outdated-11:22:33:44:55:AA"
         )
         is None
     )
@@ -369,3 +382,221 @@ async def test_debug_logging(
     )
     await hass.async_block_till_done()
     mock_client.set_debug.assert_has_calls([call(False)])
+
+
+async def test_esphome_device_with_dash_in_name_user_services(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test a device with user services and a dash in the name."""
+    entity_info = []
+    states = []
+    service1 = UserService(
+        name="my_service",
+        key=1,
+        args=[
+            UserServiceArg(name="arg1", type=UserServiceArgType.BOOL),
+            UserServiceArg(name="arg2", type=UserServiceArgType.INT),
+            UserServiceArg(name="arg3", type=UserServiceArgType.FLOAT),
+            UserServiceArg(name="arg4", type=UserServiceArgType.STRING),
+            UserServiceArg(name="arg5", type=UserServiceArgType.BOOL_ARRAY),
+            UserServiceArg(name="arg6", type=UserServiceArgType.INT_ARRAY),
+            UserServiceArg(name="arg7", type=UserServiceArgType.FLOAT_ARRAY),
+            UserServiceArg(name="arg8", type=UserServiceArgType.STRING_ARRAY),
+        ],
+    )
+    service2 = UserService(
+        name="simple_service",
+        key=2,
+        args=[
+            UserServiceArg(name="arg1", type=UserServiceArgType.BOOL),
+        ],
+    )
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=[service1, service2],
+        device_info={"name": "with-dash"},
+        states=states,
+    )
+    await hass.async_block_till_done()
+    assert hass.services.has_service(DOMAIN, "with_dash_my_service")
+    assert hass.services.has_service(DOMAIN, "with_dash_simple_service")
+
+    await hass.services.async_call(DOMAIN, "with_dash_simple_service", {"arg1": True})
+    await hass.async_block_till_done()
+
+    mock_client.execute_service.assert_has_calls(
+        [
+            call(
+                UserService(
+                    name="simple_service",
+                    key=2,
+                    args=[UserServiceArg(name="arg1", type=UserServiceArgType.BOOL)],
+                ),
+                {"arg1": True},
+            )
+        ]
+    )
+    mock_client.execute_service.reset_mock()
+
+    # Verify the service can be removed
+    mock_client.list_entities_services = AsyncMock(
+        return_value=(entity_info, [service1])
+    )
+    await device.mock_disconnect(True)
+    await hass.async_block_till_done()
+    await device.mock_connect()
+    await hass.async_block_till_done()
+    assert hass.services.has_service(DOMAIN, "with_dash_my_service")
+    assert not hass.services.has_service(DOMAIN, "with_dash_simple_service")
+
+
+async def test_esphome_user_services_ignores_invalid_arg_types(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test a device with user services and a dash in the name."""
+    entity_info = []
+    states = []
+    service1 = UserService(
+        name="bad_service",
+        key=1,
+        args=[
+            UserServiceArg(name="arg1", type="wrong"),
+        ],
+    )
+    service2 = UserService(
+        name="simple_service",
+        key=2,
+        args=[
+            UserServiceArg(name="arg1", type=UserServiceArgType.BOOL),
+        ],
+    )
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=[service1, service2],
+        device_info={"name": "with-dash"},
+        states=states,
+    )
+    await hass.async_block_till_done()
+    assert not hass.services.has_service(DOMAIN, "with_dash_bad_service")
+    assert hass.services.has_service(DOMAIN, "with_dash_simple_service")
+
+    await hass.services.async_call(DOMAIN, "with_dash_simple_service", {"arg1": True})
+    await hass.async_block_till_done()
+
+    mock_client.execute_service.assert_has_calls(
+        [
+            call(
+                UserService(
+                    name="simple_service",
+                    key=2,
+                    args=[UserServiceArg(name="arg1", type=UserServiceArgType.BOOL)],
+                ),
+                {"arg1": True},
+            )
+        ]
+    )
+    mock_client.execute_service.reset_mock()
+
+    # Verify the service can be removed
+    mock_client.list_entities_services = AsyncMock(
+        return_value=(entity_info, [service2])
+    )
+    await device.mock_disconnect(True)
+    await hass.async_block_till_done()
+    await device.mock_connect()
+    await hass.async_block_till_done()
+    assert hass.services.has_service(DOMAIN, "with_dash_simple_service")
+    assert not hass.services.has_service(DOMAIN, "with_dash_bad_service")
+
+
+async def test_esphome_user_services_changes(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test a device with user services that change arguments."""
+    entity_info = []
+    states = []
+    service1 = UserService(
+        name="simple_service",
+        key=2,
+        args=[
+            UserServiceArg(name="arg1", type=UserServiceArgType.BOOL),
+        ],
+    )
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=[service1],
+        device_info={"name": "with-dash"},
+        states=states,
+    )
+    await hass.async_block_till_done()
+    assert hass.services.has_service(DOMAIN, "with_dash_simple_service")
+
+    await hass.services.async_call(DOMAIN, "with_dash_simple_service", {"arg1": True})
+    await hass.async_block_till_done()
+
+    mock_client.execute_service.assert_has_calls(
+        [
+            call(
+                UserService(
+                    name="simple_service",
+                    key=2,
+                    args=[UserServiceArg(name="arg1", type=UserServiceArgType.BOOL)],
+                ),
+                {"arg1": True},
+            )
+        ]
+    )
+    mock_client.execute_service.reset_mock()
+
+    new_service1 = UserService(
+        name="simple_service",
+        key=2,
+        args=[
+            UserServiceArg(name="arg1", type=UserServiceArgType.FLOAT),
+        ],
+    )
+
+    # Verify the service can be updated
+    mock_client.list_entities_services = AsyncMock(
+        return_value=(entity_info, [new_service1])
+    )
+    await device.mock_disconnect(True)
+    await hass.async_block_till_done()
+    await device.mock_connect()
+    await hass.async_block_till_done()
+    assert hass.services.has_service(DOMAIN, "with_dash_simple_service")
+
+    await hass.services.async_call(DOMAIN, "with_dash_simple_service", {"arg1": 4.5})
+    await hass.async_block_till_done()
+
+    mock_client.execute_service.assert_has_calls(
+        [
+            call(
+                UserService(
+                    name="simple_service",
+                    key=2,
+                    args=[UserServiceArg(name="arg1", type=UserServiceArgType.FLOAT)],
+                ),
+                {"arg1": 4.5},
+            )
+        ]
+    )
+    mock_client.execute_service.reset_mock()

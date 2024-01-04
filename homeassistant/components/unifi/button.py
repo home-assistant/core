@@ -57,14 +57,14 @@ async def async_power_cycle_port_control_fn(
     await api.request(DevicePowerCyclePortRequest.create(mac, int(index)))
 
 
-@dataclass
+@dataclass(frozen=True)
 class UnifiButtonEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
     """Validate and load entities from different UniFi handlers."""
 
     control_fn: Callable[[aiounifi.Controller, str], Coroutine[Any, Any, None]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class UnifiButtonEntityDescription(
     ButtonEntityDescription,
     UnifiEntityDescription[HandlerT, ApiItemT],
