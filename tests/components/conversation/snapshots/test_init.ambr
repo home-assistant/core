@@ -325,6 +325,686 @@
     ]),
   })
 # ---
+# name: test_http_api_handle_failure
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'failed_to_handle',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'An unexpected error occurred while handling the intent',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_api_no_match
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'no_valid_targets',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'No device or entity named do something',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_api_unexpected_failure
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'unknown',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'An unexpected error occurred while handling the intent',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent[None]
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': 'entity',
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent[homeassistant]
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': 'entity',
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent_alias_added_removed
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen light',
+            'type': 'entity',
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent_alias_added_removed.1
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen light',
+            'type': 'entity',
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent_alias_added_removed.2
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'no_valid_targets',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'No device or entity named late added alias',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent_conversion_not_expose_new
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'no_valid_targets',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'No area named kitchen',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent_conversion_not_expose_new.1
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen light',
+            'type': 'entity',
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent_entity_added_removed
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': 'entity',
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent_entity_added_removed.1
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.late',
+            'name': 'friendly light',
+            'type': 'entity',
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent_entity_added_removed.2
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.late',
+            'name': 'friendly light',
+            'type': 'entity',
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent_entity_added_removed.3
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'no_valid_targets',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'No area named late added',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent_entity_exposed
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen light',
+            'type': 'entity',
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent_entity_exposed.1
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen light',
+            'type': 'entity',
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent_entity_exposed.2
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'no_valid_targets',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'No area named kitchen',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent_entity_exposed.3
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'no_valid_targets',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'No area named my cool',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent_entity_exposed.4
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen light',
+            'type': 'entity',
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent_entity_exposed.5
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen light',
+            'type': 'entity',
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent_entity_renamed
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen light',
+            'type': 'entity',
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent_entity_renamed.1
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'renamed light',
+            'type': 'entity',
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent_entity_renamed.2
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'no_valid_targets',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'No area named kitchen',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent_entity_renamed.3
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen light',
+            'type': 'entity',
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent_entity_renamed.4
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'code': 'no_valid_targets',
+      }),
+      'language': 'en',
+      'response_type': 'error',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'No area named renamed',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_http_processing_intent_target_ha_agent
+  dict({
+    'conversation_id': None,
+    'response': dict({
+      'card': dict({
+      }),
+      'data': dict({
+        'failed': list([
+        ]),
+        'success': list([
+          dict({
+            'id': 'light.kitchen',
+            'name': 'kitchen',
+            'type': 'entity',
+          }),
+        ]),
+        'targets': list([
+        ]),
+      }),
+      'language': 'en',
+      'response_type': 'action_done',
+      'speech': dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Turned on the light',
+        }),
+      }),
+    }),
+  })
+# ---
 # name: test_turn_on_intent[None-turn kitchen on-None]
   dict({
     'conversation_id': None,
@@ -439,7 +1119,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Turned on light',
+          'speech': 'Turned on the light',
         }),
       }),
     }),
@@ -469,7 +1149,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Turned on light',
+          'speech': 'Turned on the light',
         }),
       }),
     }),
@@ -499,7 +1179,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Turned on light',
+          'speech': 'Turned on the light',
         }),
       }),
     }),
@@ -529,7 +1209,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Turned on light',
+          'speech': 'Turned on the light',
         }),
       }),
     }),
