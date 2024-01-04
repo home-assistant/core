@@ -1832,13 +1832,12 @@ def as_datetime(value: Any, local: bool = False, default: Any = _SENTINEL) -> An
     Add midnight in case of datetime.date, and current date in case of datetime.time
     """
     if isinstance(value, datetime | date | time):
-        today = dt_util.start_of_local_day()
         # add midnight to datetime.date
         if type(value) is date:
-            value = datetime.combine(value, today.time())
+            value = datetime.combine(value, dt_util.parse_time("00:00"))
         # add current date to datetime.time
         elif type(value) is time:
-            value = datetime.combine(today.date(), value)
+            value = datetime.combine(date.today(), value)
         # add local timezone if requested
         if local:
             return dt_util.as_local(value)
