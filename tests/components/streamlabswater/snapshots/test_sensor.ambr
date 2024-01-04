@@ -1,0 +1,136 @@
+# serializer version: 1
+# name: test_all_entities[sensor.water_monitor_daily_water-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.water_monitor_daily_water',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Water Monitor Daily Water',
+    'platform': 'streamlabswater',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '945e7c52-854a-41e1-8524-50c6993277e1-daily_usage',
+    'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+  })
+# ---
+# name: test_all_entities[sensor.water_monitor_daily_water-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Water Monitor Daily Water',
+      'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.water_monitor_daily_water',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '200.4',
+  })
+# ---
+# name: test_all_entities[sensor.water_monitor_monthly_water-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.water_monitor_monthly_water',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Water Monitor Monthly Water',
+    'platform': 'streamlabswater',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '945e7c52-854a-41e1-8524-50c6993277e1-monthly_usage',
+    'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+  })
+# ---
+# name: test_all_entities[sensor.water_monitor_monthly_water-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Water Monitor Monthly Water',
+      'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.water_monitor_monthly_water',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '420.5',
+  })
+# ---
+# name: test_all_entities[sensor.water_monitor_yearly_water-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.water_monitor_yearly_water',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Water Monitor Yearly Water',
+    'platform': 'streamlabswater',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '945e7c52-854a-41e1-8524-50c6993277e1-yearly_usage',
+    'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+  })
+# ---
+# name: test_all_entities[sensor.water_monitor_yearly_water-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Water Monitor Yearly Water',
+      'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.water_monitor_yearly_water',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '65432.4',
+  })
+# ---
