@@ -15,6 +15,9 @@ from .const import DOMAIN, EMPTY_MAC
 
 PLATFORMS: list[Platform] = [
     Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
 ]
 
 
