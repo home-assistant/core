@@ -26,7 +26,7 @@ NAME_MONTHLY_USAGE = "Monthly Water"
 NAME_YEARLY_USAGE = "Yearly Water"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class StreamlabsWaterSensorEntityDescription(SensorEntityDescription):
     """Streamlabs sensor entity description."""
 
