@@ -50,7 +50,7 @@ class TessieStateUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 session=self.session,
                 api_key=self.api_key,
                 vin=self.vin,
-                use_cache=self.did_first_update,
+                use_cache=not self.did_first_update,
             )
         except ClientResponseError as e:
             if e.status == HTTPStatus.UNAUTHORIZED:
