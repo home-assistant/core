@@ -322,7 +322,7 @@ def _async_setup_keypads(
 
 @callback
 def _async_build_trigger_schemas(
-    keypad_button_names_to_leap: dict[int, dict[str, int]]
+    keypad_button_names_to_leap: dict[int, dict[str, int]],
 ) -> dict[int, vol.Schema]:
     """Build device trigger schemas."""
 

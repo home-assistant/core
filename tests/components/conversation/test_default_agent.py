@@ -307,8 +307,8 @@ async def test_device_area_context(
     turn_on_calls = async_mock_service(hass, "light", "turn_on")
     turn_off_calls = async_mock_service(hass, "light", "turn_off")
 
-    area_kitchen = area_registry.async_get_or_create("kitchen")
-    area_bedroom = area_registry.async_get_or_create("bedroom")
+    area_kitchen = area_registry.async_get_or_create("Kitchen")
+    area_bedroom = area_registry.async_get_or_create("Bedroom")
 
     # Create 2 lights in each area
     area_lights = defaultdict(list)
@@ -323,7 +323,7 @@ async def test_device_area_context(
                 "off",
                 attributes={ATTR_FRIENDLY_NAME: f"{area.name} light {i}"},
             )
-            area_lights[area.name].append(light_entity)
+            area_lights[area.id].append(light_entity)
 
     # Create voice satellites in each area
     entry = MockConfigEntry()
@@ -354,6 +354,8 @@ async def test_device_area_context(
     )
     await hass.async_block_till_done()
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.intent is not None
+    assert result.response.intent.slots["area"]["value"] == area_kitchen.id
 
     # Verify only kitchen lights were targeted
     assert {s.entity_id for s in result.response.matched_states} == {
@@ -375,6 +377,8 @@ async def test_device_area_context(
     )
     await hass.async_block_till_done()
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.intent is not None
+    assert result.response.intent.slots["area"]["value"] == area_bedroom.id
 
     # Verify only bedroom lights were targeted
     assert {s.entity_id for s in result.response.matched_states} == {
@@ -396,6 +400,8 @@ async def test_device_area_context(
     )
     await hass.async_block_till_done()
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.intent is not None
+    assert result.response.intent.slots["area"]["value"] == area_bedroom.id
 
     # Verify only bedroom lights were targeted
     assert {s.entity_id for s in result.response.matched_states} == {

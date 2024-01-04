@@ -4,12 +4,12 @@ from __future__ import annotations
 from holidays import HolidayBase, country_holidays, list_supported_countries
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LANGUAGE
+from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import CONF_COUNTRY, CONF_PROVINCE, DOMAIN, PLATFORMS
+from .const import CONF_PROVINCE, DOMAIN, PLATFORMS
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

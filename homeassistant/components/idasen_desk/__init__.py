@@ -24,7 +24,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
-PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.COVER]
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.COVER, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 

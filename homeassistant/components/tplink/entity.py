@@ -18,7 +18,7 @@ _P = ParamSpec("_P")
 
 
 def async_refresh_after(
-    func: Callable[Concatenate[_T, _P], Awaitable[None]]
+    func: Callable[Concatenate[_T, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
     """Define a wrapper to refresh after."""
 

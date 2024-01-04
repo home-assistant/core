@@ -36,7 +36,7 @@ from .entity import CoordinatedTPLinkEntity
 from .models import TPLinkData
 
 
-@dataclass
+@dataclass(frozen=True)
 class TPLinkSensorEntityDescription(SensorEntityDescription):
     """Describes TPLink sensor entity."""
 

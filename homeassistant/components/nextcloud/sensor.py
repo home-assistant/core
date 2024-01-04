@@ -30,13 +30,13 @@ from .entity import NextcloudEntity
 UNIT_OF_LOAD: Final[str] = "load"
 
 
-@dataclass
+@dataclass(frozen=True)
 class NextcloudSensorEntityDescription(SensorEntityDescription):
     """Describes Nextcloud sensor entity."""
 
-    value_fn: Callable[
-        [str | int | float], str | int | float | datetime
-    ] = lambda value: value
+    value_fn: Callable[[str | int | float], str | int | float | datetime] = (
+        lambda value: value
+    )
 
 
 SENSORS: Final[list[NextcloudSensorEntityDescription]] = [

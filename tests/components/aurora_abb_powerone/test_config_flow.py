@@ -1,5 +1,4 @@
 """Test the Aurora ABB PowerOne Solar PV config flow."""
-from logging import INFO
 from unittest.mock import patch
 
 from aurorapy.client import AuroraError, AuroraTimeoutError
@@ -49,9 +48,6 @@ async def test_form(hass: HomeAssistant) -> None:
     ), patch(
         "aurorapy.client.AuroraSerialClient.firmware",
         return_value="1.234",
-    ), patch(
-        "homeassistant.components.aurora_abb_powerone.config_flow._LOGGER.getEffectiveLevel",
-        return_value=INFO,
     ) as mock_setup, patch(
         "homeassistant.components.aurora_abb_powerone.async_setup_entry",
         return_value=True,

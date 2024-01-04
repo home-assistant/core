@@ -200,7 +200,7 @@ async def async_load_platforms(
 
     load_coroutines: list[Coroutine[Any, Any, None]] = []
     platforms: list[Platform] = []
-    reload_configs: list[tuple] = []
+    reload_configs: list[tuple[Platform, dict[str, Any]]] = []
     for platform_config in command_line_config:
         for platform, _config in platform_config.items():
             if (mapped_platform := PLATFORM_MAPPING[platform]) not in platforms:

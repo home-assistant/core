@@ -109,14 +109,14 @@ def _format_cbs_report(
     return result
 
 
-@dataclass
+@dataclass(frozen=True)
 class BMWRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[MyBMWVehicle], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class BMWBinarySensorEntityDescription(
     BinarySensorEntityDescription, BMWRequiredKeysMixin
 ):

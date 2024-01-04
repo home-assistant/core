@@ -2,6 +2,8 @@
 import datetime
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.components import geonetnz_quakes
 from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.components.geonetnz_quakes import DEFAULT_SCAN_INTERVAL, DOMAIN, FEED
@@ -38,7 +40,11 @@ from tests.common import async_fire_time_changed
 CONFIG = {geonetnz_quakes.DOMAIN: {CONF_RADIUS: 200}}
 
 
-async def test_setup(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
+async def test_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test the general setup of the integration."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -64,9 +70,8 @@ async def test_setup(hass: HomeAssistant, entity_registry: er.EntityRegistry) ->
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "aio_geojson_client.feed.GeoJsonFeed.update"
-    ) as mock_feed_update:
+    freezer.move_to(utcnow)
+    with patch("aio_geojson_client.feed.GeoJsonFeed.update") as mock_feed_update:
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
         assert await async_setup_component(hass, geonetnz_quakes.DOMAIN, CONFIG)
         await hass.async_block_till_done()
@@ -167,17 +172,17 @@ async def test_setup(hass: HomeAssistant, entity_registry: er.EntityRegistry) ->
         assert len(entity_registry.entities) == 1
 
 
-async def test_setup_imperial(hass: HomeAssistant) -> None:
+async def test_setup_imperial(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test the setup of the integration using imperial unit system."""
     hass.config.units = US_CUSTOMARY_SYSTEM
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 15.5, (38.0, -3.0))
 
     # Patching 'utcnow' to gain more control over the timed update.
-    utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "aio_geojson_client.feed.GeoJsonFeed.update"
-    ) as mock_feed_update, patch(
+    freezer.move_to(dt_util.utcnow())
+    with patch("aio_geojson_client.feed.GeoJsonFeed.update") as mock_feed_update, patch(
         "aio_geojson_client.feed.GeoJsonFeed.last_timestamp", create=True
     ):
         mock_feed_update.return_value = "OK", [mock_entry_1]
