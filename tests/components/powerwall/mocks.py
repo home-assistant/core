@@ -1,17 +1,18 @@
 """Mocks for powerwall."""
 
+import asyncio
 import json
 import os
-from unittest.mock import MagicMock, Mock
+from unittest.mock import AsyncMock, MagicMock
 
 from tesla_powerwall import (
     DeviceType,
     GridStatus,
-    MetersAggregates,
+    MetersAggregatesResponse,
     Powerwall,
-    PowerwallStatus,
-    SiteInfo,
-    SiteMaster,
+    PowerwallStatusResponse,
+    SiteInfoResponse,
+    SiteMasterResponse,
 )
 
 from tests.common import load_fixture
@@ -21,27 +22,28 @@ MOCK_GATEWAY_DIN = "111-0----2-000000000FFA"
 
 async def _mock_powerwall_with_fixtures(hass):
     """Mock data used to build powerwall state."""
-    meters = await _async_load_json_fixture(hass, "meters.json")
-    sitemaster = await _async_load_json_fixture(hass, "sitemaster.json")
-    site_info = await _async_load_json_fixture(hass, "site_info.json")
-    status = await _async_load_json_fixture(hass, "status.json")
-    device_type = await _async_load_json_fixture(hass, "device_type.json")
+    async with asyncio.TaskGroup() as tg:
+        meters = tg.create_task(_async_load_json_fixture(hass, "meters.json"))
+        sitemaster = tg.create_task(_async_load_json_fixture(hass, "sitemaster.json"))
+        site_info = tg.create_task(_async_load_json_fixture(hass, "site_info.json"))
+        status = tg.create_task(_async_load_json_fixture(hass, "status.json"))
+        device_type = tg.create_task(_async_load_json_fixture(hass, "device_type.json"))
 
-    return _mock_powerwall_return_value(
-        site_info=SiteInfo(site_info),
+    return await _mock_powerwall_return_value(
+        site_info=SiteInfoResponse.from_dict(site_info.result()),
         charge=47.34587394586,
-        sitemaster=SiteMaster(sitemaster),
-        meters=MetersAggregates(meters),
+        sitemaster=SiteMasterResponse.from_dict(sitemaster.result()),
+        meters=MetersAggregatesResponse.from_dict(meters.result()),
         grid_services_active=True,
         grid_status=GridStatus.CONNECTED,
-        status=PowerwallStatus(status),
-        device_type=DeviceType(device_type["device_type"]),
+        status=PowerwallStatusResponse.from_dict(status.result()),
+        device_type=DeviceType(device_type.result()["device_type"]),
         serial_numbers=["TG0123456789AB", "TG9876543210BA"],
         backup_reserve_percentage=15.0,
     )
 
 
-def _mock_powerwall_return_value(
+async def _mock_powerwall_return_value(
     site_info=None,
     charge=None,
     sitemaster=None,
@@ -53,39 +55,48 @@ def _mock_powerwall_return_value(
     serial_numbers=None,
     backup_reserve_percentage=None,
 ):
-    powerwall_mock = MagicMock(Powerwall("1.2.3.4"))
-    powerwall_mock.get_site_info = Mock(return_value=site_info)
-    powerwall_mock.get_charge = Mock(return_value=charge)
-    powerwall_mock.get_sitemaster = Mock(return_value=sitemaster)
-    powerwall_mock.get_meters = Mock(return_value=meters)
-    powerwall_mock.get_grid_status = Mock(return_value=grid_status)
-    powerwall_mock.get_status = Mock(return_value=status)
-    powerwall_mock.get_device_type = Mock(return_value=device_type)
-    powerwall_mock.get_serial_numbers = Mock(return_value=serial_numbers)
-    powerwall_mock.get_backup_reserve_percentage = Mock(
-        return_value=backup_reserve_percentage
-    )
-    powerwall_mock.is_grid_services_active = Mock(return_value=grid_services_active)
+    async with Powerwall("1.2.3.4") as powerwall:
+        powerwall_mock = MagicMock(powerwall)
 
-    return powerwall_mock
+        powerwall_mock.get_site_info = AsyncMock(return_value=site_info)
+        powerwall_mock.get_charge = AsyncMock(return_value=charge)
+        powerwall_mock.get_sitemaster = AsyncMock(return_value=sitemaster)
+        powerwall_mock.get_meters = AsyncMock(return_value=meters)
+        powerwall_mock.get_grid_status = AsyncMock(return_value=grid_status)
+        powerwall_mock.get_status = AsyncMock(return_value=status)
+        powerwall_mock.get_device_type = AsyncMock(return_value=device_type)
+        powerwall_mock.get_serial_numbers = AsyncMock(return_value=serial_numbers)
+        powerwall_mock.get_backup_reserve_percentage = AsyncMock(
+            return_value=backup_reserve_percentage
+        )
+        powerwall_mock.is_grid_services_active = AsyncMock(
+            return_value=grid_services_active
+        )
+
+        return powerwall_mock
 
 
 async def _mock_powerwall_site_name(hass, site_name):
-    powerwall_mock = MagicMock(Powerwall("1.2.3.4"))
+    async with Powerwall("1.2.3.4") as powerwall:
+        powerwall_mock = MagicMock(powerwall)
 
-    site_info_resp = SiteInfo(await _async_load_json_fixture(hass, "site_info.json"))
-    # Sets site_info_resp.site_name to return site_name
-    site_info_resp.response["site_name"] = site_name
-    powerwall_mock.get_site_info = Mock(return_value=site_info_resp)
-    powerwall_mock.get_gateway_din = Mock(return_value=MOCK_GATEWAY_DIN)
+        site_info_resp = SiteInfoResponse(
+            await _async_load_json_fixture(hass, "site_info.json")
+        )
+        # Sets site_info_resp.site_name to return site_name
+        site_info_resp.response["site_name"] = site_name
+        powerwall_mock.get_site_info = AsyncMock(return_value=site_info_resp)
+        powerwall_mock.get_gateway_din = AsyncMock(return_value=MOCK_GATEWAY_DIN)
 
-    return powerwall_mock
+        return powerwall_mock
 
 
-def _mock_powerwall_side_effect(site_info=None):
-    powerwall_mock = MagicMock(Powerwall("1.2.3.4"))
-    powerwall_mock.get_site_info = Mock(side_effect=site_info)
-    return powerwall_mock
+async def _mock_powerwall_side_effect(site_info=None):
+    async with Powerwall("1.2.3.4") as powerwall:
+        powerwall_mock = MagicMock(powerwall)
+
+        powerwall_mock.get_site_info = AsyncMock(side_effect=site_info)
+        return powerwall_mock
 
 
 async def _async_load_json_fixture(hass, path):

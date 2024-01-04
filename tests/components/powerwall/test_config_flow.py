@@ -63,7 +63,9 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_powerwall = _mock_powerwall_side_effect(site_info=PowerwallUnreachableError)
+    mock_powerwall = await _mock_powerwall_side_effect(
+        site_info=PowerwallUnreachableError
+    )
 
     with patch(
         "homeassistant.components.powerwall.config_flow.Powerwall",
@@ -84,7 +86,9 @@ async def test_invalid_auth(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_powerwall = _mock_powerwall_side_effect(site_info=AccessDeniedError("any"))
+    mock_powerwall = await _mock_powerwall_side_effect(
+        site_info=AccessDeniedError("any")
+    )
 
     with patch(
         "homeassistant.components.powerwall.config_flow.Powerwall",
@@ -105,7 +109,7 @@ async def test_form_unknown_exeption(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_powerwall = _mock_powerwall_side_effect(site_info=ValueError)
+    mock_powerwall = await _mock_powerwall_side_effect(site_info=ValueError)
 
     with patch(
         "homeassistant.components.powerwall.config_flow.Powerwall",
@@ -125,7 +129,7 @@ async def test_form_wrong_version(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_powerwall = _mock_powerwall_side_effect(
+    mock_powerwall = await _mock_powerwall_side_effect(
         site_info=MissingAttributeError({}, "")
     )
 
@@ -286,7 +290,9 @@ async def test_dhcp_discovery_auto_configure(hass: HomeAssistant) -> None:
 
 async def test_dhcp_discovery_cannot_connect(hass: HomeAssistant) -> None:
     """Test we can process the discovery from dhcp and we cannot connect."""
-    mock_powerwall = _mock_powerwall_side_effect(site_info=PowerwallUnreachableError)
+    mock_powerwall = await _mock_powerwall_side_effect(
+        site_info=PowerwallUnreachableError
+    )
 
     with patch(
         "homeassistant.components.powerwall.config_flow.Powerwall",

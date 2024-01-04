@@ -1,14 +1,15 @@
 """The Tesla Powerwall integration."""
 from __future__ import annotations
 
+import asyncio
 import contextlib
 from datetime import timedelta
 import logging
+from typing import Optional, cast
 
-import requests
 from tesla_powerwall import (
     AccessDeniedError,
-    APIError,
+    ApiError,
     MissingAttributeError,
     Powerwall,
     PowerwallError,
@@ -70,11 +71,11 @@ class PowerwallDataManager:
         """Return true if the api has changed out from under us."""
         return self.runtime_data[POWERWALL_API_CHANGED]
 
-    def _recreate_powerwall_login(self) -> None:
+    async def _recreate_powerwall_login(self) -> None:
         """Recreate the login on auth failure."""
         if self.power_wall.is_authenticated():
-            self.power_wall.logout()
-        self.power_wall.login(self.password or "")
+            await self.power_wall.logout()
+        await self.power_wall.login(self.password or "")
 
     async def async_update_data(self) -> PowerwallData:
         """Fetch data from API endpoint."""
@@ -82,16 +83,16 @@ class PowerwallDataManager:
         _LOGGER.debug("Checking if update failed")
         if self.api_changed:
             raise UpdateFailed("The powerwall api has changed")
-        return await self.hass.async_add_executor_job(self._update_data)
+        return await self._update_data()
 
-    def _update_data(self) -> PowerwallData:
+    async def _update_data(self) -> PowerwallData:
         """Fetch data from API endpoint."""
         _LOGGER.debug("Updating data")
         for attempt in range(2):
             try:
                 if attempt == 1:
-                    self._recreate_powerwall_login()
-                data = _fetch_powerwall_data(self.power_wall)
+                    await self._recreate_powerwall_login()
+                data = await _fetch_powerwall_data(self.power_wall)
             except PowerwallUnreachableError as err:
                 raise UpdateFailed("Unable to fetch data from powerwall") from err
             except MissingAttributeError as err:
@@ -112,7 +113,7 @@ class PowerwallDataManager:
                 _LOGGER.debug("Access denied, trying to reauthenticate")
                 # there is still an attempt left to authenticate,
                 # so we continue in the loop
-            except APIError as err:
+            except ApiError as err:
                 raise UpdateFailed(f"Updated failed due to {err}, will retry") from err
             else:
                 return data
@@ -121,20 +122,17 @@ class PowerwallDataManager:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tesla Powerwall from a config entry."""
-    http_session = requests.Session()
     ip_address: str = entry.data[CONF_IP_ADDRESS]
 
     password: str | None = entry.data.get(CONF_PASSWORD)
-    power_wall = Powerwall(ip_address, http_session=http_session)
+    power_wall = Powerwall(ip_address)
     try:
-        base_info = await hass.async_add_executor_job(
-            _login_and_fetch_base_info, power_wall, ip_address, password
-        )
+        base_info = await _login_and_fetch_base_info(power_wall, ip_address, password)
     except PowerwallUnreachableError as err:
-        http_session.close()
+        await power_wall.close()
         raise ConfigEntryNotReady from err
     except MissingAttributeError as err:
-        http_session.close()
+        await power_wall.close()
         # The error might include some important information about what exactly changed.
         _LOGGER.error("The powerwall api has changed: %s", str(err))
         persistent_notification.async_create(
@@ -143,10 +141,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
     except AccessDeniedError as err:
         _LOGGER.debug("Authentication failed", exc_info=err)
-        http_session.close()
+        await power_wall.close()
         raise ConfigEntryAuthFailed from err
-    except APIError as err:
-        http_session.close()
+    except ApiError as err:
+        await power_wall.close()
         raise ConfigEntryNotReady from err
 
     gateway_din = base_info.gateway_din
@@ -156,7 +154,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     runtime_data = PowerwallRuntimeData(
         api_changed=False,
         base_info=base_info,
-        http_session=http_session,
         coordinator=None,
         api_instance=power_wall,
     )
@@ -183,44 +180,81 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def _login_and_fetch_base_info(
+async def _login_and_fetch_base_info(
     power_wall: Powerwall, host: str, password: str | None
 ) -> PowerwallBaseInfo:
     """Login to the powerwall and fetch the base info."""
     if password is not None:
-        power_wall.login(password)
-    return call_base_info(power_wall, host)
+        await power_wall.login(password)
+    return await _call_base_info(power_wall, host)
 
 
-def call_base_info(power_wall: Powerwall, host: str) -> PowerwallBaseInfo:
+async def _call_base_info(power_wall: Powerwall, host: str) -> PowerwallBaseInfo:
     """Return PowerwallBaseInfo for the device."""
-    # Make sure the serial numbers always have the same order
-    gateway_din = None
-    with contextlib.suppress(AssertionError, PowerwallError):
-        gateway_din = power_wall.get_gateway_din().upper()
+
+    async def get_gateway_din() -> str:
+        # Make sure the serial numbers always have the same order
+        gateway_din: str
+        with contextlib.suppress(AssertionError, PowerwallError):
+            gateway_din = await power_wall.get_gateway_din()
+
+        return gateway_din.upper()
+
+    (
+        gateway_din,
+        site_info,
+        status,
+        device_type,
+        serial_numbers,
+    ) = await asyncio.gather(
+        get_gateway_din(),
+        power_wall.get_site_info(),
+        power_wall.get_status(),
+        power_wall.get_device_type(),
+        power_wall.get_serial_numbers(),
+    )
+
     return PowerwallBaseInfo(
         gateway_din=gateway_din,
-        site_info=power_wall.get_site_info(),
-        status=power_wall.get_status(),
-        device_type=power_wall.get_device_type(),
-        serial_numbers=sorted(power_wall.get_serial_numbers()),
+        site_info=site_info,
+        status=status,
+        device_type=device_type,
+        serial_numbers=serial_numbers,
         url=f"https://{host}",
     )
 
 
-def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
+async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
     """Process and update powerwall data."""
-    try:
-        backup_reserve = power_wall.get_backup_reserve_percentage()
-    except MissingAttributeError:
-        backup_reserve = None
+
+    async def get_backup_reserve_percentage() -> Optional[float]:
+        try:
+            return cast(float, await power_wall.get_backup_reserve_percentage())
+        except MissingAttributeError:
+            return None
+
+    (
+        backup_reserve,
+        charge,
+        site_master,
+        meters,
+        grid_services_active,
+        grid_status,
+    ) = await asyncio.gather(
+        get_backup_reserve_percentage(),
+        power_wall.get_charge(),
+        power_wall.get_sitemaster(),
+        power_wall.get_meters(),
+        power_wall.is_grid_services_active(),
+        power_wall.get_grid_status(),
+    )
 
     return PowerwallData(
-        charge=power_wall.get_charge(),
-        site_master=power_wall.get_sitemaster(),
-        meters=power_wall.get_meters(),
-        grid_services_active=power_wall.is_grid_services_active(),
-        grid_status=power_wall.get_grid_status(),
+        charge=charge,
+        site_master=site_master,
+        meters=meters,
+        grid_services_active=grid_services_active,
+        grid_status=grid_status,
         backup_reserve=backup_reserve,
     )
 

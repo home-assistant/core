@@ -3,8 +3,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import cast
 
-from tesla_powerwall import Meter, MeterType
+from tesla_powerwall import MeterResponse, MeterType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -36,7 +37,7 @@ _METER_DIRECTION_IMPORT = "import"
 class PowerwallRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[Meter], float]
+    value_fn: Callable[[MeterResponse], float]
 
 
 @dataclass(frozen=True)
@@ -46,24 +47,24 @@ class PowerwallSensorEntityDescription(
     """Describes Powerwall entity."""
 
 
-def _get_meter_power(meter: Meter) -> float:
+def _get_meter_power(meter: MeterResponse) -> float:
     """Get the current value in kW."""
-    return meter.get_power(precision=3)
+    return cast(float, meter.get_power(precision=3))
 
 
-def _get_meter_frequency(meter: Meter) -> float:
+def _get_meter_frequency(meter: MeterResponse) -> float:
     """Get the current value in Hz."""
-    return round(meter.frequency, 1)
+    return round(cast(float, meter.frequency), 1)
 
 
-def _get_meter_total_current(meter: Meter) -> float:
+def _get_meter_total_current(meter: MeterResponse) -> float:
     """Get the current value in A."""
-    return meter.get_instant_total_current()
+    return cast(float, meter.get_instant_total_current())
 
 
-def _get_meter_average_voltage(meter: Meter) -> float:
+def _get_meter_average_voltage(meter: MeterResponse) -> float:
     """Get the current value in V."""
-    return round(meter.average_voltage, 1)
+    return round(cast(float, meter.average_voltage), 1)
 
 
 POWERWALL_INSTANT_SENSORS = (
@@ -227,7 +228,7 @@ class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
         return super().available and self.native_value != 0
 
     @property
-    def meter(self) -> Meter:
+    def meter(self) -> MeterResponse:
         """Get the meter for the sensor."""
         return self.data.meters.get_meter(self._meter)
 
@@ -246,7 +247,7 @@ class PowerWallExportSensor(PowerWallEnergyDirectionSensor):
     @property
     def native_value(self) -> float:
         """Get the current value in kWh."""
-        return self.meter.get_energy_exported()
+        return cast(float, self.meter.get_energy_exported())
 
 
 class PowerWallImportSensor(PowerWallEnergyDirectionSensor):
@@ -263,4 +264,4 @@ class PowerWallImportSensor(PowerWallEnergyDirectionSensor):
     @property
     def native_value(self) -> float:
         """Get the current value in kWh."""
-        return self.meter.get_energy_imported()
+        return cast(float, self.meter.get_energy_imported())

@@ -1,16 +1,17 @@
 """Config flow for Tesla Powerwall integration."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, cast
 
 from tesla_powerwall import (
     AccessDeniedError,
     MissingAttributeError,
     Powerwall,
     PowerwallUnreachableError,
-    SiteInfo,
+    SiteInfoResponse,
 )
 import voluptuous as vol
 
@@ -32,19 +33,24 @@ ENTRY_FAILURE_STATES = {
 }
 
 
-def _login_and_fetch_site_info(
+async def _login_and_fetch_site_info(
     power_wall: Powerwall, password: str
-) -> tuple[SiteInfo, str]:
+) -> tuple[SiteInfoResponse, str]:
     """Login to the powerwall and fetch the base info."""
     if password is not None:
-        power_wall.login(password)
-    return power_wall.get_site_info(), power_wall.get_gateway_din()
+        await power_wall.login(password)
+
+    return cast(
+        tuple[SiteInfoResponse, str],
+        await asyncio.gather(power_wall.get_site_info(), power_wall.get_gateway_din()),
+    )
 
 
-def _powerwall_is_reachable(ip_address: str, password: str) -> bool:
+async def _powerwall_is_reachable(ip_address: str, password: str) -> bool:
     """Check if the powerwall is reachable."""
     try:
-        Powerwall(ip_address).login(password)
+        async with Powerwall(ip_address) as power_wall:
+            await power_wall.login(password)
     except AccessDeniedError:
         return True
     except PowerwallUnreachableError:
@@ -60,20 +66,20 @@ async def validate_input(
     Data has the keys from schema with values provided by the user.
     """
 
-    power_wall = Powerwall(data[CONF_IP_ADDRESS])
-    password = data[CONF_PASSWORD]
+    async with Powerwall(data[CONF_IP_ADDRESS]) as power_wall:
+        password = data[CONF_PASSWORD]
 
-    try:
-        site_info, gateway_din = await hass.async_add_executor_job(
-            _login_and_fetch_site_info, power_wall, password
-        )
-    except MissingAttributeError as err:
-        # Only log the exception without the traceback
-        _LOGGER.error(str(err))
-        raise WrongVersion from err
+        try:
+            site_info, gateway_din = await _login_and_fetch_site_info(
+                power_wall, password
+            )
+        except MissingAttributeError as err:
+            # Only log the exception without the traceback
+            _LOGGER.error(str(err))
+            raise WrongVersion from err
 
-    # Return info that you want to store in the config entry.
-    return {"title": site_info.site_name, "unique_id": gateway_din.upper()}
+        # Return info that you want to store in the config entry.
+        return {"title": site_info.site_name, "unique_id": gateway_din.upper()}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -102,9 +108,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return bool(
             entry.state in ENTRY_FAILURE_STATES
             or not async_last_update_was_successful(self.hass, entry)
-        ) and not await self.hass.async_add_executor_job(
-            _powerwall_is_reachable, ip_address, password
-        )
+        ) and not await _powerwall_is_reachable(ip_address, password)
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
