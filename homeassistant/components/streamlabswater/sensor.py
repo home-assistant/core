@@ -21,10 +21,6 @@ from . import StreamlabsCoordinator
 from .const import DOMAIN
 from .coordinator import StreamlabsData
 
-NAME_DAILY_USAGE = "Daily Water"
-NAME_MONTHLY_USAGE = "Monthly Water"
-NAME_YEARLY_USAGE = "Yearly Water"
-
 
 @dataclass(frozen=True, kw_only=True)
 class StreamlabsWaterSensorEntityDescription(SensorEntityDescription):
@@ -36,21 +32,21 @@ class StreamlabsWaterSensorEntityDescription(SensorEntityDescription):
 SENSORS: tuple[StreamlabsWaterSensorEntityDescription, ...] = (
     StreamlabsWaterSensorEntityDescription(
         key="daily_usage",
-        name=NAME_DAILY_USAGE,
+        translation_key="daily_usage",
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         device_class=SensorDeviceClass.WATER,
         value_fn=lambda data: data.daily_usage,
     ),
     StreamlabsWaterSensorEntityDescription(
         key="monthly_usage",
-        name=NAME_MONTHLY_USAGE,
+        translation_key="monthly_usage",
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         device_class=SensorDeviceClass.WATER,
         value_fn=lambda data: data.monthly_usage,
     ),
     StreamlabsWaterSensorEntityDescription(
         key="yearly_usage",
-        name=NAME_YEARLY_USAGE,
+        translation_key="yearly_usage",
         native_unit_of_measurement=UnitOfVolume.GALLONS,
         device_class=SensorDeviceClass.WATER,
         value_fn=lambda data: data.yearly_usage,
