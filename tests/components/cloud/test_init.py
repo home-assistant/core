@@ -6,8 +6,9 @@ from hass_nabucasa import Cloud
 import pytest
 
 from homeassistant.components import cloud
+from homeassistant.components.cloud.client import CloudClient
 from homeassistant.components.cloud.const import DOMAIN
-from homeassistant.components.cloud.prefs import STORAGE_KEY
+from homeassistant.components.cloud.prefs import STORAGE_KEY, CloudPreferences
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized
@@ -214,3 +215,49 @@ async def test_remote_ui_url(hass: HomeAssistant, mock_cloud_fixture) -> None:
         cl.client.prefs._prefs["remote_domain"] = "example.com"
 
         assert cloud.async_remote_ui_url(hass) == "https://example.com"
+
+
+async def test_async_get_or_create_cloudhook(
+    hass: HomeAssistant, mock_cloud_fixture: CloudPreferences
+) -> None:
+    """Test async_get_or_create_cloudhook."""
+    cl: Cloud[CloudClient] = hass.data[DOMAIN]
+    webhook_id = "mock-webhook-id"
+
+    # Not connected
+    with pytest.raises(cloud.CloudNotConnected):
+        await cloud.async_get_or_create_cloudhook(hass, webhook_id)
+
+    # Simulate connected
+    cl.iot.state = "connected"
+
+    # Not logged in
+    with pytest.raises(cloud.CloudNotAvailable):
+        await cloud.async_get_or_create_cloudhook(hass, webhook_id)
+
+    cloudhook_url = "https://cloudhook.nabu.casa/abcdefg"
+
+    with patch.object(cloud, "async_is_logged_in", return_value=True), patch.object(
+        cloud, "async_create_cloudhook", return_value=cloudhook_url
+    ) as async_create_cloudhook_mock:
+        # create cloudhook as it does not exist
+        assert (
+            await cloud.async_get_or_create_cloudhook(hass, webhook_id)
+        ) == cloudhook_url
+        async_create_cloudhook_mock.assert_called_once_with(hass, webhook_id)
+
+        mock_cloud_fixture._prefs[cloud.const.PREF_CLOUDHOOKS] = {
+            webhook_id: {
+                "webhook_id": webhook_id,
+                "cloudhook_id": "random-id",
+                "cloudhook_url": cloudhook_url,
+                "managed": True,
+            }
+        }
+        async_create_cloudhook_mock.reset_mock()
+
+        # get cloudhook as it exists
+        assert (
+            await cloud.async_get_or_create_cloudhook(hass, webhook_id) == cloudhook_url
+        )
+        async_create_cloudhook_mock.assert_not_called()
