@@ -23,6 +23,15 @@ def icon_value_validator(value: Any) -> str:
     return str(value)
 
 
+def require_default_icon_validator(value: dict) -> dict:
+    """Validate that a default icon is set."""
+    if "_" not in value:
+        raise vol.Invalid(
+            "An entity component needs to have a default icon defined with `_`"
+        )
+    return value
+
+
 def icon_schema(integration_type: str) -> vol.Schema:
     """Create a icon schema."""
 
@@ -53,10 +62,13 @@ def icon_schema(integration_type: str) -> vol.Schema:
     if integration_type == "entity":
         return base_schema.extend(
             {
-                vol.Required("entity_component"): cv.schema_with_slug_keys(
-                    icon_schema_slug(vol.Required),
-                    slug_validator=vol.Any("_", cv.slug),
-                ),
+                vol.Required("entity_component"): vol.All(
+                    cv.schema_with_slug_keys(
+                        icon_schema_slug(vol.Required),
+                        slug_validator=vol.Any("_", cv.slug),
+                    ),
+                    require_default_icon_validator,
+                )
             }
         )
     return base_schema.extend(
