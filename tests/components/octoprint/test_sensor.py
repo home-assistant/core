@@ -23,7 +23,7 @@ async def test_sensors(
         "temperature": {"tool1": {"actual": 18.83136, "target": 37.83136}},
     }
     job = {
-        "job": {},
+        "job": {"file": "test.stl"},
         "progress": {"completion": 50, "printTime": 600, "printTimeLeft": 6000},
         "state": "Printing",
     }
@@ -125,7 +125,7 @@ async def test_sensors_paused(
         "temperature": {"tool1": {"actual": 18.83136, "target": None}},
     }
     job = {
-        "job": {},
+        "job": {"file": "test.stl"},
         "progress": {"completion": 50, "printTime": 600, "printTimeLeft": 6000},
         "state": "Paused",
     }
@@ -154,7 +154,7 @@ async def test_sensors_printer_disconnected(
 ) -> None:
     """Test the underlying sensors."""
     job = {
-        "job": {},
+        "job": {"file": "test.stl"},
         "progress": {"completion": 50, "printTime": 600, "printTimeLeft": 6000},
         "state": "Paused",
     }
