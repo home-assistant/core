@@ -1098,12 +1098,10 @@ class EnumSensor(Sensor):
     """Sensor with value from enum."""
 
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENUM
-    _enum: type[enum.Enum] | None = None
+    _enum: type[enum.Enum]
 
     def formatter(self, value: int) -> str | None:
         """Use name of enum."""
-        if self._enum is None:
-            return None
         return self._enum(value).name
 
 
