@@ -286,18 +286,19 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
         self,
         coordinator: GlancesDataUpdateCoordinator,
         description: GlancesSensorEntityDescription,
-        sensor_key: str | None = None,
+        sensor_label: str | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_name = f"{sensor_name_prefix} {description.name_suffix}".strip()
+        if sensor_label:
+            self._attr_translation_placeholders = {"sensor_label": sensor_label}
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             manufacturer="Glances",
-            name=name or coordinator.host,
+            name=coordinator.host,
         )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{sensor_name_prefix}-{description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{description.key}-{description.key}"
 
     @property
     def available(self) -> bool:
