@@ -94,7 +94,12 @@ async def async_setup_entry(
     async_finish_entity_domain_replacements(
         hass,
         entry,
-        (EntityDomainReplacementStrategy(BINARY_SENSOR_DOMAIN, f"{uid}_ap_enabled"),),
+        (
+            EntityDomainReplacementStrategy(
+                BINARY_SENSOR_DOMAIN,
+                f"{uid}_ap_enabled",
+            ),
+        ),
     )
 
     @callback
