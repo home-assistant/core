@@ -26,7 +26,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
 )
-from homeassistant.util.network import is_ipv6_address
 
 from .const import CONF_CREDENTIALS, CONF_IDENTIFIERS, CONF_START_OFF, DOMAIN
 
@@ -128,7 +127,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _entry_unique_id_from_identifers(self, all_identifiers: set[str]) -> str | None:
         """Search existing entries for an identifier and return the unique id."""
         for entry in self._async_current_entries():
-            if all_identifiers.intersection(
+            if not all_identifiers.isdisjoint(
                 entry.data.get(CONF_IDENTIFIERS, [entry.unique_id])
             ):
                 return entry.unique_id
@@ -184,9 +183,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle device found via zeroconf."""
-        host = discovery_info.host
-        if is_ipv6_address(host):
+        if discovery_info.ip_address.version == 6:
             return self.async_abort(reason="ipv6_not_supported")
+        host = discovery_info.host
         self._async_abort_entries_match({CONF_ADDRESS: host})
         service_type = discovery_info.type[:-1]  # Remove leading .
         name = discovery_info.name.replace(f".{service_type}.", "")
@@ -327,7 +326,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             existing_identifiers = set(
                 entry.data.get(CONF_IDENTIFIERS, [entry.unique_id])
             )
-            if not all_identifiers.intersection(existing_identifiers):
+            if all_identifiers.isdisjoint(existing_identifiers):
                 continue
             combined_identifiers = existing_identifiers | all_identifiers
             if entry.data.get(

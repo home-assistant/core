@@ -132,7 +132,7 @@ class HyperionLight(LightEntity):
         hyperion_client: client.HyperionClient,
     ) -> None:
         """Initialize the light."""
-        self._unique_id = self._compute_unique_id(server_id, instance_num)
+        self._attr_unique_id = self._compute_unique_id(server_id, instance_num)
         self._device_id = get_hyperion_device_id(server_id, instance_num)
         self._instance_name = instance_name
         self._options = options
@@ -153,15 +153,17 @@ class HyperionLight(LightEntity):
             f"{const.KEY_PRIORITIES}-{const.KEY_UPDATE}": self._update_priorities,
             f"{const.KEY_CLIENT}-{const.KEY_UPDATE}": self._update_client,
         }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer=HYPERION_MANUFACTURER_NAME,
+            model=HYPERION_MODEL_NAME,
+            name=self._instance_name,
+            configuration_url=self._client.remote_url,
+        )
 
     def _compute_unique_id(self, server_id: str, instance_num: int) -> str:
         """Compute a unique id for this instance."""
         return get_hyperion_unique_id(server_id, instance_num, TYPE_HYPERION_LIGHT)
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Whether or not the entity is enabled by default."""
-        return True
 
     @property
     def brightness(self) -> int:
@@ -195,22 +197,6 @@ class HyperionLight(LightEntity):
     def available(self) -> bool:
         """Return server availability."""
         return bool(self._client.has_loaded_state)
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique id for this instance."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device_id)},
-            manufacturer=HYPERION_MANUFACTURER_NAME,
-            model=HYPERION_MODEL_NAME,
-            name=self._instance_name,
-            configuration_url=self._client.remote_url,
-        )
 
     def _get_option(self, key: str) -> Any:
         """Get a value from the provided options."""

@@ -19,7 +19,6 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
 )
-from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_MAIN_USER, CONF_USERS, DOMAIN
 
@@ -152,24 +151,6 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 ),
                 user_input or {CONF_USERS: []},
             ),
-        )
-
-    async def async_step_import(self, import_config: ConfigType) -> FlowResult:
-        """Import config from yaml."""
-        for entry in self._async_current_entries():
-            if entry.options[CONF_API_KEY] == import_config[CONF_API_KEY]:
-                return self.async_abort(reason="already_configured")
-        users, _ = validate_lastfm_users(
-            import_config[CONF_API_KEY], import_config[CONF_USERS]
-        )
-        return self.async_create_entry(
-            title="LastFM",
-            data={},
-            options={
-                CONF_API_KEY: import_config[CONF_API_KEY],
-                CONF_MAIN_USER: None,
-                CONF_USERS: users,
-            },
         )
 
 

@@ -1,0 +1,39 @@
+name: "CodeQL"
+
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches:
+      - dev
+      - rc
+      - master
+  schedule:
+    - cron: "30 18 * * 4"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v4.1.1
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3.22.12
+        with:
+          languages: python
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3.22.12
+        with:
+          category: "/language:python"

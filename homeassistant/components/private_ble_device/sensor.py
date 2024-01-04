@@ -18,6 +18,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfLength,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -25,14 +26,16 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .entity import BasePrivateDeviceEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class PrivateDeviceSensorEntityDescriptionRequired:
     """Required domain specific fields for sensor entity."""
 
-    value_fn: Callable[[bluetooth.BluetoothServiceInfoBleak], str | int | float | None]
+    value_fn: Callable[
+        [HomeAssistant, bluetooth.BluetoothServiceInfoBleak], str | int | float | None
+    ]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PrivateDeviceSensorEntityDescription(
     SensorEntityDescription, PrivateDeviceSensorEntityDescriptionRequired
 ):
@@ -46,7 +49,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda service_info: service_info.advertisement.rssi,
+        value_fn=lambda _, service_info: service_info.advertisement.rssi,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PrivateDeviceSensorEntityDescription(
@@ -56,7 +59,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda service_info: service_info.advertisement.tx_power,
+        value_fn=lambda _, service_info: service_info.advertisement.tx_power,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PrivateDeviceSensorEntityDescription(
@@ -64,13 +67,33 @@ SENSOR_DESCRIPTIONS = (
         translation_key="estimated_distance",
         icon="mdi:signal-distance-variant",
         native_unit_of_measurement=UnitOfLength.METERS,
-        value_fn=lambda service_info: service_info.advertisement
+        value_fn=lambda _, service_info: service_info.advertisement
         and service_info.advertisement.tx_power
         and calculate_distance_meters(
             service_info.advertisement.tx_power * 10, service_info.advertisement.rssi
         ),
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DISTANCE,
+        suggested_display_precision=1,
+    ),
+    PrivateDeviceSensorEntityDescription(
+        key="estimated_broadcast_interval",
+        translation_key="estimated_broadcast_interval",
+        icon="mdi:timer-sync-outline",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=(
+            lambda hass, service_info: (
+                bluetooth.async_get_learned_advertising_interval(
+                    hass, service_info.address
+                )
+                or bluetooth.async_get_fallback_availability_interval(
+                    hass, service_info.address
+                )
+                or bluetooth.FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+            )
+        ),
         suggested_display_precision=1,
     ),
 )
@@ -124,4 +147,4 @@ class PrivateBLEDeviceSensor(BasePrivateDeviceEntity, SensorEntity):
     def native_value(self) -> str | int | float | None:
         """Return the state of the sensor."""
         assert self._last_info
-        return self.entity_description.value_fn(self._last_info)
+        return self.entity_description.value_fn(self.hass, self._last_info)

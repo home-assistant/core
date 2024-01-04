@@ -3,11 +3,11 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .client_wrapper import CannotConnect, InvalidAuth, create_client, validate_input
-from .const import CONF_CLIENT_DEVICE_ID, DOMAIN, LOGGER, PLATFORMS
+from .const import CONF_CLIENT_DEVICE_ID, DOMAIN, PLATFORMS
 from .coordinator import JellyfinDataUpdateCoordinator, SessionsDataUpdateCoordinator
 from .models import JellyfinData
 
@@ -30,9 +30,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         user_id, connect_result = await validate_input(hass, dict(entry.data), client)
     except CannotConnect as ex:
         raise ConfigEntryNotReady("Cannot connect to Jellyfin server") from ex
-    except InvalidAuth:
-        LOGGER.error("Failed to login to Jellyfin server")
-        return False
+    except InvalidAuth as ex:
+        raise ConfigEntryAuthFailed(ex) from ex
 
     server_info: dict[str, Any] = connect_result["Servers"][0]
 

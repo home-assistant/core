@@ -4,24 +4,27 @@ from __future__ import annotations
 from twitchAPI.helper import first
 from twitchAPI.twitch import (
     AuthType,
-    InvalidTokenException,
-    MissingScopeException,
     Twitch,
     TwitchAPIException,
-    TwitchAuthorizationException,
     TwitchResourceNotFound,
     TwitchUser,
 )
 import voluptuous as vol
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_CHANNELS, LOGGER, OAUTH_SCOPES
+from .const import CONF_CHANNELS, DOMAIN, LOGGER, OAUTH_SCOPES
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -49,6 +52,11 @@ STATE_OFFLINE = "offline"
 STATE_STREAMING = "streaming"
 
 
+def chunk_list(lst: list, chunk_size: int) -> list[list]:
+    """Split a list into chunks of chunk_size."""
+    return [lst[i : i + chunk_size] for i in range(0, len(lst), chunk_size)]
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -56,42 +64,55 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Twitch platform."""
-    channels = config[CONF_CHANNELS]
-    client_id = config[CONF_CLIENT_ID]
-    client_secret = config[CONF_CLIENT_SECRET]
-    oauth_token = config.get(CONF_TOKEN)
-
-    try:
-        client = await Twitch(
-            app_id=client_id,
-            app_secret=client_secret,
-            target_app_auth_scope=OAUTH_SCOPES,
-        )
-        client.auto_refresh_auth = False
-    except TwitchAuthorizationException:
-        LOGGER.error("Invalid client ID or client secret")
-        return
-
-    if oauth_token:
-        try:
-            await client.set_user_authentication(
-                token=oauth_token, scope=OAUTH_SCOPES, validate=True
-            )
-        except MissingScopeException:
-            LOGGER.error("OAuth token is missing required scope")
-            return
-        except InvalidTokenException:
-            LOGGER.error("OAuth token is invalid")
-            return
-
-    twitch_users: list[TwitchUser] = []
-    async for channel in client.get_users(logins=channels):
-        twitch_users.append(channel)
-
-    async_add_entities(
-        [TwitchSensor(channel, client) for channel in twitch_users],
-        True,
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(config[CONF_CLIENT_ID], config[CONF_CLIENT_SECRET]),
     )
+    if CONF_TOKEN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+            )
+        )
+    else:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_credentials_imported",
+            breaks_in_ha_version="2024.4.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_credentials_imported",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Twitch",
+            },
+        )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize entries."""
+    client = hass.data[DOMAIN][entry.entry_id]
+
+    channels = entry.options[CONF_CHANNELS]
+
+    entities: list[TwitchSensor] = []
+
+    # Split channels into chunks of 100 to avoid hitting the rate limit
+    for chunk in chunk_list(channels, 100):
+        entities.extend(
+            [
+                TwitchSensor(channel, client)
+                async for channel in client.get_users(logins=chunk)
+            ]
+        )
+
+    async_add_entities(entities, True)
 
 
 class TwitchSensor(SensorEntity):
@@ -109,7 +130,7 @@ class TwitchSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Update device state."""
-        followers = (await self._client.get_users_follows(to_id=self._channel.id)).total
+        followers = (await self._client.get_channel_followers(self._channel.id)).total
         self._attr_extra_state_attributes = {
             ATTR_FOLLOWING: followers,
             ATTR_VIEWS: self._channel.view_count,
@@ -149,13 +170,11 @@ class TwitchSensor(SensorEntity):
         except TwitchAPIException as exc:
             LOGGER.error("Error response on check_user_subscription: %s", exc)
 
-        follows = (
-            await self._client.get_users_follows(
-                from_id=user.id, to_id=self._channel.id
-            )
-        ).data
-        self._attr_extra_state_attributes[ATTR_FOLLOW] = len(follows) > 0
-        if len(follows):
-            self._attr_extra_state_attributes[ATTR_FOLLOW_SINCE] = follows[
+        follows = await self._client.get_followed_channels(
+            user.id, broadcaster_id=self._channel.id
+        )
+        self._attr_extra_state_attributes[ATTR_FOLLOW] = follows.total > 0
+        if follows.total:
+            self._attr_extra_state_attributes[ATTR_FOLLOW_SINCE] = follows.data[
                 0
             ].followed_at

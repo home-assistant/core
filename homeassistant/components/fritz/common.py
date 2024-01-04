@@ -566,7 +566,7 @@ class FritzBoxTools(
                     self.fritz_hosts.get_mesh_topology
                 )
             ):
-                # pylint: disable=broad-exception-raised
+                # pylint: disable-next=broad-exception-raised
                 raise Exception("Mesh supported but empty topology reported")
         except FritzActionError:
             self.mesh_role = MeshRoles.SLAVE
@@ -1092,14 +1092,14 @@ class FritzBoxBaseEntity:
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzRequireKeysMixin:
     """Fritz entity description mix in."""
 
-    value_fn: Callable[[FritzStatus, Any], Any]
+    value_fn: Callable[[FritzStatus, Any], Any] | None
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzEntityDescription(EntityDescription, FritzRequireKeysMixin):
     """Fritz entity base description."""
 
@@ -1118,9 +1118,12 @@ class FritzBoxBaseCoordinatorEntity(update_coordinator.CoordinatorEntity[AvmWrap
     ) -> None:
         """Init device info class."""
         super().__init__(avm_wrapper)
-        self.async_on_remove(
-            avm_wrapper.register_entity_updates(description.key, description.value_fn)
-        )
+        if description.value_fn is not None:
+            self.async_on_remove(
+                avm_wrapper.register_entity_updates(
+                    description.key, description.value_fn
+                )
+            )
         self.entity_description = description
         self._device_name = device_name
         self._attr_unique_id = f"{avm_wrapper.unique_id}-{description.key}"

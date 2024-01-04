@@ -22,16 +22,10 @@ import homeassistant.helpers.issue_registry as ir
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
-async def test_device_config_file_changed(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    hass_ws_client: WebSocketGenerator,
-    client,
-    multisensor_6_state,
-    integration,
-) -> None:
-    """Test the device_config_file_changed issue."""
-    dev_reg = dr.async_get(hass)
+async def _trigger_repair_issue(
+    hass: HomeAssistant, client, multisensor_6_state
+) -> Node:
+    """Trigger repair issue."""
     # Create a node
     node_state = deepcopy(multisensor_6_state)
     node = Node(client, node_state)
@@ -50,6 +44,23 @@ async def test_device_config_file_changed(
     ):
         client.driver.controller.receive_event(event)
         await hass.async_block_till_done()
+
+    client.async_send_command_no_wait.reset_mock()
+
+    return node
+
+
+async def test_device_config_file_changed(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    client,
+    multisensor_6_state,
+    integration,
+) -> None:
+    """Test the device_config_file_changed issue."""
+    dev_reg = dr.async_get(hass)
+    node = await _trigger_repair_issue(hass, client, multisensor_6_state)
 
     client.async_send_command_no_wait.reset_mock()
 
@@ -157,3 +168,46 @@ async def test_invalid_issue(
     msg = await ws_client.receive_json()
     assert msg["success"]
     assert len(msg["result"]["issues"]) == 0
+
+
+async def test_abort_confirm(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+    client,
+    multisensor_6_state,
+    integration,
+) -> None:
+    """Test aborting device_config_file_changed issue in confirm step."""
+    dev_reg = dr.async_get(hass)
+    node = await _trigger_repair_issue(hass, client, multisensor_6_state)
+
+    device = dev_reg.async_get_device(identifiers={get_device_id(client.driver, node)})
+    assert device
+    issue_id = f"device_config_file_changed.{device.id}"
+
+    await async_process_repairs_platforms(hass)
+    await hass_ws_client(hass)
+    http_client = await hass_client()
+
+    url = RepairsFlowIndexView.url
+    resp = await http_client.post(url, json={"handler": DOMAIN, "issue_id": issue_id})
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data["step_id"] == "confirm"
+
+    # Unload config entry so we can't connect to the node
+    await hass.config_entries.async_unload(integration.entry_id)
+
+    # Apply fix
+    url = RepairsFlowResourceView.url.format(flow_id=flow_id)
+    resp = await http_client.post(url)
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data["type"] == "abort"
+    assert data["reason"] == "cannot_connect"
+    assert data["description_placeholders"] == {"device_name": device.name}

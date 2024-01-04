@@ -105,6 +105,7 @@ EFFECT_SUNSET = "Sunset"
 EFFECT_ROMANCE = "Romance"
 EFFECT_HAPPY_BIRTHDAY = "Happy Birthday"
 EFFECT_CANDLE_FLICKER = "Candle Flicker"
+EFFECT_TEA_TIME = "Tea Time"
 
 YEELIGHT_TEMP_ONLY_EFFECT_LIST = [EFFECT_TEMP, EFFECT_STOP]
 
@@ -118,6 +119,7 @@ YEELIGHT_MONO_EFFECT_LIST = [
     EFFECT_TWITTER,
     EFFECT_HOME,
     EFFECT_CANDLE_FLICKER,
+    EFFECT_TEA_TIME,
     *YEELIGHT_TEMP_ONLY_EFFECT_LIST,
 ]
 
@@ -162,6 +164,7 @@ EFFECTS_MAP = {
     EFFECT_ROMANCE: flows.romance,
     EFFECT_HAPPY_BIRTHDAY: flows.happy_birthday,
     EFFECT_CANDLE_FLICKER: flows.candle_flicker,
+    EFFECT_TEA_TIME: flows.tea_time,
 }
 
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Range(min=1, max=100))

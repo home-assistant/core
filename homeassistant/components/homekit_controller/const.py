@@ -77,6 +77,9 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.VENDOR_EVE_ENERGY_WATT: "sensor",
     CharacteristicsTypes.VENDOR_EVE_DEGREE_AIR_PRESSURE: "sensor",
     CharacteristicsTypes.VENDOR_EVE_DEGREE_ELEVATION: "number",
+    CharacteristicsTypes.VENDOR_EVE_MOTION_DURATION: "number",
+    CharacteristicsTypes.VENDOR_EVE_MOTION_SENSITIVITY: "number",
+    CharacteristicsTypes.VENDOR_EVE_THERMO_VALVE_POSITION: "sensor",
     CharacteristicsTypes.VENDOR_HAA_SETUP: "button",
     CharacteristicsTypes.VENDOR_HAA_UPDATE: "button",
     CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY: "sensor",
@@ -101,6 +104,7 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.MUTE: "switch",
     CharacteristicsTypes.FILTER_LIFE_LEVEL: "sensor",
     CharacteristicsTypes.VENDOR_AIRVERSA_SLEEP_MODE: "switch",
+    CharacteristicsTypes.TEMPERATURE_UNITS: "select",
 }
 
 STARTUP_EXCEPTIONS = (
@@ -116,3 +120,5 @@ STARTUP_EXCEPTIONS = (
 # also happens to be the same value used by
 # the update coordinator.
 DEBOUNCE_COOLDOWN = 10  # seconds
+
+SUBSCRIBE_COOLDOWN = 0.25  # seconds

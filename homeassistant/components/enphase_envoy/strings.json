@@ -3,11 +3,14 @@
     "flow_title": "{serial} ({host})",
     "step": {
       "user": {
-        "description": "For firmware version 7.0 and later, enter the Enphase cloud credentials, for older models models, enter username `installer` without a password.",
+        "description": "For firmware version 7.0 and later, enter the Enphase cloud credentials, for older models, enter username `installer` without a password.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Enphase Envoy gateway."
         }
       }
     },
@@ -39,6 +42,9 @@
       },
       "restore_battery_level": {
         "name": "Restore battery level"
+      },
+      "reserve_soc": {
+        "name": "Reserve battery level"
       }
     },
     "select": {
@@ -74,6 +80,14 @@
           "not_powered": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::not_powered%]",
           "schedule": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::schedule%]",
           "none": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::none%]"
+        }
+      },
+      "storage_mode": {
+        "name": "Storage mode",
+        "state": {
+          "self_consumption": "Self consumption",
+          "backup": "Full backup",
+          "savings": "Savings mode"
         }
       }
     },
@@ -122,6 +136,9 @@
       }
     },
     "switch": {
+      "charge_from_grid": {
+        "name": "Charge from grid"
+      },
       "grid_enabled": {
         "name": "Grid enabled"
       }

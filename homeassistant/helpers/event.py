@@ -24,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     HassJob,
+    HassJobType,
     HomeAssistant,
     State,
     callback,
@@ -135,7 +136,7 @@ class EventStateChangedData(TypedDict):
 
 
 def threaded_listener_factory(
-    async_factory: Callable[Concatenate[HomeAssistant, _P], Any]
+    async_factory: Callable[Concatenate[HomeAssistant, _P], Any],
 ) -> Callable[Concatenate[HomeAssistant, _P], CALLBACK_TYPE]:
     """Convert an async event helper to a threaded one."""
 
@@ -250,7 +251,9 @@ def async_track_state_change(
         return async_track_state_change_event(hass, entity_ids, state_change_listener)
 
     return hass.bus.async_listen(
-        EVENT_STATE_CHANGED, state_change_dispatcher, event_filter=state_change_filter  # type: ignore[arg-type]
+        EVENT_STATE_CHANGED,
+        state_change_dispatcher,  # type: ignore[arg-type]
+        event_filter=state_change_filter,  # type: ignore[arg-type]
     )
 
 
@@ -394,8 +397,8 @@ def _async_track_event(
     if listeners_key not in hass_data:
         hass_data[listeners_key] = hass.bus.async_listen(
             event_type,
-            callback(ft.partial(dispatcher_callable, hass, callbacks)),
-            event_filter=callback(ft.partial(filter_callable, hass, callbacks)),
+            ft.partial(dispatcher_callable, hass, callbacks),
+            event_filter=ft.partial(filter_callable, hass, callbacks),
         )
 
     job = HassJob(action, f"track {event_type} event {keys}")
@@ -760,7 +763,8 @@ class _TrackStateChangeFiltered:
     @callback
     def _setup_all_listener(self) -> None:
         self._listeners[_ALL_LISTENER] = self.hass.bus.async_listen(
-            EVENT_STATE_CHANGED, self._action  # type: ignore[arg-type]
+            EVENT_STATE_CHANGED,
+            self._action,  # type: ignore[arg-type]
         )
 
 
@@ -917,7 +921,6 @@ class TrackTemplateResultInfo:
 
     def async_setup(
         self,
-        raise_on_template_error: bool,
         strict: bool = False,
         log_fn: Callable[[int, str], None] | None = None,
     ) -> None:
@@ -955,8 +958,6 @@ class TrackTemplateResultInfo:
             )
 
             if info.exception:
-                if raise_on_template_error:
-                    raise info.exception
                 if not log_fn:
                     _LOGGER.error(
                         "Error while processing template: %s",
@@ -1239,7 +1240,6 @@ def async_track_template_result(
     hass: HomeAssistant,
     track_templates: Sequence[TrackTemplate],
     action: TrackTemplateResultListener,
-    raise_on_template_error: bool = False,
     strict: bool = False,
     log_fn: Callable[[int, str], None] | None = None,
     has_super_template: bool = False,
@@ -1266,11 +1266,6 @@ def async_track_template_result(
         An iterable of TrackTemplate.
     action
         Callable to call with results.
-    raise_on_template_error
-        When set to True, if there is an exception
-        processing the template during setup, the system
-        will raise the exception instead of setting up
-        tracking.
     strict
         When set to True, raise on undefined variables.
     log_fn
@@ -1286,7 +1281,7 @@ def async_track_template_result(
 
     """
     tracker = TrackTemplateResultInfo(hass, track_templates, action, has_super_template)
-    tracker.async_setup(raise_on_template_error, strict=strict, log_fn=log_fn)
+    tracker.async_setup(strict=strict, log_fn=log_fn)
     return tracker
 
 
@@ -1343,7 +1338,8 @@ def async_track_same_state(
 
     if entity_ids == MATCH_ALL:
         async_remove_state_for_cancel = hass.bus.async_listen(
-            EVENT_STATE_CHANGED, state_for_cancel_listener  # type: ignore[arg-type]
+            EVENT_STATE_CHANGED,
+            state_for_cancel_listener,  # type: ignore[arg-type]
         )
     else:
         async_remove_state_for_cancel = async_track_state_change_event(
@@ -1366,7 +1362,10 @@ def async_track_point_in_time(
     | Callable[[datetime], Coroutine[Any, Any, None] | None],
     point_in_time: datetime,
 ) -> CALLBACK_TYPE:
-    """Add a listener that fires once after a specific point in time."""
+    """Add a listener that fires once at or after a specific point in time.
+
+    The listener is passed the time it fires in local time.
+    """
     job = (
         action
         if isinstance(action, HassJob)
@@ -1382,6 +1381,7 @@ def async_track_point_in_time(
         utc_converter,
         name=f"{job.name} UTC converter",
         cancel_on_shutdown=job.cancel_on_shutdown,
+        job_type=HassJobType.Callback,
     )
     return async_track_point_in_utc_time(hass, track_job, point_in_time)
 
@@ -1397,7 +1397,10 @@ def async_track_point_in_utc_time(
     | Callable[[datetime], Coroutine[Any, Any, None] | None],
     point_in_time: datetime,
 ) -> CALLBACK_TYPE:
-    """Add a listener that fires once after a specific point in UTC time."""
+    """Add a listener that fires once at or after a specific point in time.
+
+    The listener is passed the time it fires in UTC time.
+    """
     # Ensure point_in_time is UTC
     utc_point_in_time = dt_util.as_utc(point_in_time)
     expected_fire_timestamp = dt_util.utc_to_timestamp(utc_point_in_time)
@@ -1459,7 +1462,10 @@ def async_call_at(
     | Callable[[datetime], Coroutine[Any, Any, None] | None],
     loop_time: float,
 ) -> CALLBACK_TYPE:
-    """Add a listener that is called at <loop_time>."""
+    """Add a listener that fires at or after <loop_time>.
+
+    The listener is passed the time it fires in UTC time.
+    """
     job = (
         action
         if isinstance(action, HassJob)
@@ -1476,7 +1482,10 @@ def async_call_later(
     action: HassJob[[datetime], Coroutine[Any, Any, None] | None]
     | Callable[[datetime], Coroutine[Any, Any, None] | None],
 ) -> CALLBACK_TYPE:
-    """Add a listener that is called in <delay>."""
+    """Add a listener that fires at or after <delay>.
+
+    The listener is passed the time it fires in UTC time.
+    """
     if isinstance(delay, timedelta):
         delay = delay.total_seconds()
     job = (
@@ -1501,7 +1510,10 @@ def async_track_time_interval(
     name: str | None = None,
     cancel_on_shutdown: bool | None = None,
 ) -> CALLBACK_TYPE:
-    """Add a listener that fires repetitively at every timedelta interval."""
+    """Add a listener that fires repetitively at every timedelta interval.
+
+    The listener is passed the time it fires in UTC time.
+    """
     remove: CALLBACK_TYPE
     interval_listener_job: HassJob[[datetime], None]
     interval_seconds = interval.total_seconds()
@@ -1525,7 +1537,10 @@ def async_track_time_interval(
         job_name = f"track time interval {interval} {action}"
 
     interval_listener_job = HassJob(
-        interval_listener, job_name, cancel_on_shutdown=cancel_on_shutdown
+        interval_listener,
+        job_name,
+        cancel_on_shutdown=cancel_on_shutdown,
+        job_type=HassJobType.Callback,
     )
     remove = async_call_later(hass, interval_seconds, interval_listener_job)
 
@@ -1645,7 +1660,10 @@ def async_track_utc_time_change(
     second: Any | None = None,
     local: bool = False,
 ) -> CALLBACK_TYPE:
-    """Add a listener that will fire if time matches a pattern."""
+    """Add a listener that will fire every time the UTC or local time matches a pattern.
+
+    The listener is passed the time it fires in UTC or local time.
+    """
     # We do not have to wrap the function with time pattern matching logic
     # if no pattern given
     if all(val is None or val == "*" for val in (hour, minute, second)):
@@ -1694,6 +1712,7 @@ def async_track_utc_time_change(
     pattern_time_change_listener_job = HassJob(
         pattern_time_change_listener,
         f"time change listener {hour}:{minute}:{second} {action}",
+        job_type=HassJobType.Callback,
     )
     time_listener = async_track_point_in_utc_time(
         hass, pattern_time_change_listener_job, calculate_next(dt_util.utcnow())
@@ -1720,7 +1739,10 @@ def async_track_time_change(
     minute: Any | None = None,
     second: Any | None = None,
 ) -> CALLBACK_TYPE:
-    """Add a listener that will fire if local time matches a pattern."""
+    """Add a listener that will fire every time the local time matches a pattern.
+
+    The listener is passed the time it fires in local time.
+    """
     return async_track_utc_time_change(hass, action, hour, minute, second, local=True)
 
 

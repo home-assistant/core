@@ -5,7 +5,8 @@ from typing import cast
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import TARGET_VALUE_PROPERTY, CommandClass
-from zwave_js_server.const.command_class.sound_switch import ToneID
+from zwave_js_server.const.command_class.lock import TARGET_MODE_PROPERTY
+from zwave_js_server.const.command_class.sound_switch import TONE_ID_PROPERTY, ToneID
 from zwave_js_server.model.driver import Driver
 
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
@@ -46,6 +47,8 @@ async def async_setup_entry(
             entities.append(
                 ZWaveConfigParameterSelectEntity(config_entry, driver, info)
             )
+        elif info.platform_hint == "door_lock":
+            entities.append(ZWaveDoorLockSelectEntity(config_entry, driver, info))
         else:
             entities.append(ZwaveSelectEntity(config_entry, driver, info))
         async_add_entities(entities)
@@ -95,6 +98,27 @@ class ZwaveSelectEntity(ZWaveBaseEntity, SelectEntity):
         await self._async_set_value(self.info.primary_value, int(key))
 
 
+class ZWaveDoorLockSelectEntity(ZwaveSelectEntity):
+    """Representation of a Z-Wave door lock CC mode select entity."""
+
+    def __init__(
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize a ZWaveDoorLockSelectEntity entity."""
+        super().__init__(config_entry, driver, info)
+        self._target_value = self.get_zwave_value(TARGET_MODE_PROPERTY)
+
+    async def async_select_option(self, option: str) -> None:
+        """Change the selected option."""
+        assert self._target_value is not None
+        key = next(
+            key
+            for key, val in self.info.primary_value.metadata.states.items()
+            if val == option
+        )
+        await self._async_set_value(self._target_value, int(key))
+
+
 class ZWaveConfigParameterSelectEntity(ZwaveSelectEntity):
     """Representation of a Z-Wave config parameter select."""
 
@@ -125,7 +149,7 @@ class ZwaveDefaultToneSelectEntity(ZWaveBaseEntity, SelectEntity):
         """Initialize a ZwaveDefaultToneSelectEntity entity."""
         super().__init__(config_entry, driver, info)
         self._tones_value = self.get_zwave_value(
-            "toneId", command_class=CommandClass.SOUND_SWITCH
+            TONE_ID_PROPERTY, command_class=CommandClass.SOUND_SWITCH
         )
 
         # Entity class attributes

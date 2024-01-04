@@ -513,11 +513,11 @@ async def test_switch(
     assert entry
     assert entry.unique_id == "xyz12_block_twitch"
 
-    state = hass.states.get("switch.fake_profile_block_twitter")
+    state = hass.states.get("switch.fake_profile_block_x_formerly_twitter")
     assert state
     assert state.state == STATE_ON
 
-    entry = registry.async_get("switch.fake_profile_block_twitter")
+    entry = registry.async_get("switch.fake_profile_block_x_formerly_twitter")
     assert entry
     assert entry.unique_id == "xyz12_block_twitter"
 

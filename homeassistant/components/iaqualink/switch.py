@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from iaqualink.device import AqualinkSwitch
+
 from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -30,23 +32,18 @@ async def async_setup_entry(
 class HassAqualinkSwitch(AqualinkEntity, SwitchEntity):
     """Representation of a switch."""
 
-    @property
-    def name(self) -> str:
-        """Return the name of the switch."""
-        return self.dev.label
-
-    @property
-    def icon(self) -> str | None:
-        """Return an icon based on the switch type."""
-        if self.name == "Cleaner":
-            return "mdi:robot-vacuum"
-        if self.name == "Waterfall" or self.name.endswith("Dscnt"):
-            return "mdi:fountain"
-        if self.name.endswith("Pump") or self.name.endswith("Blower"):
-            return "mdi:fan"
-        if self.name.endswith("Heater"):
-            return "mdi:radiator"
-        return None
+    def __init__(self, dev: AqualinkSwitch) -> None:
+        """Initialize AquaLink switch."""
+        super().__init__(dev)
+        name = self._attr_name = dev.label
+        if name == "Cleaner":
+            self._attr_icon = "mdi:robot-vacuum"
+        elif name == "Waterfall" or name.endswith("Dscnt"):
+            self._attr_icon = "mdi:fountain"
+        elif name.endswith("Pump") or name.endswith("Blower"):
+            self._attr_icon = "mdi:fan"
+        if name.endswith("Heater"):
+            self._attr_icon = "mdi:radiator"
 
     @property
     def is_on(self) -> bool:

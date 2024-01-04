@@ -85,6 +85,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         *,
         depth: int = 0,
         exclude: PropertyFilter | None = None,
+        include: PropertyFilter | None = None,
         matcher: PropertyMatcher | None = None,
         path: PropertyPath = (),
         visited: set[Any] | None = None,
@@ -125,6 +126,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             serializable_data,
             depth=depth,
             exclude=exclude,
+            include=include,
             matcher=matcher,
             path=path,
             visited=visited,
@@ -156,7 +158,6 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         )
         if serialized["via_device_id"] is not None:
             serialized["via_device_id"] = ANY
-        serialized.pop("_json_repr")
         return serialized
 
     @classmethod
@@ -164,7 +165,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         cls, data: er.RegistryEntry
     ) -> SerializableData:
         """Prepare a Home Assistant entity registry entry for serialization."""
-        serialized = EntityRegistryEntrySnapshot(
+        return EntityRegistryEntrySnapshot(
             attrs.asdict(data)
             | {
                 "config_entry_id": ANY,
@@ -173,9 +174,6 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
                 "options": {k: dict(v) for k, v in data.options.items()},
             }
         )
-        serialized.pop("_partial_repr")
-        serialized.pop("_display_repr")
-        return serialized
 
     @classmethod
     def _serializable_flow_result(cls, data: FlowResult) -> SerializableData:

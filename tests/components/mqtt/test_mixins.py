@@ -7,6 +7,7 @@ import pytest
 from homeassistant.components import mqtt, sensor
 from homeassistant.components.mqtt.sensor import DEFAULT_NAME as DEFAULT_SENSOR_NAME
 from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_STATE_CHANGED,
     Platform,
@@ -311,6 +312,7 @@ async def test_availability_with_shared_state_topic(
 @patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
 async def test_default_entity_and_device_name(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data,
     caplog: pytest.LogCaptureFixture,
@@ -324,7 +326,6 @@ async def test_default_entity_and_device_name(
 
     This is a test helper for the _setup_common_attributes_from_config mixin.
     """
-    # mqtt_mock = await mqtt_mock_entry()
 
     events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
     hass.state = CoreState.starting
@@ -336,9 +337,7 @@ async def test_default_entity_and_device_name(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
-    registry = dr.async_get(hass)
-
-    device = registry.async_get_device({("mqtt", "helloworld")})
+    device = device_registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
     assert device.name == device_name
 
@@ -352,3 +351,61 @@ async def test_default_entity_and_device_name(
 
     # Assert that an issues ware registered
     assert len(events) == issue_events
+
+
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR])
+async def test_name_attribute_is_set_or_not(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+) -> None:
+    """Test frendly name with device_class set.
+
+    This is a test helper for the _setup_common_attributes_from_config mixin.
+    """
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{ "name": "Gate", "state_topic": "test-topic", "device_class": "door", '
+        '"object_id": "gate",'
+        '"device": {"identifiers": "very_unique", "name": "xyz_door_sensor"}'
+        "}",
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.gate")
+
+    assert state is not None
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Gate"
+
+    # Remove the name in a discovery update
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{ "state_topic": "test-topic", "device_class": "door", '
+        '"object_id": "gate",'
+        '"device": {"identifiers": "very_unique", "name": "xyz_door_sensor"}'
+        "}",
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.gate")
+
+    assert state is not None
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Door"
+
+    # Set the name to `null` in a discovery update
+    async_fire_mqtt_message(
+        hass,
+        "homeassistant/binary_sensor/bla/config",
+        '{ "name": null, "state_topic": "test-topic", "device_class": "door", '
+        '"object_id": "gate",'
+        '"device": {"identifiers": "very_unique", "name": "xyz_door_sensor"}'
+        "}",
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.gate")
+
+    assert state is not None
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) is None

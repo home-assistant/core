@@ -27,6 +27,14 @@ class MockLocation:
         )
         return RCM("some place", 3, (0, 0))
 
+    async def uv_risk(self, api):
+        """Mock UV Index."""
+        UV = namedtuple(
+            "UV",
+            ["idPeriodo", "intervaloHora", "data", "globalIdLocal", "iUv"],
+        )
+        return UV(0, "0", datetime.now(), 0, 5.7)
+
     async def observation(self, api):
         """Mock Observation."""
         Observation = namedtuple(

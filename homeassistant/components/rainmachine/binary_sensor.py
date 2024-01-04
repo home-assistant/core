@@ -32,7 +32,7 @@ TYPE_RAINSENSOR = "rainsensor"
 TYPE_WEEKDAY = "weekday"
 
 
-@dataclass
+@dataclass(frozen=True)
 class RainMachineBinarySensorDescription(
     BinarySensorEntityDescription,
     RainMachineEntityDescription,

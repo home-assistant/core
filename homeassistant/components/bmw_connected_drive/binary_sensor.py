@@ -30,6 +30,8 @@ _LOGGER = logging.getLogger(__name__)
 
 ALLOWED_CONDITION_BASED_SERVICE_KEYS = {
     "BRAKE_FLUID",
+    "BRAKE_PADS_FRONT",
+    "BRAKE_PADS_REAR",
     "EMISSION_CHECK",
     "ENGINE_OIL",
     "OIL",
@@ -107,14 +109,14 @@ def _format_cbs_report(
     return result
 
 
-@dataclass
+@dataclass(frozen=True)
 class BMWRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[MyBMWVehicle], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class BMWBinarySensorEntityDescription(
     BinarySensorEntityDescription, BMWRequiredKeysMixin
 ):

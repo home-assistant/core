@@ -8,7 +8,15 @@ import logging
 from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from denonavr import DenonAVR
-from denonavr.const import POWER_ON, STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
+from denonavr.const import (
+    ALL_TELNET_EVENTS,
+    ALL_ZONES,
+    POWER_ON,
+    STATE_OFF,
+    STATE_ON,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 from denonavr.exceptions import (
     AvrCommandError,
     AvrForbiddenError,
@@ -19,6 +27,7 @@ from denonavr.exceptions import (
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -71,6 +80,23 @@ PARALLEL_UPDATES = 1
 SERVICE_GET_COMMAND = "get_command"
 SERVICE_SET_DYNAMIC_EQ = "set_dynamic_eq"
 SERVICE_UPDATE_AUDYSSEY = "update_audyssey"
+
+# HA Telnet events
+TELNET_EVENTS = {
+    "HD",
+    "MS",
+    "MU",
+    "MV",
+    "NS",
+    "NSE",
+    "PS",
+    "SI",
+    "SS",
+    "TF",
+    "ZM",
+    "Z2",
+    "Z3",
+}
 
 _DenonDeviceT = TypeVar("_DenonDeviceT", bound="DenonDevice")
 _R = TypeVar("_R")
@@ -218,6 +244,7 @@ class DenonDevice(MediaPlayerEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
 
     def __init__(
         self,
@@ -238,7 +265,6 @@ class DenonDevice(MediaPlayerEntity):
             name=receiver.name,
         )
         self._attr_sound_mode_list = receiver.sound_mode_list
-
         self._receiver = receiver
         self._update_audyssey = update_audyssey
 
@@ -253,7 +279,9 @@ class DenonDevice(MediaPlayerEntity):
     async def _telnet_callback(self, zone, event, parameter) -> None:
         """Process a telnet command callback."""
         # There are multiple checks implemented which reduce unnecessary updates of the ha state machine
-        if zone != self._receiver.zone:
+        if zone not in (self._receiver.zone, ALL_ZONES):
+            return
+        if event not in TELNET_EVENTS:
             return
         # Some updates trigger multiple events like one for artist and one for title for one change
         # We skip every event except the last one
@@ -267,11 +295,11 @@ class DenonDevice(MediaPlayerEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register for telnet events."""
-        self._receiver.register_callback("ALL", self._telnet_callback)
+        self._receiver.register_callback(ALL_TELNET_EVENTS, self._telnet_callback)
 
     async def async_will_remove_from_hass(self) -> None:
         """Clean up the entity."""
-        self._receiver.unregister_callback("ALL", self._telnet_callback)
+        self._receiver.unregister_callback(ALL_TELNET_EVENTS, self._telnet_callback)
 
     @async_log_errors
     async def async_update(self) -> None:
@@ -341,21 +369,11 @@ class DenonDevice(MediaPlayerEntity):
         return self._supported_features_base
 
     @property
-    def media_content_id(self):
-        """Content ID of current playing media."""
-        return None
-
-    @property
     def media_content_type(self) -> MediaType:
         """Content type of current playing media."""
         if self._receiver.state in {MediaPlayerState.PLAYING, MediaPlayerState.PAUSED}:
             return MediaType.MUSIC
         return MediaType.CHANNEL
-
-    @property
-    def media_duration(self):
-        """Duration of current playing media in seconds."""
-        return None
 
     @property
     def media_image_url(self):
@@ -388,43 +406,18 @@ class DenonDevice(MediaPlayerEntity):
         return self._receiver.station
 
     @property
-    def media_album_artist(self):
-        """Album artist of current playing media, music track only."""
-        return None
-
-    @property
-    def media_track(self):
-        """Track number of current playing media, music track only."""
-        return None
-
-    @property
-    def media_series_title(self):
-        """Title of series of current playing media, TV show only."""
-        return None
-
-    @property
-    def media_season(self):
-        """Season of current playing media, TV show only."""
-        return None
-
-    @property
-    def media_episode(self):
-        """Episode of current playing media, TV show only."""
-        return None
-
-    @property
     def extra_state_attributes(self):
         """Return device specific state attributes."""
-        if self._receiver.power != POWER_ON:
+        receiver = self._receiver
+        if receiver.power != POWER_ON:
             return {}
         state_attributes = {}
         if (
-            self._receiver.sound_mode_raw is not None
-            and self._receiver.support_sound_mode
-        ):
-            state_attributes[ATTR_SOUND_MODE_RAW] = self._receiver.sound_mode_raw
-        if self._receiver.dynamic_eq is not None:
-            state_attributes[ATTR_DYNAMIC_EQ] = self._receiver.dynamic_eq
+            sound_mode_raw := receiver.sound_mode_raw
+        ) is not None and receiver.support_sound_mode:
+            state_attributes[ATTR_SOUND_MODE_RAW] = sound_mode_raw
+        if (dynamic_eq := receiver.dynamic_eq) is not None:
+            state_attributes[ATTR_DYNAMIC_EQ] = dynamic_eq
         return state_attributes
 
     @property

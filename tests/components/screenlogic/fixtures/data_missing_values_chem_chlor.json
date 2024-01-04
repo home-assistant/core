@@ -1,0 +1,877 @@
+{
+  "adapter": {
+    "firmware": {
+      "name": "Protocol Adapter Firmware",
+      "value": "POOL: 5.2 Build 736.0 Rel",
+      "major": 5.2,
+      "minor": 736.0
+    }
+  },
+  "controller": {
+    "controller_id": 100,
+    "configuration": {
+      "body_type": {
+        "0": {
+          "min_setpoint": 40,
+          "max_setpoint": 104
+        },
+        "1": {
+          "min_setpoint": 40,
+          "max_setpoint": 104
+        }
+      },
+      "is_celsius": {
+        "name": "Is Celsius",
+        "value": 0
+      },
+      "controller_type": 13,
+      "hardware_type": 0,
+      "controller_data": 0,
+      "generic_circuit_name": "Water Features",
+      "circuit_count": 11,
+      "color_count": 8,
+      "color": [
+        {
+          "name": "White",
+          "value": [255, 255, 255]
+        },
+        {
+          "name": "Light Green",
+          "value": [160, 255, 160]
+        },
+        {
+          "name": "Green",
+          "value": [0, 255, 80]
+        },
+        {
+          "name": "Cyan",
+          "value": [0, 255, 200]
+        },
+        {
+          "name": "Blue",
+          "value": [100, 140, 255]
+        },
+        {
+          "name": "Lavender",
+          "value": [230, 130, 255]
+        },
+        {
+          "name": "Magenta",
+          "value": [255, 0, 128]
+        },
+        {
+          "name": "Light Magenta",
+          "value": [255, 180, 210]
+        }
+      ],
+      "interface_tab_flags": 127,
+      "show_alarms": 0,
+      "remotes": 0,
+      "unknown_at_offset_09": 0,
+      "unknown_at_offset_10": 0,
+      "unknown_at_offset_11": 0
+    },
+    "model": {
+      "name": "Model",
+      "value": "EasyTouch2 8"
+    },
+    "equipment": {
+      "flags": 32828,
+      "list": [
+        "CHLORINATOR",
+        "INTELLIBRITE",
+        "INTELLIFLO_0",
+        "INTELLIFLO_1",
+        "INTELLICHEM"
+      ]
+    },
+    "sensor": {
+      "state": {
+        "name": "Controller State",
+        "value": 1,
+        "device_type": "enum",
+        "enum_options": ["Unknown", "Ready", "Sync", "Service"]
+      },
+      "pool_delay": {
+        "name": "Pool Delay",
+        "value": 0
+      },
+      "spa_delay": {
+        "name": "Spa Delay",
+        "value": 0
+      },
+      "cleaner_delay": {
+        "name": "Cleaner Delay",
+        "value": 0
+      },
+      "air_temperature": {
+        "name": "Air Temperature",
+        "value": 69,
+        "unit": "\u00b0F",
+        "device_type": "temperature",
+        "state_type": "measurement"
+      },
+      "orp": {
+        "name": "ORP",
+        "value": 728,
+        "unit": "mV",
+        "state_type": "measurement"
+      },
+      "saturation": {
+        "name": "Saturation Index",
+        "value": 0.06,
+        "unit": "lsi",
+        "state_type": "measurement"
+      },
+      "salt_ppm": {
+        "name": "Salt",
+        "value": 0,
+        "unit": "ppm",
+        "state_type": "measurement"
+      },
+      "ph_supply_level": {
+        "name": "pH Supply Level",
+        "value": 2,
+        "state_type": "measurement"
+      },
+      "orp_supply_level": {
+        "name": "ORP Supply Level",
+        "value": 3,
+        "state_type": "measurement"
+      },
+      "active_alert": {
+        "name": "Active Alert",
+        "value": 0,
+        "device_type": "alarm"
+      }
+    },
+    "date_time": {
+      "timestamp": 1700489169.0,
+      "timestamp_host": 1700517812.0,
+      "auto_dst": {
+        "name": "Automatic Daylight Saving Time",
+        "value": 1
+      }
+    }
+  },
+  "circuit": {
+    "500": {
+      "circuit_id": 500,
+      "name": "Spa",
+      "configuration": {
+        "name_index": 71,
+        "flags": 1,
+        "default_runtime": 720,
+        "unknown_at_offset_62": 0,
+        "unknown_at_offset_63": 0,
+        "delay": 0
+      },
+      "function": 1,
+      "interface": 1,
+      "color": {
+        "color_set": 0,
+        "color_position": 0,
+        "color_stagger": 0
+      },
+      "device_id": 1,
+      "value": 0
+    },
+    "501": {
+      "circuit_id": 501,
+      "name": "Waterfall",
+      "configuration": {
+        "name_index": 85,
+        "flags": 0,
+        "default_runtime": 720,
+        "unknown_at_offset_94": 0,
+        "unknown_at_offset_95": 0,
+        "delay": 0
+      },
+      "function": 0,
+      "interface": 2,
+      "color": {
+        "color_set": 0,
+        "color_position": 0,
+        "color_stagger": 0
+      },
+      "device_id": 2,
+      "value": 0
+    },
+    "502": {
+      "circuit_id": 502,
+      "name": "Pool Light",
+      "configuration": {
+        "name_index": 62,
+        "flags": 0,
+        "default_runtime": 720,
+        "unknown_at_offset_126": 0,
+        "unknown_at_offset_127": 0,
+        "delay": 0
+      },
+      "function": 16,
+      "interface": 3,
+      "color": {
+        "color_set": 2,
+        "color_position": 0,
+        "color_stagger": 2
+      },
+      "device_id": 3,
+      "value": 0
+    },
+    "503": {
+      "circuit_id": 503,
+      "name": "Spa Light",
+      "configuration": {
+        "name_index": 73,
+        "flags": 0,
+        "default_runtime": 720,
+        "unknown_at_offset_158": 0,
+        "unknown_at_offset_159": 0,
+        "delay": 0
+      },
+      "function": 16,
+      "interface": 3,
+      "color": {
+        "color_set": 6,
+        "color_position": 1,
+        "color_stagger": 10
+      },
+      "device_id": 4,
+      "value": 0
+    },
+    "504": {
+      "circuit_id": 504,
+      "name": "Cleaner",
+      "configuration": {
+        "name_index": 21,
+        "flags": 0,
+        "default_runtime": 240,
+        "unknown_at_offset_186": 0,
+        "unknown_at_offset_187": 0,
+        "delay": 0
+      },
+      "function": 5,
+      "interface": 0,
+      "color": {
+        "color_set": 0,
+        "color_position": 0,
+        "color_stagger": 0
+      },
+      "device_id": 5,
+      "value": 0
+    },
+    "505": {
+      "circuit_id": 505,
+      "name": "Pool Low",
+      "configuration": {
+        "name_index": 63,
+        "flags": 1,
+        "default_runtime": 720,
+        "unknown_at_offset_214": 0,
+        "unknown_at_offset_215": 0,
+        "delay": 0
+      },
+      "function": 2,
+      "interface": 0,
+      "color": {
+        "color_set": 0,
+        "color_position": 0,
+        "color_stagger": 0
+      },
+      "device_id": 6,
+      "value": 0
+    },
+    "506": {
+      "circuit_id": 506,
+      "name": "Yard Light",
+      "configuration": {
+        "name_index": 91,
+        "flags": 0,
+        "default_runtime": 720,
+        "unknown_at_offset_246": 0,
+        "unknown_at_offset_247": 0,
+        "delay": 0
+      },
+      "function": 7,
+      "interface": 4,
+      "color": {
+        "color_set": 0,
+        "color_position": 0,
+        "color_stagger": 0
+      },
+      "device_id": 7,
+      "value": 0
+    },
+    "507": {
+      "circuit_id": 507,
+      "name": "Cameras",
+      "configuration": {
+        "name_index": 101,
+        "flags": 0,
+        "default_runtime": 1620,
+        "unknown_at_offset_274": 0,
+        "unknown_at_offset_275": 0,
+        "delay": 0
+      },
+      "function": 0,
+      "interface": 2,
+      "color": {
+        "color_set": 0,
+        "color_position": 0,
+        "color_stagger": 0
+      },
+      "device_id": 8,
+      "value": 1
+    },
+    "508": {
+      "circuit_id": 508,
+      "name": "Pool High",
+      "configuration": {
+        "name_index": 61,
+        "flags": 0,
+        "default_runtime": 720,
+        "unknown_at_offset_306": 0,
+        "unknown_at_offset_307": 0,
+        "delay": 0
+      },
+      "function": 0,
+      "interface": 0,
+      "color": {
+        "color_set": 0,
+        "color_position": 0,
+        "color_stagger": 0
+      },
+      "device_id": 9,
+      "value": 0
+    },
+    "510": {
+      "circuit_id": 510,
+      "name": "Spillway",
+      "configuration": {
+        "name_index": 78,
+        "flags": 0,
+        "default_runtime": 720,
+        "unknown_at_offset_334": 0,
+        "unknown_at_offset_335": 0,
+        "delay": 0
+      },
+      "function": 14,
+      "interface": 1,
+      "color": {
+        "color_set": 0,
+        "color_position": 0,
+        "color_stagger": 0
+      },
+      "device_id": 11,
+      "value": 0
+    },
+    "511": {
+      "circuit_id": 511,
+      "name": "Pool High",
+      "configuration": {
+        "name_index": 61,
+        "flags": 0,
+        "default_runtime": 720,
+        "unknown_at_offset_366": 0,
+        "unknown_at_offset_367": 0,
+        "delay": 0
+      },
+      "function": 0,
+      "interface": 5,
+      "color": {
+        "color_set": 0,
+        "color_position": 0,
+        "color_stagger": 0
+      },
+      "device_id": 12,
+      "value": 0
+    }
+  },
+  "pump": {
+    "0": {
+      "data": 70,
+      "type": 3,
+      "state": {
+        "name": "Pool Low Pump",
+        "value": 0
+      },
+      "watts_now": {
+        "name": "Pool Low Pump Watts Now",
+        "value": 0,
+        "unit": "W",
+        "device_type": "power",
+        "state_type": "measurement"
+      },
+      "rpm_now": {
+        "name": "Pool Low Pump RPM Now",
+        "value": 0,
+        "unit": "rpm",
+        "state_type": "measurement"
+      },
+      "unknown_at_offset_16": 0,
+      "unknown_at_offset_24": 255,
+      "preset": {
+        "0": {
+          "device_id": 6,
+          "setpoint": 63,
+          "is_rpm": 0
+        },
+        "1": {
+          "device_id": 9,
+          "setpoint": 72,
+          "is_rpm": 0
+        },
+        "2": {
+          "device_id": 1,
+          "setpoint": 3450,
+          "is_rpm": 1
+        },
+        "3": {
+          "device_id": 130,
+          "setpoint": 75,
+          "is_rpm": 0
+        },
+        "4": {
+          "device_id": 12,
+          "setpoint": 72,
+          "is_rpm": 0
+        },
+        "5": {
+          "device_id": 0,
+          "setpoint": 30,
+          "is_rpm": 0
+        },
+        "6": {
+          "device_id": 0,
+          "setpoint": 30,
+          "is_rpm": 0
+        },
+        "7": {
+          "device_id": 0,
+          "setpoint": 30,
+          "is_rpm": 0
+        }
+      }
+    },
+    "1": {
+      "data": 66,
+      "type": 3,
+      "state": {
+        "name": "Waterfall Pump",
+        "value": 0
+      },
+      "watts_now": {
+        "name": "Waterfall Pump Watts Now",
+        "value": 0,
+        "unit": "W",
+        "device_type": "power",
+        "state_type": "measurement"
+      },
+      "rpm_now": {
+        "name": "Waterfall Pump RPM Now",
+        "value": 0,
+        "unit": "rpm",
+        "state_type": "measurement"
+      },
+      "unknown_at_offset_16": 0,
+      "gpm_now": {
+        "name": "Waterfall Pump GPM Now",
+        "value": 0,
+        "unit": "gpm",
+        "state_type": "measurement"
+      },
+      "unknown_at_offset_24": 255,
+      "preset": {
+        "0": {
+          "device_id": 2,
+          "setpoint": 2700,
+          "is_rpm": 1
+        },
+        "1": {
+          "device_id": 0,
+          "setpoint": 30,
+          "is_rpm": 0
+        },
+        "2": {
+          "device_id": 0,
+          "setpoint": 30,
+          "is_rpm": 0
+        },
+        "3": {
+          "device_id": 0,
+          "setpoint": 30,
+          "is_rpm": 0
+        },
+        "4": {
+          "device_id": 0,
+          "setpoint": 30,
+          "is_rpm": 0
+        },
+        "5": {
+          "device_id": 0,
+          "setpoint": 30,
+          "is_rpm": 0
+        },
+        "6": {
+          "device_id": 0,
+          "setpoint": 30,
+          "is_rpm": 0
+        },
+        "7": {
+          "device_id": 0,
+          "setpoint": 30,
+          "is_rpm": 0
+        }
+      }
+    },
+    "2": {
+      "data": 0
+    },
+    "3": {
+      "data": 0
+    },
+    "4": {
+      "data": 0
+    },
+    "5": {
+      "data": 0
+    },
+    "6": {
+      "data": 0
+    },
+    "7": {
+      "data": 0
+    }
+  },
+  "body": {
+    "0": {
+      "body_type": 0,
+      "min_setpoint": 40,
+      "max_setpoint": 104,
+      "name": "Pool",
+      "last_temperature": {
+        "name": "Last Pool Temperature",
+        "value": 81,
+        "unit": "\u00b0F",
+        "device_type": "temperature",
+        "state_type": "measurement"
+      },
+      "heat_state": {
+        "name": "Pool Heat",
+        "value": 0,
+        "device_type": "enum",
+        "enum_options": ["Off", "Solar", "Heater", "Both"]
+      },
+      "heat_setpoint": {
+        "name": "Pool Heat Set Point",
+        "value": 83,
+        "unit": "\u00b0F",
+        "device_type": "temperature"
+      },
+      "cool_setpoint": {
+        "name": "Pool Cool Set Point",
+        "value": 100,
+        "unit": "\u00b0F",
+        "device_type": "temperature"
+      },
+      "heat_mode": {
+        "name": "Pool Heat Mode",
+        "value": 0,
+        "device_type": "enum",
+        "enum_options": [
+          "Off",
+          "Solar",
+          "Solar Preferred",
+          "Heater",
+          "Don't Change"
+        ]
+      }
+    },
+    "1": {
+      "body_type": 1,
+      "min_setpoint": 40,
+      "max_setpoint": 104,
+      "name": "Spa",
+      "last_temperature": {
+        "name": "Last Spa Temperature",
+        "value": 84,
+        "unit": "\u00b0F",
+        "device_type": "temperature",
+        "state_type": "measurement"
+      },
+      "heat_state": {
+        "name": "Spa Heat",
+        "value": 0,
+        "device_type": "enum",
+        "enum_options": ["Off", "Solar", "Heater", "Both"]
+      },
+      "heat_setpoint": {
+        "name": "Spa Heat Set Point",
+        "value": 94,
+        "unit": "\u00b0F",
+        "device_type": "temperature"
+      },
+      "cool_setpoint": {
+        "name": "Spa Cool Set Point",
+        "value": 69,
+        "unit": "\u00b0F",
+        "device_type": "temperature"
+      },
+      "heat_mode": {
+        "name": "Spa Heat Mode",
+        "value": 0,
+        "device_type": "enum",
+        "enum_options": [
+          "Off",
+          "Solar",
+          "Solar Preferred",
+          "Heater",
+          "Don't Change"
+        ]
+      }
+    }
+  },
+  "intellichem": {
+    "unknown_at_offset_00": 42,
+    "unknown_at_offset_04": 0,
+    "sensor": {
+      "orp_now": {
+        "name": "ORP Now",
+        "value": 0,
+        "unit": "mV",
+        "state_type": "measurement"
+      },
+      "ph_supply_level": {
+        "name": "pH Supply Level",
+        "value": 2,
+        "state_type": "measurement"
+      },
+      "orp_supply_level": {
+        "name": "ORP Supply Level",
+        "value": 3,
+        "state_type": "measurement"
+      },
+      "saturation": {
+        "name": "Saturation Index",
+        "value": 0.06,
+        "unit": "lsi",
+        "state_type": "measurement"
+      },
+      "ph_probe_water_temp": {
+        "name": "pH Probe Water Temperature",
+        "value": 81,
+        "unit": "\u00b0F",
+        "device_type": "temperature",
+        "state_type": "measurement"
+      }
+    },
+    "configuration": {
+      "ph_setpoint": {
+        "name": "pH Setpoint",
+        "value": 7.6,
+        "unit": "pH",
+        "max_setpoint": 7.6,
+        "min_setpoint": 7.2
+      },
+      "orp_setpoint": {
+        "name": "ORP Setpoint",
+        "value": 720,
+        "unit": "mV",
+        "max_setpoint": 800,
+        "min_setpoint": 400
+      },
+      "calcium_harness": {
+        "name": "Calcium Hardness",
+        "value": 800,
+        "unit": "ppm",
+        "max_setpoint": 800,
+        "min_setpoint": 25
+      },
+      "cya": {
+        "name": "Cyanuric Acid",
+        "value": 45,
+        "unit": "ppm",
+        "max_setpoint": 201,
+        "min_setpoint": 0
+      },
+      "total_alkalinity": {
+        "name": "Total Alkalinity",
+        "value": 45,
+        "unit": "ppm",
+        "max_setpoint": 800,
+        "min_setpoint": 25
+      },
+      "salt_tds_ppm": {
+        "name": "Salt/TDS",
+        "value": 1000,
+        "unit": "ppm",
+        "max_setpoint": 6500,
+        "min_setpoint": 500
+      },
+      "probe_is_celsius": 0,
+      "flags": 32
+    },
+    "dose_status": {
+      "ph_last_dose_time": {
+        "name": "Last pH Dose Time",
+        "value": 5,
+        "unit": "sec",
+        "device_type": "duration",
+        "state_type": "total_increasing"
+      },
+      "orp_last_dose_time": {
+        "name": "Last ORP Dose Time",
+        "value": 4,
+        "unit": "sec",
+        "device_type": "duration",
+        "state_type": "total_increasing"
+      },
+      "ph_last_dose_volume": {
+        "name": "Last pH Dose Volume",
+        "value": 8,
+        "unit": "mL",
+        "device_type": "volume",
+        "state_type": "total_increasing"
+      },
+      "orp_last_dose_volume": {
+        "name": "Last ORP Dose Volume",
+        "value": 8,
+        "unit": "mL",
+        "device_type": "volume",
+        "state_type": "total_increasing"
+      },
+      "flags": 149,
+      "ph_dosing_state": {
+        "name": "pH Dosing State",
+        "value": 1,
+        "device_type": "enum",
+        "enum_options": ["Dosing", "Mixing", "Monitoring"]
+      },
+      "orp_dosing_state": {
+        "name": "ORP Dosing State",
+        "value": 2,
+        "device_type": "enum",
+        "enum_options": ["Dosing", "Mixing", "Monitoring"]
+      }
+    },
+    "alarm": {
+      "flags": 1,
+      "flow_alarm": {
+        "name": "Flow Alarm",
+        "value": 1,
+        "device_type": "alarm"
+      },
+      "ph_high_alarm": {
+        "name": "pH HIGH Alarm",
+        "value": 0,
+        "device_type": "alarm"
+      },
+      "ph_low_alarm": {
+        "name": "pH LOW Alarm",
+        "value": 0,
+        "device_type": "alarm"
+      },
+      "orp_high_alarm": {
+        "name": "ORP HIGH Alarm",
+        "value": 0,
+        "device_type": "alarm"
+      },
+      "orp_low_alarm": {
+        "name": "ORP LOW Alarm",
+        "value": 0,
+        "device_type": "alarm"
+      },
+      "ph_supply_alarm": {
+        "name": "pH Supply Alarm",
+        "value": 0,
+        "device_type": "alarm"
+      },
+      "orp_supply_alarm": {
+        "name": "ORP Supply Alarm",
+        "value": 0,
+        "device_type": "alarm"
+      },
+      "probe_fault_alarm": {
+        "name": "Probe Fault",
+        "value": 0,
+        "device_type": "alarm"
+      }
+    },
+    "alert": {
+      "flags": 0,
+      "ph_lockout": {
+        "name": "pH Lockout",
+        "value": 0
+      },
+      "ph_limit": {
+        "name": "pH Dose Limit Reached",
+        "value": 0
+      },
+      "orp_limit": {
+        "name": "ORP Dose Limit Reached",
+        "value": 0
+      }
+    },
+    "firmware": {
+      "name": "IntelliChem Firmware",
+      "value": "1.060",
+      "major": 1,
+      "minor": 60
+    },
+    "water_balance": {
+      "flags": 0,
+      "corrosive": {
+        "name": "SI Corrosive",
+        "value": 0,
+        "device_type": "alarm"
+      },
+      "scaling": {
+        "name": "SI Scaling",
+        "value": 0,
+        "device_type": "alarm"
+      }
+    },
+    "unknown_at_offset_44": 0,
+    "unknown_at_offset_45": 0,
+    "unknown_at_offset_46": 0
+  },
+  "scg": {
+    "scg_present": 1,
+    "sensor": {
+      "state": {
+        "name": "Chlorinator",
+        "value": 0
+      },
+      "salt_ppm": {
+        "name": "Chlorinator Salt",
+        "value": 0,
+        "unit": "ppm",
+        "state_type": "measurement"
+      }
+    },
+    "configuration": {
+      "pool_setpoint": {
+        "name": "Pool Chlorinator Setpoint",
+        "value": 50,
+        "unit": "%",
+        "min_setpoint": 0,
+        "max_setpoint": 100,
+        "step": 5,
+        "body_type": 0
+      },
+      "super_chlor_timer": {
+        "name": "Super Chlorination Timer",
+        "value": 0,
+        "unit": "hr",
+        "min_setpoint": 1,
+        "max_setpoint": 72,
+        "step": 1
+      }
+    },
+    "flags": 0,
+    "super_chlorinate": {
+      "name": "Super Chlorinate",
+      "value": 0
+    }
+  }
+}

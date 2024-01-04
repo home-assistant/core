@@ -33,7 +33,7 @@ from .entity import ShadeEntity
 from .model import PowerviewDeviceInfo, PowerviewEntryData
 
 
-@dataclass
+@dataclass(frozen=True)
 class PowerviewSensorDescriptionMixin:
     """Mixin to describe a Sensor entity."""
 
@@ -42,7 +42,7 @@ class PowerviewSensorDescriptionMixin:
     create_sensor_fn: Callable[[BaseShade], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PowerviewSensorDescription(
     SensorEntityDescription, PowerviewSensorDescriptionMixin
 ):
@@ -136,6 +136,7 @@ class PowerViewSensor(ShadeEntity, SensorEntity):
         """Get the current value in percentage."""
         return self.entity_description.native_value_fn(self._shade)
 
+    # pylint: disable-next=hass-missing-super-call
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         self.async_on_remove(

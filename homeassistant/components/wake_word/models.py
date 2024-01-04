@@ -6,7 +6,7 @@ from dataclasses import dataclass
 class WakeWord:
     """Wake word model."""
 
-    ww_id: str
+    id: str
     name: str
 
 
@@ -14,7 +14,7 @@ class WakeWord:
 class DetectionResult:
     """Result of wake word detection."""
 
-    ww_id: str
+    wake_word_id: str
     """Id of detected wake word"""
 
     timestamp: int | None

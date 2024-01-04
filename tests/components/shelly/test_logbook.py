@@ -108,7 +108,7 @@ async def test_humanify_shelly_click_event_rpc_device(
     assert event1["domain"] == DOMAIN
     assert (
         event1["message"]
-        == "'single_push' click event for test switch_0 Input was fired"
+        == "'single_push' click event for Test name input 0 Input was fired"
     )
 
     assert event2["name"] == "Shelly"

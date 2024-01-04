@@ -95,9 +95,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
         self.upnp_description = discovery_info.ssdp_location
 
         # ssdp_location and hostname have been checked in check_yamaha_ssdp so it is safe to ignore type assignment
-        self.host = urlparse(
-            discovery_info.ssdp_location
-        ).hostname  # type: ignore[assignment]
+        self.host = urlparse(discovery_info.ssdp_location).hostname  # type: ignore[assignment]
 
         await self.async_set_unique_id(self.serial_number)
         self._abort_if_unique_id_configured(

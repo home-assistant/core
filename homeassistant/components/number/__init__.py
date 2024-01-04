@@ -5,16 +5,16 @@ from collections.abc import Callable
 from contextlib import suppress
 import dataclasses
 from datetime import timedelta
-import inspect
 import logging
 from math import ceil, floor
-from typing import Any, Self, final
+from typing import TYPE_CHECKING, Any, Self, final
 
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, async_get_hass, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -23,6 +23,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import async_suggest_report_issue
 
 from .const import (  # noqa: F401
     ATTR_MAX,
@@ -40,6 +41,11 @@ from .const import (  # noqa: F401
     NumberMode,
 )
 from .websocket_api import async_setup as async_setup_ws_api
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -119,8 +125,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclasses.dataclass
-class NumberEntityDescription(EntityDescription):
+class NumberEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes number entities."""
 
     device_class: NumberDeviceClass | None = None
@@ -153,8 +158,23 @@ def floor_decimal(value: float, precision: float = 0) -> float:
     return floor(value * factor) / factor
 
 
-class NumberEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "device_class",
+    "native_max_value",
+    "native_min_value",
+    "native_step",
+    "mode",
+    "native_unit_of_measurement",
+    "native_value",
+}
+
+
+class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Number entity."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {ATTR_MIN, ATTR_MAX, ATTR_STEP, ATTR_MODE}
+    )
 
     entity_description: NumberEntityDescription
     _attr_device_class: NumberDeviceClass | None
@@ -188,14 +208,10 @@ class NumberEntity(Entity):
                 "value",
             )
         ):
-            module = inspect.getmodule(cls)
-            if module and module.__file__ and "custom_components" in module.__file__:
-                report_issue = "report it to the custom integration author."
-            else:
-                report_issue = (
-                    "create a bug report at "
-                    "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
-                )
+            hass: HomeAssistant | None = None
+            with suppress(HomeAssistantError):
+                hass = async_get_hass()
+            report_issue = async_suggest_report_issue(hass, module=cls.__module__)
             _LOGGER.warning(
                 (
                     "%s::%s is overriding deprecated methods on an instance of "
@@ -217,10 +233,17 @@ class NumberEntity(Entity):
     @property
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
+        device_class = self.device_class
+        min_value = self._convert_to_state_value(
+            self.native_min_value, floor_decimal, device_class
+        )
+        max_value = self._convert_to_state_value(
+            self.native_max_value, ceil_decimal, device_class
+        )
         return {
-            ATTR_MIN: self.min_value,
-            ATTR_MAX: self.max_value,
-            ATTR_STEP: self.step,
+            ATTR_MIN: min_value,
+            ATTR_MAX: max_value,
+            ATTR_STEP: self._calculate_step(min_value, max_value),
             ATTR_MODE: self.mode,
         }
 
@@ -231,7 +254,7 @@ class NumberEntity(Entity):
         """
         return self.device_class is not None
 
-    @property
+    @cached_property
     def device_class(self) -> NumberDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -240,7 +263,7 @@ class NumberEntity(Entity):
             return self.entity_description.device_class
         return None
 
-    @property
+    @cached_property
     def native_min_value(self) -> float:
         """Return the minimum value."""
         if hasattr(self, "_attr_native_min_value"):
@@ -256,9 +279,11 @@ class NumberEntity(Entity):
     @final
     def min_value(self) -> float:
         """Return the minimum value."""
-        return self._convert_to_state_value(self.native_min_value, floor_decimal)
+        return self._convert_to_state_value(
+            self.native_min_value, floor_decimal, self.device_class
+        )
 
-    @property
+    @cached_property
     def native_max_value(self) -> float:
         """Return the maximum value."""
         if hasattr(self, "_attr_native_max_value"):
@@ -274,11 +299,15 @@ class NumberEntity(Entity):
     @final
     def max_value(self) -> float:
         """Return the maximum value."""
-        return self._convert_to_state_value(self.native_max_value, ceil_decimal)
+        return self._convert_to_state_value(
+            self.native_max_value, ceil_decimal, self.device_class
+        )
 
-    @property
+    @cached_property
     def native_step(self) -> float | None:
         """Return the increment/decrement step."""
+        if hasattr(self, "_attr_native_step"):
+            return self._attr_native_step
         if (
             hasattr(self, "entity_description")
             and self.entity_description.native_step is not None
@@ -290,18 +319,20 @@ class NumberEntity(Entity):
     @final
     def step(self) -> float:
         """Return the increment/decrement step."""
-        if hasattr(self, "_attr_native_step"):
-            return self._attr_native_step
+        return self._calculate_step(self.min_value, self.max_value)
+
+    def _calculate_step(self, min_value: float, max_value: float) -> float:
+        """Return the increment/decrement step."""
         if (native_step := self.native_step) is not None:
             return native_step
         step = DEFAULT_STEP
-        value_range = abs(self.max_value - self.min_value)
+        value_range = abs(max_value - min_value)
         if value_range != 0:
             while value_range <= step:
                 step /= 10.0
         return step
 
-    @property
+    @cached_property
     def mode(self) -> NumberMode:
         """Return the mode of the entity."""
         if hasattr(self, "_attr_mode"):
@@ -319,7 +350,7 @@ class NumberEntity(Entity):
         """Return the entity state."""
         return self.value
 
-    @property
+    @cached_property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, if any."""
         if hasattr(self, "_attr_native_unit_of_measurement"):
@@ -336,17 +367,18 @@ class NumberEntity(Entity):
             return self._number_option_unit_of_measurement
 
         native_unit_of_measurement = self.native_unit_of_measurement
-
+        # device_class is checked after native_unit_of_measurement since most
+        # of the time we can avoid the device_class check
         if (
-            self.device_class == NumberDeviceClass.TEMPERATURE
-            and native_unit_of_measurement
+            native_unit_of_measurement
             in (UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT)
+            and self.device_class == NumberDeviceClass.TEMPERATURE
         ):
             return self.hass.config.units.temperature_unit
 
         return native_unit_of_measurement
 
-    @property
+    @cached_property
     def native_value(self) -> float | None:
         """Return the value reported by the number."""
         return self._attr_native_value
@@ -357,7 +389,7 @@ class NumberEntity(Entity):
         """Return the entity value to represent the entity state."""
         if (native_value := self.native_value) is None:
             return native_value
-        return self._convert_to_state_value(native_value, round)
+        return self._convert_to_state_value(native_value, round, self.device_class)
 
     def set_native_value(self, value: float) -> None:
         """Set new value."""
@@ -378,17 +410,20 @@ class NumberEntity(Entity):
         await self.hass.async_add_executor_job(self.set_value, value)
 
     def _convert_to_state_value(
-        self, value: float, method: Callable[[float, int], float]
+        self,
+        value: float,
+        method: Callable[[float, int], float],
+        device_class: NumberDeviceClass | None,
     ) -> float:
         """Convert a value in the number's native unit to the configured unit."""
+        # device_class is checked first since most of the time we can avoid
+        # the unit conversion
+        if device_class not in UNIT_CONVERTERS:
+            return value
+
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
-        device_class = self.device_class
-
-        if (
-            native_unit_of_measurement != unit_of_measurement
-            and device_class in UNIT_CONVERTERS
-        ):
+        if native_unit_of_measurement != unit_of_measurement:
             assert native_unit_of_measurement
             assert unit_of_measurement
 
@@ -410,15 +445,14 @@ class NumberEntity(Entity):
 
     def convert_to_native_value(self, value: float) -> float:
         """Convert a value to the number's native unit."""
+        # device_class is checked first since most of the time we can avoid
+        # the unit conversion
+        if value is None or (device_class := self.device_class) not in UNIT_CONVERTERS:
+            return value
+
         native_unit_of_measurement = self.native_unit_of_measurement
         unit_of_measurement = self.unit_of_measurement
-        device_class = self.device_class
-
-        if (
-            value is not None
-            and native_unit_of_measurement != unit_of_measurement
-            and device_class in UNIT_CONVERTERS
-        ):
+        if native_unit_of_measurement != unit_of_measurement:
             assert native_unit_of_measurement
             assert unit_of_measurement
 

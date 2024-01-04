@@ -48,6 +48,7 @@ async def test_diagnostics(
         "entry": {
             "entry_id": entry.entry_id,
             "version": 1,
+            "minor_version": 1,
             "domain": "switcher_kis",
             "title": "Mock Title",
             "data": {},

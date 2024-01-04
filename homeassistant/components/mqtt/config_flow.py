@@ -6,7 +6,7 @@ from collections.abc import Callable
 import queue
 from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.x509 import load_pem_x509_certificate
@@ -224,7 +224,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm a Hass.io discovery."""
         errors: dict[str, str] = {}
-        assert self._hassio_discovery
+        if TYPE_CHECKING:
+            assert self._hassio_discovery
 
         if user_input is not None:
             data: dict[str, Any] = self._hassio_discovery.copy()
@@ -312,7 +313,8 @@ class MQTTOptionsFlowHandler(OptionsFlow):
 
         def _birth_will(birt_or_will: str) -> dict[str, Any]:
             """Return the user input for birth or will."""
-            assert user_input
+            if TYPE_CHECKING:
+                assert user_input
             return {
                 ATTR_TOPIC: user_input[f"{birt_or_will}_topic"],
                 ATTR_PAYLOAD: user_input.get(f"{birt_or_will}_payload", ""),

@@ -9,7 +9,7 @@
           "description": "Bucket to use."
         },
         "key": {
-          "name": "Kay",
+          "name": "Key",
           "description": "Object key of the file."
         },
         "file_path": {

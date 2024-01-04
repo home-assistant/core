@@ -9,7 +9,9 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.melcloud.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.issue_registry as ir
 
 from tests.common import MockConfigEntry
@@ -287,3 +289,158 @@ async def test_token_refresh(hass: HomeAssistant, mock_login, mock_get_devices) 
     entry = entries[0]
     assert entry.data["username"] == "test-email@test-domain.com"
     assert entry.data["token"] == "test-token"
+
+
+async def test_token_reauthentication(
+    hass: HomeAssistant,
+    mock_login,
+    mock_get_devices,
+) -> None:
+    """Re-configuration with existing username should refresh token, if made invalid."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"username": "test-email@test-domain.com", "token": "test-original-token"},
+        unique_id="test-email@test-domain.com",
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "unique_id": mock_entry.unique_id,
+            "entry_id": mock_entry.entry_id,
+        },
+        data=mock_entry.data,
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.melcloud.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": "test-email@test-domain.com", "password": "test-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("error", "reason"),
+    [
+        (asyncio.TimeoutError(), "cannot_connect"),
+        (AttributeError(name="get"), "invalid_auth"),
+    ],
+)
+async def test_form_errors_reauthentication(
+    hass: HomeAssistant, mock_login, error, reason
+) -> None:
+    """Test we handle cannot connect error."""
+    mock_login.side_effect = error
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"username": "test-email@test-domain.com", "token": "test-original-token"},
+        unique_id="test-email@test-domain.com",
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "unique_id": mock_entry.unique_id,
+            "entry_id": mock_entry.entry_id,
+        },
+        data=mock_entry.data,
+    )
+
+    with patch(
+        "homeassistant.components.melcloud.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": "test-email@test-domain.com", "password": "test-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"]["base"] == reason
+
+    mock_login.side_effect = None
+    with patch(
+        "homeassistant.components.melcloud.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": "test-email@test-domain.com", "password": "test-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+@pytest.mark.parametrize(
+    ("error", "reason"),
+    [
+        (HTTPStatus.UNAUTHORIZED, "invalid_auth"),
+        (HTTPStatus.FORBIDDEN, "invalid_auth"),
+        (HTTPStatus.INTERNAL_SERVER_ERROR, "cannot_connect"),
+    ],
+)
+async def test_client_errors_reauthentication(
+    hass: HomeAssistant, mock_login, mock_request_info, error, reason
+) -> None:
+    """Test we handle cannot connect error."""
+    mock_login.side_effect = ClientResponseError(mock_request_info(), (), status=error)
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"username": "test-email@test-domain.com", "token": "test-original-token"},
+        unique_id="test-email@test-domain.com",
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "unique_id": mock_entry.unique_id,
+            "entry_id": mock_entry.entry_id,
+        },
+        data=mock_entry.data,
+    )
+
+    with patch(
+        "homeassistant.components.melcloud.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": "test-email@test-domain.com", "password": "test-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["errors"]["base"] == reason
+    assert result["type"] == FlowResultType.FORM
+
+    mock_login.side_effect = None
+    with patch(
+        "homeassistant.components.melcloud.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": "test-email@test-domain.com", "password": "test-password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"

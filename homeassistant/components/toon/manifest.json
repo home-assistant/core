@@ -14,5 +14,5 @@
   "documentation": "https://www.home-assistant.io/integrations/toon",
   "iot_class": "cloud_push",
   "loggers": ["toonapi"],
-  "requirements": ["toonapi==0.2.1"]
+  "requirements": ["toonapi==0.3.0"]
 }

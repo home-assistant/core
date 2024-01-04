@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES
 from .connection import HKDevice
-from .entity import HomeKitEntity
+from .entity import BaseCharacteristicEntity
 
 INPUT_EVENT_VALUES = {
     InputEventValues.SINGLE_PRESS: "single_press",
@@ -26,7 +26,7 @@ INPUT_EVENT_VALUES = {
 }
 
 
-class HomeKitEventEntity(HomeKitEntity, EventEntity):
+class HomeKitEventEntity(BaseCharacteristicEntity, EventEntity):
     """Representation of a Homekit event entity."""
 
     _attr_should_poll = False
@@ -44,10 +44,8 @@ class HomeKitEventEntity(HomeKitEntity, EventEntity):
                 "aid": service.accessory.aid,
                 "iid": service.iid,
             },
+            service.characteristics_by_type[CharacteristicsTypes.INPUT_EVENT],
         )
-        self._characteristic = service.characteristics_by_type[
-            CharacteristicsTypes.INPUT_EVENT
-        ]
 
         self.entity_description = entity_description
 
@@ -55,7 +53,7 @@ class HomeKitEventEntity(HomeKitEntity, EventEntity):
         # clamp InputEventValues for this exact device
         self._attr_event_types = [
             INPUT_EVENT_VALUES[v]
-            for v in clamp_enum_to_char(InputEventValues, self._characteristic)
+            for v in clamp_enum_to_char(InputEventValues, self._char)
         ]
 
     def get_characteristic_types(self) -> list[str]:
@@ -68,19 +66,19 @@ class HomeKitEventEntity(HomeKitEntity, EventEntity):
 
         self.async_on_remove(
             self._accessory.async_subscribe(
-                [(self._aid, self._characteristic.iid)],
+                {(self._aid, self._char.iid)},
                 self._handle_event,
             )
         )
 
     @callback
     def _handle_event(self):
-        if self._characteristic.value is None:
+        if self._char.value is None:
             # For IP backed devices the characteristic is marked as
             # pollable, but always returns None when polled
             # Make sure we don't explode if we see that edge case.
             return
-        self._trigger_event(INPUT_EVENT_VALUES[self._characteristic.value])
+        self._trigger_event(INPUT_EVENT_VALUES[self._char.value])
         self.async_write_ha_state()
 
 

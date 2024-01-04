@@ -27,7 +27,7 @@ from .entity import ShadeEntity
 from .model import PowerviewDeviceInfo, PowerviewEntryData
 
 
-@dataclass
+@dataclass(frozen=True)
 class PowerviewSelectDescriptionMixin:
     """Mixin to describe a select entity."""
 
@@ -35,7 +35,7 @@ class PowerviewSelectDescriptionMixin:
     select_fn: Callable[[BaseShade, str], Coroutine[Any, Any, bool]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PowerviewSelectDescription(
     SelectEntityDescription, PowerviewSelectDescriptionMixin
 ):
@@ -116,5 +116,6 @@ class PowerViewSelect(ShadeEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.select_fn(self._shade, option)
-        await self._shade.refresh()  # force update data to ensure new info is in coordinator
+        # force update data to ensure new info is in coordinator
+        await self._shade.refresh()
         self.async_write_ha_state()

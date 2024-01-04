@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .. import mysensors
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
-from .device import MySensorsEntity
+from .device import MySensorsChildEntity
 from .helpers import on_unload
 
 
@@ -43,7 +43,7 @@ async def async_setup_entry(
     )
 
 
-class MySensorsText(MySensorsEntity, TextEntity):
+class MySensorsText(MySensorsChildEntity, TextEntity):
     """Representation of the value of a MySensors Text child node."""
 
     _attr_native_max = 25

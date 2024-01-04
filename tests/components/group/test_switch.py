@@ -24,7 +24,9 @@ from homeassistant.setup import async_setup_component
 from tests.common import get_fixture_path
 
 
-async def test_default_state(hass: HomeAssistant) -> None:
+async def test_default_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test switch group default state."""
     hass.states.async_set("switch.tv", "on")
     await async_setup_component(
@@ -49,7 +51,6 @@ async def test_default_state(hass: HomeAssistant) -> None:
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ENTITY_ID) == ["switch.tv", "switch.soundbar"]
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("switch.multimedia_group")
     assert entry
     assert entry.unique_id == "unique_identifier"

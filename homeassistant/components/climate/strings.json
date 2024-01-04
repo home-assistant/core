@@ -66,7 +66,7 @@
             "heating": "Heating",
             "cooling": "Cooling",
             "drying": "Drying",
-            "idle": "Idle",
+            "idle": "[%key:common::state::idle%]",
             "fan": "Fan"
           }
         },
@@ -93,7 +93,7 @@
             "away": "Away",
             "boost": "Boost",
             "comfort": "Comfort",
-            "home": "Home",
+            "home": "[%key:common::state::home%]",
             "sleep": "Sleep",
             "activity": "Activity"
           }
@@ -232,6 +232,17 @@
         "heat_cool": "Heat/cool",
         "heat": "Heat"
       }
+    }
+  },
+  "exceptions": {
+    "not_valid_preset_mode": {
+      "message": "Preset mode {mode} is not valid. Valid preset modes are: {modes}."
+    },
+    "not_valid_swing_mode": {
+      "message": "Swing mode {mode} is not valid. Valid swing modes are: {modes}."
+    },
+    "not_valid_fan_mode": {
+      "message": "Fan mode {mode} is not valid. Valid fan modes are: {modes}."
     }
   }
 }

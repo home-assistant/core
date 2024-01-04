@@ -28,14 +28,14 @@ ATTR_EK_HOP_START = "hop_sensor_start"
 ATTR_EK_HOP_END = "hop_sensor_end"
 
 
-@dataclass
+@dataclass(frozen=True)
 class ElectricKiwiHOPRequiredKeysMixin:
     """Mixin for required HOP keys."""
 
     value_func: Callable[[Hop], datetime]
 
 
-@dataclass
+@dataclass(frozen=True)
 class ElectricKiwiHOPSensorEntityDescription(
     SensorEntityDescription,
     ElectricKiwiHOPRequiredKeysMixin,
@@ -62,7 +62,7 @@ def _check_and_move_time(hop: Hop, time: str) -> datetime:
     return date_time
 
 
-HOP_SENSOR_TYPE: tuple[ElectricKiwiHOPSensorEntityDescription, ...] = (
+HOP_SENSOR_TYPES: tuple[ElectricKiwiHOPSensorEntityDescription, ...] = (
     ElectricKiwiHOPSensorEntityDescription(
         key=ATTR_EK_HOP_START,
         translation_key="hopfreepowerstart",
@@ -85,7 +85,7 @@ async def async_setup_entry(
     hop_coordinator: ElectricKiwiHOPDataCoordinator = hass.data[DOMAIN][entry.entry_id]
     hop_entities = [
         ElectricKiwiHOPEntity(hop_coordinator, description)
-        for description in HOP_SENSOR_TYPE
+        for description in HOP_SENSOR_TYPES
     ]
     async_add_entities(hop_entities)
 
@@ -107,7 +107,10 @@ class ElectricKiwiHOPEntity(
         """Entity object for Electric Kiwi sensor."""
         super().__init__(coordinator)
 
-        self._attr_unique_id = f"{coordinator._ek_api.customer_number}_{coordinator._ek_api.connection_id}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator._ek_api.customer_number}"
+            f"_{coordinator._ek_api.connection_id}_{description.key}"
+        )
         self.entity_description = description
 
     @property

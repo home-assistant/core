@@ -6,8 +6,8 @@ from python_picnic_api.session import PicnicAuthError
 import requests
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.picnic.const import CONF_COUNTRY_CODE, DOMAIN
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.components.picnic.const import DOMAIN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY_CODE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -59,7 +59,7 @@ async def test_form(hass: HomeAssistant, picnic_api) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Teststreet 123b"
+    assert result2["title"] == "Picnic"
     assert result2["data"] == {
         CONF_ACCESS_TOKEN: picnic_api().session.auth_token,
         CONF_COUNTRY_CODE: "NL",

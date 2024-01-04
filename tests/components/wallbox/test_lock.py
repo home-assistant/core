@@ -5,7 +5,7 @@ import pytest
 import requests_mock
 
 from homeassistant.components.lock import SERVICE_LOCK, SERVICE_UNLOCK
-from homeassistant.components.wallbox import CHARGER_LOCKED_UNLOCKED_KEY
+from homeassistant.components.wallbox.const import CHARGER_LOCKED_UNLOCKED_KEY
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 

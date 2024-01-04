@@ -67,7 +67,7 @@ async def test_import_host_only(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
     ), patch(
-        "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
+        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
         return_value=future_timestamp(1),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -89,7 +89,7 @@ async def test_import_host_and_port(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
     ), patch(
-        "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
+        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
         return_value=future_timestamp(1),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -111,7 +111,7 @@ async def test_import_non_default_port(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
     ), patch(
-        "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
+        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
         return_value=future_timestamp(1),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -133,7 +133,7 @@ async def test_import_with_name(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.cert_expiry.config_flow.get_cert_expiry_timestamp"
     ), patch(
-        "homeassistant.components.cert_expiry.get_cert_expiry_timestamp",
+        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
         return_value=future_timestamp(1),
     ):
         result = await hass.config_entries.flow.async_init(

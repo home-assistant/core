@@ -20,6 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import (
+    EntityServiceResponse,
     Event,
     HomeAssistant,
     ServiceCall,
@@ -31,7 +32,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform
 
-from . import config_per_platform, config_validation as cv, discovery, entity, service
+from . import config_validation as cv, discovery, entity, service
 from .entity_platform import EntityPlatform
 from .typing import ConfigType, DiscoveryInfoType
 
@@ -88,12 +89,13 @@ class EntityComponent(Generic[_EntityT]):
 
         self.config: ConfigType | None = None
 
+        domain_platform = self._async_init_entity_platform(domain, None)
         self._platforms: dict[
             str | tuple[str, timedelta | None, str | None], EntityPlatform
-        ] = {domain: self._async_init_entity_platform(domain, None)}
-        self.async_add_entities = self._platforms[domain].async_add_entities
-        self.add_entities = self._platforms[domain].add_entities
-
+        ] = {domain: domain_platform}
+        self.async_add_entities = domain_platform.async_add_entities
+        self.add_entities = domain_platform.add_entities
+        self._entities: dict[str, entity.Entity] = domain_platform.domain_entities
         hass.data.setdefault(DATA_INSTANCES, {})[domain] = self
 
     @property
@@ -104,18 +106,11 @@ class EntityComponent(Generic[_EntityT]):
         callers that iterate over this asynchronously should make a copy
         using list() before iterating.
         """
-        return chain.from_iterable(
-            platform.entities.values()  # type: ignore[misc]
-            for platform in self._platforms.values()
-        )
+        return self._entities.values()  # type: ignore[return-value]
 
     def get_entity(self, entity_id: str) -> _EntityT | None:
         """Get an entity."""
-        for platform in self._platforms.values():
-            entity_obj = platform.entities.get(entity_id)
-            if entity_obj is not None:
-                return entity_obj  # type: ignore[return-value]
-        return None
+        return self._entities.get(entity_id)  # type: ignore[return-value]
 
     def register_shutdown(self) -> None:
         """Register shutdown on Home Assistant STOP event.
@@ -147,7 +142,7 @@ class EntityComponent(Generic[_EntityT]):
         self.config = config
 
         # Look in config for Domain, Domain 2, Domain 3 etc and load them
-        for p_type, p_config in config_per_platform(config, self.domain):
+        for p_type, p_config in conf_util.config_per_platform(config, self.domain):
             if p_type is not None:
                 self.hass.async_create_task(
                     self.async_setup_platform(p_type, p_config),
@@ -218,6 +213,40 @@ class EntityComponent(Generic[_EntityT]):
         )
 
     @callback
+    def async_register_legacy_entity_service(
+        self,
+        name: str,
+        schema: dict[str | vol.Marker, Any] | vol.Schema,
+        func: str | Callable[..., Any],
+        required_features: list[int] | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
+    ) -> None:
+        """Register an entity service with a legacy response format."""
+        if isinstance(schema, dict):
+            schema = cv.make_entity_service_schema(schema)
+
+        async def handle_service(
+            call: ServiceCall,
+        ) -> ServiceResponse:
+            """Handle the service."""
+
+            result = await service.entity_service_call(
+                self.hass, self._entities, func, call, required_features
+            )
+
+            if result:
+                if len(result) > 1:
+                    raise HomeAssistantError(
+                        "Deprecated service call matched more than one entity"
+                    )
+                return result.popitem()[1]
+            return None
+
+        self.hass.services.async_register(
+            self.domain, name, handle_service, schema, supports_response
+        )
+
+    @callback
     def async_register_entity_service(
         self,
         name: str,
@@ -230,10 +259,12 @@ class EntityComponent(Generic[_EntityT]):
         if isinstance(schema, dict):
             schema = cv.make_entity_service_schema(schema)
 
-        async def handle_service(call: ServiceCall) -> ServiceResponse:
+        async def handle_service(
+            call: ServiceCall,
+        ) -> EntityServiceResponse | None:
             """Handle the service."""
             return await service.entity_service_call(
-                self.hass, self._platforms.values(), func, call, required_features
+                self.hass, self._entities, func, call, required_features
             )
 
         self.hass.services.async_register(
@@ -318,7 +349,7 @@ class EntityComponent(Generic[_EntityT]):
 
         integration = await async_get_integration(self.hass, self.domain)
 
-        processed_conf = await conf_util.async_process_component_config(
+        processed_conf = await conf_util.async_process_component_and_handle_errors(
             self.hass, conf, integration
         )
 

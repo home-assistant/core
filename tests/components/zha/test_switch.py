@@ -19,6 +19,7 @@ import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.zha.core.group import GroupMember
+from homeassistant.components.zha.core.helpers import get_zha_gateway
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -30,7 +31,6 @@ from .common import (
     async_test_rejoin,
     async_wait_for_updates,
     find_entity_id,
-    get_zha_gateway,
     send_attributes_report,
 )
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
@@ -196,6 +196,17 @@ async def test_switch(
             manufacturer=None,
             tsn=None,
         )
+
+    await async_setup_component(hass, "homeassistant", {})
+
+    cluster.read_attributes.reset_mock()
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+    )
+    assert len(cluster.read_attributes.mock_calls) == 1
+    assert cluster.read_attributes.call_args == call(
+        ["on_off"], allow_cache=False, only_cache=False, manufacturer=None
+    )
 
     # test joining a new switch to the network and HA
     await async_test_rejoin(hass, zigpy_device, [cluster], (1,))

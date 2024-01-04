@@ -1,0 +1,57 @@
+{
+  "mac": "68:A3:78:00:00:00",
+  "model_info": {
+    "has_ext_telephony": true,
+    "has_speakers_jack": true,
+    "wifi_type": "2d4_5g",
+    "pretty_name": "Freebox Server (r2)",
+    "customer_hdd_slots": 0,
+    "name": "fbxgw-r2/full",
+    "has_speakers": true,
+    "internal_hdd_size": 250,
+    "has_femtocell_exp": true,
+    "has_internal_hdd": true,
+    "has_dect": true
+  },
+  "fans": [
+    {
+      "id": "fan0_speed",
+      "name": "Ventilateur 1",
+      "value": 2130
+    }
+  ],
+  "sensors": [
+    {
+      "id": "temp_hdd",
+      "name": "Disque dur",
+      "value": 40
+    },
+    {
+      "id": "temp_hdd2",
+      "name": "Disque dur 2"
+    },
+    {
+      "id": "temp_sw",
+      "name": "Température Switch",
+      "value": 50
+    },
+    {
+      "id": "temp_cpum",
+      "name": "Température CPU M",
+      "value": 60
+    },
+    {
+      "id": "temp_cpub",
+      "name": "Température CPU B",
+      "value": 56
+    }
+  ],
+  "board_name": "fbxgw2r",
+  "disk_status": "active",
+  "uptime": "156 jours 19 heures 56 minutes 16 secondes",
+  "uptime_val": 13550176,
+  "user_main_storage": "Disque dur",
+  "box_authenticated": true,
+  "serial": "762601T190510709",
+  "firmware_version": "4.2.5"
+}

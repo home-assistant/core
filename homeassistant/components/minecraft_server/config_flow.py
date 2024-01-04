@@ -1,66 +1,57 @@
 """Config flow for Minecraft Server integration."""
-from contextlib import suppress
+import logging
 
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TYPE
 from homeassistant.data_entry_flow import FlowResult
 
-from . import MinecraftServer
-from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
+from .api import MinecraftServer, MinecraftServerAddressError, MinecraftServerType
+from .const import DEFAULT_NAME, DOMAIN
+
+DEFAULT_ADDRESS = "localhost:25565"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Minecraft Server."""
 
-    VERSION = 2
+    VERSION = 3
 
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the initial step."""
         errors = {}
 
-        if user_input is not None:
-            host = None
-            port = DEFAULT_PORT
-            title = user_input[CONF_HOST]
+        if user_input:
+            address = user_input[CONF_ADDRESS]
 
-            # Split address at last occurrence of ':'.
-            address_left, separator, address_right = user_input[CONF_HOST].rpartition(
-                ":"
-            )
+            # Prepare config entry data.
+            config_data = {
+                CONF_NAME: user_input[CONF_NAME],
+                CONF_ADDRESS: address,
+            }
 
-            # If no separator is found, 'rpartition' returns ('', '', original_string).
-            if separator == "":
-                host = address_right
-            else:
-                host = address_left
-                with suppress(ValueError):
-                    port = int(address_right)
+            # Some Bedrock Edition servers mimic a Java Edition server, therefore check for a Bedrock Edition server first.
+            for server_type in MinecraftServerType:
+                api = MinecraftServer(self.hass, server_type, address)
 
-            # Remove '[' and ']' in case of an IPv6 address.
-            host = host.strip("[]")
-
-            # Validate port configuration (limit to user and dynamic port range).
-            if (port < 1024) or (port > 65535):
-                errors["base"] = "invalid_port"
-            # Validate host and port by checking the server connection.
-            else:
-                # Create server instance with configuration data and ping the server.
-                config_data = {
-                    CONF_NAME: user_input[CONF_NAME],
-                    CONF_HOST: host,
-                    CONF_PORT: port,
-                }
-                server = MinecraftServer(self.hass, "dummy_unique_id", config_data)
-                await server.async_check_connection()
-                if not server.online:
-                    # Host or port invalid or server not reachable.
-                    errors["base"] = "cannot_connect"
+                try:
+                    await api.async_initialize()
+                except MinecraftServerAddressError:
+                    pass
                 else:
-                    # Configuration data are available and no error was detected,
-                    # create configuration entry.
-                    return self.async_create_entry(title=title, data=config_data)
+                    if await api.async_is_online():
+                        config_data[CONF_TYPE] = server_type
+                        return self.async_create_entry(title=address, data=config_data)
+
+                _LOGGER.debug(
+                    "Connection check to %s server '%s' failed", server_type, address
+                )
+
+            # Host or port invalid or server not reachable.
+            errors["base"] = "cannot_connect"
 
         # Show configuration form (default form in case of no user_input,
         # form filled with user_input and eventually with errors otherwise).
@@ -79,7 +70,8 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
                     ): str,
                     vol.Required(
-                        CONF_HOST, default=user_input.get(CONF_HOST, DEFAULT_HOST)
+                        CONF_ADDRESS,
+                        default=user_input.get(CONF_ADDRESS, DEFAULT_ADDRESS),
                     ): vol.All(str, vol.Lower),
                 }
             ),

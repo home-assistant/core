@@ -15,7 +15,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_registry import async_get
 
-from .const import DEFAULT_PORT, DOMAIN
+from .const import CONF_HTTPS, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,9 +49,15 @@ def _base_schema(discovery_info=None):
         )
     else:
         base_schema.update({vol.Required(CONF_PORT, default=DEFAULT_PORT): int})
+
     base_schema.update(
-        {vol.Optional(CONF_USERNAME): str, vol.Optional(CONF_PASSWORD): str}
+        {
+            vol.Optional(CONF_USERNAME): str,
+            vol.Optional(CONF_PASSWORD): str,
+            vol.Optional(CONF_HTTPS, default=False): bool,
+        }
     )
+
     return vol.Schema(base_schema)
 
 
@@ -105,6 +111,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data[CONF_PORT],
             data.get(CONF_USERNAME),
             data.get(CONF_PASSWORD),
+            https=data[CONF_HTTPS],
         )
 
         try:
