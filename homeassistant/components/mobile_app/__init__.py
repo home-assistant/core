@@ -1,4 +1,5 @@
 """Integrates Native Apps to Home Assistant."""
+import asyncio
 from contextlib import suppress
 from typing import Any
 
@@ -103,12 +104,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     registration_name = f"Mobile App: {registration[ATTR_DEVICE_NAME]}"
     webhook_register(hass, DOMAIN, registration_name, webhook_id, handle_webhook)
 
+    cloud_hook_lock = asyncio.Lock()
+
     async def create_cloud_hook() -> None:
         """Create a cloud hook."""
-        hook = await cloud.async_create_cloudhook(hass, webhook_id)
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_CLOUDHOOK_URL: hook}
-        )
+        async with cloud_hook_lock:
+            if CONF_CLOUDHOOK_URL in entry.data:
+                return  # We already have a cloudhook
+            hook = await cloud.async_create_cloudhook(hass, webhook_id)
+            hass.config_entries.async_update_entry(
+                entry, data={**entry.data, CONF_CLOUDHOOK_URL: hook}
+            )
 
     async def manage_cloudhook(state: cloud.CloudConnectionState) -> None:
         if (
@@ -123,6 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         and cloud.async_is_connected(hass)
     ):
         await create_cloud_hook()
+
     entry.async_on_unload(cloud.async_listen_connection_change(hass, manage_cloudhook))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
