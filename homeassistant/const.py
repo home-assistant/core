@@ -2,7 +2,13 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Any, Final
+from functools import partial
+from typing import Final
+
+from .helpers.deprecation import (
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
@@ -417,36 +423,9 @@ _DEPRECATED_DEVICE_CLASS_VOLTAGE: Final = (
 )
 
 
-# Can be removed if no deprecated constant are in this module anymore
-def __getattr__(name: str) -> Any:
-    """Check if the not found name is a deprecated constant.
-
-    If it is, print a deprecation warning and return the value of the constant.
-    Otherwise raise AttributeError.
-    """
-    module_globals = globals()
-    if f"_DEPRECATED_{name}" not in module_globals:
-        raise AttributeError(f"Module {__name__} has no attribute {name!r}")
-
-    # Avoid circular import
-    from .helpers.deprecation import (  # pylint: disable=import-outside-toplevel
-        check_if_deprecated_constant,
-    )
-
-    return check_if_deprecated_constant(name, module_globals)
-
-
-# Can be removed if no deprecated constant are in this module anymore
-def __dir__() -> list[str]:
-    """Return dir() with deprecated constants."""
-    # Copied method from homeassistant.helpers.deprecattion#dir_with_deprecated_constants to avoid import cycle
-    module_globals = globals()
-
-    return list(module_globals) + [
-        name.removeprefix("_DEPRECATED_")
-        for name in module_globals
-        if name.startswith("_DEPRECATED_")
-    ]
+# Both can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 
 # #### STATES ####
