@@ -1,20 +1,57 @@
 """Support for Streamlabs Water Monitor Usage."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import StreamlabsCoordinator
 from .const import DOMAIN
 from .coordinator import StreamlabsData
 
-NAME_DAILY_USAGE = "Daily Water"
-NAME_MONTHLY_USAGE = "Monthly Water"
-NAME_YEARLY_USAGE = "Yearly Water"
+
+@dataclass(frozen=True, kw_only=True)
+class StreamlabsWaterSensorEntityDescription(SensorEntityDescription):
+    """Streamlabs sensor entity description."""
+
+    value_fn: Callable[[StreamlabsData], StateType]
+
+
+SENSORS: tuple[StreamlabsWaterSensorEntityDescription, ...] = (
+    StreamlabsWaterSensorEntityDescription(
+        key="daily_usage",
+        translation_key="daily_usage",
+        native_unit_of_measurement=UnitOfVolume.GALLONS,
+        device_class=SensorDeviceClass.WATER,
+        value_fn=lambda data: data.daily_usage,
+    ),
+    StreamlabsWaterSensorEntityDescription(
+        key="monthly_usage",
+        translation_key="monthly_usage",
+        native_unit_of_measurement=UnitOfVolume.GALLONS,
+        device_class=SensorDeviceClass.WATER,
+        value_fn=lambda data: data.monthly_usage,
+    ),
+    StreamlabsWaterSensorEntityDescription(
+        key="yearly_usage",
+        translation_key="yearly_usage",
+        native_unit_of_measurement=UnitOfVolume.GALLONS,
+        device_class=SensorDeviceClass.WATER,
+        value_fn=lambda data: data.yearly_usage,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -25,30 +62,34 @@ async def async_setup_entry(
     """Set up Streamlabs water sensor from a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities = []
-
-    for location_id in coordinator.data.values():
-        entities.extend(
-            [
-                StreamLabsDailyUsage(coordinator, location_id),
-                StreamLabsMonthlyUsage(coordinator, location_id),
-                StreamLabsYearlyUsage(coordinator, location_id),
-            ]
-        )
-
-    async_add_entities(entities)
+    async_add_entities(
+        StreamLabsSensor(coordinator, location_id, entity_description)
+        for location_id in coordinator.data
+        for entity_description in SENSORS
+    )
 
 
-class StreamLabsDailyUsage(CoordinatorEntity[StreamlabsCoordinator], SensorEntity):
+class StreamLabsSensor(CoordinatorEntity[StreamlabsCoordinator], SensorEntity):
     """Monitors the daily water usage."""
 
-    _attr_device_class = SensorDeviceClass.WATER
-    _attr_native_unit_of_measurement = UnitOfVolume.GALLONS
+    _attr_has_entity_name = True
 
-    def __init__(self, coordinator: StreamlabsCoordinator, location_id: str) -> None:
+    entity_description: StreamlabsWaterSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: StreamlabsCoordinator,
+        location_id: str,
+        entity_description: StreamlabsWaterSensorEntityDescription,
+    ) -> None:
         """Initialize the daily water usage device."""
         super().__init__(coordinator)
         self._location_id = location_id
+        self._attr_unique_id = f"{location_id}-{entity_description.key}"
+        self.entity_description = entity_description
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, location_id)}, name=self.location_data.name
+        )
 
     @property
     def location_data(self) -> StreamlabsData:
@@ -56,39 +97,6 @@ class StreamLabsDailyUsage(CoordinatorEntity[StreamlabsCoordinator], SensorEntit
         return self.coordinator.data[self._location_id]
 
     @property
-    def name(self) -> str:
-        """Return the name for daily usage."""
-        return f"{self.location_data.name} {NAME_DAILY_USAGE}"
-
-    @property
-    def native_value(self) -> float:
+    def native_value(self) -> StateType:
         """Return the current daily usage."""
-        return self.location_data.daily_usage
-
-
-class StreamLabsMonthlyUsage(StreamLabsDailyUsage):
-    """Monitors the monthly water usage."""
-
-    @property
-    def name(self) -> str:
-        """Return the name for monthly usage."""
-        return f"{self.location_data.name} {NAME_MONTHLY_USAGE}"
-
-    @property
-    def native_value(self) -> float:
-        """Return the current monthly usage."""
-        return self.location_data.monthly_usage
-
-
-class StreamLabsYearlyUsage(StreamLabsDailyUsage):
-    """Monitors the yearly water usage."""
-
-    @property
-    def name(self) -> str:
-        """Return the name for yearly usage."""
-        return f"{self.location_data.name} {NAME_YEARLY_USAGE}"
-
-    @property
-    def native_value(self) -> float:
-        """Return the current yearly usage."""
-        return self.location_data.yearly_usage
+        return self.entity_description.value_fn(self.location_data)

@@ -9,12 +9,6 @@ import inspect
 import logging
 from typing import Any, NamedTuple, ParamSpec, TypeVar
 
-from homeassistant.core import HomeAssistant, async_get_hass
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import async_suggest_report_issue
-
-from .frame import MissingIntegrationFrame, get_integration_frame
-
 _ObjectT = TypeVar("_ObjectT", bound=object)
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
@@ -175,6 +169,13 @@ def _print_deprecation_warning_internal(
     *,
     log_when_no_integration_is_found: bool,
 ) -> None:
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.core import HomeAssistant, async_get_hass
+    from homeassistant.exceptions import HomeAssistantError
+    from homeassistant.loader import async_suggest_report_issue
+
+    from .frame import MissingIntegrationFrame, get_integration_frame
+
     logger = logging.getLogger(module_name)
     if breaks_in_ha_version:
         breaks_in = f" which will be removed in HA Core {breaks_in_ha_version}"
@@ -265,18 +266,6 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
             f"{deprecated_const.enum.__class__.__name__}.{deprecated_const.enum.name}"
         )
         breaks_in_ha_version = deprecated_const.breaks_in_ha_version
-    elif isinstance(deprecated_const, tuple):
-        # Use DeprecatedConstant and DeprecatedConstant instead, where possible
-        # Used to avoid import cycles.
-        if len(deprecated_const) == 3:
-            value = deprecated_const[0]
-            replacement = deprecated_const[1]
-            breaks_in_ha_version = deprecated_const[2]
-        elif len(deprecated_const) == 2 and isinstance(deprecated_const[0], Enum):
-            enum = deprecated_const[0]
-            value = enum.value
-            replacement = f"{enum.__class__.__name__}.{enum.name}"
-            breaks_in_ha_version = deprecated_const[1]
 
     if value is None or replacement is None:
         msg = (

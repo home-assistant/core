@@ -369,21 +369,11 @@ class DenonDevice(MediaPlayerEntity):
         return self._supported_features_base
 
     @property
-    def media_content_id(self):
-        """Content ID of current playing media."""
-        return None
-
-    @property
     def media_content_type(self) -> MediaType:
         """Content type of current playing media."""
         if self._receiver.state in {MediaPlayerState.PLAYING, MediaPlayerState.PAUSED}:
             return MediaType.MUSIC
         return MediaType.CHANNEL
-
-    @property
-    def media_duration(self):
-        """Duration of current playing media in seconds."""
-        return None
 
     @property
     def media_image_url(self):
@@ -416,43 +406,18 @@ class DenonDevice(MediaPlayerEntity):
         return self._receiver.station
 
     @property
-    def media_album_artist(self):
-        """Album artist of current playing media, music track only."""
-        return None
-
-    @property
-    def media_track(self):
-        """Track number of current playing media, music track only."""
-        return None
-
-    @property
-    def media_series_title(self):
-        """Title of series of current playing media, TV show only."""
-        return None
-
-    @property
-    def media_season(self):
-        """Season of current playing media, TV show only."""
-        return None
-
-    @property
-    def media_episode(self):
-        """Episode of current playing media, TV show only."""
-        return None
-
-    @property
     def extra_state_attributes(self):
         """Return device specific state attributes."""
-        if self._receiver.power != POWER_ON:
+        receiver = self._receiver
+        if receiver.power != POWER_ON:
             return {}
         state_attributes = {}
         if (
-            self._receiver.sound_mode_raw is not None
-            and self._receiver.support_sound_mode
-        ):
-            state_attributes[ATTR_SOUND_MODE_RAW] = self._receiver.sound_mode_raw
-        if self._receiver.dynamic_eq is not None:
-            state_attributes[ATTR_DYNAMIC_EQ] = self._receiver.dynamic_eq
+            sound_mode_raw := receiver.sound_mode_raw
+        ) is not None and receiver.support_sound_mode:
+            state_attributes[ATTR_SOUND_MODE_RAW] = sound_mode_raw
+        if (dynamic_eq := receiver.dynamic_eq) is not None:
+            state_attributes[ATTR_DYNAMIC_EQ] = dynamic_eq
         return state_attributes
 
     @property
