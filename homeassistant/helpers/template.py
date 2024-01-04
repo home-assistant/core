@@ -8,7 +8,7 @@ import collections.abc
 from collections.abc import Callable, Collection, Generator, Iterable
 from contextlib import AbstractContextManager, suppress
 from contextvars import ContextVar
-from datetime import datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from functools import cache, lru_cache, partial, wraps
 import json
 import logging
@@ -1779,12 +1779,12 @@ def square_root(value, default=_SENTINEL):
 def timestamp_custom(value, date_format=DATE_STR_FORMAT, local=True, default=_SENTINEL):
     """Filter to convert given timestamp to format."""
     try:
-        date = dt_util.utc_from_timestamp(value)
+        to_date = dt_util.utc_from_timestamp(value)
 
         if local:
-            date = dt_util.as_local(date)
+            to_date = dt_util.as_local(date)
 
-        return date.strftime(date_format)
+        return to_date.strftime(date_format)
     except (ValueError, TypeError):
         # If timestamp can't be converted
         if default is _SENTINEL:
@@ -1824,14 +1824,42 @@ def forgiving_as_timestamp(value, default=_SENTINEL):
         return default
 
 
-def as_datetime(value):
-    """Filter and to convert a time string or UNIX timestamp to datetime object."""
+def as_datetime(value: Any, local: bool = False, default: Any = _SENTINEL) -> Any:
+    """Filter and to convert a time string or UNIX timestamp to datetime object.
+
+    Return value if it is already a datetime.
+
+    Add midnight in case of datetime.date, and current date in case of datetime.time
+    """
+    if isinstance(value, datetime | date | time):
+        today = dt_util.start_of_local_day()
+        # add midnight to datetime.date
+        if type(value) is date:
+            value = datetime.combine(value, today.time())
+        # add current date to datetime.time
+        elif type(value) is time:
+            value = datetime.combine(today.date(), value)
+        # add local timezone if requested
+        if local:
+            return dt_util.as_local(value)
+        return value
     try:
         # Check for a valid UNIX timestamp string, int or float
-        timestamp = float(value)
-        return dt_util.utc_from_timestamp(timestamp)
-    except ValueError:
-        return dt_util.parse_datetime(value)
+        dtime = dt_util.utc_from_timestamp(float(value))
+        if local:
+            return dt_util.as_local(dtime)
+        return dtime
+    except (ValueError, TypeError):
+        # Check if it can be parsed to a datetime, otherwise return default
+        try:
+            parsed = dt_util.parse_datetime(value)
+            if parsed is not None and local:
+                return dt_util.as_local(parsed)
+            if parsed is not None or default is _SENTINEL:
+                return parsed
+            return default
+        except (ValueError, TypeError):
+            return default
 
 
 def as_timedelta(value: str) -> timedelta | None:
