@@ -1,7 +1,7 @@
 """Constants used by Home Assistant components."""
 from __future__ import annotations
 
-from enum import StrEnum
+from enum import Enum, StrEnum
 from functools import partial
 from typing import Final
 
@@ -1556,6 +1556,24 @@ WEEKDAYS: Final[list[str]] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 PRECISION_WHOLE: Final = 1
 PRECISION_HALVES: Final = 0.5
 PRECISION_TENTHS: Final = 0.1
+
+
+class Precision(Enum):
+    """Precision of a platform."""
+
+    WHOLE = PRECISION_WHOLE
+    HALVES = PRECISION_HALVES
+    TENTHS = PRECISION_TENTHS
+
+
+# The round mode when using precision for platforms
+class RoundMode(StrEnum):
+    """Rounding mode of a platform."""
+
+    NEAREST = "nearest"
+    DOWN = "down"
+    UP = "up"
+
 
 # Static list of entities that will never be exposed to
 # cloud, alexa, or google_home components
