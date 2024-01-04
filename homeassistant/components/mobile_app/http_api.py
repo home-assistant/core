@@ -16,7 +16,6 @@ from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import slugify
 
-from . import create_cloud_hook
 from .const import (
     ATTR_APP_DATA,
     ATTR_APP_ID,
@@ -36,6 +35,7 @@ from .const import (
     SCHEMA_APP_DATA,
 )
 from .helpers import supports_encryption
+from .util import create_cloud_hook
 
 
 class RegistrationsView(HomeAssistantView):

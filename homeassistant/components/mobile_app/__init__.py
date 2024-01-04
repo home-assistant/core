@@ -1,5 +1,4 @@
 """Integrates Native Apps to Home Assistant."""
-import asyncio
 from contextlib import suppress
 from typing import Any
 
@@ -37,26 +36,12 @@ from .const import (
 )
 from .helpers import savable_state
 from .http_api import RegistrationsView
+from .util import create_cloud_hook
 from .webhook import handle_webhook
 
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
-
-_CLOUD_HOOK_LOCK = asyncio.Lock()
-
-
-async def create_cloud_hook(
-    hass: HomeAssistant, webhook_id: str, entry: ConfigEntry | None
-) -> str:
-    """Create a cloud hook."""
-    async with _CLOUD_HOOK_LOCK:
-        hook = await cloud.async_get_or_create_cloudhook(hass, webhook_id)
-        if entry:
-            hass.config_entries.async_update_entry(
-                entry, data={**entry.data, CONF_CLOUDHOOK_URL: hook}
-            )
-        return hook
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
