@@ -24,6 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import DOMAIN
 
@@ -264,7 +265,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         connector = aiohttp.TCPConnector(
             force_close=True,
-            ssl=False if not verify_ssl else None,
+            ssl=get_default_no_verify_context()
+            if not verify_ssl
+            else get_default_context(),
         )
         session = aiohttp.ClientSession(connector=connector)
         self._sessions.append(session)

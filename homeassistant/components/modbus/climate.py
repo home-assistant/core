@@ -125,7 +125,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         )
         self._attr_min_temp = config[CONF_MIN_TEMP]
         self._attr_max_temp = config[CONF_MAX_TEMP]
-        self._attr_target_temperature_step = config[CONF_TARGET_TEMP]
         self._attr_target_temperature_step = config[CONF_STEP]
 
         if CONF_HVAC_MODE_REGISTER in config:
