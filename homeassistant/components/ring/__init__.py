@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
+from functools import partial
 import logging
 from typing import Any
 
@@ -40,9 +41,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def token_updater(token):
         """Handle from sync context when token is updated."""
         hass.loop.call_soon_threadsafe(
-            hass.config_entries.async_update_entry,
-            entry,
-            data={**entry.data, CONF_TOKEN: token},
+            partial(
+                hass.config_entries.async_update_entry,
+                entry,
+                data={**entry.data, CONF_TOKEN: token},
+            )
         )
 
     auth = ring_doorbell.Auth(
