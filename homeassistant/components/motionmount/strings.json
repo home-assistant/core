@@ -33,21 +33,6 @@
         "name": "Turn"
       }
     },
-    "binary_sensor": {
-      "motionmount_is_moving": {
-        "name": "Moving"
-      }
-    },
-    "sensor": {
-      "motionmount_error_status": {
-        "name": "Error Status",
-        "state": {
-          "none": "None",
-          "motor": "Motor",
-          "internal": "Internal"
-        }
-      }
-    },
     "select": {
       "motionmount_preset": {
         "name": "Preset",
