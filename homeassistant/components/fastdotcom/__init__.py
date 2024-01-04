@@ -7,8 +7,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
@@ -60,22 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             PLATFORMS,
         )
 
-    async def _request_refresh_service(call: ServiceCall) -> None:
-        """Request a refresh via the service."""
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            "service_deprecation",
-            breaks_in_ha_version="2024.7.0",
-            is_fixable=True,
-            is_persistent=False,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="service_deprecation",
-        )
-        await coordinator.async_request_refresh()
-
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-    hass.services.async_register(DOMAIN, "speedtest", _request_refresh_service)
 
     async_at_started(hass, _async_finish_startup)
 
@@ -84,7 +68,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Fast.com config entry."""
-    hass.services.async_remove(DOMAIN, "speedtest")
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
