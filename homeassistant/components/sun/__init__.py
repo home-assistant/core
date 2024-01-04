@@ -385,7 +385,7 @@ class Sun(Entity):
             self.night_duration = end - start
         except ValueError:  # Catch Polar day / night / twilight.
             self.night_duration = (
-                timedelta(days=1) if self.solar_elevation <= -18.0 else timedelta()
+                timedelta(days=1) if self.solar_elevation <= -6.0 else timedelta()
             )
         try:
             start, end = self.location.twilight(
