@@ -4,20 +4,17 @@ from __future__ import annotations
 from typing import Any
 
 from aioambient import OpenAPI
-from geopy import Location, Nominatim
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import UnitOfLength
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import translation
 from homeassistant.helpers.selector import (
     LocationSelector,
     LocationSelectorConfig,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
-    SelectSelectorMode,
 )
 from homeassistant.util.unit_conversion import DistanceConverter
 
@@ -28,13 +25,9 @@ from .const import (
     DOMAIN,
     ENTITY_MAC_ADDRESS,
     ENTITY_STATION_NAME,
-    ENTITY_STATIONS,
-    LOGGER,
 )
 
-CONFIG_STEP_USER = "user"
-CONFIG_STEP_STATIONS = "stations"
-CONFIG_STEP_STATION_NAME = "station_name"
+CONFIG_USER = "user"
 
 CONFIG_LOCATION = "location"
 CONFIG_LOCATION_LATITUDE = "latitude"
@@ -46,11 +39,8 @@ CONFIG_LOCATION_RADIUS_DEFAULT = DistanceConverter.convert(
     UnitOfLength.METERS,
 )
 
-CONFIG_STATIONS = "stations"
+CONFIG_STATION = "station"
 CONFIG_STATION_NAME = "station_name"
-CONFIG_STATION_NAME_SUFFIX = (
-    f"component.{DOMAIN}.config.step.station_name.data.station_name_suffix"
-)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -64,7 +54,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._longitude = 0.0
         self._latitude = 0.0
         self._radius = 0.0
-        self._stations: list[dict[str, str]] = []
+        self._station: dict[str, str] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -80,7 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 UnitOfLength.METERS,
                 UnitOfLength.MILES,
             )
-            return await self.async_step_stations()
+            return await self.async_step_station()
 
         schema: vol.Schema = self.add_suggested_values_to_schema(
             vol.Schema(
@@ -100,12 +90,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id=CONFIG_STEP_USER,
+            step_id=CONFIG_USER,
             data_schema=schema,
             errors=errors,
         )
 
-    async def async_step_stations(
+    async def async_step_station(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the second step to select the station."""
@@ -120,10 +110,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ENTITY_MAC_ADDRESS: mac_address,
                 }
 
-            self._stations = list(map(parse_station, user_input[CONFIG_STATIONS]))
-            if len(self._stations) == 0:
-                return self.async_abort(reason="no_stations_selected")
-
+            self._station = parse_station(user_input[CONFIG_STATION])
             return await self.async_step_station_name()
 
         client: OpenAPI = OpenAPI()
@@ -135,7 +122,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_stations_found")
 
         options: list[SelectOptionDict] = list[SelectOptionDict]()
-        for station in stations:
+        for station in sorted(
+            stations, key=lambda s: s[API_STATION_INFO][API_STATION_NAME]
+        ):
             station_name: str = station[API_STATION_INFO][API_STATION_NAME]
             option: SelectOptionDict = SelectOptionDict(
                 label=f"{station_name}",
@@ -145,39 +134,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         schema: vol.Schema = vol.Schema(
             {
-                vol.Required(CONFIG_STATIONS, default=None): SelectSelector(
+                vol.Required(CONFIG_STATION): SelectSelector(
                     SelectSelectorConfig(
                         options=options,
-                        multiple=True,
-                        mode=SelectSelectorMode.DROPDOWN,
+                        multiple=False,
                     ),
                 )
             }
         )
 
         return self.async_show_form(
-            step_id=CONFIG_STEP_STATIONS,
+            step_id=CONFIG_STATION,
             data_schema=schema,
             errors=errors,
         )
-
-    async def suggest_virtual_station_name(self) -> str:
-        """Suggest a name for a virtual station. The suggested name is composed of the city name and the word 'Weather Station'."""
-        geolocator = Nominatim(user_agent="homeassistant", timeout=3)
-        translations: dict[str, str] = await translation.async_get_translations(
-            self.hass, self.hass.config.language, "config", {DOMAIN}
-        )
-        suffix = translations[CONFIG_STATION_NAME_SUFFIX]
-        try:
-            location: Location = await self.hass.async_add_executor_job(
-                lambda: geolocator.reverse(
-                    str(self._latitude) + "," + str(self._longitude)
-                )
-            )
-            return str(location.raw["address"]["city"]) + " " + suffix
-        except Exception:  # pylint: disable=broad-exception-caught
-            LOGGER.warning("Failed to look up geo city name")
-            return suffix
 
     async def async_step_station_name(
         self, user_input: dict[str, Any] | None = None
@@ -186,16 +156,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            if user_input[CONFIG_STATION_NAME] == "":
+            if not user_input[CONFIG_STATION_NAME]:
                 return self.async_abort(reason="no_station_name_defined")
 
-            await self.async_set_unique_id(user_input[CONFIG_STATION_NAME])
+            await self.async_set_unique_id(self._station[ENTITY_MAC_ADDRESS])
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=f"{user_input[CONFIG_STATION_NAME]}",
                 data={
                     ENTITY_STATION_NAME: user_input[CONFIG_STATION_NAME],
-                    ENTITY_STATIONS: self._stations,
+                    ENTITY_MAC_ADDRESS: self._station[ENTITY_MAC_ADDRESS],
                 },
             )
 
@@ -203,15 +173,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(
                     CONFIG_STATION_NAME,
-                    default=self._stations[0][ENTITY_STATION_NAME]
-                    if len(self._stations) == 1
-                    else await self.suggest_virtual_station_name(),
+                    default=self._station[ENTITY_STATION_NAME],
                 ): str
             }
         )
 
         return self.async_show_form(
-            step_id=CONFIG_STEP_STATION_NAME,
+            step_id=CONFIG_STATION_NAME,
             data_schema=schema,
             errors=errors,
         )

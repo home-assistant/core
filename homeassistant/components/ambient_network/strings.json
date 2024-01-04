@@ -9,19 +9,18 @@
           "longitude": "[%key:common::config_flow::data::longitude%]"
         }
       },
-      "stations": {
+      "station": {
         "title": "Station Selection",
-        "description": "Select a single station for precise information about a specific location. Alternatively, select multiple stations to create a virtual station that provides an average picture of the weather in a broader area. This virtual station will automatically exclude data from offline stations and any outliers to ensure accurate results.",
+        "description": "Select the weather station you want to add to Home Assistant.",
         "data": {
-          "stations": "Stations"
+          "station": "Station"
         }
       },
       "station_name": {
         "title": "Station Name",
-        "description": "Create a distinctive name for your physical or virtual station, which will be incorporated into all sensor names.",
+        "description": "Create a distinctive name for the weather station, which will be incorporated into all sensor names.",
         "data": {
-          "station_name": "Station Name",
-          "station_name_suffix": "Weather Station"
+          "station_name": "Station Name"
         }
       }
     },
@@ -33,8 +32,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_station_name_defined": "You need to define a non-empty station name.",
-      "no_stations_found": "Did not find any stations in the selected region.",
-      "no_stations_selected": "You did not select any stations."
+      "no_stations_found": "Did not find any stations in the selected region."
     }
   },
   "entity": {
@@ -90,6 +88,9 @@
       "solar_radiation": {
         "name": "Solar radiation"
       },
+      "temperature": {
+        "name": "Temperature"
+      },
       "uv_index": {
         "name": "UV index"
       },
@@ -104,6 +105,9 @@
       },
       "wind_gust": {
         "name": "Wind gust"
+      },
+      "wind_speed": {
+        "name": "Wind speed"
       },
       "yearly_rain": {
         "name": "Yearly rain"

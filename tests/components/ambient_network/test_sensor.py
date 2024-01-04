@@ -41,7 +41,7 @@ async def test_sensors(
 
     sensor = hass.states.get("sensor.virtual_station_humidity")
     assert sensor is not None
-    assert sensor.state == "62.0"
+    assert sensor.state == "62"
 
     sensor = hass.states.get("sensor.virtual_station_last_rain")
     assert sensor is not None
@@ -65,7 +65,7 @@ async def test_sensors(
 
     sensor = hass.states.get("sensor.virtual_station_uv_index")
     assert sensor is not None
-    assert sensor.state == "0.0"
+    assert sensor.state == "0"
 
     sensor = hass.states.get("sensor.virtual_station_weekly_rain")
     assert sensor is not None
@@ -73,7 +73,7 @@ async def test_sensors(
 
     sensor = hass.states.get("sensor.virtual_station_wind_direction")
     assert sensor is not None
-    assert sensor.state == "13.0"
+    assert sensor.state == "13"
 
     sensor = hass.states.get("sensor.virtual_station_wind_gust")
     assert sensor is not None
