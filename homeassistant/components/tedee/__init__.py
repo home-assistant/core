@@ -22,9 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Integration setup."""
 
-    websession = async_get_clientsession(hass)
-
-    coordinator = TedeeApiCoordinator(hass, websession)
+    coordinator = TedeeApiCoordinator(hass, async_get_clientsession(hass))
 
     await coordinator.async_config_entry_first_refresh()
 
