@@ -50,6 +50,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Fast.com from a config entry."""
     coordinator = FastdotcomDataUpdateCoordindator(hass)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     async def _async_finish_startup(hass: HomeAssistant) -> None:
         """Run this only when HA has finished its startup."""
@@ -59,10 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             PLATFORMS,
         )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-
     async_at_started(hass, _async_finish_startup)
-
     return True
 
 
