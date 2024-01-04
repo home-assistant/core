@@ -369,17 +369,17 @@ _DEPRECATED_DEVICE_CLASS_MONETARY: Final = DeprecatedConstant(
     "SensorDeviceClass.MONETARY",
     "2025.1",
 )
-_DEPRECATED_DEVICE_CLASS_NITROGEN_DIOXIDE = (
+_DEPRECATED_DEVICE_CLASS_NITROGEN_DIOXIDE: Final = DeprecatedConstant(
     "nitrogen_dioxide",
     "SensorDeviceClass.NITROGEN_DIOXIDE",
     "2025.1",
 )
-_DEPRECATED_DEVICE_CLASS_NITROGEN_MONOXIDE = (
+_DEPRECATED_DEVICE_CLASS_NITROGEN_MONOXIDE: Final = DeprecatedConstant(
     "nitrogen_monoxide",
     "SensorDeviceClass.NITROGEN_MONOXIDE",
     "2025.1",
 )
-_DEPRECATED_DEVICE_CLASS_NITROUS_OXIDE = (
+_DEPRECATED_DEVICE_CLASS_NITROUS_OXIDE: Final = DeprecatedConstant(
     "nitrous_oxide",
     "SensorDeviceClass.NITROUS_OXIDE",
     "2025.1",
@@ -414,7 +414,7 @@ _DEPRECATED_DEVICE_CLASS_SIGNAL_STRENGTH: Final = DeprecatedConstant(
     "SensorDeviceClass.SIGNAL_STRENGTH",
     "2025.1",
 )
-_DEPRECATED_DEVICE_CLASS_SULPHUR_DIOXIDE = (
+_DEPRECATED_DEVICE_CLASS_SULPHUR_DIOXIDE: Final = DeprecatedConstant(
     "sulphur_dioxide",
     "SensorDeviceClass.SULPHUR_DIOXIDE",
     "2025.1",
@@ -429,7 +429,7 @@ _DEPRECATED_DEVICE_CLASS_TIMESTAMP: Final = DeprecatedConstant(
     "SensorDeviceClass.TIMESTAMP",
     "2025.1",
 )
-_DEPRECATED_DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS = (
+_DEPRECATED_DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS: Final = DeprecatedConstant(
     "volatile_organic_compounds",
     "SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS",
     "2025.1",
