@@ -2453,7 +2453,6 @@
       "iot_class": "local_push"
     },
     "holiday": {
-      "name": "Holiday",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -6971,6 +6970,7 @@
     "google_travel_time",
     "group",
     "growatt_server",
+    "holiday",
     "homekit_controller",
     "input_boolean",
     "input_button",
