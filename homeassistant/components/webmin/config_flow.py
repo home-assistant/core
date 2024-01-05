@@ -32,7 +32,7 @@ from .const import DEFAULT_PORT, DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN
 
 async def validate_user_input(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
-):
+) -> dict[str, Any]:
     """Validate user input."""
     # pylint: disable-next=protected-access
     handler.parent_handler._async_abort_entries_match(
@@ -54,14 +54,14 @@ async def validate_user_input(
     try:
         await instance.update()
         return user_input
-    except ClientResponseError as e:
-        if e.status == HTTPStatus.UNAUTHORIZED:
-            raise SchemaFlowError("invalid_auth") from e
-        raise SchemaFlowError("cannot_connect") from e
-    except ClientConnectionError as e:
-        raise SchemaFlowError("cannot_connect") from e
-    except Exception as e:
-        raise SchemaFlowError("unknown") from e
+    except ClientResponseError as err:
+        if err.status == HTTPStatus.UNAUTHORIZED:
+            raise SchemaFlowError("invalid_auth") from err
+        raise SchemaFlowError("cannot_connect") from err
+    except ClientConnectionError as err:
+        raise SchemaFlowError("cannot_connect") from err
+    except Exception as err:
+        raise SchemaFlowError("unknown") from err
 
 
 CONFIG_SCHEMA = vol.Schema(

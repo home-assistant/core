@@ -10,8 +10,6 @@ from .conftest import TEST_USER_INPUT
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
-# pytestmark = pytest.mark.usefixtures("mock_setup_entry")
-
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test successful unload of entry."""
@@ -20,7 +18,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.webmin.config_flow.WebminInstance.update",
+        "homeassistant.components.webmin.coordinator.WebminInstance.update",
         return_value=load_json_object_fixture("webmin_update.json", DOMAIN),
     ):
         await hass.config_entries.async_setup(entry.entry_id)

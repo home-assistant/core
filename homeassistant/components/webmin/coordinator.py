@@ -8,6 +8,7 @@ from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_CONNECTIONS,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -61,8 +62,7 @@ class WebminUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Provide needed data to the device info."""
         ifaces = [iface for iface in self.data["active_interfaces"] if "ether" in iface]
         ifaces.sort(key=lambda x: x["ether"])
-        self.mac_address = ifaces[0]["ether"]
-        self.device_info["connections"] = {
+        self.device_info[ATTR_CONNECTIONS] = {
             (CONNECTION_NETWORK_MAC, iface["ether"]) for iface in ifaces
         }
 
