@@ -71,16 +71,7 @@ class StoredState:
         self.state = state
 
     def as_dict(self) -> dict[str, Any]:
-        """Return a dict representation of the stored state."""
-        result = {
-            "state": self.state.as_dict(),
-            "extra_data": self.extra_data.as_dict() if self.extra_data else None,
-            "last_seen": self.last_seen,
-        }
-        return result
-
-    def as_json(self) -> dict[str, Any]:
-        """Return a dict representation of the stored state."""
+        """Return a dict representation of the stored state to be JSON serialized."""
         result = {
             "state": self.state.as_json_fragment,
             "extra_data": self.extra_data.as_dict() if self.extra_data else None,
@@ -227,7 +218,7 @@ class RestoreStateData:
         try:
             await self.store.async_save(
                 [
-                    stored_state.as_json()
+                    stored_state.as_dict()
                     for stored_state in self.async_get_stored_states()
                 ]
             )
