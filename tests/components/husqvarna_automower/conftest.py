@@ -21,6 +21,12 @@ def load_jwt_fixture():
     return load_fixture("jwt", DOMAIN)
 
 
+@pytest.fixture(scope="session")
+def load_token_decoded_fixture():
+    """Load Fixture data."""
+    return load_fixture("token_decoded.json", DOMAIN)
+
+
 @pytest.fixture
 def mock_config_entry(load_jwt_fixture) -> MockConfigEntry:
     """Return the default mocked config entry."""
@@ -77,7 +83,12 @@ def state():
 
 @pytest.fixture
 async def setup_entity(
-    hass: HomeAssistant, mower_list_fixture, mock_config_entry, activity, state
+    hass: HomeAssistant,
+    mower_list_fixture,
+    mock_config_entry,
+    load_token_decoded_fixture,
+    activity,
+    state,
 ):
     """Set up entity and config entry."""
 
@@ -86,7 +97,6 @@ async def setup_entity(
     mower_data.mower.state = state
     config_entry: MockConfigEntry = mock_config_entry
     config_entry.add_to_hass(hass)
-    token_decoded = load_fixture("token_decoded.json", DOMAIN)
     with patch(
         "aioautomower.session.AutomowerSession",
         return_value=AsyncMock(
@@ -103,7 +113,7 @@ async def setup_entity(
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session",
         return_value=AsyncMock(),
-    ), patch("jwt.decode", return_value=token_decoded), patch(
+    ), patch("jwt.decode", return_value=load_token_decoded_fixture), patch(
         "homeassistant.components.husqvarna_automower.coordinator.AutomowerDataUpdateCoordinator._async_update_data",
         return_value=mower_list_fixture,
     ) as mock_impl:
