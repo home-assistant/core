@@ -161,15 +161,13 @@ class HomeKitLight(HomeKitEntity, LightEntity):
 
         characteristics: dict[str, Any] = {}
 
-        if hs_color is not None:
-            characteristics[CharacteristicsTypes.HUE] = hs_color[0]
-            characteristics[CharacteristicsTypes.SATURATION] = hs_color[1]
-
         if brightness is not None:
             characteristics[CharacteristicsTypes.BRIGHTNESS] = int(
                 brightness * 100 / 255
             )
 
+        # Turn on is only ever called with either temperature or color,
+        # never both.
         if temperature is not None:
             if self.service.has(CharacteristicsTypes.COLOR_TEMPERATURE):
                 characteristics[CharacteristicsTypes.COLOR_TEMPERATURE] = int(
@@ -185,6 +183,10 @@ class HomeKitLight(HomeKitEntity, LightEntity):
                 )
                 characteristics[CharacteristicsTypes.HUE] = hue_sat[0]
                 characteristics[CharacteristicsTypes.SATURATION] = hue_sat[1]
+
+        elif hs_color is not None:
+            characteristics[CharacteristicsTypes.HUE] = hs_color[0]
+            characteristics[CharacteristicsTypes.SATURATION] = hs_color[1]
 
         characteristics[CharacteristicsTypes.ON] = True
 
