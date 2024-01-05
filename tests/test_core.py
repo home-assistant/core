@@ -644,7 +644,7 @@ def test_event_as_dict() -> None:
         "event_type": event_type,
         "data": data,
         "origin": "LOCAL",
-        "time_fired": now,
+        "time_fired": now.isoformat(),
         "context": {
             "id": event.context.id,
             "parent_id": None,
@@ -674,8 +674,8 @@ def test_state_as_dict() -> None:
         },
         "entity_id": "happy.happy",
         "attributes": {"pig": "dog"},
-        "last_changed": last_time,
-        "last_updated": last_time,
+        "last_changed": last_time.isoformat(),
+        "last_updated": last_time.isoformat(),
         "state": "on",
     }
     as_dict_1 = state.as_dict()
