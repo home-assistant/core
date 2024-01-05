@@ -1026,7 +1026,7 @@ class Context:
         }
 
     def as_dict(self) -> ReadOnlyDict[str, str | None]:
-        """Return a dictionary representation of the context.
+        """Return a ReadOnlyDict representation of the context.
 
         This function is not expected to be called
         and is only here for backwards compatibility.
@@ -1035,10 +1035,11 @@ class Context:
 
     @cached_property
     def _as_read_only_dict(self) -> ReadOnlyDict[str, str | None]:
-        """Return a dictionary representation of the context.
+        """Return a ReadOnlyDict representation of the context.
 
         This function is not expected to be called
-        and is only here for backwards compatibility.
+        and is only here for backwards compatibility
+        to support the as_dict method.
         """
         return ReadOnlyDict(self.as_mutable_dict)
 
@@ -1112,7 +1113,8 @@ class Event:
         """Create a dict representation of this Event.
 
         This function is not expected to be called
-        and is only here for backwards compatibility.
+        and is only here for backwards compatibility
+        to support the as_dict method.
         """
         as_dict = self._as_dict
         data = as_dict["data"]
@@ -1480,7 +1482,7 @@ class State:
     def as_dict(
         self,
     ) -> ReadOnlyDict[str, datetime.datetime | Collection[Any]]:
-        """Return a dict representation of the State.
+        """Return a ReadOnlyDict representation of the State.
 
         Async friendly.
 
@@ -1496,15 +1498,13 @@ class State:
     def _as_read_only_dict(
         self,
     ) -> ReadOnlyDict[str, datetime.datetime | Collection[Any]]:
-        """Return a dict representation of the State.
+        """Return a ReadOnlyDict representation of the State.
 
         Async friendly.
 
         This function is not expected to be called
-        and is only here for backwards compatibility.
-
-        To be used for JSON serialization.
-        Ensures: state == State.from_dict(state.as_dict())
+        and is only here for backwards compatibility
+        to support the as_dict method.
         """
         as_dict = self._as_dict
         context = as_dict["context"]
