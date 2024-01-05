@@ -651,7 +651,11 @@ def test_event_as_dict() -> None:
         "data": data,
         "origin": "LOCAL",
         "time_fired": now,
-        "context": event.context,
+        "context": {
+            "id": event.context.id,
+            "parent_id": None,
+            "user_id": event.context.user_id,
+        },
     }
     assert event.as_dict() == expected
     # 2nd time to verify cache
@@ -669,7 +673,11 @@ def test_state_as_dict() -> None:
         last_changed=last_time,
     )
     expected = {
-        "context": state.context,
+        "context": {
+            "id": state.context.id,
+            "parent_id": None,
+            "user_id": state.context.user_id,
+        },
         "entity_id": "happy.happy",
         "attributes": {"pig": "dog"},
         "last_changed": last_time,
@@ -679,7 +687,7 @@ def test_state_as_dict() -> None:
     as_dict_1 = state.as_dict()
     assert isinstance(as_dict_1, ReadOnlyDict)
     assert isinstance(as_dict_1["attributes"], ReadOnlyDict)
-    assert isinstance(as_dict_1["context"], ha.Context)
+    assert isinstance(as_dict_1["context"], ReadOnlyDict)
     assert as_dict_1 == expected
     # 2nd time to verify cache
     assert state.as_dict() == expected

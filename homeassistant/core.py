@@ -1017,7 +1017,7 @@ class Context:
         return bool(self.__class__ == other.__class__ and self.id == other.id)
 
     @cached_property
-    def _as_dict(self) -> dict[str, str | None]:
+    def as_mutable_dict(self) -> dict[str, str | None]:
         """Return a dictionary representation of the context."""
         return {
             "id": self.id,
@@ -1031,12 +1031,12 @@ class Context:
 
     @cached_property
     def _as_read_only_dict(self) -> ReadOnlyDict[str, str | None]:
-        return ReadOnlyDict(self._as_dict)
+        return ReadOnlyDict(self.as_mutable_dict)
 
     @cached_property
     def as_json_fragment(self) -> json_fragment:
         """Return a JSON fragment of the context."""
-        return json_fragment(json_dumps(self._as_dict))
+        return json_fragment(json_dumps(self.as_mutable_dict))
 
 
 class EventOrigin(enum.Enum):
@@ -1085,7 +1085,7 @@ class Event:
             "data": self.data,
             "origin": self.origin.value,
             "time_fired": self.time_fired,
-            "context": self.context,
+            "context": self.context.as_mutable_dict,
         }
 
     def as_dict(self) -> ReadOnlyDict[str, Any]:
@@ -1100,12 +1100,15 @@ class Event:
         """Create a dict representation of this Event."""
         as_dict = self._as_dict
         data = as_dict["data"]
+        context = as_dict["context"]
         # as_json_fragment will convert data to a ReadOnlyDict
         # to a normal dict so its ok to have either. We only
         # mutate the cache if someone asks for the as_dict version
         # to avoid storing multiple copies of the data in memory.
         if type(data) is not ReadOnlyDict:
             as_dict["data"] = ReadOnlyDict(data)
+        if type(context) is not ReadOnlyDict:
+            as_dict["context"] = ReadOnlyDict(context)
         return ReadOnlyDict(as_dict)
 
     @cached_property
@@ -1436,9 +1439,7 @@ class State:
         )
 
     @cached_property
-    def _as_dict(
-        self,
-    ) -> dict[str, datetime.datetime | Collection[Any] | Context]:
+    def _as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the State.
 
         Async friendly.
@@ -1457,12 +1458,12 @@ class State:
             "attributes": self.attributes,
             "last_changed": last_changed_isoformat,
             "last_updated": last_updated_isoformat,
-            "context": self.context,
+            "context": self.context.as_mutable_dict,
         }
 
     def as_dict(
         self,
-    ) -> ReadOnlyDict[str, datetime.datetime | Collection[Any] | Context]:
+    ) -> ReadOnlyDict[str, datetime.datetime | Collection[Any]]:
         """Return a dict representation of the State.
 
         Async friendly.
@@ -1475,7 +1476,7 @@ class State:
     @cached_property
     def _as_read_only_dict(
         self,
-    ) -> ReadOnlyDict[str, datetime.datetime | Collection[Any] | Context]:
+    ) -> ReadOnlyDict[str, datetime.datetime | Collection[Any]]:
         """Return a dict representation of the State.
 
         Async friendly.
@@ -1483,7 +1484,15 @@ class State:
         To be used for JSON serialization.
         Ensures: state == State.from_dict(state.as_dict())
         """
-        return ReadOnlyDict(self._as_dict)
+        as_dict = self._as_dict
+        context = as_dict["context"]
+        # as_json_fragment will convert data to a ReadOnlyDict
+        # to a normal dict so its ok to have either. We only
+        # mutate the cache if someone asks for the as_dict version
+        # to avoid storing multiple copies of the data in memory.
+        if type(context) is not ReadOnlyDict:
+            as_dict["context"] = ReadOnlyDict(context)
+        return ReadOnlyDict(as_dict)
 
     @cached_property
     def as_dict_json(self) -> str:
