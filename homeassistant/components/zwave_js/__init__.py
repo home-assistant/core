@@ -912,13 +912,15 @@ async def disconnect_client(hass: HomeAssistant, entry: ConfigEntry) -> None:
     listen_task: asyncio.Task = data[DATA_CLIENT_LISTEN_TASK]
     start_client_task: asyncio.Task = data[DATA_START_CLIENT_TASK]
     driver_events: DriverEvents = data[DATA_DRIVER_EVENTS]
-    listen_task.cancel()
     start_client_task.cancel()
+    with suppress(asyncio.CancelledError):
+        await start_client_task
+    listen_task.cancel()
     platform_setup_tasks = driver_events.platform_setup_tasks.values()
     for task in platform_setup_tasks:
         task.cancel()
 
-    tasks = (listen_task, start_client_task, *platform_setup_tasks)
+    tasks = (listen_task, *platform_setup_tasks)
     await asyncio.gather(*tasks, return_exceptions=True)
     for task in tasks:
         with suppress(asyncio.CancelledError):
