@@ -143,7 +143,7 @@ class DefaultAgent(AbstractConversationAgent):
     @property
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
-        return get_domains_and_languages()["homeassistant"]  # type: ignore[no-any-return]
+        return get_domains_and_languages()["homeassistant"]
 
     async def async_initialize(self, config_intents: dict[str, Any] | None) -> None:
         """Initialize the default agent."""
@@ -431,7 +431,7 @@ class DefaultAgent(AbstractConversationAgent):
             speech = str(speech)
             speech = " ".join(speech.strip().split())
 
-        return speech  # type: ignore[no-any-return]
+        return speech
 
     async def async_reload(self, language: str | None = None) -> None:
         """Clear cached intents for a language."""
@@ -494,7 +494,7 @@ class DefaultAgent(AbstractConversationAgent):
                 )
                 if component_intents:
                     # Merge sentences into existing dictionary
-                    merge_dict(intents_dict, component_intents)  # type: ignore[no-untyped-call]
+                    merge_dict(intents_dict, component_intents)
 
                     # Will need to recreate graph
                     intents_changed = True
@@ -526,7 +526,7 @@ class DefaultAgent(AbstractConversationAgent):
                                 ),
                                 dict,
                             ):
-                                merge_dict(intents_dict, custom_sentences_yaml)  # type: ignore[no-untyped-call]
+                                merge_dict(intents_dict, custom_sentences_yaml)
                             else:
                                 _LOGGER.warning(
                                     "Custom sentences file does not match expected format path=%s",
@@ -547,7 +547,7 @@ class DefaultAgent(AbstractConversationAgent):
 
             # Load sentences from HA config for default language only
             if self._config_intents and (language == self.hass.config.language):
-                merge_dict(  # type: ignore[no-untyped-call]
+                merge_dict(
                     intents_dict,
                     {
                         "intents": {

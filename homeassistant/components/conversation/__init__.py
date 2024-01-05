@@ -60,7 +60,7 @@ def agent_id_validator(value: Any) -> str:
     manager = _get_agent_manager(hass)
     if not manager.async_is_valid_agent_id(cv.string(value)):
         raise vol.Invalid("invalid agent ID")
-    return value  # type: ignore[no-any-return]
+    return value
 
 
 SERVICE_PROCESS_SCHEMA = vol.Schema(
@@ -508,7 +508,7 @@ class AgentManager:
 
             async with self._builtin_agent_init_lock:
                 if self._builtin_agent is not None:
-                    return self._builtin_agent  # type: ignore[unreachable]
+                    return self._builtin_agent
 
                 self._builtin_agent = DefaultAgent(self.hass)
                 await self._builtin_agent.async_initialize(
