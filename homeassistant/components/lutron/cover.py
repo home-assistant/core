@@ -14,7 +14,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
+from . import LUTRON_CONTROLLER, LUTRON_DEVICES
+from .entity import LutronDevice
 
 _LOGGER = logging.getLogger(__name__)
 
