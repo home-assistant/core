@@ -211,7 +211,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Huawei Smart Loggers sensors."""
-    coordinator = hass.data[DOMAIN]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
     _LOGGER.debug("In sensor.py async_setup_entry")
     async_add_entities(
         HuaweiSmartLogger3000Sensor(coordinator, description)
