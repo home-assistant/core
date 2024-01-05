@@ -36,6 +36,7 @@ from .coordinator import async_reconnect_soon
 from .utils import (
     get_block_device_sleep_period,
     get_coap_context,
+    get_device_entry_gen,
     get_info_auth,
     get_info_gen,
     get_model_name,
@@ -322,7 +323,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             except (DeviceConnectionError, InvalidAuthError, FirmwareUnsupported):
                 return self.async_abort(reason="reauth_unsuccessful")
 
-            if self.entry.data.get(CONF_GEN, 1) != 1:
+            if get_device_entry_gen(self.entry) != 1:
                 user_input[CONF_USERNAME] = "admin"
             try:
                 await validate_input(self.hass, host, info, user_input)
@@ -335,7 +336,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.hass.config_entries.async_reload(self.entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
-        if self.entry.data.get(CONF_GEN, 1) in BLOCK_GENERATIONS:
+        if get_device_entry_gen(self.entry) in BLOCK_GENERATIONS:
             schema = {
                 vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
@@ -364,7 +365,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
         """Return options flow support for this handler."""
         return (
-            config_entry.data.get(CONF_GEN) in RPC_GENERATIONS
+            get_device_entry_gen(config_entry) in RPC_GENERATIONS
             and not config_entry.data.get(CONF_SLEEP_PERIOD)
             and config_entry.data.get("model") != MODEL_WALL_DISPLAY
         )
