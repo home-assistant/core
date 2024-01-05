@@ -14,9 +14,8 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import DiscoveryInfoType
 
-from . import LUTRON_CONTROLLER, LUTRON_DEVICES
+from . import DOMAIN, LutronData
 from .entity import LutronDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,18 +25,20 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Lutron binary_sensor platform.
 
     Adds occupancy groups from the Main Repeater associated with the
     config_entry as binary_sensor entities.
     """
-    entities = []
-    for area_name, device in hass.data[LUTRON_DEVICES]["binary_sensor"]:
-        entity = LutronOccupancySensor(area_name, device, hass.data[LUTRON_CONTROLLER])
-        entities.append(entity)
-    async_add_entities(entities, True)
+    entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
+    async_add_entities(
+        [
+            LutronOccupancySensor(area_name, device, entry_data.client)
+            for area_name, device in entry_data.binary_sensors
+        ],
+        True,
+    )
 
 
 class LutronOccupancySensor(LutronDevice, BinarySensorEntity):

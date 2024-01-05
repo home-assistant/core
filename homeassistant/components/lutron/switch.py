@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LUTRON_CONTROLLER, LUTRON_DEVICES
+from . import DOMAIN, LutronData
 from .entity import LutronDevice
 
 
@@ -23,21 +23,19 @@ async def async_setup_entry(
     Adds switches from the Main Repeater associated with the config_entry as
     switch entities.
     """
-    entities = []
+    entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
+    entities: list[SwitchEntity] = []
 
     # Add Lutron Switches
-    for area_name, device in hass.data[LUTRON_DEVICES]["switch"]:
-        entity = LutronSwitch(area_name, device, hass.data[LUTRON_CONTROLLER])
-        entities.append(entity)
+    for area_name, device in entry_data.switches:
+        entities.append(LutronSwitch(area_name, device, entry_data.client))
 
     # Add the indicator LEDs for scenes (keypad buttons)
-    for scene_data in hass.data[LUTRON_DEVICES]["scene"]:
-        (area_name, keypad_name, scene, led) = scene_data
+    for area_name, keypad_name, scene, led in entry_data.scenes:
         if led is not None:
-            led = LutronLed(
-                area_name, keypad_name, scene, led, hass.data[LUTRON_CONTROLLER]
+            entities.append(
+                LutronLed(area_name, keypad_name, scene, led, entry_data.client)
             )
-            entities.append(led)
     async_add_entities(entities, True)
 
 
