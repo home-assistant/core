@@ -7,6 +7,7 @@ from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 from homeassistant.components.knx import async_unload_entry as knx_async_unload_entry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import KNXTestKit
 
@@ -274,3 +275,16 @@ async def test_reload_service(
         )
         mock_unload_entry.assert_called_once()
         mock_setup_entry.assert_called_once()
+
+
+async def test_service_setup_failed(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test service setup failed."""
+    await knx.setup_integration({"invalid": True})
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "knx",
+            "send",
+            {"address": "1/2/3", "payload": True, "response": False},
+            blocking=True,
+        )

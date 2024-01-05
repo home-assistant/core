@@ -72,6 +72,15 @@ def register_knx_services(hass: HomeAssistant) -> None:
     )
 
 
+@callback
+def get_knx_module(hass: HomeAssistant) -> KNXModule:
+    """Return KNXModule instance."""
+    try:
+        return hass.data[DOMAIN]  # type: ignore[no-any-return]
+    except KeyError as err:
+        raise HomeAssistantError("KNX entry not loaded") from err
+
+
 SERVICE_KNX_EVENT_REGISTER_SCHEMA = vol.Schema(
     {
         vol.Required(KNX_ADDRESS): vol.All(
@@ -86,10 +95,7 @@ SERVICE_KNX_EVENT_REGISTER_SCHEMA = vol.Schema(
 
 async def service_event_register_modify(hass: HomeAssistant, call: ServiceCall) -> None:
     """Service for adding or removing a GroupAddress to the knx_event filter."""
-    try:
-        knx_module: KNXModule = hass.data[DOMAIN]
-    except KeyError as err:
-        raise HomeAssistantError("KNX entry not loaded") from err
+    knx_module = get_knx_module(hass)
 
     attr_address = call.data[KNX_ADDRESS]
     group_addresses = list(map(parse_device_group_address, attr_address))
@@ -147,10 +153,7 @@ async def service_exposure_register_modify(
     hass: HomeAssistant, call: ServiceCall
 ) -> None:
     """Service for adding or removing an exposure to KNX bus."""
-    try:
-        knx_module: KNXModule = hass.data[DOMAIN]
-    except KeyError as err:
-        raise HomeAssistantError("KNX entry not loaded") from err
+    knx_module = get_knx_module(hass)
 
     group_address = call.data[KNX_ADDRESS]
 
@@ -215,10 +218,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
 
 async def service_send_to_knx_bus(hass: HomeAssistant, call: ServiceCall) -> None:
     """Service for sending an arbitrary KNX message to the KNX bus."""
-    try:
-        knx_module: KNXModule = hass.data[DOMAIN]
-    except KeyError as err:
-        raise HomeAssistantError("KNX entry not loaded") from err
+    knx_module = get_knx_module(hass)
 
     attr_address = call.data[KNX_ADDRESS]
     attr_payload = call.data[SERVICE_KNX_ATTR_PAYLOAD]
@@ -259,10 +259,7 @@ SERVICE_KNX_READ_SCHEMA = vol.Schema(
 
 async def service_read_to_knx_bus(hass: HomeAssistant, call: ServiceCall) -> None:
     """Service for sending a GroupValueRead telegram to the KNX bus."""
-    try:
-        knx_module: KNXModule = hass.data[DOMAIN]
-    except KeyError as err:
-        raise HomeAssistantError("KNX entry not loaded") from err
+    knx_module = get_knx_module(hass)
 
     for address in call.data[KNX_ADDRESS]:
         telegram = Telegram(
