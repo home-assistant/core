@@ -9,7 +9,6 @@ from pyarcticspas.error import SpaHTTPException
 
 from homeassistant.components.light import LightEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -28,11 +27,6 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities([SpaLight(coordinator)])
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Unload Arctic Spa."""
-    _ = hass.data[DOMAIN].pop(entry.data[CONF_API_KEY])
 
 
 class SpaLight(ArcticSpaEntity, LightEntity):
