@@ -166,8 +166,9 @@ class HomeKitLight(HomeKitEntity, LightEntity):
                 brightness * 100 / 255
             )
 
-        # Turn on is only ever called with either temperature or color,
-        # never both.
+        # If they send both temperature and hs_color, one has to win
+        # and in this case temperature wins. In practice this is not
+        # expected to happen in the UI, but it is possible via the API.
         if temperature is not None:
             if self.service.has(CharacteristicsTypes.COLOR_TEMPERATURE):
                 characteristics[CharacteristicsTypes.COLOR_TEMPERATURE] = int(
