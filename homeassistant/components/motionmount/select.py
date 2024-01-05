@@ -16,28 +16,23 @@ async def async_setup_entry(
     """Set up Vogel's MotionMount from a config entry."""
     mm = hass.data[DOMAIN][entry.entry_id]
 
-    presets = await mm.get_presets()
-
-    async_add_entities((MotionMountPresets(mm, entry, presets),))
+    async_add_entities((MotionMountPresets(mm, entry),), True)
 
 
 class MotionMountPresets(MotionMountEntity, SelectEntity):
     """The presets of a MotionMount."""
 
     _attr_translation_key = "motionmount_preset"
+    _attr_current_option: str | None = None
 
     def __init__(
         self,
         mm: motionmount.MotionMount,
         config_entry: ConfigEntry,
-        presets: dict[int, str],
     ) -> None:
         """Initialize Preset selector."""
         super().__init__(mm, config_entry)
         self._attr_unique_id = f"{self._base_unique_id}-preset"
-
-        self._update_options(presets)
-        self._attr_current_option = self._attr_options[0]
 
     def _update_options(self, presets: dict[int, str]) -> None:
         """Convert presets to select options."""
@@ -51,6 +46,9 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
         """Get latest state from MotionMount."""
         presets = await self.mm.get_presets()
         self._update_options(presets)
+
+        if self._attr_current_option is None:
+            self._attr_current_option = self._attr_options[0]
 
     async def async_select_option(self, option: str) -> None:
         """Set the new option."""
