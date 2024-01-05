@@ -169,28 +169,35 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         else:
                             _content = await response.text()
                     except (JSONDecodeError, AttributeError) as err:
-                        _LOGGER.error("Response of `%s` has invalid JSON", request_url)
-                        raise HomeAssistantError from err
+                        raise HomeAssistantError(
+                            f"Response of '{request_url}' could not be decoded as JSON",
+                            translation_domain=DOMAIN,
+                            translation_key="decoding_error",
+                            translation_placeholders={"decoding_type": "json"},
+                        ) from err
 
                     except UnicodeDecodeError as err:
-                        _LOGGER.error(
-                            "Response of `%s` could not be interpreted as text",
-                            request_url,
-                        )
-                        raise HomeAssistantError from err
+                        raise HomeAssistantError(
+                            f"Response of '{request_url}' could not be decoded as text",
+                            translation_domain=DOMAIN,
+                            translation_key="decoding_error",
+                            translation_placeholders={"decoding_type": "text"},
+                        ) from err
                     return {"content": _content, "status": response.status}
 
             except asyncio.TimeoutError as err:
-                _LOGGER.warning("Timeout call %s", request_url)
-                raise HomeAssistantError from err
+                raise HomeAssistantError(
+                    f"Timeout when calling resource '{request_url}'",
+                    translation_domain=DOMAIN,
+                    translation_key="timeout",
+                ) from err
 
             except aiohttp.ClientError as err:
-                _LOGGER.error(
-                    "Client error. Url: %s. Error: %s",
-                    request_url,
-                    err,
-                )
-                raise HomeAssistantError from err
+                raise HomeAssistantError(
+                    f"Client error occurred when calling resource '{request_url}'",
+                    translation_domain=DOMAIN,
+                    translation_key="client_error",
+                ) from err
 
         # register services
         hass.services.async_register(
