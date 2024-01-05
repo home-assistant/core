@@ -1184,8 +1184,11 @@ async def test_replace_different_node(
     await hass.async_block_till_done()
 
     # Device should still be there after the node was removed
-    device = dev_reg.async_get(dev_id)
+    device = dev_reg.async_get_device(
+        identifiers={(DOMAIN, multisensor_6_device_id_ext)}
+    )
     assert device
+    assert len(device.identifiers) == 2
 
     # When the node is replaced, a non-ready node added event is emitted
     event = Event(
@@ -1280,12 +1283,10 @@ async def test_replace_different_node(
     client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    # Device should still be there after the node was removed but the node ID based
-    # identifier should no longer be on it.
+    # Device should still be there after the node was removed
     device = dev_reg.async_get_device(identifiers={(DOMAIN, hank_device_id_ext)})
     assert device
-    assert len(device.identifiers) == 1
-    assert not dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert len(device.identifiers) == 2
 
     # When the node is replaced, a non-ready node added event is emitted
     event = Event(

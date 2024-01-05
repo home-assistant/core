@@ -440,15 +440,6 @@ class ControllerEvents:
         # We assert because we know the device exists
         assert device
         if reason in (RemoveNodeReason.REPLACED, RemoveNodeReason.PROXY_REPLACED):
-            # If this node is being replaced, we remove the node ID based identifier
-            # from its device. It will get re-added to the same device later if the
-            # node is being replaced with the same device.
-            if device and len(device.identifiers) == 2:
-                new_identifiers = device.identifiers.copy()
-                new_identifiers.remove(dev_id)
-                self.dev_reg.async_update_device(
-                    device.id, new_identifiers=new_identifiers
-                )
             self.discovered_value_ids.pop(device.id, None)
 
             async_dispatcher_send(
@@ -524,6 +515,18 @@ class ControllerEvents:
             via_device_id = get_device_id(driver, controller.own_node)
 
         if device_id_ext:
+            # If there is a device with this node ID but with a different hardware
+            # signature, remove the node ID based identifier from it.
+            if (
+                device
+                and len(device.identifiers) == 2
+                and device_id_ext not in device.identifiers
+            ):
+                new_identifiers = device.identifiers.copy()
+                new_identifiers.remove(device_id)
+                self.dev_reg.async_update_device(
+                    device.id, new_identifiers=new_identifiers
+                )
             # If there is an orphaned device that already exists with this hardware
             # based identifier, add the device_id to the orphaned device
             if (
