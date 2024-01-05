@@ -11,7 +11,7 @@ from homeassistant.components.lock import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 
 from .common import TEST_VEHICLE_STATE_ONLINE, setup_platform
 
@@ -54,7 +54,7 @@ async def test_locks(hass: HomeAssistant) -> None:
 
     # Test charge cable lock set value functions
     entity_id = "lock.test_charge_cable_lock"
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_LOCK,

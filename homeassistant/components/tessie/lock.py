@@ -8,7 +8,7 @@ from tessie_api import lock, open_unlock_charge_port, unlock
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, TessieChargeCableLockStates
@@ -72,7 +72,7 @@ class TessieCableLockEntity(TessieEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Charge cable Lock cannot be manually locked."""
-        raise HomeAssistantError(
+        raise ServiceValidationError(
             "Insert cable to lock",
             translation_domain=DOMAIN,
             translation_key="no_cable",
