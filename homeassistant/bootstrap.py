@@ -577,22 +577,22 @@ async def _async_set_up_integrations(
         # in a single batch. This will allow us to cache the result of the
         # manifest.json load and avoid spawning an executor job for each
         # integration we are about to load.
-        ensure_loaded: set[str] = set()
-        need_requirement_versions: set[str] = set()
+        preload_manifests: set[str] = set()
+        preload_installed_versions: set[str] = set()
         for itg in integrations_to_process:
-            ensure_loaded.update(itg.dependencies)
-            ensure_loaded.update(itg.after_dependencies)
-            need_requirement_versions.update(itg.requirements)
-        if ensure_loaded:
-            deps = await loader.async_get_integrations(hass, ensure_loaded)
+            preload_manifests.update(itg.dependencies)
+            preload_manifests.update(itg.after_dependencies)
+            preload_installed_versions.update(itg.requirements)
+        if preload_manifests:
+            deps = await loader.async_get_integrations(hass, preload_manifests)
             # Add the requirements of the dependencies to the need_requirement_versions
             # so we can load them in a single batch.
             for dependant_itg in deps.values():
                 if isinstance(dependant_itg, loader.Integration):
-                    need_requirement_versions.update(dependant_itg.requirements)
-        if need_requirement_versions:
+                    preload_installed_versions.update(dependant_itg.requirements)
+        if preload_installed_versions:
             await requirements.async_load_installed_versions(
-                hass, need_requirement_versions
+                hass, preload_installed_versions
             )
 
         resolve_dependencies_tasks = [
