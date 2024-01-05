@@ -3,6 +3,7 @@ import asyncio
 from copy import deepcopy
 import datetime
 import logging
+from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
@@ -22,6 +23,7 @@ from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.json import json_dumps
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import DATA_SETUP_TIME, async_setup_component
 from homeassistant.util.json import json_loads
@@ -49,6 +51,10 @@ STATE_KEY_SHORT_NAMES = {
     "attributes": "a",
 }
 STATE_KEY_LONG_NAMES = {v: k for k, v in STATE_KEY_SHORT_NAMES.items()}
+
+
+def _json_round_trip(obj: Any) -> Any:
+    return json_loads(json_dumps(obj))
 
 
 @pytest.fixture
@@ -686,7 +692,7 @@ async def test_get_states(
 
     states = []
     for state in hass.states.async_all():
-        states.append(state.as_dict())
+        states.append(_json_round_trip(state.as_dict()))
 
     assert msg["result"] == states
 
@@ -836,9 +842,9 @@ async def test_get_states_not_allows_nan(
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == [
-        hass.states.get("greeting.hello").as_dict(),
-        bad,
-        hass.states.get("greeting.bye").as_dict(),
+        _json_round_trip(hass.states.get("greeting.hello").as_dict()),
+        _json_round_trip(bad),
+        _json_round_trip(hass.states.get("greeting.bye").as_dict()),
     ]
 
 

@@ -86,7 +86,7 @@ from .helpers.deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
-from .helpers.json import json_dumps
+from .helpers.json import json_dumps, json_fragment
 from .util import dt as dt_util, location
 from .util.async_ import (
     cancelling,
@@ -1401,7 +1401,6 @@ class State:
         self.context = context or Context()
         self.state_info = state_info
         self.domain, self.object_id = split_entity_id(self.entity_id)
-        self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
 
     @property
     def name(self) -> str:
@@ -1410,7 +1409,8 @@ class State:
             "_", " "
         )
 
-    def as_dict(self) -> ReadOnlyDict[str, Collection[Any]]:
+    @cached_property
+    def _as_dict(self) -> ReadOnlyDict[str, datetime.datetime | Collection[Any]]:
         """Return a dict representation of the State.
 
         Async friendly.
@@ -1418,28 +1418,41 @@ class State:
         To be used for JSON serialization.
         Ensures: state == State.from_dict(state.as_dict())
         """
-        if not self._as_dict:
-            last_changed_isoformat = self.last_changed.isoformat()
-            if self.last_changed == self.last_updated:
-                last_updated_isoformat = last_changed_isoformat
-            else:
-                last_updated_isoformat = self.last_updated.isoformat()
-            self._as_dict = ReadOnlyDict(
-                {
-                    "entity_id": self.entity_id,
-                    "state": self.state,
-                    "attributes": self.attributes,
-                    "last_changed": last_changed_isoformat,
-                    "last_updated": last_updated_isoformat,
-                    "context": self.context.as_dict(),
-                }
-            )
+        last_changed_isoformat = self.last_changed
+        if last_changed_isoformat == self.last_updated:
+            last_updated_isoformat = last_changed_isoformat
+        else:
+            last_updated_isoformat = self.last_updated
+        return ReadOnlyDict(
+            {
+                "entity_id": self.entity_id,
+                "state": self.state,
+                "attributes": self.attributes,
+                "last_changed": last_changed_isoformat,
+                "last_updated": last_updated_isoformat,
+                "context": self.context.as_dict(),
+            }
+        )
+
+    def as_dict(self) -> ReadOnlyDict[str, datetime.datetime | Collection[Any]]:
+        """Return a dict representation of the State.
+
+        Async friendly.
+
+        To be used for JSON serialization.
+        Ensures: state == State.from_dict(state.as_dict())
+        """
         return self._as_dict
 
     @cached_property
     def as_dict_json(self) -> str:
         """Return a JSON string of the State."""
-        return json_dumps(self.as_dict())
+        return json_dumps(self._as_dict)
+
+    @cached_property
+    def as_json_fragment(self) -> json_fragment:
+        """Return a JSON fragment of the State."""
+        return json_fragment(self.as_dict_json)
 
     @cached_property
     def as_compressed_state(self) -> dict[str, Any]:

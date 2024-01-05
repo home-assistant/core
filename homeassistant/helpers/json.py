@@ -34,6 +34,8 @@ class JSONEncoder(json.JSONEncoder):
             return o.isoformat()
         if isinstance(o, set):
             return list(o)
+        if hasattr(o, "as_json_fragment"):
+            return o.as_json_fragment
         if hasattr(o, "as_dict"):
             return o.as_dict()
 
@@ -49,6 +51,8 @@ def json_encoder_default(obj: Any) -> Any:
         return list(obj)
     if isinstance(obj, float):
         return float(obj)
+    if hasattr(obj, "as_json_fragment"):
+        return obj.as_json_fragment
     if hasattr(obj, "as_dict"):
         return obj.as_dict()
     if isinstance(obj, Path):
@@ -112,6 +116,9 @@ def json_bytes_strip_null(data: Any) -> bytes:
     # We work on the processed result so we don't need to worry about
     # Home Assistant extensions which allows encoding sets, tuples, etc.
     return json_bytes(_strip_null(orjson.loads(result)))
+
+
+json_fragment = orjson.Fragment
 
 
 def json_dumps(data: Any) -> str:

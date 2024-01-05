@@ -674,8 +674,8 @@ def test_state_as_dict() -> None:
         },
         "entity_id": "happy.happy",
         "attributes": {"pig": "dog"},
-        "last_changed": last_time.isoformat(),
-        "last_updated": last_time.isoformat(),
+        "last_changed": last_time,
+        "last_updated": last_time,
         "state": "on",
     }
     as_dict_1 = state.as_dict()
