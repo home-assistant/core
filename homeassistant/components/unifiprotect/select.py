@@ -420,4 +420,15 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
             or self._attr_options != previous_options
             or self._attr_available != previous_available
         ):
+            _LOGGER.debug(
+                "Updating state [%s (%s)] %s (%s, %s) -> %s (%s, %s)",
+                device.name,
+                device.mac,
+                previous_option,
+                previous_available,
+                previous_options,
+                self._attr_current_option,
+                self._attr_available,
+                self._attr_options,
+            )
             self.async_write_ha_state()

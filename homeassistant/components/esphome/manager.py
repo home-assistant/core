@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Coroutine
+from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, NamedTuple
 
@@ -202,14 +203,19 @@ class ESPHomeManager:
                     template.render_complex(data_template, service.variables)
                 )
             except TemplateError as ex:
-                _LOGGER.error("Error rendering data template for %s: %s", self.host, ex)
+                _LOGGER.error(
+                    "Error rendering data template %s for %s: %s",
+                    service.data_template,
+                    self.host,
+                    ex,
+                )
                 return
 
         if service.is_event:
             device_id = self.device_id
             # ESPHome uses service call packet for both events and service calls
             # Ensure the user can only send events of form 'esphome.xyz'
-            if domain != "esphome":
+            if domain != DOMAIN:
                 _LOGGER.error(
                     "Can only generate events under esphome domain! (%s)", self.host
                 )
@@ -456,12 +462,10 @@ class ESPHomeManager:
 
         self.device_id = _async_setup_device_registry(hass, entry, entry_data)
         entry_data.async_update_device_state(hass)
-        await asyncio.gather(
-            entry_data.async_update_static_infos(
-                hass, entry, entity_infos, device_info.mac_address
-            ),
-            _setup_services(hass, entry_data, services),
+        await entry_data.async_update_static_infos(
+            hass, entry, entity_infos, device_info.mac_address
         )
+        _setup_services(hass, entry_data, services)
 
         setup_coros_with_disconnect_callbacks: list[
             Coroutine[Any, Any, CALLBACK_TYPE]
@@ -586,7 +590,7 @@ class ESPHomeManager:
             await entry_data.async_update_static_infos(
                 hass, entry, infos, entry.unique_id.upper()
             )
-        await _setup_services(hass, entry_data, services)
+        _setup_services(hass, entry_data, services)
 
         if entry_data.device_info is not None and entry_data.device_info.name:
             reconnect_logic.name = entry_data.device_info.name
@@ -708,12 +712,27 @@ ARG_TYPE_METADATA = {
 }
 
 
-async def _register_service(
-    hass: HomeAssistant, entry_data: RuntimeEntryData, service: UserService
+async def execute_service(
+    entry_data: RuntimeEntryData, service: UserService, call: ServiceCall
 ) -> None:
-    if entry_data.device_info is None:
-        raise ValueError("Device Info needs to be fetched first")
-    service_name = f"{entry_data.device_info.name.replace('-', '_')}_{service.name}"
+    """Execute a service on a node."""
+    await entry_data.client.execute_service(service, call.data)
+
+
+def build_service_name(device_info: EsphomeDeviceInfo, service: UserService) -> str:
+    """Build a service name for a node."""
+    return f"{device_info.name.replace('-', '_')}_{service.name}"
+
+
+@callback
+def _async_register_service(
+    hass: HomeAssistant,
+    entry_data: RuntimeEntryData,
+    device_info: EsphomeDeviceInfo,
+    service: UserService,
+) -> None:
+    """Register a service on a node."""
+    service_name = build_service_name(device_info, service)
     schema = {}
     fields = {}
 
@@ -736,33 +755,36 @@ async def _register_service(
             "selector": metadata.selector,
         }
 
-    async def execute_service(call: ServiceCall) -> None:
-        await entry_data.client.execute_service(service, call.data)
-
     hass.services.async_register(
-        DOMAIN, service_name, execute_service, vol.Schema(schema)
+        DOMAIN,
+        service_name,
+        partial(execute_service, entry_data, service),
+        vol.Schema(schema),
+    )
+    async_set_service_schema(
+        hass,
+        DOMAIN,
+        service_name,
+        {
+            "description": (
+                f"Calls the service {service.name} of the node {device_info.name}"
+            ),
+            "fields": fields,
+        },
     )
 
-    service_desc = {
-        "description": (
-            f"Calls the service {service.name} of the node"
-            f" {entry_data.device_info.name}"
-        ),
-        "fields": fields,
-    }
 
-    async_set_service_schema(hass, DOMAIN, service_name, service_desc)
-
-
-async def _setup_services(
+@callback
+def _setup_services(
     hass: HomeAssistant, entry_data: RuntimeEntryData, services: list[UserService]
 ) -> None:
-    if entry_data.device_info is None:
+    device_info = entry_data.device_info
+    if device_info is None:
         # Can happen if device has never connected or .storage cleared
         return
     old_services = entry_data.services.copy()
-    to_unregister = []
-    to_register = []
+    to_unregister: list[UserService] = []
+    to_register: list[UserService] = []
     for service in services:
         if service.key in old_services:
             # Already exists
@@ -780,11 +802,11 @@ async def _setup_services(
     entry_data.services = {serv.key: serv for serv in services}
 
     for service in to_unregister:
-        service_name = f"{entry_data.device_info.name}_{service.name}"
+        service_name = build_service_name(device_info, service)
         hass.services.async_remove(DOMAIN, service_name)
 
     for service in to_register:
-        await _register_service(hass, entry_data, service)
+        _async_register_service(hass, entry_data, device_info, service)
 
 
 async def cleanup_instance(hass: HomeAssistant, entry: ConfigEntry) -> RuntimeEntryData:
