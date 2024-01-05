@@ -38,7 +38,6 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
-from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
 
 from .const import (
@@ -217,7 +216,7 @@ def subscribe(
 
     def remove() -> None:
         """Remove listener convert."""
-        run_callback_threadsafe(hass.loop, async_remove).result()
+        hass.loop.call_soon_threadsafe(async_remove)
 
     return remove
 
