@@ -22,7 +22,7 @@ from homeassistant.setup import async_setup_component
 
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
 
-from tests.common import async_capture_events, async_mock_service, json_round_trip
+from tests.common import async_capture_events, async_mock_service
 from tests.components.conversation.conftest import mock_agent
 
 # To avoid autoflake8 removing the import
@@ -351,7 +351,7 @@ async def test_webhook_returns_error_incorrect_json(
         (RENDER_TEMPLATE, lambda hass: {"one": "Hello world"}),
         (
             {"type": "get_zones", "data": {}},
-            lambda hass: [json_round_trip(hass.states.get("zone.home").as_dict())],
+            lambda hass: [hass.states.get("zone.home").as_dict()],
         ),
     ),
 )
