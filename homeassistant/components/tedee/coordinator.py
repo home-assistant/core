@@ -1,4 +1,5 @@
 """Coordinator for Tedee locks."""
+import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
@@ -66,6 +67,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
 
             _LOGGER.debug("Update coordinator: Getting bridge from API")
             await self._async_update(_async_get_bridge)
+            await asyncio.sleep(1)
 
         _LOGGER.debug("Update coordinator: Getting locks from API")
         # once every hours get all lock details, otherwise use the sync endpoint
