@@ -1017,19 +1017,17 @@ class Context:
         return bool(self.__class__ == other.__class__ and self.id == other.id)
 
     @cached_property
-    def _as_dict(self) -> ReadOnlyDict[str, str | None]:
+    def _as_dict(self) -> dict[str, str | None]:
         """Return a dictionary representation of the context."""
-        return ReadOnlyDict(
-            {
-                "id": self.id,
-                "parent_id": self.parent_id,
-                "user_id": self.user_id,
-            }
-        )
+        return {
+            "id": self.id,
+            "parent_id": self.parent_id,
+            "user_id": self.user_id,
+        }
 
     def as_dict(self) -> ReadOnlyDict[str, str | None]:
         """Return a dictionary representation of the context."""
-        return self._as_dict
+        return ReadOnlyDict(self._as_dict)
 
     @cached_property
     def as_json_fragment(self) -> json_fragment:
@@ -1073,24 +1071,29 @@ class Event:
             context.origin_event = self
 
     @cached_property
-    def _as_dict(self) -> ReadOnlyDict[str, Any]:
+    def _as_dict(self) -> dict[str, Any]:
         """Create a dict representation of this Event.
 
         Async friendly.
         """
-        return ReadOnlyDict(
-            {
-                "event_type": self.event_type,
-                "data": ReadOnlyDict(self.data),
-                "origin": self.origin.value,
-                "time_fired": self.time_fired,
-                "context": self.context,
-            }
-        )
+        return {
+            "event_type": self.event_type,
+            "data": self.data,
+            "origin": self.origin.value,
+            "time_fired": self.time_fired,
+            "context": self.context,
+        }
 
     def as_dict(self) -> ReadOnlyDict[str, Any]:
         """Create a dict representation of this Event."""
-        return self._as_dict
+        as_dict = self._as_dict
+        data = as_dict["data"]
+        # as_json_fragment will convert data to a ReadOnlyDict
+        # so a normal dict so its ok to have either. We only
+        # update the cache if someone asks for the as_dict version
+        if type(data) is not ReadOnlyDict:
+            as_dict["data"] = ReadOnlyDict(data)
+        return ReadOnlyDict(as_dict)
 
     @cached_property
     def as_json_fragment(self) -> json_fragment:
@@ -1422,7 +1425,7 @@ class State:
     @cached_property
     def _as_dict(
         self,
-    ) -> ReadOnlyDict[str, datetime.datetime | Collection[Any] | Context]:
+    ) -> dict[str, datetime.datetime | Collection[Any] | Context]:
         """Return a dict representation of the State.
 
         Async friendly.
@@ -1435,16 +1438,14 @@ class State:
             last_updated_isoformat = last_changed_isoformat
         else:
             last_updated_isoformat = self.last_updated
-        return ReadOnlyDict(
-            {
-                "entity_id": self.entity_id,
-                "state": self.state,
-                "attributes": self.attributes,
-                "last_changed": last_changed_isoformat,
-                "last_updated": last_updated_isoformat,
-                "context": self.context,
-            }
-        )
+        return {
+            "entity_id": self.entity_id,
+            "state": self.state,
+            "attributes": self.attributes,
+            "last_changed": last_changed_isoformat,
+            "last_updated": last_updated_isoformat,
+            "context": self.context,
+        }
 
     def as_dict(
         self,
@@ -1456,7 +1457,7 @@ class State:
         To be used for JSON serialization.
         Ensures: state == State.from_dict(state.as_dict())
         """
-        return self._as_dict
+        return ReadOnlyDict(self._as_dict)
 
     @cached_property
     def as_dict_json(self) -> str:
