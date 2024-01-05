@@ -138,6 +138,7 @@ homeassistant.components.dhcp.*
 homeassistant.components.diagnostics.*
 homeassistant.components.discovergy.*
 homeassistant.components.dlna_dmr.*
+homeassistant.components.dlna_dms.*
 homeassistant.components.dnsip.*
 homeassistant.components.doorbird.*
 homeassistant.components.dormakaba_dkey.*
