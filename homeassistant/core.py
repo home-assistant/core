@@ -1441,13 +1441,7 @@ class State:
 
     @cached_property
     def _as_dict(self) -> dict[str, Any]:
-        """Return a dict representation of the State.
-
-        Async friendly.
-
-        To be used for JSON serialization.
-        Ensures: state == State.from_dict(state.as_dict())
-        """
+        """Return a dict representation of the State."""
         last_changed_isoformat = self.last_changed
         if last_changed_isoformat == self.last_updated:
             last_updated_isoformat = last_changed_isoformat
