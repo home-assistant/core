@@ -1242,7 +1242,7 @@ def async_drop_config_annotations(
     def drop_config_annotations_rec(node: Any) -> Any:
         if isinstance(node, dict):
             # Some integrations store metadata in custom dict classes, preserve those
-            tmp = dict(node.items())
+            tmp = dict(node)
             node.clear()
             for k, v in tmp.items():
                 node[drop_config_annotations_rec(k)] = drop_config_annotations_rec(v)
