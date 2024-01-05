@@ -34,7 +34,6 @@ ENTITY_DESCRIPTIONS: tuple[RensonTimeEntityDescription, ...] = (
         translation_key="day_time",
         action_fn=lambda api, time: api.set_day_time(time),
         field=DAYTIME_FIELD,
-        has_entity_name=True,
     ),
     RensonTimeEntityDescription(
         key="night_time",
@@ -42,7 +41,6 @@ ENTITY_DESCRIPTIONS: tuple[RensonTimeEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         action_fn=lambda api, time: api.set_night_time(time),
         field=NIGHTTIME_FIELD,
-        has_entity_name=True,
     ),
 )
 
@@ -60,13 +58,14 @@ async def async_setup_entry(
         RensonTime(description, data.coordinator) for description in ENTITY_DESCRIPTIONS
     ]
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class RensonTime(RensonEntity, TimeEntity):
     """Representation of a Renson time entity."""
 
     entity_description: RensonTimeEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
