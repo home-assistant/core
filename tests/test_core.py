@@ -54,9 +54,7 @@ from homeassistant.exceptions import (
     MaxLengthExceeded,
     ServiceNotFound,
 )
-from homeassistant.helpers.json import json_dumps
 import homeassistant.util.dt as dt_util
-from homeassistant.util.json import json_loads
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -67,10 +65,6 @@ from .common import (
 )
 
 PST = dt_util.get_time_zone("America/Los_Angeles")
-
-
-def _json_round_trip(obj: Any) -> Any:
-    return json_loads(json_dumps(obj))
 
 
 def test_split_entity_id() -> None:
@@ -1032,10 +1026,7 @@ def test_state_name_if_friendly_name_attr() -> None:
 def test_state_dict_conversion() -> None:
     """Test conversion of dict."""
     state = ha.State("domain.hello", "world", {"some": "attr"})
-    assert (
-        state.as_dict()
-        == ha.State.from_dict(_json_round_trip(state.as_dict())).as_dict()
-    )
+    assert state.as_dict() == ha.State.from_dict(state.as_dict()).as_dict()
 
 
 def test_state_dict_conversion_with_wrong_data() -> None:
