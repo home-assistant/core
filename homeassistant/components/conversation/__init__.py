@@ -8,6 +8,7 @@ import logging
 import re
 from typing import Any, Literal
 
+from aiohttp import web
 from hassil.recognize import RecognizeResult
 import voluptuous as vol
 
@@ -108,7 +109,7 @@ def async_set_agent(
     hass: core.HomeAssistant,
     config_entry: ConfigEntry,
     agent: AbstractConversationAgent,
-):
+) -> None:
     """Set the agent to handle the conversations."""
     _get_agent_manager(hass).async_set_agent(config_entry.entry_id, agent)
 
@@ -118,7 +119,7 @@ def async_set_agent(
 def async_unset_agent(
     hass: core.HomeAssistant,
     config_entry: ConfigEntry,
-):
+) -> None:
     """Set the agent to handle the conversations."""
     _get_agent_manager(hass).async_unset_agent(config_entry.entry_id)
 
@@ -133,7 +134,7 @@ async def async_get_conversation_languages(
     all conversation agents.
     """
     agent_manager = _get_agent_manager(hass)
-    languages = set()
+    languages: set[str] = set()
 
     agent_ids: Iterable[str]
     if agent_id is None:
@@ -408,7 +409,7 @@ class ConversationProcessView(http.HomeAssistantView):
             }
         )
     )
-    async def post(self, request, data):
+    async def post(self, request: web.Request, data: dict[str, str]) -> web.Response:
         """Send a request for processing."""
         hass = request.app["hass"]
 
