@@ -399,6 +399,7 @@ FLOWS = {
         "radiotherm",
         "rainbird",
         "rainforest_eagle",
+        "rainforest_raven",
         "rainmachine",
         "rapt_ble",
         "rdw",
