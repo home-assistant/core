@@ -297,6 +297,9 @@ class RequirementsManager:
         requirements: set[str],
     ) -> None:
         """Load the installed version of requirements."""
+        if not (requirements_to_check := requirements - self.is_installed_cache):
+            return
+
         self.is_installed_cache |= await self.hass.async_add_executor_job(
-            pkg_util.get_installed_versions, requirements
+            pkg_util.get_installed_versions, requirements_to_check
         )
