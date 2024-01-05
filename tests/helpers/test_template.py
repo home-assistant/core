@@ -1169,11 +1169,12 @@ def test_as_datetime(hass: HomeAssistant, input) -> None:
         (-1, "1969-12-31 23:59:59+00:00"),
     ),
 )
-def test_as_datetime_from_timestamp(hass: HomeAssistant, input, output) -> None:
+def test_as_datetime_from_timestamp(
+    hass: HomeAssistant,
+    input: int | float,
+    output: str,
+) -> None:
     """Test converting a UNIX timestamp to a date object."""
-    if output is not None:
-        output = str(output)
-
     assert (
         template.Template(f"{{{{ as_datetime({input}) }}}}", hass).async_render()
         == output
@@ -1218,37 +1219,27 @@ def test_as_datetime_from_datetime(hass: HomeAssistant, input) -> None:
 
 
 @pytest.mark.parametrize(
-    "input",
-    (
-        '"invalid"',
-        ["a", "list"],
-        {"a": "dict"},
-    ),
+    ("input", "output")[
+        ('"invalid"', "default output"),
+        (["a", "list"], "default output"),
+        ({"a": "dict"}, "default output"),
+    ],
 )
-def test_as_datetime_default(hass: HomeAssistant, input) -> None:
+def test_as_datetime_default(hass: HomeAssistant, input, output) -> None:
     """Test converting a timestamp string to a date object."""
     default = "default output"
-    try:
-        timestamp = float(input)
-        expected = dt_util.utc_from_timestamp(timestamp)
-    except (ValueError, TypeError):
-        expected = dt_util.parse_datetime(str(input))
-        if expected is not None:
-            expected = str(expected)
-        else:
-            expected = default
 
     assert (
         template.Template(
             f"{{{{ as_datetime({input}, default='{default}') }}}}", hass
         ).async_render()
-        == expected
+        == output
     )
     assert (
         template.Template(
             f"{{{{ {input} | as_datetime('{default}') }}}}", hass
         ).async_render()
-        == expected
+        == output
     )
 
 
