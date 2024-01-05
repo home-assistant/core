@@ -1826,8 +1826,8 @@ def forgiving_as_timestamp(value, default=_SENTINEL):
 
 def as_datetime(value: Any, default: Any = _SENTINEL) -> Any:
     """Filter and to convert a time string or UNIX timestamp to datetime object.
-    
-    Input values wil be parsed to string to before parsing them to datetime to allow 
+
+    Input values will be parsed to string to before parsing them to datetime to allow
     datetime.datetime and datetime.date to be used as input as well, and avoid errors
     on other input like lists or mappings
     """
