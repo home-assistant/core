@@ -99,6 +99,9 @@ class ThermostatClusterHandler(ClusterHandler):
         AttrReportConfig(attr="occupancy", config=REPORT_CONFIG_CLIMATE_DISCRETE),
         AttrReportConfig(attr="pi_cooling_demand", config=REPORT_CONFIG_CLIMATE_DEMAND),
         AttrReportConfig(attr="pi_heating_demand", config=REPORT_CONFIG_CLIMATE_DEMAND),
+        AttrReportConfig(
+            attr="setpoint_change_source", config=REPORT_CONFIG_CLIMATE_DISCRETE
+        ),
     )
     ZCL_INIT_ATTRS: dict[str, bool] = {
         "abs_min_heat_setpoint_limit": True,
