@@ -37,15 +37,14 @@ class AOSmithStatusEntity(AOSmithEntity[AOSmithStatusCoordinator]):
     """Base entity for entities that use data from the status coordinator."""
 
     @property
-    def device(self) -> dict[str, Any] | None:
+    def device(self) -> dict[str, Any]:
         """Shortcut to get the device status from the coordinator data."""
-        return self.coordinator.data.get(self.junction_id)
+        return self.coordinator.data[self.junction_id]
 
     @property
-    def device_data(self) -> dict[str, Any] | None:
+    def device_data(self) -> dict[str, Any]:
         """Shortcut to get the device data within the device status."""
-        device = self.device
-        return None if device is None else device.get("data", {})
+        return self.device["data"]  # type: ignore[no-any-return]
 
     @property
     def available(self) -> bool:

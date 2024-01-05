@@ -106,22 +106,22 @@ class AOSmithWaterHeaterEntity(AOSmithStatusEntity, WaterHeaterEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return self.device_data.get("temperatureSetpoint")  # type: ignore[no-any-return]
+        return self.device_data.get("temperatureSetpoint")
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return self.device_data.get("temperatureSetpointMaximum")  # type: ignore[no-any-return]
+        return self.device_data["temperatureSetpointMaximum"]  # type: ignore[no-any-return]
 
     @property
     def current_operation(self) -> str:
         """Return the current operation mode."""
-        return MODE_AOSMITH_TO_HA.get(self.device_data.get("mode"), STATE_OFF)
+        return MODE_AOSMITH_TO_HA.get(self.device_data["mode"], STATE_OFF)
 
     @property
     def is_away_mode_on(self) -> bool:
         """Return True if away mode is on."""
-        return self.device_data.get("mode") == AOSMITH_MODE_VACATION  # type: ignore[no-any-return]
+        return self.device_data.get("mode") == AOSMITH_MODE_VACATION
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
