@@ -1464,9 +1464,6 @@ class State:
         Can be used for JSON serialization.
         Ensures: state == State.from_dict(state.as_dict())
         """
-        from homeassistant.helpers.frame import report
-
-        report("Called as_dict", error_if_core=False)
         return self._as_read_only_dict
 
     @cached_property
