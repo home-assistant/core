@@ -1027,6 +1027,10 @@ class Context:
 
     def as_dict(self) -> ReadOnlyDict[str, str | None]:
         """Return a dictionary representation of the context."""
+        return self._as_read_only_dict
+
+    @cached_property
+    def _as_read_only_dict(self) -> ReadOnlyDict[str, str | None]:
         return ReadOnlyDict(self._as_dict)
 
     @cached_property
