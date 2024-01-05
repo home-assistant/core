@@ -2,6 +2,7 @@
   "domain": "lutron",
   "name": "Lutron",
   "codeowners": ["@cdheiser"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lutron",
   "iot_class": "local_polling",
   "loggers": ["pylutron"],

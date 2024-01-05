@@ -18,11 +18,11 @@ async def fetch_latest_carbon_intensity(
 ) -> CarbonIntensityResponse:
     """Fetch the latest carbon intensity based on country code or location coordinates."""
     if CONF_COUNTRY_CODE in config:
-        return await em.latest_carbon_intensity_by_country_code(  # type: ignore[no-any-return]
+        return await em.latest_carbon_intensity_by_country_code(
             code=config[CONF_COUNTRY_CODE]
         )
 
-    return await em.latest_carbon_intensity_by_coordinates(  # type: ignore[no-any-return]
+    return await em.latest_carbon_intensity_by_coordinates(
         lat=config.get(CONF_LATITUDE, hass.config.latitude),
         lon=config.get(CONF_LONGITUDE, hass.config.longitude),
     )
