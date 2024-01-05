@@ -292,7 +292,7 @@ class CachedProperties(type):
         Pop cached_properties and store it in the namespace.
         """
         namespace["_CachedProperties__cached_properties"] = cached_properties or set()
-        return super().__new__(mcs, name, bases, namespace)
+        return super().__new__(mcs, name, bases, namespace, **kwargs)
 
     def __init__(
         cls,

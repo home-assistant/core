@@ -257,7 +257,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.1.1
+aiohomekit==3.1.2
 
 # homeassistant.components.http
 aiohttp-fast-url-dispatcher==0.3.0
@@ -716,7 +716,7 @@ dovado==0.4.1
 dremel3dpy==2.1.1
 
 # homeassistant.components.drop_connect
-dropmqttapi==1.0.1
+dropmqttapi==1.0.2
 
 # homeassistant.components.dsmr
 dsmr-parser==1.3.1
@@ -998,7 +998,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==2.0.1
+habluetooth==2.0.2
 
 # homeassistant.components.cloud
 hass-nabucasa==0.75.1
@@ -1038,7 +1038,7 @@ hole==0.8.0
 holidays==0.39
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240103.3
+home-assistant-frontend==20240104.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.1.2
@@ -1425,7 +1425,7 @@ openhomedevice==2.2.0
 opensensemap-api==0.2.0
 
 # homeassistant.components.enigma2
-openwebifpy==4.0.2
+openwebifpy==4.0.4
 
 # homeassistant.components.luci
 openwrt-luci-rpc==1.1.16
@@ -1443,7 +1443,7 @@ oralb-ble==0.17.6
 oru==0.1.11
 
 # homeassistant.components.orvibo
-orvibo==1.1.1
+orvibo==1.1.2
 
 # homeassistant.components.ourgroceries
 ourgroceries==1.5.4
@@ -2241,7 +2241,7 @@ python-smarttub==0.0.36
 python-songpal==0.16
 
 # homeassistant.components.tado
-python-tado==0.17.0
+python-tado==0.17.3
 
 # homeassistant.components.telegram_bot
 python-telegram-bot==13.1
@@ -2893,7 +2893,7 @@ zigpy==0.60.4
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.55.2
+zwave-js-server-python==0.55.3
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
