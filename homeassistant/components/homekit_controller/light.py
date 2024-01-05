@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+import homeassistant.util.color as color_util
 
 from . import KNOWN_DEVICES
 from .connection import HKDevice
@@ -94,19 +95,29 @@ class HomeKitLight(HomeKitEntity, LightEntity):
     @cached_property
     def min_mireds(self) -> int:
         """Return minimum supported color temperature."""
+        if not self.service.has(CharacteristicsTypes.COLOR_TEMPERATURE):
+            return super().min_mireds
         min_value = self.service[CharacteristicsTypes.COLOR_TEMPERATURE].minValue
         return int(min_value) if min_value else super().min_mireds
 
     @cached_property
     def max_mireds(self) -> int:
         """Return the maximum color temperature."""
+        if not self.service.has(CharacteristicsTypes.COLOR_TEMPERATURE):
+            return super().max_mireds
         max_value = self.service[CharacteristicsTypes.COLOR_TEMPERATURE].maxValue
         return int(max_value) if max_value else super().max_mireds
 
     @property
     def color_temp(self) -> int:
         """Return the color temperature."""
-        return self.service.value(CharacteristicsTypes.COLOR_TEMPERATURE)
+        if self.service.has(CharacteristicsTypes.COLOR_TEMPERATURE):
+            return self.service.value(CharacteristicsTypes.COLOR_TEMPERATURE)
+        return color_util.color_temperature_kelvin_to_mired(
+            color_util.color_xy_to_temperature(
+                *color_util.color_hs_to_xy(*self.hs_color)
+            )
+        )
 
     @property
     def color_mode(self) -> str:
@@ -135,8 +146,9 @@ class HomeKitLight(HomeKitEntity, LightEntity):
             CharacteristicsTypes.SATURATION
         ):
             color_modes.add(ColorMode.HS)
+            color_modes.add(ColorMode.COLOR_TEMP)
 
-        if self.service.has(CharacteristicsTypes.COLOR_TEMPERATURE):
+        elif self.service.has(CharacteristicsTypes.COLOR_TEMPERATURE):
             color_modes.add(ColorMode.COLOR_TEMP)
 
         if not color_modes and self.service.has(CharacteristicsTypes.BRIGHTNESS):
@@ -153,15 +165,11 @@ class HomeKitLight(HomeKitEntity, LightEntity):
         temperature = kwargs.get(ATTR_COLOR_TEMP)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
-        characteristics = {}
+        characteristics: dict[str, Any] = {}
 
         if hs_color is not None:
-            characteristics.update(
-                {
-                    CharacteristicsTypes.HUE: hs_color[0],
-                    CharacteristicsTypes.SATURATION: hs_color[1],
-                }
-            )
+            characteristics[CharacteristicsTypes.HUE] = hs_color[0]
+            characteristics[CharacteristicsTypes.SATURATION] = hs_color[1]
 
         if brightness is not None:
             characteristics[CharacteristicsTypes.BRIGHTNESS] = int(
@@ -169,7 +177,20 @@ class HomeKitLight(HomeKitEntity, LightEntity):
             )
 
         if temperature is not None:
-            characteristics[CharacteristicsTypes.COLOR_TEMPERATURE] = int(temperature)
+            if self.service.has(CharacteristicsTypes.COLOR_TEMPERATURE):
+                characteristics[CharacteristicsTypes.COLOR_TEMPERATURE] = int(
+                    temperature
+                )
+            else:
+                # Some HomeKit devices simulates color temperature since the older
+                # spec does not permit the COLOR_TEMPERATURE characteristic
+                # and the HUE and SATURATION characteristics to be present at the
+                # same time.
+                hue_sat = color_util.color_temperature_to_hs(
+                    color_util.color_temperature_mired_to_kelvin(temperature)
+                )
+                characteristics[CharacteristicsTypes.HUE] = hue_sat[0]
+                characteristics[CharacteristicsTypes.SATURATION] = hue_sat[1]
 
         characteristics[CharacteristicsTypes.ON] = True
 
