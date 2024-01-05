@@ -241,7 +241,7 @@ class HuaweiSmartLogger3000Sensor(
         self._state: StateType = None
         self._attrs: dict[str, Any] = {}
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.api.HOST)},
+            identifiers={(DOMAIN, coordinator.api.HOST)},
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="Huawei",
             model="Smart Logger 3000",
