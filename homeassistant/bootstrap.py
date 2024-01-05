@@ -547,6 +547,34 @@ async def async_setup_multi_components(
             )
 
 
+async def _async_preload_dependencies_info(
+    hass: core.HomeAssistant, integrations_to_process: list[loader.Integration]
+) -> None:
+    """Preload manifest.json and installed requirements in a single batch."""
+    #
+    # This will allow us to cache the result of the manifest.json and
+    # if the requirements are installed in a single batch. This avoids
+    # spawning two executor jobs for each integration we are about to load.
+    #
+    preload_manifests: set[str] = set()
+    preload_installed_versions: set[str] = set()
+    for itg in integrations_to_process:
+        preload_manifests.update(itg.dependencies)
+        preload_manifests.update(itg.after_dependencies)
+        preload_installed_versions.update(itg.requirements)
+    if preload_manifests:
+        deps = await loader.async_get_integrations(hass, preload_manifests)
+        # Add the requirements of the dependencies to the need_requirement_versions
+        # so we can load them in a single batch.
+        for dependant_itg in deps.values():
+            if isinstance(dependant_itg, loader.Integration):
+                preload_installed_versions.update(dependant_itg.requirements)
+    if preload_installed_versions:
+        await requirements.async_load_installed_versions(
+            hass, preload_installed_versions
+        )
+
+
 async def _async_set_up_integrations(
     hass: core.HomeAssistant, config: dict[str, Any]
 ) -> None:
@@ -573,28 +601,8 @@ async def _async_set_up_integrations(
             ).values()
             if isinstance(int_or_exc, loader.Integration)
         ]
-        # Try to load the manifest.json of the integrations we just loaded
-        # in a single batch. This will allow us to cache the result of the
-        # manifest.json load and avoid spawning an executor job for each
-        # integration we are about to load.
-        preload_manifests: set[str] = set()
-        preload_installed_versions: set[str] = set()
-        for itg in integrations_to_process:
-            preload_manifests.update(itg.dependencies)
-            preload_manifests.update(itg.after_dependencies)
-            preload_installed_versions.update(itg.requirements)
-        if preload_manifests:
-            deps = await loader.async_get_integrations(hass, preload_manifests)
-            # Add the requirements of the dependencies to the need_requirement_versions
-            # so we can load them in a single batch.
-            for dependant_itg in deps.values():
-                if isinstance(dependant_itg, loader.Integration):
-                    preload_installed_versions.update(dependant_itg.requirements)
-        if preload_installed_versions:
-            await requirements.async_load_installed_versions(
-                hass, preload_installed_versions
-            )
 
+        await _async_preload_dependencies_info(hass, integrations_to_process)
         resolve_dependencies_tasks = [
             itg.resolve_dependencies()
             for itg in integrations_to_process
