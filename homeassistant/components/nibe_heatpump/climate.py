@@ -1,6 +1,7 @@
 """The Nibe Heat Pump climate."""
 from __future__ import annotations
 
+from datetime import date
 from typing import Any
 
 from nibe.coil import Coil
@@ -124,7 +125,7 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        def _get_value(coil: Coil) -> int | str | float | None:
+        def _get_value(coil: Coil) -> int | str | float | date | None:
             return self.coordinator.get_coil_value(coil)
 
         def _get_float(coil: Coil) -> float | None:

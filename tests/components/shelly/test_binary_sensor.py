@@ -1,4 +1,5 @@
 """Tests for Shelly binary sensor platform."""
+from aioshelly.const import MODEL_MOTION
 from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -77,9 +78,9 @@ async def test_block_rest_binary_sensor_connected_battery_devices(
     """Test block REST binary sensor for connected battery devices."""
     entity_id = register_entity(hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud")
     monkeypatch.setitem(mock_block_device.status, "cloud", {"connected": False})
-    monkeypatch.setitem(mock_block_device.settings["device"], "type", "SHMOS-01")
+    monkeypatch.setitem(mock_block_device.settings["device"], "type", MODEL_MOTION)
     monkeypatch.setitem(mock_block_device.settings["coiot"], "update_period", 3600)
-    await init_integration(hass, 1, model="SHMOS-01")
+    await init_integration(hass, 1, model=MODEL_MOTION)
 
     assert hass.states.get(entity_id).state == STATE_OFF
 

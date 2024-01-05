@@ -38,6 +38,7 @@ DEFAULT_EXPOSED_DOMAINS = {
     "scene",
     "script",
     "switch",
+    "todo",
     "vacuum",
     "water_heater",
 }

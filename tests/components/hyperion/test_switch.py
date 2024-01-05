@@ -144,7 +144,11 @@ async def test_switch_has_correct_entities(hass: HomeAssistant) -> None:
         assert entity_state, f"Couldn't find entity: {entity_id}"
 
 
-async def test_device_info(hass: HomeAssistant) -> None:
+async def test_device_info(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Verify device information includes expected details."""
     client = create_mock_client()
     client.components = TEST_COMPONENTS
@@ -162,7 +166,6 @@ async def test_device_info(hass: HomeAssistant) -> None:
     assert hass.states.get(TEST_SWITCH_COMPONENT_ALL_ENTITY_ID) is not None
 
     device_identifer = get_hyperion_device_id(TEST_SYSINFO_ID, TEST_INSTANCE)
-    device_registry = dr.async_get(hass)
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, device_identifer)})
     assert device
@@ -172,7 +175,6 @@ async def test_device_info(hass: HomeAssistant) -> None:
     assert device.model == HYPERION_MODEL_NAME
     assert device.name == TEST_INSTANCE_1["friendly_name"]
 
-    entity_registry = er.async_get(hass)
     entities_from_device = [
         entry.entity_id
         for entry in er.async_entries_for_device(entity_registry, device.id)
@@ -184,13 +186,13 @@ async def test_device_info(hass: HomeAssistant) -> None:
         assert entity_id in entities_from_device
 
 
-async def test_switches_can_be_enabled(hass: HomeAssistant) -> None:
+async def test_switches_can_be_enabled(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Verify switches can be enabled."""
     client = create_mock_client()
     client.components = TEST_COMPONENTS
     await setup_test_config_entry(hass, hyperion_client=client)
-
-    entity_registry = er.async_get(hass)
 
     for component in TEST_COMPONENTS:
         name = slugify(KEY_COMPONENTID_TO_NAME[str(component["name"])])

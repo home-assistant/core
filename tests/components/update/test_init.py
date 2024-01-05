@@ -128,6 +128,7 @@ async def test_update(hass: HomeAssistant) -> None:
     update.entity_description = UpdateEntityDescription(key="F5 - Its very refreshing")
     assert update.device_class is None
     assert update.entity_category is EntityCategory.CONFIG
+    del update.device_class
     update.entity_description = UpdateEntityDescription(
         key="F5 - Its very refreshing",
         device_class=UpdateDeviceClass.FIRMWARE,
@@ -864,3 +865,23 @@ async def test_name(hass: HomeAssistant) -> None:
     state = hass.states.get(entity4.entity_id)
     assert state
     assert expected.items() <= state.attributes.items()
+
+
+def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecated supported features ints."""
+
+    class MockUpdateEntity(UpdateEntity):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return 1
+
+    entity = MockUpdateEntity()
+    assert entity.supported_features_compat is UpdateEntityFeature(1)
+    assert "MockUpdateEntity" in caplog.text
+    assert "is using deprecated supported features values" in caplog.text
+    assert "Instead it should use" in caplog.text
+    assert "UpdateEntityFeature.INSTALL" in caplog.text
+    caplog.clear()
+    assert entity.supported_features_compat is UpdateEntityFeature(1)
+    assert "is using deprecated supported features values" not in caplog.text

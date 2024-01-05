@@ -13,10 +13,11 @@ from .conftest import setup_integration
 BUTTON_ENTITY = "button.test_reset_waste_drawer"
 
 
-async def test_button(hass: HomeAssistant, mock_account: MagicMock) -> None:
+async def test_button(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_account: MagicMock
+) -> None:
     """Test the creation and values of the Litter-Robot button."""
     await setup_integration(hass, mock_account, BUTTON_DOMAIN)
-    entity_registry = er.async_get(hass)
 
     state = hass.states.get(BUTTON_ENTITY)
     assert state

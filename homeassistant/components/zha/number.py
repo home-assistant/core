@@ -20,6 +20,7 @@ from .core.const import (
     CLUSTER_HANDLER_COLOR,
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_LEVEL,
+    CLUSTER_HANDLER_THERMOSTAT,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -629,7 +630,7 @@ class InovelliRemoteDimmingUpSpeed(ZHANumberConfigurationEntity):
 class InovelliButtonDelay(ZHANumberConfigurationEntity):
     """Inovelli button delay configuration entity."""
 
-    _unique_id_suffix = "dimming_speed_up_local"
+    _unique_id_suffix = "button_delay"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
@@ -776,6 +777,22 @@ class InovelliAutoShutoffTimer(ZHANumberConfigurationEntity):
     _attr_native_max_value: float = 32767
     _attribute_name = "auto_off_timer"
     _attr_translation_key: str = "auto_off_timer"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_INOVELLI, models={"VZM35-SN"}
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class InovelliQuickStartTime(ZHANumberConfigurationEntity):
+    """Inovelli fan quick start time configuration entity."""
+
+    _unique_id_suffix = "quick_start_time"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[3]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 10
+    _attribute_name = "quick_start_time"
+    _attr_translation_key: str = "quick_start_time"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
@@ -927,6 +944,24 @@ class AqaraThermostatAwayTemp(ZHANumberConfigurationEntity):
     _attr_multiplier: float = 0.01
     _attribute_name = "away_preset_temperature"
     _attr_translation_key: str = "away_preset_temperature"
+
+    _attr_mode: NumberMode = NumberMode.SLIDER
+    _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
+    _attr_icon: str = ICONS[0]
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class ThermostatLocalTempCalibration(ZHANumberConfigurationEntity):
+    """Local temperature calibration."""
+
+    _unique_id_suffix = "local_temperature_calibration"
+    _attr_native_min_value: float = -2.5
+    _attr_native_max_value: float = 2.5
+    _attr_native_step: float = 0.1
+    _attr_multiplier: float = 0.1
+    _attribute_name = "local_temperature_calibration"
+    _attr_translation_key: str = "local_temperature_calibration"
 
     _attr_mode: NumberMode = NumberMode.SLIDER
     _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS

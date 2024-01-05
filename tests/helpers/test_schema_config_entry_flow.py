@@ -23,13 +23,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 from homeassistant.util.decorator import Registry
 
-from tests.common import (
-    MockConfigEntry,
-    MockModule,
-    mock_entity_platform,
-    mock_integration,
-    mock_platform,
-)
+from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
 
 TEST_DOMAIN = "test"
 
@@ -232,7 +226,7 @@ async def test_options_flow_advanced_option(
         options_flow = OPTIONS_FLOW
 
     mock_integration(hass, MockModule("test"))
-    mock_entity_platform(hass, "config_flow.test", None)
+    mock_platform(hass, "test.config_flow", None)
     config_entry = MockConfigEntry(
         data={},
         domain="test",
@@ -521,7 +515,7 @@ async def test_suggested_values(
         options_flow = OPTIONS_FLOW
 
     mock_integration(hass, MockModule("test"))
-    mock_entity_platform(hass, "config_flow.test", None)
+    mock_platform(hass, "test.config_flow", None)
     config_entry = MockConfigEntry(
         data={},
         domain="test",
@@ -634,7 +628,7 @@ async def test_options_flow_state(hass: HomeAssistant) -> None:
         options_flow = OPTIONS_FLOW
 
     mock_integration(hass, MockModule("test"))
-    mock_entity_platform(hass, "config_flow.test", None)
+    mock_platform(hass, "test.config_flow", None)
     config_entry = MockConfigEntry(
         data={},
         domain="test",
@@ -700,7 +694,7 @@ async def test_options_flow_omit_optional_keys(
         options_flow = OPTIONS_FLOW
 
     mock_integration(hass, MockModule("test"))
-    mock_entity_platform(hass, "config_flow.test", None)
+    mock_platform(hass, "test.config_flow", None)
     config_entry = MockConfigEntry(
         data={},
         domain="test",

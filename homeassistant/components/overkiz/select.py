@@ -17,14 +17,14 @@ from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
 from .entity import OverkizDescriptiveEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class OverkizSelectDescriptionMixin:
     """Define an entity description mixin for select entities."""
 
     select_option: Callable[[str, Callable[..., Awaitable[None]]], Awaitable[None]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class OverkizSelectDescription(SelectEntityDescription, OverkizSelectDescriptionMixin):
     """Class to describe an Overkiz select entity."""
 

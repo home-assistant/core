@@ -536,7 +536,11 @@ async def test_refuse_relays(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_suggested_area(hass: HomeAssistant) -> None:
+async def test_suggested_area(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test suggested area is populated from lifx group label."""
 
     class MockLifxCommandGetGroup:
@@ -567,10 +571,8 @@ async def test_suggested_area(hass: HomeAssistant) -> None:
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
     entity_id = "light.my_bulb"
     entity = entity_registry.async_get(entity_id)
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entity.device_id)
     assert device.suggested_area == "My LIFX Group"

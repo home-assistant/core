@@ -599,21 +599,25 @@ async def test_settings_scope_config_entry(
 
 
 @pytest.mark.parametrize(
-    ("scopes"),
-    [(["heartrate"])],
+    ("scopes", "server_status"),
+    [
+        (["heartrate"], HTTPStatus.INTERNAL_SERVER_ERROR),
+        (["heartrate"], HTTPStatus.BAD_REQUEST),
+    ],
 )
 async def test_sensor_update_failed(
     hass: HomeAssistant,
     setup_credentials: None,
     integration_setup: Callable[[], Awaitable[bool]],
     requests_mock: Mocker,
+    server_status: HTTPStatus,
 ) -> None:
     """Test a failed sensor update when talking to the API."""
 
     requests_mock.register_uri(
         "GET",
         TIMESERIES_API_URL_FORMAT.format(resource="activities/heart"),
-        status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+        status_code=server_status,
     )
 
     assert await integration_setup()
@@ -808,3 +812,60 @@ async def test_device_battery_level_reauth_required(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["step_id"] == "reauth_confirm"
+
+
+@pytest.mark.parametrize(
+    ("scopes", "response_data", "expected_state"),
+    [
+        (["heartrate"], {}, "unknown"),
+        (
+            ["heartrate"],
+            {
+                "restingHeartRate": 120,
+            },
+            "120",
+        ),
+        (
+            ["heartrate"],
+            {
+                "restingHeartRate": 0,
+            },
+            "0",
+        ),
+    ],
+    ids=("missing", "valid", "zero"),
+)
+async def test_resting_heart_rate_responses(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    register_timeseries: Callable[[str, dict[str, Any]], None],
+    response_data: dict[str, Any],
+    expected_state: str,
+) -> None:
+    """Test resting heart rate sensor with various values from response."""
+
+    register_timeseries(
+        "activities/heart",
+        timeseries_response(
+            "activities-heart",
+            {
+                "customHeartRateZones": [],
+                "heartRateZones": [
+                    {
+                        "caloriesOut": 0,
+                        "max": 220,
+                        "min": 159,
+                        "minutes": 0,
+                        "name": "Peak",
+                    },
+                ],
+                **response_data,
+            },
+        ),
+    )
+    assert await integration_setup()
+
+    state = hass.states.get("sensor.resting_heart_rate")
+    assert state
+    assert state.state == expected_state
