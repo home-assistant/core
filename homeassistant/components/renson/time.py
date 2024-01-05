@@ -1,10 +1,10 @@
 """Renson ventilation unit time."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, time
 
-from _collections_abc import Callable
 from renson_endura_delta.field_enum import DAYTIME_FIELD, NIGHTTIME_FIELD, FieldEnum
 from renson_endura_delta.renson import RensonVentilation
 
@@ -57,8 +57,7 @@ async def async_setup_entry(
     data: RensonData = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = [
-        RensonTime(description, data.api, data.coordinator)
-        for description in ENTITY_DESCRIPTIONS
+        RensonTime(description, data.coordinator) for description in ENTITY_DESCRIPTIONS
     ]
 
     async_add_entities(entities, True)
@@ -72,11 +71,10 @@ class RensonTime(RensonEntity, TimeEntity):
     def __init__(
         self,
         description: RensonTimeEntityDescription,
-        api: RensonVentilation,
         coordinator: RensonCoordinator,
     ) -> None:
         """Initialize class."""
-        super().__init__(description.key, api, coordinator)
+        super().__init__(description.key, coordinator.api, coordinator)
 
         self.entity_description = description
 
