@@ -433,9 +433,7 @@ async def async_test_pi_heating_demand(hass, cluster, entity_id):
             "setpoint_change_source",
             async_test_setpoint_change_source,
             10,
-            {
-                "setpoint_change_source": 0x00,
-            },
+            None,
             None,
         ),
         (
@@ -443,9 +441,7 @@ async def async_test_pi_heating_demand(hass, cluster, entity_id):
             "pi_heating_demand",
             async_test_pi_heating_demand,
             10,
-            {
-                "pi_heating_demand": None,
-            },
+            None,
             None,
         ),
     ),
