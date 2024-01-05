@@ -176,10 +176,12 @@ class HomeKitLight(HomeKitEntity, LightEntity):
                     temperature
                 )
             else:
-                # Some HomeKit devices simulates color temperature since the older
-                # spec does not permit the COLOR_TEMPERATURE characteristic
+                # Some HomeKit devices implement color temperature with HS
+                # since he spec does not permit the COLOR_TEMPERATURE characteristic
                 # and the HUE and SATURATION characteristics to be present at the
-                # same time.
+                # same time. In practice there are a lot of devices that have
+                # both. If we have both, we use the COLOR_TEMPERATURE characteristic
+                # and ignore the HS characteristics when setting color temperature.
                 hue_sat = color_util.color_temperature_to_hs(
                     color_util.color_temperature_mired_to_kelvin(temperature)
                 )
