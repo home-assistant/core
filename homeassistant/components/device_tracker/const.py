@@ -71,5 +71,7 @@ CONNECTED_DEVICE_REGISTERED: Final = "device_tracker_connected_device_registered
 
 # These can be removed if no deprecated constant are in this module anymore
 __getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(dir_with_deprecated_constants, module_globals=[*globals().keys()])
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
 __all__ = all_with_deprecated_constants(globals())
