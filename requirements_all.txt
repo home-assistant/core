@@ -563,7 +563,7 @@ bluemaestro-ble==0.2.3
 # bluepy==1.3.0
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.16.2
+bluetooth-adapters==0.17.0
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.2.3
@@ -2896,7 +2896,7 @@ zigpy==0.60.4
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.55.2
+zwave-js-server-python==0.55.3
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
