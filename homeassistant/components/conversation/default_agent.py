@@ -885,7 +885,18 @@ def _get_no_states_matched_response(
     error_response_args: dict[str, Any] = {}
 
     if no_states_error.area:
-        if no_states_error.domains:
+        # Check device classes first, since it's more specific than domain
+        if no_states_error.device_classes:
+            # No exposed entities of a particular class in an area.
+            # Example: "close the bedroom windows"
+            error_response_type = ResponseType.NO_DEVICE_CLASS
+            error_response_args["area"] = no_states_error.area
+
+            # Only use the first device class for the error message
+            error_response_args["device_class"] = next(
+                iter(no_states_error.device_classes)
+            )
+        elif no_states_error.domains:
             # No exposed entities of a domain in an area.
             # Example: "turn on lights in kitchen"
             error_response_type = ResponseType.NO_DOMAIN
@@ -893,16 +904,6 @@ def _get_no_states_matched_response(
 
             # Only use the first domain for the error message
             error_response_args["domain"] = next(iter(no_states_error.domains))
-        elif no_states_error.device_classes:
-            # No exposed entities of a particular class in an area.
-            # Example: "close the bedroom windows"
-            error_response_type = ResponseType.NO_DEVICE_CLASS
-            error_response_args["area"] = no_states_error.area
-
-            # Only use the first device class for the error message
-            error_response_args["device_classes"] = next(
-                iter(no_states_error.device_classes)
-            )
 
     return error_response_type, error_response_args
 

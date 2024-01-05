@@ -483,7 +483,7 @@ async def test_error_no_exposed_for_device_class(
     assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
     assert (
-        result.response.speech["plain"]["speech"] == "bedroom does not contain a cover"
+        result.response.speech["plain"]["speech"] == "bedroom does not contain a window"
     )
 
 
