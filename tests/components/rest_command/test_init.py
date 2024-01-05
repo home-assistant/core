@@ -115,8 +115,11 @@ class TestRestCommandComponent:
 
         aioclient_mock.get(self.url, exc=asyncio.TimeoutError())
 
-        self.hass.services.call(rc.DOMAIN, "get_test", {})
-        self.hass.block_till_done()
+        with pytest.raises(
+            HomeAssistantError,
+            match=r"^Timeout when calling resource 'https://example.com/'$",
+        ):
+            self.hass.services.call(rc.DOMAIN, "get_test", {}, blocking=True)
 
         assert len(aioclient_mock.mock_calls) == 1
 
@@ -127,8 +130,11 @@ class TestRestCommandComponent:
 
         aioclient_mock.get(self.url, exc=aiohttp.ClientError())
 
-        self.hass.services.call(rc.DOMAIN, "get_test", {})
-        self.hass.block_till_done()
+        with pytest.raises(
+            HomeAssistantError,
+            match=r"^Client error occurred when calling resource 'https://example.com/'$",
+        ):
+            self.hass.services.call(rc.DOMAIN, "get_test", {}, blocking=True)
 
         assert len(aioclient_mock.mock_calls) == 1
 
@@ -412,7 +418,10 @@ class TestRestCommandComponent:
         assert not response
 
         # Throws error when requesting response
-        with pytest.raises(HomeAssistantError):
+        with pytest.raises(
+            HomeAssistantError,
+            match=r"^Response of 'https://example.com/' could not be decoded as JSON$",
+        ):
             response = self.hass.services.call(
                 rc.DOMAIN, "get_test", {}, blocking=True, return_response=True
             )
@@ -439,7 +448,10 @@ class TestRestCommandComponent:
         assert not response
 
         # Throws Decode error when requesting response
-        with pytest.raises(HomeAssistantError):
+        with pytest.raises(
+            HomeAssistantError,
+            match=r"^Response of 'https://example.com/' could not be decoded as text$",
+        ):
             response = self.hass.services.call(
                 rc.DOMAIN, "get_test", {}, blocking=True, return_response=True
             )
