@@ -289,7 +289,7 @@ async def async_test_setpoint_change_source(hass, cluster, entity_id):
 async def async_test_pi_heating_demand(hass, cluster, entity_id):
     """Test pi heating demand is correctly returned."""
     await send_attributes_report(hass, cluster, {0x0008: 1})
-    assert_state(hass, entity_id, "1.0", "%")
+    assert_state(hass, entity_id, "1", "%")
 
 
 @pytest.mark.parametrize(

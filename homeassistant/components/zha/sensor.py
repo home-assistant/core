@@ -1118,7 +1118,7 @@ class PiHeatingDemand(Sensor):
     _attr_translation_key: str = "pi_heating_demand"
     _attr_icon: str = "mdi:radiator"
     _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_suggested_display_precision = 1
+    _decimals = 0
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
 
 
