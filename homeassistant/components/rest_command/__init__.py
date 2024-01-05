@@ -1,6 +1,7 @@
 """Support for exposing regular REST commands as services."""
 import asyncio
 from http import HTTPStatus
+from json.decoder import JSONDecodeError
 import logging
 
 import aiohttp
@@ -18,7 +19,14 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     SERVICE_RELOAD,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_integration_yaml_config
@@ -98,17 +106,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             template_payload = command_config[CONF_PAYLOAD]
             template_payload.hass = hass
 
-        template_headers = None
-        if CONF_HEADERS in command_config:
-            template_headers = command_config[CONF_HEADERS]
-            for template_header in template_headers.values():
-                template_header.hass = hass
+        template_headers = command_config.get(CONF_HEADERS, {})
+        for template_header in template_headers.values():
+            template_header.hass = hass
 
-        content_type = None
-        if CONF_CONTENT_TYPE in command_config:
-            content_type = command_config[CONF_CONTENT_TYPE]
+        content_type = command_config.get(CONF_CONTENT_TYPE)
 
-        async def async_service_handler(service: ServiceCall) -> None:
+        async def async_service_handler(service: ServiceCall) -> ServiceResponse:
             """Execute a shell command service."""
             payload = None
             if template_payload:
@@ -123,17 +127,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 variables=service.data, parse_result=False
             )
 
-            headers = None
-            if template_headers:
-                headers = {}
-                for header_name, template_header in template_headers.items():
-                    headers[header_name] = template_header.async_render(
-                        variables=service.data, parse_result=False
-                    )
+            headers = {}
+            for header_name, template_header in template_headers.items():
+                headers[header_name] = template_header.async_render(
+                    variables=service.data, parse_result=False
+                )
 
             if content_type:
-                if headers is None:
-                    headers = {}
                 headers[hdrs.CONTENT_TYPE] = content_type
 
             try:
@@ -141,7 +141,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     request_url,
                     data=payload,
                     auth=auth,
-                    headers=headers,
+                    headers=headers or None,
                     timeout=timeout,
                 ) as response:
                     if response.status < HTTPStatus.BAD_REQUEST:
@@ -159,8 +159,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                             payload,
                         )
 
-            except asyncio.TimeoutError:
+                    if not service.return_response:
+                        return None
+
+                    _content = None
+                    try:
+                        if response.content_type == "application/json":
+                            _content = await response.json()
+                        else:
+                            _content = await response.text()
+                    except (JSONDecodeError, AttributeError) as err:
+                        _LOGGER.error("Response of `%s` has invalid JSON", request_url)
+                        raise HomeAssistantError from err
+
+                    except UnicodeDecodeError as err:
+                        _LOGGER.error(
+                            "Response of `%s` could not be interpreted as text",
+                            request_url,
+                        )
+                        raise HomeAssistantError from err
+                    return {"content": _content, "status": response.status}
+
+            except asyncio.TimeoutError as err:
                 _LOGGER.warning("Timeout call %s", request_url)
+                raise HomeAssistantError from err
 
             except aiohttp.ClientError as err:
                 _LOGGER.error(
@@ -168,9 +190,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     request_url,
                     err,
                 )
+                raise HomeAssistantError from err
 
         # register services
-        hass.services.async_register(DOMAIN, name, async_service_handler)
+        hass.services.async_register(
+            DOMAIN,
+            name,
+            async_service_handler,
+            supports_response=SupportsResponse.OPTIONAL,
+        )
 
     for name, command_config in config[DOMAIN].items():
         async_register_rest_command(name, command_config)
