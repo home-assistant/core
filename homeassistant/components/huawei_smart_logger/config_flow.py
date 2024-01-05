@@ -5,13 +5,14 @@ import logging
 from typing import Any
 
 import aiohttp
+from huawei_smart_logger import HuaweiSmartLogger3000API
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import DOMAIN, HTTP_TIMEOUT_SECONDS
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,25 +31,11 @@ async def validate_input(
     """During configuration setup we will log in to validate credentials and server info."""
     _LOGGER.debug("In validate input")
 
-    authentication_data = {
-        "langlist": "0",
-        "usrname": user_input[CONF_USERNAME],
-        "string": user_input[CONF_PASSWORD],
-        "vercodeinput": "",
-        "login": "Log+In",
-    }
-
     try:
-        _LOGGER.debug("Making HTTPS request to %s", user_input[CONF_HOST])
-        async with aiohttp.ClientSession() as session, session.post(
-            "https://" + user_input[CONF_HOST] + "/action/login",
-            data=authentication_data,
-            verify_ssl=False,
-            timeout=HTTP_TIMEOUT_SECONDS,
-        ) as authentication_request:
-            if authentication_request.status != 200:
-                _LOGGER.error("Likely authentication failure")
-                raise InvalidAuth
+        hsl = HuaweiSmartLogger3000API(
+            user_input[CONF_USERNAME], user_input[CONF_PASSWORD], user_input[CONF_HOST]
+        )
+        await hsl.fetch_data()
 
     except aiohttp.ClientError as e:
         _LOGGER.error("Connection timed out to %s", user_input[CONF_HOST])

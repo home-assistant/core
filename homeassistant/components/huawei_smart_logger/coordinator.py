@@ -2,11 +2,12 @@
 import logging
 from typing import Any, cast
 
+from huawei_smart_logger import HuaweiSmartLogger3000API
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .api import HuaweiSmartLogger3000API
 from .const import DOMAIN, MIN_TIME_BETWEEN_UPDATES
 
 _LOGGER = logging.getLogger(__name__)

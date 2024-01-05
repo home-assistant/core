@@ -3,11 +3,12 @@ from __future__ import annotations
 
 import logging
 
+from huawei_smart_logger import HuaweiSmartLogger3000API
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, Platform
 from homeassistant.core import CoreState, Event, HomeAssistant
 
-from .api import HuaweiSmartLogger3000API
 from .const import DOMAIN, MIN_TIME_BETWEEN_UPDATES
 from .coordinator import HuaweiSmartLogger3000DataCoordinator
 
@@ -20,8 +21,13 @@ SCAN_INTERVAL = MIN_TIME_BETWEEN_UPDATES
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up HuaweiSmartLogger3000 from a config entry."""
+
     _LOGGER.debug("In init.py async_setup_entry")
-    api = HuaweiSmartLogger3000API(hass=hass, config_entry=config_entry)
+    api = HuaweiSmartLogger3000API(
+        config_entry.options.get("CONF_USERNAME"),
+        config_entry.options.get("CONF_PASSWORD"),
+        config_entry.options.get("CONF_HOST"),
+    )
 
     coordinator = HuaweiSmartLogger3000DataCoordinator(
         hass=hass, config_entry=config_entry, api=api
