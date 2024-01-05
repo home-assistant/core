@@ -97,7 +97,5 @@ class OpenThermSensor(SensorEntity):
     def receive_report(self, status):
         """Handle status updates from the component."""
         value = status[self._source].get(self._var)
-        if isinstance(value, float):
-            value = f"{value:2.1f}"
         self._attr_native_value = value
         self.async_write_ha_state()
