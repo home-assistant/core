@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from http import HTTPStatus
-from typing import Any
+from typing import Any, cast
 
 from aiohttp.client_exceptions import ClientConnectionError, ClientResponseError
 import voluptuous as vol
@@ -52,7 +52,13 @@ async def validate_user_input(
     )
     instance = WebminInstance(session=session)
     try:
-        await instance.update()
+        data = await instance.update()
+        ifaces = [iface for iface in data["active_interfaces"] if "ether" in iface]
+        ifaces.sort(key=lambda x: x["ether"])
+        mac_address = ifaces[0]["ether"]
+        await cast(SchemaConfigFlowHandler, handler.parent_handler).async_set_unique_id(
+            mac_address
+        )
         return user_input
     except ClientResponseError as err:
         if err.status == HTTPStatus.UNAUTHORIZED:
