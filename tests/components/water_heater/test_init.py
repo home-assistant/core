@@ -17,7 +17,11 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 
-from tests.common import async_mock_service, import_and_test_deprecated_constant_enum
+from tests.common import (
+    async_mock_service,
+    help_test_all,
+    import_and_test_deprecated_constant_enum,
+)
 
 
 async def test_set_temp_schema_no_req(
@@ -100,6 +104,11 @@ async def test_sync_turn_off(hass: HomeAssistant) -> None:
     await water_heater.async_turn_off()
 
     assert water_heater.async_turn_off.call_count == 1
+
+
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(water_heater)
 
 
 @pytest.mark.parametrize(
