@@ -143,6 +143,7 @@ homeassistant.components.doorbird.*
 homeassistant.components.dormakaba_dkey.*
 homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
+homeassistant.components.duotecno.*
 homeassistant.components.efergy.*
 homeassistant.components.electrasmart.*
 homeassistant.components.electric_kiwi.*
