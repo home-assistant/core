@@ -94,7 +94,7 @@ from .entity import AemetEntity
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class AemetSensorEntityDescription(SensorEntityDescription):
     """A class that describes AEMET OpenData sensor entities."""
 
