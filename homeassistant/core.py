@@ -1017,7 +1017,7 @@ class Context:
         return bool(self.__class__ == other.__class__ and self.id == other.id)
 
     @cached_property
-    def as_mutable_dict(self) -> dict[str, str | None]:
+    def _as_mutable_dict(self) -> dict[str, str | None]:
         """Return a dictionary representation of the context."""
         return {
             "id": self.id,
@@ -1032,12 +1032,12 @@ class Context:
     @cached_property
     def _as_read_only_dict(self) -> ReadOnlyDict[str, str | None]:
         """Return a ReadOnlyDict representation of the context."""
-        return ReadOnlyDict(self.as_mutable_dict)
+        return ReadOnlyDict(self._as_mutable_dict)
 
     @cached_property
     def as_json_fragment(self) -> json_fragment:
         """Return a JSON fragment of the context."""
-        return json_fragment(json_dumps(self.as_mutable_dict))
+        return json_fragment(json_dumps(self._as_mutable_dict))
 
 
 class EventOrigin(enum.Enum):
@@ -1083,7 +1083,10 @@ class Event:
             "data": self.data,
             "origin": self.origin.value,
             "time_fired": self.time_fired,
-            "context": self.context.as_mutable_dict,
+            # _as_mutable_dict is marked as protected
+            # to avoid callers outside of this module
+            # from misusing it by mistake.
+            "context": self.context._as_mutable_dict,  # pylint: disable=protected-access
         }
 
     def as_dict(self) -> ReadOnlyDict[str, Any]:
@@ -1456,7 +1459,10 @@ class State:
             "attributes": self.attributes,
             "last_changed": last_changed_isoformat,
             "last_updated": last_updated_isoformat,
-            "context": self.context.as_mutable_dict,
+            # _as_mutable_dict is marked as protected
+            # to avoid callers outside of this module
+            # from misusing it by mistake.
+            "context": self.context._as_mutable_dict,  # pylint: disable=protected-access
         }
 
     def as_dict(
@@ -1508,7 +1514,10 @@ class State:
         if state_context.parent_id is None and state_context.user_id is None:
             context: dict[str, Any] | str = state_context.id
         else:
-            context = state_context.as_mutable_dict
+            # _as_mutable_dict is marked as protected
+            # to avoid callers outside of this module
+            # from misusing it by mistake.
+            context = state_context._as_mutable_dict  # pylint: disable=protected-access
         compressed_state = {
             COMPRESSED_STATE_STATE: self.state,
             COMPRESSED_STATE_ATTRIBUTES: self.attributes,
