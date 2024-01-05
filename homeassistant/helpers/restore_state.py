@@ -78,6 +78,15 @@ class StoredState:
         }
         return result
 
+    def as_json(self) -> dict[str, Any]:
+        """Return a dict representation of the stored state."""
+        result = {
+            "state": self.state.as_json_fragment,
+            "extra_data": self.extra_data.as_dict() if self.extra_data else None,
+            "last_seen": self.last_seen,
+        }
+        return result
+
     @classmethod
     def from_dict(cls, json_dict: dict) -> Self:
         """Initialize a stored state from a dict."""
@@ -217,7 +226,7 @@ class RestoreStateData:
         try:
             await self.store.async_save(
                 [
-                    stored_state.as_dict()
+                    stored_state.as_json()
                     for stored_state in self.async_get_stored_states()
                 ]
             )
