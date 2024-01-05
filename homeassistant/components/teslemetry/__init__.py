@@ -3,7 +3,8 @@ from http import HTTPStatus
 import logging
 
 from aiohttp import ClientError
-from tesla_fleet_api import TeslaFleetError, Teslemetry
+from tesla_fleet_api import Teslemetry
+from tesla_fleet_api.exceptions  import AuthenticationError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
@@ -27,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api = Teslemetry(access_token)
     try:
         api.vehicles.list()
-    except TeslaFleetError as e:
+    except  as e:
         if e.status == HTTPStatus.UNAUTHORIZED:
             raise ConfigEntryAuthFailed from e
         _LOGGER.error("Setup failed, unable to connect to Teslemetry: %s", e)
@@ -35,20 +36,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ClientError as e:
         raise ConfigEntryNotReady from e
 
-    data = [
-        TeslemetryVehicle(
-            state_coordinator=TeslemetryStateUpdateCoordinator(
-                hass,
-                api_key=api_key,
-                vin=vehicle["vin"],
-                data=vehicle["last_state"],
-            )
-        )
-        for vehicle in vehicles["results"]
-        if vehicle["last_state"] is not None
-    ]
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = api
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
