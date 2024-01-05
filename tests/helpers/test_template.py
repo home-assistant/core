@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 import json
 import logging
 import math
@@ -1151,7 +1151,6 @@ def test_as_datetime(hass: HomeAssistant, input) -> None:
     expected = dt_util.parse_datetime(input)
     if expected is not None:
         expected = str(expected)
-
     assert (
         template.Template(f"{{{{ as_datetime('{input}') }}}}", hass).async_render()
         == expected
@@ -1162,34 +1161,95 @@ def test_as_datetime(hass: HomeAssistant, input) -> None:
     )
 
 
-def test_as_datetime_from_timestamp(hass: HomeAssistant) -> None:
-    """Test converting a UNIX timestamp to a date object."""
-    tests = [
+@pytest.mark.parametrize(
+    ("input", "output"),
+    (
         (1469119144, "2016-07-21 16:39:04+00:00"),
         (1469119144.0, "2016-07-21 16:39:04+00:00"),
         (-1, "1969-12-31 23:59:59+00:00"),
-    ]
-    for input, output in tests:
-        # expected = dt_util.parse_datetime(input)
-        if output is not None:
-            output = str(output)
+    ),
+)
+def test_as_datetime_from_timestamp(hass: HomeAssistant, input, output) -> None:
+    """Test converting a UNIX timestamp to a date object."""
+    if output is not None:
+        output = str(output)
 
-        assert (
-            template.Template(f"{{{{ as_datetime({input}) }}}}", hass).async_render()
-            == output
-        )
-        assert (
-            template.Template(f"{{{{ {input} | as_datetime }}}}", hass).async_render()
-            == output
-        )
-        assert (
-            template.Template(f"{{{{ as_datetime('{input}') }}}}", hass).async_render()
-            == output
-        )
-        assert (
-            template.Template(f"{{{{ '{input}' | as_datetime }}}}", hass).async_render()
-            == output
-        )
+    assert (
+        template.Template(f"{{{{ as_datetime({input}) }}}}", hass).async_render()
+        == output
+    )
+    assert (
+        template.Template(f"{{{{ {input} | as_datetime }}}}", hass).async_render()
+        == output
+    )
+    assert (
+        template.Template(f"{{{{ as_datetime('{input}') }}}}", hass).async_render()
+        == output
+    )
+    assert (
+        template.Template(f"{{{{ '{input}' | as_datetime }}}}", hass).async_render()
+        == output
+    )
+
+
+@pytest.mark.parametrize(
+    "input",
+    (
+        "today_at('16:00')",
+        "today_at('16:00').date()",
+    ),
+)
+def test_as_datetime_from_datetime(hass: HomeAssistant, input) -> None:
+    """Test converting a timestamp string to a date object."""
+    today = dt_util.start_of_local_day()
+    if "date" in input:
+        expected = str(datetime.combine(today.date(), today.time()))
+    else:
+        expected = str(datetime.combine(today.date(), time(16, 0), today.tzinfo))
+
+    assert (
+        template.Template(f"{{{{ as_datetime({input}) }}}}", hass).async_render()
+        == expected
+    )
+    assert (
+        template.Template(f"{{{{ {input} | as_datetime }}}}", hass).async_render()
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    "input",
+    (
+        '"invalid"',
+        ["a", "list"],
+        {"a": "dict"},
+    ),
+)
+def test_as_datetime_default(hass: HomeAssistant, input) -> None:
+    """Test converting a timestamp string to a date object."""
+    default = "default output"
+    try:
+        timestamp = float(input)
+        expected = dt_util.utc_from_timestamp(timestamp)
+    except (ValueError, TypeError):
+        expected = dt_util.parse_datetime(str(input))
+        if expected is not None:
+            expected = str(expected)
+        else:
+            expected = default
+
+    assert (
+        template.Template(
+            f"{{{{ as_datetime({input}, default='{default}') }}}}", hass
+        ).async_render()
+        == expected
+    )
+    assert (
+        template.Template(
+            f"{{{{ {input} | as_datetime('{default}') }}}}", hass
+        ).async_render()
+        == expected
+    )
 
 
 def test_as_local(hass: HomeAssistant) -> None:
