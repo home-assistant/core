@@ -154,7 +154,7 @@ class LutronButton:
             self._hass.bus.fire(self._event, data)
 
 
-@dataclass
+@dataclass(slots=True)
 class LutronData:
     """Storage class for platform global data."""
 
