@@ -152,6 +152,7 @@ homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
 homeassistant.components.emulated_hue.*
 homeassistant.components.energy.*
+homeassistant.components.energyzero.*
 homeassistant.components.enigma2.*
 homeassistant.components.esphome.*
 homeassistant.components.event.*
