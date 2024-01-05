@@ -18,14 +18,13 @@ from homeassistant.helpers.json import (
     find_paths_unserializable_data,
     json_bytes_strip_null,
     json_dumps,
-    json_dumps_extended,
     json_dumps_sorted,
     json_fragment,
     save_json,
 )
 from homeassistant.util import dt as dt_util
 from homeassistant.util.color import RGBColor
-from homeassistant.util.json import SerializationError, json_loads, load_json
+from homeassistant.util.json import SerializationError, load_json
 
 from tests.common import json_round_trip
 
@@ -91,18 +90,6 @@ def test_extended_json_encoder(hass: HomeAssistant) -> None:
     # Default method falls back to repr(o)
     o = object()
     assert ha_json_enc.default(o) == {"__type": str(type(o)), "repr": repr(o)}
-
-
-def test_json_dumps_extended() -> None:
-    """Test the json dumps extended function."""
-    o = object()
-    data = {"c": 3, "a": 1, "b": 2, "o": o}
-    assert json_loads(json_dumps_extended(data)) == {
-        "c": 3,
-        "a": 1,
-        "b": 2,
-        "o": {"__type": "<class 'object'>", "repr": repr(o)},
-    }
 
 
 def test_json_dumps_sorted() -> None:
