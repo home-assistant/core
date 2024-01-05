@@ -1,5 +1,4 @@
 """Websocket API for automation."""
-import json
 from typing import Any
 
 import voluptuous as vol
@@ -12,7 +11,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.json import ExtendedJSONEncoder
+from homeassistant.helpers.json import json_dumps_extended
 from homeassistant.helpers.script import (
     SCRIPT_BREAKPOINT_HIT,
     SCRIPT_DEBUG_CONTINUE_ALL,
@@ -74,9 +73,7 @@ async def websocket_trace_get(
 
     message = websocket_api.messages.result_message(msg["id"], requested_trace)
 
-    connection.send_message(
-        json.dumps(message, cls=ExtendedJSONEncoder, allow_nan=False)
-    )
+    connection.send_message(json_dumps_extended(message))
 
 
 @websocket_api.require_admin

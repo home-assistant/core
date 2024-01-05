@@ -74,7 +74,12 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder
+from homeassistant.helpers.json import (
+    ExtendedJSONEncoder,
+    JSONEncoder,
+    _orjson_default_encoder,
+    _orjson_extended_encoder,
+)
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -1270,10 +1275,12 @@ def mock_storage(
         _LOGGER.debug("Writing data to %s: %s", store.key, data_to_write)
         raise_contains_mocks(data_to_write)
         encoder = store._encoder
-        if encoder and encoder is not JSONEncoder:
+        if encoder and encoder not in (JSONEncoder, ExtendedJSONEncoder):
             # If they pass a custom encoder that is not the
             # default JSONEncoder, we use the slow path of json.dumps
             dump = ft.partial(json.dumps, cls=store._encoder)
+        elif encoder is ExtendedJSONEncoder:
+            dump = _orjson_extended_encoder
         else:
             dump = _orjson_default_encoder
         data[store.key] = json.loads(dump(data_to_write))
