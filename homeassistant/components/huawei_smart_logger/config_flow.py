@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 import aiohttp
-from huawei_smart_logger import HuaweiSmartLogger3000API
+from huawei_smart_logger.huawei_smart_logger import HuaweiSmartLogger3000API
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions

@@ -2,7 +2,7 @@
 import logging
 from typing import Any, cast
 
-from huawei_smart_logger import HuaweiSmartLogger3000API
+from huawei_smart_logger.huawei_smart_logger import HuaweiSmartLogger3000API
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
