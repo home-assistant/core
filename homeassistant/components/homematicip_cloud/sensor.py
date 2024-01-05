@@ -158,6 +158,7 @@ class HomematicpFloorTerminalBlockMechanicValve(HomematicipGenericEntity, Sensor
     """Representation of the HomematicIP floor terminal block."""
 
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, hap: HomematicipHAP, device, channel) -> None:
         """Initialize floor terminal block 12 device."""
