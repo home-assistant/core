@@ -57,7 +57,7 @@ async def test_hidden_entities_skipped(
 
     assert len(calls) == 0
     assert result.response.response_type == intent.IntentResponseType.ERROR
-    assert result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
 
 
 async def test_exposed_domains(hass: HomeAssistant, init_components) -> None:
@@ -70,10 +70,10 @@ async def test_exposed_domains(hass: HomeAssistant, init_components) -> None:
         hass, "turn on test media player", None, Context(), None
     )
 
-    # This is an intent match failure instead of a handle failure because the
-    # media player domain is not exposed.
+    # This is a match failure instead of a handle failure because the media
+    # player domain is not exposed.
     assert result.response.response_type == intent.IntentResponseType.ERROR
-    assert result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
 
 
 async def test_exposed_areas(
@@ -127,9 +127,9 @@ async def test_exposed_areas(
         hass, "turn on lights in the bedroom", None, Context(), None
     )
 
-    # This should be an intent match failure because the area isn't in the slot list
+    # This should be a match failure because the area isn't in the slot list
     assert result.response.response_type == intent.IntentResponseType.ERROR
-    assert result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
 
 
 async def test_conversation_agent(
@@ -417,6 +417,48 @@ async def test_device_area_context(
         result = await conversation.async_converse(
             hass, f"turn {command} all lights", None, Context(), None
         )
+        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert (
+            result.response.error_code
+            == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+        )
+
+
+async def test_error_missing_entity(hass: HomeAssistant, init_components) -> None:
+    """Test error message when entity is missing."""
+    result = await conversation.async_converse(
+        hass, "turn on missing entity", None, Context(), None
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "No device or entity named missing entity"
+    )
+
+
+async def test_error_missing_area(hass: HomeAssistant, init_components) -> None:
+    """Test error message when area is missing."""
+    result = await conversation.async_converse(
+        hass, "turn on the lights in missing area", None, Context(), None
+    )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+    assert result.response.speech["plain"]["speech"] == "No area named missing area"
+
+
+async def test_error_match_failure(hass: HomeAssistant, init_components) -> None:
+    """Test response with complete match failure."""
+    with patch(
+        "homeassistant.components.conversation.default_agent.recognize_all",
+        return_value=[],
+    ):
+        result = await conversation.async_converse(
+            hass, "do something", None, Context(), None
+        )
+
         assert result.response.response_type == intent.IntentResponseType.ERROR
         assert (
             result.response.error_code == intent.IntentResponseErrorCode.NO_INTENT_MATCH
