@@ -82,10 +82,12 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Webmin sensors based on a config entry."""
+    coordinator: WebminUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
-            WebminSensor(hass.data[DOMAIN][entry.entry_id], description)
+            WebminSensor(coordinator, description)
             for description in SENSOR_TYPES
+            if description.key in coordinator.data
         ]
     )
 
@@ -94,6 +96,7 @@ class WebminSensor(CoordinatorEntity[WebminUpdateCoordinator], SensorEntity):
     """Represents a Webmin sensor."""
 
     entity_description: SensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self, coordinator: WebminUpdateCoordinator, description: SensorEntityDescription
@@ -104,7 +107,6 @@ class WebminSensor(CoordinatorEntity[WebminUpdateCoordinator], SensorEntity):
         self.entity_description = description
         self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.mac_address}_{description.key}"
-        self._attr_available = self.entity_description.key in self.coordinator.data
 
     @property
     def native_value(self) -> int | float:

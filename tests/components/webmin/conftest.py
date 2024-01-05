@@ -7,7 +7,6 @@ import pytest
 from homeassistant.components.webmin.const import DEFAULT_PORT
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -15,17 +14,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
-TEST_USER_INPUT_REQUIRED = {
-    CONF_HOST: "server",
-    CONF_USERNAME: "user",
-    CONF_PASSWORD: "pass",
-    CONF_PORT: DEFAULT_PORT,
-    CONF_SSL: True,
-    CONF_VERIFY_SSL: False,
-}
-
-TEST_USER_INPUT_FULL = {
-    CONF_NAME: "server1",
+TEST_USER_INPUT = {
     CONF_HOST: "192.168.1.1",
     CONF_USERNAME: "user",
     CONF_PASSWORD: "pass",

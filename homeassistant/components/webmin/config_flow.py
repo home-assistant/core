@@ -12,7 +12,6 @@ from yarl import URL
 
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -63,7 +62,6 @@ async def validate_user_input(
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME): selector.TextSelector(),
         vol.Required(CONF_HOST): selector.TextSelector(),
         vol.Required(CONF_PORT, default=DEFAULT_PORT): selector.NumberSelector(
             selector.NumberSelectorConfig(
@@ -95,6 +93,4 @@ class WebminConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
-        if CONF_NAME in options and options[CONF_NAME] is not None:
-            return str(options[CONF_NAME])
         return str(options[CONF_HOST])

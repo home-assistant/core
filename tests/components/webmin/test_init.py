@@ -6,7 +6,7 @@ from homeassistant.components.webmin.coordinator import WebminUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import TEST_USER_INPUT_REQUIRED
+from .conftest import TEST_USER_INPUT
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -16,9 +16,7 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test successful unload of entry."""
 
-    entry = MockConfigEntry(
-        domain=DOMAIN, options=TEST_USER_INPUT_REQUIRED, title="name"
-    )
+    entry = MockConfigEntry(domain=DOMAIN, options=TEST_USER_INPUT, title="name")
     entry.add_to_hass(hass)
 
     with patch(

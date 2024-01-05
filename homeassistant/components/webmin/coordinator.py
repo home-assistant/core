@@ -9,7 +9,6 @@ from yarl import URL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -51,7 +50,7 @@ class WebminUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.device_info = DeviceInfo(
             configuration_url=base_url,
-            name=config_entry.options.get(CONF_NAME, config_entry.options[CONF_HOST]),
+            name=config_entry.options[CONF_HOST],
         )
 
         super().__init__(
