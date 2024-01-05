@@ -56,8 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if len(data_dict) == 0:
         _LOGGER.error("Data_dict is empty")
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN] = coordinator
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     #  for sensor in data_dict:
     #     hass.states.async_set(sensor, data_dict[sensor])
