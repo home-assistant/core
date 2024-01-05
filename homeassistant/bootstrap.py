@@ -276,9 +276,6 @@ async def async_from_config_dict(
     # Set up core.
     _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)
 
-    # Load core integrations manifests in a single executor job
-    await loader.async_get_integrations(hass, CORE_INTEGRATIONS)
-
     if not all(
         await asyncio.gather(
             *(
