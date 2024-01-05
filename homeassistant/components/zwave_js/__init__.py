@@ -1002,12 +1002,16 @@ async def async_remove_config_entry_device(
     assert client.driver
     driver: Driver = client.driver
 
-    node = next(
-        node
-        for node in driver.controller.nodes.values()
-        if get_device_id(driver, node) in device_entry.identifiers
-    )
-    if get_device_id_ext(driver, node) in device_entry.identifiers:
+    # If a node is found on the controller that matches the hardware based identifier
+    # on the device, prevent the device from being removed.
+    if next(
+        (
+            node
+            for node in driver.controller.nodes.values()
+            if get_device_id_ext(driver, node) in device_entry.identifiers
+        ),
+        None,
+    ):
         return False
 
     controller_events: ControllerEvents = entry_hass_data[

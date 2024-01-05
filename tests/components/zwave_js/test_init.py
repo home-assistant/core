@@ -14,7 +14,7 @@ from zwave_js_server.model.version import VersionInfo
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN, SERVICE_SET_LEVEL
 from homeassistant.components.persistent_notification import async_dismiss
-from homeassistant.components.zwave_js import DOMAIN
+from homeassistant.components.zwave_js import DOMAIN, async_remove_config_entry_device
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
@@ -1353,6 +1353,12 @@ async def test_replace_different_node(
         (DOMAIN, device_id),
         (DOMAIN, multisensor_6_device_id_ext),
     }
+
+    # Attempting to remove the hank device should pass, but removing the multisensor should not
+    assert await async_remove_config_entry_device(hass, integration, hank_device)
+    assert not await async_remove_config_entry_device(
+        hass, integration, multisensor_6_device
+    )
 
 
 async def test_node_model_change(
