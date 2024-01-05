@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, WALL_PRESET_NAME
 from .entity import MotionMountEntity
 
 
@@ -41,7 +41,7 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
 
     def _update_options(self, presets: dict[int, str]) -> None:
         """Convert presets to select options."""
-        options = ["0_wall"]
+        options = [WALL_PRESET_NAME]
         for index, name in presets.items():
             options.append(f"{index}: {name}")
 
