@@ -798,11 +798,16 @@ async def test_heating_cooling_switch_does_not_toggle_when_within_min_cycle_dura
     target_temperature: int,
 ) -> None:
     """Test if heating/cooling does not toggle when inside minimum cycle."""
+    # Given
     await _setup_thermostat_with_min_cycle_duration(hass, ac_mode, initial_hvac_mode)
     calls = _setup_switch(hass, initial_switch_state)
-    await common.async_set_temperature(hass, target_temperature)
     _setup_sensor(hass, sensor_temperature)
+
+    # When
+    await common.async_set_temperature(hass, target_temperature)
     await hass.async_block_till_done()
+
+    # Then
     assert len(calls) == 0
 
 
@@ -813,7 +818,7 @@ async def test_heating_cooling_switch_does_not_toggle_when_within_min_cycle_dura
         "initial_switch_state",
         "sensor_temperature",
         "target_temperature",
-        "triggered_service_call",
+        "expected_triggered_service_call",
     ),
     [
         (True, HVACMode.COOL, False, 30, 25, SERVICE_TURN_ON),
@@ -829,20 +834,25 @@ async def test_heating_cooling_switch_toggles_when_outside_min_cycle_duration(
     initial_switch_state: bool,
     sensor_temperature: int,
     target_temperature: int,
-    triggered_service_call: str,
+    expected_triggered_service_call: str,
 ) -> None:
     """Test if heating/cooling toggles when outside minimum cycle."""
+    # Given
     await _setup_thermostat_with_min_cycle_duration(hass, ac_mode, initial_hvac_mode)
     fake_changed = datetime.datetime(1970, 11, 11, 11, 11, 11, tzinfo=dt_util.UTC)
     with freeze_time(fake_changed):
         calls = _setup_switch(hass, initial_switch_state)
-    await common.async_set_temperature(hass, target_temperature)
     _setup_sensor(hass, sensor_temperature)
+
+    # When
+    await common.async_set_temperature(hass, target_temperature)
     await hass.async_block_till_done()
+
+    # Then
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == HASS_DOMAIN
-    assert call.service == triggered_service_call
+    assert call.service == expected_triggered_service_call
     assert call.data["entity_id"] == ENT_SWITCH
 
 
@@ -854,7 +864,7 @@ async def test_heating_cooling_switch_toggles_when_outside_min_cycle_duration(
         "sensor_temperature",
         "target_temperature",
         "changed_hvac_mode",
-        "triggered_service_call",
+        "expected_triggered_service_call",
     ),
     [
         (True, HVACMode.COOL, False, 30, 25, HVACMode.HEAT, SERVICE_TURN_ON),
@@ -871,20 +881,25 @@ async def test_hvac_mode_change_toggles_heating_cooling_switch_even_when_within_
     sensor_temperature: int,
     target_temperature: int,
     changed_hvac_mode: HVACMode,
-    triggered_service_call: str,
+    expected_triggered_service_call: str,
 ) -> None:
     """Test if mode change toggles heating/cooling despite minimum cycle."""
+    # Given
     await _setup_thermostat_with_min_cycle_duration(hass, ac_mode, initial_hvac_mode)
     calls = _setup_switch(hass, initial_switch_state)
-    await common.async_set_temperature(hass, target_temperature)
     _setup_sensor(hass, sensor_temperature)
+
+    # When
+    await common.async_set_temperature(hass, target_temperature)
     await hass.async_block_till_done()
+
+    # Then
     assert len(calls) == 0
     await common.async_set_hvac_mode(hass, changed_hvac_mode)
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == "homeassistant"
-    assert call.service == triggered_service_call
+    assert call.service == expected_triggered_service_call
     assert call.data["entity_id"] == ENT_SWITCH
 
 
