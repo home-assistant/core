@@ -100,8 +100,4 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 @pytest.fixture(name="config_type")
 def config_type(hass: HomeAssistant) -> ConfigType:
     """Create and register mock config entry."""
-    config_type = ConfigType(
-        domain=DOMAIN,
-        data={CONF_HOST: HOST, CONF_PASSWORD: PASSWORD},
-    )
-    return config_type
+    return {DOMAIN: {CONF_HOST: HOST, CONF_PASSWORD: PASSWORD}}
