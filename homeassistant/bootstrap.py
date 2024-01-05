@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 import yarl
 
-from . import config as conf_util, config_entries, core, loader
+from . import config as conf_util, config_entries, core, loader, requirements
 from .components import http
 from .const import (
     FORMAT_DATETIME,
@@ -270,8 +270,11 @@ async def async_from_config_dict(
     start = monotonic()
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
-    await hass.config_entries.async_initialize()
-    await load_registries(hass)
+    await asyncio.gather(
+        hass.config_entries.async_initialize(),
+        load_registries(hass),
+        requirements.async_setup(hass),
+    )
 
     # Set up core.
     _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)

@@ -63,6 +63,11 @@ async def async_process_requirements(
     await _async_get_manager(hass).async_process_requirements(name, requirements)
 
 
+async def async_setup(hass: HomeAssistant) -> None:
+    """Set up the requirements manager."""
+    await _async_get_manager(hass).async_setup()
+
+
 @callback
 def _async_get_manager(hass: HomeAssistant) -> RequirementsManager:
     """Get the requirements manager."""
@@ -126,6 +131,12 @@ class RequirementsManager:
         ] = {}
         self.install_failure_history: set[str] = set()
         self.is_installed_cache: set[str] = set()
+
+    async def async_setup(self) -> None:
+        """Set up the requirements manager."""
+        self.is_installed_cache = await self.hass.async_add_executor_job(
+            pkg_util.get_installed_packages
+        )
 
     async def async_get_integration_with_requirements(
         self, domain: str, done: set[str] | None = None
