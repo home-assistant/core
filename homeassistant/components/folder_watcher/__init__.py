@@ -64,65 +64,66 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def create_event_handler(patterns: list[str], hass: HomeAssistant):
+def create_event_handler(patterns: list[str], hass: HomeAssistant) -> EventHandler:
     """Return the Watchdog EventHandler object."""
 
-    class EventHandler(PatternMatchingEventHandler):
-        """Class for handling Watcher events."""
-
-        def __init__(self, patterns: list[str], hass: HomeAssistant) -> None:
-            """Initialise the EventHandler."""
-            super().__init__(patterns)
-            self.hass = hass
-
-        def process(self, event: FileSystemEvent, moved: bool = False) -> None:
-            """On Watcher event, fire HA event."""
-            _LOGGER.debug("process(%s)", event)
-            if not event.is_directory:
-                folder, file_name = os.path.split(event.src_path)
-                fireable = {
-                    "event_type": event.event_type,
-                    "path": event.src_path,
-                    "file": file_name,
-                    "folder": folder,
-                }
-
-                if moved:
-                    event = cast(FileSystemMovedEvent, event)
-                    dest_folder, dest_file_name = os.path.split(event.dest_path)
-                    fireable.update(
-                        {
-                            "dest_path": event.dest_path,
-                            "dest_file": dest_file_name,
-                            "dest_folder": dest_folder,
-                        }
-                    )
-                self.hass.bus.fire(
-                    DOMAIN,
-                    fireable,
-                )
-
-        def on_modified(self, event: FileModifiedEvent) -> None:
-            """File modified."""
-            self.process(event)
-
-        def on_moved(self, event: FileMovedEvent) -> None:
-            """File moved."""
-            self.process(event, moved=True)
-
-        def on_created(self, event: FileCreatedEvent) -> None:
-            """File created."""
-            self.process(event)
-
-        def on_deleted(self, event: FileDeletedEvent) -> None:
-            """File deleted."""
-            self.process(event)
-
-        def on_closed(self, event: FileClosedEvent) -> None:
-            """File closed."""
-            self.process(event)
-
     return EventHandler(patterns, hass)
+
+
+class EventHandler(PatternMatchingEventHandler):
+    """Class for handling Watcher events."""
+
+    def __init__(self, patterns: list[str], hass: HomeAssistant) -> None:
+        """Initialise the EventHandler."""
+        super().__init__(patterns)
+        self.hass = hass
+
+    def process(self, event: FileSystemEvent, moved: bool = False) -> None:
+        """On Watcher event, fire HA event."""
+        _LOGGER.debug("process(%s)", event)
+        if not event.is_directory:
+            folder, file_name = os.path.split(event.src_path)
+            fireable = {
+                "event_type": event.event_type,
+                "path": event.src_path,
+                "file": file_name,
+                "folder": folder,
+            }
+
+            if moved:
+                event = cast(FileSystemMovedEvent, event)
+                dest_folder, dest_file_name = os.path.split(event.dest_path)
+                fireable.update(
+                    {
+                        "dest_path": event.dest_path,
+                        "dest_file": dest_file_name,
+                        "dest_folder": dest_folder,
+                    }
+                )
+            self.hass.bus.fire(
+                DOMAIN,
+                fireable,
+            )
+
+    def on_modified(self, event: FileModifiedEvent) -> None:
+        """File modified."""
+        self.process(event)
+
+    def on_moved(self, event: FileMovedEvent) -> None:
+        """File moved."""
+        self.process(event, moved=True)
+
+    def on_created(self, event: FileCreatedEvent) -> None:
+        """File created."""
+        self.process(event)
+
+    def on_deleted(self, event: FileDeletedEvent) -> None:
+        """File deleted."""
+        self.process(event)
+
+    def on_closed(self, event: FileClosedEvent) -> None:
+        """File closed."""
+        self.process(event)
 
 
 class Watcher:
