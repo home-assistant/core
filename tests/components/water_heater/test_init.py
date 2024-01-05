@@ -8,10 +8,13 @@ import voluptuous as vol
 
 from homeassistant.components import water_heater
 from homeassistant.components.water_heater import (
+    ATTR_OPERATION_LIST,
+    ATTR_OPERATION_MODE,
     SET_TEMPERATURE_SCHEMA,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 
 from tests.common import async_mock_service, import_and_test_deprecated_constant_enum
@@ -117,21 +120,26 @@ def test_deprecated_constants(
     )
 
 
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+def test_deprecated_supported_features_ints(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test deprecated supported features ints."""
 
     class MockWaterHeaterEntity(WaterHeaterEntity):
-        @property
-        def supported_features(self) -> int:
-            """Return supported features."""
-            return 1
+        _attr_operation_list = ["mode1", "mode2"]
+        _attr_temperature_unit = UnitOfTemperature.CELSIUS
+        _attr_current_operation = "mode1"
+        _attr_supported_features = WaterHeaterEntityFeature.OPERATION_MODE.value
 
     entity = MockWaterHeaterEntity()
-    assert entity.supported_features_compat is WaterHeaterEntityFeature(1)
+    entity.hass = hass
+    assert entity.supported_features_compat is WaterHeaterEntityFeature(2)
     assert "MockWaterHeaterEntity" in caplog.text
     assert "is using deprecated supported features values" in caplog.text
     assert "Instead it should use" in caplog.text
-    assert "WaterHeaterEntityFeature.TARGET_TEMPERATURE" in caplog.text
+    assert "WaterHeaterEntityFeature.OPERATION_MODE" in caplog.text
     caplog.clear()
-    assert entity.supported_features_compat is WaterHeaterEntityFeature(1)
+    assert entity.supported_features_compat is WaterHeaterEntityFeature(2)
     assert "is using deprecated supported features values" not in caplog.text
+    assert entity.state_attributes[ATTR_OPERATION_MODE] == "mode1"
+    assert entity.capability_attributes[ATTR_OPERATION_LIST] == ["mode1", "mode2"]

@@ -1036,8 +1036,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/qvr_pro/ @oblogic7
 /homeassistant/components/qwikswitch/ @kellerza
 /tests/components/qwikswitch/ @kellerza
-/homeassistant/components/rachio/ @bdraco
-/tests/components/rachio/ @bdraco
+/homeassistant/components/rachio/ @bdraco @rfverbruggen
+/tests/components/rachio/ @bdraco @rfverbruggen
 /homeassistant/components/radarr/ @tkdrob
 /tests/components/radarr/ @tkdrob
 /homeassistant/components/radio_browser/ @frenck
