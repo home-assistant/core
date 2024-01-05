@@ -5,7 +5,12 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from mypermobil import MyPermobil, MyPermobilAPIException, MyPermobilClientException
+from mypermobil import (
+    MyPermobil,
+    MyPermobilAPIException,
+    MyPermobilClientException,
+    MyPermobilEulaException,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -141,6 +146,10 @@ class PermobilConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # or the backend returned an error when trying to validate the code
                 _LOGGER.exception("Error verifying code")
                 errors["base"] = "invalid_code"
+            except MyPermobilEulaException:
+                # The user has not accepted the EULA
+                _LOGGER.exception("Error EULA not signed")
+                errors["base"] = "unsigned_eula"
 
         if errors or not user_input:
             return self.async_show_form(
