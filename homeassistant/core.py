@@ -1442,17 +1442,12 @@ class State:
     @cached_property
     def _as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the State."""
-        last_changed_isoformat = self.last_changed
-        if last_changed_isoformat == self.last_updated:
-            last_updated_isoformat = last_changed_isoformat
-        else:
-            last_updated_isoformat = self.last_updated
         return {
             "entity_id": self.entity_id,
             "state": self.state,
             "attributes": self.attributes,
-            "last_changed": last_changed_isoformat,
-            "last_updated": last_updated_isoformat,
+            "last_changed": self.last_changed,
+            "last_updated": self.last_updated,
             # _as_mutable_dict is marked as protected
             # to avoid callers outside of this module
             # from misusing it by mistake.
