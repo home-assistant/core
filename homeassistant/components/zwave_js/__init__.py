@@ -510,7 +510,7 @@ class ControllerEvents:
         driver = self.driver_events.driver
         device_id = get_device_id(driver, node)
         device_id_ext = get_device_id_ext(driver, node)
-        device = self.dev_reg.async_get_device(identifiers={device_id})
+        node_id_device = self.dev_reg.async_get_device(identifiers={device_id})
         via_device_id = None
         controller = driver.controller
         # Get the controller node device ID if this node is not the controller
@@ -521,25 +521,27 @@ class ControllerEvents:
             # If there is a device with this node ID but with a different hardware
             # signature, remove the node ID based identifier from it.
             if (
-                device
-                and len(device.identifiers) == 2
-                and device_id_ext not in device.identifiers
+                node_id_device
+                and len(node_id_device.identifiers) == 2
+                and device_id_ext not in node_id_device.identifiers
             ):
-                new_identifiers = device.identifiers.copy()
+                new_identifiers = node_id_device.identifiers.copy()
                 new_identifiers.remove(device_id)
                 self.dev_reg.async_update_device(
-                    device.id, new_identifiers=new_identifiers
+                    node_id_device.id, new_identifiers=new_identifiers
                 )
             # If there is an orphaned device that already exists with this hardware
             # based identifier, add the node ID based identifier to the orphaned
             # device.
             if (
-                device := self.dev_reg.async_get_device(identifiers={device_id_ext})
-            ) and len(device.identifiers) == 1:
-                new_identifiers = device.identifiers.copy()
+                hardware_device := self.dev_reg.async_get_device(
+                    identifiers={device_id_ext}
+                )
+            ) and len(hardware_device.identifiers) == 1:
+                new_identifiers = hardware_device.identifiers.copy()
                 new_identifiers.add(device_id)
                 self.dev_reg.async_update_device(
-                    device.id, new_identifiers=new_identifiers
+                    hardware_device.id, new_identifiers=new_identifiers
                 )
             ids = {device_id, device_id_ext}
         else:
