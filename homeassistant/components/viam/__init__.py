@@ -15,6 +15,7 @@ from viam.services.vision.client import RawImage
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ADDRESS, CONF_API_KEY
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -25,6 +26,10 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .const import (
+    CONF_API_ID,
+    CONF_CREDENTIAL_TYPE,
+    CONF_ROBOT_ID,
+    CONF_SECRET,
     DOMAIN,
     SERVICE_CAMERA,
     SERVICE_CLASSIFIER_NAME,
@@ -142,7 +147,7 @@ class ViamManager:
     async def capture_data(self, call: ServiceCall) -> None:
         """Accept input from service call to send to Viam."""
         parts: list[RobotPart] = await self.client.app_client.get_robot_parts(
-            robot_id=self.data["robot_id"]
+            robot_id=self.data[CONF_ROBOT_ID]
         )
         values = [call.data.get(SERVICE_VALUES)]
         component_type = call.data.get(SERVICE_COMPONENT_TYPE, "sensor")
@@ -160,7 +165,7 @@ class ViamManager:
     async def capture_image(self, call: ServiceCall) -> None:
         """Accept input from service call to send to Viam."""
         parts: list[RobotPart] = await self.client.app_client.get_robot_parts(
-            robot_id=self.data["robot_id"]
+            robot_id=self.data[CONF_ROBOT_ID]
         )
         filepath = call.data.get(SERVICE_FILEPATH)
         camera = call.data.get(SERVICE_CAMERA)
@@ -195,11 +200,7 @@ class ViamManager:
             call.data.get(SERVICE_ROBOT_SECRET), call.data.get(SERVICE_ROBOT_ADDRESS)
         ) as robot:
             classifier = VisionClient.from_robot(robot, classifier_name)
-            image = await self.hass.async_add_executor_job(_fetch_image, filepath)
-            cam_bytes = (
-                await self._get_image_from_camera(camera) if camera is not None else b""
-            )
-            image = RawImage(cam_bytes, "jpeg") if len(cam_bytes) > 0 else None
+            image = await self._get_image(filepath, camera)
 
         if image is None:
             return {
@@ -230,11 +231,7 @@ class ViamManager:
             call.data.get(SERVICE_ROBOT_SECRET), call.data.get(SERVICE_ROBOT_ADDRESS)
         ) as robot:
             detector = VisionClient.from_robot(robot, detector_name)
-            image = await self.hass.async_add_executor_job(_fetch_image, filepath)
-            cam_bytes = (
-                await self._get_image_from_camera(camera) if camera is not None else b""
-            )
-            image = RawImage(cam_bytes, "jpeg") if len(cam_bytes) > 0 else None
+            image = await self._get_image(filepath, camera)
 
         if image is None:
             return {
@@ -261,14 +258,30 @@ class ViamManager:
             "img_src": img_src,
         }
 
-    def _encode_image(self, image: RawImage):
+    def _encode_image(self, image: Image.Image | RawImage):
+        image_bytes = b""
+        if isinstance(image, Image.Image):
+            image_bytes = image.tobytes()
+        if isinstance(image, RawImage):
+            image_bytes = image.data
+
         image_string = (
-            str(base64.b64encode(image.data))
+            str(base64.b64encode(image_bytes))
             .replace("\\n", "")
             .replace("b'", "")
             .replace("'", "")
         )
-        return f"data:image/png;base64,{image_string}"
+        return f"data:image/jpeg;base64,{image_string}"
+
+    async def _get_image(self, filepath: str | None, camera: str | None):
+        if filepath is not None:
+            return await self.hass.async_add_executor_job(_fetch_image, filepath)
+        if camera is not None:
+            cam_bytes = await self._get_image_from_camera(camera)
+            if len(cam_bytes) > 0:
+                return RawImage(cam_bytes, "jpeg")
+
+        return None
 
     async def _get_image_from_camera(self, camera_name: str) -> bytes:
         cam_entity = er.async_get(self.hass).async_get(camera_name)
@@ -298,9 +311,9 @@ class ViamManager:
         self, robot_secret: str | None, robot_address: str | None
     ) -> RobotClient:
         """Check initialized data to create robot client."""
-        address = self.data.get("address")
-        payload = self.data.get("secret")
-        if self.data["credential_type"] == "api-key":
+        address = self.data.get(CONF_ADDRESS)
+        payload = self.data.get(CONF_SECRET)
+        if self.data[CONF_CREDENTIAL_TYPE] == "api-key":
             if robot_secret is None or robot_address is None:
                 raise ServiceValidationError(
                     "The robot location and secret are required for this connection type.",
@@ -326,12 +339,12 @@ class ViamManager:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up viam from a config entry."""
-    credential_type = entry.data["credential_type"]
-    payload = entry.data["secret"]
-    auth_entity = entry.data["address"]
+    credential_type = entry.data[CONF_CREDENTIAL_TYPE]
+    payload = entry.data[CONF_SECRET]
+    auth_entity = entry.data[CONF_ADDRESS]
     if credential_type == "api-key":
-        payload = entry.data["api_key"]
-        auth_entity = entry.data["api_id"]
+        payload = entry.data[CONF_API_KEY]
+        auth_entity = entry.data[CONF_API_ID]
 
     credentials = Credentials(type=credential_type, payload=payload)
     dial_options = DialOptions(auth_entity=auth_entity, credentials=credentials)

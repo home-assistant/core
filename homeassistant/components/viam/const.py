@@ -6,6 +6,7 @@ CONF_API_ID = "api_id"
 CONF_SECRET = "secret"
 CONF_CREDENTIAL_TYPE = "credential_type"
 CONF_ROBOT = "robot"
+CONF_ROBOT_ID = "robot_id"
 
 SERVICE_VALUES = "values"
 SERVICE_COMPONENT_NAME = "component_name"
