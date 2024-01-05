@@ -19,25 +19,25 @@ from .coordinator import WebminUpdateCoordinator
 SENSOR_TYPES: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="load_1m",
-        name="Load (1m)",
+        translation_key="load_1m",
         icon="mdi:cpu-64-bit",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="load_5m",
-        name="Load (5m)",
+        translation_key="load_5m",
         icon="mdi:cpu-64-bit",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="load_15m",
-        name="Load (15m)",
+        translation_key="load_15m",
         icon="mdi:cpu-64-bit",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="mem_total",
-        name="Total Memory",
+        translation_key="mem_total",
         icon="mdi:memory",
         native_unit_of_measurement=UnitOfInformation.KIBIBYTES,
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
@@ -47,7 +47,7 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="mem_free",
-        name="Free Memory",
+        translation_key="mem_free",
         icon="mdi:memory",
         native_unit_of_measurement=UnitOfInformation.KIBIBYTES,
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
@@ -57,7 +57,7 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="swap_total",
-        name="Total Swap",
+        translation_key="swap_total",
         icon="mdi:memory",
         native_unit_of_measurement=UnitOfInformation.KIBIBYTES,
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
@@ -67,7 +67,7 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="swap_free",
-        name="Free Swap",
+        translation_key="swap_free",
         icon="mdi:memory",
         native_unit_of_measurement=UnitOfInformation.KIBIBYTES,
         suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,

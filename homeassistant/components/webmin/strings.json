@@ -26,5 +26,30 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "load_1m": {
+        "name": "Load (1m)"
+      },
+      "load_5m": {
+        "name": "Load (5m)"
+      },
+      "load_15m": {
+        "name": "Load (15m)"
+      },
+      "mem_total": {
+        "name": "Memory total"
+      },
+      "mem_free": {
+        "name": "Memory free"
+      },
+      "swap_total": {
+        "name": "Swap total"
+      },
+      "swap_free": {
+        "name": "Swap free"
+      }
+    }
   }
 }
