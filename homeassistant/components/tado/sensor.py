@@ -19,6 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from . import TadoConnector
 from .const import (
     CONDITIONS_MAP,
     DATA,
@@ -31,7 +32,6 @@ from .const import (
     TYPE_HOT_WATER,
 )
 from .entity import TadoHomeEntity, TadoZoneEntity
-from .tado import TadoConnector
 
 _LOGGER = logging.getLogger(__name__)
 

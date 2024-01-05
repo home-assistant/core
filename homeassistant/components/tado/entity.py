@@ -2,8 +2,8 @@
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
+from . import TadoConnector
 from .const import DEFAULT_NAME, DOMAIN, TADO_HOME, TADO_ZONE
-from .tado import TadoConnector
 
 
 class TadoDeviceEntity(Entity):
