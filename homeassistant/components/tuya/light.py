@@ -128,8 +128,6 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             name=None,
             color_mode=DPCode.WORK_MODE,
             brightness=DPCode.BRIGHT_VALUE,
-            color_temp=None,
-            color_data=None,
         ),
     ),
     # Ceiling Fan Light
