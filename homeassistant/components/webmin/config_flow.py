@@ -34,6 +34,10 @@ async def validate_user_input(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ):
     """Validate user input."""
+    # pylint: disable-next=protected-access
+    handler.parent_handler._async_abort_entries_match(
+        {CONF_HOST: user_input[CONF_HOST]}
+    )
     base_url = URL.build(
         scheme="https" if user_input[CONF_SSL] else "http",
         user=user_input[CONF_USERNAME],
