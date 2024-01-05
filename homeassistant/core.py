@@ -1101,8 +1101,9 @@ class Event:
         as_dict = self._as_dict
         data = as_dict["data"]
         # as_json_fragment will convert data to a ReadOnlyDict
-        # so a normal dict so its ok to have either. We only
+        # to a normal dict so its ok to have either. We only
         # mutate the cache if someone asks for the as_dict version
+        # to avoid storing multiple copies of the data in memory.
         if type(data) is not ReadOnlyDict:
             as_dict["data"] = ReadOnlyDict(data)
         return ReadOnlyDict(as_dict)
