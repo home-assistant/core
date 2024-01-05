@@ -2,7 +2,6 @@
 from unittest.mock import patch
 
 from homeassistant.components.webmin.const import DOMAIN
-from homeassistant.components.webmin.coordinator import WebminUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -24,9 +23,6 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
 
     await hass.async_block_till_done()
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert isinstance(hass.data[DOMAIN][entry.entry_id], WebminUpdateCoordinator)
     assert entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(entry.entry_id)

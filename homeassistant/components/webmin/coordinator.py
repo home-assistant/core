@@ -18,7 +18,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -28,13 +32,11 @@ from .const import DOMAIN, LOGGER
 class WebminUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """The Webmin data update coordinator."""
 
-    config_entry: ConfigEntry
-    instance: WebminInstance
     mac_address: str
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the Webmin data update coordinator."""
-        self.config_entry = config_entry
+
         base_url = URL.build(
             scheme="https" if config_entry.options[CONF_SSL] else "http",
             user=config_entry.options[CONF_USERNAME],
@@ -62,8 +64,9 @@ class WebminUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Provide needed data to the device info."""
         ifaces = [iface for iface in self.data["active_interfaces"] if "ether" in iface]
         ifaces.sort(key=lambda x: x["ether"])
+        self.mac_address = format_mac(ifaces[0]["ether"])
         self.device_info[ATTR_CONNECTIONS] = {
-            (CONNECTION_NETWORK_MAC, iface["ether"]) for iface in ifaces
+            (CONNECTION_NETWORK_MAC, format_mac(iface["ether"])) for iface in ifaces
         }
 
     async def _async_update_data(self) -> dict[str, Any]:

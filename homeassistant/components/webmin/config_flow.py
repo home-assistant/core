@@ -91,7 +91,7 @@ CONFIG_FLOW = {
 
 
 class WebminConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
-    """Handle a config flow for System Monitor."""
+    """Handle a config flow for Webmin."""
 
     config_flow = CONFIG_FLOW
 

@@ -100,3 +100,38 @@ async def test_form_user_errors(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_USER_INPUT[CONF_HOST]
     assert result["options"] == TEST_USER_INPUT
+
+
+async def test_duplicate_entry(
+    hass: HomeAssistant,
+    user_flow: str,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test a successful user initiated flow."""
+    with patch(
+        "homeassistant.components.webmin.config_flow.WebminInstance.update",
+        return_value=load_json_object_fixture("webmin_update.json", DOMAIN),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            user_flow, TEST_USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_USER_INPUT[CONF_HOST]
+    assert result["options"] == TEST_USER_INPUT
+
+    with patch(
+        "homeassistant.components.webmin.config_flow.WebminInstance.update",
+        return_value=load_json_object_fixture("webmin_update.json", DOMAIN),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
