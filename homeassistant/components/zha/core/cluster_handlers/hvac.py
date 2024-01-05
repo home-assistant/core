@@ -110,6 +110,7 @@ class ThermostatClusterHandler(ClusterHandler):
         "max_heat_setpoint_limit": True,
         "min_cool_setpoint_limit": True,
         "min_heat_setpoint_limit": True,
+        "local_temperature_calibration": True,
     }
 
     @property

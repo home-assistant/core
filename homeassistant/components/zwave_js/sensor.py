@@ -661,7 +661,7 @@ class ZWaveNumericSensor(ZwaveSensor):
         """Return state of the sensor."""
         if self.info.primary_value.value is None:
             return 0
-        return round(float(self.info.primary_value.value), 2)
+        return float(self.info.primary_value.value)
 
 
 class ZWaveMeterSensor(ZWaveNumericSensor):

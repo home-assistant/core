@@ -261,6 +261,8 @@ def test_deprecated_function_called_from_custom_integration(
 class TestDeprecatedConstantEnum(StrEnum):
     """Test deprecated constant enum."""
 
+    __test__ = False  # prevent test collection of class by pytest
+
     TEST = "value"
 
 
@@ -295,22 +297,6 @@ def _get_value(obj: DeprecatedConstant | DeprecatedConstantEnum | tuple) -> Any:
         ),
         (
             DeprecatedConstantEnum(TestDeprecatedConstantEnum.TEST, "2099.1"),
-            " which will be removed in HA Core 2099.1. Use TestDeprecatedConstantEnum.TEST instead",
-        ),
-        (
-            ("value", "NEW_CONSTANT", None),
-            ". Use NEW_CONSTANT instead",
-        ),
-        (
-            (1, "NEW_CONSTANT", "2099.1"),
-            " which will be removed in HA Core 2099.1. Use NEW_CONSTANT instead",
-        ),
-        (
-            (TestDeprecatedConstantEnum.TEST, None),
-            ". Use TestDeprecatedConstantEnum.TEST instead",
-        ),
-        (
-            (TestDeprecatedConstantEnum.TEST, "2099.1"),
             " which will be removed in HA Core 2099.1. Use TestDeprecatedConstantEnum.TEST instead",
         ),
     ],
@@ -387,22 +373,6 @@ def test_check_if_deprecated_constant(
         ),
         (
             DeprecatedConstantEnum(TestDeprecatedConstantEnum.TEST, "2099.1"),
-            " which will be removed in HA Core 2099.1. Use TestDeprecatedConstantEnum.TEST instead",
-        ),
-        (
-            ("value", "NEW_CONSTANT", None),
-            ". Use NEW_CONSTANT instead",
-        ),
-        (
-            (1, "NEW_CONSTANT", "2099.1"),
-            " which will be removed in HA Core 2099.1. Use NEW_CONSTANT instead",
-        ),
-        (
-            (TestDeprecatedConstantEnum.TEST, None),
-            ". Use TestDeprecatedConstantEnum.TEST instead",
-        ),
-        (
-            (TestDeprecatedConstantEnum.TEST, "2099.1"),
             " which will be removed in HA Core 2099.1. Use TestDeprecatedConstantEnum.TEST instead",
         ),
     ],

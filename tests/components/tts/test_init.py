@@ -1406,7 +1406,9 @@ def test_resolve_engine(hass: HomeAssistant, setup: str, engine_id: str) -> None
 
     with patch.dict(
         hass.data[tts.DATA_TTS_MANAGER].providers, {}, clear=True
-    ), patch.dict(hass.data[tts.DOMAIN]._platforms, {}, clear=True):
+    ), patch.dict(hass.data[tts.DOMAIN]._platforms, {}, clear=True), patch.dict(
+        hass.data[tts.DOMAIN]._entities, {}, clear=True
+    ):
         assert tts.async_resolve_engine(hass, None) is None
 
     with patch.dict(hass.data[tts.DATA_TTS_MANAGER].providers, {"cloud": object()}):

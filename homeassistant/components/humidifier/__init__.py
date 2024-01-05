@@ -91,7 +91,7 @@ __dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 
 @bind_hass
-def is_on(hass, entity_id):
+def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the humidifier is on based on the statemachine.
 
     Async friendly.
@@ -185,7 +185,7 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
             ATTR_MAX_HUMIDITY: self.max_humidity,
         }
 
-        if self.supported_features & HumidifierEntityFeature.MODES:
+        if HumidifierEntityFeature.MODES in self.supported_features_compat:
             data[ATTR_AVAILABLE_MODES] = self.available_modes
 
         return data
@@ -214,7 +214,7 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
         if self.target_humidity is not None:
             data[ATTR_HUMIDITY] = self.target_humidity
 
-        if self.supported_features & HumidifierEntityFeature.MODES:
+        if HumidifierEntityFeature.MODES in self.supported_features_compat:
             data[ATTR_MODE] = self.mode
 
         return data
@@ -280,3 +280,16 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
     def supported_features(self) -> HumidifierEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
+
+    @property
+    def supported_features_compat(self) -> HumidifierEntityFeature:
+        """Return the supported features as HumidifierEntityFeature.
+
+        Remove this compatibility shim in 2025.1 or later.
+        """
+        features = self.supported_features
+        if type(features) is int:  # noqa: E721
+            new_features = HumidifierEntityFeature(features)
+            self._report_deprecated_supported_features_values(new_features)
+            return new_features
+        return features
