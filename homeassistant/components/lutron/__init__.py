@@ -34,10 +34,6 @@ PLATFORMS = [
 
 _LOGGER = logging.getLogger(__name__)
 
-LUTRON_BUTTONS = "lutron_buttons"
-LUTRON_CONTROLLER = "lutron_controller"
-LUTRON_DEVICES = "lutron_devices"
-
 # Attribute on events that indicates what action was taken with the button.
 ATTR_ACTION = "action"
 ATTR_FULL_ID = "full_id"
