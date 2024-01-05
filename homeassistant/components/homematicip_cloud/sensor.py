@@ -5,6 +5,7 @@ from typing import Any
 
 from homematicip.aio.device import (
     AsyncBrandSwitchMeasuring,
+    AsyncFloorTerminalBlock12,
     AsyncFullFlushSwitchMeasuring,
     AsyncHeatingThermostat,
     AsyncHeatingThermostatCompact,
@@ -26,8 +27,16 @@ from homematicip.aio.device import (
     AsyncWeatherSensorPlus,
     AsyncWeatherSensorPro,
 )
-from homematicip.base.enums import ValveState
-
+from homematicip.base.enums import (
+    ValveState,
+    FunctionalChannelType,
+)
+from homematicip.base.functionalChannels import (
+     DeviceBaseFloorHeatingChannel,
+     FloorTeminalBlockChannel,
+     FloorTerminalBlockLocalPumpChannel,
+     FloorTerminalBlockMechanicChannel,
+)
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -137,9 +146,36 @@ async def async_setup_entry(
             entities.append(HomematicpTemperatureExternalSensorCh1(hap, device))
             entities.append(HomematicpTemperatureExternalSensorCh2(hap, device))
             entities.append(HomematicpTemperatureExternalSensorDelta(hap, device))
-
+        if isinstance(device, AsyncFloorTerminalBlock12):
+          for channel in range(1, 12):
+                entities.append(HomematicipFloorTerminalBlockMechanicValve(hap, device, channel=channel))       
+              
     async_add_entities(entities)
 
+class HomematicpFloorTerminalBlockMechanicValve(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP floor terminal block."""
+
+    _attr_native_unit_of_measurement = PERCENTAGE
+
+    def __init__(self, hap: HomematicipHAP, device, channel) -> None:
+        """Initialize floor terminal block 12 device."""
+        super().__init__(hap, device, channel=channel)
+
+    @property
+    def icon(self) -> str | None:
+        """Return the icon."""
+        if super().icon:
+            return super().icon
+        if self._device._channel.valveState != ValveState.ADAPTION_DONE:
+            return "mdi:alert"
+        return "mdi:heating-coil"
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the state of the floor terminal block mechanical channel valve position."""
+        if self._device._channel.valveState != ValveState.ADAPTION_DONE:
+            return None
+        return round(self._device._channel.valvePosition * 100)
 
 class HomematicipAccesspointDutyCycle(HomematicipGenericEntity, SensorEntity):
     """Representation of then HomeMaticIP access point."""
