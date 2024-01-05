@@ -1209,7 +1209,7 @@ def test_as_datetime_from_timestamp(
 def test_as_datetime_from_datetime(
     hass: HomeAssistant, input: str, output: str
 ) -> None:
-    """Test converting a timestamp string to a date object."""
+    """Test converting a datetime.datetime or datetime.date to a date object."""
 
     assert (
         template.Template(f"{input}{{{{ dt | as_datetime }}}}", hass).async_render()
@@ -1231,7 +1231,7 @@ def test_as_datetime_from_datetime(
     ],
 )
 def test_as_datetime_default(hass: HomeAssistant, input: Any, output: str) -> None:
-    """Test converting a timestamp string to a date object."""
+    """Test invalid input and return default value."""
 
     assert (
         template.Template(
