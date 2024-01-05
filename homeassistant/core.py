@@ -1538,7 +1538,7 @@ class State:
         if state_context.parent_id is None and state_context.user_id is None:
             context: dict[str, Any] | str = state_context.id
         else:
-            context = state_context.as_dict()
+            context = state_context.as_mutable_dict
         compressed_state = {
             COMPRESSED_STATE_STATE: self.state,
             COMPRESSED_STATE_ATTRIBUTES: self.attributes,
