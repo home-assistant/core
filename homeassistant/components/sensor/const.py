@@ -38,6 +38,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -468,10 +469,6 @@ _DEPRECATED_STATE_CLASS_TOTAL_INCREASING: Final = DeprecatedConstantEnum(
 )
 STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
-
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: PressureConverter,
     SensorDeviceClass.CURRENT: ElectricCurrentConverter,
@@ -631,3 +628,10 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     SensorDeviceClass.WEIGHT: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.WIND_SPEED: {SensorStateClass.MEASUREMENT},
 }
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())
