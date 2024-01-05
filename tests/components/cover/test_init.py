@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import import_and_test_deprecated_constant_enum
+from tests.common import help_test_all, import_and_test_deprecated_constant_enum
 
 
 async def test_services(hass: HomeAssistant, enable_custom_integrations: None) -> None:
@@ -125,6 +125,11 @@ def _create_tuples(enum: Enum, constant_prefix: str) -> list[tuple[Enum, str]]:
     for enum in enum:
         result.append((enum, constant_prefix))
     return result
+
+
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(cover)
 
 
 @pytest.mark.parametrize(

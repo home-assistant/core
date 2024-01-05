@@ -83,6 +83,7 @@ from .exceptions import (
 )
 from .helpers.deprecation import (
     DeprecatedConstantEnum,
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -157,11 +158,6 @@ _DEPRECATED_SOURCE_DISCOVERED = DeprecatedConstantEnum(
 )
 _DEPRECATED_SOURCE_STORAGE = DeprecatedConstantEnum(ConfigSource.STORAGE, "2025.1")
 _DEPRECATED_SOURCE_YAML = DeprecatedConstantEnum(ConfigSource.YAML, "2025.1")
-
-
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = functools.partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = functools.partial(dir_with_deprecated_constants, module_globals=globals())
 
 
 # How long to wait until things that run on startup have to finish.
@@ -2603,3 +2599,11 @@ class Config:
             if self._original_unit_system:
                 data["unit_system"] = self._original_unit_system
             return await super().async_save(data)
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = functools.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = functools.partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

@@ -1,9 +1,11 @@
 """The tests for the rest command platform."""
 import asyncio
+import base64
 from http import HTTPStatus
 from unittest.mock import patch
 
 import aiohttp
+import pytest
 
 import homeassistant.components.rest_command as rc
 from homeassistant.const import (
@@ -11,6 +13,7 @@ from homeassistant.const import (
     CONTENT_TYPE_TEXT_PLAIN,
     SERVICE_RELOAD,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import setup_component
 
 from tests.common import assert_setup_component, get_test_home_assistant
@@ -112,8 +115,11 @@ class TestRestCommandComponent:
 
         aioclient_mock.get(self.url, exc=asyncio.TimeoutError())
 
-        self.hass.services.call(rc.DOMAIN, "get_test", {})
-        self.hass.block_till_done()
+        with pytest.raises(
+            HomeAssistantError,
+            match=r"^Timeout when calling resource 'https://example.com/'$",
+        ):
+            self.hass.services.call(rc.DOMAIN, "get_test", {}, blocking=True)
 
         assert len(aioclient_mock.mock_calls) == 1
 
@@ -124,8 +130,11 @@ class TestRestCommandComponent:
 
         aioclient_mock.get(self.url, exc=aiohttp.ClientError())
 
-        self.hass.services.call(rc.DOMAIN, "get_test", {})
-        self.hass.block_till_done()
+        with pytest.raises(
+            HomeAssistantError,
+            match=r"^Client error occurred when calling resource 'https://example.com/'$",
+        ):
+            self.hass.services.call(rc.DOMAIN, "get_test", {}, blocking=True)
 
         assert len(aioclient_mock.mock_calls) == 1
 
@@ -352,3 +361,100 @@ class TestRestCommandComponent:
             == "text/json"
         )
         assert aioclient_mock.mock_calls[6][3].get("Accept") == "application/2json"
+
+    def test_rest_command_get_response_plaintext(self, aioclient_mock):
+        """Get rest_command response, text."""
+        with assert_setup_component(5):
+            setup_component(self.hass, rc.DOMAIN, self.config)
+
+        aioclient_mock.get(
+            self.url, content=b"success", headers={"content-type": "text/plain"}
+        )
+
+        response = self.hass.services.call(
+            rc.DOMAIN, "get_test", {}, blocking=True, return_response=True
+        )
+        self.hass.block_till_done()
+
+        assert len(aioclient_mock.mock_calls) == 1
+        assert response["content"] == "success"
+        assert response["status"] == 200
+
+    def test_rest_command_get_response_json(self, aioclient_mock):
+        """Get rest_command response, json."""
+        with assert_setup_component(5):
+            setup_component(self.hass, rc.DOMAIN, self.config)
+
+        aioclient_mock.get(
+            self.url,
+            json={"status": "success", "number": 42},
+            headers={"content-type": "application/json"},
+        )
+
+        response = self.hass.services.call(
+            rc.DOMAIN, "get_test", {}, blocking=True, return_response=True
+        )
+        self.hass.block_till_done()
+
+        assert len(aioclient_mock.mock_calls) == 1
+        assert response["content"]["status"] == "success"
+        assert response["content"]["number"] == 42
+        assert response["status"] == 200
+
+    def test_rest_command_get_response_malformed_json(self, aioclient_mock):
+        """Get rest_command response, malformed json."""
+        with assert_setup_component(5):
+            setup_component(self.hass, rc.DOMAIN, self.config)
+
+        aioclient_mock.get(
+            self.url,
+            content='{"status": "failure", 42',
+            headers={"content-type": "application/json"},
+        )
+
+        # No problem without 'return_response'
+        response = self.hass.services.call(rc.DOMAIN, "get_test", {}, blocking=True)
+        self.hass.block_till_done()
+        assert not response
+
+        # Throws error when requesting response
+        with pytest.raises(
+            HomeAssistantError,
+            match=r"^Response of 'https://example.com/' could not be decoded as JSON$",
+        ):
+            response = self.hass.services.call(
+                rc.DOMAIN, "get_test", {}, blocking=True, return_response=True
+            )
+            self.hass.block_till_done()
+
+    def test_rest_command_get_response_none(self, aioclient_mock):
+        """Get rest_command response, other."""
+        with assert_setup_component(5):
+            setup_component(self.hass, rc.DOMAIN, self.config)
+
+        png = base64.decodebytes(
+            b"iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAIAAAB7QOjdAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAAPSURBVBhXY/h/ku////8AECAE1JZPvDAAAAAASUVORK5CYII="
+        )
+
+        aioclient_mock.get(
+            self.url,
+            content=png,
+            headers={"content-type": "text/plain"},
+        )
+
+        # No problem without 'return_response'
+        response = self.hass.services.call(rc.DOMAIN, "get_test", {}, blocking=True)
+        self.hass.block_till_done()
+        assert not response
+
+        # Throws Decode error when requesting response
+        with pytest.raises(
+            HomeAssistantError,
+            match=r"^Response of 'https://example.com/' could not be decoded as text$",
+        ):
+            response = self.hass.services.call(
+                rc.DOMAIN, "get_test", {}, blocking=True, return_response=True
+            )
+            self.hass.block_till_done()
+
+        assert not response
