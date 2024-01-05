@@ -630,14 +630,12 @@ class DefaultAgent(AbstractConversationAgent):
         if self._slot_lists is not None:
             return self._slot_lists
 
-        area_ids_with_entities: set[str] = set()
         entity_registry = er.async_get(self.hass)
         states = [
             state
             for state in self.hass.states.async_all()
             if async_should_expose(self.hass, DOMAIN, state.entity_id)
         ]
-        devices = dr.async_get(self.hass)
 
         # Gather exposed entity names
         entity_names = []
@@ -660,34 +658,26 @@ class DefaultAgent(AbstractConversationAgent):
 
             if entity.aliases:
                 for alias in entity.aliases:
+                    if not alias.strip():
+                        continue
+
                     entity_names.append((alias, alias, context))
 
             # Default name
             entity_names.append((state.name, state.name, context))
 
-            if entity.area_id:
-                # Expose area too
-                area_ids_with_entities.add(entity.area_id)
-            elif entity.device_id:
-                # Check device for area as well
-                device = devices.async_get(entity.device_id)
-                if (device is not None) and device.area_id:
-                    area_ids_with_entities.add(device.area_id)
-
-        # Gather areas from exposed entities
+        # Expose all areas
         areas = ar.async_get(self.hass)
         area_names = []
-        for area_id in area_ids_with_entities:
-            area = areas.async_get_area(area_id)
-            if area is None:
-                continue
-
+        for area in areas.async_list_areas():
             area_names.append((area.name, area.id))
             if area.aliases:
                 for alias in area.aliases:
+                    if not alias.strip():
+                        continue
+
                     area_names.append((alias, area.id))
 
-        _LOGGER.debug("Exposed areas: %s", area_names)
         _LOGGER.debug("Exposed entities: %s", entity_names)
 
         self._slot_lists = {
