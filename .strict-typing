@@ -263,6 +263,7 @@ homeassistant.components.media_source.*
 homeassistant.components.metoffice.*
 homeassistant.components.mikrotik.*
 homeassistant.components.min_max.*
+homeassistant.components.minecraft_server.*
 homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
