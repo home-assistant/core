@@ -250,7 +250,6 @@ async def async_setup_entry(
     for sensor_type, sensors in coordinator.data.items():
         if sensor_type in ["fs", "sensors", "raid"]:
             for sensor_label, params in sensors.items():
-                # print(sensor_label, params)
                 for param in params:
                     if sensor_description := SENSOR_TYPES.get((sensor_type, param)):
                         entities.append(
