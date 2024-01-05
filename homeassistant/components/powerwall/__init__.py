@@ -21,17 +21,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.network import is_ip_address
 
-from .const import (
-    DOMAIN,
-    POWERWALL_API_CHANGED,
-    POWERWALL_COORDINATOR,
-    POWERWALL_HTTP_SESSION,
-    UPDATE_INTERVAL,
-)
+from .const import DOMAIN, POWERWALL_API_CHANGED, POWERWALL_COORDINATOR, UPDATE_INTERVAL
 from .models import PowerwallBaseInfo, PowerwallData, PowerwallRuntimeData
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
@@ -125,7 +120,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ip_address: str = entry.data[CONF_IP_ADDRESS]
 
     password: str | None = entry.data.get(CONF_PASSWORD)
-    power_wall = Powerwall(ip_address)
+    http_session = async_get_clientsession(hass, verify_ssl=False)
+    power_wall = Powerwall(ip_address, http_session=http_session, verify_ssl=False)
     try:
         base_info = await _login_and_fetch_base_info(power_wall, ip_address, password)
     except PowerwallUnreachableError as err:
@@ -273,8 +269,6 @@ def async_last_update_was_successful(hass: HomeAssistant, entry: ConfigEntry) ->
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    hass.data[DOMAIN][entry.entry_id][POWERWALL_HTTP_SESSION].close()
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
