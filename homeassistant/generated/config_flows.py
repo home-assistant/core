@@ -394,6 +394,7 @@ FLOWS = {
         "qingping",
         "qnap",
         "qnap_qsw",
+        "rabbitair",
         "rachio",
         "radarr",
         "radio_browser",
