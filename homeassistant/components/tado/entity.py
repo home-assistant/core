@@ -1,10 +1,9 @@
 """Base class for Tado entity."""
-from typing import Any
-
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DEFAULT_NAME, DOMAIN, TADO_HOME, TADO_ZONE
+from .tado import TadoConnector
 
 
 class TadoDeviceEntity(Entity):
@@ -36,7 +35,7 @@ class TadoHomeEntity(Entity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, tado: Any) -> None:
+    def __init__(self, tado: TadoConnector) -> None:
         """Initialize a Tado home."""
         super().__init__()
         self.home_name = tado.home_name

@@ -31,6 +31,7 @@ from .const import (
     TYPE_HOT_WATER,
 )
 from .entity import TadoHomeEntity, TadoZoneEntity
+from .tado import TadoConnector
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -241,7 +242,7 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
     entity_description: TadoSensorEntityDescription
 
     def __init__(
-        self, tado: Any, entity_description: TadoSensorEntityDescription
+        self, tado: TadoConnector, entity_description: TadoSensorEntityDescription
     ) -> None:
         """Initialize of the Tado Sensor."""
         self.entity_description = entity_description
@@ -296,7 +297,7 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
 
     def __init__(
         self,
-        tado: Any,
+        tado: TadoConnector,
         zone_name: str,
         zone_id: int,
         entity_description: TadoSensorEntityDescription,
