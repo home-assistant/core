@@ -3,11 +3,7 @@
   "name": "Arctic Spa",
   "codeowners": ["@greg-szabo"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/arcticspa",
-  "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": ["pyarcticspas==0.2.2"],
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["pyarcticspas==0.2.4"]
 }

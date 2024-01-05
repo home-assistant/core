@@ -1,26 +1,25 @@
 """Config flow for Arctic Spa integration."""
 from __future__ import annotations
 
-from http import HTTPStatus
 import logging
 from typing import Any
 
+from pyarcticspas import Spa
+from pyarcticspas.error import SpaHTTPException, TooManyRequestsError, UnauthorizedError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import CONF_ARCTIC_SPA_KEY_NAME, DOMAIN
-from .hottub import Device
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME, default=CONF_ARCTIC_SPA_KEY_NAME): str,
         vol.Required(CONF_API_KEY): str,
     }
 )
@@ -32,20 +31,24 @@ def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    device = Device(data[CONF_API_KEY])
+    device = Spa(data[CONF_API_KEY])
 
-    code = device.authenticate()
-    match code:
-        case HTTPStatus.OK:
-            # Return info that you want to store in the config entry.
-            return {CONF_NAME: data[CONF_NAME], "id": device.id}
-        case HTTPStatus.UNAUTHORIZED:
-            raise InvalidAuth
-        case HTTPStatus.TOO_MANY_REQUESTS:
-            raise TooManyRequests
-        case _:
-            _LOGGER.exception("Unexpected error code %d", code)
-            raise CannotConnect
+    try:
+        _ = device.status()
+    except UnauthorizedError:
+        raise InvalidAuth
+    except TooManyRequestsError:
+        raise TooManyRequests
+    except SpaHTTPException as ex:
+        _LOGGER.exception("Unexpected error code %d", ex.code)
+        raise CannotConnect
+
+    # Return info that you want to store in the config entry.
+    return {
+        "name": f"API-{device.id[:8]}",
+        "id": device.id,
+        CONF_API_KEY: data[CONF_API_KEY],
+    }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -74,7 +77,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(info["id"])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=info["name"], data={CONF_API_KEY: info[CONF_API_KEY]}
                 )
 
         return self.async_show_form(

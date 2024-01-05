@@ -2,47 +2,39 @@
 
 from datetime import timedelta
 import logging
-from urllib.error import HTTPError
 
-from pyarcticspas import SpaResponse
+from pyarcticspas import Spa, SpaResponse
+from pyarcticspas.error import SpaHTTPException
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import REQUEST_REFRESH_DELAY
-from .hottub import Device
+from .const import REQUEST_REFRESH_COOLDOWN, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class ArcticSpaDataUpdateCoordinator(DataUpdateCoordinator[None]):
+class ArcticSpaDataUpdateCoordinator(DataUpdateCoordinator[SpaResponse]):
     """DataUpdateCoordinator to gather data from the ArcticSpa API."""
 
-    @property
-    def status(self) -> SpaResponse:
-        """Exposed local Spa status since the underlying API would always call an endpoint."""
-        return self._status
-
-    def __init__(self, hass: HomeAssistant, device: Device) -> None:
+    def __init__(self, hass: HomeAssistant, device: Spa) -> None:
         """Initialize DataUpdateCoordinator."""
         self.device = device
-        self._status = SpaResponse()
-        update_interval = timedelta(seconds=REQUEST_REFRESH_DELAY)
+        update_interval = timedelta(seconds=UPDATE_INTERVAL)
         super().__init__(
             hass,
             _LOGGER,
             name="ArcticSpa",
             update_interval=update_interval,
             request_refresh_debouncer=Debouncer(
-                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+                hass, _LOGGER, cooldown=REQUEST_REFRESH_COOLDOWN, immediate=False
             ),
         )
 
-    async def _async_update_data(self) -> None:
+    async def _async_update_data(self) -> SpaResponse:
         """Fetch ArcticSpa status from API."""
         try:
-            _LOGGER.debug("Requesting async API update")
-            self._status = await self.device.api.async_status()
-        except HTTPError as e:
-            raise UpdateFailed(e) from e
+            return await self.device.async_status()
+        except SpaHTTPException as e:
+            raise UpdateFailed(f"{e.code} {e.msg}") from e
