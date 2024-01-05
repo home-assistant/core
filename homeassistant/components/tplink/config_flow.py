@@ -301,7 +301,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_ALIAS: device.alias,
                 CONF_MODEL: device.model,
                 CONF_DEVICE_CONFIG: device.config.to_dict(
-                    credentials_hash=device.credentials_hash
+                    credentials_hash=device.credentials_hash,
+                    exclude_credentials=True,
                 ),
             },
         )

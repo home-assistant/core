@@ -14,7 +14,13 @@ from kasa import (
 from kasa.exceptions import SmartDeviceException
 from kasa.protocol import TPLinkSmartHomeProtocol
 
-from homeassistant.components.tplink import CONF_HOST
+from homeassistant.components.tplink import (
+    CONF_ALIAS,
+    CONF_DEVICE_CONFIG,
+    CONF_HOST,
+    CONF_MODEL,
+    Credentials,
+)
 from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -27,9 +33,31 @@ ALIAS = "My Bulb"
 MODEL = "HS100"
 MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
 DEFAULT_ENTRY_TITLE = f"{ALIAS} {MODEL}"
-CREDENTIALS_HASH = ""
-DEVICE_CONFIG = DeviceConfig(IP_ADDRESS)
-DEVICE_CONFIG_DICT = DEVICE_CONFIG.to_dict(credentials_hash=CREDENTIALS_HASH)
+CREDENTIALS_HASH_LEGACY = ""
+DEVICE_CONFIG_LEGACY = DeviceConfig(IP_ADDRESS)
+DEVICE_CONFIG_DICT_LEGACY = DEVICE_CONFIG_LEGACY.to_dict(
+    credentials_hash=CREDENTIALS_HASH_LEGACY, exclude_credentials=True
+)
+
+CREDENTIALS_HASH_AUTH = "abcdefghijklmnopqrstuv=="
+DEVICE_CONFIG_AUTH = DeviceConfig(IP_ADDRESS, credentials=Credentials("foo", "bar"))
+DEVICE_CONFIG_DICT_AUTH = DEVICE_CONFIG_AUTH.to_dict(
+    credentials_hash=CREDENTIALS_HASH_AUTH, exclude_credentials=True
+)
+
+CREATE_ENTRY_DATA_LEGACY = {
+    CONF_HOST: IP_ADDRESS,
+    CONF_ALIAS: ALIAS,
+    CONF_MODEL: MODEL,
+    CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_LEGACY,
+}
+
+CREATE_ENTRY_DATA_AUTH = {
+    CONF_HOST: IP_ADDRESS,
+    CONF_ALIAS: ALIAS,
+    CONF_MODEL: MODEL,
+    CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH,
+}
 
 
 def _mock_protocol() -> TPLinkSmartHomeProtocol:
@@ -38,7 +66,9 @@ def _mock_protocol() -> TPLinkSmartHomeProtocol:
     return protocol
 
 
-def _mocked_bulb() -> SmartBulb:
+def _mocked_bulb(
+    device_config=DEVICE_CONFIG_LEGACY, credentials_hash=CREDENTIALS_HASH_LEGACY
+) -> SmartBulb:
     bulb = MagicMock(auto_spec=SmartBulb, name="Mocked bulb")
     bulb.update = AsyncMock()
     bulb.mac = MAC_ADDRESS
@@ -66,8 +96,8 @@ def _mocked_bulb() -> SmartBulb:
     bulb.set_hsv = AsyncMock()
     bulb.set_color_temp = AsyncMock()
     bulb.protocol = _mock_protocol()
-    bulb.config = DEVICE_CONFIG
-    bulb.credentials_hash = CREDENTIALS_HASH
+    bulb.config = device_config
+    bulb.credentials_hash = credentials_hash
     return bulb
 
 
@@ -109,8 +139,8 @@ def _mocked_smart_light_strip() -> SmartLightStrip:
     strip.set_effect = AsyncMock()
     strip.set_custom_effect = AsyncMock()
     strip.protocol = _mock_protocol()
-    strip.config = DEVICE_CONFIG
-    strip.credentials_hash = CREDENTIALS_HASH
+    strip.config = DEVICE_CONFIG_LEGACY
+    strip.credentials_hash = CREDENTIALS_HASH_LEGACY
     return strip
 
 
@@ -142,8 +172,8 @@ def _mocked_dimmer() -> SmartDimmer:
     dimmer.set_color_temp = AsyncMock()
     dimmer.set_led = AsyncMock()
     dimmer.protocol = _mock_protocol()
-    dimmer.config = DEVICE_CONFIG
-    dimmer.credentials_hash = CREDENTIALS_HASH
+    dimmer.config = DEVICE_CONFIG_LEGACY
+    dimmer.credentials_hash = CREDENTIALS_HASH_LEGACY
     return dimmer
 
 
@@ -165,8 +195,8 @@ def _mocked_plug() -> SmartPlug:
     plug.turn_on = AsyncMock()
     plug.set_led = AsyncMock()
     plug.protocol = _mock_protocol()
-    plug.config = DEVICE_CONFIG
-    plug.credentials_hash = CREDENTIALS_HASH
+    plug.config = DEVICE_CONFIG_LEGACY
+    plug.credentials_hash = CREDENTIALS_HASH_LEGACY
     return plug
 
 
@@ -188,8 +218,8 @@ def _mocked_strip() -> SmartStrip:
     strip.turn_on = AsyncMock()
     strip.set_led = AsyncMock()
     strip.protocol = _mock_protocol()
-    strip.config = DEVICE_CONFIG
-    strip.credentials_hash = CREDENTIALS_HASH
+    strip.config = DEVICE_CONFIG_LEGACY
+    strip.credentials_hash = CREDENTIALS_HASH_LEGACY
     plug0 = _mocked_plug()
     plug0.alias = "Plug0"
     plug0.device_id = "bb:bb:cc:dd:ee:ff_PLUG0DEVICEID"

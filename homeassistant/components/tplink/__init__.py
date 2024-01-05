@@ -73,7 +73,8 @@ def async_trigger_discovery(
                 CONF_HOST: device.host,
                 CONF_MAC: formatted_mac,
                 CONF_DEVICE_CONFIG: device.config.to_dict(
-                    credentials_hash=device.credentials_hash
+                    credentials_hash=device.credentials_hash,
+                    exclude_credentials=True,
                 ),
             },
         )
@@ -147,7 +148,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SmartDeviceException as ex:
         raise ConfigEntryNotReady from ex
 
-    device_config_dict = device.config.to_dict(credentials_hash=device.credentials_hash)
+    device_config_dict = device.config.to_dict(
+        credentials_hash=device.credentials_hash, exclude_credentials=True
+    )
     updates = {}
     if device_config_dict != config_dict:
         updates[CONF_DEVICE_CONFIG] = device_config_dict

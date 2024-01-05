@@ -1,23 +1,36 @@
 """Test the tplink config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.components.tplink import DOMAIN
+from homeassistant.components.tplink import (
+    DOMAIN,
+    AuthenticationException,
+    Credentials,
+    SmartDeviceException,
+)
 from homeassistant.components.tplink.const import CONF_DEVICE_CONFIG
-from homeassistant.const import CONF_ALIAS, CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_MODEL
+from homeassistant.const import (
+    CONF_ALIAS,
+    CONF_DEVICE,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     ALIAS,
+    CREATE_ENTRY_DATA_AUTH,
+    CREATE_ENTRY_DATA_LEGACY,
     DEFAULT_ENTRY_TITLE,
-    DEVICE_CONFIG_DICT,
+    DEVICE_CONFIG_DICT_LEGACY,
     IP_ADDRESS,
     MAC_ADDRESS,
-    MODEL,
     MODULE,
     _patch_connect,
     _patch_discovery,
@@ -25,13 +38,6 @@ from . import (
 )
 
 from tests.common import MockConfigEntry
-
-CREATE_ENTRY_DATA = {
-    CONF_HOST: IP_ADDRESS,
-    CONF_ALIAS: ALIAS,
-    CONF_MODEL: MODEL,
-    CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT,
-}
 
 
 async def test_discovery(hass: HomeAssistant) -> None:
@@ -78,7 +84,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
 
     assert result3["type"] == "create_entry"
     assert result3["title"] == DEFAULT_ENTRY_TITLE
-    assert result3["data"] == CREATE_ENTRY_DATA
+    assert result3["data"] == CREATE_ENTRY_DATA_LEGACY
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
 
@@ -96,6 +102,51 @@ async def test_discovery(hass: HomeAssistant) -> None:
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "no_devices_found"
+
+
+async def test_discovery_auth(
+    hass: HomeAssistant, mock_discovery: AsyncMock, mock_connect: AsyncMock, mock_init
+) -> None:
+    """Test setting up discovery."""
+
+    mock_discovery["mock_device"].update.side_effect = AuthenticationException
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            CONF_HOST: IP_ADDRESS,
+            CONF_MAC: MAC_ADDRESS,
+            CONF_ALIAS: ALIAS,
+            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_LEGACY,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == "form"
+    assert result["step_id"] == "discovery_auth_confirm"
+    assert not result["errors"]
+
+    mock_discovery["mock_device"].update.reset_mock(side_effect=True)
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "fake_username",
+            CONF_PASSWORD: "fake_password",
+        },
+    )
+
+    assert result2["type"] == "form"
+    assert result2["step_id"] == "discovery_confirm"
+    assert not result2["errors"]
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"], user_input={}
+    )
+
+    await hass.async_block_till_done()
+    assert result3["type"] == "create_entry"
+    assert result3["title"] == DEFAULT_ENTRY_TITLE
+    assert result3["data"] == CREATE_ENTRY_DATA_AUTH
 
 
 async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> None:
@@ -151,7 +202,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
         )
         assert result3["type"] == "create_entry"
         assert result3["title"] == DEFAULT_ENTRY_TITLE
-        assert result3["data"] == CREATE_ENTRY_DATA
+        assert result3["data"] == CREATE_ENTRY_DATA_LEGACY
         await hass.async_block_till_done()
 
     mock_setup_entry.assert_called_once()
@@ -218,7 +269,7 @@ async def test_manual(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
     assert result4["type"] == "create_entry"
     assert result4["title"] == DEFAULT_ENTRY_TITLE
-    assert result4["data"] == CREATE_ENTRY_DATA
+    assert result4["data"] == CREATE_ENTRY_DATA_LEGACY
 
     # Duplicate
     result = await hass.config_entries.flow.async_init(
@@ -256,7 +307,47 @@ async def test_manual_no_capabilities(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
-    assert result["data"] == CREATE_ENTRY_DATA
+    assert result["data"] == CREATE_ENTRY_DATA_LEGACY
+
+
+async def test_manual_auth(
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+    mock_init,
+) -> None:
+    """Test manually setup."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    mock_discovery["mock_device"].update.side_effect = AuthenticationException
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: IP_ADDRESS}
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == "form"
+    assert result2["step_id"] == "user_auth_confirm"
+    assert not result2["errors"]
+
+    mock_discovery["mock_device"].update.reset_mock(side_effect=True)
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        user_input={
+            CONF_USERNAME: "fake_username",
+            CONF_PASSWORD: "fake_password",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result3["type"] == "create_entry"
+    assert result3["title"] == DEFAULT_ENTRY_TITLE
+    assert result3["data"] == CREATE_ENTRY_DATA_AUTH
 
 
 async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
@@ -270,7 +361,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
                 CONF_HOST: IP_ADDRESS,
                 CONF_MAC: MAC_ADDRESS,
                 CONF_ALIAS: ALIAS,
-                CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT,
+                CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_LEGACY,
             },
         )
         await hass.async_block_till_done()
@@ -329,7 +420,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
                 CONF_HOST: IP_ADDRESS,
                 CONF_MAC: MAC_ADDRESS,
                 CONF_ALIAS: ALIAS,
-                CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT,
+                CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_LEGACY,
             },
         ),
     ],
@@ -357,7 +448,7 @@ async def test_discovered_by_dhcp_or_discovery(
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["data"] == CREATE_ENTRY_DATA
+    assert result2["data"] == CREATE_ENTRY_DATA_LEGACY
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
@@ -375,7 +466,7 @@ async def test_discovered_by_dhcp_or_discovery(
                 CONF_HOST: IP_ADDRESS,
                 CONF_MAC: MAC_ADDRESS,
                 CONF_ALIAS: ALIAS,
-                CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT,
+                CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_LEGACY,
             },
         ),
     ],
@@ -394,3 +485,99 @@ async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(
         await hass.async_block_till_done()
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_reauth(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+) -> None:
+    """Test reauth flow."""
+    mock_added_config_entry.async_start_reauth(hass)
+    await hass.async_block_till_done()
+
+    assert mock_added_config_entry.state == config_entries.ConfigEntryState.LOADED
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    [result] = flows
+    assert result["step_id"] == "reauth_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "fake_username",
+            CONF_PASSWORD: "fake_password",
+        },
+    )
+    credentials = Credentials("fake_username", "fake_password")
+    mock_discovery["discover_single"].assert_called_once_with(
+        "127.0.0.1", credentials=credentials
+    )
+    mock_discovery["mock_device"].update.assert_called_once_with()
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "reauth_successful"
+
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("error_type", "errors_msg"),
+    [
+        (AuthenticationException, "invalid_auth"),
+        (SmartDeviceException, "unknown"),
+    ],
+    ids=["invalid-auth", "unknown-error"],
+)
+async def test_reauth_errors(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_connect: AsyncMock,
+    error_type,
+    errors_msg,
+) -> None:
+    """Test reauth errors."""
+    mock_added_config_entry.async_start_reauth(hass)
+    await hass.async_block_till_done()
+
+    assert mock_added_config_entry.state == config_entries.ConfigEntryState.LOADED
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    [result] = flows
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_discovery["mock_device"].update.side_effect = error_type
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "fake_username",
+            CONF_PASSWORD: "fake_password",
+        },
+    )
+    credentials = Credentials("fake_username", "fake_password")
+
+    mock_discovery["discover_single"].assert_called_once_with(
+        "127.0.0.1", credentials=credentials
+    )
+    mock_discovery["mock_device"].update.assert_called_once_with()
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": errors_msg}
+
+    mock_discovery["discover_single"].reset_mock()
+    mock_discovery["mock_device"].update.reset_mock(side_effect=True)
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        user_input={
+            CONF_USERNAME: "fake_username",
+            CONF_PASSWORD: "fake_password",
+        },
+    )
+
+    mock_discovery["discover_single"].assert_called_once_with(
+        "127.0.0.1", credentials=credentials
+    )
+    mock_discovery["mock_device"].update.assert_called_once_with()
+
+    assert result3["type"] == FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
