@@ -89,11 +89,7 @@ class HuaweiSmartLogger3000ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 errors["base"] = "unknown"
 
-            self._async_abort_entries_match(
-                {
-                    CONF_HOST: CONF_HOST,
-                    CONF_USERNAME: CONF_USERNAME,
-                }
+            self._async_abort_entries_match({CONF_HOST: CONF_HOST})
             )
 
             if not (errors):
