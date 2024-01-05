@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import datetime as dt
 from functools import lru_cache, partial
+import json
 import logging
 from typing import Any, cast
 
@@ -42,9 +43,9 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.json import (
     JSON_DUMP,
+    ExtendedJSONEncoder,
     find_paths_unserializable_data,
     json_dumps,
-    json_dumps_extended,
 )
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import EventType
@@ -706,7 +707,11 @@ async def handle_subscribe_trigger(
         message = messages.event_message(
             msg["id"], {"variables": variables, "context": context}
         )
-        connection.send_message(json_dumps_extended(message))
+        connection.send_message(
+            json.dumps(
+                message, cls=ExtendedJSONEncoder, allow_nan=False, separators=(",", ":")
+            )
+        )
 
     connection.subscriptions[msg["id"]] = (
         await trigger.async_initialize_triggers(
