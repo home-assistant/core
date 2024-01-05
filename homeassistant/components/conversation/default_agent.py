@@ -271,7 +271,6 @@ class DefaultAgent(AbstractConversationAgent):
             )
         except intent.NoStatesMatchedError as no_states_error:
             # Intent was valid, but no entities matched the constraints.
-            _LOGGER.exception("No states matched intent constraints")
             error_response_type, error_response_args = _get_no_states_matched_response(
                 no_states_error
             )
