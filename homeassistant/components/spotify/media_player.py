@@ -61,6 +61,13 @@ REPEAT_MODE_MAPPING_TO_SPOTIFY = {
     value: key for key, value in REPEAT_MODE_MAPPING_TO_HA.items()
 }
 
+# This is a minimal representation of the DJ playlist that Spotify now offers
+# The DJ is not fully integrated with the platlist API, so needs to have the playlist response mocked in order to maintain functionality
+SPOTIFY_DJ_PLAYLIST = {
+    "uri": "spotify:playlist:37i9dQZF1EYkqdzj48dyYq",
+    "name": "DJ"
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -423,7 +430,16 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         if context and (self._playlist is None or self._playlist["uri"] != uri):
             self._playlist = None
             if context["type"] == MediaType.PLAYLIST:
-                self._playlist = self.data.client.playlist(uri)
+                # The Spotify API does not currently support doing a lookup for the DJ playlist, so just use the minimal mock playlist object
+                if uri == SPOTIFY_DJ_PLAYLIST["uri"]:
+                    self._playlist = SPOTIFY_DJ_PLAYLIST
+                else:
+                    # Make sure any playlist lookups don't break the current playback state update
+                    try:
+                        self._playlist = self.data.client.playlist(uri)
+                    except:
+                        _LOGGER.debug(f"Unable to load spotify playlist '{uri}'. Continuing without playlist data.")
+                        self._playlist = None
 
         device = self._currently_playing.get("device")
         if device is not None:
