@@ -4,29 +4,33 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.scene import Scene
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
+from . import DOMAIN, LutronData
+from .entity import LutronDevice
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Lutron scenes."""
-    devs = []
-    for scene_data in hass.data[LUTRON_DEVICES]["scene"]:
-        (area_name, keypad_name, device, led) = scene_data
-        dev = LutronScene(
-            area_name, keypad_name, device, led, hass.data[LUTRON_CONTROLLER]
-        )
-        devs.append(dev)
+    """Set up the Lutron scene platform.
 
-    add_entities(devs, True)
+    Adds scenes from the Main Repeater associated with the config_entry as
+    scene entities.
+    """
+    entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
+
+    async_add_entities(
+        [
+            LutronScene(area_name, keypad_name, device, led, entry_data.client)
+            for area_name, keypad_name, device, led in entry_data.scenes
+        ],
+        True,
+    )
 
 
 class LutronScene(LutronDevice, Scene):

@@ -79,11 +79,11 @@ class ProtectLock(ProtectDeviceEntity, LockEntity):
         self._attr_is_locking = False
         self._attr_is_unlocking = False
         self._attr_is_jammed = False
-        if lock_status == LockStatusType.CLOSED:
+        if lock_status is LockStatusType.CLOSED:
             self._attr_is_locked = True
-        elif lock_status == LockStatusType.CLOSING:
+        elif lock_status is LockStatusType.CLOSING:
             self._attr_is_locking = True
-        elif lock_status == LockStatusType.OPENING:
+        elif lock_status is LockStatusType.OPENING:
             self._attr_is_unlocking = True
         elif lock_status in (
             LockStatusType.FAILED_WHILE_CLOSING,

@@ -92,7 +92,7 @@ import homeassistant.util.uuid as uuid_util
 import homeassistant.util.yaml.loader as yaml_loader
 
 from tests.testing_config.custom_components.test_constant_deprecation import (
-    import_deprecated_costant,
+    import_deprecated_constant,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -1482,6 +1482,7 @@ def import_and_test_deprecated_constant_enum(
     - Assert value is the same as the replacement
     - Assert a warning is logged
     - Assert the deprecated constant is included in the modules.__dir__()
+    - Assert the deprecated constant is included in the modules.__all__()
     """
     import_and_test_deprecated_constant(
         caplog,
@@ -1507,8 +1508,9 @@ def import_and_test_deprecated_constant(
     - Assert value is the same as the replacement
     - Assert a warning is logged
     - Assert the deprecated constant is included in the modules.__dir__()
+    - Assert the deprecated constant is included in the modules.__all__()
     """
-    value = import_deprecated_costant(module, constant_name)
+    value = import_deprecated_constant(module, constant_name)
     assert value == replacement
     assert (
         module.__name__,
@@ -1523,3 +1525,11 @@ def import_and_test_deprecated_constant(
 
     # verify deprecated constant is included in dir()
     assert constant_name in dir(module)
+    assert constant_name in module.__all__
+
+
+def help_test_all(module: ModuleType) -> None:
+    """Test module.__all__ is correctly set."""
+    assert set(module.__all__) == {
+        itm for itm in module.__dir__() if not itm.startswith("_")
+    }

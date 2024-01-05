@@ -2479,8 +2479,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["bool"] = forgiving_boolean
         self.filters["version"] = version
         self.filters["contains"] = contains
-        self.filters["median"] = median
-        self.filters["statistical_mode"] = statistical_mode
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -2516,8 +2514,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["iif"] = iif
         self.globals["bool"] = forgiving_boolean
         self.globals["version"] = version
-        self.globals["median"] = median
-        self.globals["statistical_mode"] = statistical_mode
         self.tests["is_number"] = is_number
         self.tests["list"] = _is_list
         self.tests["set"] = _is_set
