@@ -25,7 +25,7 @@ from homeassistant.components.esphome.const import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .conftest import MockESPHomeDevice
@@ -848,3 +848,130 @@ async def test_esphome_user_services_changes(
         ]
     )
     mock_client.execute_service.reset_mock()
+
+
+async def test_esphome_device_with_suggested_area(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test a device with suggested area."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        device_info={"suggested_area": "kitchen"},
+        states=[],
+    )
+    await hass.async_block_till_done()
+    dev_reg = dr.async_get(hass)
+    entry = device.entry
+    dev = dev_reg.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    )
+    assert dev.suggested_area == "kitchen"
+
+
+async def test_esphome_device_with_project(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test a device with a project."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        device_info={"project_name": "mfr.model", "project_version": "2.2.2"},
+        states=[],
+    )
+    await hass.async_block_till_done()
+    dev_reg = dr.async_get(hass)
+    entry = device.entry
+    dev = dev_reg.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    )
+    assert dev.manufacturer == "mfr"
+    assert dev.model == "model"
+    assert dev.hw_version == "2.2.2"
+
+
+async def test_esphome_device_with_manufacturer(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test a device with a manufacturer."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        device_info={"manufacturer": "acme"},
+        states=[],
+    )
+    await hass.async_block_till_done()
+    dev_reg = dr.async_get(hass)
+    entry = device.entry
+    dev = dev_reg.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    )
+    assert dev.manufacturer == "acme"
+
+
+async def test_esphome_device_with_web_server(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test a device with a web server."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        device_info={"webserver_port": 80},
+        states=[],
+    )
+    await hass.async_block_till_done()
+    dev_reg = dr.async_get(hass)
+    entry = device.entry
+    dev = dev_reg.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    )
+    assert dev.configuration_url == "http://test.local:80"
+
+
+async def test_esphome_device_with_compilation_time(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test a device with a compilation_time."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        device_info={"compilation_time": "comp_time"},
+        states=[],
+    )
+    await hass.async_block_till_done()
+    dev_reg = dr.async_get(hass)
+    entry = device.entry
+    dev = dev_reg.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    )
+    assert "comp_time" in dev.sw_version

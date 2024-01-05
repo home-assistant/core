@@ -53,6 +53,7 @@ from . import (
     template,
     translation,
 )
+from .group import expand_entity_ids
 from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType
 
@@ -459,9 +460,9 @@ def async_extract_referenced_entity_ids(
     if not selector.has_any_selector:
         return selected
 
-    entity_ids = selector.entity_ids
+    entity_ids: set[str] | list[str] = selector.entity_ids
     if expand_group:
-        entity_ids = hass.components.group.expand_entity_ids(entity_ids)
+        entity_ids = expand_entity_ids(hass, entity_ids)
 
     selected.referenced.update(entity_ids)
 

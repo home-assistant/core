@@ -1,29 +1,32 @@
 """Support for Lutron lights."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Lutron lights."""
-    devs = []
-    for area_name, device in hass.data[LUTRON_DEVICES]["light"]:
-        dev = LutronLight(area_name, device, hass.data[LUTRON_CONTROLLER])
-        devs.append(dev)
+    """Set up the Lutron light platform.
 
-    add_entities(devs, True)
+    Adds dimmers from the Main Repeater associated with the config_entry as
+    light entities.
+    """
+    entities = []
+    for area_name, device in hass.data[LUTRON_DEVICES]["light"]:
+        entity = LutronLight(area_name, device, hass.data[LUTRON_CONTROLLER])
+        entities.append(entity)
+    async_add_entities(entities, True)
 
 
 def to_lutron_level(level):
@@ -42,13 +45,13 @@ class LutronLight(LutronDevice, LightEntity):
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
-    def __init__(self, area_name, lutron_device, controller):
+    def __init__(self, area_name, lutron_device, controller) -> None:
         """Initialize the light."""
         self._prev_brightness = None
         super().__init__(area_name, lutron_device, controller)
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of the light."""
         new_brightness = to_hass_level(self._lutron_device.last_level())
         if new_brightness != 0:
@@ -71,12 +74,12 @@ class LutronLight(LutronDevice, LightEntity):
         self._lutron_device.level = 0
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return {"lutron_integration_id": self._lutron_device.id}
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._lutron_device.last_level() > 0
 
