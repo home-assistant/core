@@ -58,6 +58,7 @@ from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import (
     DeprecatedConstant,
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -146,10 +147,6 @@ _DEPRECATED_AutomationTriggerData = DeprecatedConstant(
 _DEPRECATED_AutomationTriggerInfo = DeprecatedConstant(
     TriggerInfo, "TriggerInfo", "2025.1"
 )
-
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 
 @bind_hass
@@ -1108,3 +1105,11 @@ def websocket_config(
             "config": automation.raw_config,
         },
     )
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

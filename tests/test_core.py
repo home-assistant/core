@@ -61,6 +61,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from .common import (
     async_capture_events,
     async_mock_service,
+    help_test_all,
     import_and_test_deprecated_constant_enum,
 )
 
@@ -2628,6 +2629,11 @@ async def test_cancel_shutdown_job(hass: HomeAssistant) -> None:
     cancel()
     await hass.async_stop()
     assert not evt.is_set()
+
+
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(ha)
 
 
 @pytest.mark.parametrize(
