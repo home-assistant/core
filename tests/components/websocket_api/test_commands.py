@@ -32,7 +32,6 @@ from tests.common import (
     MockEntityPlatform,
     MockUser,
     async_mock_service,
-    json_round_trip,
     mock_platform,
 )
 from tests.typing import (
@@ -687,7 +686,7 @@ async def test_get_states(
 
     states = []
     for state in hass.states.async_all():
-        states.append(json_round_trip(state.as_dict()))
+        states.append(state.as_dict())
 
     assert msg["result"] == states
 
@@ -837,9 +836,9 @@ async def test_get_states_not_allows_nan(
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == [
-        json_round_trip(hass.states.get("greeting.hello").as_dict()),
-        json_round_trip(bad),
-        json_round_trip(hass.states.get("greeting.bye").as_dict()),
+        hass.states.get("greeting.hello").as_dict(),
+        bad,
+        hass.states.get("greeting.bye").as_dict(),
     ]
 
 
