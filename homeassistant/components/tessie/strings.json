@@ -318,5 +318,10 @@
         "name": "[%key:component::update::title%]"
       }
     }
+  },
+  "exceptions": {
+    "no_cable": {
+      "message": "Insert cable to lock"
+    }
   }
 }

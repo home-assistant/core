@@ -11,11 +11,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, TessieChargeCableLockStates
 from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
-
-ENGAGED = "Engaged"
 
 
 async def async_setup_entry(
@@ -70,13 +68,17 @@ class TessieCableLockEntity(TessieEntity, LockEntity):
     @property
     def is_locked(self) -> bool | None:
         """Return the state of the Lock."""
-        return self._value == ENGAGED
+        return self._value == TessieChargeCableLockStates.ENGAGED
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Charge cable Lock cannot be manually locked."""
-        raise HomeAssistantError("Insert cable to lock")
+        raise HomeAssistantError(
+            "Insert cable to lock",
+            translation_domain=DOMAIN,
+            translation_key="no_cable",
+        )
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock charge cable lock."""
         await self.run(open_unlock_charge_port)
-        self.set((self.key, ENGAGED))
+        self.set((self.key, TessieChargeCableLockStates.DISENGAGED))
