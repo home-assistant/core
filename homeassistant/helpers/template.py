@@ -1834,7 +1834,7 @@ def as_datetime(value: Any, local: bool = False, default: Any = _SENTINEL) -> An
     if isinstance(value, datetime | date | time):
         # add midnight to datetime.date
         if type(value) is date:
-            value = datetime.combine(value, dt_util.parse_time("00:00"))
+            value = datetime.combine(value, time(0, 0))
         # add current date to datetime.time
         elif type(value) is time:
             value = datetime.combine(date.today(), value)
