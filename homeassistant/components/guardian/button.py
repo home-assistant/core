@@ -23,20 +23,13 @@ from . import GuardianData, ValveControllerEntity, ValveControllerEntityDescript
 from .const import API_SYSTEM_DIAGNOSTICS, DOMAIN
 
 
-@dataclass(frozen=True)
-class GuardianButtonEntityDescriptionMixin:
-    """Define an mixin for button entities."""
-
-    push_action: Callable[[Client], Awaitable]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ValveControllerButtonDescription(
-    ButtonEntityDescription,
-    ValveControllerEntityDescription,
-    GuardianButtonEntityDescriptionMixin,
+    ButtonEntityDescription, ValveControllerEntityDescription
 ):
     """Describe a Guardian valve controller button."""
+
+    push_action: Callable[[Client], Awaitable]
 
 
 BUTTON_KIND_REBOOT = "reboot"

@@ -106,7 +106,13 @@ async def test_token_refresh_success(
     )
 
 
-@pytest.mark.parametrize("token_expiration_time", [12345])
+@pytest.mark.parametrize(
+    ("token_expiration_time", "server_status"),
+    [
+        (12345, HTTPStatus.UNAUTHORIZED),
+        (12345, HTTPStatus.BAD_REQUEST),
+    ],
+)
 @pytest.mark.parametrize("closing", [True, False])
 async def test_token_requires_reauth(
     hass: HomeAssistant,
@@ -114,13 +120,14 @@ async def test_token_requires_reauth(
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     setup_credentials: None,
+    server_status: HTTPStatus,
     closing: bool,
 ) -> None:
     """Test where token is expired and the refresh attempt requires reauth."""
 
     aioclient_mock.post(
         OAUTH2_TOKEN,
-        status=HTTPStatus.UNAUTHORIZED,
+        status=server_status,
         closing=closing,
     )
 

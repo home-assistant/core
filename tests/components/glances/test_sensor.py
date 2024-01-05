@@ -1,48 +1,34 @@
 """Tests for glances sensors."""
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.glances.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import HA_SENSOR_DATA, MOCK_USER_INPUT
+from . import MOCK_USER_INPUT
 
 from tests.common import MockConfigEntry
 
 
-async def test_sensor_states(hass: HomeAssistant) -> None:
+async def test_sensor_states(
+    hass: HomeAssistant, snapshot: SnapshotAssertion, entity_registry: er.EntityRegistry
+) -> None:
     """Test sensor states are correctly collected from library."""
 
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT, entry_id="test")
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
 
-    if state := hass.states.get("sensor.0_0_0_0_ssl_disk_use"):
-        assert state.state == HA_SENSOR_DATA["fs"]["/ssl"]["disk_use"]
-    if state := hass.states.get("sensor.0_0_0_0_cpu_thermal_1"):
-        assert state.state == HA_SENSOR_DATA["sensors"]["cpu_thermal 1"]
-    if state := hass.states.get("sensor.0_0_0_0_err_temp"):
-        assert state.state == HA_SENSOR_DATA["sensors"]["err_temp"]
-    if state := hass.states.get("sensor.0_0_0_0_na_temp"):
-        assert state.state == HA_SENSOR_DATA["sensors"]["na_temp"]
-    if state := hass.states.get("sensor.0_0_0_0_memory_use_percent"):
-        assert state.state == HA_SENSOR_DATA["mem"]["memory_use_percent"]
-    if state := hass.states.get("sensor.0_0_0_0_docker_active"):
-        assert state.state == HA_SENSOR_DATA["docker"]["docker_active"]
-    if state := hass.states.get("sensor.0_0_0_0_docker_cpu_use"):
-        assert state.state == HA_SENSOR_DATA["docker"]["docker_cpu_use"]
-    if state := hass.states.get("sensor.0_0_0_0_docker_memory_use"):
-        assert state.state == HA_SENSOR_DATA["docker"]["docker_memory_use"]
-    if state := hass.states.get("sensor.0_0_0_0_md3_available"):
-        assert state.state == HA_SENSOR_DATA["raid"]["md3"]["available"]
-    if state := hass.states.get("sensor.0_0_0_0_md3_used"):
-        assert state.state == HA_SENSOR_DATA["raid"]["md3"]["used"]
-    if state := hass.states.get("sensor.0_0_0_0_md1_available"):
-        assert state.state == HA_SENSOR_DATA["raid"]["md1"]["available"]
-    if state := hass.states.get("sensor.0_0_0_0_md1_used"):
-        assert state.state == HA_SENSOR_DATA["raid"]["md1"]["used"]
+    assert entity_entries
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert hass.states.get(entity_entry.entity_id) == snapshot(
+            name=f"{entity_entry.entity_id}-state"
+        )
 
 
 @pytest.mark.parametrize(

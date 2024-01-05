@@ -501,6 +501,7 @@ class HoneywellUSThermostat(ClimateEntity):
             except (
                 AuthError,
                 ClientConnectionError,
+                AscConnectionError,
                 asyncio.TimeoutError,
             ):
                 self._retry += 1

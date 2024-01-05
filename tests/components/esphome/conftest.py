@@ -14,6 +14,7 @@ from aioesphomeapi import (
     DeviceInfo,
     EntityInfo,
     EntityState,
+    HomeassistantServiceCall,
     ReconnectLogic,
     UserService,
 )
@@ -176,12 +177,23 @@ class MockESPHomeDevice:
         """Init the mock."""
         self.entry = entry
         self.state_callback: Callable[[EntityState], None]
+        self.service_call_callback: Callable[[HomeassistantServiceCall], None]
         self.on_disconnect: Callable[[bool], None]
         self.on_connect: Callable[[bool], None]
 
     def set_state_callback(self, state_callback: Callable[[EntityState], None]) -> None:
         """Set the state callback."""
         self.state_callback = state_callback
+
+    def set_service_call_callback(
+        self, callback: Callable[[HomeassistantServiceCall], None]
+    ) -> None:
+        """Set the service call callback."""
+        self.service_call_callback = callback
+
+    def mock_service_call(self, service_call: HomeassistantServiceCall) -> None:
+        """Mock a service call."""
+        self.service_call_callback(service_call)
 
     def set_state(self, state: EntityState) -> None:
         """Mock setting state."""
@@ -242,12 +254,19 @@ async def _mock_generic_device_entry(
         for state in states:
             callback(state)
 
+    async def _subscribe_service_calls(
+        callback: Callable[[HomeassistantServiceCall], None],
+    ) -> None:
+        """Subscribe to service calls."""
+        mock_device.set_service_call_callback(callback)
+
     mock_client.device_info = AsyncMock(return_value=device_info)
     mock_client.subscribe_voice_assistant = AsyncMock(return_value=Mock())
     mock_client.list_entities_services = AsyncMock(
         return_value=mock_list_entities_services
     )
     mock_client.subscribe_states = _subscribe_states
+    mock_client.subscribe_service_calls = _subscribe_service_calls
 
     try_connect_done = Event()
 

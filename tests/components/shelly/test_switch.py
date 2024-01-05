@@ -6,7 +6,10 @@ from aioshelly.const import MODEL_GAS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
 
+from homeassistant.components import automation, script
+from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.shelly.const import DOMAIN, MODEL_WALL_DISPLAY
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -21,6 +24,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+import homeassistant.helpers.issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from . import init_integration, register_entity
 
@@ -238,9 +243,14 @@ async def test_block_device_gas_valve(
     hass: HomeAssistant, mock_block_device, monkeypatch
 ) -> None:
     """Test block device Shelly Gas with Valve addon."""
+    entity_id = register_entity(
+        hass,
+        SWITCH_DOMAIN,
+        "test_name_valve",
+        "valve_0-valve",
+    )
     registry = er.async_get(hass)
     await init_integration(hass, 1, MODEL_GAS)
-    entity_id = "switch.test_name_valve"
 
     entry = registry.async_get(entity_id)
     assert entry
@@ -316,3 +326,63 @@ async def test_wall_display_relay_mode(
 
     # the climate entity should be removed
     assert hass.states.get(entity_id) is None
+
+
+async def test_create_issue_valve_switch(
+    hass: HomeAssistant,
+    mock_block_device,
+    entity_registry_enabled_by_default: None,
+    monkeypatch,
+) -> None:
+    """Test we create an issue when an automation or script is using a deprecated entity."""
+    monkeypatch.setitem(mock_block_device.status, "cloud", {"connected": False})
+    entity_id = register_entity(
+        hass,
+        SWITCH_DOMAIN,
+        "test_name_valve",
+        "valve_0-valve",
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "test",
+                "trigger": {"platform": "state", "entity_id": entity_id},
+                "action": {"service": "switch.turn_on", "entity_id": entity_id},
+            }
+        },
+    )
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                "test": {
+                    "sequence": [
+                        {
+                            "service": "switch.turn_on",
+                            "data": {"entity_id": entity_id},
+                        },
+                    ],
+                }
+            }
+        },
+    )
+
+    await init_integration(hass, 1, MODEL_GAS)
+
+    assert automations_with_entity(hass, entity_id)[0] == "automation.test"
+    assert scripts_with_entity(hass, entity_id)[0] == "script.test"
+    issue_registry: ir.IssueRegistry = ir.async_get(hass)
+
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_valve_switch")
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_valve_switch.test_name_valve_automation.test"
+    )
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_valve_switch.test_name_valve_script.test"
+    )
+
+    assert len(issue_registry.issues) == 3

@@ -151,7 +151,7 @@ def fixture_get_train_stop() -> TrainStop:
         id=13,
         canceled=False,
         advertised_time_at_location=datetime(2023, 5, 1, 11, 0, tzinfo=dt_util.UTC),
-        estimated_time_at_location=datetime(2023, 5, 1, 11, 0, tzinfo=dt_util.UTC),
+        estimated_time_at_location=None,
         time_at_location=datetime(2023, 5, 1, 11, 0, tzinfo=dt_util.UTC),
         other_information=None,
         deviations=None,
