@@ -1,7 +1,8 @@
 """Component for interacting with a Lutron RadioRA 2 system."""
+from dataclasses import dataclass
 import logging
 
-from pylutron import Button, Lutron
+from pylutron import Button, Led, Lutron, OccupancyGroup, Output
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -31,10 +32,6 @@ PLATFORMS = [
 ]
 
 _LOGGER = logging.getLogger(__name__)
-
-LUTRON_BUTTONS = "lutron_buttons"
-LUTRON_CONTROLLER = "lutron_controller"
-LUTRON_DEVICES = "lutron_devices"
 
 # Attribute on events that indicates what action was taken with the button.
 ATTR_ACTION = "action"
@@ -105,78 +102,6 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Set up the Lutron integration."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[LUTRON_BUTTONS] = []
-    hass.data[LUTRON_CONTROLLER] = None
-    hass.data[LUTRON_DEVICES] = {
-        "light": [],
-        "cover": [],
-        "switch": [],
-        "scene": [],
-        "binary_sensor": [],
-    }
-    host = config_entry.data[CONF_HOST]
-    uid = config_entry.data[CONF_USERNAME]
-    pwd = config_entry.data[CONF_PASSWORD]
-
-    def _load_db() -> bool:
-        hass.data[LUTRON_CONTROLLER].load_xml_db()
-        return True
-
-    hass.data[LUTRON_CONTROLLER] = Lutron(host, uid, pwd)
-    await hass.async_add_executor_job(_load_db)
-    hass.data[LUTRON_CONTROLLER].connect()
-    _LOGGER.info("Connected to main repeater at %s", host)
-
-    # Sort our devices into types
-    _LOGGER.debug("Start adding devices")
-    for area in hass.data[LUTRON_CONTROLLER].areas:
-        _LOGGER.debug("Working on area %s", area.name)
-        for output in area.outputs:
-            _LOGGER.debug("Working on output %s", output.type)
-            if output.type == "SYSTEM_SHADE":
-                hass.data[LUTRON_DEVICES]["cover"].append((area.name, output))
-            elif output.is_dimmable:
-                hass.data[LUTRON_DEVICES]["light"].append((area.name, output))
-            else:
-                hass.data[LUTRON_DEVICES]["switch"].append((area.name, output))
-        for keypad in area.keypads:
-            for button in keypad.buttons:
-                # If the button has a function assigned to it, add it as a scene
-                if button.name != "Unknown Button" and button.button_type in (
-                    "SingleAction",
-                    "Toggle",
-                    "SingleSceneRaiseLower",
-                    "MasterRaiseLower",
-                ):
-                    # Associate an LED with a button if there is one
-                    led = next(
-                        (led for led in keypad.leds if led.number == button.number),
-                        None,
-                    )
-                    hass.data[LUTRON_DEVICES]["scene"].append(
-                        (area.name, keypad.name, button, led)
-                    )
-
-                hass.data[LUTRON_BUTTONS].append(
-                    LutronButton(hass, area.name, keypad, button)
-                )
-        if area.occupancy_group is not None:
-            hass.data[LUTRON_DEVICES]["binary_sensor"].append(
-                (area.name, area.occupancy_group)
-            )
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    return True
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Clean up resources and entities associated with the integration."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
 class LutronButton:
     """Representation of a button on a Lutron keypad.
 
@@ -227,3 +152,80 @@ class LutronButton:
                 ATTR_UUID: self._uuid,
             }
             self._hass.bus.fire(self._event, data)
+
+
+@dataclass(slots=True)
+class LutronData:
+    """Storage class for platform global data."""
+
+    client: Lutron
+    covers: list[tuple[str, Output]]
+    lights: list[tuple[str, Output]]
+    switches: list[tuple[str, Output]]
+    scenes: list[tuple[str, str, Button, Led]]
+    binary_sensors: list[tuple[str, OccupancyGroup]]
+    buttons: list[LutronButton]
+
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Set up the Lutron integration."""
+
+    host = config_entry.data[CONF_HOST]
+    uid = config_entry.data[CONF_USERNAME]
+    pwd = config_entry.data[CONF_PASSWORD]
+
+    lutron_client = Lutron(host, uid, pwd)
+    await hass.async_add_executor_job(lutron_client.load_xml_db)
+    lutron_client.connect()
+    _LOGGER.info("Connected to main repeater at %s", host)
+
+    entry_data = LutronData(
+        client=lutron_client,
+        covers=[],
+        lights=[],
+        switches=[],
+        scenes=[],
+        binary_sensors=[],
+        buttons=[],
+    )
+    # Sort our devices into types
+    _LOGGER.debug("Start adding devices")
+    for area in lutron_client.areas:
+        _LOGGER.debug("Working on area %s", area.name)
+        for output in area.outputs:
+            _LOGGER.debug("Working on output %s", output.type)
+            if output.type == "SYSTEM_SHADE":
+                entry_data.covers.append((area.name, output))
+            elif output.is_dimmable:
+                entry_data.lights.append((area.name, output))
+            else:
+                entry_data.switches.append((area.name, output))
+        for keypad in area.keypads:
+            for button in keypad.buttons:
+                # If the button has a function assigned to it, add it as a scene
+                if button.name != "Unknown Button" and button.button_type in (
+                    "SingleAction",
+                    "Toggle",
+                    "SingleSceneRaiseLower",
+                    "MasterRaiseLower",
+                ):
+                    # Associate an LED with a button if there is one
+                    led = next(
+                        (led for led in keypad.leds if led.number == button.number),
+                        None,
+                    )
+                    entry_data.scenes.append((area.name, keypad.name, button, led))
+
+                entry_data.buttons.append(LutronButton(hass, area.name, keypad, button))
+        if area.occupancy_group is not None:
+            entry_data.binary_sensors.append((area.name, area.occupancy_group))
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = entry_data
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Clean up resources and entities associated with the integration."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
