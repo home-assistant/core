@@ -528,6 +528,8 @@ build.json @home-assistant/supervisor
 /tests/components/history/ @home-assistant/core
 /homeassistant/components/hive/ @Rendili @KJonline
 /tests/components/hive/ @Rendili @KJonline
+/homeassistant/components/hko/ @MisterCommand
+/tests/components/hko/ @MisterCommand
 /homeassistant/components/hlk_sw16/ @jameshilliard
 /tests/components/hlk_sw16/ @jameshilliard
 /homeassistant/components/holiday/ @jrieger @gjohansson-ST
@@ -747,7 +749,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/luftdaten/ @fabaff @frenck
 /tests/components/luftdaten/ @fabaff @frenck
 /homeassistant/components/lupusec/ @majuss
-/homeassistant/components/lutron/ @cdheiser
+/homeassistant/components/lutron/ @cdheiser @wilburCForce
+/tests/components/lutron/ @cdheiser @wilburCForce
 /homeassistant/components/lutron_caseta/ @swails @bdraco @danaues
 /tests/components/lutron_caseta/ @swails @bdraco @danaues
 /homeassistant/components/lyric/ @timmo001
@@ -1036,6 +1039,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/qvr_pro/ @oblogic7
 /homeassistant/components/qwikswitch/ @kellerza
 /tests/components/qwikswitch/ @kellerza
+/homeassistant/components/rabbitair/ @rabbit-air
+/tests/components/rabbitair/ @rabbit-air
 /homeassistant/components/rachio/ @bdraco @rfverbruggen
 /tests/components/rachio/ @bdraco @rfverbruggen
 /homeassistant/components/radarr/ @tkdrob
@@ -1049,6 +1054,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/raincloud/ @vanstinator
 /homeassistant/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
 /tests/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
+/homeassistant/components/rainforest_raven/ @cottsay
+/tests/components/rainforest_raven/ @cottsay
 /homeassistant/components/rainmachine/ @bachya
 /tests/components/rainmachine/ @bachya
 /homeassistant/components/random/ @fabaff
