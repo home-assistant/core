@@ -11,7 +11,7 @@ from xknx.telegram import Telegram
 from xknx.telegram.address import parse_device_group_address
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
-from homeassistant.const import CONF_TYPE
+from homeassistant.const import CONF_TYPE, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
@@ -69,6 +69,13 @@ def register_knx_services(hass: HomeAssistant) -> None:
         SERVICE_KNX_EXPOSURE_REGISTER,
         partial(service_exposure_register_modify, hass),
         schema=SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA,
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_RELOAD,
+        partial(service_reload_integration, hass),
     )
 
 
@@ -268,3 +275,10 @@ async def service_read_to_knx_bus(hass: HomeAssistant, call: ServiceCall) -> Non
             source_address=knx_module.xknx.current_address,
         )
         await knx_module.xknx.telegrams.put(telegram)
+
+
+async def service_reload_integration(hass: HomeAssistant, call: ServiceCall) -> None:
+    """Reload the integration."""
+    knx_module = get_knx_module(hass)
+    await hass.config_entries.async_reload(knx_module.entry.entry_id)
+    hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)

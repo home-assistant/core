@@ -24,15 +24,13 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
-    SERVICE_RELOAD,
     Platform,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_integration_yaml_config
-from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
@@ -209,13 +207,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 hass, Platform.NOTIFY, DOMAIN, {}, hass.data[DATA_HASS_CONFIG]
             )
         )
-
-    async def _reload_integration(call: ServiceCall) -> None:
-        """Reload the integration."""
-        await hass.config_entries.async_reload(entry.entry_id)
-        hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
-
-    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_integration)
 
     await register_panel(hass)
 
