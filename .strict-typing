@@ -307,6 +307,7 @@ homeassistant.components.purpleair.*
 homeassistant.components.pushbullet.*
 homeassistant.components.pvoutput.*
 homeassistant.components.qnap_qsw.*
+homeassistant.components.rabbitair.*
 homeassistant.components.radarr.*
 homeassistant.components.rainforest_raven.*
 homeassistant.components.rainmachine.*
