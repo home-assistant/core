@@ -1,6 +1,7 @@
 """Tests for HomematicIP Cloud climate."""
 
 import datetime
+from unittest.mock import patch
 
 from homematicip.base.enums import AbsenceType
 from homematicip.functionalHomes import IndoorClimateHome
@@ -15,7 +16,6 @@ from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_ECO,
-    PRESET_NONE,
     HVACAction,
     HVACMode,
 )
@@ -217,12 +217,15 @@ async def test_hmip_heating_group_heat(
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == HVACMode.AUTO
 
-    await hass.services.async_call(
-        "climate",
-        "set_hvac_mode",
-        {"entity_id": entity_id, "hvac_mode": "dry"},
-        blocking=True,
-    )
+    # hvac mode "dry" is not available. expect a valueerror.
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            "climate",
+            "set_hvac_mode",
+            {"entity_id": entity_id, "hvac_mode": "dry"},
+            blocking=True,
+        )
+
     assert len(hmip_device.mock_calls) == service_call_counter + 24
     # Only fire event from last async_manipulate_test_data available.
     assert hmip_device.mock_calls[-1][0] == "fire_update_event"
@@ -429,12 +432,61 @@ async def test_hmip_heating_group_heat_with_radiator(
     assert ha_state.attributes["min_temp"] == 5.0
     assert ha_state.attributes["max_temp"] == 30.0
     assert ha_state.attributes["temperature"] == 5.0
-    assert ha_state.attributes[ATTR_PRESET_MODE] is None
+    assert ha_state.attributes[ATTR_PRESET_MODE] == "Default"
     assert ha_state.attributes[ATTR_PRESET_MODES] == [
-        PRESET_NONE,
         PRESET_BOOST,
         PRESET_ECO,
+        "Default",
     ]
+
+
+async def test_hmip_heating_profile_naming(
+    hass: HomeAssistant, default_mock_hap_factory
+) -> None:
+    """Test Heating Profile Naming."""
+    entity_id = "climate.vorzimmer2"
+    entity_name = "Vorzimmer2"
+    device_model = None
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Heizkörperthermostat2"],
+        test_groups=[entity_name],
+    )
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert hmip_device
+    assert ha_state.state == HVACMode.AUTO
+    assert ha_state.attributes[ATTR_PRESET_MODES] == [
+        PRESET_BOOST,
+        PRESET_ECO,
+        "Testprofile",
+        "Alternative 1",
+    ]
+
+    service_call_counter = len(hmip_device.mock_calls)
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {"entity_id": entity_id, "preset_mode": "Testprofile"},
+        blocking=True,
+    )
+    assert len(hmip_device.mock_calls) == service_call_counter + 1
+    assert hmip_device.mock_calls[-1][0] == "set_active_profile"
+    assert hmip_device.mock_calls[-1][1] == (0,)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.attributes[ATTR_PRESET_MODE] == "Testprofile"
+
+    with patch(
+        "homeassistant.components.homematicip_cloud.climate.NICE_PROFILE_NAMES",
+        return_value={},
+    ):
+        await hass.services.async_call(
+            "climate",
+            "set_preset_mode",
+            {"entity_id": entity_id, "preset_mode": "Testprofile"},
+            blocking=True,
+        )
 
 
 async def test_hmip_climate_services(
