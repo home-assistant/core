@@ -9,7 +9,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, LutronData, LutronDevice
+from . import DOMAIN, LutronData
+from .entity import LutronDevice
 
 
 async def async_setup_entry(
