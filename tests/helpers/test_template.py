@@ -1197,11 +1197,11 @@ def test_as_datetime_from_timestamp(
     ("input", "output"),
     [
         (
-            "today_at('16:00').replace(year=2024, month=1, day=1)",
+            "{% set dt = as_datetime('2024-01-01 16:00:00-08:00') %}",
             "2024-01-01 16:00:00-08:00",
         ),
         (
-            "today_at('16:00').replace(year=2024, month=1, day=1).date()",
+            "{% set dt = as_datetime('2024-01-01').date() %}",
             "2024-01-01 00:00:00",
         ),
     ],
@@ -1212,11 +1212,12 @@ def test_as_datetime_from_datetime(
     """Test converting a timestamp string to a date object."""
 
     assert (
-        template.Template(f"{{{{ as_datetime({input}) }}}}", hass).async_render()
+        template.Template(f"{input}{{{{ dt | as_datetime }}}}", hass).async_render()
         == output
     )
+
     assert (
-        template.Template(f"{{{{ {input} | as_datetime }}}}", hass).async_render()
+        template.Template(f"{input}{{{{ as_datetime(dt) }}}}", hass).async_render()
         == output
     )
 
