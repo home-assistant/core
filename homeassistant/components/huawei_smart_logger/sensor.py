@@ -250,7 +250,4 @@ class HuaweiSmartLogger3000Sensor(
     @property
     def native_value(self) -> StateType:
         """Return native value for entity."""
-        if self.coordinator.data:
-            state = self.coordinator.data[self.entity_description.key]
-            self._state = cast(StateType, self.entity_description.value(state))
-        return self._state
+        return self.coordinator.data.get(self.entity_description.key)
