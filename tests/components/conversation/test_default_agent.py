@@ -83,7 +83,7 @@ async def test_exposed_areas(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that only expose areas with an exposed entity/device."""
+    """Test that all areas are exposed."""
     area_kitchen = area_registry.async_get_or_create("kitchen")
     area_bedroom = area_registry.async_get_or_create("bedroom")
 
@@ -122,14 +122,20 @@ async def test_exposed_areas(
     # All is well for the exposed kitchen light
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
 
-    # Bedroom is not exposed because it has no exposed entities
+    # Bedroom has no exposed entities
     result = await conversation.async_converse(
         hass, "turn on lights in the bedroom", None, Context(), None
     )
 
-    # This should be a match failure because the area isn't in the slot list
+    # This should be an error because the lights in that area are not exposed
     assert result.response.response_type == intent.IntentResponseType.ERROR
-    assert result.response.error_code == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+    assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE
+
+    # But we can still ask questions about the bedroom, even with no exposed entities
+    result = await conversation.async_converse(
+        hass, "how many lights are on in the bedroom?", None, Context(), None
+    )
+    assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
 
 
 async def test_conversation_agent(
