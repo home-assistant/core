@@ -92,19 +92,6 @@ class ExtendedJSONEncoder(JSONEncoder):
             return {"__type": str(type(o)), "repr": repr(o)}
 
 
-def json_encoder_extended(obj: Any) -> Any:
-    """Convert Home Assistant objects and falls back to repr(o)."""
-    try:
-        return json_encoder_default(obj)
-    except TypeError:
-        pass
-    if isinstance(obj, datetime.timedelta):
-        return {"__type": str(type(obj)), "total_seconds": obj.total_seconds()}
-    if isinstance(obj, (datetime.date, datetime.time)):
-        return {"__type": str(type(obj)), "isoformat": obj.isoformat()}
-    return {"__type": str(type(obj)), "repr": repr(obj)}
-
-
 def _strip_null(obj: Any) -> Any:
     """Strip NUL from an object."""
     if isinstance(obj, str):
@@ -169,18 +156,6 @@ def _orjson_default_encoder(data: Any) -> str:
     ).decode("utf-8")
 
 
-def _orjson_extended_encoder(data: Any) -> str:
-    """JSON encoder that uses orjson with hass defaults and extended."""
-    return orjson.dumps(
-        data,
-        option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS,
-        default=json_encoder_extended,
-    ).decode("utf-8")
-
-
-json_dumps_extended = _orjson_extended_encoder
-
-
 def save_json(
     filename: str,
     data: list | dict,
@@ -195,14 +170,11 @@ def save_json(
         # For backwards compatibility, if they pass in the
         # default json encoder we use _orjson_default_encoder
         # which is the orjson equivalent to the default encoder.
-        if encoder and encoder not in (ExtendedJSONEncoder, JSONEncoder):
+        if encoder and encoder is not JSONEncoder:
             # If they pass a custom encoder that is not the
             # default JSONEncoder, we use the slow path of json.dumps
             dump = json.dumps
             json_data = json.dumps(data, indent=2, cls=encoder)
-        elif encoder is ExtendedJSONEncoder:
-            dump = _orjson_extended_encoder
-            json_data = _orjson_extended_encoder(data)
         else:
             dump = _orjson_default_encoder
             json_data = _orjson_default_encoder(data)
