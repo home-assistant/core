@@ -1824,14 +1824,18 @@ def forgiving_as_timestamp(value, default=_SENTINEL):
         return default
 
 
-def as_datetime(value):
+def as_datetime(value: Any, default: Any = _SENTINEL) -> Any:
     """Filter and to convert a time string or UNIX timestamp to datetime object."""
     try:
         # Check for a valid UNIX timestamp string, int or float
         timestamp = float(value)
         return dt_util.utc_from_timestamp(timestamp)
-    except ValueError:
-        return dt_util.parse_datetime(value)
+    except (ValueError, TypeError):
+        if (
+            parsed := dt_util.parse_datetime(str(value))
+        ) is not None or default is _SENTINEL:
+            return parsed
+        return default
 
 
 def as_timedelta(value: str) -> timedelta | None:
