@@ -276,6 +276,9 @@ async def async_from_config_dict(
     # Set up core.
     _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)
 
+    # Load core integrations manifests in a single executor job
+    await loader.async_get_integrations(hass, CORE_INTEGRATIONS)
+
     if not all(
         await asyncio.gather(
             *(
@@ -570,6 +573,17 @@ async def _async_set_up_integrations(
             ).values()
             if isinstance(int_or_exc, loader.Integration)
         ]
+        # Try to load the manifest.json of the integrations we just loaded
+        # in a single batch. This will allow us to cache the result of the
+        # manifest.json load and avoid spawning an executor job for each
+        # integration we are about to load.
+        ensure_loaded: set[str] = set()
+        for itg in integrations_to_process:
+            ensure_loaded.update(itg.dependencies)
+            ensure_loaded.update(itg.after_dependencies)
+        if ensure_loaded:
+            await loader.async_get_integrations(hass, ensure_loaded)
+
         resolve_dependencies_tasks = [
             itg.resolve_dependencies()
             for itg in integrations_to_process
