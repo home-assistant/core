@@ -503,6 +503,7 @@ FLOWS = {
         "tedee",
         "tellduslive",
         "tesla_wall_connector",
+        "teslemetry",
         "tessie",
         "thermobeacon",
         "thermopro",
