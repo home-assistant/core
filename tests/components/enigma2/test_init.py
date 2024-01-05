@@ -5,8 +5,7 @@ from homeassistant.components.enigma2.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-# from . import init_integration
-from .util import TEST_REQUIRED, MockDevice
+from .conftest import TEST_REQUIRED, MockDevice
 
 from tests.common import MockConfigEntry
 

@@ -1,4 +1,5 @@
 """Test the Enigma2 config flow."""
+
 from homeassistant.components.enigma2.const import (
     CONF_DEEP_STANDBY,
     CONF_MAC_ADDRESS,
@@ -35,7 +36,6 @@ TEST_FULL = {
     CONF_SSL: DEFAULT_SSL,
     CONF_USERNAME: DEFAULT_USERNAME,
     CONF_PASSWORD: DEFAULT_PASSWORD,
-    CONF_NAME: DEFAULT_NAME,
 }
 
 TEST_IMPORT_FULL = {

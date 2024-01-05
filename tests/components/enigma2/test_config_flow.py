@@ -8,10 +8,11 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.enigma2.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
-from .util import (
+from .conftest import (
     TEST_FULL,
     TEST_IMPORT_FULL,
     TEST_IMPORT_REQUIRED,
@@ -21,22 +22,22 @@ from .util import (
 
 
 @pytest.fixture
-async def user_flow(hass):
+async def user_flow(hass: HomeAssistant) -> str:
     """Return a user-initiated flow after filling in host info."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
     return result["flow_id"]
 
 
 @pytest.mark.parametrize(
-    ("test_config", "expected_title"),
-    [(TEST_FULL, TEST_FULL[CONF_NAME]), (TEST_REQUIRED, TEST_REQUIRED[CONF_HOST])],
+    ("test_config"),
+    [(TEST_FULL), (TEST_REQUIRED)],
 )
 async def test_form_user(
-    hass: HomeAssistant, user_flow, test_config: dict[str, Any], expected_title: str
+    hass: HomeAssistant, user_flow: str, test_config: dict[str, Any]
 ):
     """Test a successful user initiated flow."""
     with patch(
@@ -48,8 +49,8 @@ async def test_form_user(
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(user_flow, test_config)
         await hass.async_block_till_done()
-    assert result["type"] == "create_entry"
-    assert result["title"] == expected_title
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == test_config[CONF_HOST]
     assert result["options"] == test_config
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -73,22 +74,21 @@ async def test_form_user_errors(
     ):
         result = await hass.config_entries.flow.async_configure(user_flow, TEST_FULL)
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == config_entries.SOURCE_USER
     assert result["errors"] == {"base": error_type}
 
 
 @pytest.mark.parametrize(
-    ("test_config", "expected_title", "expected_options"),
+    ("test_config", "expected_options"),
     [
-        (TEST_IMPORT_FULL, TEST_IMPORT_FULL[CONF_NAME], TEST_IMPORT_FULL),
-        (TEST_IMPORT_REQUIRED, TEST_REQUIRED[CONF_HOST], TEST_REQUIRED),
+        (TEST_IMPORT_FULL, TEST_IMPORT_FULL),
+        (TEST_IMPORT_REQUIRED, TEST_REQUIRED),
     ],
 )
 async def test_form_import(
     hass: HomeAssistant,
     test_config: dict[str, Any],
-    expected_title: str,
     expected_options: dict[str, Any],
 ) -> None:
     """Test we get the form with import source."""
@@ -106,8 +106,8 @@ async def test_form_import(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
-    assert result["title"] == expected_title
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == test_config[CONF_HOST]
     assert result["options"] == expected_options
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -135,5 +135,5 @@ async def test_form_import_errors(
             data=TEST_IMPORT_FULL,
         )
 
-    assert result["type"] == "form"
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": error_type}
