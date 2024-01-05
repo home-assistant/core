@@ -6,7 +6,7 @@ import math
 import os
 from pathlib import Path
 import time
-from typing import Any, NamedTuple
+from typing import NamedTuple
 from unittest.mock import Mock, patch
 
 import pytest
@@ -24,15 +24,13 @@ from homeassistant.helpers.json import (
 )
 from homeassistant.util import dt as dt_util
 from homeassistant.util.color import RGBColor
-from homeassistant.util.json import SerializationError, json_loads, load_json
+from homeassistant.util.json import SerializationError, load_json
+
+from tests.common import json_round_trip
 
 # Test data that can be saved as JSON
 TEST_JSON_A = {"a": 1, "B": "two"}
 TEST_JSON_B = {"a": "one", "B": 2}
-
-
-def _json_round_trip(obj: Any) -> Any:
-    return json_loads(json_dumps(obj))
 
 
 @pytest.mark.parametrize("encoder", (DefaultHASSJSONEncoder, ExtendedJSONEncoder))
@@ -52,7 +50,7 @@ def test_json_encoder(hass: HomeAssistant, encoder: type[json.JSONEncoder]) -> N
     # Test serializing an object which implements as_dict
     default = ha_json_enc.default(state)
     assert isinstance(default, json_fragment)
-    assert _json_round_trip(default) == _json_round_trip(state.as_dict())
+    assert json_round_trip(default) == json_round_trip(state.as_dict())
 
 
 def test_json_encoder_raises(hass: HomeAssistant) -> None:
