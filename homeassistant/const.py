@@ -8,6 +8,7 @@ from typing import Final
 from .helpers.deprecation import (
     DeprecatedConstant,
     DeprecatedConstantEnum,
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -439,12 +440,6 @@ _DEPRECATED_DEVICE_CLASS_VOLTAGE: Final = DeprecatedConstant(
     "SensorDeviceClass.VOLTAGE",
     "2025.1",
 )
-
-
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
-
 
 # #### STATES ####
 STATE_ON: Final = "on"
@@ -1607,3 +1602,10 @@ SIGNAL_BOOTSTRAP_INTEGRATIONS = "bootstrap_integrations"
 FORMAT_DATE: Final = "%Y-%m-%d"
 FORMAT_TIME: Final = "%H:%M:%S"
 FORMAT_DATETIME: Final = f"{FORMAT_DATE} {FORMAT_TIME}"
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())
