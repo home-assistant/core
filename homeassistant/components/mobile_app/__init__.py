@@ -36,7 +36,7 @@ from .const import (
 )
 from .helpers import savable_state
 from .http_api import RegistrationsView
-from .util import create_cloud_hook
+from .util import async_create_cloud_hook
 from .webhook import handle_webhook
 
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER]
@@ -109,14 +109,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             state is cloud.CloudConnectionState.CLOUD_CONNECTED
             and CONF_CLOUDHOOK_URL not in entry.data
         ):
-            await create_cloud_hook(hass, webhook_id, entry)
+            await async_create_cloud_hook(hass, webhook_id, entry)
 
     if (
         CONF_CLOUDHOOK_URL not in entry.data
         and cloud.async_active_subscription(hass)
         and cloud.async_is_connected(hass)
     ):
-        await create_cloud_hook(hass, webhook_id, entry)
+        await async_create_cloud_hook(hass, webhook_id, entry)
 
     entry.async_on_unload(cloud.async_listen_connection_change(hass, manage_cloudhook))
 

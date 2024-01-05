@@ -62,8 +62,7 @@ def get_notify_service(hass: HomeAssistant, webhook_id: str) -> str | None:
 _CLOUD_HOOK_LOCK = asyncio.Lock()
 
 
-@callback
-async def create_cloud_hook(
+async def async_create_cloud_hook(
     hass: HomeAssistant, webhook_id: str, entry: ConfigEntry | None
 ) -> str:
     """Create a cloud hook."""

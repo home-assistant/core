@@ -35,7 +35,7 @@ from .const import (
     SCHEMA_APP_DATA,
 )
 from .helpers import supports_encryption
-from .util import create_cloud_hook
+from .util import async_create_cloud_hook
 
 
 class RegistrationsView(HomeAssistantView):
@@ -70,7 +70,9 @@ class RegistrationsView(HomeAssistantView):
         webhook_id = secrets.token_hex()
 
         if cloud.async_active_subscription(hass):
-            data[CONF_CLOUDHOOK_URL] = await create_cloud_hook(hass, webhook_id, None)
+            data[CONF_CLOUDHOOK_URL] = await async_create_cloud_hook(
+                hass, webhook_id, None
+            )
 
         data[CONF_WEBHOOK_ID] = webhook_id
 
