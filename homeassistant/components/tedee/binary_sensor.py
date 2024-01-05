@@ -58,13 +58,34 @@ async def async_setup_entry(
     """Set up the Tedee sensor entity."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
+    current_locks = set(coordinator.data.keys())
+
+    entities: list[TedeeBinarySensorEntity] = []
     for entity_description in ENTITIES:
-        async_add_entities(
+        entities.extend(
             [
                 TedeeBinarySensorEntity(lock, coordinator, entity_description)
                 for lock in coordinator.data.values()
             ]
         )
+
+    def _async_add_new_locks() -> None:
+        new_locks = set(coordinator.data.keys()) - current_locks
+        new_entities: list[TedeeBinarySensorEntity] = []
+        for lock_id in new_locks:
+            lock = coordinator.data[lock_id]
+            new_entities.extend(
+                [
+                    TedeeBinarySensorEntity(lock, coordinator, entity_description)
+                    for entity_description in ENTITIES
+                ]
+            )
+
+        async_add_entities(new_entities)
+
+    coordinator.async_add_listener(_async_add_new_locks)
+
+    async_add_entities(entities)
 
 
 class TedeeBinarySensorEntity(TedeeDescriptionEntity, BinarySensorEntity):
