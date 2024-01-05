@@ -652,6 +652,9 @@ class DefaultAgent(AbstractConversationAgent):
 
             if entity.aliases:
                 for alias in entity.aliases:
+                    if not alias.strip():
+                        continue
+
                     entity_names.append((alias, alias, context))
 
             # Default name
@@ -664,6 +667,9 @@ class DefaultAgent(AbstractConversationAgent):
             area_names.append((area.name, area.id))
             if area.aliases:
                 for alias in area.aliases:
+                    if not alias.strip():
+                        continue
+
                     area_names.append((alias, area.id))
 
         _LOGGER.debug("Exposed entities: %s", entity_names)
