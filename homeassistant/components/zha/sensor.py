@@ -1099,12 +1099,10 @@ class EnumSensor(Sensor):
     """Sensor with value from enum."""
 
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENUM
-    _enum: type[enum.Enum] | None = None
+    _enum: type[enum.Enum]
 
     def formatter(self, value: int) -> str | None:
         """Use name of enum."""
-        if self._enum is None:
-            return None
         return self._enum(value).name
 
 
@@ -1156,6 +1154,7 @@ class PiHeatingDemand(Sensor):
     _attr_translation_key: str = "pi_heating_demand"
     _attr_icon: str = "mdi:radiator"
     _attr_native_unit_of_measurement = PERCENTAGE
+    _decimals = 0
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
 
 

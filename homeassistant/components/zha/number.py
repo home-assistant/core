@@ -994,18 +994,16 @@ class ZCLHeatSetpointLimitEntity(ZCLTemperatureEntity):
     @property
     def native_min_value(self) -> float:
         """Return the minimum value."""
-        min_present_value = self._cluster_handler.cluster.get(self._min_source)
-        if min_present_value is None:
-            # This is a 16bit signed integer, which has to be converted to a python integer
-            min_present_value = ctypes.c_short(0x954D).value  # according to spec
+        # This is a 16bit signed integer, which has to be converted to a python integer
+        min_present_value = self._cluster_handler.cluster.get(
+            self._min_source, ctypes.c_short(0x954D).value
+        )
         return min_present_value * self._attr_multiplier
 
     @property
     def native_max_value(self) -> float:
         """Return the maximum value."""
-        max_present_value = self._cluster_handler.cluster.get(self._max_source)
-        if max_present_value is None:
-            max_present_value = 0x7FFF  # according to spec
+        max_present_value = self._cluster_handler.cluster.get(self._max_source, 0x7FFF)
         return max_present_value * self._attr_multiplier
 
 

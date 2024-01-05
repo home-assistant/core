@@ -11,7 +11,6 @@ from zhaquirks.quirk_ids import (
     TUYA_PLUG_MANUFACTURER,
     TUYA_PLUG_ONOFF,
 )
-
 from zhaquirks.xiaomi.aqara.magnet_ac01 import OppleCluster as MagnetAC01OppleCluster
 from zhaquirks.xiaomi.aqara.switch_acn047 import OppleCluster as T2RelayOppleCluster
 from zigpy import types

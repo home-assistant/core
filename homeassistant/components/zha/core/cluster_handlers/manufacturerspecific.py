@@ -34,7 +34,6 @@ from .general import MultistateInput
 from .homeautomation import Diagnostic
 from .hvac import ThermostatClusterHandler, UserInterface
 
-
 if TYPE_CHECKING:
     from ..endpoint import Endpoint
 
