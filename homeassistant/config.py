@@ -1235,16 +1235,18 @@ async def async_process_component_and_handle_errors(
 def async_drop_config_annotations(
     integration_config_info: IntegrationConfigInfo,
 ) -> ConfigType | None:
-    """Remove file and line annotations from component configuration."""
+    """Remove file and line annotations from str items in component configuration."""
     if (config := integration_config_info.config) is None:
         return None
 
     def drop_config_annotations_rec(node: Any) -> Any:
         if isinstance(node, dict):
-            return {
-                drop_config_annotations_rec(k): drop_config_annotations_rec(v)
-                for k, v in node.items()
-            }
+            # Some integrations store metadata in custom dict classes, preserve those
+            tmp = dict(node.items())
+            node.clear()
+            for k, v in tmp.items():
+                node[drop_config_annotations_rec(k)] = drop_config_annotations_rec(v)
+            return node
 
         if isinstance(node, list):
             return [drop_config_annotations_rec(v) for v in node]
