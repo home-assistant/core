@@ -63,10 +63,7 @@ REPEAT_MODE_MAPPING_TO_SPOTIFY = {
 
 # This is a minimal representation of the DJ playlist that Spotify now offers
 # The DJ is not fully integrated with the platlist API, so needs to have the playlist response mocked in order to maintain functionality
-SPOTIFY_DJ_PLAYLIST = {
-    "uri": "spotify:playlist:37i9dQZF1EYkqdzj48dyYq",
-    "name": "DJ"
-}
+SPOTIFY_DJ_PLAYLIST = {"uri": "spotify:playlist:37i9dQZF1EYkqdzj48dyYq", "name": "DJ"}
 
 
 async def async_setup_entry(
@@ -437,8 +434,11 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
                     # Make sure any playlist lookups don't break the current playback state update
                     try:
                         self._playlist = self.data.client.playlist(uri)
-                    except:
-                        _LOGGER.debug(f"Unable to load spotify playlist '{uri}'. Continuing without playlist data.")
+                    except SpotifyException:
+                        _LOGGER.debug(
+                            "Unable to load spotify playlist '%s'. Continuing without playlist data",
+                            uri,
+                        )
                         self._playlist = None
 
         device = self._currently_playing.get("device")
