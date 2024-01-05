@@ -16,7 +16,7 @@ async def async_setup_entry(
     """Set up Vogel's MotionMount from a config entry."""
     mm = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities((MotionMountPresets(mm, entry),), True)
+    async_add_entities([MotionMountPresets(mm, entry)], True)
 
 
 class MotionMountPresets(MotionMountEntity, SelectEntity):
