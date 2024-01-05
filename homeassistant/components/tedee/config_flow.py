@@ -1,4 +1,5 @@
 """Config flow for Tedee integration."""
+import asyncio
 from collections.abc import Mapping
 from typing import Any
 
@@ -61,6 +62,7 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="reauth_successful")
                 await self.async_set_unique_id(local_bridge.serial)
                 self._abort_if_unique_id_configured()
+                await asyncio.sleep(1)
                 return self.async_create_entry(title=NAME, data=user_input)
 
         return self.async_show_form(
