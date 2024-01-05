@@ -238,7 +238,6 @@ class HuaweiSmartLogger3000Sensor(
         self.entity_description = description
         self.entity_id = ENTITY_ID_SENSOR_FORMAT.format(description.key)
         self._attr_unique_id = f"huaweismartlogger3000_{description.key}"
-        self._state: StateType = None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.api.HOST)},
             entry_type=DeviceEntryType.SERVICE,
