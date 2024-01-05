@@ -5,6 +5,8 @@ from typing import Any
 
 from homematicip.aio.device import (
     AsyncBrandSwitchMeasuring,
+    AsyncFloorTerminalBlock6,
+    AsyncFloorTerminalBlock10,
     AsyncFloorTerminalBlock12,
     AsyncFullFlushSwitchMeasuring,
     AsyncHeatingThermostat,
