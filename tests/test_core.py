@@ -54,7 +54,9 @@ from homeassistant.exceptions import (
     MaxLengthExceeded,
     ServiceNotFound,
 )
+from homeassistant.helpers.json import json_dumps
 import homeassistant.util.dt as dt_util
+from homeassistant.util.json import json_loads
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -65,6 +67,10 @@ from .common import (
 )
 
 PST = dt_util.get_time_zone("America/Los_Angeles")
+
+
+def _json_round_trip(obj: Any) -> Any:
+    return json_loads(json_dumps(obj))
 
 
 def test_split_entity_id() -> None:
@@ -644,12 +650,8 @@ def test_event_as_dict() -> None:
         "event_type": event_type,
         "data": data,
         "origin": "LOCAL",
-        "time_fired": now.isoformat(),
-        "context": {
-            "id": event.context.id,
-            "parent_id": None,
-            "user_id": event.context.user_id,
-        },
+        "time_fired": now,
+        "context": event.context,
     }
     assert event.as_dict() == expected
     # 2nd time to verify cache
@@ -667,11 +669,7 @@ def test_state_as_dict() -> None:
         last_changed=last_time,
     )
     expected = {
-        "context": {
-            "id": state.context.id,
-            "parent_id": None,
-            "user_id": state.context.user_id,
-        },
+        "context": state.context,
         "entity_id": "happy.happy",
         "attributes": {"pig": "dog"},
         "last_changed": last_time,
@@ -681,7 +679,7 @@ def test_state_as_dict() -> None:
     as_dict_1 = state.as_dict()
     assert isinstance(as_dict_1, ReadOnlyDict)
     assert isinstance(as_dict_1["attributes"], ReadOnlyDict)
-    assert isinstance(as_dict_1["context"], ReadOnlyDict)
+    assert isinstance(as_dict_1["context"], ha.Context)
     assert as_dict_1 == expected
     # 2nd time to verify cache
     assert state.as_dict() == expected
@@ -1026,7 +1024,10 @@ def test_state_name_if_friendly_name_attr() -> None:
 def test_state_dict_conversion() -> None:
     """Test conversion of dict."""
     state = ha.State("domain.hello", "world", {"some": "attr"})
-    assert state.as_dict() == ha.State.from_dict(state.as_dict()).as_dict()
+    assert (
+        state.as_dict()
+        == ha.State.from_dict(_json_round_trip(state.as_dict())).as_dict()
+    )
 
 
 def test_state_dict_conversion_with_wrong_data() -> None:

@@ -1000,8 +1000,6 @@ class HomeAssistant:
 class Context:
     """The context that triggered something."""
 
-    __slots__ = ("user_id", "parent_id", "id", "origin_event", "_as_dict")
-
     def __init__(
         self,
         user_id: str | None = None,
@@ -1013,23 +1011,30 @@ class Context:
         self.user_id = user_id
         self.parent_id = parent_id
         self.origin_event: Event | None = None
-        self._as_dict: ReadOnlyDict[str, str | None] | None = None
 
     def __eq__(self, other: Any) -> bool:
         """Compare contexts."""
         return bool(self.__class__ == other.__class__ and self.id == other.id)
 
+    @cached_property
+    def _as_dict(self) -> ReadOnlyDict[str, str | None]:
+        """Return a dictionary representation of the context."""
+        return ReadOnlyDict(
+            {
+                "id": self.id,
+                "parent_id": self.parent_id,
+                "user_id": self.user_id,
+            }
+        )
+
     def as_dict(self) -> ReadOnlyDict[str, str | None]:
         """Return a dictionary representation of the context."""
-        if not self._as_dict:
-            self._as_dict = ReadOnlyDict(
-                {
-                    "id": self.id,
-                    "parent_id": self.parent_id,
-                    "user_id": self.user_id,
-                }
-            )
         return self._as_dict
+
+    @cached_property
+    def as_json_fragment(self) -> json_fragment:
+        """Return a JSON fragment of the context."""
+        return json_fragment(json_dumps(self._as_dict))
 
 
 class EventOrigin(enum.Enum):
@@ -1045,8 +1050,6 @@ class EventOrigin(enum.Enum):
 
 class Event:
     """Representation of an event within the bus."""
-
-    __slots__ = ("event_type", "data", "origin", "time_fired", "context", "_as_dict")
 
     def __init__(
         self,
@@ -1066,26 +1069,33 @@ class Event:
                 id=ulid_at_time(dt_util.utc_to_timestamp(self.time_fired))
             )
         self.context = context
-        self._as_dict: ReadOnlyDict[str, Any] | None = None
         if not context.origin_event:
             context.origin_event = self
 
-    def as_dict(self) -> ReadOnlyDict[str, Any]:
+    @cached_property
+    def _as_dict(self) -> ReadOnlyDict[str, Any]:
         """Create a dict representation of this Event.
 
         Async friendly.
         """
-        if not self._as_dict:
-            self._as_dict = ReadOnlyDict(
-                {
-                    "event_type": self.event_type,
-                    "data": ReadOnlyDict(self.data),
-                    "origin": self.origin.value,
-                    "time_fired": self.time_fired.isoformat(),
-                    "context": self.context.as_dict(),
-                }
-            )
+        return ReadOnlyDict(
+            {
+                "event_type": self.event_type,
+                "data": ReadOnlyDict(self.data),
+                "origin": self.origin.value,
+                "time_fired": self.time_fired,
+                "context": self.context,
+            }
+        )
+
+    def as_dict(self) -> ReadOnlyDict[str, Any]:
+        """Create a dict representation of this Event."""
         return self._as_dict
+
+    @cached_property
+    def as_json_fragment(self) -> json_fragment:
+        """Return an event as a JSON fragment."""
+        return json_fragment(json_dumps(self._as_dict))
 
     def __repr__(self) -> str:
         """Return the representation."""
@@ -1410,7 +1420,9 @@ class State:
         )
 
     @cached_property
-    def _as_dict(self) -> ReadOnlyDict[str, datetime.datetime | Collection[Any]]:
+    def _as_dict(
+        self,
+    ) -> ReadOnlyDict[str, datetime.datetime | Collection[Any] | Context]:
         """Return a dict representation of the State.
 
         Async friendly.
@@ -1430,11 +1442,13 @@ class State:
                 "attributes": self.attributes,
                 "last_changed": last_changed_isoformat,
                 "last_updated": last_updated_isoformat,
-                "context": self.context.as_dict(),
+                "context": self.context,
             }
         )
 
-    def as_dict(self) -> ReadOnlyDict[str, datetime.datetime | Collection[Any]]:
+    def as_dict(
+        self,
+    ) -> ReadOnlyDict[str, datetime.datetime | Collection[Any] | Context]:
         """Return a dict representation of the State.
 
         Async friendly.
