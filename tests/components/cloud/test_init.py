@@ -7,7 +7,12 @@ from hass_nabucasa import Cloud
 import pytest
 
 from homeassistant.components import cloud
-from homeassistant.components.cloud.const import DOMAIN
+from homeassistant.components.cloud import (
+    CloudNotAvailable,
+    CloudNotConnected,
+    async_get_or_create_cloudhook,
+)
+from homeassistant.components.cloud.const import DOMAIN, PREF_CLOUDHOOKS
 from homeassistant.components.cloud.prefs import STORAGE_KEY
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Context, HomeAssistant
@@ -217,15 +222,9 @@ async def test_remote_ui_url(hass: HomeAssistant, mock_cloud_fixture) -> None:
         assert cloud.async_remote_ui_url(hass) == "https://example.com"
 
 
-@pytest.fixture
-def cloud_mock(cloud: MagicMock) -> MagicMock:
-    """Rename cloud mock."""
-    return cloud
-
-
 async def test_async_get_or_create_cloudhook(
     hass: HomeAssistant,
-    cloud_mock: MagicMock,
+    cloud: MagicMock,
     set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
 ) -> None:
     """Test async_get_or_create_cloudhook."""
@@ -235,18 +234,17 @@ async def test_async_get_or_create_cloudhook(
     webhook_id = "mock-webhook-id"
     cloudhook_url = "https://cloudhook.nabu.casa/abcdefg"
 
-    with patch.object(
-        cloud, "async_create_cloudhook", return_value=cloudhook_url
+    with patch(
+        "homeassistant.components.cloud.async_create_cloudhook",
+        return_value=cloudhook_url,
     ) as async_create_cloudhook_mock:
         # create cloudhook as it does not exist
-        assert (
-            await cloud.async_get_or_create_cloudhook(hass, webhook_id)
-        ) == cloudhook_url
+        assert (await async_get_or_create_cloudhook(hass, webhook_id)) == cloudhook_url
         async_create_cloudhook_mock.assert_called_once_with(hass, webhook_id)
 
         await set_cloud_prefs(
             {
-                cloud.const.PREF_CLOUDHOOKS: {
+                PREF_CLOUDHOOKS: {
                     webhook_id: {
                         "webhook_id": webhook_id,
                         "cloudhook_id": "random-id",
@@ -260,21 +258,19 @@ async def test_async_get_or_create_cloudhook(
         async_create_cloudhook_mock.reset_mock()
 
         # get cloudhook as it exists
-        assert (
-            await cloud.async_get_or_create_cloudhook(hass, webhook_id) == cloudhook_url
-        )
+        assert await async_get_or_create_cloudhook(hass, webhook_id) == cloudhook_url
         async_create_cloudhook_mock.assert_not_called()
 
     # Simulate logged out
-    cloud_mock.id_token = None
+    cloud.id_token = None
 
     # Not logged in
-    with pytest.raises(cloud.CloudNotAvailable):
-        await cloud.async_get_or_create_cloudhook(hass, webhook_id)
+    with pytest.raises(CloudNotAvailable):
+        await async_get_or_create_cloudhook(hass, webhook_id)
 
     # Simulate disconnected
-    cloud_mock.iot.state = "disconnected"
+    cloud.iot.state = "disconnected"
 
     # Not connected
-    with pytest.raises(cloud.CloudNotConnected):
-        await cloud.async_get_or_create_cloudhook(hass, webhook_id)
+    with pytest.raises(CloudNotConnected):
+        await async_get_or_create_cloudhook(hass, webhook_id)
