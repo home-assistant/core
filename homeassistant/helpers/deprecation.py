@@ -292,10 +292,22 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
     return value
 
 
-def dir_with_deprecated_constants(module_globals: dict[str, Any]) -> list[str]:
+def dir_with_deprecated_constants(module_globals_keys: list[str]) -> list[str]:
     """Return dir() with deprecated constants."""
-    return list(module_globals) + [
+    return module_globals_keys + [
         name.removeprefix(_PREFIX_DEPRECATED)
-        for name in module_globals
+        for name in module_globals_keys
+        if name.startswith(_PREFIX_DEPRECATED)
+    ]
+
+
+def all_with_deprecated_constants(module_globals: dict[str, Any]) -> list[str]:
+    """Generate a list for __all___ with deprecated constants."""
+    # Iterate over a copy in case the globals dict is mutated by another thread
+    # while we loop over it.
+    module_globals_keys = list(module_globals)
+    return [itm for itm in module_globals_keys if not itm.startswith("_")] + [
+        name.removeprefix(_PREFIX_DEPRECATED)
+        for name in module_globals_keys
         if name.startswith(_PREFIX_DEPRECATED)
     ]
