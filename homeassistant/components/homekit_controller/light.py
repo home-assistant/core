@@ -174,7 +174,7 @@ class HomeKitLight(HomeKitEntity, LightEntity):
                 characteristics[CharacteristicsTypes.COLOR_TEMPERATURE] = int(
                     temperature
                 )
-            else:
+            elif hs_color is None:
                 # Some HomeKit devices implement color temperature with HS
                 # since the spec "technically" does not permit the COLOR_TEMPERATURE
                 # characteristic and the HUE and SATURATION characteristics to be
@@ -185,7 +185,7 @@ class HomeKitLight(HomeKitEntity, LightEntity):
                 characteristics[CharacteristicsTypes.HUE] = hue_sat[0]
                 characteristics[CharacteristicsTypes.SATURATION] = hue_sat[1]
 
-        elif hs_color is not None:
+        if hs_color is not None:
             characteristics[CharacteristicsTypes.HUE] = hs_color[0]
             characteristics[CharacteristicsTypes.SATURATION] = hs_color[1]
 
