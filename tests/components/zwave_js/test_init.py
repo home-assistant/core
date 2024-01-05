@@ -962,6 +962,7 @@ async def test_removed_device(
     # Make sure there are the same number of devices
     dev_reg = dr.async_get(hass)
     device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
+    logging.getLogger(__name__).error(device_entries)
     assert len(device_entries) == 3
 
     # Check how many entities there are
@@ -1016,6 +1017,7 @@ async def test_node_removed(
     client.driver.controller.receive_event(Event("node added", event))
     await hass.async_block_till_done()
     old_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert old_device
     assert old_device.id
 
     event = {"node": node, "reason": 0}
@@ -1147,11 +1149,11 @@ async def test_replace_different_node(
     state["nodeId"] = node_id
 
     device_id = f"{client.driver.controller.home_id}-{node_id}"
-    multisensor_6_device_id = (
+    multisensor_6_device_id_ext = (
         f"{device_id}-{multisensor_6.manufacturer_id}:"
         f"{multisensor_6.product_type}:{multisensor_6.product_id}"
     )
-    hank_device_id = (
+    hank_device_id_ext = (
         f"{device_id}-{state['manufacturerId']}:"
         f"{state['productType']}:"
         f"{state['productId']}"
@@ -1160,7 +1162,7 @@ async def test_replace_different_node(
     device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
     assert device == dev_reg.async_get_device(
-        identifiers={(DOMAIN, multisensor_6_device_id)}
+        identifiers={(DOMAIN, multisensor_6_device_id_ext)}
     )
     assert device.manufacturer == "AEON Labs"
     assert device.model == "ZW100"
@@ -1238,16 +1240,27 @@ async def test_replace_different_node(
     client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    # Old device and entities were removed, but the ID is re-used
-    device = dev_reg.async_get(dev_id)
-    assert device
-    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
-    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, hank_device_id)})
-    assert not dev_reg.async_get_device(identifiers={(DOMAIN, multisensor_6_device_id)})
-    assert device.manufacturer == "HANK Electronics Ltd."
-    assert device.model == "HKZW-SO01"
+    # device ID should be moved to the new hank node
+    new_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert new_device
+    assert new_device == dev_reg.async_get_device(
+        identifiers={(DOMAIN, hank_device_id_ext)}
+    )
+    # old device should remain but no longer have the non hardware specific identifier
+    # and should be distinct from the new device created for the hank node
+    multisensor_6_device = dev_reg.async_get_device(
+        identifiers={(DOMAIN, multisensor_6_device_id_ext)}
+    )
+    assert multisensor_6_device
+    assert multisensor_6_device != new_device
+    assert multisensor_6_device.identifiers == {(DOMAIN, multisensor_6_device_id_ext)}
 
-    assert not hass.states.get(AIR_TEMPERATURE_SENSOR)
+    assert new_device.manufacturer == "HANK Electronics Ltd."
+    assert new_device.model == "HKZW-SO01"
+
+    # We keep the old entities in case there are customizations that a user wants to
+    # keep. They can always delete the device and that will remove the entities as well.
+    assert hass.states.get(AIR_TEMPERATURE_SENSOR)
     assert hass.states.get("switch.smart_plug_with_two_usb_ports")
 
 

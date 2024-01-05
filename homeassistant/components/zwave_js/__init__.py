@@ -515,6 +515,20 @@ class ControllerEvents:
             via_device_id = get_device_id(driver, controller.own_node)
 
         if device_id_ext:
+            # If there is an existing device for this node ID, it has a hardware
+            # based identifier, and the hardware based identifier is not the same as
+            # the hardware based identifier for the current node, remove device_id
+            # from the existing device but leave it in place and create a new device.
+            if (
+                device
+                and len(device.identifiers) == 2
+                and not self.dev_reg.async_get_device(identifiers={device_id_ext})
+            ):
+                new_identifiers = device.identifiers.copy()
+                new_identifiers.remove(device_id)
+                self.dev_reg.async_update_device(
+                    device.id, new_identifiers=new_identifiers
+                )
             ids = {device_id, device_id_ext}
         else:
             ids = {device_id}
@@ -756,9 +770,12 @@ class NodeEvents:
             return
 
         driver = self.controller_events.driver_events.driver
-        notification: EntryControlNotification | NotificationNotification | PowerLevelNotification | MultilevelSwitchNotification = event[
-            "notification"
-        ]
+        notification: (
+            EntryControlNotification
+            | NotificationNotification
+            | PowerLevelNotification
+            | MultilevelSwitchNotification
+        ) = event["notification"]
         device = self.dev_reg.async_get_device(
             identifiers={get_device_id(driver, notification.node)}
         )
