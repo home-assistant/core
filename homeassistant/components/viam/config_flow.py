@@ -4,23 +4,29 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from const import CONF_ADDRESS, CONF_API_KEY
+from viam.app.app_client import AppClient
 from viam.app.viam_client import ViamClient
 from viam.rpc.dial import Credentials, DialOptions
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_ADDRESS, CONF_API_KEY
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
-    selector,
 )
 
-from .const import CONF_API_ID, CONF_CREDENTIAL_TYPE, CONF_ROBOT, CONF_SECRET, DOMAIN
+from .const import (
+    CONF_API_ID,
+    CONF_CREDENTIAL_TYPE,
+    CONF_ROBOT,
+    CONF_ROBOT_ID,
+    CONF_SECRET,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,29 +60,7 @@ STEP_AUTH_ORG_DATA_SCHEMA = vol.Schema(
 )
 
 
-class ViamHub:
-    """Collect user input during config flow and wrap ViamClient authentication logic."""
-
-    def __init__(self, auth_entity: str, credential_type: str) -> None:
-        """Initialize."""
-        self.auth_entity = auth_entity
-        self.credential_type = credential_type
-        self.client: ViamClient | None = None
-
-    async def authenticate(self, secret: str) -> bool:
-        """Test if we can authenticate with the host."""
-        creds = Credentials(type=self.credential_type, payload=secret)
-        opts = DialOptions(auth_entity=self.auth_entity, credentials=creds)
-        self.client = await ViamClient.create_from_dial_options(opts)
-        return bool(self.client)
-
-    def close(self) -> None:
-        """Close out the open client if it exists."""
-        if self.client:
-            self.client.close()
-
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+async def validate_input(data: dict[str, Any]) -> tuple[str, ViamClient]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -88,24 +72,18 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         auth_entity = data[CONF_ADDRESS]
         secret = data[CONF_SECRET]
 
-    hub = ViamHub(
-        auth_entity,
-        credential_type,
-    )
-
-    if not await hub.authenticate(secret):
-        raise InvalidAuth
+    creds = Credentials(type=credential_type, payload=secret)
+    opts = DialOptions(auth_entity=auth_entity, credentials=creds)
+    client = await ViamClient.create_from_dial_options(opts)
 
     # If you cannot connect:
     # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
-    if hub.client:
-        locations = await hub.client.app_client.list_locations()
-        location = await hub.client.app_client.get_location(next(iter(locations)).id)
+    if client:
+        locations = await client.app_client.list_locations()
+        location = await client.app_client.get_location(next(iter(locations)).id)
 
         # Return info that you want to store in the config entry.
-        return {"title": location.name, "hub": hub}
+        return (location.name, client)
 
     raise CannotConnect
 
@@ -117,9 +95,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize."""
-        self.credential_type = None
-        self.info = {}
-        self.data = None
+        self._title = ""
+        self._client: ViamClient | None = None
+        self._data = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -127,7 +105,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self.credential_type = user_input[CONF_CREDENTIAL_TYPE]
+            self._data.update(user_input)
             return await self.async_step_auth()
 
         return self.async_show_form(
@@ -141,22 +119,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                self.info = await validate_input(
-                    self.hass, {"credential_type": self.credential_type, **user_input}
-                )
+                self._data.update(user_input)
+                (title, client) = await validate_input(self._data)
+                self._title = title
+                self._client = client
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                self.data = user_input
                 return await self.async_step_robot()
 
         schema = STEP_AUTH_ROBOT_DATA_SCHEMA
-        if self.credential_type == "api-key":
+        if self._data.get(CONF_CREDENTIAL_TYPE) == "api-key":
             schema = STEP_AUTH_ORG_DATA_SCHEMA
 
         return self.async_show_form(
@@ -170,35 +146,38 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Select robot from location."""
 
-        locations = await self.info["hub"].client.app_client.list_locations()
-        robots = await self.info["hub"].client.app_client.list_robots(
-            next(iter(locations)).id
-        )
+        app_client = self._get_app_client()
+        locations = await app_client.list_locations()
+        robots = await app_client.list_robots(next(iter(locations)).id)
         if user_input is not None:
             robot_id = next(
                 robot.id for robot in robots if robot.name == user_input[CONF_ROBOT]
             )
-            self.data.update(
-                {"robot_id": robot_id, "credential_type": self.credential_type}
-            )
-            self.info["hub"].close()
-            return self.async_create_entry(title=self.info["title"], data=self.data)
+            self._data.update({CONF_ROBOT_ID: robot_id})
+            self._close_client()
+            return self.async_create_entry(title=self._title, data=self._data)
 
         return self.async_show_form(
             step_id="robot",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_ROBOT): selector(
-                        {"select": {"options": [robot.name for robot in robots]}}
+                    vol.Required(CONF_ROBOT): SelectSelector(
+                        SelectSelectorConfig(options=[robot.name for robot in robots])
                     )
                 }
             ),
         )
 
+    def _get_app_client(self) -> AppClient:
+        if self._client is None:
+            raise CannotConnect
+
+        return self._client.app_client
+
+    def _close_client(self):
+        if self._client is not None:
+            self._client.close()
+
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
