@@ -34,7 +34,7 @@ def dispatcher_connect(
 
     def remove_dispatcher() -> None:
         """Remove signal listener."""
-        run_callback_threadsafe(hass.loop, async_unsub).result()
+        hass.loop.call_soon_threadsafe(async_unsub)
 
     return remove_dispatcher
 
