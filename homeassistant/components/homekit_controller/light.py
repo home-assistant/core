@@ -1,7 +1,7 @@
 """Support for Homekit lights."""
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
@@ -21,6 +21,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import HomeKitEntity
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 
 async def async_setup_entry(
@@ -50,6 +55,14 @@ async def async_setup_entry(
 class HomeKitLight(HomeKitEntity, LightEntity):
     """Representation of a Homekit light."""
 
+    @callback
+    def _async_reconfigure(self) -> None:
+        """Reconfigure entity."""
+        self._async_clear_property_cache(
+            ("supported_features", "min_mireds", "max_mireds", "supported_color_modes")
+        )
+        super()._async_reconfigure()
+
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -78,13 +91,13 @@ class HomeKitLight(HomeKitEntity, LightEntity):
             self.service.value(CharacteristicsTypes.SATURATION),
         )
 
-    @property
+    @cached_property
     def min_mireds(self) -> int:
         """Return minimum supported color temperature."""
         min_value = self.service[CharacteristicsTypes.COLOR_TEMPERATURE].minValue
         return int(min_value) if min_value else super().min_mireds
 
-    @property
+    @cached_property
     def max_mireds(self) -> int:
         """Return the maximum color temperature."""
         max_value = self.service[CharacteristicsTypes.COLOR_TEMPERATURE].maxValue
@@ -113,7 +126,7 @@ class HomeKitLight(HomeKitEntity, LightEntity):
 
         return ColorMode.ONOFF
 
-    @property
+    @cached_property
     def supported_color_modes(self) -> set[ColorMode]:
         """Flag supported color modes."""
         color_modes: set[ColorMode] = set()
