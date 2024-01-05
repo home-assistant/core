@@ -111,13 +111,7 @@ class HomeKitLight(HomeKitEntity, LightEntity):
     @property
     def color_temp(self) -> int:
         """Return the color temperature."""
-        if self.service.has(CharacteristicsTypes.COLOR_TEMPERATURE):
-            return self.service.value(CharacteristicsTypes.COLOR_TEMPERATURE)
-        return color_util.color_temperature_kelvin_to_mired(
-            color_util.color_xy_to_temperature(
-                *color_util.color_hs_to_xy(*self.hs_color)
-            )
-        )
+        return self.service.value(CharacteristicsTypes.COLOR_TEMPERATURE)
 
     @property
     def color_mode(self) -> str:
