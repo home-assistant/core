@@ -1085,12 +1085,20 @@ class Event:
         }
 
     def as_dict(self) -> ReadOnlyDict[str, Any]:
+        """Create a dict representation of this Event.
+
+        Not async friendly.
+        """
+        return self._as_read_only_dict
+
+    @cached_property
+    def _as_read_only_dict(self) -> ReadOnlyDict[str, Any]:
         """Create a dict representation of this Event."""
         as_dict = self._as_dict
         data = as_dict["data"]
         # as_json_fragment will convert data to a ReadOnlyDict
         # so a normal dict so its ok to have either. We only
-        # update the cache if someone asks for the as_dict version
+        # mutate the cache if someone asks for the as_dict version
         if type(data) is not ReadOnlyDict:
             as_dict["data"] = ReadOnlyDict(data)
         return ReadOnlyDict(as_dict)
@@ -1448,6 +1456,19 @@ class State:
         }
 
     def as_dict(
+        self,
+    ) -> ReadOnlyDict[str, datetime.datetime | Collection[Any] | Context]:
+        """Return a dict representation of the State.
+
+        Async friendly.
+
+        To be used for JSON serialization.
+        Ensures: state == State.from_dict(state.as_dict())
+        """
+        return self._as_read_only_dict
+
+    @cached_property
+    def _as_read_only_dict(
         self,
     ) -> ReadOnlyDict[str, datetime.datetime | Collection[Any] | Context]:
         """Return a dict representation of the State.
