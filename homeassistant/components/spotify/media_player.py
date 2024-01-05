@@ -62,7 +62,7 @@ REPEAT_MODE_MAPPING_TO_SPOTIFY = {
 }
 
 # This is a minimal representation of the DJ playlist that Spotify now offers
-# The DJ is not fully integrated with the platlist API, so needs to have the playlist response mocked in order to maintain functionality
+# The DJ is not fully integrated with the playlist API, so needs to have the playlist response mocked in order to maintain functionality
 SPOTIFY_DJ_PLAYLIST = {"uri": "spotify:playlist:37i9dQZF1EYkqdzj48dyYq", "name": "DJ"}
 
 
