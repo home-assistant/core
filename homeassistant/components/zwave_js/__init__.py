@@ -528,7 +528,8 @@ class ControllerEvents:
                     device.id, new_identifiers=new_identifiers
                 )
             # If there is an orphaned device that already exists with this hardware
-            # based identifier, add the device_id to the orphaned device
+            # based identifier, add the node ID based identifier to the orphaned
+            # device.
             if (
                 device := self.dev_reg.async_get_device(identifiers={device_id_ext})
             ) and len(device.identifiers) == 1:
