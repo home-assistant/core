@@ -24,11 +24,11 @@ from homeassistant.util import slugify
 from .const import DOMAIN
 
 PLATFORMS = [
-    Platform.LIGHT,
-    Platform.COVER,
-    Platform.SWITCH,
-    Platform.SCENE,
     Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.SCENE,
+    Platform.SWITCH,
 ]
 
 _LOGGER = logging.getLogger(__name__)
