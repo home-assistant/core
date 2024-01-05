@@ -269,7 +269,23 @@ class DefaultAgent(AbstractConversationAgent):
                 language,
                 assistant=DOMAIN,
             )
+        except intent.NoStatesMatchedError as no_states_error:
+            # Intent was valid, but no entities matched the constraints.
+            _LOGGER.exception("No states matched intent constraints")
+            error_response_type, error_response_args = _get_no_states_matched_response(
+                no_states_error
+            )
+            return _make_error_result(
+                language,
+                intent.IntentResponseErrorCode.NO_VALID_TARGETS,
+                self._get_error_text(
+                    error_response_type, lang_intents, **error_response_args
+                ),
+                conversation_id,
+            )
         except intent.IntentHandleError:
+            # Intent was valid and entities matched constraints, but an error
+            # occurred during handling.
             _LOGGER.exception("Intent handling error")
             return _make_error_result(
                 language,
@@ -859,6 +875,35 @@ def _get_unmatched_response(
         assert isinstance(unmatched_area, UnmatchedTextEntity)
         error_response_type = ResponseType.NO_AREA
         error_response_args["area"] = unmatched_area.text
+
+    return error_response_type, error_response_args
+
+
+def _get_no_states_matched_response(
+    no_states_error: intent.NoStatesMatchedError,
+) -> tuple[ResponseType, dict[str, Any]]:
+    error_response_type = ResponseType.NO_INTENT
+    error_response_args: dict[str, Any] = {}
+
+    if no_states_error.area:
+        if no_states_error.domains:
+            # No exposed entities of a domain in an area.
+            # Example: "turn on lights in kitchen"
+            error_response_type = ResponseType.NO_DOMAIN
+            error_response_args["area"] = no_states_error.area
+
+            # Only use the first domain for the error message
+            error_response_args["domain"] = next(iter(no_states_error.domains))
+        elif no_states_error.device_classes:
+            # No exposed entities of a particular class in an area.
+            # Example: "close the bedroom windows"
+            error_response_type = ResponseType.NO_DEVICE_CLASS
+            error_response_args["area"] = no_states_error.area
+
+            # Only use the first device class for the error message
+            error_response_args["device_classes"] = next(
+                iter(no_states_error.device_classes)
+            )
 
     return error_response_type, error_response_args
 
