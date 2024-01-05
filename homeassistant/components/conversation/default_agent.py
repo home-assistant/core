@@ -34,7 +34,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_listen_entity_updates,
     async_should_expose,
 )
-from homeassistant.const import MATCH_ALL
+from homeassistant.const import EVENT_STATE_CHANGED, MATCH_ALL
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -145,7 +145,7 @@ class DefaultAgent(AbstractConversationAgent):
         """Return a list of supported languages."""
         return get_domains_and_languages()["homeassistant"]
 
-    async def async_initialize(self, config_intents):
+    async def async_initialize(self, config_intents: dict[str, Any] | None) -> None:
         """Initialize the default agent."""
         if "intent" not in self.hass.config.components:
             await setup.async_setup_component(self.hass, "intent", {})
@@ -156,17 +156,17 @@ class DefaultAgent(AbstractConversationAgent):
 
         self.hass.bus.async_listen(
             ar.EVENT_AREA_REGISTRY_UPDATED,
-            self._async_handle_area_registry_changed,
+            self._async_handle_area_registry_changed,  # type: ignore[arg-type]
             run_immediately=True,
         )
         self.hass.bus.async_listen(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
-            self._async_handle_entity_registry_changed,
+            self._async_handle_entity_registry_changed,  # type: ignore[arg-type]
             run_immediately=True,
         )
         self.hass.bus.async_listen(
-            core.EVENT_STATE_CHANGED,
-            self._async_handle_state_changed,
+            EVENT_STATE_CHANGED,
+            self._async_handle_state_changed,  # type: ignore[arg-type]
             run_immediately=True,
         )
         async_listen_entity_updates(
@@ -433,7 +433,7 @@ class DefaultAgent(AbstractConversationAgent):
 
         return speech
 
-    async def async_reload(self, language: str | None = None):
+    async def async_reload(self, language: str | None = None) -> None:
         """Clear cached intents for a language."""
         if language is None:
             self._lang_intents.clear()
@@ -442,7 +442,7 @@ class DefaultAgent(AbstractConversationAgent):
             self._lang_intents.pop(language, None)
             _LOGGER.debug("Cleared intents for language: %s", language)
 
-    async def async_prepare(self, language: str | None = None):
+    async def async_prepare(self, language: str | None = None) -> None:
         """Load intents for a language."""
         if language is None:
             language = self.hass.config.language
@@ -594,12 +594,16 @@ class DefaultAgent(AbstractConversationAgent):
         return lang_intents
 
     @core.callback
-    def _async_handle_area_registry_changed(self, event: core.Event) -> None:
+    def _async_handle_area_registry_changed(
+        self, event: EventType[ar.EventAreaRegistryUpdatedData]
+    ) -> None:
         """Clear area area cache when the area registry has changed."""
         self._slot_lists = None
 
     @core.callback
-    def _async_handle_entity_registry_changed(self, event: core.Event) -> None:
+    def _async_handle_entity_registry_changed(
+        self, event: EventType[er.EventEntityRegistryUpdatedData]
+    ) -> None:
         """Clear names list cache when an entity registry entry has changed."""
         if event.data["action"] != "update" or not any(
             field in event.data["changes"] for field in _ENTITY_REGISTRY_UPDATE_FIELDS
@@ -608,9 +612,11 @@ class DefaultAgent(AbstractConversationAgent):
         self._slot_lists = None
 
     @core.callback
-    def _async_handle_state_changed(self, event: core.Event) -> None:
+    def _async_handle_state_changed(
+        self, event: EventType[EventStateChangedData]
+    ) -> None:
         """Clear names list cache when a state is added or removed from the state machine."""
-        if event.data.get("old_state") and event.data.get("new_state"):
+        if event.data["old_state"] and event.data["new_state"]:
             return
         self._slot_lists = None
 
