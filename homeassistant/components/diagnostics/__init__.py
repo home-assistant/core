@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine, Mapping
 from dataclasses import dataclass, field
 from http import HTTPStatus
+import json
 import logging
 from typing import Any, Protocol
 
@@ -16,8 +17,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, integration_platform
 from homeassistant.helpers.device_registry import DeviceEntry, async_get
 from homeassistant.helpers.json import (
+    ExtendedJSONEncoder,
     find_paths_unserializable_data,
-    json_dumps_extended,
 )
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
@@ -171,13 +172,15 @@ async def _async_get_json_file_response(
             "requirements": cc_obj.requirements,
         }
     try:
-        json_data = json_dumps_extended(
+        json_data = json.dumps(
             {
                 "home_assistant": hass_sys_info,
                 "custom_components": custom_components,
                 "integration_manifest": integration.manifest,
                 "data": data,
-            }
+            },
+            indent=2,
+            cls=ExtendedJSONEncoder,
         )
     except TypeError:
         _LOGGER.error(
