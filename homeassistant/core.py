@@ -1108,8 +1108,8 @@ class Event:
         as_dict = self._as_dict
         data = as_dict["data"]
         context = as_dict["context"]
-        # as_json_fragment will convert data to a ReadOnlyDict
-        # to a normal dict so its ok to have either. We only
+        # as_json_fragment will serialize data from a ReadOnlyDict
+        # or a normal dict so its ok to have either. We only
         # mutate the cache if someone asks for the as_dict version
         # to avoid storing multiple copies of the data in memory.
         if type(data) is not ReadOnlyDict:
@@ -1496,8 +1496,8 @@ class State:
         """
         as_dict = self._as_dict
         context = as_dict["context"]
-        # as_json_fragment will convert data to a ReadOnlyDict
-        # to a normal dict so its ok to have either. We only
+        # as_json_fragment will serialize data from a ReadOnlyDict
+        # or a normal dict so its ok to have either. We only
         # mutate the cache if someone asks for the as_dict version
         # to avoid storing multiple copies of the data in memory.
         if type(context) is not ReadOnlyDict:
