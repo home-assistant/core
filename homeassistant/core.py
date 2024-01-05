@@ -81,6 +81,12 @@ from .exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
+from .helpers.deprecation import (
+    DeprecatedConstantEnum,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from .helpers.json import json_dumps
 from .util import dt as dt_util, location
 from .util.async_ import (
@@ -147,41 +153,11 @@ class ConfigSource(enum.StrEnum):
 
 
 # SOURCE_* are deprecated as of Home Assistant 2022.2, use ConfigSource instead
-_DEPRECATED_SOURCE_DISCOVERED = (ConfigSource.DISCOVERED, "2025.1")
-_DEPRECATED_SOURCE_STORAGE = (ConfigSource.STORAGE, "2025.1")
-_DEPRECATED_SOURCE_YAML = (ConfigSource.YAML, "2025.1")
-
-
-# Can be removed if no deprecated constant are in this module anymore
-def __getattr__(name: str) -> Any:
-    """Check if the not found name is a deprecated constant.
-
-    If it is, print a deprecation warning and return the value of the constant.
-    Otherwise raise AttributeError.
-    """
-    module_globals = globals()
-    if f"_DEPRECATED_{name}" not in module_globals:
-        raise AttributeError(f"Module {__name__} has no attribute {name!r}")
-
-    # Avoid circular import
-    from .helpers.deprecation import (  # pylint: disable=import-outside-toplevel
-        check_if_deprecated_constant,
-    )
-
-    return check_if_deprecated_constant(name, module_globals)
-
-
-# Can be removed if no deprecated constant are in this module anymore
-def __dir__() -> list[str]:
-    """Return dir() with deprecated constants."""
-    # Copied method from homeassistant.helpers.deprecattion#dir_with_deprecated_constants to avoid import cycle
-    module_globals = globals()
-
-    return list(module_globals) + [
-        name.removeprefix("_DEPRECATED_")
-        for name in module_globals
-        if name.startswith("_DEPRECATED_")
-    ]
+_DEPRECATED_SOURCE_DISCOVERED = DeprecatedConstantEnum(
+    ConfigSource.DISCOVERED, "2025.1"
+)
+_DEPRECATED_SOURCE_STORAGE = DeprecatedConstantEnum(ConfigSource.STORAGE, "2025.1")
+_DEPRECATED_SOURCE_YAML = DeprecatedConstantEnum(ConfigSource.YAML, "2025.1")
 
 
 # How long to wait until things that run on startup have to finish.
@@ -2554,3 +2530,11 @@ class Config:
             if self._original_unit_system:
                 data["unit_system"] = self._original_unit_system
             return await super().async_save(data)
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = functools.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = functools.partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())
