@@ -335,12 +335,12 @@ class DenonDevice(MediaPlayerEntity):
     @property
     def source_list(self) -> list[str]:
         """Return a list of available input sources."""
-        return self._receiver.input_func_list  # type: ignore[no-any-return]
+        return self._receiver.input_func_list
 
     @property
     def is_volume_muted(self) -> bool:
         """Return boolean if volume is currently muted."""
-        return self._receiver.muted  # type: ignore[no-any-return]
+        return self._receiver.muted
 
     @property
     def volume_level(self) -> float | None:
@@ -354,12 +354,12 @@ class DenonDevice(MediaPlayerEntity):
     @property
     def source(self) -> str | None:
         """Return the current input source."""
-        return self._receiver.input_func  # type: ignore[no-any-return]
+        return self._receiver.input_func
 
     @property
     def sound_mode(self) -> str | None:
         """Return the current matched sound mode."""
-        return self._receiver.sound_mode  # type: ignore[no-any-return]
+        return self._receiver.sound_mode
 
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
@@ -379,31 +379,31 @@ class DenonDevice(MediaPlayerEntity):
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
         if self._receiver.input_func in self._receiver.playing_func_list:
-            return self._receiver.image_url  # type: ignore[no-any-return]
+            return self._receiver.image_url
         return None
 
     @property
     def media_title(self) -> str | None:
         """Title of current playing media."""
         if self._receiver.input_func not in self._receiver.playing_func_list:
-            return self._receiver.input_func  # type: ignore[no-any-return]
+            return self._receiver.input_func
         if self._receiver.title is not None:
-            return self._receiver.title  # type: ignore[no-any-return]
-        return self._receiver.frequency  # type: ignore[no-any-return]
+            return self._receiver.title
+        return self._receiver.frequency
 
     @property
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
         if self._receiver.artist is not None:
-            return self._receiver.artist  # type: ignore[no-any-return]
-        return self._receiver.band  # type: ignore[no-any-return]
+            return self._receiver.artist
+        return self._receiver.band
 
     @property
     def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
         if self._receiver.album is not None:
-            return self._receiver.album  # type: ignore[no-any-return]
-        return self._receiver.station  # type: ignore[no-any-return]
+            return self._receiver.album
+        return self._receiver.station
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -423,7 +423,7 @@ class DenonDevice(MediaPlayerEntity):
     @property
     def dynamic_eq(self) -> bool | None:
         """Status of DynamicEQ."""
-        return self._receiver.dynamic_eq  # type: ignore[no-any-return]
+        return self._receiver.dynamic_eq
 
     @async_log_errors
     async def async_media_play_pause(self) -> None:
@@ -501,7 +501,7 @@ class DenonDevice(MediaPlayerEntity):
     @async_log_errors
     async def async_get_command(self, command: str, **kwargs: Any) -> str:
         """Send generic command."""
-        return await self._receiver.async_get_command(command)  # type: ignore[no-any-return]
+        return await self._receiver.async_get_command(command)
 
     @async_log_errors
     async def async_update_audyssey(self) -> None:

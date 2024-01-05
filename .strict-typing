@@ -129,7 +129,6 @@ homeassistant.components.date.*
 homeassistant.components.datetime.*
 homeassistant.components.deconz.*
 homeassistant.components.demo.*
-homeassistant.components.denonavr.*
 homeassistant.components.derivative.*
 homeassistant.components.device_automation.*
 homeassistant.components.device_tracker.*
