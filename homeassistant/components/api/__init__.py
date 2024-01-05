@@ -40,7 +40,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.event import EventStateChangedData
-from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.json import json_dumps, json_fragment
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.util.json import json_loads
@@ -374,14 +374,14 @@ class APIDomainServicesView(HomeAssistantView):
             )
 
         context = self.context(request)
-        changed_states: list[ha.State] = []
+        changed_states: list[json_fragment] = []
 
         @ha.callback
         def _async_save_changed_entities(
             event: EventType[EventStateChangedData],
         ) -> None:
             if event.context == context and (state := event.data["new_state"]):
-                changed_states.append(state)
+                changed_states.append(state.as_json_fragment)
 
         cancel_listen = hass.bus.async_listen(
             EVENT_STATE_CHANGED, _async_save_changed_entities, run_immediately=True
