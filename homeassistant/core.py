@@ -1026,21 +1026,12 @@ class Context:
         }
 
     def as_dict(self) -> ReadOnlyDict[str, str | None]:
-        """Return a ReadOnlyDict representation of the context.
-
-        This function is not expected to be called
-        and is only here for backwards compatibility.
-        """
+        """Return a ReadOnlyDict representation of the context."""
         return self._as_read_only_dict
 
     @cached_property
     def _as_read_only_dict(self) -> ReadOnlyDict[str, str | None]:
-        """Return a ReadOnlyDict representation of the context.
-
-        This function is not expected to be called
-        and is only here for backwards compatibility
-        to support the as_dict method.
-        """
+        """Return a ReadOnlyDict representation of the context."""
         return ReadOnlyDict(self.as_mutable_dict)
 
     @cached_property
@@ -1086,10 +1077,7 @@ class Event:
 
     @cached_property
     def _as_dict(self) -> dict[str, Any]:
-        """Create a dict representation of this Event.
-
-        Async friendly.
-        """
+        """Create a dict representation of this Event."""
         return {
             "event_type": self.event_type,
             "data": self.data,
@@ -1099,10 +1087,7 @@ class Event:
         }
 
     def as_dict(self) -> ReadOnlyDict[str, Any]:
-        """Create a dict representation of this Event.
-
-        This function is not expected to be called
-        and is only here for backwards compatibility.
+        """Create a ReadOnlyDict representation of this Event.
 
         Async friendly.
         """
@@ -1110,12 +1095,7 @@ class Event:
 
     @cached_property
     def _as_read_only_dict(self) -> ReadOnlyDict[str, Any]:
-        """Create a dict representation of this Event.
-
-        This function is not expected to be called
-        and is only here for backwards compatibility
-        to support the as_dict method.
-        """
+        """Create a ReadOnlyDict representation of this Event."""
         as_dict = self._as_dict
         data = as_dict["data"]
         context = as_dict["context"]
@@ -1486,10 +1466,7 @@ class State:
 
         Async friendly.
 
-        This function is not expected to be called
-        and is only here for backwards compatibility.
-
-        To be used for JSON serialization.
+        Can be used for JSON serialization.
         Ensures: state == State.from_dict(state.as_dict())
         """
         return self._as_read_only_dict
@@ -1498,14 +1475,7 @@ class State:
     def _as_read_only_dict(
         self,
     ) -> ReadOnlyDict[str, datetime.datetime | Collection[Any]]:
-        """Return a ReadOnlyDict representation of the State.
-
-        Async friendly.
-
-        This function is not expected to be called
-        and is only here for backwards compatibility
-        to support the as_dict method.
-        """
+        """Return a ReadOnlyDict representation of the State."""
         as_dict = self._as_dict
         context = as_dict["context"]
         # as_json_fragment will serialize data from a ReadOnlyDict
