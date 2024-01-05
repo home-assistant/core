@@ -1170,8 +1170,7 @@ async def test_replace_different_node(
 
     assert hass.states.get(AIR_TEMPERATURE_SENSOR)
 
-    # A replace node event has the extra field "replaced" set to True
-    # to distinguish it from an exclusion
+    # Remove existing node
     event = Event(
         type="node removed",
         data={
@@ -1240,14 +1239,17 @@ async def test_replace_different_node(
     client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    # device ID should be moved to the new hank node
+    # node ID based device identifier should be moved from the old multisensor device
+    # to the new hank device and both the old and new devices should exist.
     new_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
     assert new_device
-    assert new_device == dev_reg.async_get_device(
-        identifiers={(DOMAIN, hank_device_id_ext)}
-    )
-    # old device should remain but no longer have the non hardware specific identifier
-    # and should be distinct from the new device created for the hank node
+    hank_device = dev_reg.async_get_device(identifiers={(DOMAIN, hank_device_id_ext)})
+    assert hank_device
+    assert hank_device == new_device
+    assert hank_device.identifiers == {
+        (DOMAIN, device_id),
+        (DOMAIN, hank_device_id_ext),
+    }
     multisensor_6_device = dev_reg.async_get_device(
         identifiers={(DOMAIN, multisensor_6_device_id_ext)}
     )
@@ -1262,6 +1264,95 @@ async def test_replace_different_node(
     # keep. They can always delete the device and that will remove the entities as well.
     assert hass.states.get(AIR_TEMPERATURE_SENSOR)
     assert hass.states.get("switch.smart_plug_with_two_usb_ports")
+
+    # Try to add back the first node to see if the device IDs are correct
+
+    # Remove existing node
+    event = Event(
+        type="node removed",
+        data={
+            "source": "controller",
+            "event": "node removed",
+            "reason": 3,
+            "node": state,
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    # Device should still be there after the node was removed but the node ID based
+    # identifier should no longer be on it.
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, hank_device_id_ext)})
+    assert device
+    assert len(device.identifiers) == 1
+    assert not dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+
+    # When the node is replaced, a non-ready node added event is emitted
+    event = Event(
+        type="node added",
+        data={
+            "source": "controller",
+            "event": "node added",
+            "node": {
+                "nodeId": multisensor_6.node_id,
+                "index": 0,
+                "status": 4,
+                "ready": False,
+                "isSecure": False,
+                "interviewAttempts": 1,
+                "endpoints": [
+                    {"nodeId": multisensor_6.node_id, "index": 0, "deviceClass": None}
+                ],
+                "values": [],
+                "deviceClass": None,
+                "commandClasses": [],
+                "interviewStage": "None",
+                "statistics": {
+                    "commandsTX": 0,
+                    "commandsRX": 0,
+                    "commandsDroppedRX": 0,
+                    "commandsDroppedTX": 0,
+                    "timeoutResponse": 0,
+                },
+                "isControllerNode": False,
+            },
+            "result": {},
+        },
+    )
+
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    # Mark node as ready
+    event = Event(
+        type="ready",
+        data={
+            "source": "node",
+            "event": "ready",
+            "nodeId": node_id,
+            "nodeState": multisensor_6_state,
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    # node ID based device identifier should be moved from the new hank device
+    # to the old multisensor device and both the old and new devices should exist.
+    old_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert old_device
+    hank_device = dev_reg.async_get_device(identifiers={(DOMAIN, hank_device_id_ext)})
+    assert hank_device
+    assert hank_device != old_device
+    assert hank_device.identifiers == {(DOMAIN, hank_device_id_ext)}
+    multisensor_6_device = dev_reg.async_get_device(
+        identifiers={(DOMAIN, multisensor_6_device_id_ext)}
+    )
+    assert multisensor_6_device
+    assert multisensor_6_device == old_device
+    assert multisensor_6_device.identifiers == {
+        (DOMAIN, device_id),
+        (DOMAIN, multisensor_6_device_id_ext),
+    }
 
 
 async def test_node_model_change(

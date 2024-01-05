@@ -440,6 +440,15 @@ class ControllerEvents:
         # We assert because we know the device exists
         assert device
         if reason in (RemoveNodeReason.REPLACED, RemoveNodeReason.PROXY_REPLACED):
+            # If this node is being replaced, we remove the node ID based identifier
+            # from its device. It will get re-added to the same device later if the
+            # node is being replaced with the same device.
+            if device and len(device.identifiers) == 2:
+                new_identifiers = device.identifiers.copy()
+                new_identifiers.remove(dev_id)
+                self.dev_reg.async_update_device(
+                    device.id, new_identifiers=new_identifiers
+                )
             self.discovered_value_ids.pop(device.id, None)
 
             async_dispatcher_send(
@@ -515,17 +524,13 @@ class ControllerEvents:
             via_device_id = get_device_id(driver, controller.own_node)
 
         if device_id_ext:
-            # If there is an existing device for this node ID, it has a hardware based
-            # identifier, and the device's hardware based identifier is not the same as
-            # the hardware based identifier for the current node, remove device_id from
-            # the existing device but leave it in place and create a new device.
+            # If there is an orphaned device that already exists with this hardware
+            # based identifier, add the device_id to the orphaned device
             if (
-                device
-                and len(device.identifiers) == 2
-                and device_id_ext not in device.identifiers
-            ):
+                device := self.dev_reg.async_get_device(identifiers={device_id_ext})
+            ) and len(device.identifiers) == 1:
                 new_identifiers = device.identifiers.copy()
-                new_identifiers.remove(device_id)
+                new_identifiers.add(device_id)
                 self.dev_reg.async_update_device(
                     device.id, new_identifiers=new_identifiers
                 )
