@@ -229,7 +229,7 @@ def open_hass_ui(hass: core.HomeAssistant) -> None:
         )
 
 
-async def load_registries(hass: core.HomeAssistant) -> None:
+async def load_core_functionality(hass: core.HomeAssistant) -> None:
     """Load the registries and cache the result of platform.uname().processor."""
     if DATA_REGISTRIES_LOADED in hass.data:
         return
@@ -256,6 +256,7 @@ async def load_registries(hass: core.HomeAssistant) -> None:
         hass.async_add_executor_job(_cache_uname_processor),
         template.async_load_custom_templates(hass),
         restore_state.async_load(hass),
+        hass.config_entries.async_initialize(),
     )
 
 
@@ -270,8 +271,7 @@ async def async_from_config_dict(
     start = monotonic()
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
-    await hass.config_entries.async_initialize()
-    await load_registries(hass)
+    await load_core_functionality(hass)
 
     # Set up core.
     _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)
@@ -606,16 +606,9 @@ async def _async_set_up_integrations(
 
     _LOGGER.info("Domains to be set up: %s", domains_to_setup)
 
-    # Load requirements in a single job in a background task
-    # so we can continue to setup integrations. We do not wait
-    # for it to be done because async_setup_multi_components will
-    # still check if the requirements need to be installed if it
-    # has not finished in time for a specific integration. In most
-    # cases it will be done before the first integration is setup
-    # or shortly after which allows to know in advance if a
-    # requirement needs to be installed without having to wait
-    # for the requirements lock which is a high contention lock
-    # during startup because all integrations need it.
+    # Optimistically check if requirements are already installed
+    # ahead of setting up the integrations so we can prime the cache
+    # We do not wait for this since its an optimization only
     installed_requirements_task = asyncio.create_task(
         requirements.async_load_installed_versions(hass, needed_requirements)
     )
