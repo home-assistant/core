@@ -229,7 +229,7 @@ def open_hass_ui(hass: core.HomeAssistant) -> None:
         )
 
 
-async def load_core_functionality(hass: core.HomeAssistant) -> None:
+async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
     """Load the registries and cache the result of platform.uname().processor."""
     if DATA_REGISTRIES_LOADED in hass.data:
         return
@@ -271,7 +271,7 @@ async def async_from_config_dict(
     start = monotonic()
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
-    await load_core_functionality(hass)
+    await async_load_base_functionality(hass)
 
     # Set up core.
     _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)
