@@ -3,6 +3,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pytedee_async import TedeeLock
 from pytedee_async.exception import (
     TedeeClientException,
     TedeeDataUpdateException,
@@ -227,6 +228,25 @@ async def test_cleanup_disconnected_locks(
 
     # remove a lock and wait for coordinator
     mock_tedee.locks_dict.pop(12345)
+
+async def test_new_lock(
+    hass: HomeAssistant,
+    mock_tedee: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Ensure new lock is added automatically."""
+
+    state = hass.states.get("lock.lock_4e5f")
+    assert state is None
+
+    mock_tedee.locks_dict[666666] = TedeeLock("Lock-4E5F", 666666, 2)
+    mock_tedee.locks_dict[777777] = TedeeLock(
+        "Lock-6G7H",
+        777777,
+        4,
+        is_enabled_pullspring=True,
+    )
+
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -237,3 +257,8 @@ async def test_cleanup_disconnected_locks(
 
     locks = [device.name for device in devices]
     assert "Lock-1A2B" not in locks
+    
+    state = hass.states.get("lock.lock_4e5f")
+    assert state
+    state = hass.states.get("lock.lock_6g7h")
+    assert state
