@@ -116,7 +116,7 @@ def _get_doorbell_options(api: ProtectApiClient) -> list[dict[str, Any]]:
 
     for item in messages:
         msg_type = item.type.value
-        if item.type == DoorbellMessageType.CUSTOM_MESSAGE:
+        if item.type is DoorbellMessageType.CUSTOM_MESSAGE:
             msg_type = f"{DoorbellMessageType.CUSTOM_MESSAGE.value}:{item.text}"
 
         built_messages.append({"id": msg_type, "name": item.text})

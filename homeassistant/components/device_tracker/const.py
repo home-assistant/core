@@ -9,6 +9,7 @@ from typing import Final
 
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -44,10 +45,6 @@ _DEPRECATED_SOURCE_TYPE_BLUETOOTH_LE: Final = DeprecatedConstantEnum(
     SourceType.BLUETOOTH_LE, "2025.1"
 )
 
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
-
 CONF_SCAN_INTERVAL: Final = "interval_seconds"
 SCAN_INTERVAL: Final = timedelta(seconds=12)
 
@@ -71,3 +68,10 @@ ATTR_CONSIDER_HOME: Final = "consider_home"
 ATTR_IP: Final = "ip"
 
 CONNECTED_DEVICE_REGISTERED: Final = "device_tracker_connected_device_registered"
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

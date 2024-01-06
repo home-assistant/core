@@ -110,7 +110,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             self._attr_state = MediaPlayerState.IDLE
 
         is_connected = self.data.last_update_success and (
-            updated_device.state == StateType.CONNECTED
+            updated_device.state is StateType.CONNECTED
             or (not updated_device.is_adopted_by_us and updated_device.can_adopt)
         )
         self._attr_available = is_connected and updated_device.feature_flags.has_speaker
