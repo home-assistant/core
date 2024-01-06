@@ -384,6 +384,18 @@ class ESPHomeManager:
 
     async def on_connect(self) -> None:
         """Subscribe to states and list entities on successful API login."""
+        try:
+            await self._on_connnect()
+        except APIConnectionError as err:
+            _LOGGER.warning(
+                "Error getting setting up connection for %s: %s", self.host, err
+            )
+            # Re-connection logic will trigger after this
+            await self.cli.disconnect()
+            return
+
+    async def _on_connnect(self) -> None:
+        """Subscribe to states and list entities on successful API login."""
         entry = self.entry
         unique_id = entry.unique_id
         entry_data = self.entry_data
@@ -393,16 +405,10 @@ class ESPHomeManager:
         cli = self.cli
         stored_device_name = entry.data.get(CONF_DEVICE_NAME)
         unique_id_is_mac_address = unique_id and ":" in unique_id
-        try:
-            results = await asyncio.gather(
-                cli.device_info(),
-                cli.list_entities_services(),
-            )
-        except APIConnectionError as err:
-            _LOGGER.warning("Error getting device info for %s: %s", self.host, err)
-            # Re-connection logic will trigger after this
-            await cli.disconnect()
-            return
+        results = await asyncio.gather(
+            cli.device_info(),
+            cli.list_entities_services(),
+        )
 
         device_info: EsphomeDeviceInfo = results[0]
         entity_infos_services: tuple[list[EntityInfo], list[UserService]] = results[1]
@@ -487,18 +493,12 @@ class ESPHomeManager:
                 )
             )
 
-        try:
-            setup_results = await asyncio.gather(
-                *setup_coros_with_disconnect_callbacks,
-                cli.subscribe_states(entry_data.async_update_state),
-                cli.subscribe_service_calls(self.async_on_service_call),
-                cli.subscribe_home_assistant_states(self.async_on_state_subscription),
-            )
-        except APIConnectionError as err:
-            _LOGGER.warning("Error getting initial data for %s: %s", self.host, err)
-            # Re-connection logic will trigger after this
-            await cli.disconnect()
-            return
+        setup_results = await asyncio.gather(
+            *setup_coros_with_disconnect_callbacks,
+            cli.subscribe_states(entry_data.async_update_state),
+            cli.subscribe_service_calls(self.async_on_service_call),
+            cli.subscribe_home_assistant_states(self.async_on_state_subscription),
+        )
 
         for result_idx in range(len(setup_coros_with_disconnect_callbacks)):
             cancel_callback = setup_results[result_idx]
