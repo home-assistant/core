@@ -98,12 +98,14 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
                     identifiers={(DOMAIN, str(lock_id))}
                 ):
                     device_registry.async_remove_device(device.id)
+
         if new_locks := set(self.tedee_client.locks_dict.keys()) - self._current_locks:
             _LOGGER.debug("New locks found: %s", ", ".join(map(str, new_locks)))
             for lock_id in new_locks:
                 for callback in self.new_lock_callbacks:
                     callback(lock_id)
 
+        self._current_locks = set(self.tedee_client.locks_dict.keys())
         return self.tedee_client.locks_dict
 
     async def _async_update(self, update_fn: Callable[[], Awaitable[None]]) -> None:

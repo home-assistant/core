@@ -228,6 +228,17 @@ async def test_cleanup_disconnected_locks(
 
     # remove a lock and wait for coordinator
     mock_tedee.locks_dict.pop(12345)
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    locks = [device.name for device in devices]
+    assert "Lock-1A2B" not in locks
+
 
 async def test_new_lock(
     hass: HomeAssistant,
@@ -251,13 +262,6 @@ async def test_new_lock(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    devices = dr.async_entries_for_config_entry(
-        device_registry, mock_config_entry.entry_id
-    )
-
-    locks = [device.name for device in devices]
-    assert "Lock-1A2B" not in locks
-    
     state = hass.states.get("lock.lock_4e5f")
     assert state
     state = hass.states.get("lock.lock_6g7h")
