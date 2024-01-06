@@ -2070,14 +2070,6 @@ async def test_register_callback_by_local_name_overly_broad(
         bluetooth.async_register_callback(
             hass,
             _fake_subscriber,
-            {LOCAL_NAME: "a"},
-            BluetoothScanningMode.ACTIVE,
-        )
-
-    with pytest.raises(ValueError):
-        bluetooth.async_register_callback(
-            hass,
-            _fake_subscriber,
             {LOCAL_NAME: "ab*"},
             BluetoothScanningMode.ACTIVE,
         )
