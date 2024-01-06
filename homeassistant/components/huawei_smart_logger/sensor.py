@@ -245,7 +245,7 @@ class HuaweiSmartLogger3000Sensor(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="Huawei",
             model="Smart Logger 3000",
-            configuration_url="https://support.huawei.com/enterprise/en/doc/EDOC1100108365/1a9e42de/webui-layout",
+            configuration_url="",
         )
 
     @property
