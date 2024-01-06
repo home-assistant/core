@@ -19,11 +19,6 @@ PRESET_MODE_SMART = "smart"
 PRESET_MODE_SLEEP = "sleep"
 PRESET_MODE_ON = "on"
 
-FULL_SUPPORT = (
-    FanEntityFeature.SET_SPEED | FanEntityFeature.OSCILLATE | FanEntityFeature.DIRECTION
-)
-LIMITED_SUPPORT = FanEntityFeature.SET_SPEED
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
