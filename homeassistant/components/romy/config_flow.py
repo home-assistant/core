@@ -17,7 +17,6 @@ class RomyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle config flow for ROMY."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self) -> None:
         """Handle a config flow for ROMY."""
