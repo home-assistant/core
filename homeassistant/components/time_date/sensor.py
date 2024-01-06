@@ -17,7 +17,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DISPLAY_OPTIONS, EVENT_CORE_CONFIG_UPDATE
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -50,6 +49,7 @@ async def async_setup_platform(
     if hass.config.time_zone is None:
         _LOGGER.error("Timezone is not set in Home Assistant configuration")  # type: ignore[unreachable]
         return False
+
     if "beat" in config[CONF_DISPLAY_OPTIONS]:
         async_create_issue(
             hass,
@@ -77,7 +77,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Time & Date sensor."""
 
-    async_add_entities([TimeDateSensor(entry.options[CONF_DISPLAY_OPTIONS])])
+    async_add_entities(
+        [TimeDateSensor(entry.options[CONF_DISPLAY_OPTIONS], entry.entry_id)]
+    )
 
 
 class TimeDateSensor(SensorEntity):
@@ -88,18 +90,13 @@ class TimeDateSensor(SensorEntity):
     _state: str | None = None
     unsub: CALLBACK_TYPE | None = None
 
-    def __init__(self, option_type: str) -> None:
+    def __init__(self, option_type: str, entry_id: str | None = None) -> None:
         """Initialize the sensor."""
-        self._attr_translation_key = option_type
+        self._attr_translation_a_key = option_type
         self.type = option_type
         object_id = "internet_time" if option_type == "beat" else option_type
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
-        self._attr_unique_id = option_type
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, DOMAIN)},
-            name="Time & Date",
-        )
+        self._attr_unique_id = option_type if entry_id else None
 
         self._update_internal_state(dt_util.utcnow())
 
