@@ -454,6 +454,7 @@ FLOWS = {
         "sma",
         "smappee",
         "smart_meter_texas",
+        "smartfox",
         "smartthings",
         "smarttub",
         "smhi",

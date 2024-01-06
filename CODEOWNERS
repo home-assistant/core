@@ -1205,6 +1205,8 @@ build.json @home-assistant/supervisor
 /tests/components/smappee/ @bsmappee
 /homeassistant/components/smart_meter_texas/ @grahamwetzler
 /tests/components/smart_meter_texas/ @grahamwetzler
+/homeassistant/components/smartfox/ @jfk344
+/tests/components/smartfox/ @jfk344
 /homeassistant/components/smartthings/ @andrewsayre
 /tests/components/smartthings/ @andrewsayre
 /homeassistant/components/smarttub/ @mdz
