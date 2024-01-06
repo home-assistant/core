@@ -207,3 +207,19 @@ async def test_update_failed(
     state = hass.states.get("lock.lock_1a2b")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_lock_unavailable(
+    hass: HomeAssistant,
+    mock_tedee: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test update failed."""
+    mock_tedee.locks_dict.pop(12345)
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.lock_1a2b")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

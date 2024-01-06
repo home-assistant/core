@@ -38,13 +38,13 @@ class TedeeEntity(CoordinatorEntity[TedeeApiCoordinator]):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._lock = self.coordinator.data[self._lock.lock_id]
+        self._lock = self.coordinator.data.get(self._lock.lock_id, self._lock)
         super()._handle_coordinator_update()
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self._lock in self.coordinator.data.values()
+        return super().available and self._lock.lock_id in self.coordinator.data
 
 
 class TedeeDescriptionEntity(TedeeEntity):
