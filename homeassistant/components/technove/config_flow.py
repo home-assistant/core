@@ -46,6 +46,5 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_get_station(self, host: str) -> TechnoVEStation:
         """Get information from a TechnoVE station."""
-        session = async_get_clientsession(self.hass)
-        api = TechnoVE(host, session=session)
+        api = TechnoVE(host, session=async_get_clientsession(self.hass))
         return await api.update()
