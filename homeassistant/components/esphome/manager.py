@@ -203,14 +203,19 @@ class ESPHomeManager:
                     template.render_complex(data_template, service.variables)
                 )
             except TemplateError as ex:
-                _LOGGER.error("Error rendering data template for %s: %s", self.host, ex)
+                _LOGGER.error(
+                    "Error rendering data template %s for %s: %s",
+                    service.data_template,
+                    self.host,
+                    ex,
+                )
                 return
 
         if service.is_event:
             device_id = self.device_id
             # ESPHome uses service call packet for both events and service calls
             # Ensure the user can only send events of form 'esphome.xyz'
-            if domain != "esphome":
+            if domain != DOMAIN:
                 _LOGGER.error(
                     "Can only generate events under esphome domain! (%s)", self.host
                 )
@@ -280,42 +285,44 @@ class ESPHomeManager:
 
         await self.cli.send_home_assistant_state(entity_id, attribute, str(send_state))
 
+    async def _send_home_assistant_state_event(
+        self,
+        attribute: str | None,
+        event: EventType[EventStateChangedData],
+    ) -> None:
+        """Forward Home Assistant states updates to ESPHome."""
+        event_data = event.data
+        new_state = event_data["new_state"]
+        old_state = event_data["old_state"]
+
+        if new_state is None or old_state is None:
+            return
+
+        # Only communicate changes to the state or attribute tracked
+        if (not attribute and old_state.state == new_state.state) or (
+            attribute
+            and old_state.attributes.get(attribute)
+            == new_state.attributes.get(attribute)
+        ):
+            return
+
+        await self._send_home_assistant_state(
+            event.data["entity_id"], attribute, new_state
+        )
+
     @callback
     def async_on_state_subscription(
         self, entity_id: str, attribute: str | None = None
     ) -> None:
         """Subscribe and forward states for requested entities."""
         hass = self.hass
-
-        async def send_home_assistant_state_event(
-            event: EventType[EventStateChangedData],
-        ) -> None:
-            """Forward Home Assistant states updates to ESPHome."""
-            event_data = event.data
-            new_state = event_data["new_state"]
-            old_state = event_data["old_state"]
-
-            if new_state is None or old_state is None:
-                return
-
-            # Only communicate changes to the state or attribute tracked
-            if (not attribute and old_state.state == new_state.state) or (
-                attribute
-                and old_state.attributes.get(attribute)
-                == new_state.attributes.get(attribute)
-            ):
-                return
-
-            await self._send_home_assistant_state(
-                event.data["entity_id"], attribute, new_state
-            )
-
         self.entry_data.disconnect_callbacks.add(
             async_track_state_change_event(
-                hass, [entity_id], send_home_assistant_state_event
+                hass,
+                [entity_id],
+                partial(self._send_home_assistant_state_event, attribute),
             )
         )
-
         # Send initial state
         hass.async_create_task(
             self._send_home_assistant_state(

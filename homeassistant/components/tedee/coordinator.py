@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
@@ -45,9 +46,12 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         self.tedee_client = TedeeClient(
             local_token=self.config_entry.data[CONF_LOCAL_ACCESS_TOKEN],
             local_ip=self.config_entry.data[CONF_HOST],
+            session=async_get_clientsession(hass),
         )
 
         self._next_get_locks = time.time()
+        self._current_locks: set[int] = set()
+        self.new_lock_callbacks: list[Callable[[int], None]] = []
 
     @property
     def bridge(self) -> TedeeBridge:
@@ -79,6 +83,15 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             "available_locks: %s",
             ", ".join(map(str, self.tedee_client.locks_dict.keys())),
         )
+
+        if not self._current_locks:
+            self._current_locks = set(self.tedee_client.locks_dict.keys())
+
+        if new_locks := set(self.tedee_client.locks_dict.keys()) - self._current_locks:
+            _LOGGER.debug("New locks found: %s", ", ".join(map(str, new_locks)))
+            for lock_id in new_locks:
+                for callback in self.new_lock_callbacks:
+                    callback(lock_id)
 
         return self.tedee_client.locks_dict
 
