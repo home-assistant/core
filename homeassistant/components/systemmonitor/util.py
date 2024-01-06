@@ -25,6 +25,11 @@ def get_all_disk_mounts() -> set[str]:
                 "No permission for running user to access %s", part.mountpoint
             )
             continue
+        except OSError as err:
+            _LOGGER.warning(
+                "Mountpoint %s was excluded because of: %s", part.mountpoint, str(err)
+            )
+            continue
         if usage.total > 0 and part.device != "":
             disks.add(part.mountpoint)
     _LOGGER.debug("Adding disks: %s", ", ".join(disks))
