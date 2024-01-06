@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 from enum import Enum
+from typing import cast
 
 from hass_nabucasa import Cloud
 import voluptuous as vol
@@ -174,6 +175,22 @@ def async_listen_connection_change(
 def async_active_subscription(hass: HomeAssistant) -> bool:
     """Test if user has an active subscription."""
     return async_is_logged_in(hass) and not hass.data[DOMAIN].subscription_expired
+
+
+async def async_get_or_create_cloudhook(hass: HomeAssistant, webhook_id: str) -> str:
+    """Get or create a cloudhook."""
+    if not async_is_connected(hass):
+        raise CloudNotConnected
+
+    if not async_is_logged_in(hass):
+        raise CloudNotAvailable
+
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloudhooks = cloud.client.cloudhooks
+    if hook := cloudhooks.get(webhook_id):
+        return cast(str, hook["cloudhook_url"])
+
+    return await async_create_cloudhook(hass, webhook_id)
 
 
 @bind_hass

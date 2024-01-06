@@ -165,6 +165,10 @@ def count_torrents_in_states(
     coordinator: QBittorrentDataCoordinator, states: list[str]
 ) -> int:
     """Count the number of torrents in specified states."""
+    # When torrents are not in the returned data, there are none, return 0.
+    if "torrents" not in coordinator.data:
+        return 0
+
     if not states:
         return len(coordinator.data["torrents"])
 
