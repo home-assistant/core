@@ -104,6 +104,7 @@ set_minimum_floor_heating_valve_position:
     entity_id:
       required: true
       example: sensor.test_fussbodenheizungsaktor_og_minimumfloorheatingvalveposition
+      default: sensor.test_fussbodenheizungsaktor_og_minimumfloorheatingvalveposition
       selector:
         text:
     accesspoint_id:

@@ -60,6 +60,7 @@ HMIPC_SERVICES = [
 
 SCHEMA_SET_MINIMUM_FLOOR_HEATING_VALVE_POSITION = vol.Schema(
     {
+        vol.Required(ATTR_ENTITY_ID): comp_entity_ids,
         vol.Required(ATTR_VALVE_POSITION, default=0): vol.All(
             vol.Coerce(float), vol.Range(min=0, max=1)
         ),
