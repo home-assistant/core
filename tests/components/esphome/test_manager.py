@@ -86,6 +86,7 @@ async def test_esphome_device_service_calls_allowed(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a device with service calls are allowed."""
+    await async_setup_component(hass, "tag", {})
     entity_info = []
     states = []
     user_service = []
@@ -198,6 +199,23 @@ async def test_esphome_device_service_calls_allowed(
     event = events[0]
     assert event.data["raw"] == "event"
     assert event.event_type == "esphome.test"
+    events.clear()
+    caplog.clear()
+
+    # Try scanning a tag
+    events = async_capture_events(hass, "tag_scanned")
+    device.mock_service_call(
+        HomeassistantServiceCall(
+            service="esphome.tag_scanned",
+            is_event=True,
+            data={"tag_id": "1234"},
+        )
+    )
+    await hass.async_block_till_done()
+    assert len(events) == 1
+    event = events[0]
+    assert event.event_type == "tag_scanned"
+    assert event.data["tag_id"] == "1234"
     events.clear()
     caplog.clear()
 
