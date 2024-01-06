@@ -101,6 +101,7 @@ class LutronLed(LutronDevice, SwitchEntity):
             manufacturer="Lutron",
             name=scene_device.name,
             suggested_area=area_name,
+            via_device=(DOMAIN, controller.guid),
         )
 
     def turn_on(self, **kwargs: Any) -> None:

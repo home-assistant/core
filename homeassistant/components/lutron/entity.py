@@ -26,6 +26,7 @@ class LutronDevice(Entity):
             manufacturer="Lutron",
             name=lutron_device.name,
             suggested_area=area_name,
+            via_device=(DOMAIN, controller.guid),
         )
 
     async def async_added_to_hass(self) -> None:
