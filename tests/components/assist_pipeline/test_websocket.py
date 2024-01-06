@@ -2507,8 +2507,7 @@ async def test_pipeline_empty_tts_output(
 async def test_pipeline_list_devices(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    init_components,
-    pipeline_data,
+    assist_device,
 ) -> None:
     """Test list devices."""
     client = await hass_ws_client(hass)
@@ -2518,7 +2517,7 @@ async def test_pipeline_list_devices(
     assert msg["success"]
     assert msg["result"] == [
         {
-            "device_id": ANY,
-            "pipeline_entity": "select.test_test_prefix_pipeline",
+            "device_id": assist_device.id,
+            "pipeline_entity": "select.test_assist_device_test_prefix_pipeline",
         }
     ]

@@ -1703,7 +1703,7 @@ class PipelineRuns:
                 pipeline_run.abort_wake_word_detection = True
 
 
-@dataclass
+@dataclass(slots=True)
 class DeviceAudioQueue:
     """Audio capture queue for a satellite device."""
 
@@ -1717,7 +1717,7 @@ class DeviceAudioQueue:
     """Flag to be set if audio samples were dropped because the queue was full."""
 
 
-@dataclass
+@dataclass(slots=True)
 class AssistDevice:
     """Assist device."""
 
@@ -1737,7 +1737,7 @@ class PipelineData:
         self.device_audio_queues: dict[str, DeviceAudioQueue] = {}
 
 
-@dataclass
+@dataclass(slots=True)
 class PipelineRunDebug:
     """Debug data for a pipelinerun."""
 

@@ -303,19 +303,18 @@ def websocket_list_devices(
     """List assist devices."""
     pipeline_data: PipelineData = hass.data[DOMAIN]
     ent_reg = er.async_get(hass)
-    devices: list[dict[str, Any]] = []
-
-    for device_id, info in pipeline_data.pipeline_devices.items():
-        devices.append(
+    connection.send_result(
+        msg["id"],
+        [
             {
                 "device_id": device_id,
                 "pipeline_entity": ent_reg.async_get_entity_id(
                     "select", info.domain, f"{info.unique_id_prefix}-pipeline"
                 ),
             }
-        )
-
-    connection.send_result(msg["id"], devices)
+            for device_id, info in pipeline_data.pipeline_devices.items()
+        ],
+    )
 
 
 @callback
