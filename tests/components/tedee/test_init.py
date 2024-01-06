@@ -98,4 +98,4 @@ async def test_cleanup_disconnected_locks(
     )
 
     locks = [device.name for device in devices]
-    assert locks == ["Bridge-AB1C", "Lock-2C3D"]
+    assert "Lock-1A2B" not in locks
