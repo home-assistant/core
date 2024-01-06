@@ -912,6 +912,9 @@ async def disconnect_client(hass: HomeAssistant, entry: ConfigEntry) -> None:
     listen_task: asyncio.Task = data[DATA_CLIENT_LISTEN_TASK]
     start_client_task: asyncio.Task = data[DATA_START_CLIENT_TASK]
     driver_events: DriverEvents = data[DATA_DRIVER_EVENTS]
+    # Cancel the start client task before cancelling the listen task
+    # to allow client tasks to clean up before the connection to the server is closed
+    # when the listen task is cancelled.
     start_client_task.cancel()
     with suppress(asyncio.CancelledError):
         await start_client_task
