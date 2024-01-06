@@ -14,11 +14,6 @@ from .entity import LutronDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-PRESET_MODE_AUTO = "auto"
-PRESET_MODE_SMART = "smart"
-PRESET_MODE_SLEEP = "sleep"
-PRESET_MODE_ON = "on"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -82,7 +77,6 @@ class LutronFan(LutronDevice, FanEntity):
             self._prev_percentage = percentage
         self._percentage = percentage
         self._lutron_device.level = percentage
-        self._attr_preset_mode = None
         self.async_write_ha_state()
 
     async def async_turn_on(
