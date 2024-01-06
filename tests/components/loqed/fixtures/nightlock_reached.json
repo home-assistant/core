@@ -1,0 +1,8 @@
+{
+  "requested_state": "NIGHT_LOCK",
+  "requested_state_numeric": 3,
+  "mac_wifi": "**REDACTED**",
+  "mac_ble": "**REDACTED**",
+  "event_type": "STATE_CHANGED_LATCH",
+  "key_local_id": 255
+}

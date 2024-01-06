@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 
-from homeassistant.components.alexa import config, smart_home, smart_home_http
+from homeassistant.components.alexa import config, smart_home
 from homeassistant.components.alexa.const import CONF_ENDPOINT, CONF_FILTER, CONF_LOCALE
 from homeassistant.core import Context, callback
 from homeassistant.helpers import entityfilter
@@ -16,7 +16,7 @@ TEST_TOKEN_URL = "https://api.amazon.com/auth/o2/token"
 TEST_LOCALE = "en-US"
 
 
-class MockConfig(smart_home_http.AlexaConfig):
+class MockConfig(smart_home.AlexaConfig):
     """Mock Alexa config."""
 
     entity_config = {
@@ -128,12 +128,14 @@ async def assert_request_calls_service(
 
 
 async def assert_request_fails(
-    namespace, name, endpoint, service_not_called, hass, payload=None
+    namespace, name, endpoint, service_not_called, hass, payload=None, instance=None
 ):
     """Assert an API request returns an ErrorResponse."""
     request = get_new_request(namespace, name, endpoint)
     if payload:
         request["directive"]["payload"] = payload
+    if instance:
+        request["directive"]["header"]["instance"] = instance
 
     domain, service_name = service_not_called.split(".")
     call = async_mock_service(hass, domain, service_name)

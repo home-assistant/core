@@ -40,3 +40,13 @@ EVENT_TIME_FIELDS = {
     EVENT_IN,
 }
 EVENT_TYPES = "event_types"
+EVENT_DURATION = "duration"
+
+# Fields for the list events service
+LIST_EVENT_FIELDS = {
+    "start",
+    "end",
+    EVENT_SUMMARY,
+    EVENT_DESCRIPTION,
+    EVENT_LOCATION,
+}

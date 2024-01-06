@@ -46,6 +46,7 @@ class SwitchbotLightEntity(SwitchbotEntity, LightEntity):
     """Representation of switchbot light bulb."""
 
     _device: SwitchbotBaseLight
+    _attr_name = None
 
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the Switchbot light."""

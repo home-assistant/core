@@ -1,27 +1,19 @@
 decrement:
-  name: Decrement
-  description: Decrement the value of an input number entity by its stepping.
   target:
     entity:
       domain: input_number
 
 increment:
-  name: Increment
-  description: Increment the value of an input number entity by its stepping.
   target:
     entity:
       domain: input_number
 
 set_value:
-  name: Set
-  description: Set the value of an input number entity.
   target:
     entity:
       domain: input_number
   fields:
     value:
-      name: Value
-      description: The target value the entity should be set to.
       required: true
       selector:
         number:
@@ -31,5 +23,3 @@ set_value:
           mode: box
 
 reload:
-  name: Reload
-  description: Reload the input_number configuration.

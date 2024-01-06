@@ -1,0 +1,4 @@
+intent_script:
+  NewIntent2:
+    speech:
+      text: Hello World

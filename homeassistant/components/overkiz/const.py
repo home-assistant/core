@@ -5,7 +5,13 @@ from datetime import timedelta
 import logging
 from typing import Final
 
-from pyoverkiz.enums import MeasuredValueType, OverkizCommandParam, UIClass, UIWidget
+from pyoverkiz.enums import (
+    MeasuredValueType,
+    OverkizCommandParam,
+    Server,
+    UIClass,
+    UIWidget,
+)
 
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
@@ -31,8 +37,10 @@ from homeassistant.const import (
 DOMAIN: Final = "overkiz"
 LOGGER: logging.Logger = logging.getLogger(__package__)
 
+CONF_API_TYPE: Final = "api_type"
 CONF_HUB: Final = "hub"
-DEFAULT_HUB: Final = "somfy_europe"
+DEFAULT_SERVER: Final = Server.SOMFY_EUROPE
+DEFAULT_HOST: Final = "gateway-xxxx-xxxx-xxxx.local:8443"
 
 UPDATE_INTERVAL: Final = timedelta(seconds=30)
 UPDATE_INTERVAL_ALL_ASSUMED_STATE: Final = timedelta(minutes=60)
@@ -87,9 +95,11 @@ OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform | None] = {
     UIWidget.ATLANTIC_HEAT_RECOVERY_VENTILATION: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
     UIWidget.ATLANTIC_PASS_APC_DHW: Platform.WATER_HEATER,  # widgetName, uiClass is WaterHeatingSystem (not supported)
     UIWidget.ATLANTIC_PASS_APC_HEATING_AND_COOLING_ZONE: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
+    UIWidget.ATLANTIC_PASS_APC_HEATING_ZONE: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
     UIWidget.ATLANTIC_PASS_APC_ZONE_CONTROL: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
     UIWidget.DOMESTIC_HOT_WATER_PRODUCTION: Platform.WATER_HEATER,  # widgetName, uiClass is WaterHeatingSystem (not supported)
     UIWidget.DOMESTIC_HOT_WATER_TANK: Platform.SWITCH,  # widgetName, uiClass is WaterHeatingSystem (not supported)
+    UIWidget.HITACHI_AIR_TO_AIR_HEAT_PUMP: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
     UIWidget.HITACHI_DHW: Platform.WATER_HEATER,  # widgetName, uiClass is HitachiHeatingSystem (not supported)
     UIWidget.MY_FOX_ALARM_CONTROLLER: Platform.ALARM_CONTROL_PANEL,  # widgetName, uiClass is Alarm (not supported)
     UIWidget.MY_FOX_SECURITY_CAMERA: Platform.SWITCH,  # widgetName, uiClass is Camera (not supported)
@@ -97,6 +107,7 @@ OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform | None] = {
     UIWidget.RTD_OUTDOOR_SIREN: Platform.SWITCH,  # widgetName, uiClass is Siren (not supported)
     UIWidget.RTS_GENERIC: Platform.COVER,  # widgetName, uiClass is Generic (not supported)
     UIWidget.SIREN_STATUS: None,  # widgetName, uiClass is Siren (siren)
+    UIWidget.SOMFY_HEATING_TEMPERATURE_INTERFACE: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
     UIWidget.SOMFY_THERMOSTAT: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
     UIWidget.STATELESS_ALARM_CONTROLLER: Platform.SWITCH,  # widgetName, uiClass is Alarm (not supported)
     UIWidget.STATEFUL_ALARM_CONTROLLER: Platform.ALARM_CONTROL_PANEL,  # widgetName, uiClass is Alarm (not supported)

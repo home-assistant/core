@@ -50,7 +50,7 @@ NOTIFICATION_IRRIGATION = "17"
 NOTIFICATION_GAS = "18"
 
 
-@dataclass
+@dataclass(frozen=True)
 class NotificationZWaveJSEntityDescription(BinarySensorEntityDescription):
     """Represent a Z-Wave JS binary sensor entity description."""
 
@@ -58,14 +58,14 @@ class NotificationZWaveJSEntityDescription(BinarySensorEntityDescription):
     states: tuple[str, ...] | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class PropertyZWaveJSMixin:
     """Represent the mixin for property sensor descriptions."""
 
     on_states: tuple[str, ...]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PropertyZWaveJSEntityDescription(
     BinarySensorEntityDescription, PropertyZWaveJSMixin
 ):
@@ -276,9 +276,7 @@ async def async_setup_entry(
                 if state_key == "0":
                     continue
 
-                notification_description: NotificationZWaveJSEntityDescription | None = (
-                    None
-                )
+                notification_description: NotificationZWaveJSEntityDescription | None = None
 
                 for description in NOTIFICATION_SENSOR_MAPPINGS:
                     if (
@@ -314,6 +312,10 @@ async def async_setup_entry(
                 ZWavePropertyBinarySensor(
                     config_entry, driver, info, property_description
                 )
+            )
+        elif info.platform_hint == "config_parameter":
+            entities.append(
+                ZWaveConfigParameterBinarySensor(config_entry, driver, info)
             )
         else:
             # boolean sensor
@@ -411,3 +413,22 @@ class ZWavePropertyBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         if self.info.primary_value.value is None:
             return None
         return self.info.primary_value.value in self.entity_description.on_states
+
+
+class ZWaveConfigParameterBinarySensor(ZWaveBooleanBinarySensor):
+    """Representation of a Z-Wave config parameter binary sensor."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+    ) -> None:
+        """Initialize a ZWaveConfigParameterBinarySensor entity."""
+        super().__init__(config_entry, driver, info)
+
+        property_key_name = self.info.primary_value.property_key_name
+        # Entity class attributes
+        self._attr_name = self.generate_name(
+            alternate_value_name=self.info.primary_value.property_name,
+            additional_info=[property_key_name] if property_key_name else None,
+        )

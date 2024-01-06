@@ -21,26 +21,17 @@ from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
 
-@dataclass
-class RitualsEntityDescriptionMixin:
-    """Mixin values for Rituals entities."""
-
-    value_fn: Callable[[Diffuser], int | str]
-
-
-@dataclass
-class RitualsSensorEntityDescription(
-    SensorEntityDescription, RitualsEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class RitualsSensorEntityDescription(SensorEntityDescription):
     """Class describing Rituals sensor entities."""
 
     has_fn: Callable[[Diffuser], bool] = lambda _: True
+    value_fn: Callable[[Diffuser], int | str]
 
 
 ENTITY_DESCRIPTIONS = (
     RitualsSensorEntityDescription(
         key="battery_percentage",
-        translation_key="battery_percentage",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         value_fn=lambda diffuser: diffuser.battery_percentage,

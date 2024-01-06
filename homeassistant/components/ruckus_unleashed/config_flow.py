@@ -1,22 +1,32 @@
 """Config flow for Ruckus Unleashed integration."""
+from collections.abc import Mapping
 import logging
+from typing import Any
 
-from pyruckus import Ruckus
-from pyruckus.exceptions import AuthenticationError
+from aioruckus import AjaxSession, SystemStat
+from aioruckus.exceptions import AuthenticationError, SchemaError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.data_entry_flow import FlowResult
 
-from .const import API_SERIAL, API_SYSTEM_OVERVIEW, DOMAIN
+from .const import (
+    API_MESH_NAME,
+    API_SYS_SYSINFO,
+    API_SYS_SYSINFO_SERIAL,
+    DOMAIN,
+    KEY_SYS_SERIAL,
+    KEY_SYS_TITLE,
+)
 
 _LOGGER = logging.getLogger(__package__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("host"): str,
-        vol.Required("username"): str,
-        vol.Required("password"): str,
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -28,25 +38,22 @@ async def validate_input(hass: core.HomeAssistant, data):
     """
 
     try:
-        ruckus = await Ruckus.create(
+        async with AjaxSession.async_create(
             data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD]
-        )
-    except AuthenticationError as error:
-        raise InvalidAuth from error
-    except ConnectionError as error:
-        raise CannotConnect from error
+        ) as ruckus:
+            mesh_info = await ruckus.api.get_mesh_info()
+            system_info = await ruckus.api.get_system_info(SystemStat.SYSINFO)
+    except AuthenticationError as autherr:
+        raise InvalidAuth from autherr
+    except (ConnectionError, SchemaError) as connerr:
+        raise CannotConnect from connerr
 
-    mesh_name = await ruckus.mesh_name()
-
-    system_info = await ruckus.system_info()
-    try:
-        host_serial = system_info[API_SYSTEM_OVERVIEW][API_SERIAL]
-    except KeyError as error:
-        raise CannotConnect from error
+    mesh_name = mesh_info[API_MESH_NAME]
+    zd_serial = system_info[API_SYS_SYSINFO][API_SYS_SYSINFO_SERIAL]
 
     return {
-        "title": mesh_name,
-        "serial": host_serial,
+        KEY_SYS_TITLE: mesh_name,
+        KEY_SYS_SERIAL: zd_serial,
     }
 
 
@@ -55,7 +62,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    _reauth_entry: config_entries.ConfigEntry | None = None
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -69,13 +80,37 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info["serial"])
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=info["title"], data=user_input)
+                if self._reauth_entry is None:
+                    await self.async_set_unique_id(info[KEY_SYS_SERIAL])
+                    self._abort_if_unique_id_configured()
+                    return self.async_create_entry(
+                        title=info[KEY_SYS_TITLE], data=user_input
+                    )
+                if info[KEY_SYS_SERIAL] == self._reauth_entry.unique_id:
+                    self.hass.config_entries.async_update_entry(
+                        self._reauth_entry, data=user_input
+                    )
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(
+                            self._reauth_entry.entry_id
+                        )
+                    )
+                    return self.async_abort(reason="reauth_successful")
+                errors["base"] = "invalid_host"
 
-        return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+        data_schema = self.add_suggested_values_to_schema(
+            DATA_SCHEMA, self._reauth_entry.data if self._reauth_entry else {}
         )
+        return self.async_show_form(
+            step_id="user", data_schema=data_schema, errors=errors
+        )
+
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_user()
 
 
 class CannotConnect(exceptions.HomeAssistantError):

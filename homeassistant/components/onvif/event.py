@@ -142,7 +142,6 @@ class EventManager:
         for update_callback in self._listeners:
             update_callback()
 
-    # pylint: disable=protected-access
     async def async_parse_messages(self, messages) -> None:
         """Parse notification message."""
         unique_id = self.unique_id
@@ -160,7 +159,7 @@ class EventManager:
             #
             # Our parser expects the topic to be
             # tns1:RuleEngine/CellMotionDetector/Motion
-            topic = msg.Topic._value_1.rstrip("/.")
+            topic = msg.Topic._value_1.rstrip("/.")  # pylint: disable=protected-access
 
             if not (parser := PARSERS.get(topic)):
                 if topic not in UNHANDLED_TOPICS:

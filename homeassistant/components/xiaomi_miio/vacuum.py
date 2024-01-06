@@ -19,6 +19,7 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,7 +28,6 @@ from homeassistant.util.dt import as_utc
 
 from . import VacuumCoordinatorData
 from .const import (
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
     DOMAIN,
     KEY_COORDINATOR,
@@ -187,6 +187,7 @@ class MiroboVacuum(
 ):
     """Representation of a Xiaomi Vacuum cleaner robot."""
 
+    _attr_name = None
     _attr_supported_features = (
         VacuumEntityFeature.STATE
         | VacuumEntityFeature.PAUSE

@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable, Mapping
 import logging
+import string
 from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
@@ -48,7 +49,7 @@ def component_translation_path(
     If component is just a single file, will return None.
     """
     parts = component.split(".")
-    domain = parts[-1]
+    domain = parts[0]
     is_platform = len(parts) == 2
 
     # If it's a component that is just one file, we don't support translations
@@ -57,7 +58,7 @@ def component_translation_path(
         return None
 
     if is_platform:
-        filename = f"{parts[0]}.{language}.json"
+        filename = f"{parts[1]}.{language}.json"
     else:
         filename = f"{language}.json"
 
@@ -67,7 +68,7 @@ def component_translation_path(
 
 
 def load_translations_files(
-    translation_files: dict[str, str]
+    translation_files: dict[str, str],
 ) -> dict[str, dict[str, Any]]:
     """Load and parse translation.json files."""
     loaded = {}
@@ -96,7 +97,7 @@ def _merge_resources(
     # Build response
     resources: dict[str, dict[str, Any]] = {}
     for component in components:
-        domain = component.partition(".")[0]
+        domain = component.rpartition(".")[-1]
 
         domain_resources = resources.setdefault(domain, {})
 
@@ -154,7 +155,7 @@ async def _async_get_component_strings(
     # Determine paths of missing components/platforms
     files_to_load = {}
     for loaded in components:
-        domain = loaded.rpartition(".")[-1]
+        domain = loaded.partition(".")[0]
         integration = integrations[domain]
 
         path = component_translation_path(loaded, language, integration)
@@ -190,6 +191,8 @@ async def _async_get_component_strings(
 class _TranslationCache:
     """Cache for flattened translations."""
 
+    __slots__ = ("hass", "loaded", "cache")
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the cache."""
         self.hass = hass
@@ -223,7 +226,7 @@ class _TranslationCache:
         languages = [LOCALE_EN] if language == LOCALE_EN else [LOCALE_EN, language]
 
         integrations: dict[str, Integration] = {}
-        domains = list({loaded.rpartition(".")[-1] for loaded in components})
+        domains = list({loaded.partition(".")[0] for loaded in components})
         ints_or_excs = await async_get_integrations(self.hass, domains)
         for domain, int_or_exc in ints_or_excs.items():
             if isinstance(int_or_exc, Exception):
@@ -239,6 +242,42 @@ class _TranslationCache:
             self._build_category_cache(language, components, translation_strings)
 
         self.loaded[language].update(components)
+
+    def _validate_placeholders(
+        self,
+        language: str,
+        updated_resources: dict[str, Any],
+        cached_resources: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Validate if updated resources have same placeholders as cached resources."""
+        if cached_resources is None:
+            return updated_resources
+
+        mismatches: set[str] = set()
+
+        for key, value in updated_resources.items():
+            if key not in cached_resources:
+                continue
+            tuples = list(string.Formatter().parse(value))
+            updated_placeholders = {tup[1] for tup in tuples if tup[1] is not None}
+
+            tuples = list(string.Formatter().parse(cached_resources[key]))
+            cached_placeholders = {tup[1] for tup in tuples if tup[1] is not None}
+            if updated_placeholders != cached_placeholders:
+                _LOGGER.error(
+                    (
+                        "Validation of translation placeholders for localized (%s) string "
+                        "%s failed"
+                    ),
+                    language,
+                    key,
+                )
+                mismatches.add(key)
+
+        for mismatch in mismatches:
+            del updated_resources[mismatch]
+
+        return updated_resources
 
     @callback
     def _build_category_cache(
@@ -272,12 +311,14 @@ class _TranslationCache:
                 ).setdefault(category, {})
 
                 if isinstance(resource, dict):
-                    category_cache.update(
-                        recursive_flatten(
-                            f"component.{component}.{category}.",
-                            resource,
-                        )
+                    resources_flatten = recursive_flatten(
+                        f"component.{component}.{category}.",
+                        resource,
                     )
+                    resources_flatten = self._validate_placeholders(
+                        language, resources_flatten, category_cache
+                    )
+                    category_cache.update(resources_flatten)
                 else:
                     category_cache[f"component.{component}.{category}"] = resource
 
@@ -302,7 +343,7 @@ async def async_get_translations(
         components = set(integrations)
     elif config_flow:
         components = (await async_get_config_flows(hass)) - hass.config.components
-    elif category in ("state", "entity_component"):
+    elif category in ("state", "entity_component", "services"):
         components = set(hass.config.components)
     else:
         # Only 'state' supports merging, so remove platforms from selection

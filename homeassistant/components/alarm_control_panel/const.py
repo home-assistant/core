@@ -1,8 +1,14 @@
 """Provides the constants needed for component."""
-from enum import IntFlag
+from enum import IntFlag, StrEnum
+from functools import partial
 from typing import Final
 
-from homeassistant.backports.enum import StrEnum
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstantEnum,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 
 DOMAIN: Final = "alarm_control_panel"
 
@@ -17,10 +23,10 @@ class CodeFormat(StrEnum):
     NUMBER = "number"
 
 
-# These constants are deprecated as of Home Assistant 2022.5
+# These constants are deprecated as of Home Assistant 2022.5, can be removed in 2025.1
 # Please use the CodeFormat enum instead.
-FORMAT_TEXT: Final = "text"
-FORMAT_NUMBER: Final = "number"
+_DEPRECATED_FORMAT_TEXT: Final = DeprecatedConstantEnum(CodeFormat.TEXT, "2025.1")
+_DEPRECATED_FORMAT_NUMBER: Final = DeprecatedConstantEnum(CodeFormat.NUMBER, "2025.1")
 
 
 class AlarmControlPanelEntityFeature(IntFlag):
@@ -36,12 +42,24 @@ class AlarmControlPanelEntityFeature(IntFlag):
 
 # These constants are deprecated as of Home Assistant 2022.5
 # Please use the AlarmControlPanelEntityFeature enum instead.
-SUPPORT_ALARM_ARM_HOME: Final = 1
-SUPPORT_ALARM_ARM_AWAY: Final = 2
-SUPPORT_ALARM_ARM_NIGHT: Final = 4
-SUPPORT_ALARM_TRIGGER: Final = 8
-SUPPORT_ALARM_ARM_CUSTOM_BYPASS: Final = 16
-SUPPORT_ALARM_ARM_VACATION: Final = 32
+_DEPRECATED_SUPPORT_ALARM_ARM_HOME: Final = DeprecatedConstantEnum(
+    AlarmControlPanelEntityFeature.ARM_HOME, "2025.1"
+)
+_DEPRECATED_SUPPORT_ALARM_ARM_AWAY: Final = DeprecatedConstantEnum(
+    AlarmControlPanelEntityFeature.ARM_AWAY, "2025.1"
+)
+_DEPRECATED_SUPPORT_ALARM_ARM_NIGHT: Final = DeprecatedConstantEnum(
+    AlarmControlPanelEntityFeature.ARM_NIGHT, "2025.1"
+)
+_DEPRECATED_SUPPORT_ALARM_TRIGGER: Final = DeprecatedConstantEnum(
+    AlarmControlPanelEntityFeature.TRIGGER, "2025.1"
+)
+_DEPRECATED_SUPPORT_ALARM_ARM_CUSTOM_BYPASS: Final = DeprecatedConstantEnum(
+    AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS, "2025.1"
+)
+_DEPRECATED_SUPPORT_ALARM_ARM_VACATION: Final = DeprecatedConstantEnum(
+    AlarmControlPanelEntityFeature.ARM_VACATION, "2025.1"
+)
 
 CONDITION_TRIGGERED: Final = "is_triggered"
 CONDITION_DISARMED: Final = "is_disarmed"
@@ -50,3 +68,10 @@ CONDITION_ARMED_AWAY: Final = "is_armed_away"
 CONDITION_ARMED_NIGHT: Final = "is_armed_night"
 CONDITION_ARMED_VACATION: Final = "is_armed_vacation"
 CONDITION_ARMED_CUSTOM_BYPASS: Final = "is_armed_custom_bypass"
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

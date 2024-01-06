@@ -29,13 +29,7 @@ from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import (
-    DOMAIN,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-)
+from . import DOMAIN, CoverEntityFeature
 
 POSITION_TRIGGER_TYPES = {"position", "tilt_position"}
 STATE_TRIGGER_TYPES = {"opened", "closed", "opening", "closing"}
@@ -43,7 +37,7 @@ STATE_TRIGGER_TYPES = {"opened", "closed", "opening", "closing"}
 POSITION_TRIGGER_SCHEMA = vol.All(
     DEVICE_TRIGGER_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
             vol.Required(CONF_TYPE): vol.In(POSITION_TRIGGER_TYPES),
             vol.Optional(CONF_ABOVE): vol.All(
                 vol.Coerce(int), vol.Range(min=0, max=100)
@@ -58,7 +52,7 @@ POSITION_TRIGGER_SCHEMA = vol.All(
 
 STATE_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(CONF_TYPE): vol.In(STATE_TRIGGER_TYPES),
         vol.Optional(CONF_FOR): cv.positive_time_period_dict,
     }
@@ -80,14 +74,16 @@ async def async_get_triggers(
             continue
 
         supported_features = get_supported_features(hass, entry.entity_id)
-        supports_open_close = supported_features & (SUPPORT_OPEN | SUPPORT_CLOSE)
+        supports_open_close = supported_features & (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+        )
 
         # Add triggers for each entity that belongs to this integration
         base_trigger = {
             CONF_PLATFORM: "device",
             CONF_DEVICE_ID: device_id,
             CONF_DOMAIN: DOMAIN,
-            CONF_ENTITY_ID: entry.entity_id,
+            CONF_ENTITY_ID: entry.id,
         }
 
         if supports_open_close:
@@ -98,14 +94,14 @@ async def async_get_triggers(
                 }
                 for trigger in STATE_TRIGGER_TYPES
             ]
-        if supported_features & SUPPORT_SET_POSITION:
+        if supported_features & CoverEntityFeature.SET_POSITION:
             triggers.append(
                 {
                     **base_trigger,
                     CONF_TYPE: "position",
                 }
             )
-        if supported_features & SUPPORT_SET_TILT_POSITION:
+        if supported_features & CoverEntityFeature.SET_TILT_POSITION:
             triggers.append(
                 {
                     **base_trigger,

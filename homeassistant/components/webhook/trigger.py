@@ -98,7 +98,7 @@ async def async_attach_trigger(
             hass,
             DOMAIN,
             issue_id,
-            breaks_in_ha_version="2023.7.0",
+            breaks_in_ha_version="2023.11.0",
             is_fixable=False,
             severity=IssueSeverity.WARNING,
             learn_more_url="https://www.home-assistant.io/docs/automation/trigger/#webhook-trigger",

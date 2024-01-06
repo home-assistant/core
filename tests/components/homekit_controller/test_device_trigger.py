@@ -2,6 +2,7 @@
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 import pytest
+from pytest_unordered import unordered
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -13,11 +14,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import setup_test_component
 
-from tests.common import (
-    assert_lists_same,
-    async_get_device_automations,
-    async_mock_service,
-)
+from tests.common import async_get_device_automations, async_mock_service
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -86,21 +83,24 @@ def create_doorbell(accessory):
     battery.add_char(CharacteristicsTypes.BATTERY_LEVEL)
 
 
-async def test_enumerate_remote(hass: HomeAssistant, utcnow) -> None:
+async def test_enumerate_remote(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test that remote is correctly enumerated."""
     await setup_test_component(hass, create_remote)
 
-    entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get("sensor.testdevice_battery")
+    bat_sensor = entity_registry.async_get("sensor.testdevice_battery")
+    identify_button = entity_registry.async_get("button.testdevice_identify")
 
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get(entry.device_id)
+    device = device_registry.async_get(bat_sensor.device_id)
 
     expected = [
         {
             "device_id": device.id,
             "domain": "sensor",
-            "entity_id": "sensor.testdevice_battery",
+            "entity_id": bat_sensor.id,
             "platform": "device",
             "type": "battery_level",
             "metadata": {"secondary": True},
@@ -108,7 +108,7 @@ async def test_enumerate_remote(hass: HomeAssistant, utcnow) -> None:
         {
             "device_id": device.id,
             "domain": "button",
-            "entity_id": "button.testdevice_identify",
+            "entity_id": identify_button.id,
             "platform": "device",
             "type": "pressed",
             "metadata": {"secondary": True},
@@ -131,24 +131,27 @@ async def test_enumerate_remote(hass: HomeAssistant, utcnow) -> None:
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
     )
-    assert_lists_same(triggers, expected)
+    assert triggers == unordered(expected)
 
 
-async def test_enumerate_button(hass: HomeAssistant, utcnow) -> None:
+async def test_enumerate_button(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test that a button is correctly enumerated."""
     await setup_test_component(hass, create_button)
 
-    entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get("sensor.testdevice_battery")
+    bat_sensor = entity_registry.async_get("sensor.testdevice_battery")
+    identify_button = entity_registry.async_get("button.testdevice_identify")
 
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get(entry.device_id)
+    device = device_registry.async_get(bat_sensor.device_id)
 
     expected = [
         {
             "device_id": device.id,
             "domain": "sensor",
-            "entity_id": "sensor.testdevice_battery",
+            "entity_id": bat_sensor.id,
             "platform": "device",
             "type": "battery_level",
             "metadata": {"secondary": True},
@@ -156,7 +159,7 @@ async def test_enumerate_button(hass: HomeAssistant, utcnow) -> None:
         {
             "device_id": device.id,
             "domain": "button",
-            "entity_id": "button.testdevice_identify",
+            "entity_id": identify_button.id,
             "platform": "device",
             "type": "pressed",
             "metadata": {"secondary": True},
@@ -178,24 +181,27 @@ async def test_enumerate_button(hass: HomeAssistant, utcnow) -> None:
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
     )
-    assert_lists_same(triggers, expected)
+    assert triggers == unordered(expected)
 
 
-async def test_enumerate_doorbell(hass: HomeAssistant, utcnow) -> None:
+async def test_enumerate_doorbell(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test that a button is correctly enumerated."""
     await setup_test_component(hass, create_doorbell)
 
-    entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get("sensor.testdevice_battery")
+    bat_sensor = entity_registry.async_get("sensor.testdevice_battery")
+    identify_button = entity_registry.async_get("button.testdevice_identify")
 
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get(entry.device_id)
+    device = device_registry.async_get(bat_sensor.device_id)
 
     expected = [
         {
             "device_id": device.id,
             "domain": "sensor",
-            "entity_id": "sensor.testdevice_battery",
+            "entity_id": bat_sensor.id,
             "platform": "device",
             "type": "battery_level",
             "metadata": {"secondary": True},
@@ -203,7 +209,7 @@ async def test_enumerate_doorbell(hass: HomeAssistant, utcnow) -> None:
         {
             "device_id": device.id,
             "domain": "button",
-            "entity_id": "button.testdevice_identify",
+            "entity_id": identify_button.id,
             "platform": "device",
             "type": "pressed",
             "metadata": {"secondary": True},
@@ -225,17 +231,20 @@ async def test_enumerate_doorbell(hass: HomeAssistant, utcnow) -> None:
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device.id
     )
-    assert_lists_same(triggers, expected)
+    assert triggers == unordered(expected)
 
 
-async def test_handle_events(hass: HomeAssistant, utcnow, calls) -> None:
+async def test_handle_events(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    calls,
+) -> None:
     """Test that events are handled."""
     helper = await setup_test_component(hass, create_remote)
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("sensor.testdevice_battery")
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert await async_setup_component(
@@ -345,14 +354,17 @@ async def test_handle_events(hass: HomeAssistant, utcnow, calls) -> None:
     assert len(calls) == 2
 
 
-async def test_handle_events_late_setup(hass: HomeAssistant, utcnow, calls) -> None:
+async def test_handle_events_late_setup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    calls,
+) -> None:
     """Test that events are handled when setup happens after startup."""
     helper = await setup_test_component(hass, create_remote)
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("sensor.testdevice_battery")
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     await hass.config_entries.async_unload(helper.config_entry.entry_id)
@@ -421,6 +433,14 @@ async def test_handle_events_late_setup(hass: HomeAssistant, utcnow, calls) -> N
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["some"] == "device - button1 - single_press - 0"
+
+    # Make sure automation doesn't trigger for a polled None
+    helper.pairing.testing.update_named_service(
+        "Button 1", {CharacteristicsTypes.INPUT_EVENT: None}
+    )
+
+    await hass.async_block_till_done()
+    assert len(calls) == 1
 
     # Make sure automation doesn't trigger for long press
     helper.pairing.testing.update_named_service(

@@ -17,7 +17,6 @@ SCAN_INTERVAL = timedelta(minutes=2)
 
 SWITCH_TYPE = SwitchEntityDescription(
     key="switch",
-    name="Switch",
 )
 
 
@@ -33,6 +32,8 @@ async def async_setup_entry(
 
 class SmartPlugSwitch(DLinkEntity, SwitchEntity):
     """Representation of a D-Link Smart Plug switch."""
+
+    _attr_name = None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

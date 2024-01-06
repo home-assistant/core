@@ -1,7 +1,7 @@
 {
   "domain": "gogogate2",
   "name": "Gogogate2 and ismartgate",
-  "codeowners": ["@vangorra", "@bdraco"],
+  "codeowners": ["@vangorra"],
   "config_flow": true,
   "dhcp": [
     {
@@ -14,5 +14,5 @@
   },
   "iot_class": "local_polling",
   "loggers": ["ismartgate"],
-  "requirements": ["ismartgate==5.0.0"]
+  "requirements": ["ismartgate==5.0.1"]
 }

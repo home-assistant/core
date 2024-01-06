@@ -22,7 +22,6 @@ from .models import DormakabaDkeyData
 BINARY_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key="battery_level",
-        name="Battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,

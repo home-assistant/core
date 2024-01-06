@@ -7,7 +7,7 @@ from homeassistant.components import ios
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_component, mock_coro
+from tests.common import mock_component
 
 
 @pytest.fixture(autouse=True)
@@ -28,7 +28,7 @@ async def test_creating_entry_sets_up_sensor(hass: HomeAssistant) -> None:
     """Test setting up iOS loads the sensor component."""
     with patch(
         "homeassistant.components.ios.sensor.async_setup_entry",
-        return_value=mock_coro(True),
+        return_value=True,
     ) as mock_setup:
         assert await async_setup_component(hass, ios.DOMAIN, {ios.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -39,7 +39,8 @@ async def test_creating_entry_sets_up_sensor(hass: HomeAssistant) -> None:
 async def test_configuring_ios_creates_entry(hass: HomeAssistant) -> None:
     """Test that specifying config will create an entry."""
     with patch(
-        "homeassistant.components.ios.async_setup_entry", return_value=mock_coro(True)
+        "homeassistant.components.ios.async_setup_entry",
+        return_value=True,
     ) as mock_setup:
         await async_setup_component(hass, ios.DOMAIN, {"ios": {"push": {}}})
         await hass.async_block_till_done()
@@ -50,7 +51,8 @@ async def test_configuring_ios_creates_entry(hass: HomeAssistant) -> None:
 async def test_not_configuring_ios_not_creates_entry(hass: HomeAssistant) -> None:
     """Test that no config will not create an entry."""
     with patch(
-        "homeassistant.components.ios.async_setup_entry", return_value=mock_coro(True)
+        "homeassistant.components.ios.async_setup_entry",
+        return_value=True,
     ) as mock_setup:
         await async_setup_component(hass, ios.DOMAIN, {"foo": "bar"})
         await hass.async_block_till_done()

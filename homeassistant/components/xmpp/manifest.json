@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/xmpp",
   "iot_class": "cloud_push",
   "loggers": ["pyasn1", "slixmpp"],
-  "requirements": ["slixmpp==1.8.3"]
+  "requirements": ["slixmpp==1.8.4", "emoji==2.8.0"]
 }

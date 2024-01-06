@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import cast
 
 from whois import Domain
@@ -16,29 +16,22 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DOMAIN, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import ATTR_EXPIRES, ATTR_NAME_SERVERS, ATTR_REGISTRAR, ATTR_UPDATED, DOMAIN
 
 
-@dataclass
-class WhoisSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class WhoisSensorEntityDescription(SensorEntityDescription):
+    """Describes a Whois sensor entity."""
 
     value_fn: Callable[[Domain], datetime | int | str | None]
-
-
-@dataclass
-class WhoisSensorEntityDescription(
-    SensorEntityDescription, WhoisSensorEntityDescriptionMixin
-):
-    """Describes a Whois sensor entity."""
 
 
 def _days_until_expiration(domain: Domain) -> int | None:
@@ -46,7 +39,10 @@ def _days_until_expiration(domain: Domain) -> int | None:
     if domain.expiration_date is None:
         return None
     # We need to cast here, as (unlike Pyright) mypy isn't able to determine the type.
-    return cast(int, (domain.expiration_date - domain.expiration_date.utcnow()).days)
+    return cast(
+        int,
+        (domain.expiration_date - dt_util.utcnow().replace(tzinfo=None)).days,
+    )
 
 
 def _ensure_timezone(timestamp: datetime | None) -> datetime | None:
@@ -56,7 +52,7 @@ def _ensure_timezone(timestamp: datetime | None) -> datetime | None:
 
     # If timezone info isn't provided by the Whois, assume UTC.
     if timestamp.tzinfo is None:
-        return timestamp.replace(tzinfo=timezone.utc)
+        return timestamp.replace(tzinfo=UTC)
 
     return timestamp
 
@@ -64,7 +60,7 @@ def _ensure_timezone(timestamp: datetime | None) -> datetime | None:
 SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
     WhoisSensorEntityDescription(
         key="admin",
-        name="Admin",
+        translation_key="admin",
         icon="mdi:account-star",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -72,35 +68,35 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
     ),
     WhoisSensorEntityDescription(
         key="creation_date",
-        name="Created",
+        translation_key="creation_date",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda domain: _ensure_timezone(domain.creation_date),
     ),
     WhoisSensorEntityDescription(
         key="days_until_expiration",
-        name="Days until expiration",
+        translation_key="days_until_expiration",
         icon="mdi:calendar-clock",
         native_unit_of_measurement=UnitOfTime.DAYS,
         value_fn=_days_until_expiration,
     ),
     WhoisSensorEntityDescription(
         key="expiration_date",
-        name="Expires",
+        translation_key="expiration_date",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda domain: _ensure_timezone(domain.expiration_date),
     ),
     WhoisSensorEntityDescription(
         key="last_updated",
-        name="Last updated",
+        translation_key="last_updated",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda domain: _ensure_timezone(domain.last_updated),
     ),
     WhoisSensorEntityDescription(
         key="owner",
-        name="Owner",
+        translation_key="owner",
         icon="mdi:account",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -108,7 +104,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
     ),
     WhoisSensorEntityDescription(
         key="registrant",
-        name="Registrant",
+        translation_key="registrant",
         icon="mdi:account-edit",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -116,7 +112,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
     ),
     WhoisSensorEntityDescription(
         key="registrar",
-        name="Registrar",
+        translation_key="registrar",
         icon="mdi:store",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -124,7 +120,7 @@ SENSORS: tuple[WhoisSensorEntityDescription, ...] = (
     ),
     WhoisSensorEntityDescription(
         key="reseller",
-        name="Reseller",
+        translation_key="reseller",
         icon="mdi:store",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,

@@ -2,6 +2,7 @@
 
 import pytest
 
+from homeassistant.components.threshold.const import DOMAIN
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
@@ -9,7 +10,10 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 
 async def test_sensor_upper(hass: HomeAssistant) -> None:
@@ -585,3 +589,48 @@ async def test_sensor_no_lower_upper(
     await hass.async_block_till_done()
 
     assert "Lower or Upper thresholds not provided" in caplog.text
+
+
+async def test_device_id(hass: HomeAssistant) -> None:
+    """Test for source entity device for Threshold."""
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("sensor", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    source_entity = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+    assert entity_registry.async_get("sensor.test_source") is not None
+
+    utility_meter_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "entity_id": "sensor.test_source",
+            "hysteresis": 0.0,
+            "lower": -2.0,
+            "name": "Threshold",
+            "upper": None,
+        },
+        title="Threshold",
+    )
+
+    utility_meter_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(utility_meter_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    utility_meter_entity = entity_registry.async_get("binary_sensor.threshold")
+    assert utility_meter_entity is not None
+    assert utility_meter_entity.device_id == source_entity.device_id

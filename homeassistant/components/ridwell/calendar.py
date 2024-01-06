@@ -50,6 +50,7 @@ class RidwellCalendar(RidwellEntity, CalendarEntity):
     """Define a Ridwell calendar."""
 
     _attr_icon = "mdi:delete-empty"
+    _attr_name = None
 
     def __init__(
         self, coordinator: RidwellDataUpdateCoordinator, account: RidwellAccount

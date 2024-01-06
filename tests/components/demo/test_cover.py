@@ -1,5 +1,6 @@
 """The tests for the Demo cover platform."""
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 
@@ -27,6 +28,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -39,7 +41,17 @@ ENTITY_COVER = "cover.living_room_window"
 
 
 @pytest.fixture
-async def setup_comp(hass):
+async def cover_only() -> None:
+    """Enable only the climate platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.COVER],
+    ):
+        yield
+
+
+@pytest.fixture
+async def setup_comp(hass, cover_only):
     """Set up demo cover component."""
     with assert_setup_component(1, DOMAIN):
         await async_setup_component(hass, DOMAIN, CONFIG)

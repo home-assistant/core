@@ -7,6 +7,8 @@ from typing import NamedTuple
 
 import attr
 
+from .scaling import scale_to_ranged_value
+
 
 class RGBColor(NamedTuple):
     """RGB hex values."""
@@ -172,7 +174,7 @@ COLORS = {
     "yellow": RGBColor(255, 255, 0),
     "yellowgreen": RGBColor(154, 205, 50),
     # And...
-    "homeassistant": RGBColor(3, 169, 244),
+    "homeassistant": RGBColor(24, 188, 242),
 }
 
 
@@ -180,8 +182,8 @@ COLORS = {
 class XYPoint:
     """Represents a CIE 1931 XY coordinate pair."""
 
-    x: float = attr.ib()  # pylint: disable=invalid-name
-    y: float = attr.ib()  # pylint: disable=invalid-name
+    x: float = attr.ib()
+    y: float = attr.ib()
 
 
 @attr.s()
@@ -203,9 +205,6 @@ def color_name_to_rgb(color_name: str) -> RGBColor:
         raise ValueError("Unknown color")
 
     return hex_value
-
-
-# pylint: disable=invalid-name
 
 
 def color_RGB_to_xy(
@@ -579,6 +578,18 @@ def _white_levels_to_color_temperature(
     ), min(255, round(brightness * 255))
 
 
+def color_xy_to_temperature(x: float, y: float) -> int:
+    """Convert an xy color to a color temperature in Kelvin.
+
+    Uses McCamy's approximation (https://doi.org/10.1002/col.5080170211),
+    close enough for uses between 2000 K and 10000 K.
+    """
+    n = (x - 0.3320) / (0.1858 - y)
+    CCT = 437 * (n**3) + 3601 * (n**2) + 6861 * n + 5517
+
+    return int(CCT)
+
+
 def _clamp(color_component: float, minimum: float = 0, maximum: float = 255) -> float:
     """Clamp the given color component value between the given min and max values.
 
@@ -735,3 +746,38 @@ def check_valid_gamut(Gamut: GamutType) -> bool:
     )
 
     return not_on_line and red_valid and green_valid and blue_valid
+
+
+def brightness_to_value(low_high_range: tuple[float, float], brightness: int) -> float:
+    """Given a brightness_scale convert a brightness to a single value.
+
+    Do not include 0 if the light is off for value 0.
+
+    Given a brightness low_high_range of (1,100) this function
+    will return:
+
+    255: 100.0
+    127: ~49.8039
+    10: ~3.9216
+    """
+    return scale_to_ranged_value((1, 255), low_high_range, brightness)
+
+
+def value_to_brightness(low_high_range: tuple[float, float], value: float) -> int:
+    """Given a brightness_scale convert a single value to a brightness.
+
+    Do not include 0 if the light is off for value 0.
+
+    Given a brightness low_high_range of (1,100) this function
+    will return:
+
+    100: 255
+    50: 128
+    4: 10
+
+    The value will be clamped between 1..255 to ensure valid value.
+    """
+    return min(
+        255,
+        max(1, round(scale_to_ranged_value(low_high_range, (1, 255), value))),
+    )

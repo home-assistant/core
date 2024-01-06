@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/geo_rss_events",
   "iot_class": "cloud_polling",
   "loggers": ["georss_client", "georss_generic_client"],
-  "requirements": ["georss_generic_client==0.6"]
+  "requirements": ["georss-generic-client==0.6"]
 }

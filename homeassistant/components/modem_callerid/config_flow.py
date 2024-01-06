@@ -32,9 +32,7 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
         """Handle USB Discovery."""
-        device = discovery_info.device
-
-        dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)
+        dev_path = discovery_info.device
         unique_id = f"{discovery_info.vid}:{discovery_info.pid}_{discovery_info.serial_number}_{discovery_info.manufacturer}_{discovery_info.description}"
         if (
             await self.validate_device_errors(dev_path=dev_path, unique_id=unique_id)

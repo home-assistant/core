@@ -1,0 +1,13 @@
+{
+  "services": {
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads smtp notify services."
+    }
+  },
+  "exceptions": {
+    "remote_path_not_allowed": {
+      "message": "Cannot send email with attachment \"{file_name}\" from directory \"{file_path}\" which is not secure to load data from. Only folders added to `{allow_list}` are accessible. See {url} for more information."
+    }
+  }
+}

@@ -1,4 +1,6 @@
 """Test cases around the demo fan platform."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import fan
@@ -15,6 +17,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -31,8 +34,18 @@ FANS_WITH_PRESET_MODES = FULL_FAN_ENTITY_IDS + [
 PERCENTAGE_MODEL_FANS = ["fan.percentage_full_fan", "fan.percentage_limited_fan"]
 
 
+@pytest.fixture
+async def fan_only() -> None:
+    """Enable only the datetime platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.FAN],
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
-async def setup_comp(hass):
+async def setup_comp(hass: HomeAssistant, fan_only: None):
     """Initialize components."""
     assert await async_setup_component(hass, fan.DOMAIN, {"fan": {"platform": "demo"}})
     await hass.async_block_till_done()
@@ -169,7 +182,7 @@ async def test_turn_on_with_preset_mode_only(
     assert state.state == STATE_OFF
     assert state.attributes[fan.ATTR_PRESET_MODE] is None
 
-    with pytest.raises(ValueError):
+    with pytest.raises(fan.NotValidPresetModeError) as exc:
         await hass.services.async_call(
             fan.DOMAIN,
             SERVICE_TURN_ON,
@@ -177,6 +190,12 @@ async def test_turn_on_with_preset_mode_only(
             blocking=True,
         )
         await hass.async_block_till_done()
+    assert exc.value.translation_domain == fan.DOMAIN
+    assert exc.value.translation_key == "not_valid_preset_mode"
+    assert exc.value.translation_placeholders == {
+        "preset_mode": "invalid",
+        "preset_modes": "auto, smart, sleep, on",
+    }
 
     state = hass.states.get(fan_entity_id)
     assert state.state == STATE_OFF
@@ -237,7 +256,7 @@ async def test_turn_on_with_preset_mode_and_speed(
     assert state.attributes[fan.ATTR_PERCENTAGE] == 0
     assert state.attributes[fan.ATTR_PRESET_MODE] is None
 
-    with pytest.raises(ValueError):
+    with pytest.raises(fan.NotValidPresetModeError) as exc:
         await hass.services.async_call(
             fan.DOMAIN,
             SERVICE_TURN_ON,
@@ -245,6 +264,12 @@ async def test_turn_on_with_preset_mode_and_speed(
             blocking=True,
         )
         await hass.async_block_till_done()
+    assert exc.value.translation_domain == fan.DOMAIN
+    assert exc.value.translation_key == "not_valid_preset_mode"
+    assert exc.value.translation_placeholders == {
+        "preset_mode": "invalid",
+        "preset_modes": "auto, smart, sleep, on",
+    }
 
     state = hass.states.get(fan_entity_id)
     assert state.state == STATE_OFF
@@ -330,7 +355,7 @@ async def test_set_preset_mode_invalid(hass: HomeAssistant, fan_entity_id) -> No
     state = hass.states.get(fan_entity_id)
     assert state.state == STATE_OFF
 
-    with pytest.raises(ValueError):
+    with pytest.raises(fan.NotValidPresetModeError) as exc:
         await hass.services.async_call(
             fan.DOMAIN,
             fan.SERVICE_SET_PRESET_MODE,
@@ -338,8 +363,10 @@ async def test_set_preset_mode_invalid(hass: HomeAssistant, fan_entity_id) -> No
             blocking=True,
         )
         await hass.async_block_till_done()
+    assert exc.value.translation_domain == fan.DOMAIN
+    assert exc.value.translation_key == "not_valid_preset_mode"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(fan.NotValidPresetModeError) as exc:
         await hass.services.async_call(
             fan.DOMAIN,
             SERVICE_TURN_ON,
@@ -347,6 +374,8 @@ async def test_set_preset_mode_invalid(hass: HomeAssistant, fan_entity_id) -> No
             blocking=True,
         )
         await hass.async_block_till_done()
+    assert exc.value.translation_domain == fan.DOMAIN
+    assert exc.value.translation_key == "not_valid_preset_mode"
 
 
 @pytest.mark.parametrize("fan_entity_id", FULL_FAN_ENTITY_IDS)

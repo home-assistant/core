@@ -5,7 +5,6 @@ import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 import krakenex
 import pykrakenapi
 
@@ -73,7 +72,7 @@ class KrakenData:
         once.
         """
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 return await self._hass.async_add_executor_job(self._get_kraken_data)
         except pykrakenapi.pykrakenapi.KrakenAPIError as error:
             if "Unknown asset pair" in str(error):

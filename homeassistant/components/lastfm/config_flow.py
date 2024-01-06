@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pylast import LastFMNetwork, User, WSError
+from pylast import LastFMNetwork, PyLastError, User, WSError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -19,7 +19,6 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
 )
-from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_MAIN_USER, CONF_USERS, DOMAIN
 
@@ -128,11 +127,14 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             main_user, _ = get_lastfm_user(
                 self.data[CONF_API_KEY], self.data[CONF_MAIN_USER]
             )
+            friends_response = await self.hass.async_add_executor_job(
+                main_user.get_friends
+            )
             friends = [
                 SelectOptionDict(value=friend.name, label=friend.get_name(True))
-                for friend in main_user.get_friends()
+                for friend in friends_response
             ]
-        except WSError:
+        except PyLastError:
             friends = []
         return self.async_show_form(
             step_id="friends",
@@ -149,24 +151,6 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 ),
                 user_input or {CONF_USERS: []},
             ),
-        )
-
-    async def async_step_import(self, import_config: ConfigType) -> FlowResult:
-        """Import config from yaml."""
-        for entry in self._async_current_entries():
-            if entry.options[CONF_API_KEY] == import_config[CONF_API_KEY]:
-                return self.async_abort(reason="already_configured")
-        users, _ = validate_lastfm_users(
-            import_config[CONF_API_KEY], import_config[CONF_USERS]
-        )
-        return self.async_create_entry(
-            title="LastFM",
-            data={},
-            options={
-                CONF_API_KEY: import_config[CONF_API_KEY],
-                CONF_MAIN_USER: None,
-                CONF_USERS: users,
-            },
         )
 
 
@@ -197,11 +181,14 @@ class LastFmOptionsFlowHandler(OptionsFlowWithConfigEntry):
                     self.options[CONF_API_KEY],
                     self.options[CONF_MAIN_USER],
                 )
+                friends_response = await self.hass.async_add_executor_job(
+                    main_user.get_friends
+                )
                 friends = [
                     SelectOptionDict(value=friend.name, label=friend.get_name(True))
-                    for friend in main_user.get_friends()
+                    for friend in friends_response
                 ]
-            except WSError:
+            except PyLastError:
                 friends = []
         else:
             friends = []

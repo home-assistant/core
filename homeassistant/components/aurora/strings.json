@@ -25,5 +25,17 @@
         }
       }
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "visibility_alert": {
+        "name": "Visibility alert"
+      }
+    },
+    "sensor": {
+      "visibility": {
+        "name": "Visibility"
+      }
+    }
   }
 }

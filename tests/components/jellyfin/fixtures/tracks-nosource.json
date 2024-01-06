@@ -1,0 +1,23 @@
+{
+  "Items": [
+    {
+      "Album": "ALBUM_NAME",
+      "AlbumArtist": "ARTIST",
+      "AlbumArtists": [{ "Id": "ARTIST-UUID", "Name": "ARTIST" }],
+      "AlbumId": "ALBUM-UUID",
+      "AlbumPrimaryImageTag": "string",
+      "ArtistItems": [{ "Id": "ARTIST-UUID", "Name": "ARTIST" }],
+      "Artists": ["ARTIST"],
+      "Id": "TRACK-UUID",
+      "ImageTags": { "Primary": "string" },
+      "IndexNumber": 1,
+      "IsFolder": false,
+      "MediaType": "Audio",
+      "Name": "TRACK",
+      "ParentId": "ALBUM-UUID",
+      "Path": "/media/music/MockArtist/MockAlbum/01 - Track - MockAlbum - MockArtist.flac",
+      "ServerId": "string",
+      "Type": "Audio"
+    }
+  ]
+}

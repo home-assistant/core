@@ -10,7 +10,7 @@
       },
       "pick_device": {
         "data": {
-          "device": "Device"
+          "device": "[%key:common::config_flow::data::device%]"
         }
       },
       "discovery_confirm": {
@@ -27,6 +27,21 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "not_steamist_device": "Not a steamist device"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "steam_minutes_remain": {
+        "name": "Steam minutes remain"
+      },
+      "steam_temperature": {
+        "name": "Steam temperature"
+      }
+    },
+    "switch": {
+      "steam_active": {
+        "name": "Steam active"
+      }
     }
   }
 }

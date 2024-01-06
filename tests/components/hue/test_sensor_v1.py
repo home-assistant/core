@@ -3,6 +3,7 @@ import asyncio
 from unittest.mock import Mock
 
 import aiohue
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components import hue
 from homeassistant.components.hue.const import ATTR_HUE_EVENT
@@ -10,7 +11,6 @@ from homeassistant.components.hue.v1 import sensor_base
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_get
-from homeassistant.util import dt as dt_util
 
 from .conftest import create_mock_bridge, setup_platform
 
@@ -448,7 +448,9 @@ async def test_update_unauthorized(hass: HomeAssistant, mock_bridge_v1) -> None:
     assert len(mock_bridge_v1.handle_unauthorized_error.mock_calls) == 1
 
 
-async def test_hue_events(hass: HomeAssistant, mock_bridge_v1, device_reg) -> None:
+async def test_hue_events(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_bridge_v1, device_reg
+) -> None:
     """Test that hue remotes fire events when pressed."""
     mock_bridge_v1.mock_sensor_responses.append(SENSOR_RESPONSE)
 
@@ -460,7 +462,7 @@ async def test_hue_events(hass: HomeAssistant, mock_bridge_v1, device_reg) -> No
     assert len(events) == 0
 
     hue_tap_device = device_reg.async_get_device(
-        {(hue.DOMAIN, "00:00:00:00:00:44:23:08")}
+        identifiers={(hue.DOMAIN, "00:00:00:00:00:44:23:08")}
     )
 
     mock_bridge_v1.api.sensors["7"].last_event = {"type": "button"}
@@ -475,9 +477,8 @@ async def test_hue_events(hass: HomeAssistant, mock_bridge_v1, device_reg) -> No
     mock_bridge_v1.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + sensor_base.SensorManager.SCAN_INTERVAL
-    )
+    freezer.tick(sensor_base.SensorManager.SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert len(mock_bridge_v1.mock_requests) == 2
@@ -492,7 +493,7 @@ async def test_hue_events(hass: HomeAssistant, mock_bridge_v1, device_reg) -> No
     }
 
     hue_dimmer_device = device_reg.async_get_device(
-        {(hue.DOMAIN, "00:17:88:01:10:3e:3a:dc")}
+        identifiers={(hue.DOMAIN, "00:17:88:01:10:3e:3a:dc")}
     )
 
     new_sensor_response = dict(new_sensor_response)
@@ -504,9 +505,8 @@ async def test_hue_events(hass: HomeAssistant, mock_bridge_v1, device_reg) -> No
     mock_bridge_v1.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + sensor_base.SensorManager.SCAN_INTERVAL
-    )
+    freezer.tick(sensor_base.SensorManager.SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert len(mock_bridge_v1.mock_requests) == 3
@@ -530,9 +530,8 @@ async def test_hue_events(hass: HomeAssistant, mock_bridge_v1, device_reg) -> No
     mock_bridge_v1.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + sensor_base.SensorManager.SCAN_INTERVAL
-    )
+    freezer.tick(sensor_base.SensorManager.SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert len(mock_bridge_v1.mock_requests) == 4
@@ -575,9 +574,8 @@ async def test_hue_events(hass: HomeAssistant, mock_bridge_v1, device_reg) -> No
     mock_bridge_v1.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + sensor_base.SensorManager.SCAN_INTERVAL
-    )
+    freezer.tick(sensor_base.SensorManager.SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert len(mock_bridge_v1.mock_requests) == 5
@@ -589,13 +587,12 @@ async def test_hue_events(hass: HomeAssistant, mock_bridge_v1, device_reg) -> No
     mock_bridge_v1.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + sensor_base.SensorManager.SCAN_INTERVAL
-    )
+    freezer.tick(sensor_base.SensorManager.SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     hue_aurora_device = device_reg.async_get_device(
-        {(hue.DOMAIN, "ff:ff:00:0f:e7:fd:bc:b7")}
+        identifiers={(hue.DOMAIN, "ff:ff:00:0f:e7:fd:bc:b7")}
     )
 
     assert len(mock_bridge_v1.mock_requests) == 6

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from axis.models.event import Event, EventGroup, EventOperation, EventTopic
 
@@ -13,8 +13,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.util.dt import utcnow
+from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN as AXIS_DOMAIN
 from .device import AxisNetworkDevice
@@ -82,7 +81,7 @@ class AxisBinarySensor(AxisEventEntity, BinarySensorEntity):
         self._attr_is_on = event.is_tripped
 
         @callback
-        def scheduled_update(now):
+        def scheduled_update(now: datetime) -> None:
             """Timer callback for sensor update."""
             self.cancel_scheduled_update = None
             self.async_write_ha_state()
@@ -95,10 +94,10 @@ class AxisBinarySensor(AxisEventEntity, BinarySensorEntity):
             self.async_write_ha_state()
             return
 
-        self.cancel_scheduled_update = async_track_point_in_utc_time(
+        self.cancel_scheduled_update = async_call_later(
             self.hass,
+            timedelta(seconds=self.device.option_trigger_time),
             scheduled_update,
-            utcnow() + timedelta(seconds=self.device.option_trigger_time),
         )
 
     @callback

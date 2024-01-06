@@ -1,7 +1,7 @@
 """The tests for lastfm."""
 from unittest.mock import patch
 
-from pylast import Track, WSError
+from pylast import PyLastError, Track
 
 from homeassistant.components.lastfm.const import CONF_MAIN_USER, CONF_USERS
 from homeassistant.const import CONF_API_KEY
@@ -22,64 +22,83 @@ CONF_FRIENDS_DATA = {CONF_USERS: [USERNAME_2]}
 class MockNetwork:
     """Mock _Network object for pylast."""
 
-    def __init__(self, username: str):
+    def __init__(self, username: str) -> None:
         """Initialize the mock."""
         self.username = username
+
+
+class MockTopTrack:
+    """Mock TopTrack object for pylast."""
+
+    def __init__(self, item: Track) -> None:
+        """Initialize the mock."""
+        self.item = item
+
+
+class MockLastTrack:
+    """Mock LastTrack object for pylast."""
+
+    def __init__(self, track: Track) -> None:
+        """Initialize the mock."""
+        self.track = track
 
 
 class MockUser:
     """Mock User object for pylast."""
 
-    def __init__(self, now_playing_result, error, has_friends, username):
+    def __init__(
+        self,
+        username: str = USERNAME_1,
+        now_playing_result: Track | None = None,
+        thrown_error: Exception | None = None,
+        friends: list = [],
+        recent_tracks: list[Track] = [],
+        top_tracks: list[Track] = [],
+    ) -> None:
         """Initialize the mock."""
         self._now_playing_result = now_playing_result
-        self._thrown_error = error
-        self._has_friends = has_friends
+        self._thrown_error = thrown_error
+        self._friends = friends
+        self._recent_tracks = recent_tracks
+        self._top_tracks = top_tracks
         self.name = username
 
     def get_name(self, capitalized: bool) -> str:
         """Get name of the user."""
         return self.name
 
-    def get_playcount(self):
+    def get_playcount(self) -> int:
         """Get mock play count."""
         if self._thrown_error:
             raise self._thrown_error
-        return 1
+        return len(self._recent_tracks)
 
-    def get_image(self):
+    def get_image(self) -> str:
         """Get mock image."""
+        return "image"
 
-    def get_recent_tracks(self, limit):
+    def get_recent_tracks(self, limit: int) -> list[MockLastTrack]:
         """Get mock recent tracks."""
-        return []
+        return [MockLastTrack(track) for track in self._recent_tracks]
 
-    def get_top_tracks(self, limit):
+    def get_top_tracks(self, limit: int) -> list[MockTopTrack]:
         """Get mock top tracks."""
-        return []
+        return [MockTopTrack(track) for track in self._recent_tracks]
 
-    def get_now_playing(self):
+    def get_now_playing(self) -> Track:
         """Get mock now playing."""
         return self._now_playing_result
 
-    def get_friends(self):
+    def get_friends(self) -> list[any]:
         """Get mock friends."""
-        if self._has_friends is False:
-            raise WSError("network", "status", "Page not found")
-        return [MockUser(None, None, True, USERNAME_2)]
+        if len(self._friends) == 0:
+            raise PyLastError("network", "status", "Page not found")
+        return self._friends
 
 
-def patch_fetch_user(
-    now_playing: Track | None = None,
-    thrown_error: Exception | None = None,
-    has_friends: bool = True,
-    username: str = USERNAME_1,
-) -> MockUser:
+def patch_user(user: MockUser) -> MockUser:
     """Patch interface."""
-    return patch(
-        "pylast.User",
-        return_value=MockUser(now_playing, thrown_error, has_friends, username),
-    )
+    return patch("pylast.User", return_value=user)
 
 
 def patch_setup_entry() -> bool:

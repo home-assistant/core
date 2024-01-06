@@ -14,7 +14,7 @@ from homeassistant.components.button import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SynoApi
@@ -24,14 +24,14 @@ from .models import SynologyDSMData
 LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class SynologyDSMbuttonDescriptionMixin:
     """Mixin to describe a Synology DSM button entity."""
 
     press_action: Callable[[SynoApi], Callable[[], Coroutine[Any, Any, None]]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SynologyDSMbuttonDescription(
     ButtonEntityDescription, SynologyDSMbuttonDescriptionMixin
 ):

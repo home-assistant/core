@@ -51,9 +51,6 @@ class FileNotificationService(BaseNotificationService):
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a file."""
         file: TextIO
-        if not self.hass.config.config_dir:
-            return
-
         filepath: str = os.path.join(self.hass.config.config_dir, self.filename)
         with open(filepath, "a", encoding="utf8") as file:
             if os.stat(filepath).st_size == 0:

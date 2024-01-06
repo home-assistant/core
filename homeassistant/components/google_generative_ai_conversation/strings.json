@@ -18,7 +18,7 @@
       "init": {
         "data": {
           "prompt": "Prompt Template",
-          "model": "Model",
+          "model": "[%key:common::generic::model%]",
           "temperature": "Temperature",
           "top_p": "Top P",
           "top_k": "Top K"

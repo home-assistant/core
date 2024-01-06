@@ -8,7 +8,7 @@ from homeassistant.components.knx.sensor import SCAN_INTERVAL
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .conftest import KNXTestKit
 
@@ -47,7 +47,7 @@ async def test_diagnostic_entities(
     knx.xknx.connection_manager.cemi_count_outgoing_error = 2
 
     events = async_capture_events(hass, "state_changed")
-    async_fire_time_changed(hass, dt.utcnow() + SCAN_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done()
 
     assert len(events) == 3  # 5 polled sensors - 2 disabled
@@ -99,11 +99,11 @@ async def test_removed_entity(
     hass: HomeAssistant, knx: KNXTestKit, entity_registry: er.EntityRegistry
 ) -> None:
     """Test unregister callback when entity is removed."""
-    await knx.setup_integration({})
-
-    with patch.object(
-        knx.xknx.connection_manager, "unregister_connection_state_changed_cb"
+    with patch(
+        "xknx.core.connection_manager.ConnectionManager.unregister_connection_state_changed_cb"
     ) as unregister_mock:
+        await knx.setup_integration({})
+
         entity_registry.async_update_entity(
             "sensor.knx_interface_connection_established",
             disabled_by=er.RegistryEntryDisabler.USER,

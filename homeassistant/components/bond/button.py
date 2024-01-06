@@ -21,7 +21,7 @@ from .utils import BondDevice, BondHub
 STEP_SIZE = 10
 
 
-@dataclass
+@dataclass(frozen=True)
 class BondButtonEntityDescriptionMixin:
     """Mixin to describe a Bond Button entity."""
 
@@ -29,11 +29,15 @@ class BondButtonEntityDescriptionMixin:
     argument: int | None
 
 
-@dataclass
+@dataclass(frozen=True)
 class BondButtonEntityDescription(
     ButtonEntityDescription, BondButtonEntityDescriptionMixin
 ):
     """Class to describe a Bond Button entity."""
+
+    # BondEntity does not support UNDEFINED,
+    # restrict the type to str | None
+    name: str | None = None
 
 
 STOP_BUTTON = BondButtonEntityDescription(

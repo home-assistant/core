@@ -15,6 +15,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 @pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_device_registry_cleanup(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
     caplog: pytest.LogCaptureFixture,
@@ -23,7 +24,6 @@ async def test_device_registry_cleanup(
     mock_config_entry.options = {CONF_REPOSITORIES: ["home-assistant/core"]}
     await setup_github_integration(hass, mock_config_entry, aioclient_mock)
 
-    device_registry = dr.async_get(hass)
     devices = dr.async_entries_for_config_entry(
         registry=device_registry,
         config_entry_id=mock_config_entry.entry_id,

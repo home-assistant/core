@@ -157,7 +157,7 @@ def test_config_verify_ssl_but_no_ssl_enabled(
     assert "_http_id=1234567890" in result.req.body
     assert "exec=devlist" in result.req.body
     assert mock_session_send.call_count == 1
-    assert mock_session_send.mock_calls[0] == mock.call(result.req, timeout=3)
+    assert mock_session_send.mock_calls[0] == mock.call(result.req, timeout=60)
 
 
 @mock.patch("os.access", return_value=True)
@@ -192,7 +192,7 @@ def test_config_valid_verify_ssl_path(hass: HomeAssistant, mock_session_send) ->
     assert "exec=devlist" in result.req.body
     assert mock_session_send.call_count == 1
     assert mock_session_send.mock_calls[0] == mock.call(
-        result.req, timeout=3, verify="/test/tomato.crt"
+        result.req, timeout=60, verify="/test/tomato.crt"
     )
 
 
@@ -223,7 +223,7 @@ def test_config_valid_verify_ssl_bool(hass: HomeAssistant, mock_session_send) ->
     assert "exec=devlist" in result.req.body
     assert mock_session_send.call_count == 1
     assert mock_session_send.mock_calls[0] == mock.call(
-        result.req, timeout=3, verify=False
+        result.req, timeout=60, verify=False
     )
 
 
@@ -381,7 +381,7 @@ def test_bad_connection(hass: HomeAssistant, mock_exception_logger) -> None:
             "POST",
             "http://tomato-router:80/update.cgi",
             exc=requests.exceptions.ConnectionError,
-        ),
+        )
         tomato.get_scanner(hass, config)
     assert mock_exception_logger.call_count == 1
     assert mock_exception_logger.mock_calls[0] == mock.call(
@@ -409,7 +409,7 @@ def test_router_timeout(hass: HomeAssistant, mock_exception_logger) -> None:
             "POST",
             "http://tomato-router:80/update.cgi",
             exc=requests.exceptions.Timeout,
-        ),
+        )
         tomato.get_scanner(hass, config)
     assert mock_exception_logger.call_count == 1
     assert mock_exception_logger.mock_calls[0] == mock.call(

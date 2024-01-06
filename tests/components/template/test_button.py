@@ -1,6 +1,7 @@
 """The tests for the Template button platform."""
 import datetime as dt
-from unittest.mock import patch
+
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant import setup
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -59,7 +60,9 @@ async def test_missing_required_keys(hass: HomeAssistant) -> None:
     assert hass.states.async_all("button") == []
 
 
-async def test_all_optional_config(hass: HomeAssistant, calls) -> None:
+async def test_all_optional_config(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls
+) -> None:
     """Test: including all optional templates is ok."""
     with assert_setup_component(1, "template"):
         assert await setup.async_setup_component(
@@ -97,15 +100,14 @@ async def test_all_optional_config(hass: HomeAssistant, calls) -> None:
         _TEST_OPTIONS_BUTTON,
     )
 
-    now = dt.datetime.now(dt.timezone.utc)
-
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {CONF_ENTITY_ID: _TEST_OPTIONS_BUTTON},
-            blocking=True,
-        )
+    now = dt.datetime.now(dt.UTC)
+    freezer.move_to(now)
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {CONF_ENTITY_ID: _TEST_OPTIONS_BUTTON},
+        blocking=True,
+    )
 
     assert len(calls) == 1
     assert calls[0].data["caller"] == _TEST_OPTIONS_BUTTON

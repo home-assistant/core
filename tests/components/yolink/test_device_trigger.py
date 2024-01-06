@@ -1,5 +1,6 @@
 """The tests for YoLink device triggers."""
 import pytest
+from pytest_unordered import unordered
 from yolink.const import ATTR_DEVICE_DIMMER, ATTR_DEVICE_SMART_REMOTER
 
 from homeassistant.components import automation
@@ -11,7 +12,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
-    assert_lists_same,
     async_get_device_automations,
     async_mock_service,
 )
@@ -96,7 +96,7 @@ async def test_get_triggers(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 async def test_get_triggers_exception(
@@ -115,7 +115,7 @@ async def test_get_triggers_exception(
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entity.id
     )
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
 async def test_if_fires_on_event(
@@ -154,7 +154,7 @@ async def test_if_fires_on_event(
         },
     )
 
-    device = device_registry.async_get_device(set(), {connection})
+    device = device_registry.async_get_device(connections={connection})
     assert device is not None
     # Fake remote button long press.
     hass.bus.async_fire(

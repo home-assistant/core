@@ -2,7 +2,7 @@
   "domain": "rachio",
   "name": "Rachio",
   "after_dependencies": ["cloud"],
-  "codeowners": ["@bdraco"],
+  "codeowners": ["@bdraco", "@rfverbruggen"],
   "config_flow": true,
   "dependencies": ["http"],
   "dhcp": [
@@ -25,7 +25,7 @@
   },
   "iot_class": "cloud_push",
   "loggers": ["rachiopy"],
-  "requirements": ["rachiopy==1.0.3"],
+  "requirements": ["RachioPy==1.1.0"],
   "zeroconf": [
     {
       "type": "_http._tcp.local.",

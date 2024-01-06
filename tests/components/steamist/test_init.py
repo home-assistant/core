@@ -105,7 +105,7 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
 
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, FORMATTED_MAC_ADDRESS)}, identifiers={}
+        connections={(dr.CONNECTION_NETWORK_MAC, FORMATTED_MAC_ADDRESS)}
     )
     assert isinstance(device_entry, dr.DeviceEntry)
     assert device_entry.name == DEVICE_NAME

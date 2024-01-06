@@ -59,6 +59,7 @@ class BalboaClimateEntity(BalboaEntity, ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
     _attr_translation_key = DOMAIN
+    _attr_name = None
 
     def __init__(self, client: SpaClient) -> None:
         """Initialize the climate entity."""
@@ -78,7 +79,7 @@ class BalboaClimateEntity(BalboaEntity, ClimateEntity):
         return HEAT_HVAC_MODE_MAP.get(self._client.heat_mode.state)
 
     @property
-    def hvac_action(self) -> str:
+    def hvac_action(self) -> HVACAction:
         """Return the current operation mode."""
         return HEAT_STATE_HVAC_ACTION_MAP[self._client.heat_state]
 

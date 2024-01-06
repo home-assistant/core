@@ -20,13 +20,16 @@ from tests.common import async_fire_time_changed
 uid = "2WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*2VAS3HTWINNZ5N6HVEIPDJ6NX85P2-AM-GSYWUCNPU0"
 
 
-async def test_lock_get_state(hass: HomeAssistant, init_integration) -> None:
+async def test_lock_get_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    init_integration,
+) -> None:
     """Test states of the lock."""
     init_integration
-    registry = er.async_get(hass)
-    registry_device = dr.async_get(hass)
 
-    device = registry_device.async_get_device({("freedompro", uid)})
+    device = device_registry.async_get_device(identifiers={("freedompro", uid)})
     assert device is not None
     assert device.identifiers == {("freedompro", uid)}
     assert device.manufacturer == "Freedompro"
@@ -39,14 +42,14 @@ async def test_lock_get_state(hass: HomeAssistant, init_integration) -> None:
     assert state.state == STATE_UNLOCKED
     assert state.attributes.get("friendly_name") == "lock"
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == uid
 
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["lock"] = 1
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
@@ -56,24 +59,25 @@ async def test_lock_get_state(hass: HomeAssistant, init_integration) -> None:
         assert state
         assert state.attributes.get("friendly_name") == "lock"
 
-        entry = registry.async_get(entity_id)
+        entry = entity_registry.async_get(entity_id)
         assert entry
         assert entry.unique_id == uid
 
         assert state.state == STATE_LOCKED
 
 
-async def test_lock_set_unlock(hass: HomeAssistant, init_integration) -> None:
+async def test_lock_set_unlock(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, init_integration
+) -> None:
     """Test set on of the lock."""
     init_integration
-    registry = er.async_get(hass)
 
     entity_id = "lock.lock"
 
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["lock"] = 1
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         await async_update_entity(hass, entity_id)
@@ -85,12 +89,12 @@ async def test_lock_set_unlock(hass: HomeAssistant, init_integration) -> None:
     assert state.state == STATE_LOCKED
     assert state.attributes.get("friendly_name") == "lock"
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == uid
 
     with patch("homeassistant.components.freedompro.lock.put_state") as mock_put_state:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_UNLOCK,
             {ATTR_ENTITY_ID: [entity_id]},
@@ -101,7 +105,7 @@ async def test_lock_set_unlock(hass: HomeAssistant, init_integration) -> None:
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["lock"] = 0
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
@@ -111,10 +115,11 @@ async def test_lock_set_unlock(hass: HomeAssistant, init_integration) -> None:
     assert state.state == STATE_UNLOCKED
 
 
-async def test_lock_set_lock(hass: HomeAssistant, init_integration) -> None:
+async def test_lock_set_lock(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, init_integration
+) -> None:
     """Test set on of the lock."""
     init_integration
-    registry = er.async_get(hass)
 
     entity_id = "lock.lock"
     state = hass.states.get(entity_id)
@@ -122,12 +127,12 @@ async def test_lock_set_lock(hass: HomeAssistant, init_integration) -> None:
     assert state.state == STATE_UNLOCKED
     assert state.attributes.get("friendly_name") == "lock"
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == uid
 
     with patch("homeassistant.components.freedompro.lock.put_state") as mock_put_state:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             LOCK_DOMAIN,
             SERVICE_LOCK,
             {ATTR_ENTITY_ID: [entity_id]},
@@ -138,7 +143,7 @@ async def test_lock_set_lock(hass: HomeAssistant, init_integration) -> None:
     states_response = get_states_response_for_uid(uid)
     states_response[0]["state"]["lock"] = 1
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))

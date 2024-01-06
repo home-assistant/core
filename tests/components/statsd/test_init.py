@@ -1,13 +1,12 @@
 """The tests for the StatsD feeder."""
 from unittest import mock
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
 
 import homeassistant.components.statsd as statsd
-from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
-import homeassistant.core as ha
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -32,15 +31,15 @@ def test_invalid_config() -> None:
 async def test_statsd_setup_full(hass: HomeAssistant) -> None:
     """Test setup with all data."""
     config = {"statsd": {"host": "host", "port": 123, "rate": 1, "prefix": "foo"}}
-    hass.bus.listen = MagicMock()
     with patch("statsd.StatsClient") as mock_init:
         assert await async_setup_component(hass, statsd.DOMAIN, config)
 
         assert mock_init.call_count == 1
         assert mock_init.call_args == mock.call(host="host", port=123, prefix="foo")
 
-    assert hass.bus.listen.called
-    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
+        hass.states.async_set("domain.test", "on")
+        await hass.async_block_till_done()
+        assert len(mock_init.mock_calls) == 3
 
 
 async def test_statsd_setup_defaults(hass: HomeAssistant) -> None:
@@ -50,13 +49,14 @@ async def test_statsd_setup_defaults(hass: HomeAssistant) -> None:
     config["statsd"][statsd.CONF_PORT] = statsd.DEFAULT_PORT
     config["statsd"][statsd.CONF_PREFIX] = statsd.DEFAULT_PREFIX
 
-    hass.bus.listen = MagicMock()
     with patch("statsd.StatsClient") as mock_init:
         assert await async_setup_component(hass, statsd.DOMAIN, config)
 
         assert mock_init.call_count == 1
         assert mock_init.call_args == mock.call(host="host", port=8125, prefix="hass")
-    assert hass.bus.listen.called
+        hass.states.async_set("domain.test", "on")
+        await hass.async_block_till_done()
+        assert len(mock_init.mock_calls) == 3
 
 
 async def test_event_listener_defaults(hass: HomeAssistant, mock_client) -> None:
@@ -65,31 +65,27 @@ async def test_event_listener_defaults(hass: HomeAssistant, mock_client) -> None
 
     config["statsd"][statsd.CONF_RATE] = statsd.DEFAULT_RATE
 
-    hass.bus.listen = MagicMock()
     await async_setup_component(hass, statsd.DOMAIN, config)
-    assert hass.bus.listen.called
-    handler_method = hass.bus.listen.call_args_list[0][0][1]
 
     valid = {"1": 1, "1.0": 1.0, "custom": 3, STATE_ON: 1, STATE_OFF: 0}
     for in_, out in valid.items():
-        state = MagicMock(state=in_, attributes={"attribute key": 3.2})
-        handler_method(MagicMock(data={"new_state": state}))
+        hass.states.async_set("domain.test", in_, {"attribute key": 3.2})
+        await hass.async_block_till_done()
         mock_client.gauge.assert_has_calls(
-            [mock.call(state.entity_id, out, statsd.DEFAULT_RATE)]
+            [mock.call("domain.test", out, statsd.DEFAULT_RATE)]
         )
 
         mock_client.gauge.reset_mock()
 
         assert mock_client.incr.call_count == 1
         assert mock_client.incr.call_args == mock.call(
-            state.entity_id, rate=statsd.DEFAULT_RATE
+            "domain.test", rate=statsd.DEFAULT_RATE
         )
         mock_client.incr.reset_mock()
 
     for invalid in ("foo", "", object):
-        handler_method(
-            MagicMock(data={"new_state": ha.State("domain.test", invalid, {})})
-        )
+        hass.states.async_set("domain.test", invalid, {})
+        await hass.async_block_till_done()
         assert not mock_client.gauge.called
         assert mock_client.incr.called
 
@@ -100,19 +96,16 @@ async def test_event_listener_attr_details(hass: HomeAssistant, mock_client) -> 
 
     config["statsd"][statsd.CONF_RATE] = statsd.DEFAULT_RATE
 
-    hass.bus.listen = MagicMock()
     await async_setup_component(hass, statsd.DOMAIN, config)
-    assert hass.bus.listen.called
-    handler_method = hass.bus.listen.call_args_list[0][0][1]
 
     valid = {"1": 1, "1.0": 1.0, STATE_ON: 1, STATE_OFF: 0}
     for in_, out in valid.items():
-        state = MagicMock(state=in_, attributes={"attribute key": 3.2})
-        handler_method(MagicMock(data={"new_state": state}))
+        hass.states.async_set("domain.test", in_, {"attribute key": 3.2})
+        await hass.async_block_till_done()
         mock_client.gauge.assert_has_calls(
             [
-                mock.call(f"{state.entity_id}.state", out, statsd.DEFAULT_RATE),
-                mock.call(f"{state.entity_id}.attribute_key", 3.2, statsd.DEFAULT_RATE),
+                mock.call("domain.test.state", out, statsd.DEFAULT_RATE),
+                mock.call("domain.test.attribute_key", 3.2, statsd.DEFAULT_RATE),
             ]
         )
 
@@ -120,13 +113,12 @@ async def test_event_listener_attr_details(hass: HomeAssistant, mock_client) -> 
 
         assert mock_client.incr.call_count == 1
         assert mock_client.incr.call_args == mock.call(
-            state.entity_id, rate=statsd.DEFAULT_RATE
+            "domain.test", rate=statsd.DEFAULT_RATE
         )
         mock_client.incr.reset_mock()
 
     for invalid in ("foo", "", object):
-        handler_method(
-            MagicMock(data={"new_state": ha.State("domain.test", invalid, {})})
-        )
+        hass.states.async_set("domain.test", invalid, {})
+        await hass.async_block_till_done()
         assert not mock_client.gauge.called
         assert mock_client.incr.called

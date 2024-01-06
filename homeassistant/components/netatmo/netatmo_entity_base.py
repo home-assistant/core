@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from pyatmo import DeviceType
 from pyatmo.modules.device_types import (
     DEVICE_DESCRIPTION_MAP,
     DeviceType as NetatmoDeviceType,
@@ -10,7 +11,8 @@ from pyatmo.modules.device_types import (
 
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
 
 from .const import DATA_DEVICE_IDS, DEFAULT_ATTRIBUTION, DOMAIN, SIGNAL_NAME
 from .data_handler import PUBLIC, NetatmoDataHandler
@@ -28,7 +30,7 @@ class NetatmoBase(Entity):
 
         self._device_name: str = ""
         self._id: str = ""
-        self._model: str = ""
+        self._model: DeviceType
         self._config_url: str | None = None
         self._attr_name = None
         self._attr_unique_id = None
@@ -70,7 +72,7 @@ class NetatmoBase(Entity):
                 await self.data_handler.unsubscribe(signal_name, None)
 
         registry = dr.async_get(self.hass)
-        if device := registry.async_get_device({(DOMAIN, self._id)}):
+        if device := registry.async_get_device(identifiers={(DOMAIN, self._id)}):
             self.hass.data[DOMAIN][DATA_DEVICE_IDS][self._id] = device.id
 
         self.async_update_callback()

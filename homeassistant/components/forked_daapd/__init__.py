@@ -18,9 +18,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Remove forked-daapd component."""
     status = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if status and hass.data.get(DOMAIN) and hass.data[DOMAIN].get(entry.entry_id):
-        hass.data[DOMAIN][entry.entry_id][
+        if websocket_handler := hass.data[DOMAIN][entry.entry_id][
             HASS_DATA_UPDATER_KEY
-        ].websocket_handler.cancel()
+        ].websocket_handler:
+            websocket_handler.cancel()
         for remove_listener in hass.data[DOMAIN][entry.entry_id][
             HASS_DATA_REMOVE_LISTENERS_KEY
         ]:

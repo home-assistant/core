@@ -4,9 +4,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass, field
 import logging
-from typing import Any, TypedDict
-
-from typing_extensions import NotRequired
+from typing import Any, NotRequired, TypedDict
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -35,8 +33,10 @@ from .const import (
     EVENT_SUPERVISOR_EVENT,
     EVENT_SUPERVISOR_UPDATE,
     EVENT_SUPPORTED_CHANGED,
+    ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     PLACEHOLDER_KEY_REFERENCE,
     UPDATE_KEY_SUPERVISOR,
+    SupervisorIssueContext,
 )
 from .handler import HassIO, HassioAPIError
 
@@ -88,6 +88,7 @@ ISSUE_KEYS_FOR_REPAIRS = {
     "issue_mount_mount_failed",
     "issue_system_multiple_data_disks",
     "issue_system_reboot_required",
+    ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -107,22 +108,22 @@ class Suggestion:
     """Suggestion from Supervisor which resolves an issue."""
 
     uuid: str
-    type_: str
-    context: str
+    type: str
+    context: SupervisorIssueContext
     reference: str | None = None
 
     @property
     def key(self) -> str:
         """Get key for suggestion (combination of context and type)."""
-        return f"{self.context}_{self.type_}"
+        return f"{self.context}_{self.type}"
 
     @classmethod
     def from_dict(cls, data: SuggestionDataType) -> Suggestion:
         """Convert from dictionary representation."""
         return cls(
             uuid=data["uuid"],
-            type_=data["type"],
-            context=data["context"],
+            type=data["type"],
+            context=SupervisorIssueContext(data["context"]),
             reference=data["reference"],
         )
 
@@ -142,15 +143,15 @@ class Issue:
     """Issue from Supervisor."""
 
     uuid: str
-    type_: str
-    context: str
+    type: str
+    context: SupervisorIssueContext
     reference: str | None = None
     suggestions: list[Suggestion] = field(default_factory=list, compare=False)
 
     @property
     def key(self) -> str:
         """Get key for issue (combination of context and type)."""
-        return f"issue_{self.context}_{self.type_}"
+        return f"issue_{self.context}_{self.type}"
 
     @classmethod
     def from_dict(cls, data: IssueDataType) -> Issue:
@@ -158,8 +159,8 @@ class Issue:
         suggestions: list[SuggestionDataType] = data.get("suggestions", [])
         return cls(
             uuid=data["uuid"],
-            type_=data["type"],
-            context=data["context"],
+            type=data["type"],
+            context=SupervisorIssueContext(data["context"]),
             reference=data["reference"],
             suggestions=[
                 Suggestion.from_dict(suggestion) for suggestion in suggestions
@@ -242,6 +243,11 @@ class SupervisorIssues:
 
         self._unsupported_reasons = reasons
 
+    @property
+    def issues(self) -> set[Issue]:
+        """Get issues."""
+        return set(self._issues.values())
+
     def add_issue(self, issue: Issue) -> None:
         """Add or update an issue in the list. Create or update a repair if necessary."""
         if issue.key in ISSUE_KEYS_FOR_REPAIRS:
@@ -263,25 +269,16 @@ class SupervisorIssues:
     async def add_issue_from_data(self, data: IssueDataType) -> None:
         """Add issue from data to list after getting latest suggestions."""
         try:
-            suggestions = (await self._client.get_suggestions_for_issue(data["uuid"]))[
-                ATTR_SUGGESTIONS
-            ]
-            self.add_issue(
-                Issue(
-                    uuid=data["uuid"],
-                    type_=data["type"],
-                    context=data["context"],
-                    reference=data["reference"],
-                    suggestions=[
-                        Suggestion.from_dict(suggestion) for suggestion in suggestions
-                    ],
-                )
-            )
+            data["suggestions"] = (
+                await self._client.get_suggestions_for_issue(data["uuid"])
+            )[ATTR_SUGGESTIONS]
         except HassioAPIError:
             _LOGGER.error(
                 "Could not get suggestions for supervisor issue %s, skipping it",
                 data["uuid"],
             )
+            return
+        self.add_issue(Issue.from_dict(data))
 
     def remove_issue(self, issue: Issue) -> None:
         """Remove an issue from the list. Delete a repair if necessary."""
@@ -307,7 +304,11 @@ class SupervisorIssues:
 
     async def update(self) -> None:
         """Update issues from Supervisor resolution center."""
-        data = await self._client.get_resolution_info()
+        try:
+            data = await self._client.get_resolution_info()
+        except HassioAPIError as err:
+            _LOGGER.error("Failed to update supervisor issues: %r", err)
+            return
         self.unhealthy_reasons = set(data[ATTR_UNHEALTHY])
         self.unsupported_reasons = set(data[ATTR_UNSUPPORTED])
 

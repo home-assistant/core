@@ -334,12 +334,13 @@ async def test_device_info_ismartgate(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device({(DOMAIN, "xyz")})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "xyz")})
     assert device
     assert device.manufacturer == MANUFACTURER
     assert device.name == "mycontroller"
     assert device.model == "ismartgatePRO"
     assert device.sw_version == "555"
+    assert device.configuration_url == "https://abc321.blah.blah"
 
 
 @patch("homeassistant.components.gogogate2.common.GogoGate2Api")
@@ -369,9 +370,10 @@ async def test_device_info_gogogate2(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device({(DOMAIN, "xyz")})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "xyz")})
     assert device
     assert device.manufacturer == MANUFACTURER
     assert device.name == "mycontroller"
     assert device.model == "gogogate2"
     assert device.sw_version == "222"
+    assert device.configuration_url == "http://127.0.0.1"

@@ -23,8 +23,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.device_registry import DeviceInfo, format_mac
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import utcnow
@@ -78,6 +78,8 @@ SERVICE_SCHEMA_PLAY_RINGTONE = vol.Schema(
 SERVICE_SCHEMA_REMOVE_DEVICE = vol.Schema(
     {vol.Required(ATTR_DEVICE_ID): vol.All(cv.string, vol.Length(min=14, max=14))}
 )
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -265,10 +267,8 @@ class XiaomiDevice(Entity):
         self.parse_data(device["data"], device["raw_data"])
         self.parse_voltage(device["data"])
 
-        if hasattr(self, "_data_key") and self._data_key:  # pylint: disable=no-member
-            self._unique_id = (
-                f"{self._data_key}{self._sid}"  # pylint: disable=no-member
-            )
+        if hasattr(self, "_data_key") and self._data_key:
+            self._unique_id = f"{self._data_key}{self._sid}"
         else:
             self._unique_id = f"{self._type}{self._sid}"
 

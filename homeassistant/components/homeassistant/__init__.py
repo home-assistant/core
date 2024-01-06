@@ -1,7 +1,9 @@
 """Integration providing core pieces of infrastructure."""
 import asyncio
+from collections.abc import Callable, Coroutine
 import itertools as it
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -9,12 +11,11 @@ from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.components import persistent_notification
 import homeassistant.config as conf_util
 from homeassistant.const import (
+    ATTR_ELEVATION,
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     RESTART_EXIT_CODE,
-    SERVICE_HOMEASSISTANT_RESTART,
-    SERVICE_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
     SERVICE_SAVE_PERSISTENT_STATES,
     SERVICE_TOGGLE,
@@ -33,10 +34,17 @@ from homeassistant.helpers.service import (
 from homeassistant.helpers.template import async_load_custom_templates
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_EXPOSED_ENTITIES, DOMAIN
+from .const import (
+    DATA_EXPOSED_ENTITIES,
+    DATA_STOP_HANDLER,
+    DOMAIN,
+    SERVICE_HOMEASSISTANT_RESTART,
+    SERVICE_HOMEASSISTANT_STOP,
+)
 from .exposed_entities import ExposedEntities
 
 ATTR_ENTRY_ID = "entry_id"
+ATTR_SAFE_MODE = "safe_mode"
 
 _LOGGER = logging.getLogger(__name__)
 SERVICE_RELOAD_CORE_CONFIG = "reload_core_config"
@@ -56,7 +64,7 @@ SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
     ),
     cv.has_at_least_one_key(ATTR_ENTRY_ID, *cv.ENTITY_SERVICE_FIELDS),
 )
-
+SCHEMA_RESTART = vol.Schema({vol.Optional(ATTR_SAFE_MODE, default=False): bool})
 
 SHUTDOWN_SERVICES = (SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART)
 
@@ -147,6 +155,8 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
 
     async def async_handle_core_service(call: ha.ServiceCall) -> None:
         """Service handler for handling core services."""
+        stop_handler: Callable[[ha.HomeAssistant, bool], Coroutine[Any, Any, None]]
+
         if call.service in SHUTDOWN_SERVICES and recorder.async_migration_in_progress(
             hass
         ):
@@ -160,8 +170,8 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
             )
 
         if call.service == SERVICE_HOMEASSISTANT_STOP:
-            # Track trask in hass.data. No need to cleanup, we're stopping.
-            hass.data["homeassistant_stop"] = asyncio.create_task(hass.async_stop())
+            stop_handler = hass.data[DATA_STOP_HANDLER]
+            await stop_handler(hass, False)
             return
 
         errors = await conf_util.async_check_ha_config_file(hass)
@@ -184,10 +194,10 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
             )
 
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
-            # Track trask in hass.data. No need to cleanup, we're stopping.
-            hass.data["homeassistant_stop"] = asyncio.create_task(
-                hass.async_stop(RESTART_EXIT_CODE)
-            )
+            if call.data[ATTR_SAFE_MODE]:
+                await conf_util.async_enable_safe_mode(hass)
+            stop_handler = hass.data[DATA_STOP_HANDLER]
+            await stop_handler(hass, True)
 
     async def async_handle_update_service(call: ha.ServiceCall) -> None:
         """Service handler for updating an entity."""
@@ -221,7 +231,11 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         hass, ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service
     )
     async_register_admin_service(
-        hass, ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART, async_handle_core_service
+        hass,
+        ha.DOMAIN,
+        SERVICE_HOMEASSISTANT_RESTART,
+        async_handle_core_service,
+        SCHEMA_RESTART,
     )
     async_register_admin_service(
         hass, ha.DOMAIN, SERVICE_CHECK_CONFIG, async_handle_core_service
@@ -250,16 +264,28 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
 
     async def async_set_location(call: ha.ServiceCall) -> None:
         """Service handler to set location."""
-        await hass.config.async_update(
-            latitude=call.data[ATTR_LATITUDE], longitude=call.data[ATTR_LONGITUDE]
-        )
+        service_data = {
+            "latitude": call.data[ATTR_LATITUDE],
+            "longitude": call.data[ATTR_LONGITUDE],
+        }
+
+        if elevation := call.data.get(ATTR_ELEVATION):
+            service_data["elevation"] = elevation
+
+        await hass.config.async_update(**service_data)
 
     async_register_admin_service(
         hass,
         ha.DOMAIN,
         SERVICE_SET_LOCATION,
         async_set_location,
-        vol.Schema({ATTR_LATITUDE: cv.latitude, ATTR_LONGITUDE: cv.longitude}),
+        vol.Schema(
+            {
+                vol.Required(ATTR_LATITUDE): cv.latitude,
+                vol.Required(ATTR_LONGITUDE): cv.longitude,
+                vol.Optional(ATTR_ELEVATION): int,
+            }
+        ),
     )
 
     async def async_handle_reload_templates(call: ha.ServiceCall) -> None:
@@ -345,5 +371,22 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
     exposed_entities = ExposedEntities(hass)
     await exposed_entities.async_initialize()
     hass.data[DATA_EXPOSED_ENTITIES] = exposed_entities
+    async_set_stop_handler(hass, _async_stop)
 
     return True
+
+
+async def _async_stop(hass: ha.HomeAssistant, restart: bool):
+    """Stop home assistant."""
+    exit_code = RESTART_EXIT_CODE if restart else 0
+    # Track trask in hass.data. No need to cleanup, we're stopping.
+    hass.data["homeassistant_stop"] = asyncio.create_task(hass.async_stop(exit_code))
+
+
+@ha.callback
+def async_set_stop_handler(
+    hass: ha.HomeAssistant,
+    stop_handler: Callable[[ha.HomeAssistant, bool], Coroutine[Any, Any, None]],
+) -> None:
+    """Set function which is called by the stop and restart services."""
+    hass.data[DATA_STOP_HANDLER] = stop_handler

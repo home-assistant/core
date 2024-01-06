@@ -38,6 +38,7 @@ from .schemas import (
     add_x10_device,
     build_device_override_schema,
     build_hub_schema,
+    build_plm_manual_schema,
     build_plm_schema,
     build_remove_override_schema,
     build_remove_x10_schema,
@@ -46,6 +47,7 @@ from .schemas import (
 from .utils import async_get_usb_ports
 
 STEP_PLM = "plm"
+STEP_PLM_MANUALLY = "plm_manually"
 STEP_HUB_V1 = "hubv1"
 STEP_HUB_V2 = "hubv2"
 STEP_CHANGE_HUB_CONFIG = "change_hub_config"
@@ -55,6 +57,7 @@ STEP_ADD_OVERRIDE = "add_override"
 STEP_REMOVE_OVERRIDE = "remove_override"
 STEP_REMOVE_X10 = "remove_x10"
 MODEM_TYPE = "modem_type"
+PLM_MANUAL = "manual"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -129,14 +132,33 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Set up the PLM modem type."""
         errors = {}
         if user_input is not None:
+            if user_input[CONF_DEVICE] == PLM_MANUAL:
+                return await self.async_step_plm_manually()
             if await _async_connect(**user_input):
                 return self.async_create_entry(title="", data=user_input)
             errors["base"] = "cannot_connect"
         schema_defaults = user_input if user_input is not None else {}
         ports = await async_get_usb_ports(self.hass)
+        if not ports:
+            return await self.async_step_plm_manually()
+        ports[PLM_MANUAL] = "Enter manually"
         data_schema = build_plm_schema(ports, **schema_defaults)
         return self.async_show_form(
             step_id=STEP_PLM, data_schema=data_schema, errors=errors
+        )
+
+    async def async_step_plm_manually(self, user_input=None):
+        """Set up the PLM modem type manually."""
+        errors = {}
+        schema_defaults = {}
+        if user_input is not None:
+            if await _async_connect(**user_input):
+                return self.async_create_entry(title="", data=user_input)
+            errors["base"] = "cannot_connect"
+            schema_defaults = user_input
+        data_schema = build_plm_manual_schema(**schema_defaults)
+        return self.async_show_form(
+            step_id=STEP_PLM_MANUALLY, data_schema=data_schema, errors=errors
         )
 
     async def async_step_hubv1(self, user_input=None):
@@ -163,25 +185,14 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id=step_id, data_schema=data_schema, errors=errors
         )
 
-    async def async_step_import(self, import_info):
-        """Import a yaml entry as a config entry."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-        if not await _async_connect(**import_info):
-            return self.async_abort(reason="cannot_connect")
-        return self.async_create_entry(title="", data=import_info)
-
     async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
         """Handle USB discovery."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        dev_path = await self.hass.async_add_executor_job(
-            usb.get_serial_by_id, discovery_info.device
-        )
-        self._device_path = dev_path
+        self._device_path = discovery_info.device
         self._device_name = usb.human_readable_device_name(
-            dev_path,
+            discovery_info.device,
             discovery_info.serial_number,
             discovery_info.manufacturer,
             discovery_info.description,

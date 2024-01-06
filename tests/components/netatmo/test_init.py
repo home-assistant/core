@@ -12,7 +12,7 @@ from homeassistant.components.netatmo import DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .common import (
     FAKE_WEBHOOK_ACTIVATION,
@@ -201,11 +201,11 @@ async def test_setup_with_cloud(hass: HomeAssistant, config_entry) -> None:
     ) as fake_delete_cloudhook, patch(
         "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
     ) as mock_auth, patch(
-        "homeassistant.components.netatmo.PLATFORMS", []
+        "homeassistant.components.netatmo.data_handler.PLATFORMS", []
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
-        "homeassistant.components.netatmo.webhook_generate_url"
+        "homeassistant.components.netatmo.webhook_generate_url",
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post_request
         assert await async_setup_component(
@@ -267,11 +267,11 @@ async def test_setup_with_cloudhook(hass: HomeAssistant) -> None:
     ) as fake_delete_cloudhook, patch(
         "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
     ) as mock_auth, patch(
-        "homeassistant.components.netatmo.PLATFORMS", []
+        "homeassistant.components.netatmo.data_handler.PLATFORMS", []
     ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
-        "homeassistant.components.netatmo.webhook_generate_url"
+        "homeassistant.components.netatmo.webhook_generate_url",
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post_request
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
@@ -339,7 +339,7 @@ async def test_setup_component_with_delay(hass: HomeAssistant, config_entry) -> 
 
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(seconds=60),
+            dt_util.utcnow() + timedelta(seconds=60),
         )
         await hass.async_block_till_done()
 
@@ -415,7 +415,7 @@ async def test_setup_component_invalid_token(hass: HomeAssistant, config_entry) 
                 headers={},
                 real_url="http://example.com",
             ),
-            code=400,
+            status=400,
             history=(),
         )
 

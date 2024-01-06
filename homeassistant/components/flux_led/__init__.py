@@ -14,7 +14,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -70,6 +74,8 @@ REQUEST_REFRESH_DELAY: Final = 1.5
 NAME_TO_WHITE_CHANNEL_TYPE: Final = {
     option.name.lower(): option for option in WhiteChannelType
 }
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @callback

@@ -57,6 +57,8 @@ CREATE_FIELDS = {
 }
 UPDATE_FIELDS: dict = {}  # Not supported
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 
 @dataclass
 class ClientCredential:

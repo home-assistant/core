@@ -3,8 +3,10 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import ValuesView
+from datetime import datetime
 from itertools import chain
 import logging
+from typing import Any
 
 from aiohttp import ClientError, ClientResponseError
 from yalexs.const import DEFAULT_BRAND
@@ -30,6 +32,7 @@ from .const import CONF_BRAND, DOMAIN, MIN_TIME_BETWEEN_DETAIL_UPDATES, PLATFORM
 from .exceptions import CannotConnect, InvalidAuth, RequireValidation
 from .gateway import AugustGateway
 from .subscriber import AugustSubscriberMixin
+from .util import async_create_august_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,8 +47,8 @@ YALEXS_BLE_DOMAIN = "yalexs_ble"
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up August from a config entry."""
-
-    august_gateway = AugustGateway(hass)
+    session = async_create_august_clientsession(hass)
+    august_gateway = AugustGateway(hass, session)
 
     try:
         await august_gateway.async_setup(entry.data)
@@ -235,14 +238,18 @@ class AugustData(AugustSubscriberMixin):
                 )
 
     @callback
-    def async_pubnub_message(self, device_id, date_time, message):
+    def async_pubnub_message(
+        self, device_id: str, date_time: datetime, message: dict[str, Any]
+    ) -> None:
         """Process a pubnub message."""
         device = self.get_device_detail(device_id)
         activities = activities_from_pubnub_message(device, date_time, message)
+        activity_stream = self.activity_stream
+        assert activity_stream is not None
         if activities:
-            self.activity_stream.async_process_newer_device_activities(activities)
+            activity_stream.async_process_newer_device_activities(activities)
             self.async_signal_device_id_update(device.device_id)
-        self.activity_stream.async_schedule_house_id_refresh(device.house_id)
+        activity_stream.async_schedule_house_id_refresh(device.house_id)
 
     @callback
     def async_stop(self):

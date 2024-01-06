@@ -9,20 +9,14 @@ from tuya_iot import TuyaDevice
 
 from homeassistant.components.diagnostics import REDACTED
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_COUNTRY_CODE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.util import dt as dt_util
 
 from . import HomeAssistantTuyaData
-from .const import (
-    CONF_APP_TYPE,
-    CONF_AUTH_TYPE,
-    CONF_COUNTRY_CODE,
-    CONF_ENDPOINT,
-    DOMAIN,
-    DPCode,
-)
+from .const import CONF_APP_TYPE, CONF_AUTH_TYPE, CONF_ENDPOINT, DOMAIN, DPCode
 
 
 async def async_get_config_entry_diagnostics(
@@ -155,7 +149,7 @@ def _async_device_as_dict(hass: HomeAssistant, device: TuyaDevice) -> dict[str, 
 
         for entity_entry in hass_entities:
             state = hass.states.get(entity_entry.entity_id)
-            state_dict = None
+            state_dict: dict[str, Any] | None = None
             if state:
                 state_dict = dict(state.as_dict())
 

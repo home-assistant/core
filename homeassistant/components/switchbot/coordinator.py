@@ -6,7 +6,6 @@ import contextlib
 import logging
 from typing import TYPE_CHECKING
 
-import async_timeout
 import switchbot
 from switchbot import SwitchbotModel
 
@@ -117,7 +116,7 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
     async def async_wait_ready(self) -> bool:
         """Wait for the device to be ready."""
         with contextlib.suppress(asyncio.TimeoutError):
-            async with async_timeout.timeout(DEVICE_STARTUP_TIMEOUT):
+            async with asyncio.timeout(DEVICE_STARTUP_TIMEOUT):
                 await self._ready_event.wait()
                 return True
         return False

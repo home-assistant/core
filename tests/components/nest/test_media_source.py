@@ -231,7 +231,9 @@ def create_battery_event_data(
         (
             "sdm.devices.types.THERMOSTAT",
             {
-                "sdm.devices.traits.Temperature": {},
+                "sdm.devices.traits.Temperature": {
+                    "ambientTemperatureCelsius": 22.0,
+                },
             },
         )
     ],
@@ -256,7 +258,7 @@ async def test_supported_device(hass: HomeAssistant, setup_platform) -> None:
     assert camera is not None
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, DEVICE_ID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
 
@@ -318,7 +320,7 @@ async def test_camera_event(
     assert camera is not None
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, DEVICE_ID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
 
@@ -448,7 +450,7 @@ async def test_event_order(
     assert camera is not None
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, DEVICE_ID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
 
@@ -493,7 +495,7 @@ async def test_multiple_image_events_in_session(
     assert camera is not None
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, DEVICE_ID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
 
@@ -607,7 +609,7 @@ async def test_multiple_clip_preview_events_in_session(
     assert camera is not None
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, DEVICE_ID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
 
@@ -695,7 +697,7 @@ async def test_browse_invalid_device_id(
     await setup_platform()
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, DEVICE_ID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
 
@@ -716,7 +718,7 @@ async def test_browse_invalid_event_id(
     await setup_platform()
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, DEVICE_ID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
 
@@ -739,7 +741,7 @@ async def test_resolve_missing_event_id(
     await setup_platform()
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, DEVICE_ID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
 
@@ -771,7 +773,7 @@ async def test_resolve_invalid_event_id(
     await setup_platform()
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, DEVICE_ID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
 
@@ -819,7 +821,7 @@ async def test_camera_event_clip_preview(
     assert camera is not None
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, DEVICE_ID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
 
@@ -916,7 +918,7 @@ async def test_event_media_render_invalid_event_id(
     """Test event media API called with an invalid device id."""
     await setup_platform()
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, DEVICE_ID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
 
@@ -958,7 +960,7 @@ async def test_event_media_failure(
     assert camera is not None
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, DEVICE_ID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
 
@@ -998,7 +1000,7 @@ async def test_media_permission_unauthorized(
     assert camera is not None
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, DEVICE_ID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
 
@@ -1034,9 +1036,9 @@ async def test_multiple_devices(
     await setup_platform()
 
     device_registry = dr.async_get(hass)
-    device1 = device_registry.async_get_device({(DOMAIN, DEVICE_ID)})
+    device1 = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device1
-    device2 = device_registry.async_get_device({(DOMAIN, device_id2)})
+    device2 = device_registry.async_get_device(identifiers={(DOMAIN, device_id2)})
     assert device2
 
     # Very no events have been received yet
@@ -1121,7 +1123,7 @@ async def test_media_store_persistence(
     await setup_platform()
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, DEVICE_ID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
 
@@ -1174,7 +1176,7 @@ async def test_media_store_persistence(
     await hass.async_block_till_done()
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, DEVICE_ID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
 
@@ -1233,7 +1235,7 @@ async def test_media_store_save_filesystem_error(
     assert camera is not None
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, DEVICE_ID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
 
@@ -1272,7 +1274,7 @@ async def test_media_store_load_filesystem_error(
     assert camera is not None
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, DEVICE_ID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
 
@@ -1322,7 +1324,7 @@ async def test_camera_event_media_eviction(
     await setup_platform()
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, DEVICE_ID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
 
@@ -1399,7 +1401,7 @@ async def test_camera_image_resize(
     await setup_platform()
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, DEVICE_ID)})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
     assert device
     assert device.name == DEVICE_NAME
 

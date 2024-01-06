@@ -1,10 +1,6 @@
 play_everywhere:
-  name: Play everywhere
-  description: Play on all Bose SoundTouch devices.
   fields:
     master:
-      name: Master
-      description: Name of the master entity that will coordinate the grouping. Platform dependent. It is a shortcut for creating a multi-room zone with all devices
       required: true
       selector:
         entity:
@@ -12,20 +8,14 @@ play_everywhere:
           domain: media_player
 
 create_zone:
-  name: Create zone
-  description: Create a SoundTouch multi-room zone.
   fields:
     master:
-      name: Master
-      description: Name of the master entity that will coordinate the multi-room zone. Platform dependent.
       required: true
       selector:
         entity:
           integration: soundtouch
           domain: media_player
     slaves:
-      name: Slaves
-      description: Name of slaves entities to add to the new zone.
       required: true
       selector:
         entity:
@@ -34,20 +24,14 @@ create_zone:
           domain: media_player
 
 add_zone_slave:
-  name: Add zone slave
-  description: Add a slave to a SoundTouch multi-room zone.
   fields:
     master:
-      name: Master
-      description: Name of the master entity that is coordinating the multi-room zone. Platform dependent.
       required: true
       selector:
         entity:
           integration: soundtouch
           domain: media_player
     slaves:
-      name: Slaves
-      description: Name of slaves entities to add to the existing zone.
       required: true
       selector:
         entity:
@@ -56,20 +40,14 @@ add_zone_slave:
           domain: media_player
 
 remove_zone_slave:
-  name: Remove zone slave
-  description: Remove a slave from the SoundTouch multi-room zone.
   fields:
     master:
-      name: Master
-      description: Name of the master entity that is coordinating the multi-room zone. Platform dependent.
       required: true
       selector:
         entity:
           integration: soundtouch
           domain: media_player
     slaves:
-      name: Slaves
-      description: Name of slaves entities to remove from the existing zone.
       required: true
       selector:
         entity:

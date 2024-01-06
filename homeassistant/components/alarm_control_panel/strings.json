@@ -63,10 +63,76 @@
       }
     }
   },
-  "issues": {
-    "platform_integration_no_support": {
-      "title": "[%key:common::issues::platform_integration_no_support_title%]",
-      "description": "[%key:common::issues::platform_integration_no_support_description%]"
+  "services": {
+    "alarm_disarm": {
+      "name": "Disarm",
+      "description": "Disarms the alarm.",
+      "fields": {
+        "code": {
+          "name": "Code",
+          "description": "Code to disarm the alarm."
+        }
+      }
+    },
+    "alarm_arm_custom_bypass": {
+      "name": "Arm with custom bypass",
+      "description": "Arms the alarm while allowing to bypass a custom area.",
+      "fields": {
+        "code": {
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
+          "description": "Code to arm the alarm."
+        }
+      }
+    },
+    "alarm_arm_home": {
+      "name": "Arm home",
+      "description": "Sets the alarm to: _armed, but someone is home_.",
+      "fields": {
+        "code": {
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
+          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]"
+        }
+      }
+    },
+    "alarm_arm_away": {
+      "name": "Arm away",
+      "description": "Sets the alarm to: _armed, no one home_.",
+      "fields": {
+        "code": {
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
+          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]"
+        }
+      }
+    },
+    "alarm_arm_night": {
+      "name": "Arm night",
+      "description": "Sets the alarm to: _armed for the night_.",
+      "fields": {
+        "code": {
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
+          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]"
+        }
+      }
+    },
+    "alarm_arm_vacation": {
+      "name": "Arm vacation",
+      "description": "Sets the alarm to: _armed for vacation_.",
+      "fields": {
+        "code": {
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
+          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]"
+        }
+      }
+    },
+    "alarm_trigger": {
+      "name": "Trigger",
+      "description": "Enables an external alarm trigger.",
+      "fields": {
+        "code": {
+          "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
+          "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]"
+        }
+      }
     }
   }
 }

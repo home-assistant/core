@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Generator
 from http import HTTPStatus
+import json
 from typing import Any
 from unittest.mock import patch
 
@@ -17,17 +17,16 @@ from homeassistant.components.rainbird.const import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
-
-ComponentSetup = Callable[[], Awaitable[bool]]
 
 HOST = "example.com"
 URL = "http://example.com/stick"
 PASSWORD = "password"
 SERIAL_NUMBER = 0x12635436566
+MAC_ADDRESS = "4C:A1:61:00:11:22"
+MAC_ADDRESS_UNIQUE_ID = "4c:a1:61:00:11:22"
 
 #
 # Response payloads below come from pyrainbird test cases.
@@ -35,6 +34,9 @@ SERIAL_NUMBER = 0x12635436566
 
 # Get serial number Command 0x85. Serial is 0x12635436566
 SERIAL_RESPONSE = "850000012635436566"
+ZERO_SERIAL_RESPONSE = "850000000000000000"
+# Model and version command 0x82
+MODEL_AND_VERSION_RESPONSE = "820005090C"  # ESP-TM2
 # Get available stations command 0x83
 AVAILABLE_STATIONS_RESPONSE = "83017F000000"  # Mask for 7 zones
 EMPTY_STATIONS_RESPONSE = "830000000000"
@@ -51,6 +53,20 @@ RAIN_DELAY = "B60010"  # 0x10 is 16
 RAIN_DELAY_OFF = "B60000"
 # ACK command 0x10, Echo 0x06
 ACK_ECHO = "0106"
+WIFI_PARAMS_RESPONSE = {
+    "macAddress": MAC_ADDRESS,
+    "localIpAddress": "1.1.1.38",
+    "localNetmask": "255.255.255.0",
+    "localGateway": "1.1.1.1",
+    "rssi": -61,
+    "wifiSsid": "wifi-ssid-name",
+    "wifiPassword": "wifi-password-name",
+    "wifiSecurity": "wpa2-aes",
+    "apTimeoutNoLan": 20,
+    "apTimeoutIdle": 20,
+    "apSecurity": "unknown",
+    "stickVersion": "Rain Bird Stick Rev C/1.63",
+}
 
 
 CONFIG = {
@@ -63,16 +79,17 @@ CONFIG = {
     }
 }
 
-CONFIG_ENTRY_DATA = {
+CONFIG_ENTRY_DATA_OLD_FORMAT = {
     "host": HOST,
     "password": PASSWORD,
     "serial_number": SERIAL_NUMBER,
 }
-
-
-UNAVAILABLE_RESPONSE = AiohttpClientMockResponse(
-    "POST", URL, status=HTTPStatus.SERVICE_UNAVAILABLE
-)
+CONFIG_ENTRY_DATA = {
+    "host": HOST,
+    "password": PASSWORD,
+    "serial_number": SERIAL_NUMBER,
+    "mac": MAC_ADDRESS,
+}
 
 
 @pytest.fixture
@@ -82,26 +99,36 @@ def platforms() -> list[Platform]:
 
 
 @pytest.fixture
-def yaml_config() -> dict[str, Any]:
-    """Fixture for configuration.yaml."""
-    return {}
+async def config_entry_unique_id() -> str:
+    """Fixture for config entry unique id."""
+    return MAC_ADDRESS_UNIQUE_ID
 
 
 @pytest.fixture
-async def config_entry_data() -> dict[str, Any]:
+async def serial_number() -> int:
+    """Fixture for serial number used in the config entry data."""
+    return SERIAL_NUMBER
+
+
+@pytest.fixture
+async def config_entry_data(serial_number: int) -> dict[str, Any]:
     """Fixture for MockConfigEntry data."""
-    return CONFIG_ENTRY_DATA
+    return {
+        **CONFIG_ENTRY_DATA,
+        "serial_number": serial_number,
+    }
 
 
 @pytest.fixture
 async def config_entry(
-    config_entry_data: dict[str, Any] | None
+    config_entry_data: dict[str, Any] | None,
+    config_entry_unique_id: str | None,
 ) -> MockConfigEntry | None:
     """Fixture for MockConfigEntry."""
     if config_entry_data is None:
         return None
     return MockConfigEntry(
-        unique_id=SERIAL_NUMBER,
+        unique_id=config_entry_unique_id,
         domain=DOMAIN,
         data=config_entry_data,
         options={ATTR_DURATION: DEFAULT_TRIGGER_TIME_MINUTES},
@@ -117,35 +144,42 @@ async def add_config_entry(
         config_entry.add_to_hass(hass)
 
 
-@pytest.fixture
-async def setup_integration(
+@pytest.fixture(autouse=True)
+def setup_platforms(
     hass: HomeAssistant,
     platforms: list[str],
-    yaml_config: dict[str, Any],
-) -> Generator[ComponentSetup, None, None]:
-    """Fixture for setting up the component."""
+) -> None:
+    """Fixture for setting up the default platforms."""
 
     with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
-
-        async def func() -> bool:
-            result = await async_setup_component(hass, DOMAIN, yaml_config)
-            await hass.async_block_till_done()
-            return result
-
-        yield func
+        yield
 
 
-def rainbird_response(data: str) -> bytes:
+def rainbird_json_response(result: dict[str, str]) -> bytes:
     """Create a fake API response."""
     return encryption.encrypt(
-        '{"jsonrpc": "2.0", "result": {"data":"%s"}, "id": 1} ' % data,
+        '{"jsonrpc": "2.0", "result": %s, "id": 1} ' % json.dumps(result),
         PASSWORD,
+    )
+
+
+def mock_json_response(result: dict[str, str]) -> AiohttpClientMockResponse:
+    """Create a fake AiohttpClientMockResponse."""
+    return AiohttpClientMockResponse(
+        "POST", URL, response=rainbird_json_response(result)
     )
 
 
 def mock_response(data: str) -> AiohttpClientMockResponse:
     """Create a fake AiohttpClientMockResponse."""
-    return AiohttpClientMockResponse("POST", URL, response=rainbird_response(data))
+    return mock_json_response({"data": data})
+
+
+def mock_response_error(
+    status: HTTPStatus = HTTPStatus.SERVICE_UNAVAILABLE,
+) -> AiohttpClientMockResponse:
+    """Create a fake AiohttpClientMockResponse."""
+    return AiohttpClientMockResponse("POST", URL, status=status)
 
 
 @pytest.fixture(name="stations_response")
@@ -172,8 +206,15 @@ def mock_rain_delay_response() -> str:
     return RAIN_DELAY_OFF
 
 
+@pytest.fixture(name="model_and_version_response")
+def mock_model_and_version_response() -> str:
+    """Mock response to return rain delay state."""
+    return MODEL_AND_VERSION_RESPONSE
+
+
 @pytest.fixture(name="api_responses")
 def mock_api_responses(
+    model_and_version_response: str,
     stations_response: str,
     zone_state_response: str,
     rain_response: str,
@@ -183,7 +224,13 @@ def mock_api_responses(
 
     These are returned in the order they are requested by the update coordinator.
     """
-    return [stations_response, zone_state_response, rain_response, rain_delay_response]
+    return [
+        model_and_version_response,
+        stations_response,
+        zone_state_response,
+        rain_response,
+        rain_delay_response,
+    ]
 
 
 @pytest.fixture(name="responses")

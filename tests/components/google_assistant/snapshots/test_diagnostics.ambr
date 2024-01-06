@@ -1,0 +1,114 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'project_id': '1234',
+      }),
+      'disabled_by': None,
+      'domain': 'google_assistant',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'import',
+      'title': '1234',
+      'unique_id': '1234',
+      'version': 1,
+    }),
+    'query': dict({
+      'devices': dict({
+        'switch.ac': dict({
+          'on': False,
+          'online': True,
+        }),
+        'switch.decorative_lights': dict({
+          'on': True,
+          'online': True,
+        }),
+      }),
+    }),
+    'sync': dict({
+      'agentUserId': '**REDACTED**',
+      'devices': list([
+        dict({
+          'attributes': dict({
+            'commandOnlyOnOff': True,
+          }),
+          'customData': dict({
+            'httpPort': 8123,
+            'uuid': '**REDACTED**',
+            'webhookId': None,
+          }),
+          'id': 'switch.decorative_lights',
+          'name': dict({
+            'name': 'Decorative Lights',
+          }),
+          'otherDeviceIds': list([
+            dict({
+              'deviceId': 'switch.decorative_lights',
+            }),
+          ]),
+          'traits': list([
+            'action.devices.traits.OnOff',
+          ]),
+          'type': 'action.devices.types.SWITCH',
+          'willReportState': False,
+        }),
+        dict({
+          'attributes': dict({
+          }),
+          'customData': dict({
+            'httpPort': 8123,
+            'uuid': '**REDACTED**',
+            'webhookId': None,
+          }),
+          'id': 'switch.ac',
+          'name': dict({
+            'name': 'AC',
+          }),
+          'otherDeviceIds': list([
+            dict({
+              'deviceId': 'switch.ac',
+            }),
+          ]),
+          'traits': list([
+            'action.devices.traits.OnOff',
+          ]),
+          'type': 'action.devices.types.OUTLET',
+          'willReportState': False,
+        }),
+      ]),
+    }),
+    'yaml_config': dict({
+      'expose_by_default': True,
+      'exposed_domains': list([
+        'alarm_control_panel',
+        'binary_sensor',
+        'climate',
+        'cover',
+        'event',
+        'fan',
+        'group',
+        'humidifier',
+        'input_boolean',
+        'input_select',
+        'light',
+        'lock',
+        'media_player',
+        'scene',
+        'script',
+        'select',
+        'sensor',
+        'switch',
+        'vacuum',
+        'valve',
+        'water_heater',
+      ]),
+      'project_id': '1234',
+      'report_state': False,
+      'service_account': '**REDACTED**',
+    }),
+  })
+# ---

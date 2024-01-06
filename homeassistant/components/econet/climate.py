@@ -16,7 +16,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -62,23 +62,22 @@ async def async_setup_entry(
 
 
 class EcoNetThermostat(EcoNetEntity, ClimateEntity):
-    """Define a Econet thermostat."""
+    """Define an Econet thermostat."""
+
+    _attr_should_poll = True
+    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
     def __init__(self, thermostat):
         """Initialize."""
         super().__init__(thermostat)
-        self._running = thermostat.running
-        self._poll = True
-        self.econet_state_to_ha = {}
-        self.ha_state_to_econet = {}
-        self.op_list = []
+        self._attr_hvac_modes = []
         for mode in self._econet.modes:
             if mode not in [
                 ThermostatOperationMode.UNKNOWN,
                 ThermostatOperationMode.EMERGENCY_HEAT,
             ]:
                 ha_mode = ECONET_STATE_TO_HA[mode]
-                self.op_list.append(ha_mode)
+                self._attr_hvac_modes.append(ha_mode)
 
     @property
     def supported_features(self) -> ClimateEntityFeature:
@@ -143,15 +142,7 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
         return self._econet.mode == ThermostatOperationMode.EMERGENCY_HEAT
 
     @property
-    def hvac_modes(self):
-        """Return hvac operation ie. heat, cool mode.
-
-        Needs to be one of HVAC_MODE_*.
-        """
-        return self.op_list
-
-    @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool, mode.
 
         Needs to be one of HVAC_MODE_*.

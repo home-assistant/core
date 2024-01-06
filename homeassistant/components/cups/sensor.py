@@ -115,9 +115,14 @@ class CupsSensor(SensorEntity):
     def __init__(self, data: CupsData, printer_name: str) -> None:
         """Initialize the CUPS sensor."""
         self.data = data
-        self._attr_name = printer_name
+        self._name = printer_name
         self._printer: dict[str, Any] | None = None
         self._attr_available = False
+
+    @property
+    def name(self) -> str:
+        """Return the name of the entity."""
+        return self._name
 
     @property
     def native_value(self):
@@ -149,7 +154,6 @@ class CupsSensor(SensorEntity):
     def update(self) -> None:
         """Get the latest data and updates the states."""
         self.data.update()
-        assert self.name is not None
         assert self.data.printers is not None
         self._printer = self.data.printers.get(self.name)
         self._attr_available = self.data.available

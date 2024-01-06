@@ -70,14 +70,6 @@ class GoogleGenerativeAIAgent(conversation.AbstractConversationAgent):
         self.history: dict[str, list[dict]] = {}
 
     @property
-    def attribution(self):
-        """Return the attribution."""
-        return {
-            "name": "Powered by Google Generative AI",
-            "url": "https://developers.generativeai.google/",
-        }
-
-    @property
     def supported_languages(self) -> list[str] | Literal["*"]:
         """Return a list of supported languages."""
         return MATCH_ALL
@@ -96,7 +88,7 @@ class GoogleGenerativeAIAgent(conversation.AbstractConversationAgent):
             conversation_id = user_input.conversation_id
             messages = self.history[conversation_id]
         else:
-            conversation_id = ulid.ulid()
+            conversation_id = ulid.ulid_now()
             messages = []
 
         try:

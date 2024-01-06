@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import logging
 
-from apcaccess.status import ALL_UNITS
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -22,11 +20,11 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, APCUPSdData
+from . import DOMAIN, APCUPSdCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -379,7 +377,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="stesti",
         name="UPS Self Test Interval",
         icon="mdi:information-outline",
-        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "timeleft": SensorEntityDescription(
         key="timeleft",
@@ -427,18 +424,26 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
 }
 
-SPECIFIC_UNITS = {"ITEMP": UnitOfTemperature.CELSIUS}
 INFERRED_UNITS = {
     " Minutes": UnitOfTime.MINUTES,
     " Seconds": UnitOfTime.SECONDS,
     " Percent": PERCENTAGE,
     " Volts": UnitOfElectricPotential.VOLT,
     " Ampere": UnitOfElectricCurrent.AMPERE,
+    " Amps": UnitOfElectricCurrent.AMPERE,
     " Volt-Ampere": UnitOfApparentPower.VOLT_AMPERE,
+    " VA": UnitOfApparentPower.VOLT_AMPERE,
     " Watts": UnitOfPower.WATT,
     " Hz": UnitOfFrequency.HERTZ,
     " C": UnitOfTemperature.CELSIUS,
+    # APCUPSd reports data for "itemp" field (eventually represented by UPS Internal
+    # Temperature sensor in this integration) with a trailing "Internal", e.g.,
+    # "34.6 C Internal". Here we create a fake unit " C Internal" to handle this case.
+    " C Internal": UnitOfTemperature.CELSIUS,
     " Percent Load Capacity": PERCENTAGE,
+    # "stesti" field (Self Test Interval) field could report a "days" unit, e.g.,
+    # "7 days", so here we add support for it.
+    " days": UnitOfTime.DAYS,
 }
 
 
@@ -448,11 +453,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the APCUPSd sensors from config entries."""
-    data_service: APCUPSdData = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: APCUPSdCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    # The resources from data service are in upper-case by default, but we use
-    # lower cases throughout this integration.
-    available_resources: set[str] = {k.lower() for k, _ in data_service.status.items()}
+    # The resource keys in the data dict collected in the coordinator is in upper-case
+    # by default, but we use lower cases throughout this integration.
+    available_resources: set[str] = {k.lower() for k, _ in coordinator.data.items()}
 
     entities = []
     for resource in available_resources:
@@ -460,65 +465,55 @@ async def async_setup_entry(
             _LOGGER.warning("Invalid resource from APCUPSd: %s", resource.upper())
             continue
 
-        entities.append(APCUPSdSensor(data_service, SENSORS[resource]))
+        entities.append(APCUPSdSensor(coordinator, SENSORS[resource]))
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
 
 def infer_unit(value: str) -> tuple[str, str | None]:
-    """If the value ends with any of the units from ALL_UNITS.
+    """If the value ends with any of the units from supported units.
 
     Split the unit off the end of the value and return the value, unit tuple
     pair. Else return the original value and None as the unit.
     """
 
-    for unit in ALL_UNITS:
+    for unit, ha_unit in INFERRED_UNITS.items():
         if value.endswith(unit):
-            return value.removesuffix(unit), INFERRED_UNITS.get(unit, unit.strip())
+            return value.removesuffix(unit), ha_unit
+
     return value, None
 
 
-class APCUPSdSensor(SensorEntity):
+class APCUPSdSensor(CoordinatorEntity[APCUPSdCoordinator], SensorEntity):
     """Representation of a sensor entity for APCUPSd status values."""
 
     def __init__(
         self,
-        data_service: APCUPSdData,
+        coordinator: APCUPSdCoordinator,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
+        super().__init__(coordinator=coordinator, context=description.key.upper())
+
         # Set up unique id and device info if serial number is available.
-        if (serial_no := data_service.serial_no) is not None:
+        if (serial_no := coordinator.ups_serial_no) is not None:
             self._attr_unique_id = f"{serial_no}_{description.key}"
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, serial_no)},
-                model=data_service.model,
-                manufacturer="APC",
-                hw_version=data_service.hw_version,
-                sw_version=data_service.sw_version,
-            )
 
         self.entity_description = description
-        self._data_service = data_service
+        self._attr_device_info = coordinator.device_info
 
-    def update(self) -> None:
-        """Get the latest status and use it to update our sensor state."""
-        try:
-            self._data_service.update()
-        except OSError as ex:
-            if self._attr_available:
-                self._attr_available = False
-                _LOGGER.exception("Got exception while fetching state: %s", ex)
-            return
+        # Initial update of attributes.
+        self._update_attrs()
 
-        self._attr_available = True
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_attrs()
+        self.async_write_ha_state()
+
+    def _update_attrs(self) -> None:
+        """Update sensor attributes based on coordinator data."""
         key = self.entity_description.key.upper()
-        if key not in self._data_service.status:
-            self._attr_native_value = None
-            return
-
-        self._attr_native_value, inferred_unit = infer_unit(
-            self._data_service.status[key]
-        )
+        self._attr_native_value, inferred_unit = infer_unit(self.coordinator.data[key])
         if not self.native_unit_of_measurement:
             self._attr_native_unit_of_measurement = inferred_unit

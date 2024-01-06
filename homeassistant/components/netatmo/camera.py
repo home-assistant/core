@@ -200,9 +200,7 @@ class NetatmoCamera(NetatmoBase, Camera):
             await self._camera.async_update_camera_urls()
 
         if self._camera.local_url:
-            return "{}/live/files/{}/index.m3u8".format(
-                self._camera.local_url, self._quality
-            )
+            return f"{self._camera.local_url}/live/files/{self._quality}/index.m3u8"
         return f"{self._camera.vpn_url}/live/files/{self._quality}/index.m3u8"
 
     @callback

@@ -71,6 +71,8 @@ async def async_setup_entry(
 class WizBulbEntity(WizToggleEntity, LightEntity):
     """Representation of WiZ Light bulb."""
 
+    _attr_name = None
+
     def __init__(self, wiz_data: WizData, name: str) -> None:
         """Initialize an WiZLight."""
         super().__init__(wiz_data, name)

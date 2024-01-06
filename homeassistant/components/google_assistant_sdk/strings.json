@@ -21,7 +21,10 @@
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -31,14 +34,28 @@
     "step": {
       "init": {
         "data": {
-          "enable_conversation_agent": "Enable the conversation agent",
           "language_code": "Language code"
-        },
-        "description": "Set language for interactions with Google Assistant and whether you want to enable the conversation agent."
+        }
       }
     }
   },
   "application_credentials": {
     "description": "Follow the [instructions]({more_info_url}) for [OAuth consent screen]({oauth_consent_url}) to give Home Assistant access to your Google Assistant SDK. You also need to create Application Credentials linked to your account:\n1. Go to [Credentials]({oauth_creds_url}) and click **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **Web application** for the Application Type.\n\n"
+  },
+  "services": {
+    "send_text_command": {
+      "name": "Send text command",
+      "description": "Sends a command as a text query to Google Assistant.",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "Command(s) to send to Google Assistant."
+        },
+        "media_player": {
+          "name": "Media player entity",
+          "description": "Name(s) of media player entities to play response on."
+        }
+      }
+    }
   }
 }

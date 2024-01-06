@@ -65,6 +65,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
     _speed: IntegerTypeData | None = None
     _speeds: EnumTypeData | None = None
     _switch: DPCode | None = None
+    _attr_name = None
 
     def __init__(
         self,

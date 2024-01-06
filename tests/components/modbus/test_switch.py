@@ -10,8 +10,8 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
+    CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
-    CONF_LAZY_ERROR,
     CONF_STATE_OFF,
     CONF_STATE_ON,
     CONF_VERIFY,
@@ -37,7 +37,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
+from .conftest import TEST_ENTITY_NAME, ReadResult
 
 from tests.common import async_fire_time_changed
 
@@ -62,7 +62,6 @@ ENTITY_ID2 = f"{ENTITY_ID}_2"
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_WRITE_TYPE: CALL_TYPE_COIL,
-                    CONF_LAZY_ERROR: 10,
                 }
             ]
         },
@@ -72,6 +71,24 @@ ENTITY_ID2 = f"{ENTITY_ID}_2"
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_SLAVE: 1,
+                    CONF_COMMAND_OFF: 0x00,
+                    CONF_COMMAND_ON: 0x01,
+                    CONF_DEVICE_CLASS: "switch",
+                    CONF_VERIFY: {
+                        CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                        CONF_ADDRESS: 1235,
+                        CONF_STATE_OFF: 0,
+                        CONF_STATE_ON: 1,
+                    },
+                }
+            ]
+        },
+        {
+            CONF_SWITCHES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_DEVICE_ADDRESS: 1,
                     CONF_COMMAND_OFF: 0x00,
                     CONF_COMMAND_ON: 0x01,
                     CONF_DEVICE_CLASS: "switch",
@@ -208,49 +225,8 @@ async def test_all_switch(hass: HomeAssistant, mock_do_cycle, expected) -> None:
 
 
 @pytest.mark.parametrize(
-    "do_config",
-    [
-        {
-            CONF_SWITCHES: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_ADDRESS: 1234,
-                    CONF_SLAVE: 1,
-                    CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
-                    CONF_SCAN_INTERVAL: 10,
-                    CONF_LAZY_ERROR: 2,
-                    CONF_VERIFY: {},
-                },
-            ],
-        },
-    ],
-)
-@pytest.mark.parametrize(
-    ("register_words", "do_exception", "start_expect", "end_expect"),
-    [
-        (
-            [0x00],
-            True,
-            STATE_OFF,
-            STATE_UNAVAILABLE,
-        ),
-    ],
-)
-async def test_lazy_error_switch(
-    hass: HomeAssistant, start_expect, end_expect, mock_do_cycle
-) -> None:
-    """Run test for given config."""
-    now = mock_do_cycle
-    assert hass.states.get(ENTITY_ID).state == start_expect
-    now = await do_next_cycle(hass, now, 11)
-    assert hass.states.get(ENTITY_ID).state == start_expect
-    now = await do_next_cycle(hass, now, 11)
-    assert hass.states.get(ENTITY_ID).state == end_expect
-
-
-@pytest.mark.parametrize(
     "mock_test_state",
-    [(State(ENTITY_ID, STATE_ON),)],
+    [(State(ENTITY_ID, STATE_ON),), (State(ENTITY_ID, STATE_OFF),)],
     indirect=True,
 )
 @pytest.mark.parametrize(
@@ -297,7 +273,10 @@ async def test_restore_state_switch(
     ],
 )
 async def test_switch_service_turn(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_modbus,
+    mock_pymodbus_return,
 ) -> None:
     """Run test for service turn_on/turn_off."""
     assert MODBUS_DOMAIN in hass.config.components
@@ -388,7 +367,9 @@ async def test_service_switch_update(hass: HomeAssistant, mock_modbus, mock_ha) 
         },
     ],
 )
-async def test_delay_switch(hass: HomeAssistant, mock_modbus) -> None:
+async def test_delay_switch(
+    hass: HomeAssistant, mock_modbus, mock_pymodbus_return
+) -> None:
     """Run test for switch verify delay."""
     mock_modbus.read_holding_registers.return_value = ReadResult([0x01])
     now = dt_util.utcnow()

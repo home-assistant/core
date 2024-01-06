@@ -7,6 +7,7 @@ from unittest.mock import ANY, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from pytest_unordered import unordered
 
 from homeassistant.components.homeassistant_alerts import (
     COMPONENT_LOADED_COOLDOWN,
@@ -19,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import assert_lists_same, async_fire_time_changed, load_fixture
+from tests.common import async_fire_time_changed, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
@@ -613,8 +614,7 @@ async def test_alerts_change(
     await client.send_json({"id": 1, "type": "repairs/list_issues"})
     msg = await client.receive_json()
     assert msg["success"]
-    assert_lists_same(
-        msg["result"]["issues"],
+    assert msg["result"]["issues"] == unordered(
         [
             {
                 "breaks_in_ha_version": None,
@@ -634,7 +634,7 @@ async def test_alerts_change(
                 },
             }
             for alert_id, integration in expected_alerts_1
-        ],
+        ]
     )
 
     fixture_2_content = load_fixture(fixture_2, "homeassistant_alerts")
@@ -653,8 +653,7 @@ async def test_alerts_change(
     await client.send_json({"id": 2, "type": "repairs/list_issues"})
     msg = await client.receive_json()
     assert msg["success"]
-    assert_lists_same(
-        msg["result"]["issues"],
+    assert msg["result"]["issues"] == unordered(
         [
             {
                 "breaks_in_ha_version": None,
@@ -674,5 +673,5 @@ async def test_alerts_change(
                 },
             }
             for alert_id, integration in expected_alerts_2
-        ],
+        ]
     )

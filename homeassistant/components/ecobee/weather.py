@@ -12,7 +12,9 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
+    Forecast,
     WeatherEntity,
+    WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -22,7 +24,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -57,6 +59,9 @@ class EcobeeWeather(WeatherEntity):
     _attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_native_visibility_unit = UnitOfLength.METERS
     _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_supported_features = WeatherEntityFeature.FORECAST_DAILY
 
     def __init__(self, data, name, index):
         """Initialize the Ecobee weather platform."""
@@ -64,6 +69,7 @@ class EcobeeWeather(WeatherEntity):
         self._name = name
         self._index = index
         self.weather = None
+        self._attr_unique_id = data.ecobee.get_thermostat(self._index)["identifier"]
 
     def get_forecast(self, index, param):
         """Retrieve forecast parameter."""
@@ -72,16 +78,6 @@ class EcobeeWeather(WeatherEntity):
             return forecast[param]
         except (IndexError, KeyError) as err:
             raise ValueError from err
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique identifier for the weather platform."""
-        return self.data.ecobee.get_thermostat(self._index)["identifier"]
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -98,7 +94,7 @@ class EcobeeWeather(WeatherEntity):
             identifiers={(DOMAIN, thermostat["identifier"])},
             manufacturer=MANUFACTURER,
             model=model,
-            name=self.name,
+            name=self._name,
         )
 
     @property
@@ -168,13 +164,12 @@ class EcobeeWeather(WeatherEntity):
         time = self.weather.get("timestamp", "UNKNOWN")
         return f"Ecobee weather provided by {station} at {time} UTC"
 
-    @property
-    def forecast(self):
+    def _forecast(self) -> list[Forecast] | None:
         """Return the forecast array."""
         if "forecasts" not in self.weather:
             return None
 
-        forecasts = []
+        forecasts: list[Forecast] = []
         date = dt_util.utcnow()
         for day in range(0, 5):
             forecast = _process_forecast(self.weather["forecasts"][day])
@@ -188,11 +183,21 @@ class EcobeeWeather(WeatherEntity):
             return forecasts
         return None
 
+    @property
+    def forecast(self) -> list[Forecast] | None:
+        """Return the forecast array."""
+        return self._forecast()
+
+    async def async_forecast_daily(self) -> list[Forecast] | None:
+        """Return the daily forecast in native units."""
+        return self._forecast()
+
     async def async_update(self) -> None:
         """Get the latest weather data."""
         await self.data.update()
         thermostat = self.data.ecobee.get_thermostat(self._index)
         self.weather = thermostat.get("weather")
+        await self.async_update_listeners(("daily",))
 
 
 def _process_forecast(json):

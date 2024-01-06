@@ -6,7 +6,6 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
-    DOMAIN as VACUUM_DOMAIN,
     ENTITY_ID_FORMAT,
     STATE_CLEANING,
     STATE_DOCKED,
@@ -24,7 +23,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.json import json_loads_object
@@ -39,9 +37,9 @@ from ..const import (
     CONF_STATE_TOPIC,
 )
 from ..debug_info import log_messages
-from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, warn_for_legacy_schema
+from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, write_state_on_attr_change
 from ..models import ReceiveMessage
-from ..util import get_mqtt_data, valid_publish_topic
+from ..util import valid_publish_topic
 from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
@@ -65,7 +63,6 @@ DEFAULT_SERVICES = (
     VacuumEntityFeature.START
     | VacuumEntityFeature.STOP
     | VacuumEntityFeature.RETURN_HOME
-    | VacuumEntityFeature.STATUS
     | VacuumEntityFeature.BATTERY
     | VacuumEntityFeature.CLEAN_SPOT
 )
@@ -128,7 +125,7 @@ PLATFORM_SCHEMA_STATE_MODERN = (
             vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
                 cv.ensure_list, [cv.string]
             ),
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_NAME): vol.Any(cv.string, None),
             vol.Optional(
                 CONF_PAYLOAD_CLEAN_SPOT, default=DEFAULT_PAYLOAD_CLEAN_SPOT
             ): cv.string,
@@ -155,30 +152,13 @@ PLATFORM_SCHEMA_STATE_MODERN = (
     .extend(MQTT_VACUUM_SCHEMA.schema)
 )
 
-# Configuring MQTT Vacuums under the vacuum platform key was deprecated in
-# HA Core 2022.6;
-# Setup for the legacy YAML format was removed in HA Core 2022.12
-PLATFORM_SCHEMA_STATE = vol.All(
-    warn_for_legacy_schema(VACUUM_DOMAIN),
-)
-
 DISCOVERY_SCHEMA_STATE = PLATFORM_SCHEMA_STATE_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
-
-
-async def async_setup_entity_state(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    config_entry: ConfigEntry,
-    discovery_data: DiscoveryInfoType | None,
-) -> None:
-    """Set up a State MQTT Vacuum."""
-    async_add_entities([MqttStateVacuum(hass, config, config_entry, discovery_data)])
 
 
 class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     """Representation of a MQTT-controlled state vacuum."""
 
+    _default_name = DEFAULT_NAME
     _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_VACUUM_ATTRIBUTES_BLOCKED
 
@@ -207,7 +187,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         supported_feature_strings: list[str] = config[CONF_SUPPORTED_FEATURES]
-        self._attr_supported_features = strings_to_services(
+        self._attr_supported_features = VacuumEntityFeature.STATE | strings_to_services(
             supported_feature_strings, STRING_TO_SERVICE
         )
         self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
@@ -239,6 +219,9 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(
+            self, {"_attr_battery_level", "_attr_fan_speed", "_attr_state"}
+        )
         def state_message_received(msg: ReceiveMessage) -> None:
             """Handle state MQTT message."""
             payload = json_loads_object(msg.payload)
@@ -250,7 +233,6 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
                 )
                 del payload[STATE]
             self._update_state_attributes(payload)
-            get_mqtt_data(self.hass).state_write_requests.write_state_request(self)
 
         if state_topic := self._config.get(CONF_STATE_TOPIC):
             topics["state_position_topic"] = {
@@ -268,8 +250,8 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     async def _async_publish_command(self, feature: VacuumEntityFeature) -> None:
-        """Check for a missing feature or command topic."""
-        if self._command_topic is None or self.supported_features & feature == 0:
+        """Publish a command."""
+        if self._command_topic is None:
             return
 
         await self.async_publish(

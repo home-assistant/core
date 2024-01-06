@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 from typing import Any
 
 from pyunifiprotect.data import (
@@ -27,11 +28,12 @@ from .entity import ProtectDeviceEntity, ProtectNVREntity, async_all_device_enti
 from .models import PermRequired, ProtectSetableKeysMixin, T
 from .utils import async_dispatch_id as _ufpd
 
+_LOGGER = logging.getLogger(__name__)
 ATTR_PREV_MIC = "prev_mic_level"
 ATTR_PREV_RECORD = "prev_record_mode"
 
 
-@dataclass
+@dataclass(frozen=True)
 class ProtectSwitchEntityDescription(
     ProtectSetableKeysMixin[T], SwitchEntityDescription
 ):
@@ -207,6 +209,16 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_value="is_smoke_detection_on",
         ufp_enabled="is_recording_enabled",
         ufp_set_method="set_smoke_detection",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectSwitchEntityDescription(
+        key="color_night_vision",
+        name="Color Night Vision",
+        icon="mdi:light-flood-down",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="has_color_night_vision",
+        ufp_value="isp_settings.is_color_night_vision_enabled",
+        ufp_set_method="set_color_night_vision",
         ufp_perm=PermRequired.WRITE,
     ),
 )
@@ -420,20 +432,44 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
         self._attr_name = f"{self.device.display_name} {self.entity_description.name}"
         self._switch_type = self.entity_description.key
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if device is on."""
-        return self.entity_description.get_ufp_value(self.device) is True
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
+        self._attr_is_on = self.entity_description.get_ufp_value(self.device) is True
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-
         await self.entity_description.ufp_set(self.device, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-
         await self.entity_description.ufp_set(self.device, False)
+
+    @callback
+    def _async_updated_event(self, device: ProtectModelWithId) -> None:
+        """Call back for incoming data that only writes when state has changed.
+
+        Only the is_on and available are ever updated for these
+        entities, and since the websocket update for the device will trigger
+        an update for all entities connected to the device, we want to avoid
+        writing state unless something has actually changed.
+        """
+        previous_is_on = self._attr_is_on
+        previous_available = self._attr_available
+        self._async_update_device_from_protect(device)
+        if (
+            self._attr_is_on != previous_is_on
+            or self._attr_available != previous_available
+        ):
+            _LOGGER.debug(
+                "Updating state [%s (%s)] %s (%s) -> %s (%s)",
+                device.name,
+                device.mac,
+                previous_is_on,
+                previous_available,
+                self._attr_is_on,
+                self._attr_available,
+            )
+            self.async_write_ha_state()
 
 
 class ProtectNVRSwitch(ProtectNVREntity, SwitchEntity):

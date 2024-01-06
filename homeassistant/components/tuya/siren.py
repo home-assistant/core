@@ -27,7 +27,6 @@ SIRENS: dict[str, tuple[SirenEntityDescription, ...]] = {
     "dgnbj": (
         SirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
-            name="Siren",
         ),
     ),
     # Siren Alarm
@@ -35,7 +34,6 @@ SIRENS: dict[str, tuple[SirenEntityDescription, ...]] = {
     "sgbj": (
         SirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
-            name="Siren",
         ),
     ),
     # Smart Camera
@@ -43,7 +41,6 @@ SIRENS: dict[str, tuple[SirenEntityDescription, ...]] = {
     "sp": (
         SirenEntityDescription(
             key=DPCode.SIREN_SWITCH,
-            name="Siren",
         ),
     ),
 }
@@ -83,6 +80,7 @@ class TuyaSirenEntity(TuyaEntity, SirenEntity):
     """Tuya Siren Entity."""
 
     _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF
+    _attr_name = None
 
     def __init__(
         self,

@@ -2,6 +2,8 @@
 from collections import defaultdict
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
@@ -31,7 +33,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -174,7 +175,7 @@ async def _call_media_player_service(hass, name, data):
     )
 
 
-async def test_update(hass: HomeAssistant) -> None:
+async def test_update(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """Test updating values from ws66i."""
     ws66i = MockWs66i()
     _ = await _setup_ws66i_with_options(hass, ws66i)
@@ -191,7 +192,8 @@ async def test_update(hass: HomeAssistant) -> None:
     ws66i.set_volume(11, MAX_VOL)
 
     with patch.object(MockWs66i, "open") as method_call:
-        async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
+        freezer.tick(POLL_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         assert not method_call.called
@@ -203,7 +205,9 @@ async def test_update(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_INPUT_SOURCE] == "three"
 
 
-async def test_failed_update(hass: HomeAssistant) -> None:
+async def test_failed_update(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test updating failure from ws66i."""
     ws66i = MockWs66i()
     _ = await _setup_ws66i_with_options(hass, ws66i)
@@ -219,23 +223,27 @@ async def test_failed_update(hass: HomeAssistant) -> None:
     ws66i.set_source(11, 3)
     ws66i.set_volume(11, MAX_VOL)
 
-    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Failed update, close called
     with patch.object(MockWs66i, "zone_status", return_value=None):
-        async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
+        freezer.tick(POLL_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     assert hass.states.is_state(ZONE_1_ID, STATE_UNAVAILABLE)
 
     # A connection re-attempt fails
     with patch.object(MockWs66i, "zone_status", return_value=None):
-        async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
+        freezer.tick(POLL_INTERVAL)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     # A connection re-attempt succeeds
-    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # confirm entity is back on
@@ -295,14 +303,17 @@ async def test_select_source(hass: HomeAssistant) -> None:
     assert ws66i.zones[11].source == 3
 
 
-async def test_source_select(hass: HomeAssistant) -> None:
+async def test_source_select(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test source selection simulated from keypad."""
     ws66i = MockWs66i()
     _ = await _setup_ws66i_with_options(hass, ws66i)
 
     ws66i.set_source(11, 5)
 
-    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(ZONE_1_ID)
@@ -341,7 +352,9 @@ async def test_mute_volume(hass: HomeAssistant) -> None:
     assert ws66i.zones[11].mute
 
 
-async def test_volume_up_down(hass: HomeAssistant) -> None:
+async def test_volume_up_down(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test increasing volume by one."""
     ws66i = MockWs66i()
     _ = await _setup_ws66i(hass, ws66i)
@@ -354,26 +367,30 @@ async def test_volume_up_down(hass: HomeAssistant) -> None:
     await _call_media_player_service(
         hass, SERVICE_VOLUME_DOWN, {"entity_id": ZONE_1_ID}
     )
-    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     # should not go below zero
     assert ws66i.zones[11].volume == 0
 
     await _call_media_player_service(hass, SERVICE_VOLUME_UP, {"entity_id": ZONE_1_ID})
-    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert ws66i.zones[11].volume == 1
 
     await _call_media_player_service(
         hass, SERVICE_VOLUME_SET, {"entity_id": ZONE_1_ID, "volume_level": 1.0}
     )
-    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert ws66i.zones[11].volume == MAX_VOL
 
     await _call_media_player_service(hass, SERVICE_VOLUME_UP, {"entity_id": ZONE_1_ID})
 
-    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
+    freezer.tick(POLL_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     # should not go above 38 (MAX_VOL)
     assert ws66i.zones[11].volume == MAX_VOL

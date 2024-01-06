@@ -19,14 +19,20 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, discovery_flow
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery_flow,
+)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import TPLinkDataUpdateCoordinator
+from .models import TPLinkData
 
 DISCOVERY_INTERVAL = timedelta(minutes=15)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @callback
@@ -80,12 +86,37 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up TPLink from a config entry."""
+    host = entry.data[CONF_HOST]
     try:
-        device: SmartDevice = await Discover.discover_single(entry.data[CONF_HOST])
+        device: SmartDevice = await Discover.discover_single(host, timeout=10)
     except SmartDeviceException as ex:
         raise ConfigEntryNotReady from ex
 
-    hass.data[DOMAIN][entry.entry_id] = TPLinkDataUpdateCoordinator(hass, device)
+    found_mac = dr.format_mac(device.mac)
+    if found_mac != entry.unique_id:
+        # If the mac address of the device does not match the unique_id
+        # of the config entry, it likely means the DHCP lease has expired
+        # and the device has been assigned a new IP address. We need to
+        # wait for the next discovery to find the device at its new address
+        # and update the config entry so we do not mix up devices.
+        raise ConfigEntryNotReady(
+            f"Unexpected device found at {host}; expected {entry.unique_id}, found {found_mac}"
+        )
+
+    parent_coordinator = TPLinkDataUpdateCoordinator(hass, device, timedelta(seconds=5))
+    child_coordinators: list[TPLinkDataUpdateCoordinator] = []
+
+    if device.is_strip:
+        child_coordinators = [
+            # The child coordinators only update energy data so we can
+            # set a longer update interval to avoid flooding the device
+            TPLinkDataUpdateCoordinator(hass, child, timedelta(seconds=60))
+            for child in device.children
+        ]
+
+    hass.data[DOMAIN][entry.entry_id] = TPLinkData(
+        parent_coordinator, child_coordinators
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -94,7 +125,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     hass_data: dict[str, Any] = hass.data[DOMAIN]
-    device: SmartDevice = hass_data[entry.entry_id].device
+    data: TPLinkData = hass_data[entry.entry_id]
+    device = data.parent_coordinator.device
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass_data.pop(entry.entry_id)
     await device.protocol.close()

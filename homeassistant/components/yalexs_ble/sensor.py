@@ -27,14 +27,14 @@ from .entity import YALEXSBLEEntity
 from .models import YaleXSBLEData
 
 
-@dataclass
+@dataclass(frozen=True)
 class YaleXSBLERequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[LockState, LockInfo, ConnectionInfo], int | float | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class YaleXSBLESensorEntityDescription(
     SensorEntityDescription, YaleXSBLERequiredKeysMixin
 ):
@@ -44,7 +44,6 @@ class YaleXSBLESensorEntityDescription(
 SENSORS: tuple[YaleXSBLESensorEntityDescription, ...] = (
     YaleXSBLESensorEntityDescription(
         key="",  # No key for the original RSSI sensor unique id
-        name="Signal strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -55,7 +54,6 @@ SENSORS: tuple[YaleXSBLESensorEntityDescription, ...] = (
     ),
     YaleXSBLESensorEntityDescription(
         key="battery_level",
-        name="Battery level",
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -67,7 +65,7 @@ SENSORS: tuple[YaleXSBLESensorEntityDescription, ...] = (
     ),
     YaleXSBLESensorEntityDescription(
         key="battery_voltage",
-        name="Battery Voltage",
+        translation_key="battery_voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,

@@ -66,7 +66,7 @@ async def test_send_switch_on(
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity},
@@ -96,7 +96,7 @@ async def test_send_switch_on_device_timeout(
 
     await async_setup_gree(hass)
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity},
@@ -124,7 +124,7 @@ async def test_send_switch_off(
     """Test for sending power on command to the device."""
     await async_setup_gree(hass)
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: entity},
@@ -153,7 +153,7 @@ async def test_send_switch_toggle(
     await async_setup_gree(hass)
 
     # Turn the service on first
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity},
@@ -165,7 +165,7 @@ async def test_send_switch_toggle(
     assert state.state == STATE_ON
 
     # Toggle it off
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_TOGGLE,
         {ATTR_ENTITY_ID: entity},
@@ -177,7 +177,7 @@ async def test_send_switch_toggle(
     assert state.state == STATE_OFF
 
     # Toggle is back on
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_TOGGLE,
         {ATTR_ENTITY_ID: entity},

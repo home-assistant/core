@@ -24,7 +24,7 @@ async def test_successful_config_entry(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test that configured options for a host are loaded via config entry."""
-    await setup_unifi_integration(hass, aioclient_mock, unique_id=None)
+    await setup_unifi_integration(hass, aioclient_mock)
     assert hass.data[UNIFI_DOMAIN]
 
 

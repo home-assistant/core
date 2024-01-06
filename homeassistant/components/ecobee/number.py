@@ -18,7 +18,7 @@ from .entity import EcobeeBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class EcobeeNumberEntityDescriptionBase:
     """Required values when describing Ecobee number entities."""
 
@@ -26,7 +26,7 @@ class EcobeeNumberEntityDescriptionBase:
     set_fn: Callable[[EcobeeData, int, int], Awaitable]
 
 
-@dataclass
+@dataclass(frozen=True)
 class EcobeeNumberEntityDescription(
     NumberEntityDescription, EcobeeNumberEntityDescriptionBase
 ):
@@ -36,7 +36,7 @@ class EcobeeNumberEntityDescription(
 VENTILATOR_NUMBERS = (
     EcobeeNumberEntityDescription(
         key="home",
-        name="home",
+        translation_key="ventilator_min_type_home",
         ecobee_setting_key="ventilatorMinOnTimeHome",
         set_fn=lambda data, id, min_time: data.ecobee.set_ventilator_min_on_time_home(
             id, min_time
@@ -44,7 +44,7 @@ VENTILATOR_NUMBERS = (
     ),
     EcobeeNumberEntityDescription(
         key="away",
-        name="away",
+        translation_key="ventilator_min_type_away",
         ecobee_setting_key="ventilatorMinOnTimeAway",
         set_fn=lambda data, id, min_time: data.ecobee.set_ventilator_min_on_time_away(
             id, min_time
@@ -92,7 +92,6 @@ class EcobeeVentilatorMinTime(EcobeeBaseEntity, NumberEntity):
         """Initialize ecobee ventilator platform."""
         super().__init__(data, thermostat_index)
         self.entity_description = description
-        self._attr_name = f"Ventilator min time {description.name}"
         self._attr_unique_id = f"{self.base_unique_id}_ventilator_{description.key}"
 
     async def async_update(self) -> None:

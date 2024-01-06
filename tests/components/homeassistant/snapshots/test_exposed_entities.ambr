@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_get_assistant_settings
   dict({
-    'climate.test_unique1': mappingproxy({
+    'climate.test_unique1': ReadOnlyDict({
       'should_expose': True,
     }),
     'light.not_in_registry': dict({

@@ -3,18 +3,40 @@
     "flow_title": "Gateway: {gateway_id}",
     "step": {
       "user": {
-        "description": "The Overkiz platform is used by various vendors like Somfy (Connexoon / TaHoma), Hitachi (Hi Kumo), Rexel (Energeasy Connect) and Atlantic (Cozytouch). Enter your application credentials and select your hub.",
+        "description": "Select your server. The Overkiz platform is used by various vendors like Somfy (Connexoon / TaHoma), Hitachi (Hi Kumo) and Atlantic (Cozytouch).",
+        "data": {
+          "hub": "Server"
+        }
+      },
+      "local_or_cloud": {
+        "description": "Choose between local or cloud API. Local API supports TaHoma Connexoon, TaHoma v2, and TaHoma Switch. Climate devices and scenarios are not supported in local API.",
+        "data": {
+          "api_type": "API type"
+        }
+      },
+      "cloud": {
+        "description": "Enter your application credentials.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "local": {
+        "description": "By activating the [Developer Mode of your TaHoma box](https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode#getting-started), you can authorize third-party software (like Home Assistant) to connect to it via your local network. \n\n After activation, enter your application credentials and change the host to include your gateway-pin or enter the IP address of your gateway.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "hub": "Hub"
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "certificate_verify_failed": "Cannot connect to host, certificate verify failed.",
+      "developer_mode_disabled": "Developer Mode disabled. Activate the Developer Mode of your Somfy TaHoma box first.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_such_token": "Cannot create a token for this gateway. Please confirm if the account is linked to this gateway.",
       "server_in_maintenance": "Server is down for maintenance",
       "too_many_attempts": "Too many attempts with an invalid token, temporarily banned",
       "too_many_requests": "Too many requests, try again later",
@@ -47,7 +69,7 @@
           },
           "fan_mode": {
             "state": {
-              "away": "Away",
+              "away": "[%key:common::state::not_home%]",
               "bypass_boost": "Bypass boost",
               "home_boost": "Home boost",
               "kitchen_boost": "Kitchen boost"
@@ -59,9 +81,16 @@
     "select": {
       "open_closed_pedestrian": {
         "state": {
-          "open": "Open",
+          "open": "[%key:common::state::open%]",
           "pedestrian": "Pedestrian",
-          "closed": "Closed"
+          "closed": "[%key:common::state::closed%]"
+        }
+      },
+      "open_closed_partial": {
+        "state": {
+          "open": "[%key:common::state::open%]",
+          "partial": "Partial",
+          "closed": "[%key:common::state::closed%]"
         }
       },
       "memorized_simple_volume": {
@@ -77,6 +106,7 @@
           "full": "Full",
           "low": "Low",
           "normal": "Normal",
+          "medium": "Medium",
           "verylow": "Very low"
         }
       },
@@ -121,8 +151,8 @@
       },
       "three_way_handle_direction": {
         "state": {
-          "closed": "Closed",
-          "open": "Open",
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]",
           "tilt": "Tilt"
         }
       }

@@ -13,7 +13,12 @@ from tests.common import MockConfigEntry, load_fixture
 @pytest.fixture(name="config_entry")
 def config_entry_fixture(hass, config):
     """Define a config entry fixture."""
-    entry = MockConfigEntry(domain=DOMAIN, unique_id=config[CONF_ZIP_CODE], data=config)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=config[CONF_ZIP_CODE],
+        data=config,
+        entry_id="690ac4b7e99855fc5ee7b987a758d5cb",
+    )
     entry.add_to_hass(hass)
     return entry
 
@@ -89,13 +94,9 @@ async def setup_iqvia_fixture(
         "pyiqvia.allergens.Allergens.outlook", return_value=data_allergy_outlook
     ), patch(
         "pyiqvia.asthma.Asthma.extended", return_value=data_asthma_forecast
-    ), patch(
-        "pyiqvia.asthma.Asthma.current", return_value=data_asthma_index
-    ), patch(
+    ), patch("pyiqvia.asthma.Asthma.current", return_value=data_asthma_index), patch(
         "pyiqvia.disease.Disease.extended", return_value=data_disease_forecast
-    ), patch(
-        "pyiqvia.disease.Disease.current", return_value=data_disease_index
-    ), patch(
+    ), patch("pyiqvia.disease.Disease.current", return_value=data_disease_index), patch(
         "homeassistant.components.iqvia.PLATFORMS", []
     ):
         assert await async_setup_component(hass, DOMAIN, config)

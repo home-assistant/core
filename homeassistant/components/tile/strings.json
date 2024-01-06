@@ -26,7 +26,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "Configure Tile",
+        "title": "[%key:component::tile::config::step::user::title%]",
         "data": {
           "show_inactive": "Show inactive Tiles"
         }

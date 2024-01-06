@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 from unittest.mock import patch
 
-from lru import LRU  # pylint: disable=no-name-in-module
+from lru import LRU
 import pytest
 
 from homeassistant.components.profiler import (
@@ -223,6 +223,8 @@ async def test_log_scheduled(
     await hass.async_block_till_done()
 
     assert hass.services.has_service(DOMAIN, SERVICE_LOG_EVENT_LOOP_SCHEDULED)
+
+    hass.loop.call_later(0.1, lambda: None)
 
     await hass.services.async_call(
         DOMAIN, SERVICE_LOG_EVENT_LOOP_SCHEDULED, {}, blocking=True

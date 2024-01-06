@@ -3,7 +3,6 @@ import asyncio
 from collections import OrderedDict
 from http import HTTPStatus
 
-import async_timeout
 from logi_circle import LogiCircle
 from logi_circle.exception import AuthorizationFailed
 import voluptuous as vol
@@ -158,7 +157,7 @@ class LogiCircleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            async with async_timeout.timeout(_TIMEOUT):
+            async with asyncio.timeout(_TIMEOUT):
                 await logi_session.authorize(code)
         except AuthorizationFailed:
             (self.hass.data[DATA_FLOW_IMPL][DOMAIN][EXTERNAL_ERRORS]) = "invalid_auth"

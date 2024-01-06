@@ -12,26 +12,6 @@ from homeassistant import setup
 from homeassistant.components.command_line import DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.issue_registry as ir
-
-
-async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
-    """Test sensor setup."""
-    assert await setup.async_setup_component(
-        hass,
-        NOTIFY_DOMAIN,
-        {
-            NOTIFY_DOMAIN: [
-                {"platform": "command_line", "name": "Test1", "command": "exit 0"},
-            ]
-        },
-    )
-    await hass.async_block_till_done()
-    assert hass.services.has_service(NOTIFY_DOMAIN, "test1")
-
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_notify")
-    assert issue.translation_key == "deprecated_platform_yaml"
 
 
 @pytest.mark.parametrize(
@@ -94,7 +74,7 @@ async def test_command_line_output(hass: HomeAssistant) -> None:
 
         assert hass.services.has_service(NOTIFY_DOMAIN, "test3")
 
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             NOTIFY_DOMAIN, "test3", {"message": message}, blocking=True
         )
         with open(filename, encoding="UTF-8") as handle:
@@ -122,7 +102,7 @@ async def test_error_for_none_zero_exit_code(
 ) -> None:
     """Test if an error is logged for non zero exit codes."""
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         NOTIFY_DOMAIN, "test4", {"message": "error"}, blocking=True
     )
     assert "Command failed" in caplog.text
@@ -149,7 +129,7 @@ async def test_timeout(
     caplog: pytest.LogCaptureFixture, hass: HomeAssistant, load_yaml_integration: None
 ) -> None:
     """Test blocking is not forever."""
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         NOTIFY_DOMAIN, "test5", {"message": "error"}, blocking=True
     )
     assert "Timeout" in caplog.text
@@ -185,13 +165,13 @@ async def test_subprocess_exceptions(
             subprocess.SubprocessError(),
         ]
 
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             NOTIFY_DOMAIN, "test6", {"message": "error"}, blocking=True
         )
         assert check_output.call_count == 2
         assert "Timeout for command" in caplog.text
 
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             NOTIFY_DOMAIN, "test6", {"message": "error"}, blocking=True
         )
         assert check_output.call_count == 4

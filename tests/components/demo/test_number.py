@@ -1,4 +1,5 @@
 """The tests for the demo number component."""
+from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -12,7 +13,7 @@ from homeassistant.components.number import (
     SERVICE_SET_VALUE,
     NumberMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -22,8 +23,18 @@ ENTITY_LARGE_RANGE = "number.large_range"
 ENTITY_SMALL_RANGE = "number.small_range"
 
 
+@pytest.fixture
+async def number_only() -> None:
+    """Enable only the number platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.NUMBER],
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
-async def setup_demo_number(hass):
+async def setup_demo_number(hass, number_only):
     """Initialize setup demo Number entity."""
     assert await async_setup_component(hass, DOMAIN, {"number": {"platform": "demo"}})
     await hass.async_block_till_done()

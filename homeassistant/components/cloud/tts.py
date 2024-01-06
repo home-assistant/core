@@ -1,4 +1,4 @@
-"""Support for the cloud for text to speech service."""
+"""Support for the cloud for text-to-speech service."""
 from __future__ import annotations
 
 import logging
@@ -150,4 +150,4 @@ class CloudProvider(Provider):
             _LOGGER.error("Voice error: %s", err)
             return (None, None)
 
-        return (str(options[ATTR_AUDIO_OUTPUT]), data)
+        return (str(options[ATTR_AUDIO_OUTPUT].value), data)

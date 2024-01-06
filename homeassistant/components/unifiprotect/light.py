@@ -34,7 +34,7 @@ async def async_setup_entry(
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
     async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        if device.model == ModelType.LIGHT and device.can_write(
+        if device.model is ModelType.LIGHT and device.can_write(
             data.api.bootstrap.auth_user
         ):
             async_add_entities([ProtectLight(data, device)])
@@ -73,9 +73,10 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         super()._async_update_device_from_protect(device)
-        self._attr_is_on = self.device.is_light_on
+        updated_device = self.device
+        self._attr_is_on = updated_device.is_light_on
         self._attr_brightness = unifi_brightness_to_hass(
-            self.device.light_device_settings.led_level
+            updated_device.light_device_settings.led_level
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:

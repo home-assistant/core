@@ -33,6 +33,7 @@ async def async_setup_entry(
 class FullyMediaPlayer(FullyKioskEntity, MediaPlayerEntity):
     """Representation of a Fully Kiosk Browser media player entity."""
 
+    _attr_name = None
     _attr_supported_features = MEDIA_SUPPORT_FULLYKIOSK
     _attr_assumed_state = True
 

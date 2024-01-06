@@ -43,9 +43,7 @@ def get_insteon_device_from_ha_device(ha_device):
 
 async def async_device_name(dev_registry, address):
     """Get the Insteon device name from a device registry id."""
-    ha_device = dev_registry.async_get_device(
-        identifiers={(DOMAIN, str(address))}, connections=set()
-    )
+    ha_device = dev_registry.async_get_device(identifiers={(DOMAIN, str(address))})
     if not ha_device:
         if device := devices[address]:
             return f"{device.description} ({device.model})"

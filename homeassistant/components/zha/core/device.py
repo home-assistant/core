@@ -5,13 +5,11 @@ import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 from enum import Enum
-from functools import cached_property
 import logging
 import random
 import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
-from typing_extensions import Self
 from zigpy import types
 import zigpy.device
 import zigpy.exceptions
@@ -23,9 +21,11 @@ from zigpy.zcl.clusters.general import Groups, Identify
 from zigpy.zcl.foundation import Status as ZclStatus, ZCLCommandDef
 import zigpy.zdo.types as zdo_types
 
+from homeassistant.backports.functools import cached_property
 from homeassistant.const import ATTR_COMMAND, ATTR_DEVICE_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -59,6 +59,7 @@ from .const import (
     ATTR_POWER_SOURCE,
     ATTR_QUIRK_APPLIED,
     ATTR_QUIRK_CLASS,
+    ATTR_QUIRK_ID,
     ATTR_ROUTES,
     ATTR_RSSI,
     ATTR_SIGNATURE,
@@ -94,6 +95,16 @@ _UPDATE_ALIVE_INTERVAL = (60, 90)
 _CHECKIN_GRACE_PERIODS = 2
 
 
+def get_device_automation_triggers(
+    device: zigpy.device.Device,
+) -> dict[tuple[str, str], dict[str, str]]:
+    """Get the supported device automation triggers for a zigpy device."""
+    return {
+        ("device_offline", "device_offline"): {"device_event_type": "device_offline"},
+        **getattr(device, "device_automation_triggers", {}),
+    }
+
+
 class DeviceStatus(Enum):
     """Status of a device."""
 
@@ -125,6 +136,7 @@ class ZHADevice(LogMixin):
             f"{self._zigpy_device.__class__.__module__}."
             f"{self._zigpy_device.__class__.__name__}"
         )
+        self.quirk_id = getattr(self._zigpy_device, ATTR_QUIRK_ID, None)
 
         if self.is_mains_powered:
             self.consider_unavailable_time = async_get_zha_config_value(
@@ -154,6 +166,9 @@ class ZHADevice(LogMixin):
 
         if not self.is_coordinator:
             keep_alive_interval = random.randint(*_UPDATE_ALIVE_INTERVAL)
+            self.debug(
+                "starting availability checks - interval: %s", keep_alive_interval
+            )
             self.unsubs.append(
                 async_track_time_interval(
                     self.hass,
@@ -273,7 +288,7 @@ class ZHADevice(LogMixin):
         if not self.is_coordinator:
             return False
 
-        return self.ieee == self.gateway.coordinator_ieee
+        return self.ieee == self.gateway.state.node_info.ieee
 
     @property
     def is_end_device(self) -> bool | None:
@@ -312,16 +327,7 @@ class ZHADevice(LogMixin):
     @cached_property
     def device_automation_triggers(self) -> dict[tuple[str, str], dict[str, str]]:
         """Return the device automation triggers for this device."""
-        triggers = {
-            ("device_offline", "device_offline"): {
-                "device_event_type": "device_offline"
-            }
-        }
-
-        if hasattr(self._zigpy_device, "device_automation_triggers"):
-            triggers.update(self._zigpy_device.device_automation_triggers)
-
-        return triggers
+        return get_device_automation_triggers(self._zigpy_device)
 
     @property
     def available_signal(self) -> str:
@@ -420,7 +426,9 @@ class ZHADevice(LogMixin):
         """Update device sw version."""
         if self.device_id is None:
             return
-        self._zha_gateway.ha_device_registry.async_update_device(
+
+        device_registry = dr.async_get(self.hass)
+        device_registry.async_update_device(
             self.device_id, sw_version=f"0x{sw_version:08x}"
         )
 
@@ -442,35 +450,36 @@ class ZHADevice(LogMixin):
             self._checkins_missed_count = 0
             return
 
-        if (
-            self._checkins_missed_count >= _CHECKIN_GRACE_PERIODS
-            or self.manufacturer == "LUMI"
-            or not self._endpoints
-        ):
-            self.debug(
-                (
-                    "last_seen is %s seconds ago and ping attempts have been exhausted,"
-                    " marking the device unavailable"
-                ),
-                difference,
-            )
-            self.update_available(False)
-            return
+        if self.hass.data[const.DATA_ZHA].allow_polling:
+            if (
+                self._checkins_missed_count >= _CHECKIN_GRACE_PERIODS
+                or self.manufacturer == "LUMI"
+                or not self._endpoints
+            ):
+                self.debug(
+                    (
+                        "last_seen is %s seconds ago and ping attempts have been exhausted,"
+                        " marking the device unavailable"
+                    ),
+                    difference,
+                )
+                self.update_available(False)
+                return
 
-        self._checkins_missed_count += 1
-        self.debug(
-            "Attempting to checkin with device - missed checkins: %s",
-            self._checkins_missed_count,
-        )
-        if not self.basic_ch:
-            self.debug("does not have a mandatory basic cluster")
-            self.update_available(False)
-            return
-        res = await self.basic_ch.get_attribute_value(
-            ATTR_MANUFACTURER, from_cache=False
-        )
-        if res is not None:
-            self._checkins_missed_count = 0
+            self._checkins_missed_count += 1
+            self.debug(
+                "Attempting to checkin with device - missed checkins: %s",
+                self._checkins_missed_count,
+            )
+            if not self.basic_ch:
+                self.debug("does not have a mandatory basic cluster")
+                self.update_available(False)
+                return
+            res = await self.basic_ch.get_attribute_value(
+                ATTR_MANUFACTURER, from_cache=False
+            )
+            if res is not None:
+                self._checkins_missed_count = 0
 
     def update_available(self, available: bool) -> None:
         """Update device availability and signal entities."""
@@ -534,6 +543,7 @@ class ZHADevice(LogMixin):
             ATTR_NAME: self.name or ieee,
             ATTR_QUIRK_APPLIED: self.quirk_applied,
             ATTR_QUIRK_CLASS: self.quirk_class,
+            ATTR_QUIRK_ID: self.quirk_id,
             ATTR_MANUFACTURER_CODE: self.manufacturer_code,
             ATTR_POWER_SOURCE: self.power_source,
             ATTR_LQI: self.lqi,
@@ -658,7 +668,8 @@ class ZHADevice(LogMixin):
                 )
         device_info[ATTR_ENDPOINT_NAMES] = names
 
-        reg_device = self.gateway.ha_device_registry.async_get(self.device_id)
+        device_registry = dr.async_get(self.hass)
+        reg_device = device_registry.async_get(self.device_id)
         if reg_device is not None:
             device_info["user_given_name"] = reg_device.name_by_user
             device_info["device_reg_id"] = reg_device.id
@@ -740,9 +751,15 @@ class ZHADevice(LogMixin):
         manufacturer=None,
     ):
         """Write a value to a zigbee attribute for a cluster in this entity."""
-        cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
-        if cluster is None:
-            return None
+        try:
+            cluster: Cluster = self.async_get_cluster(
+                endpoint_id, cluster_id, cluster_type
+            )
+        except KeyError as exc:
+            raise ValueError(
+                f"Cluster {cluster_id} not found on endpoint {endpoint_id} while"
+                f" writing attribute {attribute} with value {value}"
+            ) from exc
 
         try:
             response = await cluster.write_attributes(
@@ -758,15 +775,13 @@ class ZHADevice(LogMixin):
             )
             return response
         except zigpy.exceptions.ZigbeeException as exc:
-            self.debug(
-                "failed to set attribute: %s %s %s %s %s",
-                f"{ATTR_VALUE}: {value}",
-                f"{ATTR_ATTRIBUTE}: {attribute}",
-                f"{ATTR_CLUSTER_ID}: {cluster_id}",
-                f"{ATTR_ENDPOINT_ID}: {endpoint_id}",
-                exc,
-            )
-            return None
+            raise HomeAssistantError(
+                f"Failed to set attribute: "
+                f"{ATTR_VALUE}: {value} "
+                f"{ATTR_ATTRIBUTE}: {attribute} "
+                f"{ATTR_CLUSTER_ID}: {cluster_id} "
+                f"{ATTR_ENDPOINT_ID}: {endpoint_id}"
+            ) from exc
 
     async def issue_cluster_command(
         self,

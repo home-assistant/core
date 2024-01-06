@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["pytomorrowio"],
-  "requirements": ["pytomorrowio==0.3.5"]
+  "requirements": ["pytomorrowio==0.3.6"]
 }

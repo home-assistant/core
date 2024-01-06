@@ -1,23 +1,15 @@
 # synology-dsm service entries description.
 
 reboot:
-  name: Reboot
-  description: Reboot the NAS. This service is deprecated and will be removed in future release. Please use the corresponding button entity.
   fields:
     serial:
-      name: Serial
-      description: serial of the NAS to reboot; required when multiple NAS are configured.
       example: 1NDVC86409
       selector:
         text:
 
 shutdown:
-  name: Shutdown
-  description: Shutdown the NAS. This service is deprecated and will be removed in future release. Please use the corresponding button entity.
   fields:
     serial:
-      name: Serial
-      description: serial of the NAS to shutdown; required when multiple NAS are configured.
       example: 1NDVC86409
       selector:
         text:

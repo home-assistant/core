@@ -26,14 +26,27 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
+from . import ATTR_CURRENT_HUMIDITY, DOMAIN
 
 # mypy: disallow-any-generics
+
+CURRENT_TRIGGER_SCHEMA = vol.All(
+    DEVICE_TRIGGER_BASE_SCHEMA.extend(
+        {
+            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
+            vol.Required(CONF_TYPE): "current_humidity_changed",
+            vol.Optional(CONF_BELOW): vol.Any(vol.Coerce(float)),
+            vol.Optional(CONF_ABOVE): vol.Any(vol.Coerce(float)),
+            vol.Optional(CONF_FOR): cv.positive_time_period_dict,
+        }
+    ),
+    cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
+)
 
 HUMIDIFIER_TRIGGER_SCHEMA = vol.All(
     DEVICE_TRIGGER_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
             vol.Required(CONF_TYPE): "target_humidity_changed",
             vol.Optional(CONF_BELOW): vol.Any(vol.Coerce(int)),
             vol.Optional(CONF_ABOVE): vol.Any(vol.Coerce(int)),
@@ -45,6 +58,7 @@ HUMIDIFIER_TRIGGER_SCHEMA = vol.All(
 
 TRIGGER_SCHEMA = vol.All(
     vol.Any(
+        CURRENT_TRIGGER_SCHEMA,
         HUMIDIFIER_TRIGGER_SCHEMA,
         toggle_entity.TRIGGER_SCHEMA,
     ),
@@ -64,15 +78,31 @@ async def async_get_triggers(
         if entry.domain != DOMAIN:
             continue
 
+        state = hass.states.get(entry.entity_id)
+
+        # Add triggers for each entity that belongs to this integration
+        base_trigger = {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.id,
+        }
+
         triggers.append(
             {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
+                **base_trigger,
                 CONF_TYPE: "target_humidity_changed",
             }
         )
+
+        if state and ATTR_CURRENT_HUMIDITY in state.attributes:
+            triggers.append(
+                {
+                    **base_trigger,
+                    CONF_TYPE: "current_humidity_changed",
+                }
+            )
+
     return triggers
 
 
@@ -83,7 +113,10 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    if config[CONF_TYPE] == "target_humidity_changed":
+    if (trigger_type := config[CONF_TYPE]) in {
+        "current_humidity_changed",
+        "target_humidity_changed",
+    }:
         numeric_state_config = {
             numeric_state_trigger.CONF_PLATFORM: "numeric_state",
             numeric_state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
@@ -91,6 +124,14 @@ async def async_attach_trigger(
                 "{{ state.attributes.humidity }}"
             ),
         }
+        if trigger_type == "target_humidity_changed":
+            numeric_state_config[
+                numeric_state_trigger.CONF_VALUE_TEMPLATE
+            ] = "{{ state.attributes.humidity }}"
+        else:  # trigger_type == "current_humidity_changed"
+            numeric_state_config[
+                numeric_state_trigger.CONF_VALUE_TEMPLATE
+            ] = "{{ state.attributes.current_humidity }}"
 
         if CONF_ABOVE in config:
             numeric_state_config[CONF_ABOVE] = config[CONF_ABOVE]
@@ -115,7 +156,7 @@ async def async_get_trigger_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
     """List trigger capabilities."""
-    if config[CONF_TYPE] == "target_humidity_changed":
+    if config[CONF_TYPE] in {"current_humidity_changed", "target_humidity_changed"}:
         return {
             "extra_fields": vol.Schema(
                 {

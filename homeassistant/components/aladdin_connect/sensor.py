@@ -16,21 +16,21 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .model import DoorDevice
 
 
-@dataclass
+@dataclass(frozen=True)
 class AccSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable
 
 
-@dataclass
+@dataclass(frozen=True)
 class AccSensorEntityDescription(
     SensorEntityDescription, AccSensorEntityDescriptionMixin
 ):
@@ -40,7 +40,6 @@ class AccSensorEntityDescription(
 SENSORS: tuple[AccSensorEntityDescription, ...] = (
     AccSensorEntityDescription(
         key="battery_level",
-        name="Battery level",
         device_class=SensorDeviceClass.BATTERY,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=PERCENTAGE,
@@ -49,7 +48,7 @@ SENSORS: tuple[AccSensorEntityDescription, ...] = (
     ),
     AccSensorEntityDescription(
         key="rssi",
-        name="Wi-Fi RSSI",
+        translation_key="wifi_strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
@@ -58,7 +57,7 @@ SENSORS: tuple[AccSensorEntityDescription, ...] = (
     ),
     AccSensorEntityDescription(
         key="ble_strength",
-        name="BLE Strength",
+        translation_key="ble_strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
@@ -89,8 +88,8 @@ async def async_setup_entry(
 class AladdinConnectSensor(SensorEntity):
     """A sensor implementation for Aladdin Connect devices."""
 
-    _device: AladdinConnectSensor
     entity_description: AccSensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -101,24 +100,20 @@ class AladdinConnectSensor(SensorEntity):
         """Initialize a sensor for an Aladdin Connect device."""
         self._device_id = device["device_id"]
         self._number = device["door_number"]
-        self._name = device["name"]
-        self._model = device["model"]
         self._acc = acc
         self.entity_description = description
         self._attr_unique_id = f"{self._device_id}-{self._number}-{description.key}"
-        self._attr_has_entity_name = True
-        if self._model == "01" and description.key in ("battery_level", "ble_strength"):
-            self._attr_entity_registry_enabled_default = True
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Device information for Aladdin Connect sensors."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{self._device_id}-{self._number}")},
-            name=self._name,
+            name=device["name"],
             manufacturer="Overhead Door",
-            model=self._model,
+            model=device["model"],
         )
+        if device["model"] == "01" and description.key in (
+            "battery_level",
+            "ble_strength",
+        ):
+            self._attr_entity_registry_enabled_default = True
 
     @property
     def native_value(self) -> float | None:

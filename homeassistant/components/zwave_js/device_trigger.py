@@ -142,7 +142,7 @@ SCENE_ACTIVATION_VALUE_NOTIFICATION_SCHEMA = (
 # State based trigger schemas
 BASE_STATE_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
     }
 )
 
@@ -161,7 +161,7 @@ BASE_VALUE_UPDATED_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
         vol.Required(ATTR_COMMAND_CLASS): vol.In([cc.value for cc in CommandClass]),
         vol.Required(ATTR_PROPERTY): vol.Any(int, str),
         vol.Optional(ATTR_PROPERTY_KEY): vol.Any(None, vol.Coerce(int), str),
-        vol.Optional(ATTR_ENDPOINT): vol.Any(None, vol.Coerce(int)),
+        vol.Optional(ATTR_ENDPOINT, default=0): vol.Any(None, vol.Coerce(int)),
         vol.Optional(ATTR_FROM): VALUE_SCHEMA,
         vol.Optional(ATTR_TO): VALUE_SCHEMA,
     }
@@ -272,7 +272,7 @@ async def async_get_triggers(
         and not entity.disabled
     ):
         triggers.append(
-            {**base_trigger, CONF_TYPE: NODE_STATUS, CONF_ENTITY_ID: entity_id}
+            {**base_trigger, CONF_TYPE: NODE_STATUS, CONF_ENTITY_ID: entity.id}
         )
 
     # Handle notification event triggers

@@ -5,7 +5,7 @@ import pytest
 
 from homeassistant.components.broadlink.heartbeat import BroadlinkHeartbeat
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from . import get_device
 
@@ -48,7 +48,7 @@ async def test_heartbeat_trigger_right_time(hass: HomeAssistant) -> None:
 
     with patch(DEVICE_PING) as mock_ping:
         async_fire_time_changed(
-            hass, dt.utcnow() + BroadlinkHeartbeat.HEARTBEAT_INTERVAL
+            hass, dt_util.utcnow() + BroadlinkHeartbeat.HEARTBEAT_INTERVAL
         )
         await hass.async_block_till_done()
 
@@ -66,7 +66,7 @@ async def test_heartbeat_do_not_trigger_before_time(hass: HomeAssistant) -> None
     with patch(DEVICE_PING) as mock_ping:
         async_fire_time_changed(
             hass,
-            dt.utcnow() + BroadlinkHeartbeat.HEARTBEAT_INTERVAL // 2,
+            dt_util.utcnow() + BroadlinkHeartbeat.HEARTBEAT_INTERVAL // 2,
         )
         await hass.async_block_till_done()
 
@@ -85,7 +85,7 @@ async def test_heartbeat_unload(hass: HomeAssistant) -> None:
 
     with patch(DEVICE_PING) as mock_ping:
         async_fire_time_changed(
-            hass, dt.utcnow() + BroadlinkHeartbeat.HEARTBEAT_INTERVAL
+            hass, dt_util.utcnow() + BroadlinkHeartbeat.HEARTBEAT_INTERVAL
         )
 
     assert mock_ping.call_count == 0
@@ -105,7 +105,7 @@ async def test_heartbeat_do_not_unload(hass: HomeAssistant) -> None:
 
     with patch(DEVICE_PING) as mock_ping:
         async_fire_time_changed(
-            hass, dt.utcnow() + BroadlinkHeartbeat.HEARTBEAT_INTERVAL
+            hass, dt_util.utcnow() + BroadlinkHeartbeat.HEARTBEAT_INTERVAL
         )
         await hass.async_block_till_done()
 

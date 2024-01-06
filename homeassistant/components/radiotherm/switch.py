@@ -28,10 +28,11 @@ async def async_setup_entry(
 class RadioThermHoldSwitch(RadioThermostatEntity, SwitchEntity):
     """Provides radiotherm hold switch support."""
 
+    _attr_translation_key = "hold"
+
     def __init__(self, coordinator: RadioThermUpdateCoordinator) -> None:
         """Initialize the hold mode switch."""
         super().__init__(coordinator)
-        self._attr_name = f"{coordinator.init_data.name} Hold"
         self._attr_unique_id = f"{coordinator.init_data.mac}_hold"
 
     @property

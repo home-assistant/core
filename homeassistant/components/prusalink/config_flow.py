@@ -6,13 +6,13 @@ import logging
 from typing import Any
 
 from aiohttp import ClientError
-import async_timeout
 from awesomeversion import AwesomeVersion, AwesomeVersionException
-from pyprusalink import InvalidAuth, PrusaLink
+from pyprusalink import PrusaLink
+from pyprusalink.types import InvalidAuth
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_API_KEY, CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -26,7 +26,10 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_API_KEY): str,
+        # "maker" is currently hardcoded in the firmware
+        # https://github.com/prusa3d/Prusa-Firmware-Buddy/blob/bfb0ffc745ee6546e7efdba618d0e7c0f4c909cd/lib/WUI/wui_api.h#L19
+        vol.Required(CONF_USERNAME, default="maker"): str,
+        vol.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -36,10 +39,15 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    api = PrusaLink(async_get_clientsession(hass), data[CONF_HOST], data[CONF_API_KEY])
+    api = PrusaLink(
+        async_get_clientsession(hass),
+        data[CONF_HOST],
+        data[CONF_USERNAME],
+        data[CONF_PASSWORD],
+    )
 
     try:
-        async with async_timeout.timeout(5):
+        async with asyncio.timeout(5):
             version = await api.get_version()
 
     except (asyncio.TimeoutError, ClientError) as err:
@@ -59,6 +67,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for PrusaLink."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -75,7 +84,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         data = {
             CONF_HOST: host,
-            CONF_API_KEY: user_input[CONF_API_KEY],
+            CONF_USERNAME: user_input[CONF_USERNAME],
+            CONF_PASSWORD: user_input[CONF_PASSWORD],
         }
         errors = {}
 

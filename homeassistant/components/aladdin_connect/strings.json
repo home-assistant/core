@@ -25,5 +25,15 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "wifi_strength": {
+        "name": "Wi-Fi RSSI"
+      },
+      "ble_strength": {
+        "name": "BLE Strength"
+      }
+    }
   }
 }

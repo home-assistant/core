@@ -1,14 +1,13 @@
 """Component to pressing a button as platforms."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import datetime, timedelta
+from enum import StrEnum
 import logging
-from typing import final
+from typing import TYPE_CHECKING, final
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -23,6 +22,11 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, SERVICE_PRESS
 
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
+
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -35,6 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 class ButtonDeviceClass(StrEnum):
     """Device class for buttons."""
 
+    IDENTIFY = "identify"
     RESTART = "restart"
     UPDATE = "update"
 
@@ -72,14 +77,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
-class ButtonEntityDescription(EntityDescription):
+class ButtonEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes button entities."""
 
     device_class: ButtonDeviceClass | None = None
 
 
-class ButtonEntity(RestoreEntity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "device_class",
+}
+
+
+class ButtonEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Button entity."""
 
     entity_description: ButtonEntityDescription
@@ -88,7 +97,14 @@ class ButtonEntity(RestoreEntity):
     _attr_state: None = None
     __last_pressed: datetime | None = None
 
-    @property
+    def _default_to_device_class_name(self) -> bool:
+        """Return True if an unnamed entity should be named by its device class.
+
+        For buttons this is True if the entity has a device class.
+        """
+        return self.device_class is not None
+
+    @cached_property
     def device_class(self) -> ButtonDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):

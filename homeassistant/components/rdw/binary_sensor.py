@@ -13,8 +13,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -24,30 +23,23 @@ from homeassistant.helpers.update_coordinator import (
 from .const import DOMAIN
 
 
-@dataclass
-class RDWBinarySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RDWBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes RDW binary sensor entity."""
 
     is_on_fn: Callable[[Vehicle], bool | None]
-
-
-@dataclass
-class RDWBinarySensorEntityDescription(
-    BinarySensorEntityDescription, RDWBinarySensorEntityDescriptionMixin
-):
-    """Describes RDW binary sensor entity."""
 
 
 BINARY_SENSORS: tuple[RDWBinarySensorEntityDescription, ...] = (
     RDWBinarySensorEntityDescription(
         key="liability_insured",
-        name="Liability insured",
+        translation_key="liability_insured",
         icon="mdi:shield-car",
         is_on_fn=lambda vehicle: vehicle.liability_insured,
     ),
     RDWBinarySensorEntityDescription(
         key="pending_recall",
-        name="Pending recall",
+        translation_key="pending_recall",
         device_class=BinarySensorDeviceClass.PROBLEM,
         is_on_fn=lambda vehicle: vehicle.pending_recall,
     ),

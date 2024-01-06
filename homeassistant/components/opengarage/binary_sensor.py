@@ -22,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="vehicle",
+        translation_key="vehicle",
     ),
 )
 
@@ -66,9 +67,6 @@ class OpenGarageBinarySensor(OpenGarageEntity, BinarySensorEntity):
     @callback
     def _update_attr(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_name = (
-            f'{self.coordinator.data["name"]} {self.entity_description.key}'
-        )
         state = self.coordinator.data.get(self.entity_description.key)
         if state == 1:
             self._attr_is_on = True

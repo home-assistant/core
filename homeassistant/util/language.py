@@ -10,6 +10,14 @@ import re
 from homeassistant.const import MATCH_ALL
 
 SEPARATOR_RE = re.compile(r"[-_]")
+SAME_LANGUAGES = (
+    # no = spoken Norwegian
+    # nb = written Norwegian (Bokmål)
+    ("nb", "no"),
+    # he = Hebrew new code
+    # iw = Hebrew old code
+    ("he", "iw"),
+)
 
 
 def preferred_regions(
@@ -60,9 +68,7 @@ def is_language_match(lang_1: str, lang_2: str) -> bool:
         # Exact match
         return True
 
-    if {lang_1, lang_2} == {"no", "nb"}:
-        # no = spoken Norwegian
-        # nb = written Norwegian (Bokmål)
+    if tuple(sorted([lang_1, lang_2])) in SAME_LANGUAGES:
         return True
 
     return False
@@ -193,3 +199,14 @@ def matches(
 
     # Score < 0 is not a match
     return [tag for _dialect, score, tag in scored if score[0] >= 0]
+
+
+def intersect(languages_1: set[str], languages_2: set[str]) -> set[str]:
+    """Intersect two sets of languages using is_match for aliases."""
+    languages = set()
+    for lang_1 in languages_1:
+        for lang_2 in languages_2:
+            if is_language_match(lang_1, lang_2):
+                languages.add(lang_1)
+
+    return languages

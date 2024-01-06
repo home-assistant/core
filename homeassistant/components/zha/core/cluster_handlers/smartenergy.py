@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 import zigpy.zcl
 from zigpy.zcl.clusters import smartenergy
 
-from . import AttrReportConfig, ClusterHandler
 from .. import registries
 from ..const import (
     REPORT_CONFIG_ASAP,
@@ -16,6 +15,7 @@ from ..const import (
     REPORT_CONFIG_OP,
     SIGNAL_ATTR_UPDATED,
 )
+from . import AttrReportConfig, ClusterHandler
 
 if TYPE_CHECKING:
     from ..endpoint import Endpoint
@@ -195,9 +195,9 @@ class Metering(ClusterHandler):
         )  # 1 digit to the right, 15 digits to the left
         self._summa_format = self.get_formatting(fmting)
 
-    async def async_force_update(self) -> None:
+    async def async_update(self) -> None:
         """Retrieve latest state."""
-        self.debug("async_force_update")
+        self.debug("async_update")
 
         attrs = [
             a["attr"]

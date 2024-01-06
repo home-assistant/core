@@ -447,7 +447,7 @@ class HyperionOptionsFlow(OptionsFlow):
     ) -> FlowResult:
         """Manage the options."""
 
-        effects = {source: source for source in const.KEY_COMPONENTID_EXTERNAL_SOURCES}
+        effects = {}
         async with self._create_client() as hyperion_client:
             if not hyperion_client:
                 return self.async_abort(reason="cannot_connect")
