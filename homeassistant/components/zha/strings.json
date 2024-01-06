@@ -727,6 +727,9 @@
       },
       "local_temperature_calibration": {
         "name": "Local temperature offset"
+      },
+      "presence_detection_timeout": {
+        "name": "Presence detection timeout"
       }
     },
     "select": {
@@ -792,6 +795,9 @@
       },
       "decoupled_mode": {
         "name": "Decoupled mode"
+      },
+      "detection_sensitivity": {
+        "name": "Detection Sensitivity"
       }
     },
     "sensor": {
@@ -869,6 +875,9 @@
       },
       "smoke_density": {
         "name": "Smoke density"
+      },
+      "last_illumination_state": {
+        "name": "Last illumination state"
       }
     },
     "switch": {
