@@ -4,6 +4,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+from pylutron import Output
+
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -33,12 +35,12 @@ async def async_setup_entry(
     )
 
 
-def to_lutron_level(level):
+def to_lutron_level(level: int) -> float:
     """Convert the given Home Assistant light level (0-255) to Lutron (0.0-100.0)."""
     return float((level * 100) / 255)
 
 
-def to_hass_level(level):
+def to_hass_level(level: float) -> int:
     """Convert the given Lutron (0.0-100.0) light level to Home Assistant (0-255)."""
     return int((level * 255) / 100)
 
@@ -48,11 +50,8 @@ class LutronLight(LutronDevice, LightEntity):
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-
-    def __init__(self, area_name, lutron_device, controller) -> None:
-        """Initialize the light."""
-        self._prev_brightness = None
-        super().__init__(area_name, lutron_device, controller)
+    _lutron_device: Output
+    _prev_brightness: int | None = None
 
     @property
     def brightness(self) -> int:
