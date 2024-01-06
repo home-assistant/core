@@ -38,9 +38,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 results = await client.get_meter_values(
                     start_time=(dt_util.now() - timedelta(hours=1)).isoformat()
                 )
-                self._metering_point_ids = metering_point_ids = [
-                    x["meteringPointId"] for x in results["meteringpoints"]
-                ]
+
             except ElviaError.AuthError as exception:
                 LOGGER.error("Authentication error %s", exception)
                 errors["base"] = "invalid_auth"
@@ -48,6 +46,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 LOGGER.error("Unknown error %s", exception)
                 errors["base"] = "unknown"
             else:
+                try:
+                    self._metering_point_ids = metering_point_ids = [
+                        x["meteringPointId"] for x in results["meteringpoints"]
+                    ]
+                except KeyError:
+                    return self.async_abort(reason="no_metering_points")
+
                 if (meter_count := len(metering_point_ids)) > 1:
                     return await self.async_step_select_meter()
                 if meter_count == 1:

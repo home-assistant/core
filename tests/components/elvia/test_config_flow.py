@@ -129,6 +129,36 @@ async def test_no_metering_points(
     assert len(mock_setup_entry.mock_calls) == 0
 
 
+async def test_bad_data(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test using the config flow with no metering points."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "elvia.meter_value.MeterValue.get_meter_values",
+        return_value={},
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_TOKEN: TEST_API_TOKEN,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "no_metering_points"
+
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
 async def test_abort_when_metering_point_id_exist(
     recorder_mock: Recorder,
     hass: HomeAssistant,
