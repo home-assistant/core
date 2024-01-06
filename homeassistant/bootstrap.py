@@ -611,8 +611,9 @@ async def _async_set_up_integrations(
     # Optimistically check if requirements are already installed
     # ahead of setting up the integrations so we can prime the cache
     # We do not wait for this since its an optimization only
-    installed_requirements_task = asyncio.create_task(
-        requirements.async_load_installed_versions(hass, needed_requirements)
+    hass.async_create_background_task(
+        requirements.async_load_installed_versions(hass, needed_requirements),
+        "check installed requirements",
     )
 
     # Initialize recorder
@@ -706,7 +707,6 @@ async def _async_set_up_integrations(
         _LOGGER.warning("Setup timed out for bootstrap - moving forward")
 
     watch_task.cancel()
-    await installed_requirements_task
     async_dispatcher_send(hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, {})
 
     _LOGGER.debug(
