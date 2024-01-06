@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -243,10 +242,12 @@ class HuaweiSmartLogger3000Sensor(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="Huawei",
             model="Smart Logger 3000",
-            configuration_url="",
+            configuration_url=f"https://{coordinator.api.HOST}",
         )
 
     @property
     def native_value(self) -> StateType:
         """Return native value for entity."""
-        return self.coordinator.data.get(self.entity_description.key)
+        if self.coordinator.data:
+            return self.coordinator.data.get(self.entity_description.key)
+        return None
