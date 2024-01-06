@@ -7,7 +7,7 @@ from technove import TechnoVEConnectionError
 
 from homeassistant.components.technove.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -26,13 +26,13 @@ async def test_full_user_flow_implementation(hass: HomeAssistant) -> None:
     assert result.get("type") == FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_IP_ADDRESS: "192.168.1.123"}
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}
     )
 
     assert result.get("title") == "TechnoVE Station"
     assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert "data" in result
-    assert result["data"][CONF_IP_ADDRESS] == "192.168.1.123"
+    assert result["data"][CONF_HOST] == "192.168.1.123"
     assert "result" in result
     assert result["result"].unique_id == "AA:AA:AA:AA:AA:BB"
 
@@ -48,7 +48,7 @@ async def test_user_device_exists_abort(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_IP_ADDRESS: "192.168.1.123"},
+        data={CONF_HOST: "192.168.1.123"},
     )
 
     assert result.get("type") == FlowResultType.ABORT
@@ -61,7 +61,7 @@ async def test_connection_error(hass: HomeAssistant, mock_technove: MagicMock) -
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_IP_ADDRESS: "example.com"},
+        data={CONF_HOST: "example.com"},
     )
 
     assert result.get("type") == FlowResultType.FORM

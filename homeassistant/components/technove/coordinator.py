@@ -4,7 +4,7 @@ from __future__ import annotations
 from technove import Station as TechnoVEStation, TechnoVE, TechnoVEError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -26,7 +26,7 @@ class TechnoVEDataUpdateCoordinator(DataUpdateCoordinator[TechnoVEStation]):
             update_interval=SCAN_INTERVAL,
         )
         self.technove = TechnoVE(
-            self.config_entry.data[CONF_IP_ADDRESS],
+            self.config_entry.data[CONF_HOST],
             session=async_get_clientsession(hass),
         )
 

@@ -6,7 +6,7 @@ from technove import Station as TechnoVEStation, TechnoVE, TechnoVEConnectionErr
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -23,24 +23,24 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                station = await self._async_get_station(user_input[CONF_IP_ADDRESS])
+                station = await self._async_get_station(user_input[CONF_HOST])
             except TechnoVEConnectionError:
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(station.info.mac_address)
                 self._abort_if_unique_id_configured(
-                    updates={CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]}
+                    updates={CONF_HOST: user_input[CONF_HOST]}
                 )
                 return self.async_create_entry(
                     title=station.info.name,
                     data={
-                        CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
+                        CONF_HOST: user_input[CONF_HOST],
                     },
                 )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_IP_ADDRESS): str}),
+            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
             errors=errors,
         )
 

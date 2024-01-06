@@ -6,7 +6,7 @@ import pytest
 from technove import Station as TechnoVEStation
 
 from homeassistant.components.technove.const import DOMAIN
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -17,7 +17,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_IP_ADDRESS: "192.168.1.123"},
+        data={CONF_HOST: "192.168.1.123"},
         unique_id="AA:AA:AA:AA:AA:BB",
     )
 

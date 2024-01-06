@@ -5,10 +5,10 @@
       "user": {
         "description": "Set up your TechnoVE station to integrate with Home Assistant.",
         "data": {
-          "ip_address": "[%key:common::config_flow::data::ip%]"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "ip_address": "Hostname or IP address of your TechnoVE station."
+          "host": "Hostname or IP address of your TechnoVE station."
         }
       }
     },
