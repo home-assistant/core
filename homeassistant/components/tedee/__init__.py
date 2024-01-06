@@ -37,23 +37,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    def cleanup_disconnected_locks() -> None:
-        device_registry = dr.async_get(hass)
-        devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-        devices_to_remove = devices.copy()
-        for device in devices:
-            if device.model == "Bridge":
-                devices_to_remove.remove(device)
-            for lock in coordinator.data.values():
-                if lock.lock_name == device.name:
-                    devices_to_remove.remove(device)
-                    break
-
-        for device in devices_to_remove:
-            device_registry.async_remove_device(device.id)
-
-    cleanup_disconnected_locks()
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
