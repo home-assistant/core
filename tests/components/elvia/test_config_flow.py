@@ -9,7 +9,7 @@ from homeassistant.components.elvia.const import CONF_METERING_POINT_ID, DOMAIN
 from homeassistant.components.recorder.core import Recorder
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
 
 from tests.common import MockConfigEntry
 
@@ -198,3 +198,10 @@ async def test_form_exceptions(
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": base_error}
+
+    # Simulate that the user gives up and closes the window...
+    hass.config_entries.flow._async_remove_flow_progress(result["flow_id"])
+    await hass.async_block_till_done()
+
+    with pytest.raises(UnknownFlow):
+        hass.config_entries.flow.async_get(result["flow_id"])
