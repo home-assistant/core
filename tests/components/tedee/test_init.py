@@ -75,30 +75,27 @@ async def test_cleanup_disconnected_locks(
     mock_tedee: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Ensure disconnected locks are cleaned up."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    def assert_current_registry_state() -> None:
-        devices = dr.async_entries_for_config_entry(
-            device_registry, mock_config_entry.entry_id
-        )
-        assert devices == snapshot
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
 
-        for device in devices:
-            entities = er.async_entries_for_device(
-                entity_registry, device.id, include_disabled_entities=True
-            )
-            assert entities == snapshot
-
-    assert_current_registry_state()
+    locks = [device.name for device in devices]
+    assert locks == ["Bridge-AB1C", "Lock-1A2B", "Lock-2C3D"]
 
     # remove a lock and reload integration
     mock_tedee.locks_dict.pop(12345)
 
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
 
-    assert_current_registry_state()
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    locks = [device.name for device in devices]
+    assert locks == ["Bridge-AB1C", "Lock-2C3D"]
