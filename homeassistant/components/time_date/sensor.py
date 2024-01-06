@@ -13,15 +13,9 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DISPLAY_OPTIONS, EVENT_CORE_CONFIG_UPDATE
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    DOMAIN as HOMEASSISTANT_DOMAIN,
-    Event,
-    HomeAssistant,
-    callback,
-)
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -53,26 +47,28 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Time and Date sensor."""
-    async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2024.7.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "Time & Date",
-        },
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
+    if hass.config.time_zone is None:
+        _LOGGER.error("Timezone is not set in Home Assistant configuration")  # type: ignore[unreachable]
+        return False
+    if "beat" in config[CONF_DISPLAY_OPTIONS]:
+        async_create_issue(
+            hass,
             DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
+            "deprecated_beat",
+            breaks_in_ha_version="2024.7.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_beat",
+            translation_placeholders={
+                "config_key": "beat",
+                "display_options": "display_options",
+                "integration": DOMAIN,
+            },
         )
+        _LOGGER.warning("'beat': is deprecated and will be removed in version 2024.7")
+
+    async_add_entities(
+        [TimeDateSensor(variable) for variable in config[CONF_DISPLAY_OPTIONS]]
     )
 
 
@@ -80,28 +76,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Time & Date sensor."""
-    if "beat" in entry.options[CONF_DISPLAY_OPTIONS]:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_beat",
-            breaks_in_ha_version="2024.7.0",
-            is_fixable=True,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_beat",
-            translation_placeholders={
-                "config_key": "beat",
-                "integration": DOMAIN,
-            },
-        )
-        _LOGGER.warning("'beat': is deprecated and will be removed in version 2024.7")
 
-    async_add_entities(
-        [
-            TimeDateSensor(option_type)
-            for option_type in entry.options[CONF_DISPLAY_OPTIONS]
-        ]
-    )
+    async_add_entities([TimeDateSensor(entry.options[CONF_DISPLAY_OPTIONS])])
 
 
 class TimeDateSensor(SensorEntity):

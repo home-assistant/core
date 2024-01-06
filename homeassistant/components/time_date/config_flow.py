@@ -8,10 +8,9 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
 from homeassistant.components import websocket_api
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, async_get_hass, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import EntityPlatform
@@ -39,20 +38,6 @@ USER_SCHEMA = vol.Schema(
             SelectSelectorConfig(
                 options=[option for option in OPTION_TYPES if option != "beat"],
                 mode=SelectSelectorMode.DROPDOWN,
-                multiple=True,
-                translation_key="display_options",
-            )
-        ),
-    }
-)
-
-IMPORT_OPTIONS_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_DISPLAY_OPTIONS): SelectSelector(
-            SelectSelectorConfig(
-                options=OPTION_TYPES,
-                mode=SelectSelectorMode.DROPDOWN,
-                multiple=True,
                 translation_key="display_options",
             )
         ),
@@ -64,7 +49,7 @@ async def validate_input(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
     """Validate rest setup."""
-    hass = async_get_hass()
+    hass = handler.parent_handler.hass
     if hass.config.time_zone is None:
         raise SchemaFlowError("timezone_not_exist")
     return user_input
@@ -75,14 +60,7 @@ CONFIG_FLOW = {
         schema=USER_SCHEMA,
         preview=DOMAIN,
         validate_user_input=validate_input,
-    ),
-    "import": SchemaFlowFormStep(
-        schema=IMPORT_OPTIONS_SCHEMA,
-        validate_user_input=validate_input,
-    ),
-}
-OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(schema=IMPORT_OPTIONS_SCHEMA, preview=DOMAIN)
+    )
 }
 
 
@@ -90,16 +68,14 @@ class TimeDateConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config flow for Time & Date."""
 
     config_flow = CONFIG_FLOW
-    options_flow = OPTIONS_FLOW
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
-        return "Time & Date"
+        return f"Time & Date {options[CONF_DISPLAY_OPTIONS]}"
 
     def async_config_flow_finished(self, options: Mapping[str, Any]) -> None:
         """Abort if instance already exist."""
-        if self._async_current_entries():
-            raise data_entry_flow.AbortFlow("single_instance_allowed")
+        self._async_abort_entries_match(dict(options))
 
     @staticmethod
     async def async_setup_preview(hass: HomeAssistant) -> None:
@@ -111,7 +87,7 @@ class TimeDateConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     {
         vol.Required("type"): "time_date/start_preview",
         vol.Required("flow_id"): str,
-        vol.Required("flow_type"): vol.Any("config_flow", "options_flow"),
+        vol.Required("flow_type"): vol.Any("config_flow"),
         vol.Required("user_input"): dict,
     }
 )
@@ -122,7 +98,7 @@ async def ws_start_preview(
     msg: dict[str, Any],
 ) -> None:
     """Generate a preview."""
-    validated = IMPORT_OPTIONS_SCHEMA(msg["user_input"])
+    validated = USER_SCHEMA(msg["user_input"])
 
     # Create an EntityPlatform, needed for name translations
     platform = await async_prepare_setup_platform(hass, {}, SENSOR_DOMAIN, DOMAIN)
