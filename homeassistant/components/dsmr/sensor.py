@@ -28,6 +28,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
+    CONF_PROTOCOL,
     EVENT_HOMEASSISTANT_STOP,
     EntityCategory,
     UnitOfEnergy,
@@ -46,8 +47,6 @@ from homeassistant.util import Throttle
 
 from .const import (
     CONF_DSMR_VERSION,
-    CONF_PRECISION,
-    CONF_PROTOCOL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
     CONF_TIME_BETWEEN_UPDATE,
@@ -68,7 +67,7 @@ EVENT_FIRST_TELEGRAM = "dsmr_first_telegram_{}"
 UNIT_CONVERSION = {"m3": UnitOfVolume.CUBIC_METERS}
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class DSMRSensorEntityDescription(SensorEntityDescription):
     """Represents an DSMR Sensor."""
 
@@ -79,6 +78,13 @@ class DSMRSensorEntityDescription(SensorEntityDescription):
 
 
 SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
+    DSMRSensorEntityDescription(
+        key="timestamp",
+        obis_reference=obis_references.P1_MESSAGE_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
     DSMRSensorEntityDescription(
         key="current_electricity_usage",
         translation_key="current_electricity_usage",
@@ -648,7 +654,7 @@ async def async_setup_entry(
                 # throttle reconnect attempts
                 await asyncio.sleep(DEFAULT_RECONNECT_INTERVAL)
 
-            except (serial.serialutil.SerialException, OSError):
+            except (serial.SerialException, OSError):
                 # Log any error while establishing connection and drop to retry
                 # connection wait
                 LOGGER.exception("Error connecting to DSMR")
@@ -790,9 +796,7 @@ class DSMREntity(SensorEntity):
             return self.translate_tariff(value, self._entry.data[CONF_DSMR_VERSION])
 
         with suppress(TypeError):
-            value = round(
-                float(value), self._entry.data.get(CONF_PRECISION, DEFAULT_PRECISION)
-            )
+            value = round(float(value), DEFAULT_PRECISION)
 
         # Make sure we do not return a zero value for an energy sensor
         if not value and self.state_class == SensorStateClass.TOTAL_INCREASING:

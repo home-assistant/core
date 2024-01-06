@@ -151,7 +151,7 @@ class ToonBoilerDeviceEntity(ToonEntity):
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class ToonRequiredKeysMixin:
     """Mixin for required keys."""
 

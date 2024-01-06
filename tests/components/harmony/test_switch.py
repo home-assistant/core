@@ -146,6 +146,7 @@ async def test_create_issue(
     hass: HomeAssistant,
     mock_write_config,
     entity_registry_enabled_by_default: None,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test we create an issue when an automation or script is using a deprecated entity."""
     assert await async_setup_component(
@@ -186,7 +187,6 @@ async def test_create_issue(
 
     assert automations_with_entity(hass, ENTITY_WATCH_TV)[0] == "automation.test"
     assert scripts_with_entity(hass, ENTITY_WATCH_TV)[0] == "script.test"
-    issue_registry: ir.IssueRegistry = ir.async_get(hass)
 
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_switches")
     assert issue_registry.async_get_issue(

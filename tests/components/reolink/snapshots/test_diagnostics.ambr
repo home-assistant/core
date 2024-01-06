@@ -41,7 +41,7 @@
     'event connection': 'Fast polling',
     'firmware version': 'v1.0.0.0.0.0000',
     'hardware version': 'IPC_00000',
-    'model': 'RLC-123',
+    'model': 'RLN8-410',
     'stream channels': list([
       0,
     ]),

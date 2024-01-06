@@ -35,7 +35,7 @@ from .entity import HomeWizardEntity
 PARALLEL_UPDATES = 1
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class HomeWizardSensorEntityDescription(SensorEntityDescription):
     """Class describing HomeWizard sensor entities."""
 

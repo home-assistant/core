@@ -36,6 +36,7 @@ from .const import (
 )
 from .helpers import savable_state
 from .http_api import RegistrationsView
+from .util import async_create_cloud_hook
 from .webhook import handle_webhook
 
 PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER]
@@ -102,6 +103,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     registration_name = f"Mobile App: {registration[ATTR_DEVICE_NAME]}"
     webhook_register(hass, DOMAIN, registration_name, webhook_id, handle_webhook)
+
+    async def manage_cloudhook(state: cloud.CloudConnectionState) -> None:
+        if (
+            state is cloud.CloudConnectionState.CLOUD_CONNECTED
+            and CONF_CLOUDHOOK_URL not in entry.data
+        ):
+            await async_create_cloud_hook(hass, webhook_id, entry)
+
+    if (
+        CONF_CLOUDHOOK_URL not in entry.data
+        and cloud.async_active_subscription(hass)
+        and cloud.async_is_connected(hass)
+    ):
+        await async_create_cloud_hook(hass, webhook_id, entry)
+
+    entry.async_on_unload(cloud.async_listen_connection_change(hass, manage_cloudhook))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

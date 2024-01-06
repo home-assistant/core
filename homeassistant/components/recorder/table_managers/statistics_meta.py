@@ -5,7 +5,7 @@ import logging
 import threading
 from typing import TYPE_CHECKING, Literal, cast
 
-from lru import LRU  # pylint: disable=no-name-in-module
+from lru import LRU
 from sqlalchemy import lambda_stmt, select
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import true
@@ -74,7 +74,7 @@ class StatisticsMetaManager:
     def __init__(self, recorder: Recorder) -> None:
         """Initialize the statistics meta manager."""
         self.recorder = recorder
-        self._stat_id_to_id_meta: dict[str, tuple[int, StatisticMetaData]] = LRU(
+        self._stat_id_to_id_meta: LRU[str, tuple[int, StatisticMetaData]] = LRU(
             CACHE_SIZE
         )
 

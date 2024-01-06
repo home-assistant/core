@@ -85,7 +85,7 @@ async def test_http_processing_intent(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on light",
+                    "speech": "Turned on the light",
                 }
             },
             "language": hass.config.language,
@@ -135,7 +135,7 @@ async def test_http_processing_intent_target_ha_agent(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on light",
+                    "speech": "Turned on the light",
                 }
             },
             "language": hass.config.language,
@@ -186,7 +186,7 @@ async def test_http_processing_intent_entity_added_removed(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on light",
+                    "speech": "Turned on the light",
                 }
             },
             "language": hass.config.language,
@@ -222,7 +222,7 @@ async def test_http_processing_intent_entity_added_removed(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on light",
+                    "speech": "Turned on the light",
                 }
             },
             "language": hass.config.language,
@@ -255,7 +255,7 @@ async def test_http_processing_intent_entity_added_removed(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on light",
+                    "speech": "Turned on the light",
                 }
             },
             "language": hass.config.language,
@@ -331,7 +331,7 @@ async def test_http_processing_intent_alias_added_removed(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on light",
+                    "speech": "Turned on the light",
                 }
             },
             "language": hass.config.language,
@@ -364,7 +364,7 @@ async def test_http_processing_intent_alias_added_removed(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on light",
+                    "speech": "Turned on the light",
                 }
             },
             "language": hass.config.language,
@@ -449,7 +449,7 @@ async def test_http_processing_intent_entity_renamed(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on light",
+                    "speech": "Turned on the light",
                 }
             },
             "language": hass.config.language,
@@ -483,7 +483,7 @@ async def test_http_processing_intent_entity_renamed(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on light",
+                    "speech": "Turned on the light",
                 }
             },
             "language": hass.config.language,
@@ -540,7 +540,7 @@ async def test_http_processing_intent_entity_renamed(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on light",
+                    "speech": "Turned on the light",
                 }
             },
             "language": hass.config.language,
@@ -624,7 +624,7 @@ async def test_http_processing_intent_entity_exposed(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on light",
+                    "speech": "Turned on the light",
                 }
             },
             "language": hass.config.language,
@@ -656,7 +656,7 @@ async def test_http_processing_intent_entity_exposed(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on light",
+                    "speech": "Turned on the light",
                 }
             },
             "language": hass.config.language,
@@ -740,7 +740,7 @@ async def test_http_processing_intent_entity_exposed(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on light",
+                    "speech": "Turned on the light",
                 }
             },
             "language": hass.config.language,
@@ -769,7 +769,7 @@ async def test_http_processing_intent_entity_exposed(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on light",
+                    "speech": "Turned on the light",
                 }
             },
             "language": hass.config.language,
@@ -855,7 +855,7 @@ async def test_http_processing_intent_conversion_not_expose_new(
             "speech": {
                 "plain": {
                     "extra_data": None,
-                    "speech": "Turned on light",
+                    "speech": "Turned on the light",
                 }
             },
             "language": hass.config.language,

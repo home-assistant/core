@@ -643,7 +643,7 @@ def _test_transport(host: str | None, port: int | None, device: str | None) -> b
     else:
         try:
             conn = rfxtrxmod.PySerialTransport(device)
-        except serial.serialutil.SerialException:
+        except serial.SerialException:
             return False
 
         if conn.serial is None:

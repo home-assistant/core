@@ -1,7 +1,7 @@
 """Support for VELUX KLF 200 devices."""
 import logging
 
-from pyvlx import OpeningDevice, PyVLX, PyVLXException
+from pyvlx import Node, PyVLX, PyVLXException
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -90,7 +90,7 @@ class VeluxEntity(Entity):
 
     _attr_should_poll = False
 
-    def __init__(self, node: OpeningDevice) -> None:
+    def __init__(self, node: Node) -> None:
         """Initialize the Velux device."""
         self.node = node
         self._attr_unique_id = node.serial_number

@@ -41,7 +41,7 @@ async def test_address_validation_failure(hass: HomeAssistant) -> None:
         "homeassistant.components.minecraft_server.api.BedrockServer.lookup",
         side_effect=ValueError,
     ), patch(
-        "homeassistant.components.minecraft_server.api.JavaServer.lookup",
+        "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
         side_effect=ValueError,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -58,7 +58,7 @@ async def test_java_connection_failure(hass: HomeAssistant) -> None:
         "homeassistant.components.minecraft_server.api.BedrockServer.lookup",
         side_effect=ValueError,
     ), patch(
-        "homeassistant.components.minecraft_server.api.JavaServer.lookup",
+        "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
         return_value=JavaServer(host=TEST_HOST, port=TEST_PORT),
     ), patch(
         "homeassistant.components.minecraft_server.api.JavaServer.async_status",
@@ -95,7 +95,7 @@ async def test_java_connection(hass: HomeAssistant) -> None:
         "homeassistant.components.minecraft_server.api.BedrockServer.lookup",
         side_effect=ValueError,
     ), patch(
-        "homeassistant.components.minecraft_server.api.JavaServer.lookup",
+        "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
         return_value=JavaServer(host=TEST_HOST, port=TEST_PORT),
     ), patch(
         "homeassistant.components.minecraft_server.api.JavaServer.async_status",
@@ -138,7 +138,7 @@ async def test_recovery(hass: HomeAssistant) -> None:
         "homeassistant.components.minecraft_server.api.BedrockServer.lookup",
         side_effect=ValueError,
     ), patch(
-        "homeassistant.components.minecraft_server.api.JavaServer.lookup",
+        "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
         side_effect=ValueError,
     ):
         result = await hass.config_entries.flow.async_init(

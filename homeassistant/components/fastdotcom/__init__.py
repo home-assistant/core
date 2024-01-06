@@ -1,22 +1,19 @@
 """Support for testing internet speed via Fast.com."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
 import logging
-from typing import Any
 
-from fastdotcom import fast_com
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall
+from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_MANUAL, DATA_UPDATED, DEFAULT_INTERVAL, DOMAIN, PLATFORMS
+from .const import CONF_MANUAL, DEFAULT_INTERVAL, DOMAIN, PLATFORMS
+from .coordinator import FastdotcomDataUpdateCoordindator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,20 +46,35 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up the Fast.com component."""
-    data = hass.data[DOMAIN] = SpeedtestData(hass)
+    """Set up Fast.com from a config entry."""
+    coordinator = FastdotcomDataUpdateCoordindator(hass)
 
-    entry.async_on_unload(
-        async_track_time_interval(hass, data.update, timedelta(hours=DEFAULT_INTERVAL))
-    )
-    # Run an initial update to get a starting state
-    await data.update()
+    async def _request_refresh(event: Event) -> None:
+        """Request a refresh."""
+        await coordinator.async_request_refresh()
 
-    async def update(service_call: ServiceCall | None = None) -> None:
-        """Service call to manually update the data."""
-        await data.update()
+    async def _request_refresh_service(call: ServiceCall) -> None:
+        """Request a refresh via the service."""
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "service_deprecation",
+            breaks_in_ha_version="2024.7.0",
+            is_fixable=True,
+            is_persistent=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="service_deprecation",
+        )
+        await coordinator.async_request_refresh()
 
-    hass.services.async_register(DOMAIN, "speedtest", update)
+    if hass.state == CoreState.running:
+        await coordinator.async_config_entry_first_refresh()
+    else:
+        # Don't start the speedtest when HA is starting up
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _request_refresh)
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    hass.services.async_register(DOMAIN, "speedtest", _request_refresh_service)
 
     await hass.config_entries.async_forward_entry_setups(
         entry,
@@ -74,23 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Fast.com config entry."""
+    hass.services.async_remove(DOMAIN, "speedtest")
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data.pop(DOMAIN)
+        hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
-
-
-class SpeedtestData:
-    """Get the latest data from Fast.com."""
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize the data object."""
-        self.data: dict[str, Any] | None = None
-        self._hass = hass
-
-    async def update(self, now: datetime | None = None) -> None:
-        """Get the latest data from fast.com."""
-        _LOGGER.debug("Executing Fast.com speedtest")
-        fast_com_data = await self._hass.async_add_executor_job(fast_com)
-        self.data = {"download": fast_com_data}
-        _LOGGER.debug("Fast.com speedtest finished, with mbit/s: %s", fast_com_data)
-        dispatcher_send(self._hass, DATA_UPDATED)

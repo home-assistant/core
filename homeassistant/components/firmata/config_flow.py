@@ -41,12 +41,12 @@ class FirmataFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except RuntimeError as err:
             _LOGGER.error("Error connecting to PyMata board %s: %s", name, err)
             return self.async_abort(reason="cannot_connect")
-        except serial.serialutil.SerialTimeoutException as err:
+        except serial.SerialTimeoutException as err:
             _LOGGER.error(
                 "Timeout writing to serial port for PyMata board %s: %s", name, err
             )
             return self.async_abort(reason="cannot_connect")
-        except serial.serialutil.SerialException as err:
+        except serial.SerialException as err:
             _LOGGER.error(
                 "Error connecting to serial port for PyMata board %s: %s", name, err
             )
