@@ -92,7 +92,7 @@ DEVICE_RECORDING_MODES = [
 DEVICE_CLASS_LCD_MESSAGE: Final = "unifiprotect__lcd_message"
 
 
-@dataclass
+@dataclass(frozen=True)
 class ProtectSelectEntityDescription(
     ProtectSetableKeysMixin[T], SelectEntityDescription
 ):
@@ -116,7 +116,7 @@ def _get_doorbell_options(api: ProtectApiClient) -> list[dict[str, Any]]:
 
     for item in messages:
         msg_type = item.type.value
-        if item.type == DoorbellMessageType.CUSTOM_MESSAGE:
+        if item.type is DoorbellMessageType.CUSTOM_MESSAGE:
             msg_type = f"{DoorbellMessageType.CUSTOM_MESSAGE.value}:{item.text}"
 
         built_messages.append({"id": msg_type, "name": item.text})
@@ -420,4 +420,15 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
             or self._attr_options != previous_options
             or self._attr_available != previous_available
         ):
+            _LOGGER.debug(
+                "Updating state [%s (%s)] %s (%s, %s) -> %s (%s, %s)",
+                device.name,
+                device.mac,
+                previous_option,
+                previous_available,
+                previous_options,
+                self._attr_current_option,
+                self._attr_available,
+                self._attr_options,
+            )
             self.async_write_ha_state()

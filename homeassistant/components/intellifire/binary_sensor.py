@@ -21,14 +21,14 @@ from .const import DOMAIN
 from .entity import IntellifireEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class IntellifireBinarySensorRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[IntellifirePollData], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class IntellifireBinarySensorEntityDescription(
     BinarySensorEntityDescription, IntellifireBinarySensorRequiredKeysMixin
 ):

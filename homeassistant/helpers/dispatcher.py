@@ -90,20 +90,22 @@ def dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None:
     hass.loop.call_soon_threadsafe(async_dispatcher_send, hass, signal, *args)
 
 
+def _format_err(signal: str, target: Callable[..., Any], *args: Any) -> str:
+    """Format error message."""
+    return "Exception in {} when dispatching '{}': {}".format(
+        # Functions wrapped in partial do not have a __name__
+        getattr(target, "__name__", None) or str(target),
+        signal,
+        args,
+    )
+
+
 def _generate_job(
     signal: str, target: Callable[..., Any]
 ) -> HassJob[..., None | Coroutine[Any, Any, None]]:
     """Generate a HassJob for a signal and target."""
     return HassJob(
-        catch_log_exception(
-            target,
-            lambda *args: "Exception in {} when dispatching '{}': {}".format(
-                # Functions wrapped in partial do not have a __name__
-                getattr(target, "__name__", None) or str(target),
-                signal,
-                args,
-            ),
-        ),
+        catch_log_exception(target, partial(_format_err, signal, target)),
         f"dispatcher {signal}",
     )
 

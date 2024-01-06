@@ -22,14 +22,14 @@ if TYPE_CHECKING:
     from homeassistant.helpers.typing import StateType
 
 
-@dataclass
+@dataclass(frozen=True)
 class BaseEntityDescriptionMixin:
     """Mixin for required descriptor keys."""
 
     value_fn: Callable[[KaleidescapeDevice], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class KaleidescapeSensorEntityDescription(
     SensorEntityDescription, BaseEntityDescriptionMixin
 ):

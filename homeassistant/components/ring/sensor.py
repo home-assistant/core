@@ -173,7 +173,7 @@ class HistoryRingSensor(RingSensor):
         return attrs
 
 
-@dataclass
+@dataclass(frozen=True)
 class RingRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -181,7 +181,7 @@ class RingRequiredKeysMixin:
     cls: type[RingSensor]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RingSensorEntityDescription(SensorEntityDescription, RingRequiredKeysMixin):
     """Describes Ring sensor entity."""
 

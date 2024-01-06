@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN, MANUFACTURER
 
 
-@dataclass
+@dataclass(frozen=True)
 class MyStromSwitchSensorEntityDescription(SensorEntityDescription):
     """Class describing mystrom switch sensor entities."""
 

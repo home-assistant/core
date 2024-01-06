@@ -87,7 +87,7 @@ async def test_new_ignored_users_available(
 
     await wait_for_debouncer(hass)
 
-    sensor = hass.states.get("sensor.plex_plex_server_1")
+    sensor = hass.states.get("sensor.plex_server_1")
     assert sensor.state == str(len(active_sessions))
 
 
@@ -101,7 +101,7 @@ async def test_network_error_during_refresh(
 
     await wait_for_debouncer(hass)
 
-    sensor = hass.states.get("sensor.plex_plex_server_1")
+    sensor = hass.states.get("sensor.plex_server_1")
     assert sensor.state == str(len(active_sessions))
 
     with patch("plexapi.server.PlexServer.clients", side_effect=RequestException):
@@ -126,7 +126,7 @@ async def test_gdm_client_failure(
     active_sessions = mock_plex_server._plex_server.sessions()
     await wait_for_debouncer(hass)
 
-    sensor = hass.states.get("sensor.plex_plex_server_1")
+    sensor = hass.states.get("sensor.plex_server_1")
     assert sensor.state == str(len(active_sessions))
 
     with patch("plexapi.server.PlexServer.clients", side_effect=RequestException):
@@ -146,7 +146,7 @@ async def test_mark_sessions_idle(
 
     active_sessions = mock_plex_server._plex_server.sessions()
 
-    sensor = hass.states.get("sensor.plex_plex_server_1")
+    sensor = hass.states.get("sensor.plex_server_1")
     assert sensor.state == str(len(active_sessions))
 
     url = mock_plex_server.url_in_use
@@ -157,7 +157,7 @@ async def test_mark_sessions_idle(
     await hass.async_block_till_done()
     await wait_for_debouncer(hass)
 
-    sensor = hass.states.get("sensor.plex_plex_server_1")
+    sensor = hass.states.get("sensor.plex_server_1")
     assert sensor.state == "0"
 
 
@@ -175,7 +175,7 @@ async def test_ignore_plex_web_client(
     await wait_for_debouncer(hass)
 
     active_sessions = mock_plex_server._plex_server.sessions()
-    sensor = hass.states.get("sensor.plex_plex_server_1")
+    sensor = hass.states.get("sensor.plex_server_1")
     assert sensor.state == str(len(active_sessions))
 
     media_players = hass.states.async_entity_ids("media_player")
