@@ -27,7 +27,7 @@ def get_all_disk_mounts() -> set[str]:
             continue
         except OSError as err:
             _LOGGER.warning(
-                "Mountpoint %s was excluded because of: %s", part.mountpoint, str(err)
+                "Mountpoint %s was excluded because of: %s", part.mountpoint, err
             )
             continue
         if usage.total > 0 and part.device != "":
