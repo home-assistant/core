@@ -510,6 +510,9 @@ async def test_connection_aborted_wrong_device(
         "with mac address `11:22:33:44:55:ab`" in caplog.text
     )
 
+    assert "Error getting setting up connection for" not in caplog.text
+    assert len(mock_client.disconnect.mock_calls) == 1
+
     caplog.clear()
     # Make sure discovery triggers a reconnect to the correct device
     service_info = dhcp.DhcpServiceInfo(
