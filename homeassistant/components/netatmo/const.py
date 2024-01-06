@@ -49,6 +49,13 @@ NETATMO_CREATE_SENSOR = "netatmo_create_sensor"
 NETATMO_CREATE_SWITCH = "netatmo_create_switch"
 NETATMO_CREATE_WEATHER_SENSOR = "netatmo_create_weather_sensor"
 
+ISSUE_ID_WEBHOOK_NOT_REGISTERED = "webhook_not_registered"
+ISSUE_ID_WEBHOOK_REGISTRATION_ERROR = "webhook_registration_error"
+WEBHOOK_HELP_LINK = "https://www.home-assistant.io/integrations/netatmo/#webhook-events"
+
+EXCEPTION_ID_WEBHOOK_HTTPS_REQUIRED = "webhook_https_required"
+EXCEPTION_ID_WEBHOOK_REGISTRATION_FAILED = "webhook_registration_failed"
+
 CONF_AREA_NAME = "area_name"
 CONF_CLOUDHOOK_URL = "cloudhook_url"
 CONF_LAT_NE = "lat_ne"
@@ -100,6 +107,8 @@ SERVICE_SET_SCHEDULE = "set_schedule"
 SERVICE_SET_PRESET_MODE_WITH_END_DATETIME = "set_preset_mode_with_end_datetime"
 SERVICE_SET_TEMPERATURE_WITH_END_DATETIME = "set_temperature_with_end_datetime"
 SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD = "set_temperature_with_time_period"
+SERVICE_REGISTER_WEBHOOK = "register_webhook"
+SERVICE_UNREGISTER_WEBHOOK = "unregister_webhook"
 
 # Climate events
 EVENT_TYPE_CANCEL_SET_POINT = "cancel_set_point"
