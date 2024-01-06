@@ -67,6 +67,9 @@
     "gate": {
       "name": "Gate"
     },
+    "screen": {
+      "name": "Screen"
+    },
     "shade": {
       "name": "Shade"
     },

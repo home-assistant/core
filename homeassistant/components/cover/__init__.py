@@ -70,6 +70,7 @@ class CoverDeviceClass(StrEnum):
     DOOR = "door"
     GARAGE = "garage"
     GATE = "gate"
+    SCREEN = "screen"
     SHADE = "shade"
     SHUTTER = "shutter"
     WINDOW = "window"
