@@ -1868,7 +1868,7 @@ sensirion-ble==0.1.1
 sensorpro-ble==0.5.3
 
 # homeassistant.components.sensorpush
-sensorpush-ble==1.6.1
+sensorpush-ble==1.6.2
 
 # homeassistant.components.sentry
 sentry-sdk==1.37.1
