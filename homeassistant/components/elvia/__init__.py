@@ -8,7 +8,6 @@ from elvia import error as ElviaError
 
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import CONF_METERING_POINT_ID, LOGGER
@@ -30,8 +29,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Import meter values."""
         try:
             await importer.import_meter_values()
-        except ElviaError.AuthError as exception:
-            LOGGER.error("Invalid authentication %s", exception)
         except ElviaError.ElviaException as exception:
             LOGGER.exception("Unknown error %s", exception)
 
@@ -39,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await importer.import_meter_values()
     except ElviaError.ElviaException as exception:
         LOGGER.exception("Unknown error %s", exception)
-        raise ConfigEntryNotReady(exception) from exception
+        return False
 
     entry.async_on_unload(
         async_track_time_interval(
