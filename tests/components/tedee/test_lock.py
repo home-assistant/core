@@ -221,7 +221,12 @@ async def test_new_lock(
     assert state is None
 
     mock_tedee.locks_dict[666666] = TedeeLock("Lock-4E5F", 666666, 2)
-    mock_tedee.locks_dict[777777] = TedeeLock("Lock-6G7H", 777777, 4)
+    mock_tedee.locks_dict[777777] = TedeeLock(
+        "Lock-6G7H",
+        777777,
+        4,
+        is_enabled_pullspring=True,
+    )
 
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
