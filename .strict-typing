@@ -141,8 +141,11 @@ homeassistant.components.dlna_dmr.*
 homeassistant.components.dnsip.*
 homeassistant.components.doorbird.*
 homeassistant.components.dormakaba_dkey.*
+homeassistant.components.downloader.*
 homeassistant.components.dsmr.*
 homeassistant.components.dunehd.*
+homeassistant.components.duotecno.*
+homeassistant.components.easyenergy.*
 homeassistant.components.efergy.*
 homeassistant.components.electrasmart.*
 homeassistant.components.electric_kiwi.*
@@ -150,6 +153,7 @@ homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
 homeassistant.components.emulated_hue.*
 homeassistant.components.energy.*
+homeassistant.components.energyzero.*
 homeassistant.components.enigma2.*
 homeassistant.components.esphome.*
 homeassistant.components.event.*
@@ -262,6 +266,7 @@ homeassistant.components.media_source.*
 homeassistant.components.metoffice.*
 homeassistant.components.mikrotik.*
 homeassistant.components.min_max.*
+homeassistant.components.minecraft_server.*
 homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
@@ -292,6 +297,7 @@ homeassistant.components.opensky.*
 homeassistant.components.openuv.*
 homeassistant.components.otbr.*
 homeassistant.components.overkiz.*
+homeassistant.components.p1_monitor.*
 homeassistant.components.peco.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
@@ -307,7 +313,9 @@ homeassistant.components.purpleair.*
 homeassistant.components.pushbullet.*
 homeassistant.components.pvoutput.*
 homeassistant.components.qnap_qsw.*
+homeassistant.components.rabbitair.*
 homeassistant.components.radarr.*
+homeassistant.components.rainforest_raven.*
 homeassistant.components.rainmachine.*
 homeassistant.components.raspberry_pi.*
 homeassistant.components.rdw.*

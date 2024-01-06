@@ -497,6 +497,9 @@ omit =
     homeassistant/components/hive/sensor.py
     homeassistant/components/hive/switch.py
     homeassistant/components/hive/water_heater.py
+    homeassistant/components/hko/__init__.py
+    homeassistant/components/hko/weather.py
+    homeassistant/components/hko/coordinator.py
     homeassistant/components/hlk_sw16/__init__.py
     homeassistant/components/hlk_sw16/switch.py
     homeassistant/components/home_connect/__init__.py
@@ -698,6 +701,7 @@ omit =
     homeassistant/components/lutron/__init__.py
     homeassistant/components/lutron/binary_sensor.py
     homeassistant/components/lutron/cover.py
+    homeassistant/components/lutron/entity.py
     homeassistant/components/lutron/light.py
     homeassistant/components/lutron/switch.py
     homeassistant/components/lutron_caseta/__init__.py
@@ -1001,6 +1005,11 @@ omit =
     homeassistant/components/qrcode/image_processing.py
     homeassistant/components/quantum_gateway/device_tracker.py
     homeassistant/components/qvr_pro/*
+    homeassistant/components/rabbitair/__init__.py
+    homeassistant/components/rabbitair/const.py
+    homeassistant/components/rabbitair/coordinator.py
+    homeassistant/components/rabbitair/entity.py
+    homeassistant/components/rabbitair/fan.py
     homeassistant/components/rachio/__init__.py
     homeassistant/components/rachio/binary_sensor.py
     homeassistant/components/rachio/device.py
@@ -1033,6 +1042,7 @@ omit =
     homeassistant/components/renson/fan.py
     homeassistant/components/renson/binary_sensor.py
     homeassistant/components/renson/number.py
+    homeassistant/components/renson/time.py
     homeassistant/components/raspyrfm/*
     homeassistant/components/recollect_waste/sensor.py
     homeassistant/components/recorder/repack.py
