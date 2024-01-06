@@ -4,26 +4,26 @@
       "alertSettings": {
         "faultCode": {
           "major": {
-            "email": "**REDACTED**",
+            "email": true,
             "sms": false
           },
           "minor": {
-            "email": "**REDACTED**",
+            "email": false,
             "sms": false
           }
         },
         "operatingSetPoint": {
-          "email": "**REDACTED**",
+          "email": false,
           "sms": false
         },
         "tankTemperature": {
           "highTemperature": {
-            "email": "**REDACTED**",
+            "email": false,
             "sms": false,
             "value": 160
           },
           "lowTemperature": {
-            "email": "**REDACTED**",
+            "email": false,
             "sms": false,
             "value": 120
           }
@@ -31,26 +31,26 @@
       },
       "brand": "aosmith",
       "deviceType": "NEXT_GEN_HEAT_PUMP",
-      "dsn": "**REDACTED**",
+      "dsn": "dsn",
       "hardware": {
         "hasBluetooth": true,
         "interface": "CONTROL_PANEL"
       },
-      "id": "**REDACTED**",
+      "id": "id",
       "install": {
-        "address": "**REDACTED**",
-        "city": "**REDACTED**",
+        "address": "sample_address",
+        "city": "sample_city",
         "country": "United States",
         "date": "2023-09-29",
-        "email": "**REDACTED**",
+        "email": "sample_email",
         "group": "Residential",
         "location": "Basement",
-        "phone": "**REDACTED**",
-        "postalCode": "**REDACTED**",
+        "phone": "sample_phone",
+        "postalCode": "sample_postal_code",
         "professional": false,
-        "registeredOwner": "**REDACTED**",
+        "registeredOwner": "sample_owner",
         "registrationDate": "2023-12-24",
-        "state": "**REDACTED**"
+        "state": "sample_state"
       },
       "isRegistered": true,
       "junctionId": "junctionId",
@@ -59,14 +59,14 @@
       "name": "Water Heater",
       "permissions": "USER",
       "productId": "100350404",
-      "serial": "**REDACTED**",
+      "serial": "sample_serial",
       "users": [
         {
-          "contactId": "**REDACTED**",
-          "email": "**REDACTED**",
-          "firstName": "**REDACTED**",
+          "contactId": "sample_contact_id",
+          "email": "sample_email",
+          "firstName": "sample_first_name",
           "isSelf": true,
-          "lastName": "**REDACTED**",
+          "lastName": "sample_last_name",
           "permissions": "USER"
         }
       ],
@@ -77,8 +77,8 @@
         "isWifi": true,
         "lastUpdate": 1703138389000,
         "signalStrength": null,
-        "heaterSsid": "**REDACTED**",
-        "ssid": "**REDACTED**",
+        "heaterSsid": "sample_heater_ssid",
+        "ssid": "sample_ssid",
         "temperatureSetpoint": 145,
         "temperatureSetpointPending": false,
         "temperatureSetpointPrevious": 145,
