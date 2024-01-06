@@ -129,6 +129,10 @@
       "name": "Set minimum Floor Heating Valve Position",
       "description": "Sets the minimum Floor Heating Valve Position.",
       "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "The ID of the climate entity. Use 'all' keyword to switch the profile for all entities."
+        },
         "valve_position": {
           "name": "Minimum Valve Position",
           "description": "The minimum Vale Postion (must be between 0.0 and 1.0)."
