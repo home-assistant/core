@@ -8,13 +8,15 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant.components import stt, tts, wake_word
-from homeassistant.components.assist_pipeline import DOMAIN
+from homeassistant.components.assist_pipeline import DOMAIN, select
 from homeassistant.components.assist_pipeline.pipeline import (
     PipelineData,
     PipelineStorageCollection,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.setup import async_setup_component
 
@@ -272,7 +274,7 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
 
 
 @pytest.fixture
-async def init_supporting_components(
+async def init_components(
     hass: HomeAssistant,
     mock_stt_provider: MockSttProvider,
     mock_stt_provider_entity: MockSttProviderEntity,
@@ -282,13 +284,24 @@ async def init_supporting_components(
     config_flow_fixture,
 ):
     """Initialize relevant components with empty configs."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    assert await async_setup_component(hass, "assist_pipeline", {})
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    dev_reg = dr.async_get(hass)
+    dev_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "test")},
+    )
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
-            config_entry, [stt.DOMAIN, wake_word.DOMAIN]
+            config_entry, [Platform.STT, Platform.WAKE_WORD, Platform.SELECT]
         )
         return True
 
@@ -297,7 +310,7 @@ async def init_supporting_components(
     ) -> bool:
         """Unload up test config entry."""
         await hass.config_entries.async_unload_platforms(
-            config_entry, [stt.DOMAIN, wake_word.DOMAIN]
+            config_entry, [Platform.STT, Platform.WAKE_WORD, Platform.SELECT]
         )
         return True
 
@@ -318,6 +331,22 @@ async def init_supporting_components(
         async_add_entities(
             [mock_wake_word_provider_entity, mock_wake_word_provider_entity2]
         )
+
+    async def async_setup_entry_select_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Set up test select platform via config entry."""
+        entities = [
+            select.AssistPipelineSelect(hass, "test", "test-prefix"),
+            select.VadSensitivitySelect(hass, "test-prefix"),
+        ]
+        for ent in entities:
+            ent._attr_device_info = dr.DeviceInfo(
+                identifiers={("test", "test")},
+            )
+        async_add_entities(entities)
 
     mock_integration(
         hass,
@@ -349,24 +378,21 @@ async def init_supporting_components(
             async_setup_entry=async_setup_entry_wake_word_platform,
         ),
     )
+    mock_platform(
+        hass,
+        "test.select",
+        MockPlatform(
+            async_setup_entry=async_setup_entry_select_platform,
+        ),
+    )
     mock_platform(hass, "test.config_flow")
 
-    assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, tts.DOMAIN, {"tts": {"platform": "test"}})
     assert await async_setup_component(hass, stt.DOMAIN, {"stt": {"platform": "test"}})
     assert await async_setup_component(hass, "media_source", {})
 
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-
-
-@pytest.fixture
-async def init_components(hass: HomeAssistant, init_supporting_components):
-    """Initialize relevant components with empty configs."""
-
-    assert await async_setup_component(hass, "assist_pipeline", {})
 
 
 @pytest.fixture
