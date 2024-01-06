@@ -164,7 +164,7 @@ async def test_import(
 @pytest.mark.parametrize(
     ("raise_error", "reason"),
     [
-        (HTTPError("", 404, "", None, {}), "cannot_connect"),
+        (HTTPError("", 404, "", Message(), None), "cannot_connect"),
         (Exception, "unknown"),
     ],
 )
