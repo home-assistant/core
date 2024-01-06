@@ -959,7 +959,7 @@ class ZWaveStatisticsSensor(SensorEntity):
             if key not in data:
                 return None
             data = data[key]
-        return self.entity_description.convert(cast(int, data))
+        return self.entity_description.convert(data)
 
     @callback
     def statistics_updated(self, event_data: dict) -> None:
