@@ -125,7 +125,7 @@ _P = ParamSpec("_P")
 
 
 @callback
-def handle_exceptions(
+def convert_exceptions_to_homeassistant_error(
     func: Callable[Concatenate[_GuardianEntityT, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_GuardianEntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate to handle exceptions from the Guardian API."""

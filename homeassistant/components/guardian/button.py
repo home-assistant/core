@@ -19,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import GuardianData, ValveControllerEntity, ValveControllerEntityDescription
 from .const import API_SYSTEM_DIAGNOSTICS, DOMAIN
-from .util import handle_exceptions
+from .util import convert_exceptions_to_homeassistant_error
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -95,7 +95,7 @@ class GuardianButton(ValveControllerEntity, ButtonEntity):
 
         self._client = data.client
 
-    @handle_exceptions
+    @convert_exceptions_to_homeassistant_error
     async def async_press(self) -> None:
         """Send out a restart command."""
         async with self._client:

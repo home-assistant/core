@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import GuardianData, ValveControllerEntity, ValveControllerEntityDescription
 from .const import API_VALVE_STATUS, API_WIFI_STATUS, DOMAIN
-from .util import handle_exceptions
+from .util import convert_exceptions_to_homeassistant_error
 
 ATTR_AVG_CURRENT = "average_current"
 ATTR_CONNECTED_CLIENTS = "connected_clients"
@@ -138,14 +138,14 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
         """Return True if entity is on."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 
-    @handle_exceptions
+    @convert_exceptions_to_homeassistant_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         async with self._client:
             await self.entity_description.off_fn(self._client)
         await self.coordinator.async_request_refresh()
 
-    @handle_exceptions
+    @convert_exceptions_to_homeassistant_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         async with self._client:
