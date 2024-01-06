@@ -225,7 +225,7 @@ async def test_cleanup_disconnected_locks(
     locks = [device.name for device in devices]
     assert "Lock-1A2B" in locks
 
-    # remove a lock and reload integration
+    # remove a lock and wait for coordinator
     mock_tedee.locks_dict.pop(12345)
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
