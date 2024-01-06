@@ -9,6 +9,11 @@ from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.core import async_get_hass
+from homeassistant.core import callback
+
+from homeassistant.components import person
+
 from homeassistant.const import CONF_COMMAND
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -46,6 +51,7 @@ class CommandLineAuthProvider(AuthProvider):
     # which keys to accept from a program's stdout
     ALLOWED_META_KEYS = (
         "name",
+        "fullname",
         "group",
         "local_only",
     )
@@ -109,13 +115,42 @@ class CommandLineAuthProvider(AuthProvider):
         self, flow_result: Mapping[str, str]
     ) -> Credentials:
         """Get credentials based on the flow result."""
-        username = flow_result["username"]
-        for credential in await self.async_credentials():
-            if credential.data["username"] == username:
-                return credential
+        username = flow_result["username"].strip().casefold()
 
+        users = await self.store.async_get_users()
+        for user in users:
+            if user.name and user.name.strip().casefold() != username:
+                continue
+
+            if not user.is_active:
+                continue
+
+            for credential in await self.async_credentials():
+                if credential.data["username"] and credential.data["username"].strip().casefold() == username:
+                    return credential
+
+            cred = self.async_create_credentials({"username": username})
+            await self.store.async_link_user(user, cred)
+            return cred
+
+        hass = async_get_hass()
+        meta = self._user_meta.get(flow_result["username"], {})
+
+        provider = _async_get_hass_provider(hass)
+        await provider.async_initialize()
+
+        user = await hass.auth.async_create_user(flow_result["username"], group_ids=[meta.get("group")])
+        cred = await provider.async_get_or_create_credentials({"username": flow_result["username"]})
+
+        pretty_name = meta.get("fullname")
+        if not pretty_name:
+            pretty_name = flow_result["username"]
+        await provider.data.async_save()
+        await hass.auth.async_link_user(user, cred)
+        if "person" in hass.config.components:
+            await person.async_create_person(hass, pretty_name, user_id=user.id)
         # Create new credentials.
-        return self.async_create_credentials({"username": username})
+        return cred
 
     async def async_user_meta_for_credentials(
         self, credentials: Credentials
@@ -125,13 +160,15 @@ class CommandLineAuthProvider(AuthProvider):
         Currently, supports name, group and local_only.
         """
         meta = self._user_meta.get(credentials.data["username"], {})
-        return UserMeta(
-            name=meta.get("name"),
+        username = credentials.data["username"]
+        user_meta = UserMeta(
+            name=credentials.data["username"],
             is_active=True,
             group=meta.get("group"),
             local_only=meta.get("local_only") == "true",
         )
 
+        return user_meta
 
 class CommandLineLoginFlow(LoginFlow):
     """Handler for the login flow."""
@@ -165,3 +202,13 @@ class CommandLineLoginFlow(LoginFlow):
             ),
             errors=errors,
         )
+
+
+@callback
+def _async_get_hass_provider(hass):
+    """Get the Home Assistant auth provider."""
+    for prv in hass.auth.auth_providers:
+        if prv.type == "homeassistant":
+            return prv
+
+    raise RuntimeError("No Home Assistant provider found")
