@@ -527,11 +527,13 @@ async def async_setup_multi_components(
     config: dict[str, Any],
 ) -> None:
     """Set up multiple domains. Log on failure."""
+    # Avoid creating tasks for domains that were setup in a previous stage
+    domains_not_yet_setup = domains - hass.config.components
     futures = {
         domain: hass.async_create_task(
             async_setup_component(hass, domain, config), f"setup component {domain}"
         )
-        for domain in domains
+        for domain in domains_not_yet_setup
     }
     results = await asyncio.gather(*futures.values(), return_exceptions=True)
     for idx, domain in enumerate(futures):
