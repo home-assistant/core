@@ -5,8 +5,8 @@ from collections import defaultdict
 from collections.abc import Mapping
 import contextlib
 from dataclasses import asdict, dataclass
-from functools import lru_cache
 from enum import StrEnum
+from functools import lru_cache
 import logging
 from typing import Any, cast
 
