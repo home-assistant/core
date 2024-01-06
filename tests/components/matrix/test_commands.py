@@ -1,5 +1,5 @@
 """Test MatrixBot's ability to parse and respond to commands in matrix rooms."""
-
+from collections.abc import Callable
 from functools import partial
 from typing import Any
 
@@ -22,7 +22,10 @@ from tests.components.matrix.conftest import (
 
 @dataclass
 class CommandTestParameters:
-    """Dataclass of parameters representing the command config parameters and expected result state."""
+    """Dataclass of parameters representing the command config parameters and expected result state.
+
+    Switches behavior based on `room_id` and `expected_event_room_data`.
+    """
 
     room_id: RoomID
     room_message: RoomMessageText
@@ -112,7 +115,7 @@ self_command_global = partial(
 
 @pytest.mark.parametrize("room_id", [TEST_ROOM_A_ID, TEST_ROOM_B_ID, TEST_ROOM_C_ID])
 @pytest.mark.parametrize(
-    "partial_param",
+    "command_params_by_room",
     [
         word_command_global,
         expr_command_global,
@@ -125,26 +128,28 @@ self_command_global = partial(
 async def test_commands(
     hass: HomeAssistant,
     matrix_bot: MatrixBot,
-    command_events,
-    partial_param,
+    command_events: list[Event],
+    command_params_by_room: Callable[[RoomID], CommandTestParameters],
     room_id: RoomID,
 ):
     """Test that the configured commands are used correctly."""
-    command_param: CommandTestParameters = partial_param(room_id=room_id)
-    room = MatrixRoom(room_id=command_param.room_id, own_user_id=matrix_bot._mx_id)
+    command_params: CommandTestParameters = command_params_by_room(room_id)
+    room = MatrixRoom(room_id=command_params.room_id, own_user_id=matrix_bot._mx_id)
 
     await hass.async_start()
     assert len(command_events) == 0
-    await matrix_bot._handle_room_message(room, command_param.room_message)
+    await matrix_bot._handle_room_message(room, command_params.room_message)
     await hass.async_block_till_done()
 
-    match command_events:
-        case [Event() as event] if command_param.expected_event_data is not None:
-            assert event.data == command_param.expected_event_data
-        case [] if command_param.expected_event_data is None:
-            pass
-        case _:
-            pytest.fail(f"Unexpected data in {command_events=}")
+    if command_params.expected_event_data is None:
+        # No Event data specified: MatrixBot should not treat this message as a Command
+        assert len(command_events) == 0
+
+    else:
+        # MatrixBot should emit exactly one Event with matching data from this Command
+        assert len(command_events) == 1
+        event = command_events[0]
+        assert event.data == command_params.expected_event_data
 
 
 async def test_commands_parsing(hass: HomeAssistant, matrix_bot: MatrixBot):
