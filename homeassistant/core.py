@@ -2109,11 +2109,11 @@ class ServiceRegistry:
                 raise ValueError(
                     "Invalid argument return_response=True when blocking=False"
                 )
-            if handler.supports_response == SupportsResponse.NONE:
+            if handler.supports_response is SupportsResponse.NONE:
                 raise ValueError(
                     "Invalid argument return_response=True when handler does not support responses"
                 )
-        elif handler.supports_response == SupportsResponse.ONLY:
+        elif handler.supports_response is SupportsResponse.ONLY:
             raise ValueError(
                 "Service call requires responses but caller did not ask for responses"
             )
