@@ -544,34 +544,6 @@ async def async_setup_multi_components(
             )
 
 
-async def _async_preload_dependencies_info(
-    hass: core.HomeAssistant, integrations_to_process: list[loader.Integration]
-) -> None:
-    """Preload manifest.json and installed requirements in a single batch."""
-    #
-    # This will allow us to cache the result of the manifest.json and
-    # if the requirements are installed in a single batch. This avoids
-    # spawning two executor jobs for each integration we are about to load.
-    #
-    preload_manifests: set[str] = set()
-    preload_installed_versions: set[str] = set()
-    for itg in integrations_to_process:
-        preload_manifests.update(itg.dependencies)
-        preload_manifests.update(itg.after_dependencies)
-        preload_installed_versions.update(itg.requirements)
-    if preload_manifests:
-        deps = await loader.async_get_integrations(hass, preload_manifests)
-        # Add the requirements of the dependencies to the need_requirement_versions
-        # so we can load them in a single batch.
-        for dependant_itg in deps.values():
-            if isinstance(dependant_itg, loader.Integration):
-                preload_installed_versions.update(dependant_itg.requirements)
-    if preload_installed_versions:
-        await requirements.async_load_installed_versions(
-            hass, preload_installed_versions
-        )
-
-
 async def _async_set_up_integrations(
     hass: core.HomeAssistant, config: dict[str, Any]
 ) -> None:
@@ -582,6 +554,8 @@ async def _async_set_up_integrations(
     watch_task = asyncio.create_task(_async_watch_pending_setups(hass))
 
     domains_to_setup = _get_domains(hass, config)
+
+    needed_requirements: set[str] = set()
 
     # Resolve all dependencies so we know all integrations
     # that will have to be loaded and start rightaway
@@ -599,7 +573,18 @@ async def _async_set_up_integrations(
             if isinstance(int_or_exc, loader.Integration)
         ]
 
-        await _async_preload_dependencies_info(hass, integrations_to_process)
+        manifest_deps: set[str] = set()
+        for itg in integrations_to_process:
+            manifest_deps.update(itg.dependencies)
+            manifest_deps.update(itg.after_dependencies)
+            needed_requirements.update(itg.requirements)
+
+        if manifest_deps:
+            deps = await loader.async_get_integrations(hass, manifest_deps)
+            for dependant_itg in deps.values():
+                if isinstance(dependant_itg, loader.Integration):
+                    needed_requirements.update(dependant_itg.requirements)
+
         resolve_dependencies_tasks = [
             itg.resolve_dependencies()
             for itg in integrations_to_process
@@ -620,6 +605,17 @@ async def _async_set_up_integrations(
                 to_resolve.add(dep)
 
     _LOGGER.info("Domains to be set up: %s", domains_to_setup)
+
+    # Load requirements in a single job but
+    # do not wait for it to finish before
+    # starting setup of integrations since
+    # this is an optimization and not a
+    # requirement and we do not want to wait
+    # for the requirements to be checked
+    # before starting setup of integrations
+    installed_requirements_task = asyncio.create_task(
+        requirements.async_load_installed_versions(hass, needed_requirements)
+    )
 
     # Initialize recorder
     if "recorder" in domains_to_setup:
@@ -712,6 +708,7 @@ async def _async_set_up_integrations(
         _LOGGER.warning("Setup timed out for bootstrap - moving forward")
 
     watch_task.cancel()
+    await installed_requirements_task
     async_dispatcher_send(hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, {})
 
     _LOGGER.debug(
