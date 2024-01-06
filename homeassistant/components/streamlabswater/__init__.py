@@ -107,12 +107,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def set_away_mode(service: ServiceCall) -> None:
         """Set the StreamLabsWater Away Mode."""
         away_mode = service.data.get(ATTR_AWAY_MODE)
-        location_id = (
-            service.data.get(CONF_LOCATION_ID) or list(coordinator.data.values())[0]
-        )
+        location_id = service.data.get(CONF_LOCATION_ID) or list(coordinator.data)[0]
         client.update_location(location_id, away_mode)
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_SET_AWAY_MODE, set_away_mode, schema=SET_AWAY_MODE_SCHEMA
     )
 
