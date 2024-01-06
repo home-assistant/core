@@ -227,9 +227,6 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        if preset_mode not in self.preset_modes:
-            raise ValueError(f"Unsupported preset mode: {preset_mode}")
-
         if self._device.boostMode and preset_mode != PRESET_BOOST:
             await self._device.set_boost(False)
         if preset_mode == PRESET_BOOST:
