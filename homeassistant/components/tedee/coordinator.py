@@ -85,6 +85,26 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             ", ".join(map(str, self.tedee_client.locks_dict.keys())),
         )
 
+        self._async_add_remove_locks()
+        return self.tedee_client.locks_dict
+
+    async def _async_update(self, update_fn: Callable[[], Awaitable[None]]) -> None:
+        """Update locks based on update function."""
+        try:
+            await update_fn()
+        except TedeeLocalAuthException as ex:
+            raise ConfigEntryAuthFailed(
+                "Authentication failed. Local access token is invalid"
+            ) from ex
+
+        except TedeeDataUpdateException as ex:
+            _LOGGER.debug("Error while updating data: %s", str(ex))
+            raise UpdateFailed("Error while updating data: %s" % str(ex)) from ex
+        except (TedeeClientException, TimeoutError) as ex:
+            raise UpdateFailed("Querying API failed. Error: %s" % str(ex)) from ex
+
+    def _async_add_remove_locks(self) -> None:
+        """Add new locks, remove non-existing locks."""
         if not self._current_locks:
             self._current_locks = set(self.tedee_client.locks_dict.keys())
 
@@ -106,19 +126,3 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
                     callback(lock_id)
 
         self._current_locks = set(self.tedee_client.locks_dict.keys())
-        return self.tedee_client.locks_dict
-
-    async def _async_update(self, update_fn: Callable[[], Awaitable[None]]) -> None:
-        """Update locks based on update function."""
-        try:
-            await update_fn()
-        except TedeeLocalAuthException as ex:
-            raise ConfigEntryAuthFailed(
-                "Authentication failed. Local access token is invalid"
-            ) from ex
-
-        except TedeeDataUpdateException as ex:
-            _LOGGER.debug("Error while updating data: %s", str(ex))
-            raise UpdateFailed("Error while updating data: %s" % str(ex)) from ex
-        except (TedeeClientException, TimeoutError) as ex:
-            raise UpdateFailed("Querying API failed. Error: %s" % str(ex)) from ex
