@@ -22,8 +22,6 @@ async def async_setup_entry(
     """Set up the Tedee lock entity."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    current_locks = set(coordinator.data.keys())
-
     entities: list[TedeeLockEntity] = []
     for lock in coordinator.data.values():
         if lock.is_enabled_pullspring:
@@ -31,19 +29,14 @@ async def async_setup_entry(
         else:
             entities.append(TedeeLockEntity(lock, coordinator))
 
-    def _async_add_new_locks() -> None:
-        new_locks = set(coordinator.data.keys()) - current_locks
-        new_entities: list[TedeeLockEntity] = []
-        for lock_id in new_locks:
-            lock = coordinator.data[lock_id]
-            if lock.is_enabled_pullspring:
-                new_entities.append(TedeeLockWithLatchEntity(lock, coordinator))
-            else:
-                new_entities.append(TedeeLockEntity(lock, coordinator))
+    def _async_add_new_lock(lock_id: int) -> None:
+        lock = coordinator.data[lock_id]
+        if lock.is_enabled_pullspring:
+            async_add_entities([TedeeLockWithLatchEntity(lock, coordinator)])
+        else:
+            async_add_entities([TedeeLockEntity(lock, coordinator)])
 
-        async_add_entities(new_entities)
-
-    coordinator.async_add_listener(_async_add_new_locks)
+    coordinator.new_lock_callbacks.append(_async_add_new_lock)
 
     async_add_entities(entities)
 

@@ -48,6 +48,8 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         )
 
         self._next_get_locks = time.time()
+        self._current_locks: set[int] = set()
+        self.new_lock_callbacks: list[Callable[[int], None]] = []
 
     @property
     def bridge(self) -> TedeeBridge:
@@ -79,6 +81,16 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             "available_locks: %s",
             ", ".join(map(str, self.tedee_client.locks_dict.keys())),
         )
+
+        if not self._current_locks:
+            self._current_locks = set(self.tedee_client.locks_dict.keys())
+
+        if len(self._current_locks) < len(self.tedee_client.locks_dict):
+            new_locks = set(self.tedee_client.locks_dict.keys()) - self._current_locks
+            _LOGGER.debug("New locks found: %s", ", ".join(map(str, new_locks)))
+            for lock_id in new_locks:
+                for callback in self.new_lock_callbacks:
+                    callback(lock_id)
 
         return self.tedee_client.locks_dict
 
