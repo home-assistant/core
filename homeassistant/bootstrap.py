@@ -606,13 +606,16 @@ async def _async_set_up_integrations(
 
     _LOGGER.info("Domains to be set up: %s", domains_to_setup)
 
-    # Load requirements in a single job but
-    # do not wait for it to finish before
-    # starting setup of integrations since
-    # this is an optimization and not a
-    # requirement and we do not want to wait
-    # for the requirements to be checked
-    # before starting setup of integrations
+    # Load requirements in a single job in a background task
+    # so we can continue to setup integrations. We do not wait
+    # for it to be done because async_setup_multi_components will
+    # still check if the requirements need to be installed if it
+    # has not finished in time for a specific integration. In most
+    # cases it will be done before the first integration is setup
+    # or shortly after which allows to know in advance if a
+    # requirement needs to be installed without having to wait
+    # for the requirements lock which is a high contention lock
+    # during startup because all integrations need it.
     installed_requirements_task = asyncio.create_task(
         requirements.async_load_installed_versions(hass, needed_requirements)
     )
