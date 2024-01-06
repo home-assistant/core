@@ -1316,12 +1316,8 @@ async def get_system_health_info(hass: HomeAssistant, domain: str) -> dict[str, 
 @contextmanager
 def mock_config_flow(domain: str, config_flow: type[ConfigFlow]) -> None:
     """Mock a config flow handler."""
-    handler = config_entries.HANDLERS.get(domain)
-    config_entries.HANDLERS[domain] = config_flow
-    _LOGGER.info("Adding mock config flow: %s", domain)
-    yield
-    if handler:
-        config_entries.HANDLERS[domain] = handler
+    with patch.dict(config_entries.HANDLERS, {domain: config_flow}):
+        yield
 
 
 def mock_integration(
