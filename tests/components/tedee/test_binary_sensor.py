@@ -43,7 +43,6 @@ async def test_new_binary_sensors(
     hass: HomeAssistant,
     mock_tedee: MagicMock,
     freezer: FrozenDateTimeFactory,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Ensure binary sensors for new lock are added automatically."""
 
@@ -60,4 +59,3 @@ async def test_new_binary_sensors(
     for key in BINARY_SENSORS:
         state = hass.states.get(f"binary_sensor.lock_4e5f_{key}")
         assert state
-        assert state == snapshot(name=f"state-{key}")

@@ -58,9 +58,8 @@ async def async_setup_entry(
     """Set up the Tedee sensor entity."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    entities: list[TedeeBinarySensorEntity] = []
     for entity_description in ENTITIES:
-        entities.extend(
+        async_add_entities(
             [
                 TedeeBinarySensorEntity(lock, coordinator, entity_description)
                 for lock in coordinator.data.values()
@@ -77,8 +76,6 @@ async def async_setup_entry(
         )
 
     coordinator.new_lock_callbacks.append(_async_add_new_lock)
-
-    async_add_entities(entities)
 
 
 class TedeeBinarySensorEntity(TedeeDescriptionEntity, BinarySensorEntity):
