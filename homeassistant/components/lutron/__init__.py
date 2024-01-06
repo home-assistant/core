@@ -26,6 +26,7 @@ from .const import DOMAIN
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.COVER,
+    Platform.FAN,
     Platform.LIGHT,
     Platform.SCENE,
     Platform.SWITCH,
@@ -158,13 +159,14 @@ class LutronButton:
 class LutronData:
     """Storage class for platform global data."""
 
-    client: Lutron
-    covers: list[tuple[str, Output]]
-    lights: list[tuple[str, Output]]
-    switches: list[tuple[str, Output]]
-    scenes: list[tuple[str, str, Button, Led]]
     binary_sensors: list[tuple[str, OccupancyGroup]]
     buttons: list[LutronButton]
+    client: Lutron
+    covers: list[tuple[str, Output]]
+    fans: list[tuple[str, Output]]
+    lights: list[tuple[str, Output]]
+    scenes: list[tuple[str, str, Button, Led]]
+    switches: list[tuple[str, Output]]
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -180,13 +182,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     _LOGGER.info("Connected to main repeater at %s", host)
 
     entry_data = LutronData(
-        client=lutron_client,
-        covers=[],
-        lights=[],
-        switches=[],
-        scenes=[],
         binary_sensors=[],
         buttons=[],
+        client=lutron_client,
+        covers=[],
+        fans=[],
+        lights=[],
+        scenes=[],
+        switches=[],
     )
     # Sort our devices into types
     _LOGGER.debug("Start adding devices")
@@ -196,6 +199,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             _LOGGER.debug("Working on output %s", output.type)
             if output.type == "SYSTEM_SHADE":
                 entry_data.covers.append((area.name, output))
+            elif output.type == "CEILING_FAN_TYPE":
+                entry_data.fans.append((area.name, output))
             elif output.is_dimmable:
                 entry_data.lights.append((area.name, output))
             else:
