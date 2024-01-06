@@ -1138,6 +1138,203 @@ async def test_friendly_name_description_device_class_name(
 
 
 @pytest.mark.parametrize(
+    (
+        "has_entity_name",
+        "translation_key",
+        "translations",
+        "placeholders",
+        "expected_friendly_name",
+    ),
+    (
+        (False, None, None, None, "Entity Blu"),
+        (True, None, None, None, "Device Bla Entity Blu"),
+        (
+            True,
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "English ent"
+                },
+            },
+            None,
+            "Device Bla English ent",
+        ),
+        (
+            True,
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent"
+                },
+            },
+            {"placeholder": "special"},
+            "Device Bla special English ent",
+        ),
+        (
+            True,
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "English ent {placeholder}"
+                },
+            },
+            {"placeholder": "special"},
+            "Device Bla English ent special",
+        ),
+    ),
+)
+async def test_entity_name_translation_placeholders(
+    hass: HomeAssistant,
+    has_entity_name: bool,
+    translation_key: str | None,
+    translations: dict[str, str] | None,
+    placeholders: dict[str, str] | None,
+    expected_friendly_name: str | None,
+) -> None:
+    """Test friendly name when the entity name translation has placeholders."""
+
+    async def async_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        return translations[language]
+
+    ent = MockEntity(
+        unique_id="qwer",
+        device_info={
+            "identifiers": {("hue", "1234")},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+            "name": "Device Bla",
+        },
+    )
+    ent.entity_description = entity.EntityDescription(
+        "test",
+        has_entity_name=has_entity_name,
+        translation_key=translation_key,
+        name="Entity Blu",
+    )
+    if placeholders is not None:
+        ent._attr_translation_placeholders = placeholders
+    with patch(
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
+        side_effect=async_get_translations,
+    ):
+        await _test_friendly_name(hass, ent, expected_friendly_name)
+
+
+@pytest.mark.parametrize(
+    (
+        "translation_key",
+        "translations",
+        "placeholders",
+        "release_channel",
+        "expected_error",
+    ),
+    (
+        (
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent {2ndplaceholder}"
+                },
+            },
+            {"placeholder": "special"},
+            "stable",
+            (
+                "has translation placeholders '{'placeholder': 'special'}' which do "
+                "not match the name '{placeholder} English ent {2ndplaceholder}'"
+            ),
+        ),
+        (
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent {2ndplaceholder}"
+                },
+            },
+            {"placeholder": "special"},
+            "beta",
+            "HomeAssistantError: Missing placeholder '2ndplaceholder'",
+        ),
+        (
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent"
+                },
+            },
+            None,
+            "stable",
+            (
+                "has translation placeholders '{}' which do "
+                "not match the name '{placeholder} English ent'"
+            ),
+        ),
+    ),
+)
+async def test_entity_name_translation_placeholder_errors(
+    hass: HomeAssistant,
+    translation_key: str | None,
+    translations: dict[str, str] | None,
+    placeholders: dict[str, str] | None,
+    release_channel: str,
+    expected_error: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test entity name translation has placeholder issues."""
+
+    async def async_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        return translations[language]
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities([ent])
+        return True
+
+    ent = MockEntity(
+        unique_id="qwer",
+    )
+    ent.entity_description = entity.EntityDescription(
+        "test",
+        has_entity_name=True,
+        translation_key=translation_key,
+        name="Entity Blu",
+    )
+    if placeholders is not None:
+        ent._attr_translation_placeholders = placeholders
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    caplog.clear()
+
+    with patch(
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
+        side_effect=async_get_translations,
+    ), patch(
+        "homeassistant.helpers.entity.get_release_channel", return_value=release_channel
+    ):
+        await entity_platform.async_setup_entry(config_entry)
+
+    assert expected_error in caplog.text
+
+
+@pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
     (
         (False, "Entity Blu", "Entity Blu"),
@@ -1392,8 +1589,8 @@ async def test_translation_key(hass: HomeAssistant) -> None:
     assert mock_entity2.translation_key == "from_entity_description"
 
 
-async def test_repr_using_stringify_state() -> None:
-    """Test that repr uses stringify state."""
+async def test_repr(hass) -> None:
+    """Test Entity.__repr__."""
 
     class MyEntity(MockEntity):
         """Mock entity."""
@@ -1403,8 +1600,19 @@ async def test_repr_using_stringify_state() -> None:
             """Return the state."""
             raise ValueError("Boom")
 
+    platform = MockEntityPlatform(hass, domain="hello")
     my_entity = MyEntity(entity_id="test.test", available=False)
+
+    # Not yet added
+    assert str(my_entity) == "<entity unknown.unknown=unknown>"
+
+    # Added
+    await platform.async_add_entities([my_entity])
     assert str(my_entity) == "<entity test.test=unavailable>"
+
+    # Removed
+    await platform.async_remove_entity(my_entity.entity_id)
+    assert str(my_entity) == "<entity unknown.unknown=unknown>"
 
 
 async def test_warn_using_async_update_ha_state(

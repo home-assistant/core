@@ -10,7 +10,11 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import HomeAssistant
 from homeassistant.util.decorator import Registry
 
-from .common import async_capture_events, import_and_test_deprecated_constant_enum
+from .common import (
+    async_capture_events,
+    help_test_all,
+    import_and_test_deprecated_constant_enum,
+)
 
 
 @pytest.fixture
@@ -802,6 +806,11 @@ async def test_find_flows_by_init_data_type(
     )
     assert len(wifi_flows) == 0
     assert len(manager.async_progress()) == 0
+
+
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(data_entry_flow)
 
 
 @pytest.mark.parametrize(("enum"), list(data_entry_flow.FlowResultType))
