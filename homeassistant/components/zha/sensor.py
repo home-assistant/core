@@ -216,9 +216,9 @@ class PollableSensor(Sensor):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
-        assert self._cancel_refresh_handle
-        self._cancel_refresh_handle()
-        self._cancel_refresh_handle = None
+        if self._cancel_refresh_handle is not None:
+            self._cancel_refresh_handle()
+            self._cancel_refresh_handle = None
         self.debug("stopped polling during device removal")
         await super().async_will_remove_from_hass()
 
