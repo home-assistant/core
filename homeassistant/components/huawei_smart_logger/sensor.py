@@ -211,7 +211,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Huawei Smart Loggers sensors."""
-    coordinator = hass.data[DOMAIN]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
     _LOGGER.debug("In sensor.py async_setup_entry")
     async_add_entities(
         HuaweiSmartLogger3000Sensor(coordinator, description)
@@ -238,10 +238,8 @@ class HuaweiSmartLogger3000Sensor(
         self.entity_description = description
         self.entity_id = ENTITY_ID_SENSOR_FORMAT.format(description.key)
         self._attr_unique_id = f"huaweismartlogger3000_{description.key}"
-        self._state: StateType = None
-        self._attrs: dict[str, Any] = {}
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.api.HOST)},
+            identifiers={(DOMAIN, coordinator.api.HOST)},
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="Huawei",
             model="Smart Logger 3000",
@@ -251,7 +249,4 @@ class HuaweiSmartLogger3000Sensor(
     @property
     def native_value(self) -> StateType:
         """Return native value for entity."""
-        if self.coordinator.data:
-            state = self.coordinator.data[self.entity_description.key]
-            self._state = cast(StateType, self.entity_description.value(state))
-        return self._state
+        return self.coordinator.data.get(self.entity_description.key)

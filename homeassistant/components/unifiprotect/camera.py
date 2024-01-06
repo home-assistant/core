@@ -191,13 +191,11 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self._attr_motion_detection_enabled = (
             motion_enabled if motion_enabled is not None else True
         )
+        state_type_is_connected = updated_device.state is StateType.CONNECTED
         self._attr_is_recording = (
-            updated_device.state == StateType.CONNECTED and updated_device.is_recording
+            state_type_is_connected and updated_device.is_recording
         )
-        is_connected = (
-            self.data.last_update_success
-            and updated_device.state == StateType.CONNECTED
-        )
+        is_connected = self.data.last_update_success and state_type_is_connected
         # some cameras have detachable lens that could cause the camera to be offline
         self._attr_available = is_connected and updated_device.is_video_ready
 
