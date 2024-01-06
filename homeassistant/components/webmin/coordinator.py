@@ -9,6 +9,7 @@ from yarl import URL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONNECTIONS,
+    ATTR_IDENTIFIERS,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -37,6 +38,9 @@ class WebminUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the Webmin data update coordinator."""
 
+        super().__init__(
+            hass, logger=LOGGER, name=DOMAIN, update_interval=DEFAULT_SCAN_INTERVAL
+        )
         base_url = URL.build(
             scheme="https" if config_entry.options[CONF_SSL] else "http",
             user=config_entry.options[CONF_USERNAME],
@@ -56,10 +60,6 @@ class WebminUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             name=config_entry.options[CONF_HOST],
         )
 
-        super().__init__(
-            hass, logger=LOGGER, name=DOMAIN, update_interval=DEFAULT_SCAN_INTERVAL
-        )
-
     async def async_setup(self) -> None:
         """Provide needed data to the device info."""
         ifaces = [iface for iface in self.data["active_interfaces"] if "ether" in iface]
@@ -67,6 +67,9 @@ class WebminUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.mac_address = format_mac(ifaces[0]["ether"])
         self.device_info[ATTR_CONNECTIONS] = {
             (CONNECTION_NETWORK_MAC, format_mac(iface["ether"])) for iface in ifaces
+        }
+        self.device_info[ATTR_IDENTIFIERS] = {
+            (DOMAIN, format_mac(iface["ether"])) for iface in ifaces
         }
 
     async def _async_update_data(self) -> dict[str, Any]:
