@@ -10,7 +10,11 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from tests.common import MockConfigEntry, load_json_array_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 FIXTURE_USER_INPUT = {
     CONF_EMAIL: "testemail@example.com",
@@ -47,9 +51,13 @@ def get_devices_fixture() -> str:
 async def mock_client(get_devices_fixture: str) -> Generator[MagicMock, None, None]:
     """Return a mocked client."""
     get_devices_fixture = load_json_array_fixture(f"{get_devices_fixture}.json", DOMAIN)
+    get_energy_use_fixture = load_json_object_fixture(
+        "get_energy_use_data.json", DOMAIN
+    )
 
     client_mock = MagicMock(AOSmithAPIClient)
     client_mock.get_devices = AsyncMock(return_value=get_devices_fixture)
+    client_mock.get_energy_use_data = AsyncMock(return_value=get_energy_use_fixture)
 
     return client_mock
 

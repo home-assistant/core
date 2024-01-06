@@ -19,6 +19,7 @@ from homeassistant.components import (
     number,
     timer,
     vacuum,
+    valve,
     water_heater,
 )
 from homeassistant.components.alarm_control_panel import (
@@ -1444,6 +1445,19 @@ class AlexaModeController(AlexaCapability):
             ):
                 return f"{cover.ATTR_POSITION}.{mode}"
 
+        # Valve position state
+        if self.instance == f"{valve.DOMAIN}.state":
+            # Return state instead of position when using ModeController.
+            state = self.entity.state
+            if state in (
+                valve.STATE_OPEN,
+                valve.STATE_OPENING,
+                valve.STATE_CLOSED,
+                valve.STATE_CLOSING,
+                STATE_UNKNOWN,
+            ):
+                return f"state.{state}"
+
         return None
 
     def configuration(self) -> dict[str, Any] | None:
@@ -1540,6 +1554,32 @@ class AlexaModeController(AlexaCapability):
             )
             return self._resource.serialize_capability_resources()
 
+        # Valve position resources
+        if self.instance == f"{valve.DOMAIN}.state":
+            supported_features = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            self._resource = AlexaModeResource(
+                ["Preset", AlexaGlobalCatalog.SETTING_PRESET], False
+            )
+            modes = 0
+            if supported_features & valve.ValveEntityFeature.OPEN:
+                self._resource.add_mode(
+                    f"state.{valve.STATE_OPEN}",
+                    ["Open", AlexaGlobalCatalog.SETTING_PRESET],
+                )
+                modes += 1
+            if supported_features & valve.ValveEntityFeature.CLOSE:
+                self._resource.add_mode(
+                    f"state.{valve.STATE_CLOSED}",
+                    ["Closed", AlexaGlobalCatalog.SETTING_PRESET],
+                )
+                modes += 1
+
+            # Alexa requiers at least 2 modes
+            if modes == 1:
+                self._resource.add_mode(f"state.{PRESET_MODE_NA}", [PRESET_MODE_NA])
+
+            return self._resource.serialize_capability_resources()
+
         return {}
 
     def semantics(self) -> dict[str, Any] | None:
@@ -1574,6 +1614,34 @@ class AlexaModeController(AlexaCapability):
                 raise_labels,
                 "SetMode",
                 {"mode": f"{cover.ATTR_POSITION}.{cover.STATE_OPEN}"},
+            )
+
+            return self._semantics.serialize_semantics()
+
+        # Valve Position
+        if self.instance == f"{valve.DOMAIN}.state":
+            close_labels = [AlexaSemantics.ACTION_CLOSE]
+            open_labels = [AlexaSemantics.ACTION_OPEN]
+            self._semantics = AlexaSemantics()
+
+            self._semantics.add_states_to_value(
+                [AlexaSemantics.STATES_CLOSED],
+                f"state.{valve.STATE_CLOSED}",
+            )
+            self._semantics.add_states_to_value(
+                [AlexaSemantics.STATES_OPEN],
+                f"state.{valve.STATE_OPEN}",
+            )
+
+            self._semantics.add_action_to_directive(
+                close_labels,
+                "SetMode",
+                {"mode": f"state.{valve.STATE_CLOSED}"},
+            )
+            self._semantics.add_action_to_directive(
+                open_labels,
+                "SetMode",
+                {"mode": f"state.{valve.STATE_OPEN}"},
             )
 
             return self._semantics.serialize_semantics()
@@ -1690,6 +1758,10 @@ class AlexaRangeController(AlexaCapability):
                     (i for i, v in enumerate(speed_list) if v == speed), None
                 )
                 return speed_index
+
+        # Valve Position
+        if self.instance == f"{valve.DOMAIN}.{valve.ATTR_POSITION}":
+            return self.entity.attributes.get(valve.ATTR_CURRENT_POSITION)
 
         return None
 
@@ -1814,6 +1886,17 @@ class AlexaRangeController(AlexaCapability):
 
             return self._resource.serialize_capability_resources()
 
+        # Valve Position Resources
+        if self.instance == f"{valve.DOMAIN}.{valve.ATTR_POSITION}":
+            self._resource = AlexaPresetResource(
+                ["Opening", AlexaGlobalCatalog.SETTING_OPENING],
+                min_value=0,
+                max_value=100,
+                precision=1,
+                unit=AlexaGlobalCatalog.UNIT_PERCENT,
+            )
+            return self._resource.serialize_capability_resources()
+
         return {}
 
     def semantics(self) -> dict[str, Any] | None:
@@ -1890,6 +1973,25 @@ class AlexaRangeController(AlexaCapability):
             )
             return self._semantics.serialize_semantics()
 
+        # Valve Position
+        if self.instance == f"{valve.DOMAIN}.{valve.ATTR_POSITION}":
+            close_labels = [AlexaSemantics.ACTION_CLOSE]
+            open_labels = [AlexaSemantics.ACTION_OPEN]
+            self._semantics = AlexaSemantics()
+
+            self._semantics.add_states_to_value([AlexaSemantics.STATES_CLOSED], value=0)
+            self._semantics.add_states_to_range(
+                [AlexaSemantics.STATES_OPEN], min_value=1, max_value=100
+            )
+
+            self._semantics.add_action_to_directive(
+                close_labels, "SetRangeValue", {"rangeValue": 0}
+            )
+            self._semantics.add_action_to_directive(
+                open_labels, "SetRangeValue", {"rangeValue": 100}
+            )
+            return self._semantics.serialize_semantics()
+
         return None
 
 
@@ -1963,6 +2065,10 @@ class AlexaToggleController(AlexaCapability):
             is_on = bool(self.entity.attributes.get(fan.ATTR_OSCILLATING))
             return "ON" if is_on else "OFF"
 
+        # Stop Valve
+        if self.instance == f"{valve.DOMAIN}.stop":
+            return "OFF"
+
         return None
 
     def capability_resources(self) -> dict[str, list[dict[str, Any]]]:
@@ -1973,6 +2079,10 @@ class AlexaToggleController(AlexaCapability):
             self._resource = AlexaCapabilityResource(
                 [AlexaGlobalCatalog.SETTING_OSCILLATE, "Rotate", "Rotation"]
             )
+            return self._resource.serialize_capability_resources()
+
+        if self.instance == f"{valve.DOMAIN}.stop":
+            self._resource = AlexaCapabilityResource(["Stop"])
             return self._resource.serialize_capability_resources()
 
         return {}

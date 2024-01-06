@@ -669,7 +669,6 @@
 # ---
 # name: test_setup_hass
   ReadOnlyDict({
-    'apparent_temperature': 18.0,
     'attribution': 'Swedish weather institute (SMHI)',
     'cloud_coverage': 100,
     'forecast': list([
