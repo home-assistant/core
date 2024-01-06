@@ -522,10 +522,10 @@ class EvoBroker:
                 ),
                 err,
             )
-            self.temps = {}  # high-presicion temps now stale
+            self.temps = {}  # high-precision temps now stale
 
         except Exception:  # pylint: disable=broad-except
-            self.temps = {}  # high-presicion temps now stale
+            self.temps = {}  # high-precision temps now considered stale
             raise
 
         else:
