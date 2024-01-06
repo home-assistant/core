@@ -18,6 +18,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
@@ -50,6 +51,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         )
 
         self._next_get_locks = time.time()
+        self._current_locks: set[int] = set()
 
     @property
     def bridge(self) -> TedeeBridge:
@@ -81,6 +83,20 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             "available_locks: %s",
             ", ".join(map(str, self.tedee_client.locks_dict.keys())),
         )
+
+        if not self._current_locks:
+            self._current_locks = set(self.tedee_client.locks_dict.keys())
+
+        if removed_locks := self._current_locks - set(
+            self.tedee_client.locks_dict.keys()
+        ):
+            _LOGGER.debug("Removed locks: %s", ", ".join(map(str, removed_locks)))
+            device_registry = dr.async_get(self.hass)
+            for lock_id in removed_locks:
+                if device := device_registry.async_get_device(
+                    identifiers={(DOMAIN, str(lock_id))}
+                ):
+                    device_registry.async_remove_device(device.id)
 
         return self.tedee_client.locks_dict
 

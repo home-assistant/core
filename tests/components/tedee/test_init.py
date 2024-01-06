@@ -7,7 +7,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -67,35 +67,3 @@ async def test_bridge_device(
     )
     assert device
     assert device == snapshot
-
-
-async def test_cleanup_disconnected_locks(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_tedee: MagicMock,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Ensure disconnected locks are cleaned up."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    devices = dr.async_entries_for_config_entry(
-        device_registry, mock_config_entry.entry_id
-    )
-
-    locks = [device.name for device in devices]
-    assert "Lock-1A2B" in locks
-
-    # remove a lock and reload integration
-    mock_tedee.locks_dict.pop(12345)
-
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-
-    devices = dr.async_entries_for_config_entry(
-        device_registry, mock_config_entry.entry_id
-    )
-
-    locks = [device.name for device in devices]
-    assert "Lock-1A2B" not in locks

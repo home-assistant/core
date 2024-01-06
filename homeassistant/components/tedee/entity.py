@@ -44,7 +44,7 @@ class TedeeEntity(CoordinatorEntity[TedeeApiCoordinator]):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self._lock.lock_id in self.coordinator.data
+        return super().available and self._lock.is_connected
 
 
 class TedeeDescriptionEntity(TedeeEntity):
