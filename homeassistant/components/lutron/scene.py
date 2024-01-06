@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pylutron import Button, Led, Lutron, LutronEntity
+from pylutron import Button, Lutron, LutronEntity
 
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
@@ -28,7 +28,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            LutronScene(area_name, keypad_name, device, led, entry_data.client)
+            LutronScene(area_name, keypad_name, device, entry_data.client)
             for area_name, keypad_name, device, led in entry_data.scenes
         ],
         True,
@@ -39,25 +39,19 @@ class LutronScene(LutronDevice, Scene):
     """Representation of a Lutron Scene."""
 
     _lutron_device: Button
+    _attr_name = None
 
     def __init__(
         self,
         area_name: str,
         keypad_name: str,
         lutron_device: LutronEntity,
-        lutron_led: Led,
         controller: Lutron,
     ) -> None:
         """Initialize the scene/button."""
         super().__init__(area_name, lutron_device, controller)
         self._keypad_name = keypad_name
-        self._led = lutron_led
 
     def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         self._lutron_device.press()
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return f"{self._area_name} {self._keypad_name}: {self._lutron_device.name}"

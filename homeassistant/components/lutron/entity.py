@@ -3,6 +3,8 @@ from typing import Any
 
 from pylutron import Lutron, LutronEntity, LutronEvent
 
+from homeassistant.core import DOMAIN
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 
@@ -10,6 +12,7 @@ class LutronDevice(Entity):
     """Representation of a Lutron device entity."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self, area_name: str, lutron_device: LutronEntity, controller: Lutron
@@ -18,6 +21,12 @@ class LutronDevice(Entity):
         self._lutron_device = lutron_device
         self._controller = controller
         self._area_name = area_name
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, lutron_device.uuid)},
+            manufacturer="Lutron",
+            name=lutron_device.name,
+            suggested_area=area_name,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -28,11 +37,6 @@ class LutronDevice(Entity):
     ) -> None:
         """Run when invoked by pylutron when the device state changes."""
         self.schedule_update_ha_state()
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return f"{self._area_name} {self._lutron_device.name}"
 
     @property
     def unique_id(self) -> str | None:

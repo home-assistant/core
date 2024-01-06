@@ -9,6 +9,7 @@ from pylutron import Button, Led, Lutron, LutronEntity, Output
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, LutronData
@@ -81,6 +82,7 @@ class LutronLed(LutronDevice, SwitchEntity):
     """Representation of a Lutron Keypad LED."""
 
     _lutron_device: Led
+    _attr_name = "LED"
 
     def __init__(
         self,
@@ -94,6 +96,12 @@ class LutronLed(LutronDevice, SwitchEntity):
         self._keypad_name = keypad_name
         self._scene_name = scene_device.name
         super().__init__(area_name, led_device, controller)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, scene_device.uuid)},
+            manufacturer="Lutron",
+            name=scene_device.name,
+            suggested_area=area_name,
+        )
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the LED on."""
@@ -116,11 +124,6 @@ class LutronLed(LutronDevice, SwitchEntity):
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._lutron_device.last_state
-
-    @property
-    def name(self) -> str:
-        """Return the name of the LED."""
-        return f"{self._area_name} {self._keypad_name}: {self._scene_name} LED"
 
     def update(self) -> None:
         """Call when forcing a refresh of the device."""
