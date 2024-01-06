@@ -107,7 +107,8 @@ async def test_wrapped_bleak_client_local_adapter_only(
         "00:00:00:00:00:01",
         "hci0",
     )
-    cancel = manager.async_register_scanner(scanner, True)
+    scanner.connectable = True
+    cancel = manager.async_register_scanner(scanner)
     inject_advertisement_with_source(
         hass, switchbot_device, switchbot_adv, "00:00:00:00:00:01"
     )
@@ -187,7 +188,7 @@ async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
         connector,
         True,
     )
-    cancel = manager.async_register_scanner(scanner, True)
+    cancel = manager.async_register_scanner(scanner)
     inject_advertisement_with_source(
         hass, switchbot_device, switchbot_adv, "00:00:00:00:00:01"
     )
@@ -291,7 +292,7 @@ async def test_ble_device_with_proxy_client_out_of_connections(
 
     connector = HaBluetoothConnector(MockBleakClient, "esp32", lambda: False)
     scanner = FakeScanner("esp32", "esp32", connector, True)
-    cancel = manager.async_register_scanner(scanner, True)
+    cancel = manager.async_register_scanner(scanner)
     inject_advertisement_with_source(
         hass, switchbot_proxy_device_no_connection_slot, switchbot_adv, "esp32"
     )
@@ -356,7 +357,7 @@ async def test_ble_device_with_proxy_clear_cache(
 
     connector = HaBluetoothConnector(MockBleakClient, "esp32", lambda: True)
     scanner = FakeScanner("esp32", "esp32", connector, True)
-    cancel = manager.async_register_scanner(scanner, True)
+    cancel = manager.async_register_scanner(scanner)
     inject_advertisement_with_source(
         hass, switchbot_proxy_device_with_connection_slot, switchbot_adv, "esp32"
     )
@@ -466,7 +467,7 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         connector,
         True,
     )
-    cancel = manager.async_register_scanner(scanner, True)
+    cancel = manager.async_register_scanner(scanner)
     assert manager.async_discovered_devices(True) == [
         switchbot_proxy_device_no_connection_slot
     ]
@@ -578,7 +579,7 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         connector,
         True,
     )
-    cancel = manager.async_register_scanner(scanner, True)
+    cancel = manager.async_register_scanner(scanner)
     assert manager.async_discovered_devices(True) == [
         switchbot_proxy_device_no_connection_slot
     ]

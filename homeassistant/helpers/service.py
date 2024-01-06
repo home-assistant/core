@@ -53,12 +53,12 @@ from . import (
     template,
     translation,
 )
+from .group import expand_entity_ids
 from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType
 
 if TYPE_CHECKING:
     from .entity import Entity
-    from .entity_platform import EntityPlatform
 
     _EntityT = TypeVar("_EntityT", bound=Entity)
 
@@ -88,6 +88,7 @@ def _base_components() -> dict[str, ModuleType]:
         media_player,
         remote,
         siren,
+        todo,
         update,
         vacuum,
         water_heater,
@@ -106,6 +107,7 @@ def _base_components() -> dict[str, ModuleType]:
         "media_player": media_player,
         "remote": remote,
         "siren": siren,
+        "todo": todo,
         "update": update,
         "vacuum": vacuum,
         "water_heater": water_heater,
@@ -458,9 +460,9 @@ def async_extract_referenced_entity_ids(
     if not selector.has_any_selector:
         return selected
 
-    entity_ids = selector.entity_ids
+    entity_ids: set[str] | list[str] = selector.entity_ids
     if expand_group:
-        entity_ids = hass.components.group.expand_entity_ids(entity_ids)
+        entity_ids = expand_entity_ids(hass, entity_ids)
 
     selected.referenced.update(entity_ids)
 
@@ -739,7 +741,7 @@ def async_set_service_schema(
 
 def _get_permissible_entity_candidates(
     call: ServiceCall,
-    platforms: Iterable[EntityPlatform],
+    entities: dict[str, Entity],
     entity_perms: None | (Callable[[str, str], bool]),
     target_all_entities: bool,
     all_referenced: set[str] | None,
@@ -752,9 +754,8 @@ def _get_permissible_entity_candidates(
             # is allowed to control.
             return [
                 entity
-                for platform in platforms
-                for entity in platform.entities.values()
-                if entity_perms(entity.entity_id, POLICY_CONTROL)
+                for entity_id, entity in entities.items()
+                if entity_perms(entity_id, POLICY_CONTROL)
             ]
 
         assert all_referenced is not None
@@ -769,29 +770,26 @@ def _get_permissible_entity_candidates(
                 )
 
     elif target_all_entities:
-        return [
-            entity for platform in platforms for entity in platform.entities.values()
-        ]
+        return list(entities.values())
 
     # We have already validated they have permissions to control all_referenced
     # entities so we do not need to check again.
-    assert all_referenced is not None
-    if single_entity := len(all_referenced) == 1 and list(all_referenced)[0]:
-        for platform in platforms:
-            if (entity := platform.entities.get(single_entity)) is not None:
-                return [entity]
+    if TYPE_CHECKING:
+        assert all_referenced is not None
+    if (
+        len(all_referenced) == 1
+        and (single_entity := list(all_referenced)[0])
+        and (entity := entities.get(single_entity)) is not None
+    ):
+        return [entity]
 
-    return [
-        platform.entities[entity_id]
-        for platform in platforms
-        for entity_id in all_referenced.intersection(platform.entities)
-    ]
+    return [entities[entity_id] for entity_id in all_referenced.intersection(entities)]
 
 
 @bind_hass
 async def entity_service_call(
     hass: HomeAssistant,
-    platforms: Iterable[EntityPlatform],
+    registered_entities: dict[str, Entity],
     func: str | Callable[..., Coroutine[Any, Any, ServiceResponse]],
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
@@ -830,7 +828,7 @@ async def entity_service_call(
     # A list with entities to call the service on.
     entity_candidates = _get_permissible_entity_candidates(
         call,
-        platforms,
+        registered_entities,
         entity_perms,
         target_all_entities,
         all_referenced,
@@ -998,7 +996,7 @@ def verify_domain_control(
     """Ensure permission to access any entity under domain in service call."""
 
     def decorator(
-        service_handler: Callable[[ServiceCall], Any]
+        service_handler: Callable[[ServiceCall], Any],
     ) -> Callable[[ServiceCall], Any]:
         """Decorate."""
         if not asyncio.iscoroutinefunction(service_handler):

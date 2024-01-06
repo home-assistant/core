@@ -70,7 +70,7 @@ from .const import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class TomorrowioSensorEntityDescription(SensorEntityDescription):
     """Describes a Tomorrow.io sensor entity."""
 

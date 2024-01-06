@@ -70,14 +70,14 @@ SUPPORTED_PUBLIC_SENSOR_TYPES: tuple[str, ...] = (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class NetatmoRequiredKeysMixin:
     """Mixin for required keys."""
 
     netatmo_name: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class NetatmoSensorEntityDescription(SensorEntityDescription, NetatmoRequiredKeysMixin):
     """Describes Netatmo sensor entity."""
 
