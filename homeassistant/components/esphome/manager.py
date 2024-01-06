@@ -392,7 +392,6 @@ class ESPHomeManager:
             )
             # Re-connection logic will trigger after this
             await self.cli.disconnect()
-            return
 
     async def _on_connnect(self) -> None:
         """Subscribe to states and list entities on successful API login."""
