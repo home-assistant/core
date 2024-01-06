@@ -14,7 +14,7 @@ from zwave_js_server.model.version import VersionInfo
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.logger import DOMAIN as LOGGER_DOMAIN, SERVICE_SET_LEVEL
 from homeassistant.components.persistent_notification import async_dismiss
-from homeassistant.components.zwave_js import DOMAIN, async_remove_config_entry_device
+from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
@@ -30,6 +30,7 @@ from homeassistant.setup import async_setup_component
 from .common import AIR_TEMPERATURE_SENSOR, EATON_RF9640_ENTITY
 
 from tests.common import MockConfigEntry, async_get_persistent_notifications
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(name="connect_timeout")
@@ -1141,6 +1142,7 @@ async def test_replace_different_node(
     hank_binary_switch_state,
     client,
     integration,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test when a node is replaced with a different node."""
     dev_reg = dr.async_get(hass)
@@ -1337,6 +1339,8 @@ async def test_replace_different_node(
     client.driver.receive_event(event)
     await hass.async_block_till_done()
 
+    assert await async_setup_component(hass, "config", {})
+
     # node ID based device identifier should be moved from the new hank device
     # to the old multisensor device and both the old and new devices should exist.
     old_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
@@ -1355,11 +1359,52 @@ async def test_replace_different_node(
         (DOMAIN, multisensor_6_device_id_ext),
     }
 
-    # Attempting to remove the hank device should pass, but removing the multisensor should not
-    assert await async_remove_config_entry_device(hass, integration, hank_device)
-    assert not await async_remove_config_entry_device(
-        hass, integration, multisensor_6_device
+    ws_client = await hass_ws_client(hass)
+
+    # Simulate the driver not being ready to ensure that the device removal handler
+    # does not crash
+    driver = client.driver
+    client.driver = None
+
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": integration.entry_id,
+            "device_id": hank_device.id,
+        }
     )
+    response = await ws_client.receive_json()
+    assert not response["success"]
+
+    client.driver = driver
+
+    # Attempting to remove the hank device should pass, but removing the multisensor should not
+    await ws_client.send_json(
+        {
+            "id": 2,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": integration.entry_id,
+            "device_id": hank_device.id,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+
+    await ws_client.send_json(
+        {
+            "id": 3,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": integration.entry_id,
+            "device_id": multisensor_6_device.id,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert not response["success"]
+    # assert await async_remove_config_entry_device(hass, integration, hank_device)
+    # assert not await async_remove_config_entry_device(
+    #     hass, integration, multisensor_6_device
+    # )
 
 
 async def test_node_model_change(

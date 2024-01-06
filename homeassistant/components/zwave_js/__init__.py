@@ -519,7 +519,14 @@ class ControllerEvents:
 
         if device_id_ext:
             # If there is a device with this node ID but with a different hardware
-            # signature, remove the node ID based identifier from it.
+            # signature, remove the node ID based identifier from it. The hardware
+            # signature can be different for one of two reasons: 1) in the ideal
+            # scenario, the node was replaced with a different node that's a different
+            # device entirely, or 2) the device erroneously advertised the wrong
+            # hardware identifiers (this is known to happen due to poor RF conditions).
+            # While we would like to remove the old device automatically for case 1, we
+            # have no way to distinguish between these reasons so we leave it up to the
+            # user to remove the old device manually.
             if (
                 node_id_device
                 and len(node_id_device.identifiers) == 2
@@ -1008,8 +1015,12 @@ async def async_remove_config_entry_device(
     """Remove a config entry from a device."""
     entry_hass_data = hass.data[DOMAIN][config_entry.entry_id]
     client: ZwaveClient = entry_hass_data[DATA_CLIENT]
-    assert client.driver
-    driver: Driver = client.driver
+
+    # Driver may not be ready yet so we can't allow users to remove a device since
+    # we need to check if the device is still known to the controller
+    if (driver := client.driver) is None:
+        LOGGER.error("Driver for %s is not ready", config_entry.title)
+        return False
 
     # If a node is found on the controller that matches the hardware based identifier
     # on the device, prevent the device from being removed.
