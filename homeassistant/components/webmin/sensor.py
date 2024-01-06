@@ -22,18 +22,21 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
         translation_key="load_1m",
         icon="mdi:cpu-64-bit",
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="load_5m",
         translation_key="load_5m",
         icon="mdi:cpu-64-bit",
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="load_15m",
         translation_key="load_15m",
         icon="mdi:cpu-64-bit",
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="mem_total",
@@ -44,6 +47,7 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
         device_class=SensorDeviceClass.DATA_SIZE,
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="mem_free",
@@ -54,6 +58,7 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
         device_class=SensorDeviceClass.DATA_SIZE,
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="swap_total",
@@ -64,6 +69,7 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
         device_class=SensorDeviceClass.DATA_SIZE,
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="swap_free",
@@ -74,6 +80,7 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
         device_class=SensorDeviceClass.DATA_SIZE,
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
 ]
 
