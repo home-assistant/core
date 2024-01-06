@@ -39,7 +39,7 @@ from .enum_mapper import EsphomeEnumMapper
 
 _LOGGER = logging.getLogger(__name__)
 
-UDP_PORT = 0  # Set to 0 to let the OS pick a free random port
+UDP_PORT = 10500  # Set to 0 to let the OS pick a free random port
 UDP_MAX_PACKET_SIZE = 1024
 
 _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
