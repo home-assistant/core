@@ -322,9 +322,8 @@ async def _async_register_hass_zc_service(
 def _match_against_props(matcher: dict[str, str], props: dict[str, str | None]) -> bool:
     """Check a matcher to ensure all values in props."""
     for key, value in matcher.items():
-        if key not in props or not _memorized_fnmatch(
-            (props[key] or "").lower(), value
-        ):
+        prop_val = props.get(key)
+        if prop_val is None or not _memorized_fnmatch(prop_val.lower(), value):
             return False
     return True
 
