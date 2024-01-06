@@ -4,7 +4,6 @@ from typing import Any
 from unittest.mock import MagicMock
 from urllib.parse import urlparse
 
-from freezegun.api import FrozenDateTimeFactory
 from pytedee_async.exception import (
     TedeeAuthException,
     TedeeClientException,
@@ -93,9 +92,7 @@ async def test_webhook_post(
     hass_client_no_auth: ClientSessionGenerator,
     body: dict[str, Any],
     expected_code: HTTPStatus,
-    current_request_with_host: None,
     side_effect: Exception,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test webhook callback."""
 

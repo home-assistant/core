@@ -46,23 +46,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    webhook_registered = False
     register_lock = asyncio.Lock()
 
     async def unregister_webhook(_: Any) -> None:
-        nonlocal webhook_registered
         async with register_lock:
-            if not webhook_registered:
-                return
             await coordinator.tedee_client.delete_webhooks()
             webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
             _LOGGER.debug("Unregistered Tedee webhook")
 
     async def register_webhook() -> None:
-        nonlocal webhook_registered
         async with register_lock:
-            if webhook_registered:
-                return
             webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
             webhook_name = "Tedee"
             if entry.title != NAME:
@@ -82,7 +75,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.async_on_unload(
                 hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
             )
-            webhook_registered = True
 
     entry.async_create_background_task(
         hass, register_webhook(), "tedee_register_webhook"
