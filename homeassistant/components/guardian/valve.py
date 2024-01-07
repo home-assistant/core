@@ -7,7 +7,6 @@ from enum import StrEnum
 from typing import Any
 
 from aioguardian import Client
-from aioguardian.errors import GuardianError
 
 from homeassistant.components.valve import (
     ValveDeviceClass,
@@ -17,11 +16,11 @@ from homeassistant.components.valve import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import GuardianData, ValveControllerEntity, ValveControllerEntityDescription
 from .const import API_VALVE_STATUS, DOMAIN
+from .util import convert_exceptions_to_homeassistant_error
 
 ATTR_AVG_CURRENT = "average_current"
 ATTR_CONNECTED_CLIENTS = "connected_clients"
@@ -172,35 +171,23 @@ class ValveControllerValve(ValveControllerEntity, ValveEntity):
         """Return if the valve is opening or not."""
         return self.entity_description.is_opening_fn(self.coordinator.data)
 
+    @convert_exceptions_to_homeassistant_error
     async def async_close_valve(self) -> None:
         """Close the valve."""
-        try:
+        async with self._client:
             await self.entity_description.close_coro_fn(self._client)
-        except GuardianError as err:
-            raise HomeAssistantError(
-                f"Error while closing {self.entity_id}: {err}"
-            ) from err
+        await self.coordinator.async_request_refresh()
 
-        self._attr_is_closed = True
-        self.async_write_ha_state()
-
+    @convert_exceptions_to_homeassistant_error
     async def async_open_valve(self) -> None:
         """Open the valve."""
-        try:
+        async with self._client:
             await self.entity_description.open_coro_fn(self._client)
-        except GuardianError as err:
-            raise HomeAssistantError(
-                f"Error while opening {self.entity_id}: {err}"
-            ) from err
+        await self.coordinator.async_request_refresh()
 
-        self._attr_is_closed = True
-        self.async_write_ha_state()
-
+    @convert_exceptions_to_homeassistant_error
     async def async_stop_valve(self) -> None:
         """Stop the valve."""
-        try:
+        async with self._client:
             await self.entity_description.halt_coro_fn(self._client)
-        except GuardianError as err:
-            raise HomeAssistantError(
-                f"Error while halting {self.entity_id}: {err}"
-            ) from err
+        await self.coordinator.async_request_refresh()
