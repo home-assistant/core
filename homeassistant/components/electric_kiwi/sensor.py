@@ -41,7 +41,7 @@ ATTR_HOP_PERCENTAGE = "hop_percentage"
 class ElectricKiwiAccountRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_func: Callable[[AccountBalance], str | datetime]
+    value_func: Callable[[AccountBalance], float | int | datetime]
 
 
 @dataclass(frozen=True)
