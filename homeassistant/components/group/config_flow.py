@@ -9,13 +9,14 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.const import CONF_ENTITIES, CONF_TYPE
+from homeassistant.const import CONF_ENTITIES, CONF_TYPE, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
+    SchemaFlowError,
     SchemaFlowFormStep,
     SchemaFlowMenuStep,
     SchemaOptionsFlowHandler,
@@ -42,6 +43,7 @@ _STATISTIC_MEASURES = [
     "last",
     "range",
     "sum",
+    "template",
     "product",
 ]
 
@@ -104,6 +106,7 @@ SENSOR_CONFIG_EXTENDS = {
             options=_STATISTIC_MEASURES, translation_key=CONF_TYPE
         ),
     ),
+    vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
 }
 SENSOR_OPTIONS = {
     vol.Optional(CONF_IGNORE_NON_NUMERIC, default=False): selector.BooleanSelector(),
@@ -112,6 +115,7 @@ SENSOR_OPTIONS = {
             options=_STATISTIC_MEASURES, translation_key=CONF_TYPE
         ),
     ),
+    vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
 }
 
 
@@ -176,6 +180,28 @@ def set_group_type(
     return _set_group_type
 
 
+def validate_value_template(
+    previous: Callable[
+        [SchemaCommonFlowHandler, dict[str, Any]], Coroutine[Any, Any, dict[str, Any]]
+    ],
+) -> Callable[
+    [SchemaCommonFlowHandler, dict[str, Any]], Coroutine[Any, Any, dict[str, Any]]
+]:
+    """Validate that the value_template is set for 'template' statistic measures."""
+
+    async def _validate_value_template(
+        handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+    ) -> dict[str, Any]:
+        if (
+            user_input[CONF_TYPE] == "template"
+            and user_input.get(CONF_VALUE_TEMPLATE, "") == ""
+        ):
+            raise SchemaFlowError("missing_value_template")
+        return await previous(handler, user_input)
+
+    return _validate_value_template
+
+
 CONFIG_FLOW = {
     "user": SchemaFlowMenuStep(GROUP_TYPES),
     "binary_sensor": SchemaFlowFormStep(
@@ -216,7 +242,7 @@ CONFIG_FLOW = {
     "sensor": SchemaFlowFormStep(
         SENSOR_CONFIG_SCHEMA,
         preview="group",
-        validate_user_input=set_group_type("sensor"),
+        validate_user_input=validate_value_template(set_group_type("sensor")),
     ),
     "switch": SchemaFlowFormStep(
         basic_group_config_schema("switch"),
@@ -368,7 +394,19 @@ def ws_start_preview(
         group_type = flow_status["step_id"]
         form_step = cast(SchemaFlowFormStep, CONFIG_FLOW[group_type])
         schema = cast(vol.Schema, form_step.schema)
-        validated = schema(msg["user_input"])
+        try:
+            validated = schema(msg["user_input"])
+        except vol.MultipleInvalid as multiple_invalid:
+            # Validation for templates is liekly going to fail. This validation
+            # is called each time the user types a character. It is quite likely
+            # that the template is incomplete and invalid until the user has finished
+            # typing.
+            if not all(
+                "invalid template" in error.msg for error in multiple_invalid.errors
+            ):
+                raise  # pragma: no cover
+            validated = msg["user_input"]
+
         name = validated["name"]
     else:
         flow_status = hass.config_entries.options.async_get(msg["flow_id"])
@@ -378,7 +416,18 @@ def ws_start_preview(
             raise HomeAssistantError
         group_type = config_entry.options["group_type"]
         name = config_entry.options["name"]
-        validated = PREVIEW_OPTIONS_SCHEMA[group_type](msg["user_input"])
+        try:
+            validated = PREVIEW_OPTIONS_SCHEMA[group_type](msg["user_input"])
+        except vol.MultipleInvalid as multiple_invalid:
+            # Validation for templates is liekly going to fail. This validation
+            # is called each time the user types a character. It is quite likely
+            # that the template is incomplete and invalid until the user has finished
+            # typing.
+            if not all(
+                "invalid template" in error.msg for error in multiple_invalid.errors
+            ):
+                raise  # pragma: no cover
+            validated = msg["user_input"]
         entity_registry = er.async_get(hass)
         entries = er.async_entries_for_config_entry(entity_registry, config_entry_id)
         if entries:

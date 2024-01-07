@@ -50,19 +50,22 @@ MEDIAN = statistics.median(VALUES)
 RANGE = max(VALUES) - min(VALUES)
 SUM_VALUE = sum(VALUES)
 PRODUCT_VALUE = prod(VALUES)
+TEMPLATE_VALUE = statistics.mean(VALUES)
 
 
 @pytest.mark.parametrize(
-    ("sensor_type", "result", "attributes"),
+    ("sensor_type", "result", "attributes", "value_template"),
     [
-        ("min", MIN_VALUE, {ATTR_MIN_ENTITY_ID: "sensor.test_3"}),
-        ("max", MAX_VALUE, {ATTR_MAX_ENTITY_ID: "sensor.test_2"}),
-        ("mean", MEAN, {}),
-        ("median", MEDIAN, {}),
-        ("last", VALUES[2], {ATTR_LAST_ENTITY_ID: "sensor.test_3"}),
-        ("range", RANGE, {}),
-        ("sum", SUM_VALUE, {}),
-        ("product", PRODUCT_VALUE, {}),
+        ("min", MIN_VALUE, {ATTR_MIN_ENTITY_ID: "sensor.test_3"}, None),
+        ("max", MAX_VALUE, {ATTR_MAX_ENTITY_ID: "sensor.test_2"}, None),
+        ("mean", MEAN, {}, None),
+        ("median", MEDIAN, {}, None),
+        ("last", VALUES[2], {ATTR_LAST_ENTITY_ID: "sensor.test_3"}, None),
+        ("range", RANGE, {}, None),
+        ("sum", SUM_VALUE, {}, None),
+        ("product", PRODUCT_VALUE, {}, None),
+        ("template", TEMPLATE_VALUE, {}, "{{ average(value) }}"),
+        ("template", None, {}, "{{ average( }}"),
     ],
 )
 async def test_sensors2(
@@ -71,6 +74,7 @@ async def test_sensors2(
     sensor_type: str,
     result: str,
     attributes: dict[str, Any],
+    value_template: str,
 ) -> None:
     """Test the sensors."""
     config = {
@@ -82,6 +86,8 @@ async def test_sensors2(
             "unique_id": "very_unique_id",
         }
     }
+    if value_template:
+        config[SENSOR_DOMAIN]["value_template"] = value_template
 
     entity_ids = config["sensor"]["entities"]
 
@@ -101,6 +107,10 @@ async def test_sensors2(
     await hass.async_block_till_done()
 
     state = hass.states.get(f"sensor.sensor_group_{sensor_type}")
+
+    if result is None:
+        assert state is None
+        return
 
     assert float(state.state) == pytest.approx(float(result))
     assert state.attributes.get(ATTR_ENTITY_ID) == entity_ids

@@ -33,11 +33,16 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
+    CONF_VALUE_TEMPLATE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, State, callback
+<<<<<<< HEAD
 from homeassistant.exceptions import HomeAssistantError
+=======
+from homeassistant.exceptions import TemplateError
+>>>>>>> a123fe0006 (Add value templates for sensor group)
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import (
     get_capability,
@@ -45,11 +50,15 @@ from homeassistant.helpers.entity import (
     get_unit_of_measurement,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+<<<<<<< HEAD
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
     async_delete_issue,
 )
+=======
+from homeassistant.helpers.template import Template
+>>>>>>> a123fe0006 (Add value templates for sensor group)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from .const import CONF_IGNORE_NON_NUMERIC, DOMAIN as GROUP_DOMAIN
@@ -68,6 +77,7 @@ ATTR_LAST_ENTITY_ID = "last_entity_id"
 ATTR_RANGE = "range"
 ATTR_SUM = "sum"
 ATTR_PRODUCT = "product"
+ATTR_TEMPLATE = "template"
 SENSOR_TYPES = {
     ATTR_MIN_VALUE: "min",
     ATTR_MAX_VALUE: "max",
@@ -77,6 +87,7 @@ SENSOR_TYPES = {
     ATTR_RANGE: "range",
     ATTR_SUM: "sum",
     ATTR_PRODUCT: "product",
+    ATTR_TEMPLATE: "template",
 }
 SENSOR_TYPE_TO_ATTR = {v: k for k, v in SENSOR_TYPES.items()}
 
@@ -92,6 +103,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_IGNORE_NON_NUMERIC, default=False): cv.boolean,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
@@ -107,7 +119,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Switch Group platform."""
+    """Set up the Sensor Group platform."""
     async_add_entities(
         [
             SensorGroup(
@@ -117,6 +129,7 @@ async def async_setup_platform(
                 config[CONF_ENTITIES],
                 config[CONF_IGNORE_NON_NUMERIC],
                 config[CONF_TYPE],
+                config.get(CONF_VALUE_TEMPLATE),
                 config.get(CONF_UNIT_OF_MEASUREMENT),
                 config.get(CONF_STATE_CLASS),
                 config.get(CONF_DEVICE_CLASS),
@@ -130,11 +143,12 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Initialize Switch Group config entry."""
+    """Initialize Sensor Group config entry."""
     registry = er.async_get(hass)
     entities = er.async_validate_entity_ids(
         registry, config_entry.options[CONF_ENTITIES]
     )
+    template_string: str | None = config_entry.options.get(CONF_VALUE_TEMPLATE)
     async_add_entities(
         [
             SensorGroup(
@@ -144,6 +158,9 @@ async def async_setup_entry(
                 entities,
                 config_entry.options.get(CONF_IGNORE_NON_NUMERIC, True),
                 config_entry.options[CONF_TYPE],
+                Template(template_string, hass)
+                if template_string is not None
+                else None,
                 None,
                 None,
                 None,
@@ -157,6 +174,7 @@ def async_create_preview_sensor(
     hass: HomeAssistant, name: str, validated_config: dict[str, Any]
 ) -> SensorGroup:
     """Create a preview sensor."""
+    template_string: str | None = validated_config.get(CONF_VALUE_TEMPLATE)
     return SensorGroup(
         hass,
         None,
@@ -164,6 +182,7 @@ def async_create_preview_sensor(
         validated_config[CONF_ENTITIES],
         validated_config.get(CONF_IGNORE_NON_NUMERIC, False),
         validated_config[CONF_TYPE],
+        Template(template_string, None) if template_string is not None else None,
         None,
         None,
         None,
@@ -171,6 +190,7 @@ def async_create_preview_sensor(
 
 
 def calc_min(
+    sensor_group: SensorGroup,
     sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float | None]:
     """Calculate min value."""
@@ -187,6 +207,7 @@ def calc_min(
 
 
 def calc_max(
+    sensor_group: SensorGroup,
     sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float | None]:
     """Calculate max value."""
@@ -203,6 +224,7 @@ def calc_max(
 
 
 def calc_mean(
+    sensor_group: SensorGroup,
     sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float | None]:
     """Calculate mean value."""
@@ -213,6 +235,7 @@ def calc_mean(
 
 
 def calc_median(
+    sensor_group: SensorGroup,
     sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float | None]:
     """Calculate median value."""
@@ -223,6 +246,7 @@ def calc_median(
 
 
 def calc_last(
+    sensor_group: SensorGroup,
     sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float | None]:
     """Calculate last value."""
@@ -240,6 +264,7 @@ def calc_last(
 
 
 def calc_range(
+    sensor_group: SensorGroup,
     sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float]:
     """Calculate range value."""
@@ -251,6 +276,7 @@ def calc_range(
 
 
 def calc_sum(
+    sensor_group: SensorGroup,
     sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float]:
     """Calculate a sum of values."""
@@ -262,6 +288,7 @@ def calc_sum(
 
 
 def calc_product(
+    sensor_group: SensorGroup,
     sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float]:
     """Calculate a product of values."""
@@ -272,10 +299,29 @@ def calc_product(
     return {}, result
 
 
+def calc_template(
+    sensor_group: SensorGroup,
+    sensor_values: list[tuple[str, float, State]],
+) -> tuple[dict[str, str | None], float | None]:
+    """Evaluate a template to calculate the value."""
+    template = sensor_group.value_template
+    if template is None:
+        return {}, None  # pragma: no cover
+    if template.hass is None:
+        template.hass = sensor_group.hass  # pragma: no cover
+    try:
+        values: list[float] = [value for _, value, _ in sensor_values]
+        value = float(template.async_render(limited=True, value=values))
+    except (ValueError, TemplateError, TypeError):
+        value = None
+    return {}, value
+
+
 CALC_TYPES: dict[
     str,
     Callable[
-        [list[tuple[str, float, State]]], tuple[dict[str, str | None], float | None]
+        [SensorGroup, list[tuple[str, float, State]]],
+        tuple[dict[str, str | None], float | None],
     ],
 ] = {
     "min": calc_min,
@@ -286,6 +332,7 @@ CALC_TYPES: dict[
     "range": calc_range,
     "sum": calc_sum,
     "product": calc_product,
+    "template": calc_template,
 }
 
 
@@ -303,6 +350,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         entity_ids: list[str],
         ignore_non_numeric: bool,
         sensor_type: str,
+        value_template: Template | None,
         unit_of_measurement: str | None,
         state_class: SensorStateClass | None,
         device_class: SensorDeviceClass | None,
@@ -321,10 +369,15 @@ class SensorGroup(GroupEntity, SensorEntity):
             self._attr_name = f"{DEFAULT_NAME} {sensor_type}".capitalize()
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
+<<<<<<< HEAD
         self._ignore_non_numeric = ignore_non_numeric
         self.mode = all if ignore_non_numeric is False else any
+=======
+        self.mode = all if mode is False else any
+        self.value_template = value_template
+>>>>>>> a123fe0006 (Add value templates for sensor group)
         self._state_calc: Callable[
-            [list[tuple[str, float, State]]],
+            [SensorGroup, list[tuple[str, float, State]]],
             tuple[dict[str, str | None], float | None],
         ] = CALC_TYPES[self._sensor_type]
         self._state_incorrect: set[str] = set()
@@ -420,7 +473,7 @@ class SensorGroup(GroupEntity, SensorEntity):
 
         # Calculate values
         self._extra_state_attribute, self._attr_native_value = self._state_calc(
-            sensor_values
+            self, sensor_values
         )
 
     @property

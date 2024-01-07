@@ -55,6 +55,15 @@ from tests.typing import WebSocketGenerator
             {"type": "sum"},
             {},
         ),
+        (
+            "sensor",
+            "20.0",
+            "20.0",
+            {},
+            {"type": "template", "value_template": "{{ average(value) }}"},
+            {"type": "template", "value_template": "{{ average(value) }}"},
+            {},
+        ),
         ("switch", "on", "on", {}, {}, {}, {}),
     ],
 )
@@ -129,7 +138,58 @@ async def test_config_flow(
 
 
 @pytest.mark.parametrize(
+<<<<<<< HEAD
     ("hide_members", "hidden_by"), [(False, None), (True, "integration")]
+=======
+    ("group_type", "member_state", "member_attributes", "extra_input", "error"),
+    (("sensor", "20.0", {}, {"type": "template"}, "missing_value_template"),),
+)
+async def test_config_flow_errors(
+    hass: HomeAssistant,
+    group_type,
+    member_state,
+    member_attributes,
+    extra_input,
+    error,
+) -> None:
+    """Test errors in the config flow."""
+    members = [f"{group_type}.one", f"{group_type}.two"]
+    for member in members:
+        hass.states.async_set(member, member_state, member_attributes)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": group_type},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == group_type
+
+    with patch(
+        "homeassistant.components.group.async_setup_entry", wraps=async_setup_entry
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "name": "Living Room",
+                "entities": members,
+                **extra_input,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"]["base"] == error
+
+
+@pytest.mark.parametrize(
+    ("hide_members", "hidden_by"), ((False, None), (True, "integration"))
+>>>>>>> a123fe0006 (Add value templates for sensor group)
 )
 @pytest.mark.parametrize(
     ("group_type", "extra_input"),
@@ -485,6 +545,7 @@ LIGHT_ATTRS = [
 LOCK_ATTRS = [{"supported_features": 1}, {}]
 MEDIA_PLAYER_ATTRS = [{"supported_features": 0}, {}]
 SENSOR_ATTRS = [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_two"}]
+SENSOR_WITH_TEMPLATE_ATTRS = [{"icon": "mdi:calculator"}, {}]
 
 
 @pytest.mark.parametrize(
@@ -498,6 +559,13 @@ SENSOR_ATTRS = [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_two"
         ("lock", {}, ["unlocked", "locked"], "unlocked", LOCK_ATTRS),
         ("media_player", {}, ["on", "off"], "on", MEDIA_PLAYER_ATTRS),
         ("sensor", {"type": "max"}, ["10", "20"], "20.0", SENSOR_ATTRS),
+        (
+            "sensor",
+            {"type": "template", "value_template": "{{ average( }}"},
+            ["10", "20"],
+            "unknown",
+            SENSOR_WITH_TEMPLATE_ATTRS,
+        ),
         ("switch", {}, ["on", "off"], "on", [{}, {}]),
     ],
 )
@@ -589,6 +657,14 @@ async def test_config_flow_preview(
             ["10", "20"],
             "20.0",
             SENSOR_ATTRS,
+        ),
+        (
+            "sensor",
+            {"type": "template", "value_template": "{{ average( }}"},
+            {"type": "template", "value_template": "{{ average( }}"},
+            ["10", "20"],
+            "unknown",
+            SENSOR_WITH_TEMPLATE_ATTRS,
         ),
         ("switch", {}, {}, ["on", "off"], "on", [{}, {}]),
     ],
