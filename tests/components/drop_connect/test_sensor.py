@@ -1,10 +1,12 @@
 """Test DROP sensor entities."""
+
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -37,10 +39,18 @@ from .common import (
     config_entry_pump_controller,
     config_entry_ro_filter,
     config_entry_softener,
+    help_assert_entries,
 )
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message
 from tests.typing import MqttMockHAClient
+
+
+@pytest.fixture(autouse=True)
+def only_sensor_platform() -> Generator[[], None]:
+    """Only setup the DROP sensor platform."""
+    with patch("homeassistant.components.drop_connect.PLATFORMS", [Platform.SENSOR]):
+        yield
 
 
 @pytest.mark.parametrize(
@@ -107,29 +117,14 @@ async def test_sensors(
     """Test DROP sensors."""
     config_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.drop_connect.PLATFORMS", [Platform.SENSOR]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    )
-
-    assert entity_entries
-    for entity_entry in entity_entries:
-        assert hass.states.get(entity_entry.entity_id).state == STATE_UNKNOWN
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    help_assert_entries(hass, entity_registry, snapshot, config_entry, "init", True)
 
     async_fire_mqtt_message(hass, topic, reset)
     await hass.async_block_till_done()
+    help_assert_entries(hass, entity_registry, snapshot, config_entry, "reset")
+
     async_fire_mqtt_message(hass, topic, data)
     await hass.async_block_till_done()
-
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    )
-    assert entity_entries
-    for entity_entry in entity_entries:
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-        assert hass.states.get(entity_entry.entity_id) == snapshot(
-            name=f"{entity_entry.entity_id}-state"
-        )
+    help_assert_entries(hass, entity_registry, snapshot, config_entry, "data")
