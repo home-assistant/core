@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import import_and_test_deprecated_constant_enum
+from tests.common import help_test_all, import_and_test_deprecated_constant_enum
 from tests.testing_config.custom_components.test.fan import MockFan
 
 
@@ -148,6 +148,11 @@ async def test_preset_mode_validation(
     with pytest.raises(NotValidPresetModeError) as exc:
         await test_fan._valid_preset_mode_or_raise("invalid")
     assert exc.value.translation_key == "not_valid_preset_mode"
+
+
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(fan)
 
 
 @pytest.mark.parametrize(("enum"), list(fan.FanEntityFeature))
