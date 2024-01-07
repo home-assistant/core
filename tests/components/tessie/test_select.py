@@ -16,7 +16,7 @@ from .common import ERROR_UNKNOWN, TEST_RESPONSE, setup_platform
 
 
 async def test_select(hass: HomeAssistant) -> None:
-    """Tests that the select entity is correct."""
+    """Tests that the select entities are correct."""
 
     assert len(hass.states.async_all(SELECT_DOMAIN)) == 0
 

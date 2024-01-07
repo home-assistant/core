@@ -67,10 +67,10 @@ from .const import (
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
-    LENGTH_METERS,
     MATCH_ALL,
     MAX_LENGTH_EVENT_EVENT_TYPE,
     MAX_LENGTH_STATE_STATE,
+    UnitOfLength,
     __version__,
 )
 from .exceptions import (
@@ -80,6 +80,12 @@ from .exceptions import (
     MaxLengthExceeded,
     ServiceNotFound,
     Unauthorized,
+)
+from .helpers.deprecation import (
+    DeprecatedConstantEnum,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
 )
 from .helpers.json import json_dumps
 from .util import dt as dt_util, location
@@ -147,9 +153,12 @@ class ConfigSource(enum.StrEnum):
 
 
 # SOURCE_* are deprecated as of Home Assistant 2022.2, use ConfigSource instead
-SOURCE_DISCOVERED = ConfigSource.DISCOVERED.value
-SOURCE_STORAGE = ConfigSource.STORAGE.value
-SOURCE_YAML = ConfigSource.YAML.value
+_DEPRECATED_SOURCE_DISCOVERED = DeprecatedConstantEnum(
+    ConfigSource.DISCOVERED, "2025.1"
+)
+_DEPRECATED_SOURCE_STORAGE = DeprecatedConstantEnum(ConfigSource.STORAGE, "2025.1")
+_DEPRECATED_SOURCE_YAML = DeprecatedConstantEnum(ConfigSource.YAML, "2025.1")
+
 
 # How long to wait until things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
@@ -571,13 +580,13 @@ class HomeAssistant:
         # if TYPE_CHECKING to avoid the overhead of constructing
         # the type used for the cast. For history see:
         # https://github.com/home-assistant/core/pull/71960
-        if hassjob.job_type == HassJobType.Coroutinefunction:
+        if hassjob.job_type is HassJobType.Coroutinefunction:
             if TYPE_CHECKING:
                 hassjob.target = cast(
                     Callable[..., Coroutine[Any, Any, _R]], hassjob.target
                 )
             task = self.loop.create_task(hassjob.target(*args), name=hassjob.name)
-        elif hassjob.job_type == HassJobType.Callback:
+        elif hassjob.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
             self.loop.call_soon(hassjob.target, *args)
@@ -676,7 +685,7 @@ class HomeAssistant:
         # if TYPE_CHECKING to avoid the overhead of constructing
         # the type used for the cast. For history see:
         # https://github.com/home-assistant/core/pull/71960
-        if hassjob.job_type == HassJobType.Callback:
+        if hassjob.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
             hassjob.target(*args)
@@ -856,7 +865,7 @@ class HomeAssistant:
                         continue
                     tasks.append(task_or_none)
                 if tasks:
-                    asyncio.gather(*tasks, return_exceptions=True)
+                    await asyncio.gather(*tasks, return_exceptions=True)
         except asyncio.TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for shutdown jobs to complete, the shutdown will"
@@ -1376,7 +1385,13 @@ class State:
 
         self.entity_id = entity_id
         self.state = state
-        self.attributes = ReadOnlyDict(attributes or {})
+        # State only creates and expects a ReadOnlyDict so
+        # there is no need to check for subclassing with
+        # isinstance here so we can use the faster type check.
+        if type(attributes) is not ReadOnlyDict:  # noqa: E721
+            self.attributes = ReadOnlyDict(attributes or {})
+        else:
+            self.attributes = attributes
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
@@ -1795,6 +1810,11 @@ class StateMachine:
         else:
             now = dt_util.utcnow()
 
+        if same_attr:
+            if TYPE_CHECKING:
+                assert old_state is not None
+            attributes = old_state.attributes
+
         state = State(
             entity_id,
             new_state,
@@ -1937,13 +1957,20 @@ class ServiceRegistry:
             Coroutine[Any, Any, ServiceResponse] | ServiceResponse | None,
         ],
         schema: vol.Schema | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Register a service.
 
         Schema is called to coerce and validate the service data.
         """
         run_callback_threadsafe(
-            self._hass.loop, self.async_register, domain, service, service_func, schema
+            self._hass.loop,
+            self.async_register,
+            domain,
+            service,
+            service_func,
+            schema,
+            supports_response,
         ).result()
 
     @callback
@@ -2082,11 +2109,11 @@ class ServiceRegistry:
                 raise ValueError(
                     "Invalid argument return_response=True when blocking=False"
                 )
-            if handler.supports_response == SupportsResponse.NONE:
+            if handler.supports_response is SupportsResponse.NONE:
                 raise ValueError(
                     "Invalid argument return_response=True when handler does not support responses"
                 )
-        elif handler.supports_response == SupportsResponse.ONLY:
+        elif handler.supports_response is SupportsResponse.ONLY:
             raise ValueError(
                 "Service call requires responses but caller did not ask for responses"
             )
@@ -2164,11 +2191,11 @@ class ServiceRegistry:
         """Execute a service."""
         job = handler.job
         target = job.target
-        if job.job_type == HassJobType.Coroutinefunction:
+        if job.job_type is HassJobType.Coroutinefunction:
             if TYPE_CHECKING:
                 target = cast(Callable[..., Coroutine[Any, Any, _R]], target)
             return await target(service_call)
-        if job.job_type == HassJobType.Callback:
+        if job.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
                 target = cast(Callable[..., _R], target)
             return target(service_call)
@@ -2242,7 +2269,8 @@ class Config:
         Async friendly.
         """
         return self.units.length(
-            location.distance(self.latitude, self.longitude, lat, lon), LENGTH_METERS
+            location.distance(self.latitude, self.longitude, lat, lon),
+            UnitOfLength.METERS,
         )
 
     def path(self, *path: str) -> str:
@@ -2513,3 +2541,11 @@ class Config:
             if self._original_unit_system:
                 data["unit_system"] = self._original_unit_system
             return await super().async_save(data)
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = functools.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = functools.partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

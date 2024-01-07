@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 from enum import Enum
+from typing import cast
 
 from hass_nabucasa import Cloud
 import voluptuous as vol
@@ -63,7 +64,7 @@ from .subscription import async_subscription_info
 
 DEFAULT_MODE = MODE_PROD
 
-PLATFORMS = [Platform.STT]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.STT]
 
 SERVICE_REMOTE_CONNECT = "remote_connect"
 SERVICE_REMOTE_DISCONNECT = "remote_disconnect"
@@ -176,6 +177,22 @@ def async_active_subscription(hass: HomeAssistant) -> bool:
     return async_is_logged_in(hass) and not hass.data[DOMAIN].subscription_expired
 
 
+async def async_get_or_create_cloudhook(hass: HomeAssistant, webhook_id: str) -> str:
+    """Get or create a cloudhook."""
+    if not async_is_connected(hass):
+        raise CloudNotConnected
+
+    if not async_is_logged_in(hass):
+        raise CloudNotAvailable
+
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloudhooks = cloud.client.cloudhooks
+    if hook := cloudhooks.get(webhook_id):
+        return cast(str, hook["cloudhook_url"])
+
+    return await async_create_cloudhook(hass, webhook_id)
+
+
 @bind_hass
 async def async_create_cloudhook(hass: HomeAssistant, webhook_id: str) -> str:
     """Create a cloudhook."""
@@ -284,7 +301,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         tts_info = {"platform_loaded": tts_platform_loaded}
 
-        await async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)
         await async_load_platform(hass, Platform.TTS, DOMAIN, tts_info, config)
         await tts_platform_loaded.wait()
 

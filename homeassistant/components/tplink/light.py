@@ -28,6 +28,7 @@ from . import legacy_device_id
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity, async_refresh_after
+from .models import TPLinkData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -132,14 +133,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switches."""
-    coordinator: TPLinkDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    if coordinator.device.is_light_strip:
+    data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
+    parent_coordinator = data.parent_coordinator
+    device = parent_coordinator.device
+    if device.is_light_strip:
         async_add_entities(
-            [
-                TPLinkSmartLightStrip(
-                    cast(SmartLightStrip, coordinator.device), coordinator
-                )
-            ]
+            [TPLinkSmartLightStrip(cast(SmartLightStrip, device), parent_coordinator)]
         )
         platform = entity_platform.async_get_current_platform()
         platform.async_register_entity_service(
@@ -152,9 +151,9 @@ async def async_setup_entry(
             SEQUENCE_EFFECT_DICT,
             "async_set_sequence_effect",
         )
-    elif coordinator.device.is_bulb or coordinator.device.is_dimmer:
+    elif device.is_bulb or device.is_dimmer:
         async_add_entities(
-            [TPLinkSmartBulb(cast(SmartBulb, coordinator.device), coordinator)]
+            [TPLinkSmartBulb(cast(SmartBulb, device), parent_coordinator)]
         )
 
 
@@ -182,6 +181,19 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             self._attr_unique_id = legacy_device_id(device)
         else:
             self._attr_unique_id = device.mac.replace(":", "").upper()
+        modes: set[ColorMode] = set()
+        if device.is_variable_color_temp:
+            modes.add(ColorMode.COLOR_TEMP)
+            temp_range = device.valid_temperature_range
+            self._attr_min_color_temp_kelvin = temp_range.min
+            self._attr_max_color_temp_kelvin = temp_range.max
+        if device.is_color:
+            modes.add(ColorMode.HS)
+        if device.is_dimmable:
+            modes.add(ColorMode.BRIGHTNESS)
+        if not modes:
+            modes.add(ColorMode.ONOFF)
+        self._attr_supported_color_modes = modes
 
     @callback
     def _async_extract_brightness_transition(
@@ -242,16 +254,6 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         await self.device.turn_off(transition=transition)
 
     @property
-    def min_color_temp_kelvin(self) -> int:
-        """Return minimum supported color temperature."""
-        return cast(int, self.device.valid_temperature_range.min)
-
-    @property
-    def max_color_temp_kelvin(self) -> int:
-        """Return maximum supported color temperature."""
-        return cast(int, self.device.valid_temperature_range.max)
-
-    @property
     def color_temp_kelvin(self) -> int:
         """Return the color temperature of this light."""
         return cast(int, self.device.color_temp)
@@ -266,22 +268,6 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         """Return the color."""
         hue, saturation, _ = self.device.hsv
         return hue, saturation
-
-    @property
-    def supported_color_modes(self) -> set[ColorMode]:
-        """Return list of available color modes."""
-        modes: set[ColorMode] = set()
-        if self.device.is_variable_color_temp:
-            modes.add(ColorMode.COLOR_TEMP)
-        if self.device.is_color:
-            modes.add(ColorMode.HS)
-        if self.device.is_dimmable:
-            modes.add(ColorMode.BRIGHTNESS)
-
-        if not modes:
-            modes.add(ColorMode.ONOFF)
-
-        return modes
 
     @property
     def color_mode(self) -> ColorMode:
@@ -300,11 +286,7 @@ class TPLinkSmartLightStrip(TPLinkSmartBulb):
     """Representation of a TPLink Smart Light Strip."""
 
     device: SmartLightStrip
-
-    @property
-    def supported_features(self) -> LightEntityFeature:
-        """Flag supported features."""
-        return super().supported_features | LightEntityFeature.EFFECT
+    _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
 
     @property
     def effect_list(self) -> list[str] | None:
