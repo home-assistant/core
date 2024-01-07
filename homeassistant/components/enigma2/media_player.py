@@ -1,10 +1,9 @@
 """Support for Enigma2 media players."""
 from __future__ import annotations
 
-from logging import getLogger
 from typing import Any
 
-from aiohttp.client_exceptions import ClientConnectorError, ServerDisconnectedError
+from aiohttp.client_exceptions import ClientConnectorError
 from openwebif.api import OpenWebIfDevice
 from openwebif.enums import RemoteControlCodes, SetVolumeOption
 import voluptuous as vol
@@ -50,8 +49,6 @@ ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
 ATTR_MEDIA_DESCRIPTION = "media_description"
 ATTR_MEDIA_END_TIME = "media_end_time"
 ATTR_MEDIA_START_TIME = "media_start_time"
-
-_LOGGER = getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -143,15 +140,7 @@ class Enigma2Device(MediaPlayerEntity):
 
     async def async_turn_off(self) -> None:
         """Turn off media player."""
-        try:
-            await self._device.turn_off()
-        except ServerDisconnectedError as err:
-            _LOGGER.warning(
-                "%s went into deep standby. Error: %s",
-                self._device.base.host,
-                str(err),
-            )
-            self._attr_available = False
+        await self._device.turn_off()
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
@@ -199,20 +188,9 @@ class Enigma2Device(MediaPlayerEntity):
 
     async def async_update(self) -> None:
         """Update state of the media_player."""
-        try:
-            await self._device.update()
-            if not self._attr_available:
-                _LOGGER.debug("%s is available", self._device.base.host)
-                self._attr_available = True
-        except ClientConnectorError as err:
-            if self._attr_available:
-                _LOGGER.warning(
-                    "%s is unavailable. Error: %s", self._device.base.host, str(err)
-                )
-                self._attr_available = False
-            return
-
+        await self._device.update()
         self._data = self._device.status_info
+        self._attr_available = not self._device.is_offline
 
         if self._data.get("inStandby") == "false":
             self._attr_extra_state_attributes = {
