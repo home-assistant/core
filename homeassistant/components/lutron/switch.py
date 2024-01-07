@@ -47,7 +47,7 @@ class LutronSwitch(LutronDevice, SwitchEntity):
     _lutron_device: Output
 
     def __init__(
-        self, area_name: str, lutron_device: LutronEntity, controller: Lutron
+        self, area_name: str, lutron_device: Output, controller: Lutron
     ) -> None:
         """Initialize the switch."""
         self._prev_state = None
