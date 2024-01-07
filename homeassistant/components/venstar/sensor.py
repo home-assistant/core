@@ -64,7 +64,7 @@ SCHEDULE_PARTS: dict[int, str] = {
     255: "inactive",
 }
 
-STAGES: dict[int, str] = {0: "idle", 1: "first stage", 2: "second stage"}
+STAGES: dict[int, str] = {0: "idle", 1: "first_stage", 2: "second_stage"}
 
 
 @dataclass(frozen=True)
