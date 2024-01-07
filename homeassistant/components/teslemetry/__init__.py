@@ -1,8 +1,10 @@
 """Teslemetry integration."""
 import logging
+from aiohttp import ClientResponseError
 
 from tesla_fleet_api import Teslemetry
-from tesla_fleet_api.exceptions import AuthenticationError, TeslaFleetError
+from tesla_fleet_api.exceptions import InvalidToken, TeslaFleetError
+from teslemetry_stream import TeslemetryStream
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
@@ -23,20 +25,41 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Teslemetry config."""
 
-    teslemetry = Teslemetry(
+    access_token = entry.data[CONF_ACCESS_TOKEN]
+
+    # Create API connection
+    api = Teslemetry(
         session=async_get_clientsession(hass),
-        access_token=entry.data[CONF_ACCESS_TOKEN],
+        access_token=access_token,
     )
     try:
-        vehicles = await teslemetry.vehicle.create()
-    except AuthenticationError as e:
+        vehicles = await api.vehicle.create()
+    except InvalidToken as e:
         raise ConfigEntryAuthFailed from e
     except TeslaFleetError as e:
         _LOGGER.error("Setup failed, unable to connect to Teslemetry: %s", e)
         return False
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = TeslemetryData(vehicles=vehicles)
+    # Create SSE stream
+    data = []
+    for vehicle_api in vehicles:
+        stream = TeslemetryStream(
+            session=async_get_clientsession(hass),
+            vin=vehicle_api.vin,
+            access_token=access_token,
+        )
+        try:
+            #await stream.connect()
+            pass
+        except ClientResponseError as e:
+            raise ConfigEntryAuthFailed from e
+
+        data.append(TeslemetryData(api=vehicle_api, stream=stream))
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+
 
     return True
 
