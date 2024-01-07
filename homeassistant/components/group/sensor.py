@@ -34,11 +34,15 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, State, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.entity import (
+    get_capability,
+    get_device_class,
+    get_unit_of_measurement,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_get
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import GroupEntity
@@ -100,6 +104,7 @@ async def async_setup_platform(
     async_add_entities(
         [
             SensorGroup(
+                hass,
                 config.get(CONF_UNIQUE_ID),
                 config[CONF_NAME],
                 config[CONF_ENTITIES],
@@ -126,6 +131,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             SensorGroup(
+                hass,
                 config_entry.entry_id,
                 config_entry.title,
                 entities,
@@ -144,7 +150,9 @@ def async_create_preview_sensor(
     name: str, validated_config: dict[str, Any]
 ) -> SensorGroup:
     """Create a preview sensor."""
+    hass = async_get_hass()
     return SensorGroup(
+        hass,
         None,
         name,
         validated_config[CONF_ENTITIES],
@@ -283,6 +291,7 @@ class SensorGroup(GroupEntity, SensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         unique_id: str | None,
         name: str,
         entity_ids: list[str],
@@ -293,6 +302,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         device_class: SensorDeviceClass | None,
     ) -> None:
         """Initialize a sensor group."""
+        self.hass = hass
         self._entity_ids = entity_ids
         self._sensor_type = sensor_type
         self._attr_state_class = self._calculate_state_class(state_class)
@@ -400,14 +410,14 @@ class SensorGroup(GroupEntity, SensorEntity):
         if state_class:
             return state_class
         state_classes: list[SensorStateClass | None] = []
-        entity_reg = async_get(self.hass)
         for entity_id in self._entity_ids:
-            if (entity := entity_reg.async_get(entity_id)) and (
-                capabilities := entity.capabilities
-            ):
-                state_classes.append(capabilities.get("state_class"))
-                continue
-            return None
+            try:
+                _state_class = get_capability(self.hass, entity_id, "state_class")
+            except HomeAssistantError:
+                return None
+            if not _state_class:
+                return None
+            state_classes.append(_state_class)
 
         if all(x == state_classes[0] for x in state_classes):
             return state_classes[0]
@@ -420,14 +430,14 @@ class SensorGroup(GroupEntity, SensorEntity):
         if device_class:
             return device_class
         device_classes: list[SensorDeviceClass | None] = []
-        entity_reg = async_get(self.hass)
         for entity_id in self._entity_ids:
-            if (entity := entity_reg.async_get(entity_id)) and (
-                _device_class := entity.device_class
-            ):
-                device_classes.append(SensorDeviceClass(_device_class))
-                continue
-            return None
+            try:
+                _device_class = get_device_class(self.hass, entity_id)
+            except HomeAssistantError:
+                return None
+            if not _device_class:
+                return None
+            device_classes.append(SensorDeviceClass(_device_class))
 
         if all(x == device_classes[0] for x in device_classes):
             return device_classes[0]
@@ -441,16 +451,16 @@ class SensorGroup(GroupEntity, SensorEntity):
             return unit_of_measurement
 
         unit_of_measurements: list[str | None] = []
-        entity_reg = async_get(self.hass)
         for entity_id in self._entity_ids:
-            if (entity := entity_reg.async_get(entity_id)) and (
-                _unit_of_measurement := entity.unit_of_measurement
-            ):
-                unit_of_measurements.append(_unit_of_measurement)
-                continue
-            return None
+            try:
+                _unit_of_measurement = get_unit_of_measurement(self.hass, entity_id)
+            except HomeAssistantError:
+                return None
+            if not _unit_of_measurement:
+                return None
+            unit_of_measurements.append(_unit_of_measurement)
 
-        if (device_class := self.device_class) not in UNIT_CONVERTERS and all(
+        if (device_class := self.device_class) in UNIT_CONVERTERS and any(
             x == unit_of_measurements[0]
             for x in UNIT_CONVERTERS[device_class].VALID_UNITS
         ):
