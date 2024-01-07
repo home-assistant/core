@@ -207,6 +207,11 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
     ),
+    TessieSensorEntityDescription(
+        key="drive_state_active_route_destination",
+        icon="mdi:map-marker",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 )
 
 
