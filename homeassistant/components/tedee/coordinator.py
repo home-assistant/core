@@ -106,7 +106,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
     def _async_add_remove_locks(self) -> None:
         """Add new locks, remove non-existing locks."""
         if not self._current_locks:
-            self._current_locks = set(self.tedee_client.locks_dict.keys())
+            self._current_locks = set(self.tedee_client.locks_dict)
 
         if removed_locks := self._current_locks - set(
             self.tedee_client.locks_dict.keys()
@@ -125,4 +125,4 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
                 for callback in self.new_lock_callbacks:
                     callback(lock_id)
 
-        self._current_locks = set(self.tedee_client.locks_dict.keys())
+        self._current_locks = set(self.tedee_client.locks_dict)
