@@ -65,8 +65,8 @@ async def test_main(
         blocking=True,
     )
 
-    assert len(mock_lamarzocco.set_power_hass.mock_calls) == 1
-    mock_lamarzocco.set_power_hass.assert_called_once_with(enabled=False)
+    assert len(mock_lamarzocco.set_power.mock_calls) == 1
+    mock_lamarzocco.set_power.assert_called_once_with(False, None)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -77,8 +77,8 @@ async def test_main(
         blocking=True,
     )
 
-    assert len(mock_lamarzocco.set_power_hass.mock_calls) == 2
-    mock_lamarzocco.set_power_hass.assert_called_with(enabled=True)
+    assert len(mock_lamarzocco.set_power.mock_calls) == 2
+    mock_lamarzocco.set_power.assert_called_with(True, None)
 
 
 async def test_auto_on_off(
@@ -302,8 +302,8 @@ async def test_steam_boiler_enable(
         blocking=True,
     )
 
-    assert len(mock_lamarzocco.set_steam_boiler_hass.mock_calls) == 1
-    mock_lamarzocco.set_steam_boiler_hass.assert_called_once_with(enable=False)
+    assert len(mock_lamarzocco.set_steam.mock_calls) == 1
+    mock_lamarzocco.set_steam.assert_called_once_with(False, None)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -314,5 +314,5 @@ async def test_steam_boiler_enable(
         blocking=True,
     )
 
-    assert len(mock_lamarzocco.set_steam_boiler_hass.mock_calls) == 2
-    mock_lamarzocco.set_steam_boiler_hass.assert_called_with(enable=True)
+    assert len(mock_lamarzocco.set_steam.mock_calls) == 2
+    mock_lamarzocco.set_steam.assert_called_with(True, None)

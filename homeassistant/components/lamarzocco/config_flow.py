@@ -3,6 +3,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from lmcloud import LMCloud as LaMarzoccoClient
 from lmcloud.exceptions import AuthFail, RequestNotSuccessful
 import voluptuous as vol
 
@@ -26,7 +27,6 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_MACHINE, DOMAIN
-from .lm_client import LaMarzoccoClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 **self._discovered,
             }
 
-            lm = LaMarzoccoClient(hass=self.hass)
+            lm = LaMarzoccoClient()
             try:
                 self._machines = await lm.get_all_machines(data)
             except AuthFail:
@@ -124,7 +124,7 @@ class LmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # validate local connection if host is provided
             if user_input.get(CONF_HOST):
-                lm = LaMarzoccoClient(hass=self.hass)
+                lm = LaMarzoccoClient()
                 if not await lm.check_local_connection(
                     credentials=self._config,
                     host=user_input[CONF_HOST],

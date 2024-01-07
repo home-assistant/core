@@ -9,7 +9,7 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import LmApiCoordinator
+from .coordinator import LaMarzoccoUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -24,7 +24,7 @@ class LaMarzoccoEntityDescription(EntityDescription):
     )
 
 
-class LaMarzoccoEntity(CoordinatorEntity[LmApiCoordinator]):
+class LaMarzoccoEntity(CoordinatorEntity[LaMarzoccoUpdateCoordinator]):
     """Common elements for all entities."""
 
     entity_description: LaMarzoccoEntityDescription
@@ -32,21 +32,20 @@ class LaMarzoccoEntity(CoordinatorEntity[LmApiCoordinator]):
 
     def __init__(
         self,
-        coordinator: LmApiCoordinator,
+        coordinator: LaMarzoccoUpdateCoordinator,
         entity_description: LaMarzoccoEntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._lm_client = self.coordinator.lm
         self._attr_unique_id = (
-            f"{self._lm_client.serial_number}_{entity_description.key}"
+            f"{self.coordinator.lm.serial_number}_{entity_description.key}"
         )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._lm_client.serial_number)},
-            name=self._lm_client.machine_name,
+            identifiers={(DOMAIN, self.coordinator.lm.serial_number)},
+            name=self.coordinator.lm.machine_name,
             manufacturer="La Marzocco",
-            model=self._lm_client.true_model_name,
-            serial_number=self._lm_client.serial_number,
-            sw_version=self._lm_client.firmware_version,
+            model=self.coordinator.lm.true_model_name,
+            serial_number=self.coordinator.lm.serial_number,
+            sw_version=self.coordinator.lm.firmware_version,
         )

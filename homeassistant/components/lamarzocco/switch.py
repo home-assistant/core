@@ -12,8 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
+from .coordinator import LaMarzoccoUpdateCoordinator
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
-from .lm_client import LaMarzoccoClient
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -23,8 +23,8 @@ class LaMarzoccoSwitchEntityDescription(
 ):
     """Description of a La Marzocco Switch."""
 
-    control_fn: Callable[[LaMarzoccoClient, bool], Coroutine[Any, Any, bool]]
-    is_on_fn: Callable[[LaMarzoccoClient], bool]
+    control_fn: Callable[[LaMarzoccoUpdateCoordinator, bool], Coroutine[Any, Any, bool]]
+    is_on_fn: Callable[[LaMarzoccoUpdateCoordinator], bool]
 
 
 ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
@@ -32,23 +32,28 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         key="main",
         translation_key="main",
         icon="mdi:power",
-        control_fn=lambda client, state: client.set_power_hass(state),
-        is_on_fn=lambda client: client.current_status["power"],
+        control_fn=lambda coordinator, state: coordinator.lm.set_power(
+            state, coordinator.async_get_ble_device()
+        ),
+        is_on_fn=lambda coordinator: coordinator.lm.current_status["power"],
     ),
     LaMarzoccoSwitchEntityDescription(
         key="auto_on_off",
         translation_key="auto_on_off",
         icon="mdi:alarm",
-        control_fn=lambda client, state: client.set_auto_on_off_global(state),
-        is_on_fn=lambda client: client.current_status["global_auto"] == "Enabled",
+        control_fn=lambda coordinator, state: coordinator.lm.set_auto_on_off_global(
+            state
+        ),
+        is_on_fn=lambda coordinator: coordinator.lm.current_status["global_auto"]
+        == "Enabled",
         entity_category=EntityCategory.CONFIG,
     ),
     LaMarzoccoSwitchEntityDescription(
         key="prebrew",
         translation_key="prebrew",
         icon="mdi:water",
-        control_fn=lambda client, state: client.set_prebrew(state),
-        is_on_fn=lambda client: client.current_status["enable_prebrewing"],
+        control_fn=lambda coordinator, state: coordinator.lm.set_prebrew(state),
+        is_on_fn=lambda coordinator: coordinator.lm.current_status["enable_prebrewing"],
         entity_category=EntityCategory.CONFIG,
         supported_models=(
             LaMarzoccoModel.GS3_AV,
@@ -60,8 +65,10 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         key="preinfusion",
         translation_key="preinfusion",
         icon="mdi:water",
-        control_fn=lambda client, state: client.set_preinfusion(state),
-        is_on_fn=lambda client: client.current_status["enable_preinfusion"],
+        control_fn=lambda coordinator, state: coordinator.lm.set_preinfusion(state),
+        is_on_fn=lambda coordinator: coordinator.lm.current_status[
+            "enable_preinfusion"
+        ],
         entity_category=EntityCategory.CONFIG,
         supported_models=(
             LaMarzoccoModel.GS3_AV,
@@ -73,8 +80,12 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
         key="steam_boiler_enable",
         translation_key="steam_boiler",
         icon="mdi:water-boiler",
-        control_fn=lambda client, state: client.set_steam_boiler_hass(state),
-        is_on_fn=lambda client: client.current_status["steam_boiler_enable"],
+        control_fn=lambda coordinator, state: coordinator.lm.set_steam(
+            state, coordinator.async_get_ble_device()
+        ),
+        is_on_fn=lambda coordinator: coordinator.lm.current_status[
+            "steam_boiler_enable"
+        ],
     ),
 )
 
@@ -101,15 +112,15 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
-        await self.entity_description.control_fn(self._lm_client, True)
+        await self.entity_description.control_fn(self.coordinator, True)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
-        await self.entity_description.control_fn(self._lm_client, False)
+        await self.entity_description.control_fn(self.coordinator, False)
         self.async_write_ha_state()
 
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return self.entity_description.is_on_fn(self._lm_client)
+        return self.entity_description.is_on_fn(self.coordinator)
