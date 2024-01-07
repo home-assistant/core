@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pylutron import Button, Led, Lutron, LutronEntity
+from pylutron import Button, Led, Lutron
 
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry

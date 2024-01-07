@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from pylutron import Button, Led, Lutron, LutronEntity, Output
+from pylutron import Button, Led, Lutron, Output
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry

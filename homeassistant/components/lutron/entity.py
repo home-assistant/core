@@ -1,5 +1,4 @@
 """Base class for Lutron devices."""
-from typing import Any
 
 from pylutron import Lutron, LutronEntity, LutronEvent
 
