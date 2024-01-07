@@ -420,6 +420,7 @@ homeassistant.components.vlc_telnet.*
 homeassistant.components.wake_on_lan.*
 homeassistant.components.wake_word.*
 homeassistant.components.wallbox.*
+homeassistant.components.waqi.*
 homeassistant.components.water_heater.*
 homeassistant.components.watttime.*
 homeassistant.components.weather.*
