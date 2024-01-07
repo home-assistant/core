@@ -16,21 +16,20 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.start import async_at_start
 
 from .core import discovery
-from .core.const import CHANNEL_OTA, DATA_ZHA, SIGNAL_ADD_ENTITIES
+from .core.const import CLUSTER_HANDLER_OTA, DATA_ZHA, SIGNAL_ADD_ENTITIES
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
 if TYPE_CHECKING:
-    from .core.channels.base import ZigbeeChannel
+    from .core.cluster_handlers import ClusterHandler
     from .core.device import ZHADevice
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.UPDATE)
@@ -54,7 +53,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-@STRICT_MATCH(channel_names=CHANNEL_OTA)
+@STRICT_MATCH(channel_names=CLUSTER_HANDLER_OTA)
 class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
     """Representation of a ZHA firmware update entity."""
 
@@ -71,13 +70,13 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         self,
         unique_id: str,
         zha_device: ZHADevice,
-        channels: list[ZigbeeChannel],
+        channels: list[ClusterHandler],
         **kwargs: Any,
     ) -> None:
         """Initialize the ZHA update entity."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._attr_name = "Firmware"
-        self._ota_channel = self.cluster_channels[CHANNEL_OTA]
+        self._ota_channel = self.cluster_handlers[CLUSTER_HANDLER_OTA]
         self._attr_installed_version = self.zha_device.sw_version
         self._latest_version_firmware = None
         self._result = None
@@ -187,4 +186,5 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed."""
+        await super().async_will_remove_from_hass()
         self._reset_progress(False)
