@@ -35,7 +35,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(data):
+async def validate_input(data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -60,9 +60,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the Harmony config flow."""
         self.harmony_config: dict[str, Any] = {}
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             try:
                 validated = await validate_input(user_input)
@@ -116,9 +118,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.harmony_config[UNIQUE_ID] = unique_id
         return await self.async_step_link()
 
-    async def async_step_link(self, user_input=None):
+    async def async_step_link(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Attempt to link with the Harmony."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             # Everything was validated in async_step_ssdp
@@ -145,7 +149,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
-    async def _async_create_entry_from_valid_input(self, validated, user_input):
+    async def _async_create_entry_from_valid_input(
+        self, validated: dict[str, Any], user_input: dict[str, Any]
+    ) -> FlowResult:
         """Single path to create the config entry from validated input."""
 
         data = {
@@ -159,8 +165,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=validated[CONF_NAME], data=data)
 
 
-def _options_from_user_input(user_input):
-    options = {}
+def _options_from_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
+    options: dict[str, Any] = {}
     if ATTR_ACTIVITY in user_input:
         options[ATTR_ACTIVITY] = user_input[ATTR_ACTIVITY]
     if ATTR_DELAY_SECS in user_input:
@@ -175,7 +181,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

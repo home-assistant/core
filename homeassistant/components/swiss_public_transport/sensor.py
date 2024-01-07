@@ -122,15 +122,25 @@ class SwissPublicTransportSensor(
             entry_type=DeviceEntryType.SERVICE,
         )
 
+    async def async_added_to_hass(self) -> None:
+        """Prepare the extra attributes at start."""
+        self._async_update_attrs()
+        await super().async_added_to_hass()
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle the state update and prepare the extra state attributes."""
+        self._async_update_attrs()
+        return super()._handle_coordinator_update()
+
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update the extra state attributes based on the coordinator data."""
         self._attr_extra_state_attributes = {
             key: value
             for key, value in self.coordinator.data.items()
             if key not in {"departure"}
         }
-        return super()._handle_coordinator_update()
 
     @property
     def native_value(self) -> str:

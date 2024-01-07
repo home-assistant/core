@@ -1,7 +1,9 @@
 """Sensors for the Elexa Guardian integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -19,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import (
     GuardianData,
@@ -39,25 +42,36 @@ SENSOR_KIND_TEMPERATURE = "temperature"
 SENSOR_KIND_UPTIME = "uptime"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
+class PairedSensorDescription(SensorEntityDescription):
+    """Describe a Guardian paired sensor."""
+
+    value_fn: Callable[[dict[str, Any]], StateType]
+
+
+@dataclass(frozen=True, kw_only=True)
 class ValveControllerSensorDescription(
     SensorEntityDescription, ValveControllerEntityDescription
 ):
     """Describe a Guardian valve controller sensor."""
 
+    value_fn: Callable[[dict[str, Any]], StateType]
+
 
 PAIRED_SENSOR_DESCRIPTIONS = (
-    SensorEntityDescription(
+    PairedSensorDescription(
         key=SENSOR_KIND_BATTERY,
         device_class=SensorDeviceClass.VOLTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        value_fn=lambda data: data["battery"],
     ),
-    SensorEntityDescription(
+    PairedSensorDescription(
         key=SENSOR_KIND_TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data["temperature"],
     ),
 )
 VALVE_CONTROLLER_DESCRIPTIONS = (
@@ -67,6 +81,7 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         state_class=SensorStateClass.MEASUREMENT,
         api_category=API_SYSTEM_ONBOARD_SENSOR_STATUS,
+        value_fn=lambda data: data["temperature"],
     ),
     ValveControllerSensorDescription(
         key=SENSOR_KIND_UPTIME,
@@ -75,6 +90,7 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         api_category=API_SYSTEM_DIAGNOSTICS,
+        value_fn=lambda data: data["uptime"],
     ),
 )
 
@@ -125,15 +141,12 @@ async def async_setup_entry(
 class PairedSensorSensor(PairedSensorEntity, SensorEntity):
     """Define a binary sensor related to a Guardian valve controller."""
 
-    entity_description: SensorEntityDescription
+    entity_description: PairedSensorDescription
 
-    @callback
-    def _async_update_from_latest_data(self) -> None:
-        """Update the entity's underlying data."""
-        if self.entity_description.key == SENSOR_KIND_BATTERY:
-            self._attr_native_value = self.coordinator.data["battery"]
-        elif self.entity_description.key == SENSOR_KIND_TEMPERATURE:
-            self._attr_native_value = self.coordinator.data["temperature"]
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+        return self.entity_description.value_fn(self.coordinator.data)
 
 
 class ValveControllerSensor(ValveControllerEntity, SensorEntity):
@@ -141,10 +154,7 @@ class ValveControllerSensor(ValveControllerEntity, SensorEntity):
 
     entity_description: ValveControllerSensorDescription
 
-    @callback
-    def _async_update_from_latest_data(self) -> None:
-        """Update the entity's underlying data."""
-        if self.entity_description.key == SENSOR_KIND_TEMPERATURE:
-            self._attr_native_value = self.coordinator.data["temperature"]
-        elif self.entity_description.key == SENSOR_KIND_UPTIME:
-            self._attr_native_value = self.coordinator.data["uptime"]
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+        return self.entity_description.value_fn(self.coordinator.data)
