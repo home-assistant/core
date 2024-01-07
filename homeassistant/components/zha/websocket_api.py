@@ -9,7 +9,7 @@ import voluptuous as vol
 import zigpy.backups
 from zigpy.config import CONF_DEVICE
 from zigpy.config.validators import cv_boolean
-from zigpy.types.named import EUI64
+from zigpy.types.named import EUI64, KeyData
 from zigpy.zcl.clusters.security import IasAce
 import zigpy.zdo.types as zdo_types
 
@@ -338,10 +338,16 @@ async def websocket_permit_devices(
         )
     elif ATTR_QR_CODE in msg:
         src_ieee, code = msg[ATTR_QR_CODE]
-        _LOGGER.debug("Allowing join for %s device with install code", src_ieee)
-        await zha_gateway.application_controller.permit_with_key(
-            time_s=duration, node=src_ieee, code=code
-        )
+        if isinstance(code, KeyData):
+            _LOGGER.debug("Allowing join for %s device with link key", src_ieee)
+            await zha_gateway.application_controller.permit_with_link_key(
+                time_s=duration, node=src_ieee, link_key=code
+            )
+        else:
+            _LOGGER.debug("Allowing join for %s device with install code", src_ieee)
+            await zha_gateway.application_controller.permit_with_key(
+                time_s=duration, node=src_ieee, code=code
+            )
     else:
         await zha_gateway.application_controller.permit(time_s=duration, node=ieee)
     connection.send_result(msg[ID])
@@ -1261,10 +1267,16 @@ def async_load_api(hass: HomeAssistant) -> None:
 
         if ATTR_QR_CODE in service.data:
             src_ieee, code = service.data[ATTR_QR_CODE]
-            _LOGGER.info("Allowing join for %s device with install code", src_ieee)
-            await application_controller.permit_with_key(
-                time_s=duration, node=src_ieee, code=code
-            )
+            if isinstance(code, KeyData):
+                _LOGGER.info("Allowing join for %s device with link key", src_ieee)
+                await application_controller.permit_with_link_key(
+                    time_s=duration, node=src_ieee, link_key=code
+                )
+            else:
+                _LOGGER.info("Allowing join for %s device with install code", src_ieee)
+                await application_controller.permit_with_key(
+                    time_s=duration, node=src_ieee, code=code
+                )
             return
 
         if ieee:
