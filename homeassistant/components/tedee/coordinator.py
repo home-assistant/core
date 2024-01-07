@@ -75,7 +75,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         # once every hours get all lock details, otherwise use the sync endpoint
         if self._next_full_update <= time.time():
             _LOGGER.debug("Updating through /my/lock endpoint")
-            await self._async_update_locks(self.tedee_client.get_locks)
+            await self._async_update(self.tedee_client.get_locks)
             self._next_full_update = time.time() + FULL_UPDATE_INTERVAL_SECONDS
         else:
             _LOGGER.debug("Updating through /sync endpoint")
