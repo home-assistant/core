@@ -52,13 +52,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = FastdotcomDataUpdateCoordindator(hass)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
+    await hass.config_entries.async_forward_entry_setups(
+        entry,
+        PLATFORMS,
+    )
+
     async def _async_finish_startup(hass: HomeAssistant) -> None:
         """Run this only when HA has finished its startup."""
         await coordinator.async_config_entry_first_refresh()
-        await hass.config_entries.async_forward_entry_setups(
-            entry,
-            PLATFORMS,
-        )
 
     # Don't start a speedtest during startup, this will slow down the overall startup dramatically
     async_at_started(hass, _async_finish_startup)
