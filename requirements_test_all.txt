@@ -1677,6 +1677,9 @@ python-MotionMount==0.3.1
 # homeassistant.components.awair
 python-awair==0.2.4
 
+# homeassistant.components.bring
+python-bring-api==2.0.0
+
 # homeassistant.components.bsblan
 python-bsblan==0.5.18
 
