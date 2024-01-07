@@ -522,7 +522,7 @@ class EvoBroker:
                 ),
                 err,
             )
-            self.temps = {}  # high-precision temps now stale
+            self.temps = {}  # high-precision temps now considered stale
 
         except Exception:
             self.temps = {}  # high-precision temps now considered stale
