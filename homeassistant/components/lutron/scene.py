@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pylutron import Button, Lutron, LutronEntity
+from pylutron import Button, Lutron
 
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
@@ -45,7 +45,7 @@ class LutronScene(LutronDevice, Scene):
         self,
         area_name: str,
         keypad_name: str,
-        lutron_device: LutronEntity,
+        lutron_device: Button,
         controller: Lutron,
     ) -> None:
         """Initialize the scene/button."""

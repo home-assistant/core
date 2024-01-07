@@ -1,18 +1,8 @@
 """Component for interacting with a Lutron RadioRA 2 system."""
 from dataclasses import dataclass
 import logging
-from typing import Any
 
-from pylutron import (
-    Button,
-    Keypad,
-    Led,
-    Lutron,
-    LutronEntity,
-    LutronEvent,
-    OccupancyGroup,
-    Output,
-)
+from pylutron import Button, Keypad, Led, Lutron, LutronEvent, OccupancyGroup, Output
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -144,7 +134,7 @@ class LutronButton:
         button.subscribe(self.button_callback, None)
 
     def button_callback(
-        self, _button: LutronEntity, _context: Any, event: LutronEvent, _params: dict
+        self, _button: Button, _context: None, event: LutronEvent, _params: dict
     ) -> None:
         """Fire an event about a button being pressed or released."""
         # Events per button type:
@@ -169,7 +159,7 @@ class LutronButton:
             self._hass.bus.fire(self._event, data)
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, kw_only=True)
 class LutronData:
     """Storage class for platform global data."""
 

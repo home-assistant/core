@@ -1,5 +1,4 @@
 """Base class for Lutron devices."""
-from typing import Any
 
 from pylutron import Lutron, LutronEntity, LutronEvent
 
@@ -34,7 +33,7 @@ class LutronDevice(Entity):
         self._lutron_device.subscribe(self._update_callback, None)
 
     def _update_callback(
-        self, _device: LutronEntity, _context: Any, _event: LutronEvent, _params: dict
+        self, _device: LutronEntity, _context: None, _event: LutronEvent, _params: dict
     ) -> None:
         """Run when invoked by pylutron when the device state changes."""
         self.schedule_update_ha_state()
