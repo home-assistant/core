@@ -7,6 +7,8 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.govee_light_api.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
+from .conftest import DEFAULT_CAPABILITEIS
+
 
 async def test_creating_entry_has_no_devices(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_govee_api: AsyncMock
@@ -48,6 +50,7 @@ async def test_creating_entry_has_with_devices(
             ip="192.168.1.100",
             fingerprint="asdawdqwdqwd1",
             sku="H615A",
+            capabilities=DEFAULT_CAPABILITEIS,
         )
     ]
 

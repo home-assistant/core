@@ -2,6 +2,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from govee_local_api import GoveeLightCapability
 import pytest
 
 from homeassistant.components.govee_light_api.coordinator import GoveeController
@@ -26,3 +27,10 @@ def fixture_mock_setup_entry() -> Generator[AsyncMock, None, None]:
         "homeassistant.components.govee_light_api.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+DEFAULT_CAPABILITEIS: set[GoveeLightCapability] = {
+    GoveeLightCapability.COLOR_RGB,
+    GoveeLightCapability.COLOR_KELVIN_TEMPERATURE,
+    GoveeLightCapability.BRIGHTNESS,
+}
