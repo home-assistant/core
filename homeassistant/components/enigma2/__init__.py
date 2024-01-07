@@ -3,6 +3,7 @@
 import logging
 
 from openwebif.api import OpenWebIfDevice
+from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -11,9 +12,11 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import DOMAIN
 
@@ -23,15 +26,19 @@ PLATFORMS = [Platform.MEDIA_PLAYER]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Enigma2 from a config entry."""
-    device: OpenWebIfDevice = OpenWebIfDevice(
-        entry.options[CONF_HOST],
+    base_url = URL.build(
+        scheme="http" if not entry.options[CONF_SSL] else "https",
+        host=entry.options[CONF_HOST],
         port=entry.options[CONF_PORT],
-        username=entry.options.get(CONF_USERNAME),
+        user=entry.options.get(CONF_USERNAME),
         password=entry.options.get(CONF_PASSWORD),
-        is_https=entry.options.get(CONF_SSL),
     )
-    entry.async_on_unload(device.close)
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = device
+
+    session = async_create_clientsession(
+        hass, verify_ssl=entry.options[CONF_VERIFY_SSL], base_url=base_url
+    )
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = OpenWebIfDevice(session)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
