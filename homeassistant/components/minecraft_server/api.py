@@ -128,7 +128,7 @@ class MinecraftServer:
         self, status_response: JavaStatusResponse
     ) -> MinecraftServerData:
         """Extract Java Edition server data out of status response."""
-        players_list = []
+        players_list: list[str] = []
 
         if players := status_response.players.sample:
             for player in players:

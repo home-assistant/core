@@ -127,7 +127,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _entry_unique_id_from_identifers(self, all_identifiers: set[str]) -> str | None:
         """Search existing entries for an identifier and return the unique id."""
         for entry in self._async_current_entries():
-            if all_identifiers.intersection(
+            if not all_identifiers.isdisjoint(
                 entry.data.get(CONF_IDENTIFIERS, [entry.unique_id])
             ):
                 return entry.unique_id
@@ -326,7 +326,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             existing_identifiers = set(
                 entry.data.get(CONF_IDENTIFIERS, [entry.unique_id])
             )
-            if not all_identifiers.intersection(existing_identifiers):
+            if all_identifiers.isdisjoint(existing_identifiers):
                 continue
             combined_identifiers = existing_identifiers | all_identifiers
             if entry.data.get(

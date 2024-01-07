@@ -55,12 +55,14 @@ async def async_get_scanner(
         translation_key = "import_aborted"
         if import_result.get("reason") == "import_failed":
             translation_key = "import_failed"
+        if import_result.get("reason") == "import_failed_invalid_auth":
+            translation_key = "import_failed_invalid_auth"
 
     async_create_issue(
         hass,
         DOMAIN,
         "deprecated_yaml_import_device_tracker",
-        breaks_in_ha_version="2024.6.0",
+        breaks_in_ha_version="2024.7.0",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key=translation_key,
