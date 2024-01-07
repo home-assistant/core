@@ -64,6 +64,8 @@ SCHEDULE_PARTS: dict[int, str] = {
     255: "inactive",
 }
 
+STAGES: dict[int, str] = {0: "idle", 1: "first stage", 2: "second stage"}
+
 
 @dataclass(frozen=True)
 class VenstarSensorTypeMixin:
@@ -237,5 +239,16 @@ INFO_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
             coordinator.client.get_info(sensor_name)
         ],
         name_fn=lambda _: "Schedule Part",
+    ),
+    VenstarSensorEntityDescription(
+        key="activestage",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(STAGES.values()),
+        translation_key="active_stage",
+        uom_fn=lambda _: None,
+        value_fn=lambda coordinator, sensor_name: STAGES[
+            coordinator.client.get_info(sensor_name)
+        ],
+        name_fn=lambda _: "Active Stage",
     ),
 )
