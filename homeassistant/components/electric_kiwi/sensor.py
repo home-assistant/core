@@ -41,7 +41,7 @@ ATTR_HOP_PERCENTAGE = "hop_percentage"
 class ElectricKiwiAccountRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_func: Callable[[AccountBalance], float | int | datetime]
+    value_func: Callable[[AccountBalance], float | datetime]
 
 
 @dataclass(frozen=True)
@@ -59,7 +59,7 @@ ACCOUNT_SENSOR_TYPES: tuple[ElectricKiwiAccountSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_DOLLAR,
-        value_func=lambda account_balance: str(account_balance.total_running_balance),
+        value_func=lambda account_balance: float(account_balance.total_running_balance),
     ),
     ElectricKiwiAccountSensorEntityDescription(
         key=ATTR_TOTAL_CURRENT_BALANCE,
@@ -68,7 +68,7 @@ ACCOUNT_SENSOR_TYPES: tuple[ElectricKiwiAccountSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_DOLLAR,
-        value_func=lambda account_balance: str(account_balance.total_account_balance),
+        value_func=lambda account_balance: float(account_balance.total_account_balance),
     ),
     ElectricKiwiAccountSensorEntityDescription(
         key=ATTR_NEXT_BILLING_DATE,
@@ -85,7 +85,7 @@ ACCOUNT_SENSOR_TYPES: tuple[ElectricKiwiAccountSensorEntityDescription, ...] = (
         icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_func=lambda account_balance: str(
+        value_func=lambda account_balance: float(
             account_balance.connections[0].hop_percentage
         ),
     ),
@@ -150,23 +150,24 @@ async def async_setup_entry(
         ACCOUNT_COORDINATOR
     ]
 
-    account_entities = [
+    entities: list[SensorEntity] = [
         ElectricKiwiAccountEntity(
             coordinator,
             description,
         )
         for description in ACCOUNT_SENSOR_TYPES
     ]
-    async_add_entities(account_entities)
 
     hop_coordinator: ElectricKiwiHOPDataCoordinator = hass.data[DOMAIN][entry.entry_id][
         HOP_COORDINATOR
     ]
-    hop_entities = [
-        ElectricKiwiHOPEntity(hop_coordinator, description)
-        for description in HOP_SENSOR_TYPES
-    ]
-    async_add_entities(hop_entities)
+    entities.extend(
+        [
+            ElectricKiwiHOPEntity(hop_coordinator, description)
+            for description in HOP_SENSOR_TYPES
+        ]
+    )
+    async_add_entities(entities)
 
 
 class ElectricKiwiAccountEntity(
@@ -193,7 +194,7 @@ class ElectricKiwiAccountEntity(
         self.entity_description = description
 
     @property
-    def native_value(self) -> datetime | str:
+    def native_value(self) -> float | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_func(self.coordinator.data)
 
