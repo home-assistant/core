@@ -38,6 +38,7 @@ from .const import (
     CONF_ENCODING,
     CONF_JSON_ATTRS,
     CONF_JSON_ATTRS_PATH,
+    CONF_PAYLOAD_TEMPLATE,
     CONF_SSL_CIPHER_LIST,
     DEFAULT_ENCODING,
     DEFAULT_FORCE_UPDATE,
@@ -61,6 +62,7 @@ RESOURCE_SCHEMA = {
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_PAYLOAD): cv.string,
+    vol.Exclusive(CONF_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.template,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     vol.Optional(
         CONF_SSL_CIPHER_LIST,
