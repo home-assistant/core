@@ -7,15 +7,10 @@ from homeassistant.components.vacuum import VacuumEntityFeature
 
 from ..const import CONF_SCHEMA
 
-LEGACY = "legacy"
 STATE = "state"
 
 MQTT_VACUUM_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_SCHEMA, default=LEGACY): vol.All(
-            vol.Lower, vol.Any(LEGACY, STATE)
-        )
-    }
+    {vol.Optional(CONF_SCHEMA, default=STATE): vol.All(vol.Lower, vol.Any(STATE))}
 )
 
 
