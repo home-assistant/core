@@ -174,20 +174,17 @@ class ValveControllerValve(ValveControllerEntity, ValveEntity):
     @convert_exceptions_to_homeassistant_error
     async def async_close_valve(self) -> None:
         """Close the valve."""
-        async with self._client:
-            await self.entity_description.close_coro_fn(self._client)
+        await self.entity_description.close_coro_fn(self._client)
         await self.coordinator.async_request_refresh()
 
     @convert_exceptions_to_homeassistant_error
     async def async_open_valve(self) -> None:
         """Open the valve."""
-        async with self._client:
-            await self.entity_description.open_coro_fn(self._client)
+        await self.entity_description.open_coro_fn(self._client)
         await self.coordinator.async_request_refresh()
 
     @convert_exceptions_to_homeassistant_error
     async def async_stop_valve(self) -> None:
         """Stop the valve."""
-        async with self._client:
-            await self.entity_description.halt_coro_fn(self._client)
+        await self.entity_description.halt_coro_fn(self._client)
         await self.coordinator.async_request_refresh()
