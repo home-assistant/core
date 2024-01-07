@@ -34,13 +34,13 @@ async def test_config_entry_not_ready(
     mock_lamarzocco: MagicMock,
 ) -> None:
     """Test the La Marzocco configuration entry not ready."""
-    mock_lamarzocco.update_machine_status.side_effect = RequestNotSuccessful("")
+    mock_lamarzocco.update_local_machine_status.side_effect = RequestNotSuccessful("")
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(mock_lamarzocco.update_machine_status.mock_calls) == 1
+    assert len(mock_lamarzocco.update_local_machine_status.mock_calls) == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
@@ -50,13 +50,13 @@ async def test_invalid_auth(
     mock_lamarzocco: MagicMock,
 ) -> None:
     """Test auth error during setup."""
-    mock_lamarzocco.update_machine_status.side_effect = AuthFail("")
+    mock_lamarzocco.update_local_machine_status.side_effect = AuthFail("")
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert len(mock_lamarzocco.update_machine_status.mock_calls) == 1
+    assert len(mock_lamarzocco.update_local_machine_status.mock_calls) == 1
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

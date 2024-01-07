@@ -6,11 +6,7 @@ from lmcloud import LMCloud
 from lmcloud.exceptions import BluetoothConnectionFailed
 
 from homeassistant.components import bluetooth
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-
-from .const import CONF_MACHINE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,89 +14,15 @@ _LOGGER = logging.getLogger(__name__)
 class LaMarzoccoClient(LMCloud):
     """Keep data for La Marzocco entities."""
 
-    _bt_disconnected = False
-
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry | None = None,
         callback_websocket_notify: Callable[[], None] | None = None,
     ) -> None:
         """Initialise the LaMarzocco entity data."""
         super().__init__(callback_websocket_notify=callback_websocket_notify)
-        self.entry = entry
         self.hass = hass
-
-    async def connect(self) -> None:
-        """Connect to the machine."""
-        if not self.entry:
-            raise RuntimeError("ConfigEntry not set")
-
-        _LOGGER.debug("Initializing Cloud API")
-        await self._init_cloud_api(
-            credentials=self.entry.data,
-            machine_serial=self.entry.data.get(CONF_MACHINE),
-        )
-        _LOGGER.debug("Model name: %s", self.model_name)
-
-        username: str = self.entry.data.get(CONF_USERNAME, "")
-        mac_address: str = self.entry.data.get(CONF_MAC, "")
-        name: str = self.entry.data.get(CONF_NAME, "")
-
-        if mac_address and name:
-            # coming from discovery
-            _LOGGER.debug("Initializing with known Bluetooth device")
-            await self._init_bluetooth_with_known_device(username, mac_address, name)
-        else:
-            # check if there are any bluetooth adapters to use
-            count = bluetooth.async_scanner_count(self.hass, connectable=True)
-            if count > 0:
-                _LOGGER.debug("Found Bluetooth adapters, initializing with Bluetooth")
-                bt_scanner = bluetooth.async_get_scanner(self.hass)
-
-                await self._init_bluetooth(
-                    username=username,
-                    init_client=False,
-                    bluetooth_scanner=bt_scanner,
-                )
-
-        if self._lm_bluetooth:
-            _LOGGER.debug("Connecting to machine with Bluetooth")
-            # update the config entry with the MAC address
-            new_data = self.entry.data.copy()
-            new_data[CONF_MAC] = self._lm_bluetooth.address
-            self.hass.config_entries.async_update_entry(
-                self.entry,
-                data=new_data,
-            )
-            await self.get_hass_bt_client()
-
-        host: str = self.entry.data.get(CONF_HOST, "")
-        if host:
-            _LOGGER.debug("Initializing local API")
-            await self._init_local_api(host)
-
-            _LOGGER.debug("Init WebSocket in Background Task")
-
-            # local API is initialized now
-            assert self._lm_local_api
-
-            self.entry.async_create_background_task(
-                hass=self.hass,
-                target=self._lm_local_api.websocket_connect(
-                    callback=self.on_websocket_message_received,
-                    use_sigterm_handler=False,
-                ),
-                name="lm_websocket_task",
-            )
-
-    async def update_machine_status(self) -> None:
-        """Update the machine status."""
-        if not self._initialized:
-            await self.connect()
-            self._initialized = True
-
-        await self.update_local_machine_status(force_update=True)
+        self._bt_disconnected = False
 
     async def set_power(self, enabled: bool) -> bool:
         """Set the power state of the machine."""
@@ -133,7 +55,6 @@ class LaMarzoccoClient(LMCloud):
 
         # should not be called before the client is initialized
         assert self._lm_bluetooth.address
-        assert self.hass
 
         ble_device = bluetooth.async_ble_device_from_address(
             self.hass, self._lm_bluetooth.address, connectable=True

@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 from lmcloud.const import LaMarzoccoModel
 import pytest
 
-from homeassistant.components.lamarzocco.const import DOMAIN
+from homeassistant.components.lamarzocco.const import CONF_MACHINE, DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import USER_INPUT
@@ -26,7 +26,7 @@ def mock_config_entry(mock_lamarzocco: MagicMock) -> MockConfigEntry:
     return MockConfigEntry(
         title="My LaMarzocco",
         domain=DOMAIN,
-        data=USER_INPUT,
+        data=USER_INPUT | {CONF_MACHINE: mock_lamarzocco.serial_number},
         unique_id=mock_lamarzocco.serial_number,
     )
 
@@ -95,10 +95,6 @@ def mock_lamarzocco(
         lamarzocco.gateway_version = "v2.2-rc0"
         lamarzocco.latest_gateway_version = "v3.1-rc4"
 
-        lamarzocco.connect.return_value = None
-        lamarzocco.websocket_connect.return_value = None
-        lamarzocco.update_local_machine_status.return_value = None
-
         lamarzocco.current_status = json.loads(
             load_fixture("current_status.json", DOMAIN)
         )
@@ -109,4 +105,8 @@ def mock_lamarzocco(
             (serial_number, model_name),
         ]
         lamarzocco.check_local_connection.return_value = True
+
+        lamarzocco.lm_bluetooth = MagicMock()
+        lamarzocco.lm_bluetooth.address = "AA:BB:CC:DD:EE:FF"
+
         yield lamarzocco
